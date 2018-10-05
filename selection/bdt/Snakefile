@@ -1,8 +1,8 @@
 # Pipepine to train and apply BDT
 
 
-with open('selection/bdt/config.yml') as file:
-    BDT_CONFIG = yaml.load(file, Loader=yaml.FullLoader)
+# with open('selection/bdt/config.yml') as file:
+#     BDT_CONFIG = yaml.load(file, Loader=yaml.FullLoader)
 
 
 # rules for proxy signal and background for bdt {{{
@@ -189,14 +189,10 @@ def tmva_weights_file(wildcards):
 def input_to_apply_bdt_selection(wildcards):
     if "MC_Bs2JpsiPhi_fromLb" in wildcards.mode:
         return SAMPLES + f'/{wildcards.year}/{wildcards.mode}/{wildcards.version}_preselected.root',
-        # return expand(rules.apply_preselection_mc_Lb.output,
-        #               version=wildcards.version, mode=wildcards.mode,
-        #               year=wildcards.year)
     else:
         return SAMPLES + f'/{wildcards.year}/{wildcards.mode}/{wildcards.version}_withbdt.root'
-        # return expand(rules.add_bdt_branches.output,
-        #               version=wildcards.version, mode=wildcards.mode,
-        #               year=wildcards.year)
+
+
 
 # rule cp_tmva_dir_local:
 #     threads: 2
@@ -252,8 +248,34 @@ if config['selection_mode'] == 'run2':
             --bdt-branches {params.branches} \
             --bdt-cut-file {input.bdt_cut} \
             --tmva-weight-dir {input.tmva_weight_dir} ) &> {log}')
+
+
 elif config['selection_mode'] == 'run1':
-    print("rule for run1")
+    rule selection_run1:
+        """
+        Generic rule.
+        Apply cuts specified in yaml file corresponding to Run1 ANAnote 
+        (cds.cern.ch/record/1459106/files/LHCb-ANA-2012-067.pdf).
+        This rule is used instead of selection_run2_apply_bdt.
+        """
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            tuple_file = SAMPLES + '/{year}/{mode}/{version}_preselected.root',
+        params:
+            script = 'selection/tools/apply_selection.py',
+            cuts = 'selection/bdt/cuts_run1.yaml',
+        output:
+            SAMPLES + '/{year}/{mode}/{version}_elected.root'
+        log:
+            'output/log/selection_run1/{year}/{mode}/{version}_elected.log'
+        run:
+            shell('(time python {params.script} --input-file {input.tuple_file}\
+                                --output-file {output} \
+                                --mode {wildcards.mode} \
+                                --year {wildcards.year} \
+                                --selection-files {params.cuts} )&> {log}')
 
 # }}}
 
