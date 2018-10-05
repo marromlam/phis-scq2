@@ -2,7 +2,14 @@
 
 # Configuration for the selection is in an independent file
 import yaml
-with open('selection/config.yaml') as file:
+
+#Load eos paths (restripped or usual tuples)
+if config['stripping_mode']=='pidcuts':
+  with open('selection/config.yaml') as file:
+    selconfig = yaml.load(file, Loader=yaml.FullLoader)
+
+elif config['stripping_mode']=='nopidcuts':
+  with open('selection/config_restripped.yaml') as file:
     selconfig = yaml.load(file, Loader=yaml.FullLoader)
 
 
