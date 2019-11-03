@@ -1,0 +1,1 @@
+This repository contains the code for running different parts of Bs Jpsi KK analysis. Each folder contains a part.
