@@ -1,0 +1,572 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                       CUDA decay rate Bs -> mumuKK                         //
+//                                                                            //
+//  Created: 2019-01-25                                                       //
+//                                                                            //
+//                                                                            //
+//                                                                            //
+//                                                                            //
+//                                                                            //
+//                                                                            //
+//                                                                            //
+//                                                                            //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Inlude headers //////////////////////////////////////////////////////////////
+
+//#include <OpenCL/cl.h>
+//#include <stdio.h>
+#include <math.h>
+// #include <thrust/complex.h>
+//#include <pycuda-complex.hpp>
+#include <pyopencl-complex.h>
+#define PYOPENCL_DEFINE_CDOUBLE
+//#include <curand.h>
+//#include <curand_kernel.h>
+//#include "/scratch15/diego/gitcrap4/cuda/tag_gen.c"
+//#include "/home3/marcos.romero/JpsiKKAna/cuda/somefunctions.c"
+//#include "Faddeeva.c"
+__global double const sigma_threshold = 5.0;
+__global int const time_acc_bins = 40;
+__global int const spl_bins = 7;
+
+//extern "C"
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//{
+
+
+
+__global double getNcoeffs(double APlon,
+   double ASlon,
+   double APpar,
+   double APper,
+   double CSP,
+   int k)
+{
+  double nk;
+  switch(k) {
+  case 1:  nk = APlon*APlon;
+   break;
+  case 2:  nk = APpar*APpar;
+   break;
+  case 3:  nk = APper*APper;
+   break;
+  case 4:  nk = APper*APpar;
+   break;
+  case 5:  nk = APlon*APpar;
+   break;
+  case 6:  nk = APlon*APper;
+   break;
+  case 7:  nk = ASlon*ASlon;
+   break;
+  case 8:  nk = CSP*ASlon*APpar;
+   break;
+  case 9:  nk = CSP*ASlon*APper;
+   break;
+  case 10: nk = CSP*ASlon*APlon;
+   break;
+  default: printf("Wrong k index in nk, please check code %d\\n", k);
+   return 0.;
+  }
+  return nk;
+}
+
+__global double getFcoeffs(double cosK,
+   double cosL,
+   double hphi,
+   int k)
+{
+  double helsinthetaK = sqrt(1. - cosK*cosK);
+  double helsinthetaL = sqrt(1. - cosL*cosL);
+//     hphi -= M_PI;
+//     double helsinphi = sin(-hphi);
+//     double helcosphi = cos(-hphi);
+  double helsinphi = sin(hphi);
+  double helcosphi = cos(hphi);
+
+  double fk;
+  switch(k) {
+  case 1:  fk = cosK*cosK*helsinthetaL*helsinthetaL;
+   break;
+  case 2:  fk = 0.5*helsinthetaK*helsinthetaK*(1.-helcosphi*helcosphi*helsinthetaL*helsinthetaL);
+   break;
+  case 3:  fk = 0.5*helsinthetaK*helsinthetaK*(1.-helsinphi*helsinphi*helsinthetaL*helsinthetaL);
+   break;
+  case 4:  fk = helsinthetaK*helsinthetaK*helsinthetaL*helsinthetaL*helsinphi*helcosphi;
+   break;
+  case 5:  fk = sqrt(2.)*helsinthetaK*cosK*helsinthetaL*cosL*helcosphi;
+   break;
+  case 6:  fk = -sqrt(2.)*helsinthetaK*cosK*helsinthetaL*cosL*helsinphi;
+   break;
+  case 7:  fk = helsinthetaL*helsinthetaL/3.;
+   break;
+  case 8:  fk = 2.*helsinthetaK*helsinthetaL*cosL*helcosphi/sqrt(6.);
+   break;
+  case 9:  fk = -2.*helsinthetaK*helsinthetaL*cosL*helsinphi/sqrt(6.);
+   break;
+  case 10: fk = 2.*cosK*helsinthetaL*helsinthetaL/sqrt(3.);
+   break;
+  default: printf("Wrong k index in fk, please check code %d\\n", k);
+   return 0.;
+  }
+  return fk;
+}
+
+__global double getAcoeffs(double phisPlon,
+   double phisSlon,
+   double phisPpar,
+   double phisPper,
+   double deltaPlon,
+   double deltaSlon,
+   double deltaPpar,
+   double deltaPper,
+   double lambdaPlon,
+   double lambdaSlon,
+   double lambdaPpar,
+   double lambdaPper,
+   int k)
+{
+  double ak;
+  switch(k) {
+  case 1:  ak = 0.5*(1.+lambdaPlon*lambdaPlon);
+   break;
+  case 2:  ak = 0.5*(1.+lambdaPpar*lambdaPpar);
+   break;
+  case 3:  ak = 0.5*(1.+lambdaPper*lambdaPper);
+   break;
+  case 4:  ak = 0.5*(sin(deltaPper-deltaPpar) - lambdaPper*lambdaPpar*sin(deltaPper-deltaPpar-phisPper+phisPpar));
+   break;
+  case 5:  ak = 0.5*(cos(deltaPlon-deltaPpar) + lambdaPlon*lambdaPpar*cos(deltaPlon-deltaPpar-phisPlon+phisPpar));
+   break;
+  case 6:  ak = -0.5*(sin(deltaPlon-deltaPper) - lambdaPlon*lambdaPper*sin(deltaPlon-deltaPper-phisPlon+phisPper));
+   break;
+  case 7:  ak = 0.5*(1.+lambdaSlon*lambdaSlon);
+   break;
+  case 8:  ak = 0.5*(cos(deltaSlon-deltaPpar) - lambdaSlon*lambdaPpar*cos(deltaSlon-deltaPpar-phisSlon+phisPpar));
+   break;
+  case 9:  ak = -0.5*(sin(deltaSlon-deltaPper) + lambdaSlon*lambdaPper*sin(deltaSlon-deltaPper-phisSlon+phisPper));
+   break;
+  case 10: ak = 0.5*(cos(deltaSlon-deltaPlon) - lambdaSlon*lambdaPlon*cos(deltaSlon-deltaPlon-phisSlon+phisPlon));
+   break;
+  default: printf("Wrong k index in ak, please check code %d\\n", k);
+   return 0.;
+  }
+  return ak;
+}
+
+__global double getBcoeffs(double phisPlon,
+   double phisSlon,
+   double phisPpar,
+   double phisPper,
+   double deltaPlon,
+   double deltaSlon,
+   double deltaPpar,
+   double deltaPper,
+   double lambdaPlon,
+   double lambdaSlon,
+   double lambdaPpar,
+   double lambdaPper,
+   int k)
+{
+  double bk;
+  switch(k) {
+  case 1:  bk = -lambdaPlon*cos(phisPlon);
+   break;
+  case 2:  bk = -lambdaPpar*cos(phisPpar);
+   break;
+  case 3:  bk = lambdaPper*cos(phisPper);
+   break;
+  case 4:  bk = 0.5*(lambdaPper*sin(deltaPper-deltaPpar-phisPper) + lambdaPpar*sin(deltaPpar-deltaPper-phisPpar));
+   break;
+  case 5:  bk = -0.5*(lambdaPlon*cos(deltaPlon-deltaPpar-phisPlon) + lambdaPpar*cos(deltaPpar-deltaPlon-phisPpar));
+   break;
+  case 6:  bk = 0.5*(lambdaPlon*sin(deltaPlon-deltaPper-phisPlon) + lambdaPper*sin(deltaPper-deltaPlon-phisPper));
+   break;
+  case 7:  bk = lambdaSlon*cos(phisSlon);
+   break;
+  case 8:  bk = 0.5*(lambdaSlon*cos(deltaSlon-deltaPpar-phisSlon) - lambdaPpar*cos(deltaPpar-deltaSlon-phisPpar));
+   break;
+  case 9:  bk = -0.5*(lambdaSlon*sin(deltaSlon-deltaPper-phisSlon) - lambdaPper*sin(deltaPper-deltaSlon-phisPper));
+   break;
+  case 10: bk = 0.5*(lambdaSlon*cos(deltaSlon-deltaPlon-phisSlon) - lambdaPlon*cos(deltaPlon-deltaSlon-phisPlon));
+   break;
+  default: printf("Wrong k index in bk, please check code %d\\n", k);
+   return 0.;
+  }
+  return bk;
+}
+
+__global double getCcoeffs(double phisPlon,
+   double phisSlon,
+   double phisPpar,
+   double phisPper,
+   double deltaPlon,
+   double deltaSlon,
+   double deltaPpar,
+   double deltaPper,
+   double lambdaPlon,
+   double lambdaSlon,
+   double lambdaPpar,
+   double lambdaPper,
+   int k)
+{
+
+  double ck;
+  switch(k) {
+  case 1:  ck = 0.5*(1.-lambdaPlon*lambdaPlon);
+   break;
+  case 2:  ck = 0.5*(1.-lambdaPpar*lambdaPpar);
+   break;
+  case 3:  ck = 0.5*(1.-lambdaPper*lambdaPper);
+   break;
+  case 4:  ck = 0.5*(sin(deltaPper-deltaPpar) + lambdaPper*lambdaPpar*sin(deltaPper-deltaPpar-phisPper+phisPpar));
+   break;
+  case 5:  ck = 0.5*(cos(deltaPlon-deltaPpar) - lambdaPlon*lambdaPpar*cos(deltaPlon-deltaPpar-phisPlon+phisPpar));
+   break;
+  case 6:  ck = -0.5*(sin(deltaPlon-deltaPper) + lambdaPlon*lambdaPper*sin(deltaPlon-deltaPper-phisPlon+phisPper));
+   break;
+  case 7:  ck = 0.5*(1.-lambdaSlon*lambdaSlon);
+   break;
+  case 8:  ck = 0.5*(cos(deltaSlon-deltaPpar) + lambdaSlon*lambdaPpar*cos(deltaSlon-deltaPpar-phisSlon+phisPpar));
+   break;
+  case 9:  ck = -0.5*(sin(deltaSlon-deltaPper) - lambdaSlon*lambdaPper*sin(deltaSlon-deltaPper-phisSlon+phisPper));
+   break;
+  case 10: ck = 0.5*(cos(deltaSlon-deltaPlon) + lambdaSlon*lambdaPlon*cos(deltaSlon-deltaPlon-phisSlon+phisPlon));
+   break;
+  default: printf("Wrong k index in ck, please check code %d\\n", k);
+   return 0.;
+  }
+  return ck;
+}
+
+__global double getDcoeffs(double phisPlon,
+   double phisSlon,
+   double phisPpar,
+   double phisPper,
+   double deltaPlon,
+   double deltaSlon,
+   double deltaPpar,
+   double deltaPper,
+   double lambdaPlon,
+   double lambdaSlon,
+   double lambdaPpar,
+   double lambdaPper,
+   int k)
+{
+
+  double dk;
+  switch(k) {
+  case 1:  dk = lambdaPlon*sin(phisPlon);
+   break;
+  case 2:  dk = lambdaPpar*sin(phisPpar);
+   break;
+  case 3:  dk = -lambdaPper*sin(phisPper);
+   break;
+  case 4:  dk = -0.5*(lambdaPper*cos(deltaPper-deltaPpar-phisPper) + lambdaPpar*cos(deltaPpar-deltaPper-phisPpar));
+   break;
+  case 5:  dk = -0.5*(lambdaPlon*sin(deltaPlon-deltaPpar-phisPlon) + lambdaPpar*sin(deltaPpar-deltaPlon-phisPpar));
+   break;
+  case 6:  dk = -0.5*(lambdaPlon*cos(deltaPlon-deltaPper-phisPlon) + lambdaPper*cos(deltaPper-deltaPlon-phisPper));
+   break;
+  case 7:  dk = -lambdaSlon*sin(phisSlon);
+   break;
+  case 8:  dk = 0.5*(lambdaSlon*sin(deltaSlon-deltaPpar-phisSlon) - lambdaPpar*sin(deltaPpar-deltaSlon-phisPpar));
+   break;
+  case 9:  dk = -0.5*(-lambdaSlon*cos(deltaSlon-deltaPper-phisSlon) + lambdaPper*cos(deltaPper-deltaSlon-phisPper));
+   break;
+  case 10: dk = 0.5*(lambdaSlon*sin(deltaSlon-deltaPlon-phisSlon) - lambdaPlon*sin(deltaPlon-deltaSlon-phisPlon));
+   break;
+  default: printf("Wrong k index in dk, please check code %d\\n", k);
+
+   return 0.;
+  }
+  return dk;
+}
+
+
+
+
+
+__global
+pycuda::complex<double> getExponentialConvolution(double t, double gamma,
+                                                  double omega, double sigma)
+{
+  pycuda::complex<double> I(0,1);
+  pycuda::complex<double> z, fad;
+  double sigma2 = sigma*sigma;
+
+  if( t >sigma_threshold*sigma )
+  {
+    return  //2.*(sqrt(0.5*M_PI))* this was an old factor
+  exp(-gamma*t+0.5*gamma*gamma*sigma2-0.5*omega*omega*sigma2)*
+  (cos(omega*(t-gamma*sigma2)) + I*sin(omega*(t-gamma*sigma2)));
+  }
+  else
+  {
+    z   = (-I*(t-sigma2*gamma) - omega*sigma2)/(sigma*sqrt(2.));
+    fad = faddeeva(z);
+    fad = (pycuda::real(fad) - I*pycuda::imag(fad));
+    return sqrt(0.5*M_PI)*exp(-0.5*t*t/sigma2)*fad;
+  }
+}
+
+
+
+
+
+
+
+
+__global
+double getDiffRate(double *data, double G, double DG, double DM, double CSP,
+                    double APlon, double ASlon, double APpar, double APper,
+                    double phisPlon, double phisSlon, double phisPpar, double phisPper,
+                    double deltaSlon, double deltaPlon, double deltaPpar, double deltaPper,
+                    double lPlon, double lSlon, double lPpar, double lPper)
+{
+  // variables
+  double cosK = data[0];
+  double cosL = data[1];
+  double hphi = data[2];
+  double time = data[3];
+
+  // double sigma_t 		= data[4];
+  // double q_OS 			= data[5];
+  // double qSlonSK 		= data[6];
+  // double eta_OS 		= data[7];
+  // double etaSlonSK 	= data[8];
+  // int year 					= data[9];
+
+
+
+
+/*
+  double delta_t =  delta(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
+
+  double delta_t_1 = delta_1(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
+  double delta_t_2 = delta_2(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
+
+  double omega_OS = omega(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
+  double omega_bar_OS = omega_bar(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
+  double omegaSlonSK = omega(etaSlonSK, p0SlonSK, dp0SlonSK, p1SlonSK, dp1SlonSK, 0., 0., eta_barSlonSK);
+  double omega_barSlonSK = omega_bar(etaSlonSK, p0SlonSK, dp0SlonSK, p1SlonSK, dp1SlonSK, 0., 0., eta_barSlonSK);
+
+  double taggingPparrs_OS[3] = {omega_OS, omega_bar_OS, q_OS};
+  double taggingPparrsSlonSK[3] = {omegaSlonSK, omega_barSlonSK, qSlonSK};
+
+  fix_taggingPparrs(taggingPparrs_OS);
+  fix_taggingPparrs(taggingPparrsSlonSK);
+
+  omega_OS = taggingPparrs_OS[0];
+  omega_bar_OS = taggingPparrs_OS[1];
+  omegaSlonSK = taggingPparrsSlonSK[0];
+  omega_barSlonSK = taggingPparrsSlonSK[1];
+
+  if((taggingPparrs_OS[0] == 0.5 || taggingPparrs_OS[1] == 0.5) && (taggingPparrs_OS[0] != taggingPparrs_OS[1]))
+  printf("OS tag mismatch!!! Check code %lf vs %lf and %lf \n", taggingPparrs_OS[0], taggingPparrs_OS[1], taggingPparrs_OS[2]);
+  else
+  q_OS = taggingPparrs_OS[2];
+
+  if((taggingPparrsSlonSK[0] == 0.5 || taggingPparrsSlonSK[1] == 0.5) && (taggingPparrsSlonSK[0] != taggingPparrsSlonSK[1]))
+  printf("SSK tag mismatch!!! Check code %lf vs %lf and %lf \n", taggingPparrsSlonSK[0], taggingPparrsSlonSK[1], taggingPparrsSlonSK[2]);
+  else
+  qSlonSK = taggingPparrsSlonSK[2];
+
+*/
+
+
+
+
+  // Time resolution -----------------------------------------------------------
+  //     In order to remove the effects of conv, set delta_t = 0, so in this way
+  //     you are running the first branch of getExponentialConvolution.
+  pycuda::complex<double> exp_p, exp_m, exp_i;
+  double t_offset = 0.0;//delta(sigma_t, sigma_t_mu_a, sigma_t_mu_b, sigma_t_mu_c);
+  double delta_t  = 0.0;
+
+  exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., delta_t);
+  exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., delta_t);
+  exp_i = getExponentialConvolution(time-t_offset,          G, DM, delta_t);
+
+  double ta = pycuda::real(0.5*(exp_m + exp_p));     // cosh = (exp_m + exp_p)/2
+  double tb = pycuda::real(0.5*(exp_m - exp_p));     // sinh = (exp_m - exp_p)/2
+  double tc = pycuda::real(exp_i);                        // exp_i = cos + I*sin
+  double td = pycuda::imag(exp_i);                        // exp_i = cos + I*sin
+  //printf("%.8lf\t %.8lf\t %.8lf\t %.8lf\n", ta,tb,tc,td);
+
+
+
+  // Flavor tagging ------------------------------------------------------------
+  double omegaOSB = 0; double omegaOSBbar = 0;
+  double omegaSSB = 0; double omegaSSBbar = 0;
+  int tagOS = 0; int tagSS = 0;
+
+  bool useTrueTag = 1;
+  if (useTrueTag)
+  {
+    tagOS = 0.5;
+  }
+
+  //   tagOS = meas->tag_decision;
+  //   tagSS = meas->tag_decision_ss;
+  //
+  //   double meas_omega    = meas->tag_omega;
+  //   double meas_omega_ss = meas->tag_omega_ss;
+  //
+  //   double ma(0.99),mi(0);
+  //
+  //   omega_os_B =    std::max(std::min(params->tag_p0()    + params->tag_deltap0()/2.0    +(params->tag_p1()    + params->tag_deltap1()/2.0)    * (meas_omega - params->tag_eta()),ma),mi);
+  //   omega_os_Bbar = std::max(std::min(params->tag_p0()    - params->tag_deltap0()/2.0    +(params->tag_p1()    - params->tag_deltap1()/2.0)    * (meas_omega - params->tag_eta()),ma),mi);
+  //
+  //   omega_ss_B =    std::max(std::min(params->tag_ss_p0() + params->tag_ss_deltap0()/2.0 +(params->tag_ss_p1() + params->tag_ss_deltap1()/2.0) * (meas_omega_ss - params->tag_ss_eta()),ma),mi);
+  //   omega_ss_Bbar = std::max(std::min(params->tag_ss_p0() - params->tag_ss_deltap0()/2.0 +(params->tag_ss_p1() - params->tag_ss_deltap1()/2.0) * (meas_omega_ss - params->tag_ss_eta()),ma),mi);
+  //
+  //   if((1.0 + tagOS * (1-2*omega_os_B))*(1.0 + tagSS * (1-2*omega_ss_B)) == 0 && (1.0 - tagOS * (1-2*omega_os_Bbar))*(1.0 - tagSS * (1-2*omega_ss_Bbar)) == 0){
+  //     omega_ss_Bbar=0.5;
+  //     omega_ss_B=0.5;
+  //     omega_os_Bbar=0.5;
+  //     omega_os_B=0.5;
+  //   }
+  // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Decay-time acceptance -----------------------------------------------------
+  //     To get rid of decay-time acceptance set dta to 1.0.
+  double dta = 1.0;
+  /*
+  to be implemented
+  */
+
+
+  double vNk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vdk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+
+  double Nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
+  double pdfB = 0.0; double pdfBbar = 0.0;
+
+  for(int k = 1; k <= 10; k++)
+  {
+    Nk = getNcoeffs(APlon,ASlon,APpar,APper,CSP,k);
+    fk = 9./(16.*M_PI)*getFcoeffs(cosK,cosL,hphi,k);
+
+    ak = getAcoeffs(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
+    bk = getBcoeffs(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
+    ck = getCcoeffs(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
+    dk = getDcoeffs(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
+
+    hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);//old factor: 3./(4.*M_PI)*
+    hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
+
+    pdfB    += Nk*hk_B*fk;
+    pdfBbar += Nk*hk_Bbar*fk;
+
+    vNk[k-1] = 1.*Nk;
+    vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
+  }
+
+/*
+double integral[2] = {0.,0.};
+
+double time_acc = 0.;
+
+
+time_acc = 1.0;//calculate_time_acc(t, spline_knots, spline_coeffs, spline_Nknots);
+integral4pitimeSlonpline(integral, vNk, vak, vbk, vck, vdk, normweights, G, DG, DM, delta_t, t_ll, t_offset, spline_Nknots, spline_knots, spline_coeffs);
+
+
+double int_B = integral[0];
+double int_Bbar = integral[1];
+
+*/
+double num = 1.0; double den = 1.0;
+num = dta*(
+        (1.0+tagOS*(1-2*omegaOSB)   ) * (1.0+tagSS*(1-2*omegaSSB)   ) * pdfB +
+        (1.0-tagOS*(1-2*omegaOSBbar)) * (1.0-tagSS*(1-2*omegaSSBbar)) * pdfBbar
+      );
+
+/*
+// Total PDF integral
+double den =  ((1.+q_OS*(1.-2.*omega_OS))*(1.+qSlonSK*(1.-2.*omegaSlonSK))*int_B
+  + (1.-q_OS*(1.-2.*omega_bar_OS))*(1.-qSlonSK*(1.-2.*omega_barSlonSK))*int_Bbar);
+// double den =  ((1.+q_OS)*(1.+qSlonSK)*int_B
+//              + (1.-q_OS)*(1.-qSlonSK)*int_Bbar);
+
+//     printf("omegaSlonSK %lf, omega_barSlonSK %lf, omega_OS %lf, omega_bar_OS %lf \n", omegaSlonSK, omega_barSlonSK, omega_OS, omega_bar_OS);
+
+*/
+  return num/den;
+}
+
+
+
+__global__
+void pyDiffRate(double *data, double *lkhd, double G, double DG, double DM, double CSP,
+                double APlon, double ASlon, double APpar, double APper,
+                double phisPlon, double phisSlon, double phisPpar, double phisPper,
+                double deltaSlon, double deltaPlon, double deltaPpar, double deltaPper,
+                double lPlon, double lSlon, double lPpar, double lPper, int Nevt)
+{
+  int row = threadIdx.x + blockDim.x * blockIdx.x;
+  if (row >= Nevt) { return; }
+  //printf("%lf\n", data[row]);
+
+  double shit[4] = {data[row*4+0],data[row*4+1],data[row*4+2],data[row*4+3]};
+  printf("%lf\n", shit[3]);
+  lkhd[row] = getDiffRate( shit,  G,  DG,  DM,  CSP,
+                       APlon,  ASlon,  APpar,  APper,
+                       phisPlon,  phisSlon,  phisPpar,  phisPper,
+                       deltaSlon,  deltaPlon,  deltaPpar,  deltaPper,
+                       lPlon,  lSlon,  lPpar,  lPper);
+
+}
+
+
+
+
+__global
+void pyFcoeffs(double *data, double *fk,  int Nevt)
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int k = threadIdx.y + blockDim.y * blockIdx.y;
+  if (i >= Nevt) { return; }
+  fk[i*10+k]= 9./(16.*M_PI)*getFcoeffs(data[i*4+0],data[i*4+1],data[i*4+2],k+1);
+
+}
+
+
+
+//}
