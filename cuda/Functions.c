@@ -6,12 +6,9 @@
 #define errf_const 1.12837916709551
 #define xLim 5.33
 #define yLim 4.29
-#define sigma_t_threshold 5
-#define time_acc_bins 40
-#define spl_bins 7
 
 
-__device__ double Factorial(int n)
+__device__ double factorial(int n)
 {
    if(n <= 0)
     return 1.;
