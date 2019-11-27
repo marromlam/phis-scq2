@@ -10,14 +10,9 @@
 //                     phi_s analysis in Bs -> Jpsi K+ K-                     //
 //                                                                            //
 //  This file contains the following __kernels:                               //
-//    * pyDiffRate: computes Bs2MuMuKK pdf looping over the events            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//  TODO: The way complex numbers are handled is a bit neolithic, but as      //
-//        far as openCL does not provide a standard library, this is the      //
-//        only solution avaliable                                             //
-//  TODO: fadevva function is not corretly implemented yet                    //
+//    * pyDiffRate: Computes Bs2MuMuKK pdf looping over the events. Now it    //
+//                  handles a binned X_M fit without splitting beforehand the //
+//                  data, it launches a thread per mass bin.                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,224 +21,98 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Include headers /////////////////////////////////////////////////////////////
 
+// Debugging 0 [0,1,2,3,>3]
+__constant int DEBUG = 4;
+
 #pragma OPENCL EXTENSION cl_khr_fp64: enable
 #define PYOPENCL_DEFINE_CDOUBLE
 #include <pyopencl-complex.h>
+
+
+
+
+// mKK mass bins
+#define nknots 7
+#define sigma_t 0.15
+#define USE_TIME_ACC 0
+
+__constant double X_M[7] = {990, 1008, 1016, 1020, 1024, 1032, 1050};
+__constant double pdfweights[10] = {1,1,1,0,0,0,1,0,0,0};
+__constant double knots[7] =  { 0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00 };
 
 // Include disciplines
 #include "/home3/marcos.romero/phis-scq/opencl/DecayTimeAcceptance.cl"
 #include "/home3/marcos.romero/phis-scq/opencl/TimeAngularDistribution.cl"
 
-// mKK mass bins
-__constant double X_M[7] = {990, 1008, 1016, 1020, 1024, 1032, 1050};
-__constant double pdfweights[10] = {1,1,1,0,0,0,1,0,0,0};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-/*
-__global
-cdouble_t calcM(double x, int n, double t, double sigma,
-                              double gamma, double omega)
-{
-  cdouble_t conv_term;
-  conv_term = getExponentialConvolution(t, gamma, omega, sigma)/(sqrt(0.5*M_PI));
-
-  if (n == 0)
-  {
-    return cdouble_t(erf(x),0.)-conv_term;
-  }
-  else if (n == 1)
-  {
-    return 2.*(-cdouble_t(sqrt(1./M_PI)*exp(-x*x),0.)-x*conv_term);
-  }
-  else if (n == 2)
-  {
-    return 2.*(-2.*x*exp(-x*x)*cdouble_t(sqrt(1./M_PI),0.)-(2.*x*x-1.)*conv_term);
-  }
-  else if (n == 3)
-  {
-    return 4.*(-(2.*x*x-1.)*exp(-x*x)*cdouble_t(sqrt(1./M_PI),0.)-x*(2.*x*x-3.)*conv_term);
-  }
-  else if (n == 4)
-  {
-    return 4.*(exp(-x*x)*(6.*x+4.*x*x*x)*cdouble_t(sqrt(1./M_PI),0.)-(3.-12.*x*x+4.*x*x*x*x)*conv_term);
-  }
-  else if (n == 5)
-  {
-    return 8.*(-(3.-12.*x*x+4.*x*x*x*x)*exp(-x*x)*cdouble_t(sqrt(1./M_PI),0.)-x*(15.-20.*x*x+4.*x*x*x*x)*conv_term);
-  }
-  else if (n == 6)
-  {
-    return 8.*(-exp(-x*x)*(30.*x-40.*x*x*x+8.*x*x*x*x*x)*cdouble_t(sqrt(1./M_PI),0.)-(-15.+90.*x*x-60.*x*x*x*x+8.*x*x*x*x*x*x)*conv_term);
-  }
-  return cdouble_t(0.,0.);
-}
-
+// Functions ///////////////////////////////////////////////////////////////////
 
 
 
 __global
-void intgTimeAcceptance(double time_terms[4], double sigma, double gamma,
-                            double dgamma, double dm, double *knots,
-                            double *coeffs, int n, double t0)
-{
-  // Add tUL to knots list
-  knots[7] = 15; n += 1;
-  int const N = 7+1;
-  double x[N];
-
-  double aux1 = 1./(sqrt(2.)*sigma);
-
-  for(int i = 0; i < spl_bins+1; i++)
-  {
-    x[i] = (knots[i] - t0)*aux1;
-  }
-
-  // Fill S matrix                (TODO speed to be gained here - S is constant)
-  double S[spl_bins][4][4];
-  for (int bin=0; bin < spl_bins; ++bin)
-  {
-    for (int i=0; i<4; ++i)
-    {
-      for (int j=0; j<4; ++j)
-      {
-        if(i+j < 4)
-        {
-          S[bin][i][j] = getCoeff(coeffs,bin,i+j)
-                         *Factorial(i+j)/Factorial(j)/Factorial(i)/pow(2.0,i+j);
-        }
-        else
-        {
-          S[bin][i][j] = 0.;
-        }
-      }
-    }
-  }
-
-
-  cdouble_t z_sinh, K_sinh[4], M_sinh[spl_bins+1][4];
-  cdouble_t z_cosh, K_cosh[4], M_cosh[spl_bins+1][4];
-  cdouble_t z_trig, K_trig[4], M_trig[spl_bins+1][4];
-
-  z_cosh = sigma*cdouble_t(gamma-0.5*dgamma,0.)/sqrt(2.);
-  z_sinh = sigma*cdouble_t(gamma+0.5*dgamma,0.)/sqrt(2.);
-  z_trig = sigma*cdouble_t(gamma,-dm)/sqrt(2.);
-
-  // Fill Kn                 (only need to calculate this once per minimization)
-  for (int j=0; j<4; ++j)
-  {
-    K_cosh[j] = Kn(z_cosh,j);
-    K_sinh[j] = Kn(z_sinh,j);
-    K_trig[j] = Kn(z_trig,j);
-  }
-
-  // Fill Mn
-  for (int j=0; j<4; ++j)
-  {
-    for(int bin=0; bin < spl_bins+1; ++bin)
-    {
-      M_sinh[bin][j] = calcM(x[bin],j,knots[bin]-t0,sigma,gamma-0.5*dgamma,0.);
-      M_cosh[bin][j] = calcM(x[bin],j,knots[bin]-t0,sigma,gamma+0.5*dgamma,0.);
-      M_trig[bin][j] = calcM(x[bin],j,knots[bin]-t0,sigma,gamma,dm);
-    }
-  }
-
-  // Fill the delta factors to multiply by the integrals
-  double sigma_fact[4];
-  for (int i=0; i<4; ++i)
-  {
-    sigma_fact[i] = pow(sigma*sqrt(2.), i+1)/sqrt(2.);
-  }
-
-  // Integral calculation for cosh, sinh, cos, sin terms
-  double int_sinh = 0; double int_cosh = 0;
-  cdouble_t int_trig = cdouble_t(0.,0.);
-
-  for (int bin=0; bin < spl_bins; ++bin)
-  {
-    for (int j=0; j<=3; ++j)
-    {
-      for (int k=0; k<=3-j; ++k)
-      {
-        int_sinh += pyopencl::real(S[bin][j][k]*(M_sinh[bin+1][j]-M_sinh[bin][j])
-                    *K_cosh[k])*sigma_fact[j+k];
-
-        int_cosh += pyopencl::real(S[bin][j][k]*(M_cosh[bin+1][j]-M_cosh[bin][j])
-                    *K_sinh[k])*sigma_fact[j+k];
-
-        int_trig += S[bin][j][k]*(M_trig[bin+1][j] - M_trig[bin][j])
-                    *K_trig[k]*sigma_fact[j+k];
-      }
-    }
-  }
-
-  // Fill itengral terms - 0:cosh, 1:sinh, 2:cos, 3:sin
-  time_terms[0] = 0.5*(int_sinh + int_cosh);
-  time_terms[1] = 0.5*(int_sinh - int_cosh);
-  time_terms[2] = pyopencl::real(int_trig);
-  time_terms[3] = pyopencl::imag(int_trig);
-
-}
-
-
-
-*/
-/*
-//This integral works for all decay times.
-__global
-void integral4pitime_full_spline( double integral[2], double vnk[10], double vak[10],double vbk[10],
-                                  double vck[10],double vdk[10], double *normweights, double G, double DG, double DM,
-                                  double delta_t, double t_ll, double t_offset, int spline_nknots, double *spline_knots, double *spline_coeffs)
-{
-    double time_terms[4] = {0., 0., 0., 0.};
-    intgTimeAcceptance(time_terms, delta_t, G, DG, DM, spline_knots, spline_coeffs, spline_nknots, t_offset) ;
-
-    double int_ta = time_terms[0];
-    double int_tb = time_terms[1];
-    double int_tc = time_terms[2];
-    double int_td = time_terms[3];
-
-    for(int k=0; k<10; k++)
-    {
-        integral[0] += vnk[k]*normweights[k]*(vak[k]*int_ta + vbk[k]*int_tb + vck[k]*int_tc + vdk[k]*int_td);
-        integral[1] += vnk[k]*normweights[k]*(vak[k]*int_ta + vbk[k]*int_tb - vck[k]*int_tc - vdk[k]*int_td);
-    }
-}
-*/
-
-
-
-
-
-
-
-
-__global
-double getDiffRate(double *data, double G, double DG, double DM, double CSP,
+double getDiffRate( double *data, double G, double DG, double DM, double CSP,
                     double APlon, double ASlon, double APpar, double APper,
                     double phisPlon, double phisSlon, double phisPpar, double phisPper,
                     double deltaSlon, double deltaPlon, double deltaPpar, double deltaPper,
-                    double lPlon, double lSlon, double lPpar, double lPper, double tLL, double tUL, bool USE_FK)
+                    double lPlon, double lSlon, double lPpar, double lPper,
+                    double tLL, double tUL,
+                    double *coeffs,
+                    bool USE_FK)
 {
+  if ((DEBUG > 3) && ( get_global_id(0) == 0) )
+  {
+    printf("*USE_FK       :  %d\n", USE_FK);
+    printf("*USE_TIME_ACC :  %d\n", USE_TIME_ACC);
+    //printf("CSP           : %+lf\n", CSP);
+    //printf("ASlon         : %+lf\n", ASlon);
+    printf("G             : %+lf\n", G);
+    printf("DG            : %+lf\n", DG);
+    printf("CSP           : %+lf\n", CSP);
+    printf("ASlon         : %+lf\n", ASlon);
+    printf("APlon         : %+lf\n", APlon);
+    printf("APpar         : %+lf\n", APpar);
+    printf("APper         : %+lf\n", APper);
+    printf("phisSlon      : %+lf\n", phisSlon);
+    printf("phisPlon      : %+lf\n", phisPlon);
+    printf("phisPpar      : %+lf\n", phisPpar);
+    printf("phisPper      : %+lf\n", phisPper);
+    printf("deltaSlon     : %+lf\n", deltaSlon);
+    printf("deltaPlon     : %+lf\n", deltaPlon);
+    printf("deltaPper     : %+lf\n", deltaPper);
+    printf("deltaPpar     : %+lf\n", deltaPpar);
+    printf("lSlon         : %+lf\n", lSlon);
+    printf("lPlon         : %+lf\n", lPlon);
+    printf("lPper         : %+lf\n", lPper);
+    printf("lPpar         : %+lf\n", lPpar);
+    printf("tLL           : %+lf\n", tLL);
+    printf("tUL           : %+lf\n", tUL);
+    printf("COEFFS        : %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
+    printf("                %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
+    printf("                %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
+    printf("                %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
+    printf("                %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
+    printf("                %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
+    printf("                %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
+  }
+
   // variables
   double normweights[10] = {1,1,1,0,0,0,1,0,0,0};
   double cosK = data[0];
   double cosL = data[1];
   double hphi = data[2];
   double time = data[3];
+  if ((time>tUL) || (time<tLL)) {return 0;}
   // add when needed:
   // double sigma_t 		= data[4];
   // double q_OS 			= data[5];
@@ -258,10 +127,10 @@ double getDiffRate(double *data, double G, double DG, double DM, double CSP,
 /*
   NOT YET IMPLEMENTED STUFF
 
-  double delta_t =  delta(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
+  double sigma_t =  delta(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
 
-  double delta_t_1 = delta_1(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
-  double delta_t_2 = delta_2(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
+  double sigma_t_1 = delta_1(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
+  double sigma_t_2 = delta_2(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
 
   double omega_OS = omega(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
   double omega_bar_OS = omega_bar(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
@@ -295,15 +164,14 @@ double getDiffRate(double *data, double G, double DG, double DM, double CSP,
 
 
   // Time resolution -----------------------------------------------------------
-  //     In order to remove the effects of conv, set delta_t = 0, so in this way
+  //     In order to remove the effects of conv, set sigma_t = 0, so in this way
   //     you are running the first branch of getExponentialConvolution.
   cdouble_t exp_p, exp_m, exp_i;
   double t_offset = 0.0;//delta(sigma_t, sigma_t_mu_a, sigma_t_mu_b, sigma_t_mu_c);
-  double delta_t  = 0.0;
 
-  exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., delta_t);
-  exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., delta_t);
-  exp_i = getExponentialConvolution(time-t_offset,          G, DM, delta_t);
+  exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., sigma_t);
+  exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., sigma_t);
+  exp_i = getExponentialConvolution(time-t_offset,          G, DM, sigma_t);
 
   //double ta = pyopencl::real(0.5*(exp_m + exp_p)); // cosh = (exp_m + exp_p)/2
   //double tb = pyopencl::real(0.5*(exp_m - exp_p)); // sinh = (exp_m - exp_p)/2
@@ -350,11 +218,12 @@ double getDiffRate(double *data, double G, double DG, double DM, double CSP,
   // }
 
   // Decay-time acceptance -----------------------------------------------------
-  //     To get rid of decay-time acceptance set dta to 1.0.
+  //     To get rid of decay-time acceptance set USE_TIME_ACC to False.
   double dta = 1.0;
-  /*
-  to be implemented
-  */
+  if (USE_TIME_ACC)
+  {
+    dta = calcTimeAcceptance(time, coeffs, tLL, tUL);
+  }
 
 
 
@@ -399,7 +268,7 @@ double getDiffRate(double *data, double G, double DG, double DM, double CSP,
 
   // Compute pdf integral ------------------------------------------------------
   double intBBar[2] = {0.,0.};
-  if (delta_t == 0)
+  if (sigma_t == 0 && USE_TIME_ACC == 0)
   {
     // Here we can use the simplest 4xPi integral of the pdf since there are no
     // resolution effects
@@ -408,10 +277,18 @@ double getDiffRate(double *data, double G, double DG, double DM, double CSP,
   }
   else
   {
-    //This integral works for all decay times.
-    //integral4pitime_full_spline
+    // This integral works for all decay times, remember sigma_t != 0.
+    double foo[7] =  { 0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00 };
+    integralFullSpline(intBBar,
+                       vnk, vak, vbk, vck, vdk,
+                       normweights,  G, DG,  DM,
+                       sigma_t,
+                       tLL,
+                       t_offset,
+                       7,
+                       foo, coeffs);
   }
-  double intB    = intBBar[0]; double intBbar = intBBar[1];
+  double intB = intBBar[0]; double intBbar = intBBar[1];
 
 
 
@@ -426,21 +303,37 @@ double getDiffRate(double *data, double G, double DG, double DM, double CSP,
         (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar
         );
 
+
+
   // DEBUG ! -------------------------------------------------------------------
+  if (DEBUG >= 1 && ( get_global_id(0) == 0))
+  {
+    printf("INPUT     : cosK=%+lf\tcosL=%+lf\thphi=%+lf\ttime=%+lf\n",
+           cosK,cosL,hphi,time);
+    printf("RESULT    : pdf=%+0.8lf\tipdf=%+0.3lf\tpdf/ipdf=%+lf\n",
+           num,den,num/den);
+    if (DEBUG >= 2)
+    {
+      printf("RESULT    : pdfB=%+lf\tpdBbar=%+lf\tipdfB=%+lf\tipdfBbar=%+lf\n",
+             pdfB,pdfBbar,intB,intBbar);
+      printf("RESULT    : dta=%+lf\tpdBbar=%+lf\tipdfB=%+lf\tipdfBbar=%+lf\n",
+             dta,pdfBbar,intB,intBbar);
+      if (DEBUG >= 3)
+      {
+        printf("TIME ACC  : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",
+               ta,tb,tc,td);
+        if (DEBUG >= 4)
+        {
+          // for(int k = 0; k < 10; k++)
+          // {
+          //   printf("--> %.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\n", vnk[k], vak[k], vbk[k], vck[k], vdk[k],
+          //                    normweights[k]);
+          // }
+        }
+      }
+    }
+  }
 
-  //printf("%lf,%lf,%lf,%lf\n",cosK,cosL,hphi,time);
-
-  //printf("t=%+0.3lf\tcosK=%+0.3lf\tcosL=%+0.3lf\thphi=%+0.3lf\tpdf=%+0.3lf\tipdf=%+0.3lf\t --> pdf/ipdf=%+lf\n", time,cosK,cosL,hphi, num,den,num/den);
-
-  //printf("USE_FK=%d\tt=%+lf\tpdf=%+lf\tipdf=%+lf\t --> pdf/ipdf=%+lf\n", USE_FK, time, num,den,num/den);
-
-  //printf("%.8lf\t %.8lf\t %.8lf\t %.8lf\n", ta,tb,tc,td);
-
-  // for(int k = 0; k < 10; k++)
-  // {
-  //   printf("--> %.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\n", vnk[k], vak[k], vbk[k], vck[k], vdk[k],
-  //                    normweights[k]);
-  // }
 
   // That's all folks!
   return num/den;
@@ -581,7 +474,7 @@ double getAlgo(double *data, double G, double DG, double DM, double CSP,
   double eff = 1.0;
   //should actually never use efficiencies (only for plotting bs)
   //not true if bkg is present!! TODO
-  /*
+
   if (use_efficiencies)
     {
       if (use_angular_acc && use_time_acc)
@@ -599,7 +492,7 @@ double getAlgo(double *data, double G, double DG, double DM, double CSP,
         }
     }
   std::cout << "eff=" << eff << std::endl;
-  *//*/
+
 
 
   // Get angular f coeffs
@@ -718,7 +611,7 @@ double getAlgo(double *data, double G, double DG, double DM, double CSP,
   }
   else
   {
-    /*
+
     double Z_light_s =
       +0.5*f7*ASlon2*(1.0-D)
       //+0.5*f9*sqrt( aperp2*as2 )*sin(dperp-ds)*(1-cos_phi_s);
@@ -732,7 +625,7 @@ double getAlgo(double *data, double G, double DG, double DM, double CSP,
     //-0.5*f9*sqrt( aperp2*as2 )*sin_del_perp_s*(1+cos_phi_s);
 
     double Z_one_s = 0.0; Z_two_s = 0.0
-    /*//*//
+
   }
   printf("Z_light_s=%lf, Z_heavy_s=%lf\n",Z_light_s,Z_heavy_s);
   printf("Z_one_s=%lf, Z_two_s=%lf\n",Z_one_s,Z_two_s);
@@ -914,21 +807,30 @@ void pyAlgo(__global const double *data, __global double *lkhd,
 // GLOBAL::pyDiffRate //////////////////////////////////////////////////////////
 
 __kernel
-void pyDiffRate(__global const double *data, __global double *lkhd,
+void pyDiffRate(__constant double *data, __global double *lkhd,
                 double G, double DG, double DM,
                 __global const double * CSP,
                 __global const double * ASlon,
-                double APlon, double APpar, double APper, double phisPlon,
-                double phisSlon, double phisPpar, double phisPper,
-                double deltaSlon, double deltaPlon, double deltaPpar,
-                double deltaPper,
-                double lPlon, double lSlon, double lPpar, double lPper,
+                double APlon, __global const double * APpar, double APper,
+                double phisSlon,
+                double phisPlon, double phisPpar, double phisPper,
+                __global const double * deltaSlon,
+                double deltaPlon, double deltaPpar, double deltaPper,
+                double lPlon,
+                double lSlon, double lPpar, double lPper,
                 double tLL, double tUL,
+                __constant double *coeffs,
                 int Nevt)
 {
   int evt = get_global_id(0);
   int bin = get_global_id(1);
   if (evt >= Nevt) { return; }
+
+  double shit[28];                                // check why this is mandatory
+  for (int index =0; index < 28; index++)
+  {
+    shit[index] = coeffs[index];
+  }
 
   double mass = data[evt*5+4];
   if (get_local_size(1) > 1)                   // if fitting binned X_M spectrum
@@ -937,63 +839,33 @@ void pyDiffRate(__global const double *data, __global double *lkhd,
     {
       double data4[4] = {data[evt*5+0],data[evt*5+1],data[evt*5+2],data[evt*5+3]};
       lkhd[evt] = getDiffRate(data4,
-                              G, DG, DM, CSP[bin], APlon, ASlon[bin], APpar, APper, phisPlon,
-                              phisSlon, phisPpar, phisPper, deltaSlon, deltaPlon,
-                              deltaPpar, deltaPper, lPlon, lSlon, lPpar, lPper, tLL, tUL, 1);
+                              G, DG, DM, CSP[bin],
+                              APlon, ASlon[bin], APpar[bin], APper,
+                              phisPlon, phisSlon, phisPpar, phisPper,
+                              deltaSlon[bin], deltaPlon, deltaPpar, deltaPper,
+                              lPlon, lSlon, lPpar, lPper,
+                              tLL, tUL,
+                              shit, 1);
     }
   }
   else
   {
     double data4[4] = {data[evt*5+0],data[evt*5+1],data[evt*5+2],data[evt*5+3]};
     lkhd[evt] = getDiffRate(data4,
-                            G, DG, DM, CSP[0], APlon, ASlon[0], APpar, APper, phisPlon,
-                            phisSlon, phisPpar, phisPper, deltaSlon, deltaPlon,
-                            deltaPpar, deltaPper, lPlon, lSlon, lPpar, lPper, tLL, tUL, 1);
+                            G, DG, DM, CSP[0],
+                            APlon, ASlon[0], APpar[0], APper,
+                            phisPlon, phisSlon, phisPpar, phisPper,
+                            deltaSlon[0], deltaPlon, deltaPpar, deltaPper,
+                            lPlon, lSlon, lPpar, lPper,
+                            tLL, tUL,
+                            shit, 1);
   }
 
   //printf("%lf\n", data[evt]);
-
-  // DEBUG ! -------------------------------------------------------------------
   //printf("CSP: %lf\n", CSP[bin]);
   //printf("%d,%d,%d,%d\n",get_global_size(0),get_global_size(1),get_local_size(0),get_local_size(1));
-
-
 }
 
-
-
-__kernel
-void pyDiffRateOld(__global const double *data, __global double *lkhd,
-                double G, double DG, double DM,
-                double CSP,
-                double ASlon,
-                double APlon, double APpar, double APper, double phisPlon,
-                double phisSlon, double phisPpar, double phisPper,
-                double deltaSlon, double deltaPlon, double deltaPpar,
-                double deltaPper,
-                double lPlon, double lSlon, double lPpar, double lPper,
-                double tLL, double tUL,
-                int Nevt)
-{
-  int evt      = get_global_id(0);
-  if (evt >= Nevt) { return; }
-
-
-  double data4[4] = {data[evt*5+0],data[evt*5+1],data[evt*5+2],data[evt*5+3]};
-  lkhd[evt] = getDiffRate(data4,
-                          G, DG, DM, CSP, APlon, ASlon, APpar, APper, phisPlon,
-                          phisSlon, phisPpar, phisPper, deltaSlon, deltaPlon,
-                          deltaPpar, deltaPper, lPlon, lSlon, lPpar, lPper,
-                          tLL, tUL, 1);
-
-  //printf("%lf\n", data[evt]);
-
-  // DEBUG ! -------------------------------------------------------------------
-  //printf("evt: %d, bin: %d, mass: %lf\n", evt, bin, mass);
-  //printf("%d,%d,%d,%d\n",get_global_size(0),get_global_size(1),get_local_size(0),get_local_size(1));
-
-
-}
 
 
 

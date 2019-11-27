@@ -1,8 +1,19 @@
-// useful functions
-//#include <stdio.h>
-//#include <math.h>
-// #include <thrust/complex.h>
-//#include <pyopencl-complex.hpp>
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                      OPENCL some useful functions                          //
+//                                                                            //
+//   Created: 2019-11-18                                                      //
+//  Modified: 2019-11-27                                                      //
+//    Author: Marcos Romero                                                   //
+//                                                                            //
+//    This file is part of phis-scq packages, Santiago's framework for the    //
+//                     phi_s analysis in Bs -> Jpsi K+ K-                     //
+//                                                                            //
+//  This file contains the following __kernels:                               //
+//    * [none]                                                                      //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 #pragma OPENCL EXTENSION cl_khr_fp64: enable
 #define PYOPENCL_DEFINE_CDOUBLE
 #include <pyopencl-complex.h>
@@ -14,19 +25,23 @@
 __global
 double factorial(int n)
 {
-   if(n <= 0)
-    return 1.;
+  if(n <= 0) { return 1.; }
+  double x = 1; int b = 0;
+  do {
+    b++;
+    x *= b;
+  } while(b!=n);
 
-   double x = 1;
-   int b = 0;
-   do {
-      b++;
-      x *= b;
-   } while(b!=n);
-
-   return x;
+  return x;
 }
 
+
+
+__global
+cdouble_t cdouble_subt(cdouble_t a, cdouble_t b)
+{
+  return cdouble_add(a,cdouble_mul(cdouble_new(-1,0),b));
+}
 
 
 
