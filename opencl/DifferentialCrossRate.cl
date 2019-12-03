@@ -48,7 +48,7 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
                     double *coeffs,
                     bool USE_FK)
 {
-  if ((DEBUG > 3) && ( get_global_id(0) == 0) )
+  if ((DEBUG > 3) && ( get_global_id(0) < DEBUG_EVT) )
   {
     printf("*USE_FK            : %d\n", USE_FK);
     printf("*USE_TIME_ACC      : %d\n", USE_TIME_ACC);
@@ -58,6 +58,7 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
     printf("*USE_TRUETAG       : %d\n", USE_TRUETAG);
     printf("G                  : %+lf\n", G);
     printf("DG                 : %+lf\n", DG);
+    printf("DM                 : %+lf\n", DM);
     printf("CSP                : %+lf\n", CSP);
     printf("ASlon              : %+lf\n", ASlon);
     printf("APlon              : %+lf\n", APlon);
@@ -121,50 +122,11 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
 
 
 
-/*
-  NOT YET IMPLEMENTED STUFF
-
-  double sigma_t =  delta(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
-
-  double sigma_t_1 = delta_1(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
-  double sigma_t_2 = delta_2(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
-
-  double omega_OS = omega(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
-  double omega_bar_OS = omega_bar(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
-  double omegaSlonSK = omega(etaSlonSK, p0SlonSK, dp0SlonSK, p1SlonSK, dp1SlonSK, 0., 0., eta_barSlonSK);
-  double omega_barSlonSK = omega_bar(etaSlonSK, p0SlonSK, dp0SlonSK, p1SlonSK, dp1SlonSK, 0., 0., eta_barSlonSK);
-
-  double taggingPparrs_OS[3] = {omega_OS, omega_bar_OS, q_OS};
-  double taggingPparrsSlonSK[3] = {omegaSlonSK, omega_barSlonSK, qSlonSK};
-
-  fix_taggingPparrs(taggingPparrs_OS);
-  fix_taggingPparrs(taggingPparrsSlonSK);
-
-  omega_OS = taggingPparrs_OS[0];
-  omega_bar_OS = taggingPparrs_OS[1];
-  omegaSlonSK = taggingPparrsSlonSK[0];
-  omega_barSlonSK = taggingPparrsSlonSK[1];
-
-  if((taggingPparrs_OS[0] == 0.5 || taggingPparrs_OS[1] == 0.5) && (taggingPparrs_OS[0] != taggingPparrs_OS[1]))
-  printf("OS tag mismatch!!! Check code %lf vs %lf and %lf \n", taggingPparrs_OS[0], taggingPparrs_OS[1], taggingPparrs_OS[2]);
-  else
-  q_OS = taggingPparrs_OS[2];
-
-  if((taggingPparrsSlonSK[0] == 0.5 || taggingPparrsSlonSK[1] == 0.5) && (taggingPparrsSlonSK[0] != taggingPparrsSlonSK[1]))
-  printf("SSK tag mismatch!!! Check code %lf vs %lf and %lf \n", taggingPparrsSlonSK[0], taggingPparrsSlonSK[1], taggingPparrsSlonSK[2]);
-  else
-  qSlonSK = taggingPparrsSlonSK[2];
-
-*/
-
-
-
-
   // Time resolution -----------------------------------------------------------
   //     In order to remove the effects of conv, set sigma_t = 0, so in this way
   //     you are running the first branch of getExponentialConvolution.
   cdouble_t exp_p, exp_m, exp_i;
-  double t_offset = 0.0; double delta_t = 0.15;
+  double t_offset = 0.0; double delta_t = 0.0;
   double sigma_t_mu_a = 0, sigma_t_mu_b = 0, sigma_t_mu_c = 0;
   double sigma_t_a = 0, sigma_t_b = 0, sigma_t_c = 0;
 
@@ -175,9 +137,8 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
   if (USE_TIME_RES)
   {
     delta_t  = getTimeCal(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
-    //printf("delta_t=%lf\n",delta_t);
   }
-
+  //printf("delta_t=%lf,\tt_offset=%lf\n",delta_t,t_offset);
   exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., delta_t);
   exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., delta_t);
   exp_i = getExponentialConvolution(time-t_offset,          G, DM, delta_t);
@@ -202,11 +163,14 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
     tagOS = 0.0;
     tagSS = 0.0;
   }
-
-  if (USE_PERFTAG)
+  else if (USE_PERFTAG)
   {
     tagOS = qOS/531;
     tagSS = qSS/531;
+    if ((tagOS == 0)|(tagSS == 0))
+    {
+      printf("This events is not tagged!\n");
+    }
   }
 
 
@@ -214,7 +178,7 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
   // Decay-time acceptance -----------------------------------------------------
   //     To get rid of decay-time acceptance set USE_TIME_ACC to False. If True
   //     then calcTimeAcceptance locates the time bin of the event and returns
-  //     the valuo of the cubic spline.
+  //     the value of the cubic spline.
   double dta = 1.0;
   if (USE_TIME_ACC)
   {
@@ -302,11 +266,11 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
 
 
   // DEBUG ! -------------------------------------------------------------------
-  if ((DEBUG >= 1) && ( get_global_id(0) == 0))
+  if ((DEBUG >= 1) && ( get_global_id(0) < DEBUG_EVT))
   {
     printf("INPUT              : cosK=%+lf\tcosL=%+lf\thphi=%+lf\ttime=%+lf\tq=%+lf\n",
            cosK,cosL,hphi,time,tagOS);
-    printf("RESULT             : pdf=%+0.8lf\tipdf=%+lf\tpdf/ipdf=%+lf\n",
+    printf("RESULT             : pdf=%.8lf\tipdf=%.8lf\tpdf/ipdf=%.15lf\n",
            num,den,num/den);
     if (DEBUG >= 2)
     {

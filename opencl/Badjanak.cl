@@ -23,6 +23,7 @@
 
 // Debugging 0 [0,1,2,3,>3]
 #define DEBUG {DEBUG}
+#define DEBUG_EVT {DEBUG_EVT}
 
 #pragma OPENCL EXTENSION cl_khr_fp64: enable
 #define PYOPENCL_DEFINE_CDOUBLE
