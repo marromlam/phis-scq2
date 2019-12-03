@@ -32,7 +32,7 @@
 //#include "/scratch15/diego/gitcrap4/cuda/tag_gen.c"
 //#include "/home3/marcos.romero/JpsiKKAna/cuda/somefunctions.c"
 
-#include "/home3/marcos.romero/phis-scq/opencl/DifferentialCrossRate.cu"
+#include "DifferentialCrossRate.cu"
 
 
 extern "C"

@@ -38,6 +38,14 @@ double factorial(int n)
 
 
 __global
+double getTimeCal(double sigma, double sigma_a, double sigma_b, double sigma_c)
+{
+  return sigma_a*sigma*sigma + sigma_b*sigma + sigma_c;
+}
+
+
+
+__global
 cdouble_t cdouble_subt(cdouble_t a, cdouble_t b)
 {
   return cdouble_add(a,cdouble_mul(cdouble_new(-1,0),b));

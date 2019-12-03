@@ -37,7 +37,7 @@ __constant int sigma_threshold = 5.0;
 __constant int time_acc_bins = 40;
 #define spl_bins 7
 
-#include "/home3/marcos.romero/phis-scq/opencl/Functions.cl"
+#include "Functions.cl"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,11 +52,11 @@ __global
 int getTimeBin(double t)
 {
   int _i = 0;
-  int _n = spl_bins-1;
+  int _n = NKNOTS-1;
   //printf("%d\n", _n);
   while(_i <= _n )
   {
-    if( t < knots[_i] ) {break;}
+    if( t < KNOTS[_i] ) {break;}
     _i++;
   }
   if (0 == _i) {printf("WARNING: t=%lf below first knot!\n",t);}
@@ -71,10 +71,10 @@ double getKnot(int i)
   if (i<=0) {
     i = 0;
   }
-  else if (i>=nknots) {
-    i = nknots;
+  else if (i>=NKNOTS) {
+    i = NKNOTS;
   }
-  return knots[i];
+  return KNOTS[i];
 }
 
 
@@ -259,7 +259,7 @@ void intgTimeAcceptance(double time_terms[4], double sigma,
 {
   // Add tUL to knots list
   knots[7] = 15; n += 1;
-  double x[7+1];
+  double x[NTIMEBINS];
 
   double aux1 = 1./(sqrt(2.0)*sigma);
   cdouble_t aux2 = cdouble_new(sigma/(sqrt(2.0)),0);
@@ -368,7 +368,7 @@ void intgTimeAcceptance(double time_terms[4], double sigma,
 
   if (DEBUG > 3 && ( get_global_id(0) == 0) )
   {
-    printf("INTEGRAL  : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",
+    printf("INTEGRAL           : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",
            time_terms[0],time_terms[1],time_terms[2],time_terms[3]);
   }
 }
@@ -382,12 +382,12 @@ void integralFullSpline( double result[2],
                          double delta_t,
                          double t_ll,
                          double t_offset,
-                         int spline_nknots,
-                         double *spline_knots, double *spline_coeffs)
+                         double nknots, double *knots,
+                         double *spline_coeffs)
 {
   double integrals[4] = {0., 0., 0., 0.};
   intgTimeAcceptance(integrals, delta_t, G, DG, DM,
-                     spline_knots, spline_coeffs, spline_nknots, t_offset) ;
+                     knots, spline_coeffs, nknots, t_offset) ;
   double ta = integrals[0];
   double tb = integrals[1];
   double tc = integrals[2];

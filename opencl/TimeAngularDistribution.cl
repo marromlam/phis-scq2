@@ -11,13 +11,6 @@
 //                                                                            //
 //  This file contains the following __kernels:                               //
 //                                                                            //
-//                                                                            //
-//                                                                            //
-//  TODO: The way complex numbers are handled is a bit neolithic, but as      //
-//        far as openCL does not provide a standard library, this is the      //
-//        only solution avaliable                                             //
-//  TODO: fadevva function is not corretly implemented yet                    //
-//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -33,8 +26,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//{
+
 
 
 __global
@@ -192,9 +184,9 @@ double getD(double p10, double p00, double p1a, double p1e, double d10,
 
 __global
 void integralSimple(double result[2],
-                    double vnk[10],
-                    double vak[10], double vbk[10], double vck[10], double vdk[10],
-                    double *normweights,
+                    double vn[10],
+                    double va[10], double vb[10], double vc[10], double vd[10],
+                    double *norm,
                     double G, double DG, double DM, double ti, double tf)
 {
   double ita = (2*(DG*sinh(.5*DG*ti) + 2*G*cosh(.5*DG*ti))*exp(G*tf) - 2*(DG*sinh(.5*DG*tf) + 2*G*cosh(.5*DG*tf))*exp(G*ti))*exp(-G*(ti + tf))/(-pow(DG, 2) + 4 *pow(G, 2));
@@ -204,14 +196,15 @@ void integralSimple(double result[2],
 
   for(int k=0; k<10 ; k++)
   {
-    result[0] += vnk[k]*normweights[k]*(vak[k]*ita + vbk[k]*itb +
-                                        vck[k]*itc + vdk[k]*itd);
-    result[1] += vnk[k]*normweights[k]*(vak[k]*ita + vbk[k]*itb -
-                                        vck[k]*itc - vdk[k]*itd);
+    result[0] += vn[k]*norm[k]*(va[k]*ita + vb[k]*itb + vc[k]*itc + vd[k]*itd);
+    result[1] += vn[k]*norm[k]*(va[k]*ita + vb[k]*itb - vc[k]*itc - vd[k]*itd);
   }
-  // printf("   INTEGRALS: %.4lf\t%.4lf\n",result[0],result[1] );
-  // printf("       RANGE: %.4lf\t%.4lf\n",tLL,tUL );
-  // printf("   INTEGRALS: %.4lf\t%.4lf\t%.4lf\t%.4lf\n",result[0],ita,itb,itc,itd );
+
+  if (DEBUG > 3 && ( get_global_id(0) == 0) )
+  {
+    printf("INTEGRAL           : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",
+           ita,itb,itc,itd );
+  }
 }
 
 
