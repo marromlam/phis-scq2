@@ -2,49 +2,358 @@
 //                                                                            //
 //                       CUDA decay rate Bs -> mumuKK                         //
 //                                                                            //
-//  Created: 2019-01-25                                                       //
+//   Created: 2019-01-25                                                      //
+//  Modified: 2019-11-21                                                      //
+//    Author: Marcos Romero                                                   //
 //                                                                            //
+//    This file is part of p-scq packages, Santiago's framework for the       //
+//                     phi_s analysis in Bs -> Jpsi K+ K-                     //
 //                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
+//  This file contains the following __kernels:                               //
+//    * pyDiffRate: Computes Bs2MuMuKK pdf looping over the events. Now it    //
+//                  handles a binned X_M fit without splitting beforehand the //
+//                  data --it launches a thread per mass bin.                 //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// #if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
-// #else
-// __device__ double atomicAdd(double* a, double b) { return b; }
-// #endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Inlude headers //////////////////////////////////////////////////////////////
+// Include headers /////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 #include <math.h>
-// #include <thrust/complex.h>
 #include <pycuda-complex.hpp>
-//#include <curand.h>
-//#include <curand_kernel.h>
-//#include "/scratch15/diego/gitcrap4/cuda/tag_gen.c"
-//#include "/home3/marcos.romero/JpsiKKAna/cuda/somefunctions.c"
-#include "/home3/marcos.romero/phis-scq/cuda/DecayTimeAcceptance.cu"
-#include "/home3/marcos.romero/phis-scq/cuda/TimeAngularDistribution.cu"
 
-
-extern "C"
+// Include disciplines
+#include "DecayTimeAcceptance.cu"
+#include "TimeAngularDistribution.cu"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+// Functions ///////////////////////////////////////////////////////////////////
+
+
+
+__device__
+double getDiffRate( double *data,
+                    double G, double DG, double DM, double CSP,
+                    double ASlon, double APlon, double APpar, double APper,
+                    double pSlon, double pPlon, double pPpar, double pPper,
+                    double dSlon, double dPlon, double dPpar, double dPper,
+                    double lSlon, double lPlon, double lPpar, double lPper,
+                    double tLL, double tUL,
+                    double *coeffs,
+                    bool USE_FK)
 {
+  if ((DEBUG > 3) && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT) )
+  {
+    printf("*USE_FK            : %d\n", USE_FK);
+    printf("*USE_TIME_ACC      : %d\n", USE_TIME_ACC);
+    printf("*USE_TIME_OFFSET   : %d\n", USE_TIME_OFFSET);
+    printf("*USE_TIME_RES      : %d\n", USE_TIME_RES);
+    printf("*USE_PERFTAG       : %d\n", USE_PERFTAG);
+    printf("*USE_TRUETAG       : %d\n", USE_TRUETAG);
+    printf("G                  : %+lf\n", G);
+    printf("DG                 : %+lf\n", DG);
+    printf("DM                 : %+lf\n", DM);
+    printf("CSP                : %+lf\n", CSP);
+    printf("ASlon              : %+lf\n", ASlon);
+    printf("APlon              : %+lf\n", APlon);
+    printf("APpar              : %+lf\n", APpar);
+    printf("APper              : %+lf\n", APper);
+    printf("pSlon              : %+lf\n", pSlon);
+    printf("pPlon              : %+lf\n", pPlon);
+    printf("pPpar              : %+lf\n", pPpar);
+    printf("pPper              : %+lf\n", pPper);
+    printf("dSlon              : %+lf\n", dSlon);
+    printf("dPlon              : %+lf\n", dPlon);
+    printf("dPper              : %+lf\n", dPper);
+    printf("dPpar              : %+lf\n", dPpar);
+    printf("lSlon              : %+lf\n", lSlon);
+    printf("lPlon              : %+lf\n", lPlon);
+    printf("lPper              : %+lf\n", lPper);
+    printf("lPpar              : %+lf\n", lPpar);
+    printf("tLL                : %+lf\n", tLL);
+    printf("tUL                : %+lf\n", tUL);
+    printf("COEFFS             : %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
+    printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
+    printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
+    printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
+    printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
+    printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
+    printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+            coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
+  }
+
+  double normweights[10] = {1,1,1,0,0,0,1,0,0,0};
+
+  // Variables -----------------------------------------------------------------
+  //     Make sure that the input it's in this order.
+  //     lalala
+  double cosK       = data[0];                      // Time-angular distribution
+  double cosL       = data[1];
+  double hphi       = data[2];
+  double time       = data[3];
+
+  double sigma_t    = data[4];                                // Time resolution
+
+  double qOS        = data[5];                                        // Tagging
+  double qSS        = data[5];
+
+  // double eta_OS 		= data[7];
+  // double etaSlonSK 	= data[8];
+  // int year 					= data[9];
+
+  if ((time>=tUL) || (time<=tLL))
+  {
+    printf("WARNING            : Event with time not within [tLL,tUL].\n");
+  }
+
+
+
+  // Time resolution -----------------------------------------------------------
+  //     In order to remove the effects of conv, set sigma_t = 0, so in this way
+  //     you are running the first branch of getExponentialConvolution.
+  pycuda::complex<double> exp_p, exp_m, exp_i;
+  double t_offset = 0.0; double delta_t = 0.0;
+  double sigma_t_mu_a = 0, sigma_t_mu_b = 0, sigma_t_mu_c = 0;
+  double sigma_t_a = 0, sigma_t_b = 0, sigma_t_c = 0;
+
+  if (USE_TIME_OFFSET)
+  {
+    t_offset = getTimeCal(sigma_t, sigma_t_mu_a, sigma_t_mu_b, sigma_t_mu_c);
+  }
+  if (USE_TIME_RES)
+  {
+    delta_t  = getTimeCal(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
+  }
+
+  exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., delta_t);
+  exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., delta_t);
+  exp_i = getExponentialConvolution(time-t_offset,          G, DM, delta_t);
+
+  double ta = pycuda::real(0.5*(exp_m + exp_p));     // cosh = (exp_m + exp_p)/2
+  double tb = pycuda::real(0.5*(exp_m - exp_p));     // sinh = (exp_m - exp_p)/2
+  double tc = pycuda::real(exp_i);                        // exp_i = cos + I*sin
+  double td = pycuda::imag(exp_i);                        // exp_i = cos + I*sin
+
+
+
+  // Flavor tagging ------------------------------------------------------------
+  double omegaOSB = 0; double omegaOSBbar = 0; double tagOS = 0;
+  double omegaSSB = 0; double omegaSSBbar = 0; double tagSS = 0;
+
+  if (USE_TRUETAG)
+  {
+    tagOS = 0.0;
+    tagSS = 0.0;
+  }
+  else if (USE_PERFTAG)
+  {
+    tagOS = qOS/531;
+    tagSS = qSS/531;
+    if ((tagOS == 0)|(tagSS == 0))
+    {
+      printf("This event is not tagged!\n");
+    }
+  }
+
+
+
+  // Decay-time acceptance -----------------------------------------------------
+  //     To get rid of decay-time acceptance set USE_TIME_ACC to False. If True
+  //     then calcTimeAcceptance locates the time bin of the event and returns
+  //     the value of the cubic spline.
+  double dta = 1.0;
+  if (USE_TIME_ACC)
+  {
+    dta = calcTimeAcceptance(time, coeffs, tLL, tUL);
+  }
+
+
+
+  // Compute per event pdf -----------------------------------------------------
+  double vnk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  double vdk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+
+  double nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
+  double pdfB = 0.0; double pdfBbar = 0.0;
+
+  for(int k = 1; k <= 10; k++)
+  {
+    nk = getN(APlon,ASlon,APpar,APper,CSP,k);
+    if (USE_FK)
+    {
+      fk = (9/(16*M_PI))*getF(cosK,cosL,hphi,k);
+    }
+    else
+    {
+      fk = normweights[k-1]; // these are 0s or 1s
+    }
+
+    ak = getA(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+    bk = getB(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+    ck = getC(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+    dk = getD(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+
+    hk_B    = (ak*ta + bk*tb + ck*tc + dk*td); pdfB    += nk*fk*hk_B;
+    hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td); pdfBbar += nk*fk*hk_Bbar;
+
+    vnk[k-1] = 1.*nk; vfk[k-1] = 1.*fk;
+    vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
+  }
+
+
+
+  // Compute pdf integral ------------------------------------------------------
+  double intBBar[2] = {0.,0.};
+  if ( (delta_t == 0) & (USE_TIME_ACC == 0) )
+  {
+    // Here we can use the simplest 4xPi integral of the pdf since there are no
+    // resolution effects
+    integralSimple(intBBar,
+                   vnk, vak, vbk, vck, vdk, normweights, G, DG, DM, tLL, tUL);
+  }
+  else
+  {
+    // This integral works for all decay times, remember delta_t != 0.
+    double knots[NKNOTS];
+    for (int i=0; i<NKNOTS; i++) {knots[i] = KNOTS[i];}   // why is this needed?
+    integralFullSpline(intBBar,
+                       vnk, vak, vbk, vck, vdk,
+                       normweights,  G, DG,  DM,
+                       sigma_t,
+                       tLL,
+                       t_offset,
+                       NKNOTS, knots,
+                       coeffs);
+  }
+  double intB = intBBar[0]; double intBbar = intBBar[1];
+
+
+
+  // Cooking the output --------------------------------------------------------
+  double num = 1.0; double den = 1.0;
+  num = dta*(
+        (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
+        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar
+        );
+  den = 1.0*(
+        (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * intB +
+        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar
+        );
+
+
+
+  // DEBUG ! -------------------------------------------------------------------
+  if ((DEBUG >= 1) && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT))
+  {
+    printf("INPUT              : cosK=%+lf\tcosL=%+lf\thphi=%+lf\ttime=%+lf\tq=%+lf\n",
+           cosK,cosL,hphi,time,tagOS);
+    printf("RESULT             : pdf=%.8lf\tipdf=%.8lf\tpdf/ipdf=%.15lf\n",
+           num,den,num/den);
+    if (DEBUG >= 2)
+    {
+      printf("RESULT             : pdfB=%+lf\tpdBbar=%+lf\tipdfB=%+lf\tipdfBbar=%+lf\n",
+             pdfB,pdfBbar,intB,intBbar);
+      printf("RESULT             : dta=%+lf\tpdBbar=%+lf\tipdfB=%+lf\tipdfBbar=%+lf\n",
+             dta,pdfBbar,intB,intBbar);
+      if (DEBUG >= 3)
+      {
+        printf("TIME ACC           : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",
+               ta,tb,tc,td);
+        if (DEBUG >= 4)
+        {
+          for(int k = 0; k < 10; k++)
+          {
+            printf("ANGULAR PART   (%d) : %+lf\t%+lf\t%+lf\t%+lf\t%+lf\t%+lf\n",
+                   k,vnk[k], vak[k], vbk[k], vck[k], vdk[k], vfk[k]);
+          }
+        }
+      }
+    }
+  }
+
+
+  // That's all folks!
+  return num/den;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -54,43 +363,7 @@ extern "C"
 
 
 /*
-__device__
-pycuda::complex<double> calcM(double x, int n, double t, double sigma,
-                              double gamma, double omega)
-{
-  pycuda::complex<double> conv_term;
-  conv_term = getExponentialConvolution(t, gamma, omega, sigma)/(sqrt(0.5*M_PI));
 
-  if (n == 0)
-  {
-    return pycuda::complex<double>(erf(x),0.)-conv_term;
-  }
-  else if (n == 1)
-  {
-    return 2.*(-pycuda::complex<double>(sqrt(1./M_PI)*exp(-x*x),0.)-x*conv_term);
-  }
-  else if (n == 2)
-  {
-    return 2.*(-2.*x*exp(-x*x)*pycuda::complex<double>(sqrt(1./M_PI),0.)-(2.*x*x-1.)*conv_term);
-  }
-  else if (n == 3)
-  {
-    return 4.*(-(2.*x*x-1.)*exp(-x*x)*pycuda::complex<double>(sqrt(1./M_PI),0.)-x*(2.*x*x-3.)*conv_term);
-  }
-  else if (n == 4)
-  {
-    return 4.*(exp(-x*x)*(6.*x+4.*x*x*x)*pycuda::complex<double>(sqrt(1./M_PI),0.)-(3.-12.*x*x+4.*x*x*x*x)*conv_term);
-  }
-  else if (n == 5)
-  {
-    return 8.*(-(3.-12.*x*x+4.*x*x*x*x)*exp(-x*x)*pycuda::complex<double>(sqrt(1./M_PI),0.)-x*(15.-20.*x*x+4.*x*x*x*x)*conv_term);
-  }
-  else if (n == 6)
-  {
-    return 8.*(-exp(-x*x)*(30.*x-40.*x*x*x+8.*x*x*x*x*x)*pycuda::complex<double>(sqrt(1./M_PI),0.)-(-15.+90.*x*x-60.*x*x*x*x+8.*x*x*x*x*x*x)*conv_term);
-  }
-  return pycuda::complex<double>(0.,0.);
-}
 
 
 
@@ -224,7 +497,7 @@ void integral4pitime_full_spline( double integral[2], double vNk[10], double vak
 }
 */
 
-
+/*
 __device__ double IntegralTimeA(double t_0, double t_1, double G,double DG)
 {
     return (2*(DG*sinh(.5*DG*t_0) + 2*G*cosh(.5*DG*t_0))*exp(G*t_1) - 2*(DG*sinh(.5*DG*t_1) + 2*G*cosh(.5*DG*t_1))*exp(G*t_0))*exp(-G*(t_0 + t_1))/(-pow(DG, 2) + 4 *pow(G, 2));
@@ -272,256 +545,271 @@ __device__ void Integral4PiTime(double result[2],
   // printf("       RANGE: %.4lf\t%.4lf\n",tLL,tUL );
   // printf("   INTEGRALS: %.4lf\t%.4lf\t%.4lf\t%.4lf\n",result[0],IntTimeA,IntTimeB,IntTimeC,IntTimeD );
 }
-
-
-
-
-__device__
-double getDiffRate(double *data, double G, double DG, double DM, double CSP,
-                    double APlon, double ASlon, double APpar, double APper,
-                    double phisPlon, double phisSlon, double phisPpar, double phisPper,
-                    double deltaSlon, double deltaPlon, double deltaPpar, double deltaPper,
-                    double lPlon, double lSlon, double lPpar, double lPper, bool USE_FK)
-{
-  // variables
-  double cosK = data[0];
-  double cosL = data[1];
-  double hphi = data[2];
-  double time = data[3];
-  //printf("%lf,%lf,%lf,%lf\n",cosK,cosL,hphi,time);
-
-  double normweights[10] = {1,1,1,0,0,0,1,0,0,0};
-
-  // double sigma_t 		= data[4];
-  // double q_OS 			= data[5];
-  // double qSlonSK 		= data[6];
-  // double eta_OS 		= data[7];
-  // double etaSlonSK 	= data[8];
-  // int year 					= data[9];
-
-
-
-
-/*
-  double delta_t =  delta(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
-
-  double delta_t_1 = delta_1(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
-  double delta_t_2 = delta_2(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
-
-  double omega_OS = omega(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
-  double omega_bar_OS = omega_bar(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
-  double omegaSlonSK = omega(etaSlonSK, p0SlonSK, dp0SlonSK, p1SlonSK, dp1SlonSK, 0., 0., eta_barSlonSK);
-  double omega_barSlonSK = omega_bar(etaSlonSK, p0SlonSK, dp0SlonSK, p1SlonSK, dp1SlonSK, 0., 0., eta_barSlonSK);
-
-  double taggingPparrs_OS[3] = {omega_OS, omega_bar_OS, q_OS};
-  double taggingPparrsSlonSK[3] = {omegaSlonSK, omega_barSlonSK, qSlonSK};
-
-  fix_taggingPparrs(taggingPparrs_OS);
-  fix_taggingPparrs(taggingPparrsSlonSK);
-
-  omega_OS = taggingPparrs_OS[0];
-  omega_bar_OS = taggingPparrs_OS[1];
-  omegaSlonSK = taggingPparrsSlonSK[0];
-  omega_barSlonSK = taggingPparrsSlonSK[1];
-
-  if((taggingPparrs_OS[0] == 0.5 || taggingPparrs_OS[1] == 0.5) && (taggingPparrs_OS[0] != taggingPparrs_OS[1]))
-  printf("OS tag mismatch!!! Check code %lf vs %lf and %lf \n", taggingPparrs_OS[0], taggingPparrs_OS[1], taggingPparrs_OS[2]);
-  else
-  q_OS = taggingPparrs_OS[2];
-
-  if((taggingPparrsSlonSK[0] == 0.5 || taggingPparrsSlonSK[1] == 0.5) && (taggingPparrsSlonSK[0] != taggingPparrsSlonSK[1]))
-  printf("SSK tag mismatch!!! Check code %lf vs %lf and %lf \n", taggingPparrsSlonSK[0], taggingPparrsSlonSK[1], taggingPparrsSlonSK[2]);
-  else
-  qSlonSK = taggingPparrsSlonSK[2];
-
 */
 
 
 
-
-  // Time resolution -----------------------------------------------------------
-  //     In order to remove the effects of conv, set delta_t = 0, so in this way
-  //     you are running the first branch of getExponentialConvolution.
-  pycuda::complex<double> exp_p, exp_m, exp_i;
-  double t_offset = 0.0;//delta(sigma_t, sigma_t_mu_a, sigma_t_mu_b, sigma_t_mu_c);
-  double delta_t  = 0.0;
-
-  exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., delta_t);
-  exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., delta_t);
-  exp_i = getExponentialConvolution(time-t_offset,          G, DM, delta_t);
-
-  double ta = pycuda::real(0.5*(exp_m + exp_p));     // cosh = (exp_m + exp_p)/2
-  double tb = pycuda::real(0.5*(exp_m - exp_p));     // sinh = (exp_m - exp_p)/2
-  double tc = pycuda::real(exp_i);                        // exp_i = cos + I*sin
-  double td = pycuda::imag(exp_i);                        // exp_i = cos + I*sin
-  //printf("%.8lf\t %.8lf\t %.8lf\t %.8lf\n", ta,tb,tc,td);
-
-
-
-  // Flavor tagging ------------------------------------------------------------
-  double omegaOSB = 0; double omegaOSBbar = 0;
-  double omegaSSB = 0; double omegaSSBbar = 0;
-  double tagOS = 0; double tagSS = 0;
-
-  bool useTrueTag = 1;
-  if (useTrueTag)
-  {
-    tagOS = 0.5;
-  }
-
-  //   tagOS = meas->tag_decision;
-  //   tagSS = meas->tag_decision_ss;
-  //
-  //   double meas_omega    = meas->tag_omega;
-  //   double meas_omega_ss = meas->tag_omega_ss;
-  //
-  //   double ma(0.99),mi(0);
-  //
-  //   omega_os_B =    std::max(std::min(params->tag_p0()    + params->tag_deltap0()/2.0    +(params->tag_p1()    + params->tag_deltap1()/2.0)    * (meas_omega - params->tag_eta()),ma),mi);
-  //   omega_os_Bbar = std::max(std::min(params->tag_p0()    - params->tag_deltap0()/2.0    +(params->tag_p1()    - params->tag_deltap1()/2.0)    * (meas_omega - params->tag_eta()),ma),mi);
-  //
-  //   omega_ss_B =    std::max(std::min(params->tag_ss_p0() + params->tag_ss_deltap0()/2.0 +(params->tag_ss_p1() + params->tag_ss_deltap1()/2.0) * (meas_omega_ss - params->tag_ss_eta()),ma),mi);
-  //   omega_ss_Bbar = std::max(std::min(params->tag_ss_p0() - params->tag_ss_deltap0()/2.0 +(params->tag_ss_p1() - params->tag_ss_deltap1()/2.0) * (meas_omega_ss - params->tag_ss_eta()),ma),mi);
-  //
-  //   if((1.0 + tagOS * (1-2*omega_os_B))*(1.0 + tagSS * (1-2*omega_ss_B)) == 0 && (1.0 - tagOS * (1-2*omega_os_Bbar))*(1.0 - tagSS * (1-2*omega_ss_Bbar)) == 0){
-  //     omega_ss_Bbar=0.5;
-  //     omega_ss_B=0.5;
-  //     omega_os_Bbar=0.5;
-  //     omega_os_B=0.5;
-  //   }
-  // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Decay-time acceptance -----------------------------------------------------
-  //     To get rid of decay-time acceptance set dta to 1.0.
-  double dta = 1.0;
-  /*
-  to be implemented
-  */
-
-
-  double vNk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  double vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  double vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  double vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  double vdk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-
-  double Nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
-  double pdfB = 0.0; double pdfBbar = 0.0;
-
-  for(int k = 1; k <= 10; k++)
-  {
-    Nk = getNcoeffs(APlon,ASlon,APpar,APper,CSP,k);
-    if (USE_FK)
-    {
-      fk = 9./(16.*M_PI)*getFcoeffs(cosK,cosL,hphi,k);
-    }
-    else
-    {
-      fk = normweights[k-1];
-    }
-
-
-
-    ak = getAcoeffs(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
-    bk = getBcoeffs(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
-    ck = getCcoeffs(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
-    dk = getDcoeffs(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
-
-    hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);//old factor: 3./(4.*M_PI)*
-    hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
-
-    pdfB    += Nk*hk_B*fk;
-    pdfBbar += Nk*hk_Bbar*fk;
-
-    vNk[k-1] = 1.*Nk;
-    vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
-  }
-
-  double Int4PiTime[2] = {0.,0.};
-  Integral4PiTime(Int4PiTime, vNk, vak, vbk, vck, vdk,
-                  normweights,
-                  G, DG, DM, 0.3, 15., 0.);
-  double intB    = Int4PiTime[0];
-  double intBbar = Int4PiTime[1];
-
-  // Cooking the output --------------------------------------------------------
-  double num = 1.0; double den = 1.0;
-  num = dta*(
-        (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
-        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar
-        );
-  den = 1.0*(
-        (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * intB +
-        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar
-        );
-
-  // DEBUG ! -------------------------------------------------------------------
-  //printf("t=%+0.3lf\tcosK=%+0.3lf\tcosL=%+0.3lf\thphi=%+0.3lf\tpdf=%+0.3lf\tipdf=%+0.3lf\t --> pdf/ipdf=%+lf\n", time,cosK,cosL,hphi, num,den,num/den);
-  //printf("USE_FK=%d\tt=%+lf\tpdf=%+lf\tipdf=%+lf\t --> pdf/ipdf=%+lf\n", USE_FK, time, num,den,num/den);
-  // for(int k = 0; k < 10; k++)
-  // {
-  //   printf("--> %.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\n", vNk[k], vak[k], vbk[k], vck[k], vdk[k],
-  //                    normweights[k]);
-  // }
-  return num/den;
-}
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// GLOBAL::pyDiffRate //////////////////////////////////////////////////////////
-
-__global__
-void pyDiffRate(double *data, double *lkhd,
-                double G, double DG, double DM, double CSP, double APlon,
-                double ASlon, double APpar, double APper, double phisPlon,
-                double phisSlon, double phisPpar, double phisPper,
-                double deltaSlon, double deltaPlon, double deltaPpar,
-                double deltaPper, double lPlon, double lSlon, double lPpar,
-                double lPper,
-                int Nevt)
-{
-  int row = threadIdx.x + blockDim.x * blockIdx.x;
-  if (row >= Nevt) { return; }
-  //printf("%lf\n", data[row]);
-
-  double data4[4] = {data[row*4+0],data[row*4+1],data[row*4+2],data[row*4+3]};
-
-
-  lkhd[row] = getDiffRate(data4,
-                          G, DG, DM, CSP, APlon, ASlon, APpar, APper, phisPlon,
-                          phisSlon, phisPpar, phisPper, deltaSlon, deltaPlon,
-                          deltaPpar, deltaPper, lPlon, lSlon, lPpar, lPper, 1);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-}
+// __device__
+// double getDiffRate( double *data, double G, double DG, double DM, double CSP,
+//                     double APlon, double ASlon, double APpar, double APper,
+//                     double pPlon, double pSlon, double pPpar, double pPper,
+//                     double dSlon, double dPlon, double dPpar, double dPper,
+//                     double lPlon, double lSlon, double lPpar, double lPper,
+//                     double tLL, double tUL,
+//                     double *coeffs,
+//                     bool USE_FK)
+// {
+//   if ((DEBUG > 3) && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT) )
+//   {
+//     printf("*USE_FK            : %d\n", USE_FK);
+//     printf("*USE_TIME_ACC      : %d\n", USE_TIME_ACC);
+//     printf("*USE_TIME_OFFSET   : %d\n", USE_TIME_OFFSET);
+//     printf("*USE_TIME_RES      : %d\n", USE_TIME_RES);
+//     printf("*USE_PERFTAG       : %d\n", USE_PERFTAG);
+//     printf("*USE_TRUETAG       : %d\n", USE_TRUETAG);
+//     printf("G                  : %+lf\n", G);
+//     printf("DG                 : %+lf\n", DG);
+//     printf("DM                 : %+lf\n", DM);
+//     printf("CSP                : %+lf\n", CSP);
+//     printf("ASlon              : %+lf\n", ASlon);
+//     printf("APlon              : %+lf\n", APlon);
+//     printf("APpar              : %+lf\n", APpar);
+//     printf("APper              : %+lf\n", APper);
+//     printf("pSlon           : %+lf\n", pSlon);
+//     printf("pPlon           : %+lf\n", pPlon);
+//     printf("pPpar           : %+lf\n", pPpar);
+//     printf("pPper           : %+lf\n", pPper);
+//     printf("dSlon          : %+lf\n", dSlon);
+//     printf("dPlon          : %+lf\n", dPlon);
+//     printf("dPper          : %+lf\n", dPper);
+//     printf("dPpar          : %+lf\n", dPpar);
+//     printf("lSlon              : %+lf\n", lSlon);
+//     printf("lPlon              : %+lf\n", lPlon);
+//     printf("lPper              : %+lf\n", lPper);
+//     printf("lPpar              : %+lf\n", lPpar);
+//     printf("tLL                : %+lf\n", tLL);
+//     printf("tUL                : %+lf\n", tUL);
+//     printf("COEFFS             : %+lf\t%+lf\t%+lf\t%+lf\n",
+//             coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
+//     printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+//             coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
+//     printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+//             coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
+//     printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+//             coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
+//     printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+//             coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
+//     printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+//             coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
+//     printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
+//             coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
+//   }
+//
+//
+//   double normweights[10] = {1,1,1,0,0,0,1,0,0,0};
+//
+//   // Variables -----------------------------------------------------------------
+//   //     Make sure that the input it's in this order.
+//   //     lalala
+//   double cosK       = data[0];                      // Time-angular distribution
+//   double cosL       = data[1];
+//   double hphi       = data[2];
+//   double time       = data[3];
+//
+//   double sigma_t    = data[4];                                // Time resolution
+//
+//   double qOS        = data[5];                                        // Tagging
+//   double qSS        = data[5];
+//
+//
+//   // double eta_OS 		= data[7];
+//   // double etaSlonSK 	= data[8];
+//   // int year 					= data[9];
+//
+//
+//
+//
+// /*
+//   double delta_t =  delta(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
+//
+//   double delta_t_1 = delta_1(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
+//   double delta_t_2 = delta_2(sigma_t, fSlonigma_t, r_offset_pr, r_offsetSlonc, rSlonlope_pr, rSlonlopeSlonc, sigma_t_bar);
+//
+//   double omega_OS = omega(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
+//   double omega_bar_OS = omega_bar(eta_OS, p0_OS, dp0_OS, p1_OS, dp1_OS, p2_OS, dp2_OS, eta_bar_OS);
+//   double omegaSlonSK = omega(etaSlonSK, p0SlonSK, dp0SlonSK, p1SlonSK, dp1SlonSK, 0., 0., eta_barSlonSK);
+//   double omega_barSlonSK = omega_bar(etaSlonSK, p0SlonSK, dp0SlonSK, p1SlonSK, dp1SlonSK, 0., 0., eta_barSlonSK);
+//
+//   double taggingPparrs_OS[3] = {omega_OS, omega_bar_OS, q_OS};
+//   double taggingPparrsSlonSK[3] = {omegaSlonSK, omega_barSlonSK, qSlonSK};
+//
+//   fix_taggingPparrs(taggingPparrs_OS);
+//   fix_taggingPparrs(taggingPparrsSlonSK);
+//
+//   omega_OS = taggingPparrs_OS[0];
+//   omega_bar_OS = taggingPparrs_OS[1];
+//   omegaSlonSK = taggingPparrsSlonSK[0];
+//   omega_barSlonSK = taggingPparrsSlonSK[1];
+//
+//   if((taggingPparrs_OS[0] == 0.5 || taggingPparrs_OS[1] == 0.5) && (taggingPparrs_OS[0] != taggingPparrs_OS[1]))
+//   printf("OS tag mismatch!!! Check code %lf vs %lf and %lf \n", taggingPparrs_OS[0], taggingPparrs_OS[1], taggingPparrs_OS[2]);
+//   else
+//   q_OS = taggingPparrs_OS[2];
+//
+//   if((taggingPparrsSlonSK[0] == 0.5 || taggingPparrsSlonSK[1] == 0.5) && (taggingPparrsSlonSK[0] != taggingPparrsSlonSK[1]))
+//   printf("SSK tag mismatch!!! Check code %lf vs %lf and %lf \n", taggingPparrsSlonSK[0], taggingPparrsSlonSK[1], taggingPparrsSlonSK[2]);
+//   else
+//   qSlonSK = taggingPparrsSlonSK[2];
+//
+// */
+//
+//
+//
+//
+//   // Time resolution -----------------------------------------------------------
+//   //     In order to remove the effects of conv, set delta_t = 0, so in this way
+//   //     you are running the first branch of getExponentialConvolution.
+//   pycuda::complex<double> exp_p, exp_m, exp_i;
+//   double t_offset = 0.0; double delta_t = 0.0;
+//   double sigma_t_mu_a = 0, sigma_t_mu_b = 0, sigma_t_mu_c = 0;
+//   double sigma_t_a = 0, sigma_t_b = 0, sigma_t_c = 0;
+//
+//   if (USE_TIME_OFFSET)
+//   {
+//     t_offset = getTimeCal(sigma_t, sigma_t_mu_a, sigma_t_mu_b, sigma_t_mu_c);
+//   }
+//   if (USE_TIME_RES)
+//   {
+//     delta_t  = getTimeCal(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
+//   }
+//   //printf("delta_t=%lf,\tt_offset=%lf\n",delta_t,t_offset);
+//   exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., delta_t);
+//   exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., delta_t);
+//   exp_i = getExponentialConvolution(time-t_offset,          G, DM, delta_t);
+//
+//   double ta = pycuda::real(0.5*(exp_m + exp_p));     // cosh = (exp_m + exp_p)/2
+//   double tb = pycuda::real(0.5*(exp_m - exp_p));     // sinh = (exp_m - exp_p)/2
+//   double tc = pycuda::real(exp_i);                        // exp_i = cos + I*sin
+//   double td = pycuda::imag(exp_i);                        // exp_i = cos + I*sin
+//
+//
+//
+//   // Flavor tagging ------------------------------------------------------------
+//   double omegaOSB = 0; double omegaOSBbar = 0; double tagOS = 0;
+//   double omegaSSB = 0; double omegaSSBbar = 0; double tagSS = 0;
+//
+//   if (USE_TRUETAG)
+//   {
+//     tagOS = 0.0;
+//     tagSS = 0.0;
+//   }
+//   else if (USE_PERFTAG)
+//   {
+//     tagOS = qOS/531;
+//     tagSS = qSS/531;
+//     if ((tagOS == 0)|(tagSS == 0))
+//     {
+//       printf("This events is not tagged!\n");
+//     }
+//   }
+//
+//
+//
+//   // Decay-time acceptance -----------------------------------------------------
+//   //     To get rid of decay-time acceptance set USE_TIME_ACC to False. If True
+//   //     then calcTimeAcceptance locates the time bin of the event and returns
+//   //     the value of the cubic spline.
+//   double dta = 1.0;
+//   if (USE_TIME_ACC)
+//   {
+//     dta = calcTimeAcceptance(time, coeffs, tLL, tUL);
+//   }
+//
+//
+//
+//   // Compute per event pdf -----------------------------------------------------
+//   double vnk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+//   double vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+//   double vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+//   double vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+//   double vdk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+//
+//   double nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
+//   double pdfB = 0.0; double pdfBbar = 0.0;
+//
+//   for(int k = 1; k <= 10; k++)
+//   {
+//     nk = getN(APlon,ASlon,APpar,APper,CSP,k);
+//     if (USE_FK)
+//     {
+//       fk = (9/(16*M_PI))*getF(cosK,cosL,hphi,k);
+//     }
+//     else
+//     {
+//       fk = normweights[k-1]; // these are 0s or 1s
+//     }
+//
+//     ak = getA(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+//     bk = getB(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+//     ck = getC(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+//     dk = getD(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+//
+//     hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);//old factor: 3./(4.*M_PI)*
+//     hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
+//
+//     pdfB    += nk*fk*hk_B; pdfBbar += nk*fk*hk_Bbar;
+//
+//     vnk[k-1] = 1.*nk;
+//     vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
+//   }
+//
+//
+//
+//   // Compute pdf integral ------------------------------------------------------
+//   double intBBar[2] = {0.,0.};
+//   if ( (delta_t == 0) & (USE_TIME_ACC == 0) )
+//   {
+//     // Here we can use the simplest 4xPi integral of the pdf since there are no
+//     // resolution effects
+//     integralSimple(intBBar,
+//                    vnk, vak, vbk, vck, vdk, normweights, G, DG, DM, tLL, tUL);
+//   }
+//   else
+//   {
+//     // This integral works for all decay times, remember sigma_t != 0.
+//     double knots[NKNOTS];
+//     for (int i=0; i<NKNOTS; i++) {knots[i] = KNOTS[i];}   // why is this needed?
+//     integralFullSpline(intBBar,
+//                        vnk, vak, vbk, vck, vdk,
+//                        normweights,  G, DG,  DM,
+//                        sigma_t,
+//                        tLL,
+//                        t_offset,
+//                        NKNOTS, knots,
+//                        coeffs);
+//   }
+//   double intB = intBBar[0]; double intBbar = intBBar[1];
+//
+//
+//
+//   // Cooking the output --------------------------------------------------------
+//   double num = 1.0; double den = 1.0;
+//   num = dta*(
+//         (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
+//         (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar
+//         );
+//   den = 1.0*(
+//         (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * intB +
+//         (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar
+//         );
+//
+//   // DEBUG ! -------------------------------------------------------------------
+//   //printf("t=%+0.3lf\tcosK=%+0.3lf\tcosL=%+0.3lf\thphi=%+0.3lf\tpdf=%+0.3lf\tipdf=%+0.3lf\t --> pdf/ipdf=%+lf\n", time,cosK,cosL,hphi, num,den,num/den);
+//   //printf("USE_FK=%d\tt=%+lf\tpdf=%+lf\tipdf=%+lf\t --> pdf/ipdf=%+lf\n", USE_FK, time, num,den,num/den);
+//   // for(int k = 0; k < 10; k++)
+//   // {
+//   //   printf("--> %.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\t%.4lf\n", vNk[k], vak[k], vbk[k], vck[k], vdk[k],
+//   //                    normweights[k]);
+//   // }
+//   return num/den;
+// }

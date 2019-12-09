@@ -6,10 +6,10 @@
 //  Modified: 2019-11-21                                                      //
 //    Author: Marcos Romero                                                   //
 //                                                                            //
-//    This file is part of p-scq packages, Santiago's framework for the    //
+//    This file is part of p-scq packages, Santiago's framework for the       //
 //                     phi_s analysis in Bs -> Jpsi K+ K-                     //
 //                                                                            //
-//  This file contains the following __kernels:                               //
+//  This file contains the following __global__s:                             //
 //    * pyDiffRate: Computes Bs2MuMuKK pdf looping over the events. Now it    //
 //                  handles a binned X_M fit without splitting beforehand the //
 //                  data --it launches a thread per mass bin.                 //
@@ -21,18 +21,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Include headers /////////////////////////////////////////////////////////////
 
+#include <stdio.h>
+#include <math.h>
+#include <pycuda-complex.hpp>
+
 // Debugging 0 [0,1,2,3,>3]
 #define DEBUG {DEBUG}
 #define DEBUG_EVT {DEBUG_EVT}
-
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
-#pragma OPENCL EXTENSION cl_khr_int64_base_atomics : enable
-#pragma OPENCL EXTENSION cl_khr_int64_extended_atomics : enable
-#define PYOPENCL_DEFINE_CDOUBLE
-#include <pyopencl-complex.h>
-
-
-
 
 // Flags
 #define USE_TIME_ACC {USE_TIME_ACC}
@@ -47,24 +42,22 @@
 // Time acceptance parameters
 #define NKNOTS {NKNOTS}
 #define NTIMEBINS {NTIMEBINS}
-__constant double KNOTS[NKNOTS] = {KNOTS};
+__device__ double const KNOTS[NKNOTS] = {KNOTS};
 
 // PDF parameters
 #define NMASSBINS {NMASSBINS}
-__constant double X_M[8] = {X_M};
-__constant double TRISTAN[10] = {TRISTAN};
-
+__device__ double const X_M[8] = {X_M};
+__device__ double const TRISTAN[10] = {TRISTAN};
 
 // Include disciplines
 //     They follow the next tree, which means that its only necessay to include
-//     AngularAcceptance.cl in order to load all of them.
+//     AngularAcceptance.cu in order to load all of them.
 //         AngularAcceptance
 //           |– DifferentialCrossRate
 //               |- DecayTimeAcceptance
 //                   |– Functions
 //               |– TimeAngularDistribution
-#include "AngularAcceptance.cl" //but this file is not yet translated to openCL.
-//#include "DifferentialCrossRate.cl"
+#include "AngularAcceptance.cu"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,22 +66,22 @@ __constant double TRISTAN[10] = {TRISTAN};
 ////////////////////////////////////////////////////////////////////////////////
 // GLOBAL::pyDiffRate //////////////////////////////////////////////////////////
 
-__kernel
-void pyDiffRate(__global double *data, __global double *lkhd,
+__global__
+void pyDiffRate(double *data, double *lkhd,
                 double G, double DG, double DM,
-                __global const double * CSP,
-                __global const double * ASlon,
-                __global const double * APlon,
-                __global const double * APpar,
-                __global const double * APper,
+                const double * CSP,
+                const double * ASlon,
+                const double * APlon,
+                const double * APpar,
+                const double * APper,
                 double pSlon,
                 double pPlon, double pPpar, double pPper,
-                __global const double * deltaSlon,
+                const double * deltaSlon,
                 double deltaPlon, double deltaPpar, double deltaPper,
                 double lPlon,
                 double lSlon, double lPpar, double lPper,
                 double tLL, double tUL,
-                __global double *coeffs,
+                double *coeffs,
                 int Nevt)
 {{
   int evt = get_global_id(0);
@@ -145,18 +138,34 @@ void pyDiffRate(__global double *data, __global double *lkhd,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// GLOBAL::pyFcoeffs ///////////////////////////////////////////////////////////
+
+__global__
+void pyFcoeffs(double *data, double *fk,  int Nevt)
+{
+  int i = threadIdx.x + blockDim.x * blockIdx.x;
+  int k = threadIdx.y + blockDim.y * blockIdx.y;
+  if (i >= Nevt) { return; }
+  fk[i*10+k]= 9./(16.*M_PI)*getFcoeffs(data[i*4+0],data[i*4+1],data[i*4+2],k+1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
 // GLOBAL::getAngularWeights ///////////////////////////////////////////////////
 
-__kernel
-void pyAngularWeights(__global double *dtrue, __global double *dreco,
-                      __global long *w,
+__global__
+void pyAngularWeights(double *dtrue, double *dreco,
+                      double *w,
                       double G, double DG, double DM, double CSP,
                       double APlon, double ASlon, double APpar, double APper,
                       double pPlon, double pSlon, double pPpar, double pPper,
                       double dSlon, double dPlon, double dPpar, double dPper,
                       double lPlon, double lSlon, double lPpar, double lPper,
                       double tLL, double tUL,
-                      __global double *coeffs,
+                      double *coeffs,
                       int Nevt)
 {{
   int i = get_global_id(0);
@@ -182,11 +191,9 @@ void pyAngularWeights(__global double *dtrue, __global double *dreco,
 
   for(int k = 0; k < 10; k++)
   {{
-    atom_add( &w[0]+k , w10[k] );
+    atomicAdd( &w[0]+k , w10[k] );
   }}
-  //__syncthreads();
-
-  //printf("                   %+.4lf  %+.4lf  %+.4lf  %+.4lf  %+.4lf  %+.4lf  %+.4lf  %+.4lf  %+.4lf  %+.4lf  \n", w10[0], w10[1], w10[2], w10[3], w10[4], w10[5], w10[6], w10[7], w10[8], w10[9]);
+  __syncthreads();
 
 }}
 

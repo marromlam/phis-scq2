@@ -24,6 +24,13 @@ __device__ double factorial(int n)
 }
 
 
+__device__
+double getTimeCal(double sigma, double sigma_a, double sigma_b, double sigma_c)
+{
+  return sigma_a*sigma*sigma + sigma_b*sigma + sigma_c;
+}
+
+
 
 
 __device__ pycuda::complex<double> faddeeva(pycuda::complex<double> z)//, double t)

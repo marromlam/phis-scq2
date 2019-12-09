@@ -30,9 +30,7 @@
 #define PYOPENCL_DEFINE_CDOUBLE
 #include <pyopencl-complex.h>
 
-
-
-// Spline parameters }
+// Spline parameters
 __constant int sigma_threshold = 5.0;
 __constant int time_acc_bins = 40;
 #define spl_bins 7
@@ -65,6 +63,7 @@ int getTimeBin(double t)
 }
 
 
+
 __global
 double getKnot(int i)
 {
@@ -76,6 +75,7 @@ double getKnot(int i)
   }
   return KNOTS[i];
 }
+
 
 
 __global
