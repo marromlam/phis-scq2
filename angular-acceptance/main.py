@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+""" --
+ANGULAR ACCEPTANCE
+
+
+
+
+-- """
 
 
 # %% Modules -------------------------------------------------------------------
@@ -39,7 +46,8 @@ MAX_EVENTS = 5
 
 sys.path.append("/home3/marcos.romero/ipanema3/")
 from ipanema import Parameters#, fit_report, minimize
-
+import uncertainties as unc
+from uncertainties import unumpy as unp
 
 
 # %% Load parameters -----------------------------------------------------------
@@ -48,28 +56,18 @@ params.load(os.environ['PHIS_SCQ']+'/params/ang-peilian.json');
 
 
 
-# %% Get kernels ---------------------------------------------------------------
-
-# Flags
-config = json.load(open(path+'/angular-acceptance/config.json'))
-#config.update({'DEBUG':'0'})
-#config.update({'DEBUG_EVT':'1'})
-
-# Compile model and get kernels
-BsJpsiKK = Badjanak(cu_path,**config);
-getAngularWeights = BsJpsiKK.getAngularWeights;
-
-
-
 # %% Get data (now a test file) ------------------------------------------------
 
-dpath  = 'BsJpsiKK/Root/'
+dpath  = '/scratch03/marcos.romero/BsJpsiKK/Root/'
 dpath += 'BsJpsiPhi_DG0_MC_2016_UpDown_MDST_20181101_Sim09b_tmva_cut58_sel_sw'
+dpath  = '/home3/marcos.romero/phis-scq/'
+dpath += 'BsJpsiPhi_DG0_MC_2016_UpDown_MDST_20181101_Sim09b_tmva_cut58_sel_sw_kinematicweight'
+
 
 if platform.system() == "Darwin":
   rfile = uproot.open('/Volumes/Santiago/Scratch03/'+dpath+'.root')["DecayTree"]
 elif platform.system() == "Linux":
-  rfile = uproot.open('/scratch03/marcos.romero/'+dpath+'.root')["DecayTree"]
+  rfile = uproot.open(dpath+'.root')["DecayTree"]
 
 vars_true  = ['truehelcosthetaK','truehelcosthetaL','truehelphi','B_TRUETAU']
 vars_reco  = ['helcosthetaK','helcosthetaL','helphi','time']
@@ -104,14 +102,24 @@ fk_reco_d   = cu_array.to_gpu(fk_true_h).astype(np.float64)
 
 
 
+# %% Get kernels ---------------------------------------------------------------
+
+# Flags
+config = json.load(open(path+'/angular-acceptance/config.json'))
+#config.update({'DEBUG':'0'})
+#config.update({'DEBUG_EVT':'1'})
+
+# Compile model and get kernels
+BsJpsiKK = Badjanak(cu_path,**config);
+getAngularWeights = BsJpsiKK.getAngularWeights;
+getAngularCov = BsJpsiKK.getAngularCov;
+
+
+
 # %% Run -----------------------------------------------------------------------
 
-weights = getAngularWeights(data_true_d, params.valuesdict())
-weights
-
-
-
-
+# Get the angular weights
+w = getAngularWeights(data_reco_d, params.valuesdict())
 """ ----------------------------------------------------------------------------
 EXPECTED RESULTS 2016 MC DG0
 
@@ -124,4 +132,23 @@ RECO:
 [ 1.00000000e+00  1.02753308e+00  1.02746135e+00  4.36813344e-05
  -6.23355718e-05 -3.59750950e-05  1.01080218e+00  7.24432185e-04
  -6.05650041e-04 -1.79225349e-03]
+---------------------------------------------------------------------------- """
+
+
+
+# Calculate the covariance matrix of the normalization weights (for all 10)
+w, uw = getAngularCov(data_reco_d, params.valuesdict())
+weights = unp.uarray(w,uw)
+weights
+""" ----------------------------------------------------------------------------
+EXPECTED RESULTS 2016 MC DG0
+  w1/w0:  1.0275338 +- 0.0008291
+  w2/w0:  1.0274621 +- 0.0008281
+  w3/w0:  0.0000437 +- 0.0005396
+  w4/w0: -0.0000623 +- 0.0003696
+  w5/w0: -0.0000360 +- 0.0003480
+  w6/w0:  1.0108026 +- 0.0005279
+  w7/w0:  0.0007244 +- 0.0004852
+  w8/w0: -0.0006057 +- 0.0004709
+  w9/w0: -0.0017923 +- 0.0010610
 ---------------------------------------------------------------------------- """

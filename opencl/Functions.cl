@@ -22,7 +22,7 @@
 #define yLim 4.29
 
 
-__global
+//__global
 double factorial(int n)
 {
   if(n <= 0) { return 1.; }
@@ -37,7 +37,7 @@ double factorial(int n)
 
 
 
-__global
+//__global
 double getTimeCal(double sigma, double sigma_a, double sigma_b, double sigma_c)
 {
   return sigma_a*sigma*sigma + sigma_b*sigma + sigma_c;
@@ -45,7 +45,7 @@ double getTimeCal(double sigma, double sigma_a, double sigma_b, double sigma_c)
 
 
 
-__global
+//__global
 cdouble_t cdouble_subt(cdouble_t a, cdouble_t b)
 {
   return cdouble_add(a,cdouble_mul(cdouble_new(-1,0),b));
@@ -53,7 +53,7 @@ cdouble_t cdouble_subt(cdouble_t a, cdouble_t b)
 
 
 
-__global
+//__global
 cdouble_t faddeeva(cdouble_t z)//, double t)
 {
    double in_real = z.real;
@@ -69,7 +69,7 @@ cdouble_t faddeeva(cdouble_t z)//, double t)
    if (y < yLim && x < xLim) {
       q = (1.0 - y / yLim) * sqrt(1.0 - (x / xLim) * (x / xLim));
       h  = 1.0 / (3.2 * q);
-      nc = 7 + convert_int4(23.0 * q);
+      nc = 7 + convert_int(23.0 * q);
 //       xl = pow(h, double(1 - nc));
       double h_inv = 1./h;
       xl = h_inv;
@@ -78,7 +78,7 @@ cdouble_t faddeeva(cdouble_t z)//, double t)
 
       xh = y + 0.5 / h;
       yh = x;
-      nu = 10 + convert_int4(21.0 * q);
+      nu = 10 + convert_int(21.0 * q);
       Rx[nu] = 0.;
       Ry[nu] = 0.;
       for (n = nu; n > 0; n--){

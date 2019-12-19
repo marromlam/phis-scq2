@@ -29,7 +29,7 @@
 
 
 
-__global
+//__global
 double getN(double A10, double A00, double A1a, double A1e, double C01, int k)
 {
   double nk;
@@ -52,7 +52,7 @@ double getN(double A10, double A00, double A1a, double A1e, double C01, int k)
 
 
 
-__global
+//__global
 double getF(double cosK, double cosL, double hphi, int k)
 {
   double sinK   = sqrt(1. - cosK*cosK);
@@ -80,7 +80,7 @@ double getF(double cosK, double cosL, double hphi, int k)
 
 
 
-__global
+//__global
 double getA(double p10, double p00, double p1a, double p1e, double d10,
 						double d00, double d1a, double d1e, double l10, double l00,
 						double l1a, double l1e, int k)
@@ -105,7 +105,7 @@ double getA(double p10, double p00, double p1a, double p1e, double d10,
 
 
 
-__global
+//__global
 double getB(double p10, double p00, double p1a, double p1e, double d10,
 						double d00, double d1a, double d1e, double l10, double l00,
 						double l1a, double l1e, int k)
@@ -130,7 +130,7 @@ double getB(double p10, double p00, double p1a, double p1e, double d10,
 
 
 
-__global
+//__global
 double getC(double p10, double p00, double p1a, double p1e, double d10,
 						double d00, double d1a, double d1e, double l10, double l00,
 						double l1a, double l1e, int k)
@@ -156,7 +156,7 @@ double getC(double p10, double p00, double p1a, double p1e, double d10,
 
 
 
-__global
+//__global
 double getD(double p10, double p00, double p1a, double p1e, double d10,
 						double d00, double d1a, double d1e, double l10, double l00,
 						double l1a, double l1e, int k)
@@ -182,7 +182,7 @@ double getD(double p10, double p00, double p1a, double p1e, double d10,
 }
 
 
-__global
+//__global
 void integralSimple(double result[2],
                     double vn[10],
                     double va[10], double vb[10], double vc[10], double vd[10],

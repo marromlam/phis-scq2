@@ -98,27 +98,27 @@ class Badjanak():
     APpar = FP*(1-pars['APlon']-pars['APper'])
     dSlon = np.float64([pars[key] for key in pars_keys if key[:5] == 'dSlon'])
 
-    self.kDiffRate(queue,
+    self.kDiffRate(self.queue,
               (int(np.ceil(pdf.shape[0]/BLOCK_SIZE)),),
               (BLOCK_SIZE,mass_bins,1),
               vars.data, pdf.data,
               np.float64(pars["Gd"]+pars["DGsd"]),
               np.float64(pars["DGs"]),
               np.float64(pars["DM"]),
-              cl_array.to_device(queue, CSP).astype(np.float64).data,
-              cl_array.to_device(queue, np.sqrt(ASlon)).astype(np.float64).data,
-              cl_array.to_device(queue, np.sqrt(APlon)).astype(np.float64).data,
-              cl_array.to_device(queue, np.sqrt(APpar)).astype(np.float64).data,
-              cl_array.to_device(queue, np.sqrt(APper)).astype(np.float64).data,
+              cl_array.to_device(self.queue, CSP).astype(np.float64).data,
+              cl_array.to_device(self.queue, np.sqrt(ASlon)).astype(np.float64).data,
+              cl_array.to_device(self.queue, np.sqrt(APlon)).astype(np.float64).data,
+              cl_array.to_device(self.queue, np.sqrt(APpar)).astype(np.float64).data,
+              cl_array.to_device(self.queue, np.sqrt(APper)).astype(np.float64).data,
               np.float64(pars["pPlon"]), np.float64(pars["pSlon"]),
               np.float64(pars["pPpar"]), np.float64(pars["pPper"]),
-              cl_array.to_device(queue, dSlon).astype(np.float64).data,
+              cl_array.to_device(self.queue, dSlon).astype(np.float64).data,
               np.float64(pars["dPlon"]),
               np.float64(pars["dPpar"]), np.float64(pars["dPper"]),
               np.float64(pars["lPlon"]), np.float64(pars["lSlon"]),
               np.float64(pars["lPpar"]), np.float64(pars["lPper"]),
               np.float64(0.3), np.float64(15),
-              cl_array.to_device(queue, coeffs).astype(np.float64).data,
+              cl_array.to_device(self.queue, coeffs).astype(np.float64).data,
               np.int32(pdf.shape[0]), g_times_l = True )
 
     return pdf.get()
@@ -180,6 +180,9 @@ class Badjanak():
                 np.int32(vars_true.shape[0]), g_times_l = True )
     print(weights)
     return weights.get()/weights.get()[0]
+
+
+
 
 
 #context = cl.create_some_context()

@@ -6,7 +6,7 @@
 //  Modified: 2019-11-21                                                      //
 //    Author: Marcos Romero                                                   //
 //                                                                            //
-//    This file is part of p-scq packages, Santiago's framework for the       //
+//    This file is part of phis-scq packages, Santiago's framework for the    //
 //                     phi_s analysis in Bs -> Jpsi K+ K-                     //
 //                                                                            //
 //  This file contains the following __global__s:                             //
@@ -45,14 +45,14 @@
 __device__ double const KNOTS[NKNOTS] = {KNOTS};
 
 __device__ double const SIGMA_THRESHOLD = 5.0;
-__device__ int const TIME_ACC_BINS = 40;
+//__device__ int const TIME_ACC_BINS = 40;
 __device__ int const SPL_BINS = 7;
 
 
 // PDF parameters
 #define NMASSBINS {NMASSBINS}
 __device__ double const X_M[8] = {X_M};
-__device__ double const TRISTAN[10] = {TRISTAN};
+//__device__ double const TRISTAN[10] = {TRISTAN};
 
 // Include disciplines
 //     They follow the next tree, which means that its only necessay to include
@@ -178,8 +178,8 @@ void pyAngularWeights(double *data, double *w,
                          data[evt*4+1], // cosL
                          data[evt*4+2], // hphi
                          data[evt*4+3], // time
-                         0,              // sigma_t
-                         0               // flavour
+                         0,             // sigma_t
+                         0              // flavour
                        }};
 
   getAngularWeights(vec_true, w10,
@@ -196,8 +196,176 @@ void pyAngularWeights(double *data, double *w,
   {{
     atomicAdd( &w[0]+k , w10[k]);
   }}
-  //__syncthreads();
 
 }}
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// GLOBAL::getAngularWeights ///////////////////////////////////////////////////
+
+__global__
+void pyAngularCov(double *data, double w[10], double cov[10][10],
+                      double G, double DG, double DM, double CSP,
+                      double ASlon, double APlon, double APpar, double APper,
+                      double pSlon, double pPlon, double pPpar, double pPper,
+                      double dSlon, double dPlon, double dPpar, double dPper,
+                      double lSlon, double lPlon, double lPpar, double lPper,
+                      double tLL, double tUL,
+                      double *coeffs,
+                      int Nevt)
+{{
+  int evt = threadIdx.x + blockDim.x * blockIdx.x;
+  if (evt >= Nevt) {{ return; }}
+
+  double w10[10]       = {{0}};
+  double cov10[10][10] = {{{{0}}}};
+  double vec_true[6] = {{data[evt*4+0], // cosK
+                         data[evt*4+1], // cosL
+                         data[evt*4+2], // hphi
+                         data[evt*4+3], // time
+                         0,             // sigma_t
+                         0              // flavour
+                       }};
+
+  getAngularWeights(vec_true, w10,
+                    G, DG, DM, CSP,
+                    ASlon, APlon, APpar, APper,
+                    pSlon, pPlon, pPpar, pPper,
+                    dSlon, dPlon, dPpar, dPper,
+                    lSlon, lPlon, lPpar, lPper,
+                    tLL, tUL,
+                    coeffs);
+
+  // __syncthreads();
+  // for(int k = 0; k < 10; k++)
+  // {{
+  //   atomicAdd( &w[0]+k , w10[k]);
+  // }}
+  // __syncthreads();
+
+
+  for(int i=0; i<10; i++)
+  {{
+    for(int j=i; j<10; j++)
+    {{
+      cov10[i][j] = (w10[i]-w[i])*(w10[j]-w[j]);
+    }}
+    if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT) )
+    {{
+      printf("%+lf, %+lf, %+lf, %+lf, %+lf, %+lf, %+lf, %+lf, %+lf, %+lf\n",
+             cov10[i][0],cov10[i][1],cov10[i][2],cov10[i][3],cov10[i][4],
+             cov10[i][5],cov10[i][6],cov10[i][7],cov10[i][8],cov10[i][9]);
+    }}
+  }}
+
+  __syncthreads();
+  for(int i=0; i<10; i++)
+  {{
+    for(int j=0; j<10; j++)
+    {{
+      atomicAdd( &cov[i][j], cov10[i][j] );
+      //cov10[i][j] = (w10[i]-w[i])*(w10[j]-w[j]);
+    }}
+    if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT) )
+    {{
+      printf("%+lf, %+lf, %+lf, %+lf, %+lf, %+lf, %+lf, %+lf, %+lf, %+lf\n",
+             cov[i][0],cov[i][1],cov[i][2],cov[i][3],cov[i][4],
+             cov[i][5],cov[i][6],cov[i][7],cov[i][8],cov[i][9]);
+    }}
+  }}
+
+}}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Acceptance //////////////////////////////////////////////////////////////////
+
+__global__
+void pySingleTimeAcc(double *time, double *lkhd, double *coeffs, double mu,
+                     double sigma, double gamma, double tLL, double tUL, int Nevt)
+/*
+This is a pycuda iterating function. It calls getAcceptanceSingle for each event
+in time and returns
+*/
+{{
+
+  int row = threadIdx.x + blockDim.x * blockIdx.x;
+  if (row >= Nevt) {{ return; }}
+  double t = time[row] - mu;
+
+  lkhd[row] = getOneSplineTimeAcc(t, coeffs, sigma, gamma, tLL, tUL);
+
+}}
+
+
+
+__global__
+void pyRatioTimeAcc(double *time1, double *time2,
+                    double *lkhd1, double *lkhd2,
+                    double *c1, double *c2,
+                    double mu1, double sigma1, double gamma1,
+                    double mu2, double sigma2, double gamma2,
+                    double tLL, double tUL,
+                    int Nevt1, int Nevt2)
+/*
+This is a pycuda iterating function. It calls getAcceptanceSingle for each event
+in time and returns
+*/
+{{
+
+  int row = threadIdx.x + blockDim.x * blockIdx.x;
+  if (row < Nevt1)
+  {{
+    double t1 = time1[row] - mu1;
+    lkhd1[row] = getOneSplineTimeAcc(t1, c1,     sigma1, gamma1, tLL, tUL);
+  }}
+  if (row < Nevt2)
+  {{
+    double t2 = time2[row] - mu2;
+    lkhd2[row] = getTwoSplineTimeAcc(t2, c1, c2, sigma2, gamma2, tLL, tUL);
+  }}
+}}
+
+
+
+__global__
+void pyFullTimeAcc(double *time1, double *time2, double *time3,
+                    double *lkhd1, double *lkhd2, double *lkhd3,
+                    double *c1, double *c2, double *c3,
+                    double mu1, double sigma1, double gamma1,
+                    double mu2, double sigma2, double gamma2,
+                    double mu3, double sigma3, double gamma3,
+                    double tLL, double tUL,
+                    int Nevt1, int Nevt2, int Nevt3)
+/*
+This is a pycuda iterating function. It calls getAcceptanceSingle for each event
+in time and returns
+*/
+{{
+
+  int row1 = threadIdx.x + blockDim.x * blockIdx.x;
+  int row2 = threadIdx.y + blockDim.y * blockIdx.y;
+  int row3 = threadIdx.z + blockDim.z * blockIdx.z;
+  if (row1 < Nevt1)
+  {{
+    double t1 = time1[row] - mu1;
+    lkhd1[row] = getOneSplineTimeAcc(t1, c1,     sigma1, gamma1, tLL, tUL);
+  }}
+  if (row2 < Nevt2)
+  {{
+    double t2 = time2[row] - mu2;
+    lkhd2[row] = getTwoSplineTimeAcc(t2, c1, c2, sigma2, gamma2, tLL, tUL);
+  }}
+  if (row3 < Nevt3)
+  {{
+    double t3 = time3[row] - mu3;
+    lkhd3[row] = getTwoSplineTimeAcc(t3, c2, c3, sigma3, gamma3, tLL, tUL);
+  }}
+
+}}

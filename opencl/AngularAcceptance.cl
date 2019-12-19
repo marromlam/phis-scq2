@@ -39,7 +39,7 @@
 
 
 
-__global
+//__global
 void getAngularWeights(double *dtrue, double *dreco, long *w10,
                        double G, double DG, double DM, double CSP,
                        double ASlon, double APlon, double APpar, double APper,

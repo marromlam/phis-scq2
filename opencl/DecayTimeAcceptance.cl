@@ -46,7 +46,7 @@ __constant int time_acc_bins = 40;
 
 
 
-__global
+//__global
 int getTimeBin(double t)
 {
   int _i = 0;
@@ -64,7 +64,7 @@ int getTimeBin(double t)
 
 
 
-__global
+//__global
 double getKnot(int i)
 {
   if (i<=0) {
@@ -78,7 +78,7 @@ double getKnot(int i)
 
 
 
-__global
+//__global
 double getCoeff(double *mat, int r, int c)
 {
   return mat[4*r+c];
@@ -87,7 +87,7 @@ double getCoeff(double *mat, int r, int c)
 
 
 
-__global
+//__global
 double calcTimeAcceptance(double t, double *coeffs, double tLL, double tUL)
 {
   int bin   = getTimeBin(t);
@@ -111,7 +111,7 @@ double calcTimeAcceptance(double t, double *coeffs, double tLL, double tUL)
 
 
 
-__global
+//__global
 cdouble_t getExponentialConvolution(double t, double G, double omega, double sigma)
 {
   cdouble_t I  = cdouble_new(0,+1);
@@ -150,7 +150,7 @@ cdouble_t getExponentialConvolution(double t, double G, double omega, double sig
 
 
 
-__global
+//__global
 cdouble_t getK(cdouble_t z, int n)
 {
   cdouble_t z2 = cdouble_mul(z,z);
@@ -195,7 +195,7 @@ cdouble_t getK(cdouble_t z, int n)
 
 
 
-__global
+//__global
 cdouble_t getM(double x, int n, double t, double sigma, double G, double omega)
 {
   cdouble_t conv_term;
@@ -252,7 +252,7 @@ cdouble_t getM(double x, int n, double t, double sigma, double G, double omega)
 
 
 
-__global
+//__global
 void intgTimeAcceptance(double time_terms[4], double sigma,
                         double G, double DG, double DM,
                         double *knots, double *coeffs, int n, double t0)
@@ -375,7 +375,7 @@ void intgTimeAcceptance(double time_terms[4], double sigma,
 
 
 
-__global
+//__global
 void integralFullSpline( double result[2],
                          double vn[10], double va[10],double vb[10], double vc[10],double vd[10],
                          double *norm, double G, double DG, double DM,

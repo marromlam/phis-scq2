@@ -1,11 +1,41 @@
-// useful functions
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                       CUDA decay rate Bs -> mumuKK                         //
+//                                                                            //
+//   Created: 2019-01-25                                                      //
+//  Modified: 2019-11-21                                                      //
+//    Author: Marcos Romero                                                   //
+//                                                                            //
+//    This file is part of phis-scq packages, Santiago's framework for the    //
+//                     phi_s analysis in Bs -> Jpsi K+ K-                     //
+//                                                                            //
+//  This file contains the following __kernels:                               //
+//    * pyDiffRate: Computes Bs2MuMuKK pdf looping over the events. Now it    //
+//                  handles a binned X_M fit without splitting beforehand the //
+//                  data --it launches a thread per mass bin.                 //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Include headers /////////////////////////////////////////////////////////////
+
 #include <stdio.h>
-//#include <math.h>
-// #include <thrust/complex.h>
+#include <math.h>
 #include <pycuda-complex.hpp>
-#define errf_const 1.12837916709551
-#define xLim 5.33
-#define yLim 4.29
+
+#define ERRF_CONST 1.12837916709551
+#define XLIM 5.33
+#define YLIM 4.29
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Functions ///////////////////////////////////////////////////////////////////
+
 
 
 __device__ double factorial(int n)
@@ -24,12 +54,12 @@ __device__ double factorial(int n)
 }
 
 
+
 __device__
 double getTimeCal(double sigma, double sigma_a, double sigma_b, double sigma_c)
 {
   return sigma_a*sigma*sigma + sigma_b*sigma + sigma_c;
 }
-
 
 
 
@@ -45,8 +75,8 @@ __device__ pycuda::complex<double> faddeeva(pycuda::complex<double> z)//, double
    x = fabs(in_real);
    y = fabs(in_imag);
 
-   if (y < yLim && x < xLim) {
-      q = (1.0 - y / yLim) * sqrt(1.0 - (x / xLim) * (x / xLim));
+   if (y < YLIM && x < XLIM) {
+      q = (1.0 - y / YLIM) * sqrt(1.0 - (x / XLIM) * (x / XLIM));
       h  = 1.0 / (3.2 * q);
       nc = 7 + int(23.0 * q);
 //       xl = pow(h, double(1 - nc));
@@ -75,8 +105,8 @@ __device__ pycuda::complex<double> faddeeva(pycuda::complex<double> z)//, double
          Sy = Rx[n-1] * Sy + Ry[n-1] * Saux;
          xl = h * xl;
       };
-      Wx = errf_const * Sx;
-      Wy = errf_const * Sy;
+      Wx = ERRF_CONST * Sx;
+      Wy = ERRF_CONST * Sy;
    }
    else {
       xh = y;
@@ -90,8 +120,8 @@ __device__ pycuda::complex<double> faddeeva(pycuda::complex<double> z)//, double
          Rx[0] = 0.5 * Tx / Tn;
          Ry[0] = 0.5 * Ty / Tn;
       };
-      Wx = errf_const * Rx[0];
-      Wy = errf_const * Ry[0];
+      Wx = ERRF_CONST * Rx[0];
+      Wy = ERRF_CONST * Ry[0];
    }
 
    if (y == 0.) {
@@ -112,3 +142,7 @@ __device__ pycuda::complex<double> faddeeva(pycuda::complex<double> z)//, double
 
    return pycuda::complex<double>(Wx,Wy);
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////

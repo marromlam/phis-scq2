@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                      OPENCL decay-time acceptance                          //
+//                       CUDA decay rate Bs -> mumuKK                         //
 //                                                                            //
 //   Created: 2019-01-28                                                      //
 //  Modified: 2019-11-27                                                      //
@@ -9,18 +9,7 @@
 //    This file is part of phis-scq packages, Santiago's framework for the    //
 //                     phi_s analysis in Bs -> Jpsi K+ K-                     //
 //                                                                            //
-//  This file contains the following __kernels:                               //
-//    * [none]                                                                //
-//                                                                            //
-//  TODO: The way complex numbers are handled is a bit neolithic, but as      //
-//        far as openCL does not provide a standard library, this is the      //
-//        only solution avaliable                                             //
-//  TODO: Finish openCL translation of decay-time acceptance getM and getK    //
-//        functions, that are incomplete por dta analysis but right for       //
-//        computing standard pdf                                              //
-//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +70,6 @@ double getCoeff(double *mat, int r, int c)
 
 
 
-
 __device__
 double calcTimeAcceptance(double t, double *coeffs, double tLL, double tUL)
 {
@@ -95,7 +83,7 @@ double calcTimeAcceptance(double t, double *coeffs, double tLL, double tUL)
   double c3 = getCoeff(coeffs,bin,3);
 
   double result = (c0 + t*(c1 + t*(c2 + t*c3)));
-  if (DEBUG >= 3 && ( threadIdx.x + blockDim.x * blockIdx.x == 0))
+  if (DEBUG >= 3 && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT))
   {
     printf("TIME ACC  : t=%lf\tbin=%d\tc=[%+lf\t%+lf\t%+lf\t%+lf]\tdta=%lf\n",
            t,bin,c0,c1,c2,c3,result);
@@ -114,7 +102,7 @@ pycuda::complex<double> getExponentialConvolution(double t, double G, double ome
   pycuda::complex<double> I(0,1);
 
   if( t >SIGMA_THRESHOLD*sigma )
-  {//2.*(sqrt(0.5*M_PI))* this was an old factor
+  {//2.*(sqrt(0.5*M_M_PI))* this was an old factor
     return exp(-G*t+0.5*G*G*sigma2-0.5*omega*omega*sigma2)*(cos(omega*(t-G*sigma2)) + I*sin(omega*(t-G*sigma2)));
   }
   else
@@ -199,18 +187,6 @@ pycuda::complex<double> getK(pycuda::complex<double> z, int n)
   return pycuda::complex<double>(0.,0.);
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -362,7 +338,7 @@ void intgTimeAcceptance(double time_terms[4], double sigma,
   time_terms[2] = pycuda::real(int_trig);
   time_terms[3] = pycuda::imag(int_trig);
 
-  if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == 0) )
+  if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT) )
   {
     printf("INTEGRAL           : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",
            time_terms[0],time_terms[1],time_terms[2],time_terms[3]);
@@ -398,30 +374,277 @@ void integralFullSpline( double result[2],
 
 
 
-/*
-__device__
-pycuda::complex<double> getExponentialConvolution(double t, double gamma,
-                                                  double omega, double sigma)
-{
-  pycuda::complex<double> I(0,1);
-  pycuda::complex<double> z, fad;
-  double sigma2 = sigma*sigma;
+////////////////////////////////////////////////////////////////////////////////
+// PDF = conv x sp1 ////////////////////////////////////////////////////////////
 
-  if( t >sigma_threshold*sigma )
-  {
-    return  //2.*(sqrt(0.5*M_PI))* this was an old factor
-  exp(-gamma*t+0.5*gamma*gamma*sigma2-0.5*omega*omega*sigma2)*
-  (cos(omega*(t-gamma*sigma2)) + I*sin(omega*(t-gamma*sigma2)));
+__device__
+double getOneSplineTimeAcc(double t, double *coeffs, double sigma, double gamma,
+                           double tLL, double tUL)
+{
+
+  // Compute pdf value
+  double erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
+  double fpdf = 1.0; double ipdf = 0;
+  fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
+  fpdf *= calcTimeAcceptance(t, coeffs , tLL, tUL);
+
+  // Compute per event normatization
+  double ti  = 0.0;  double tf  =  0.0;
+  for (int k = 0; k < NKNOTS; k++) {
+
+    if (k == NKNOTS-1) {
+      ti = KNOTS[NKNOTS-1];
+      tf = tUL;
+    }
+    else {
+      ti = KNOTS[k];
+      tf = KNOTS[k+1];
+    }
+
+    double c0 = getCoeff(coeffs,k,0);
+    double c1 = getCoeff(coeffs,k,1);
+    double c2 = getCoeff(coeffs,k,2);
+    double c3 = getCoeff(coeffs,k,3);
+
+    ipdf += (exp((pow(gamma,2)*pow(sigma,2))/2.)*((c1*(-exp(-(gamma*tf))
+    + exp(-(gamma*ti)) -
+    (gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(tf,2))/(2.*pow(sigma,2))) +
+    (gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(ti,2))/(2.*pow(sigma,2))) - (gamma*tf)/exp(gamma*tf) +
+    (gamma*ti)/exp(gamma*ti) +
+    erf(tf/(sqrt(2.0)*sigma))/exp((pow(gamma,2)*pow(sigma,2))/2.) + ((1 +
+    gamma*tf)*erf((gamma*sigma)/sqrt(2.0) -
+    tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) -
+    erf(ti/(sqrt(2.0)*sigma))/exp((pow(gamma,2)*pow(sigma,2))/2.) -
+    erf((gamma*sigma)/sqrt(2.0) - ti/(sqrt(2.0)*sigma))/exp(gamma*ti) -
+    (gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
+    ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/pow(gamma,2) -
+    (c2*(2/exp(gamma*tf) - 2/exp(gamma*ti) +
+    (2*gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(tf,2))/(2.*pow(sigma,2))) -
+    (2*gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(ti,2))/(2.*pow(sigma,2))) + (2*gamma*tf)/exp(gamma*tf) +
+    (pow(gamma,2)*sqrt(2/M_PI)*sigma*tf)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(tf,2))/(2.*pow(sigma,2))) +
+    (pow(gamma,2)*pow(tf,2))/exp(gamma*tf) - (2*gamma*ti)/exp(gamma*ti) -
+    (pow(gamma,2)*sqrt(2/M_PI)*sigma*ti)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(ti,2))/(2.*pow(sigma,2))) -
+    (pow(gamma,2)*pow(ti,2))/exp(gamma*ti) - ((2 +
+    pow(gamma,2)*pow(sigma,2))*erf(tf/(sqrt(2.0)*sigma)))/exp((pow(gamma,
+    2)*pow(sigma,2))/2.) - ((2 + 2*gamma*tf +
+    pow(gamma,2)*pow(tf,2))*erf((gamma*sigma)/sqrt(2.0) -
+    tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) +
+    (2*erf(ti/(sqrt(2.0)*sigma)))/exp((pow(gamma,2)*pow(sigma,2))/2.) +
+    (pow(gamma,2)*pow(sigma,2)*erf(ti/(sqrt(2.0)*sigma)))/exp((pow(gamma,
+    2)*pow(sigma,2))/2.) + (2*erf((gamma*sigma)/sqrt(2.0) -
+    ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+    (2*gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
+    ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+    (pow(gamma,2)*pow(ti,2)*erf((gamma*sigma)/sqrt(2.0) -
+    ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/pow(gamma,3) -
+    (c3*(6/exp(gamma*tf) - 6/exp(gamma*ti) +
+    (6*gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(tf,2))/(2.*pow(sigma,2))) -
+    (6*gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(ti,2))/(2.*pow(sigma,2))) +
+    (2*pow(gamma,3)*sqrt(2/M_PI)*pow(sigma,3))/exp((pow(gamma,2)*pow(sigma,
+    4) + pow(tf,2))/(2.*pow(sigma,2))) -
+    (2*pow(gamma,3)*sqrt(2/M_PI)*pow(sigma,3))/exp((pow(gamma,2)*pow(sigma,
+    4) + pow(ti,2))/(2.*pow(sigma,2))) + (6*gamma*tf)/exp(gamma*tf) +
+    (3*pow(gamma,2)*sqrt(2/M_PI)*sigma*tf)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(tf,2))/(2.*pow(sigma,2))) +
+    (3*pow(gamma,2)*pow(tf,2))/exp(gamma*tf) +
+    (pow(gamma,3)*sqrt(2/M_PI)*sigma*pow(tf,2))/exp((pow(gamma,2)*pow(sigma,
+    4) + pow(tf,2))/(2.*pow(sigma,2))) +
+    (pow(gamma,3)*pow(tf,3))/exp(gamma*tf) - (6*gamma*ti)/exp(gamma*ti) -
+    (3*pow(gamma,2)*sqrt(2/M_PI)*sigma*ti)/exp((pow(gamma,2)*pow(sigma,4) +
+    pow(ti,2))/(2.*pow(sigma,2))) -
+    (3*pow(gamma,2)*pow(ti,2))/exp(gamma*ti) -
+    (pow(gamma,3)*sqrt(2/M_PI)*sigma*pow(ti,2))/exp((pow(gamma,2)*pow(sigma,
+    4) + pow(ti,2))/(2.*pow(sigma,2))) -
+    (pow(gamma,3)*pow(ti,3))/exp(gamma*ti) - (3*(2 +
+    pow(gamma,2)*pow(sigma,2))*erf(tf/(sqrt(2.0)*sigma)))/exp((pow(gamma,
+    2)*pow(sigma,2))/2.) - ((6 + 6*gamma*tf + 3*pow(gamma,2)*pow(tf,2) +
+    pow(gamma,3)*pow(tf,3))*erf((gamma*sigma)/sqrt(2.0) -
+    tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) +
+    (6*erf(ti/(sqrt(2.0)*sigma)))/exp((pow(gamma,2)*pow(sigma,2))/2.) +
+    (3*pow(gamma,2)*pow(sigma,2)*erf(ti/(sqrt(2.0)*sigma)))/exp((pow(
+    gamma,2)*pow(sigma,2))/2.) + (6*erf((gamma*sigma)/sqrt(2.0) -
+    ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+    (6*gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
+    ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+    (3*pow(gamma,2)*pow(ti,2)*erf((gamma*sigma)/sqrt(2.0) -
+    ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+    (pow(gamma,3)*pow(ti,3)*erf((gamma*sigma)/sqrt(2.0) -
+    ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/pow(gamma,4) +
+    (c0*(erf(tf/(sqrt(2.0)*sigma))/exp((pow(gamma,2)*pow(sigma,2))/2.) -
+    erf(ti/(sqrt(2.0)*sigma))/exp((pow(gamma,2)*pow(sigma,2))/2.) -
+    erfc((gamma*pow(sigma,2) - tf)/(sqrt(2.0)*sigma))/exp(gamma*tf) +
+    erfc((gamma*pow(sigma,2) -
+    ti)/(sqrt(2.0)*sigma))/exp(gamma*ti)))/gamma))/2.;
   }
-  else
+
+  if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT) )
   {
-    z   = (-I*(t-sigma2*gamma) - omega*sigma2)/(sigma*sqrt(2.));
-    fad = faddeeva(z);
-    fad = (pycuda::real(fad) - I*pycuda::imag(fad));
-    return sqrt(0.5*M_PI)*exp(-0.5*t*t/sigma2)*fad;
+    printf("TIME ACC           : integral=%.8lf\n",
+           ipdf);
   }
+  return fpdf/ipdf;
 }
-*/
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// PDF = conv x sp1 x sp2 //////////////////////////////////////////////////////
+
+__device__
+double getTwoSplineTimeAcc(double t, double *coeffs2, double *coeffs1,
+                           double sigma, double gamma, double tLL, double tUL)
+{
+  // Compute pdf
+  double erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
+  double fpdf = 1.0;
+  fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2*t) ) * (erf_value);
+  fpdf *= calcTimeAcceptance(t, coeffs1, tLL, tUL);
+  fpdf *= calcTimeAcceptance(t, coeffs2, tLL, tUL);
+
+  // Compute per event normatization
+  double ipdf = 0.0; double ti  = 0.0;  double tf  =  0.0;
+  double term1i = 0.0; double term2i = 0.0;
+  double term1f = 0.0; double term2f = 0.0;
+  for (int k = 0; k < NKNOTS; k++) {
+
+    if (k == NKNOTS-1) {
+      ti = KNOTS[NKNOTS-1];
+      tf = tUL;
+    }
+    else {
+      ti = KNOTS[k];
+      tf = KNOTS[k+1];
+    }
+
+    double r0 = getCoeff(coeffs1,k,0);
+    double r1 = getCoeff(coeffs1,k,1);
+    double r2 = getCoeff(coeffs1,k,2);
+    double r3 = getCoeff(coeffs1,k,3);
+    double b0 = getCoeff(coeffs2,k,0);
+    double b1 = getCoeff(coeffs2,k,1);
+    double b2 = getCoeff(coeffs2,k,2);
+    double b3 = getCoeff(coeffs2,k,3);
+
+    term1i = -((exp(gamma*ti - (ti*(2*gamma*pow(sigma,2) +
+    ti))/(2.*pow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*ti)
+    + 12*pow(gamma,2)*(2*r1 + 5*r2*ti + 10*r3*(2*pow(sigma,2) +
+    pow(ti,2))) + 2*pow(gamma,3)*(3*r0 + 6*r1*ti + 10*r2*(2*pow(sigma,2)
+    + pow(ti,2)) + 15*r3*ti*(3*pow(sigma,2) + pow(ti,2))) +
+    pow(gamma,5)*(3*pow(sigma,2)*(r1 + 5*r3*pow(sigma,2))*ti + (r1 +
+    5*r3*pow(sigma,2))*pow(ti,3) + r3*pow(ti,5) + r0*(2*pow(sigma,2) +
+    pow(ti,2)) + r2*(8*pow(sigma,4) + 4*pow(sigma,2)*pow(ti,2) +
+    pow(ti,4))) + pow(gamma,4)*(3*(r0 + 5*r2*pow(sigma,2))*ti +
+    5*r2*pow(ti,3) + 4*r1*(2*pow(sigma,2) + pow(ti,2)) +
+    6*r3*(8*pow(sigma,4) + 4*pow(sigma,2)*pow(ti,2) + pow(ti,4)))) +
+    gamma*(120*b2*r3 + b1*gamma*(24*r3 + 6*gamma*(r2 + 2*r3*ti) +
+    pow(gamma,2)*(2*r1 + 8*r3*pow(sigma,2) + 3*r2*ti + 4*r3*pow(ti,2)) +
+    pow(gamma,3)*(r0 + 2*r2*pow(sigma,2) + r1*ti + 3*r3*pow(sigma,2)*ti +
+    r2*pow(ti,2) + r3*pow(ti,3))) + b2*gamma*(24*r2 + 60*r3*ti +
+    pow(gamma,2)*(2*r0 + 8*r2*pow(sigma,2) + 3*(r1 +
+    5*r3*pow(sigma,2))*ti + 4*r2*pow(ti,2) + 5*r3*pow(ti,3)) +
+    pow(gamma,3)*(2*pow(sigma,2)*(r1 + 4*r3*pow(sigma,2)) + (r0 +
+    3*r2*pow(sigma,2))*ti + (r1 + 4*r3*pow(sigma,2))*pow(ti,2) +
+    r2*pow(ti,3) + r3*pow(ti,4)) + 2*gamma*(3*r1 + 6*r2*ti +
+    10*r3*(2*pow(sigma,2) + pow(ti,2)))) + b0*pow(gamma,2)*(6*r3 +
+    gamma*(2*r2 + 3*r3*ti + gamma*(r1 + 2*r3*pow(sigma,2) + r2*ti +
+    r3*pow(ti,2)))))))/(pow(gamma,6)*sqrt(2*M_PI)));
+    term1f = -((exp(gamma*tf - (tf*(2*gamma*pow(sigma,2) +
+    tf))/(2.*pow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*tf)
+    + 12*pow(gamma,2)*(2*r1 + 5*r2*tf + 10*r3*(2*pow(sigma,2) +
+    pow(tf,2))) + 2*pow(gamma,3)*(3*r0 + 6*r1*tf + 10*r2*(2*pow(sigma,2)
+    + pow(tf,2)) + 15*r3*tf*(3*pow(sigma,2) + pow(tf,2))) +
+    pow(gamma,5)*(3*pow(sigma,2)*(r1 + 5*r3*pow(sigma,2))*tf + (r1 +
+    5*r3*pow(sigma,2))*pow(tf,3) + r3*pow(tf,5) + r0*(2*pow(sigma,2) +
+    pow(tf,2)) + r2*(8*pow(sigma,4) + 4*pow(sigma,2)*pow(tf,2) +
+    pow(tf,4))) + pow(gamma,4)*(3*(r0 + 5*r2*pow(sigma,2))*tf +
+    5*r2*pow(tf,3) + 4*r1*(2*pow(sigma,2) + pow(tf,2)) +
+    6*r3*(8*pow(sigma,4) + 4*pow(sigma,2)*pow(tf,2) + pow(tf,4)))) +
+    gamma*(120*b2*r3 + b1*gamma*(24*r3 + 6*gamma*(r2 + 2*r3*tf) +
+    pow(gamma,2)*(2*r1 + 8*r3*pow(sigma,2) + 3*r2*tf + 4*r3*pow(tf,2)) +
+    pow(gamma,3)*(r0 + 2*r2*pow(sigma,2) + r1*tf + 3*r3*pow(sigma,2)*tf +
+    r2*pow(tf,2) + r3*pow(tf,3))) + b2*gamma*(24*r2 + 60*r3*tf +
+    pow(gamma,2)*(2*r0 + 8*r2*pow(sigma,2) + 3*(r1 +
+    5*r3*pow(sigma,2))*tf + 4*r2*pow(tf,2) + 5*r3*pow(tf,3)) +
+    pow(gamma,3)*(2*pow(sigma,2)*(r1 + 4*r3*pow(sigma,2)) + (r0 +
+    3*r2*pow(sigma,2))*tf + (r1 + 4*r3*pow(sigma,2))*pow(tf,2) +
+    r2*pow(tf,3) + r3*pow(tf,4)) + 2*gamma*(3*r1 + 6*r2*tf +
+    10*r3*(2*pow(sigma,2) + pow(tf,2)))) + b0*pow(gamma,2)*(6*r3 +
+    gamma*(2*r2 + 3*r3*tf + gamma*(r1 + 2*r3*pow(sigma,2) + r2*tf +
+    r3*pow(tf,2)))))))/(pow(gamma,6)*sqrtf(2*M_PI)));
+    term2i = (exp(gamma*ti)*(3*b3*(240*r3 + gamma*(2*pow(gamma,2)*r0 +
+    8*gamma*r1 + 40*r2 + gamma*(pow(gamma,3)*r0 + 4*pow(gamma,2)*r1 +
+    20*gamma*r2 + 120*r3)*pow(sigma,2) + pow(gamma,3)*(pow(gamma,2)*r1 +
+    5*gamma*r2 + 30*r3)*pow(sigma,4) + 5*pow(gamma,5)*r3*pow(sigma,6))) +
+    gamma*(120*b2*r3 + b2*gamma*(2*pow(gamma,2)*r0 + 6*gamma*r1 + 24*r2 +
+    gamma*(pow(gamma,3)*r0 + 3*pow(gamma,2)*r1 + 12*gamma*r2 +
+    60*r3)*pow(sigma,2) + 3*pow(gamma,3)*(gamma*r2 + 5*r3)*pow(sigma,4))
+    + b0*pow(gamma,2)*(6*r3 + gamma*(2*r2 + gamma*(gamma*r0 + r1 +
+    (gamma*r2 + 3*r3)*pow(sigma,2)))) + b1*gamma*(24*r3 + gamma*(6*r2 +
+    gamma*(gamma*r0 + 2*r1 + (pow(gamma,2)*r1 + 3*gamma*r2 +
+    12*r3)*pow(sigma,2) +
+    3*pow(gamma,2)*r3*pow(sigma,4))))))*erf(ti/(sqrt(2.0)*sigma)) -
+    exp((pow(gamma,2)*pow(sigma,2))/2.)*(b3*(720*r3 + 120*gamma*(r2 +
+    6*r3*ti) + pow(gamma,5)*pow(ti,2)*(3*r0 + 4*r1*ti + 5*r2*pow(ti,2) +
+    6*r3*pow(ti,3)) + 24*pow(gamma,2)*(r1 + 5*ti*(r2 + 3*r3*ti)) +
+    pow(gamma,6)*pow(ti,3)*(r0 + ti*(r1 + ti*(r2 + r3*ti))) +
+    6*pow(gamma,3)*(r0 + 2*ti*(2*r1 + 5*ti*(r2 + 2*r3*ti))) +
+    2*pow(gamma,4)*ti*(3*r0 + ti*(6*r1 + 5*ti*(2*r2 + 3*r3*ti)))) +
+    gamma*(b2*(120*r3 + 24*gamma*(r2 + 5*r3*ti) + 6*pow(gamma,2)*(r1 +
+    4*r2*ti + 10*r3*pow(ti,2)) + pow(gamma,4)*ti*(2*r0 + 3*r1*ti +
+    4*r2*pow(ti,2) + 5*r3*pow(ti,3)) + 2*pow(gamma,3)*(r0 + 3*r1*ti +
+    6*r2*pow(ti,2) + 10*r3*pow(ti,3)) + pow(gamma,5)*pow(ti,2)*(r0 +
+    ti*(r1 + ti*(r2 + r3*ti)))) + gamma*(b1*(24*r3 + 6*gamma*(r2 +
+    4*r3*ti) + pow(gamma,3)*(r0 + 2*r1*ti + 3*r2*pow(ti,2) +
+    4*r3*pow(ti,3)) + 2*pow(gamma,2)*(r1 + 3*ti*(r2 + 2*r3*ti)) +
+    pow(gamma,4)*ti*(r0 + ti*(r1 + ti*(r2 + r3*ti)))) + b0*gamma*(6*r3 +
+    gamma*(2*r2 + 6*r3*ti + gamma*(r1 + ti*(2*r2 + 3*r3*ti)) +
+    pow(gamma,2)*(r0 + ti*(r1 + ti*(r2 + r3*ti))))))))*erfc((gamma*sigma
+    - ti/sigma)/sqrt(2.0)))/(2.*exp(gamma*ti)*pow(gamma,7));
+    term2f = (exp(gamma*tf)*(3*b3*(240*r3 + gamma*(2*pow(gamma,2)*r0 +
+    8*gamma*r1 + 40*r2 + gamma*(pow(gamma,3)*r0 + 4*pow(gamma,2)*r1 +
+    20*gamma*r2 + 120*r3)*pow(sigma,2) + pow(gamma,3)*(pow(gamma,2)*r1 +
+    5*gamma*r2 + 30*r3)*pow(sigma,4) + 5*pow(gamma,5)*r3*pow(sigma,6))) +
+    gamma*(120*b2*r3 + b2*gamma*(2*pow(gamma,2)*r0 + 6*gamma*r1 + 24*r2 +
+    gamma*(pow(gamma,3)*r0 + 3*pow(gamma,2)*r1 + 12*gamma*r2 +
+    60*r3)*pow(sigma,2) + 3*pow(gamma,3)*(gamma*r2 + 5*r3)*pow(sigma,4))
+    + b0*pow(gamma,2)*(6*r3 + gamma*(2*r2 + gamma*(gamma*r0 + r1 +
+    (gamma*r2 + 3*r3)*pow(sigma,2)))) + b1*gamma*(24*r3 + gamma*(6*r2 +
+    gamma*(gamma*r0 + 2*r1 + (pow(gamma,2)*r1 + 3*gamma*r2 +
+    12*r3)*pow(sigma,2) +
+    3*pow(gamma,2)*r3*pow(sigma,4))))))*erf(tf/(sqrt(2.0)*sigma)) -
+    exp((pow(gamma,2)*pow(sigma,2))/2.)*(b3*(720*r3 + 120*gamma*(r2 +
+    6*r3*tf) + pow(gamma,5)*pow(tf,2)*(3*r0 + 4*r1*tf + 5*r2*pow(tf,2) +
+    6*r3*pow(tf,3)) + 24*pow(gamma,2)*(r1 + 5*tf*(r2 + 3*r3*tf)) +
+    pow(gamma,6)*pow(tf,3)*(r0 + tf*(r1 + tf*(r2 + r3*tf))) +
+    6*pow(gamma,3)*(r0 + 2*tf*(2*r1 + 5*tf*(r2 + 2*r3*tf))) +
+    2*pow(gamma,4)*tf*(3*r0 + tf*(6*r1 + 5*tf*(2*r2 + 3*r3*tf)))) +
+    gamma*(b2*(120*r3 + 24*gamma*(r2 + 5*r3*tf) + 6*pow(gamma,2)*(r1 +
+    4*r2*tf + 10*r3*pow(tf,2)) + pow(gamma,4)*tf*(2*r0 + 3*r1*tf +
+    4*r2*pow(tf,2) + 5*r3*pow(tf,3)) + 2*pow(gamma,3)*(r0 + 3*r1*tf +
+    6*r2*pow(tf,2) + 10*r3*pow(tf,3)) + pow(gamma,5)*pow(tf,2)*(r0 +
+    tf*(r1 + tf*(r2 + r3*tf)))) + gamma*(b1*(24*r3 + 6*gamma*(r2 +
+    4*r3*tf) + pow(gamma,3)*(r0 + 2*r1*tf + 3*r2*pow(tf,2) +
+    4*r3*pow(tf,3)) + 2*pow(gamma,2)*(r1 + 3*tf*(r2 + 2*r3*tf)) +
+    pow(gamma,4)*tf*(r0 + tf*(r1 + tf*(r2 + r3*tf)))) + b0*gamma*(6*r3 +
+    gamma*(2*r2 + 6*r3*tf + gamma*(r1 + tf*(2*r2 + 3*r3*tf)) +
+    pow(gamma,2)*(r0 + tf*(r1 + tf*(r2 + r3*tf))))))))*erfc((gamma*sigma
+    - tf/sigma)/sqrt(2.0)))/(2.*exp(gamma*tf)*pow(gamma,7));
+
+    ipdf += (term1f + term2f) - (term1i + term2i);
+
+  }
+  return fpdf/ipdf;
+
+}
+
 
 
 
