@@ -1,0 +1,13 @@
+{
+	"fit_each_sample" : 0,
+	"fit_ratio" : 0,
+	"fit_full_spline" : 1,
+	"triggers_to_fit" : "both",
+	"kernel_config" : {
+		"USE_TIME_ACC": "0",
+		"USE_TIME_OFFSET": "0",
+		"USE_TIME_RES": "0",
+		"USE_PERFTAG": "0",
+		"USE_TRUETAG": "1"
+	}
+}

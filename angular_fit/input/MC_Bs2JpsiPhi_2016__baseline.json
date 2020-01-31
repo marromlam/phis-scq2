@@ -1,0 +1,162 @@
+{
+	"ASlon": {
+		"name": "ASlon",
+		"value": 0.0,
+		"free": false,
+		"min": 0.0,
+		"max": 0.6,
+		"latex": "|A_{S}|^2"
+	},
+	"APlon": {
+		"name": "APlon",
+		"value": 0.52428,
+		"free": true,
+		"min": 0.4,
+		"max": 0.6,
+		"latex": "|A_{0}|^2"
+	},
+	"APper": {
+		"name": "APper",
+		"value": 0.25005,
+		"free": true,
+		"min": 0.2,
+		"max": 0.3,
+		"latex": "|A_{\\perp}|^2"
+	},
+	"pSlon": {
+		"name": "pSlon",
+		"value": 0,
+		"free": false,
+		"min": -0.5,
+		"max": 0.50,
+		"latex": "{\\phi_{s}}_{S}-{\\phi_{s}}_{0}"
+	},
+	"pPlon": {
+		"name": "pPlon",
+		"value": -0.03,
+		"free": true,
+		"min": -0.5,
+		"max": 0.5,
+		"latex": "{\\phi_{s}}_{0}"
+	},
+	"pPpar": {
+		"name": "pPpar",
+		"value": 0,
+		"free": false,
+		"min": -0.5,
+		"max": 0.5,
+		"latex": "{\\phi_{s}}_{\\parallel}-{\\phi_{s}}_{0}"
+	},
+	"pPper": {
+		"name": "pPper",
+		"value": 0,
+		"free": false,
+		"min": -0.5,
+		"max": 0.5,
+		"latex": "{\\phi_{s}}_{\\perp}-{\\phi_{s}}_{0}"
+	},
+	"dSlon": {
+		"name": "dSlon",
+		"value": 0.0,
+		"free": true,
+		"min": -6.28319,
+		"max": 6.28319,
+		"latex": "\\delta_{S}-\\delta_{\\perp}"
+	},
+	"dPlon": {
+		"name": "dPlon",
+		"value": 0,
+		"free": false,
+		"min": -6.28319,
+		"max": 6.28319,
+		"latex": "\\delta_0"
+	},
+	"dPpar": {
+		"name": "dPpar",
+		"value": 3.26,
+		"free": true,
+		"min": -6.28319,
+		"max": 6.28319,
+		"latex": "\\delta_{\\parallel}-\\delta_0"
+	},
+	"dPper": {
+		"name": "dPper",
+		"value": 3.08,
+		"free": true,
+		"min": -6.28319,
+		"max": 6.28319,
+		"latex": "\\delta_{\\perp}-\\delta_0"
+	},
+	"lSlon": {
+		"name": "lSlon",
+		"value": 1,
+		"free": false,
+		"min": 0.7,
+		"max": 1.61,
+		"latex": "|\\lambda{S}/\\lambda_0|"
+	},
+	"lPlon": {
+		"name": "lPlon",
+		"value": 1,
+		"free": true,
+		"min": 0.7,
+		"max": 1.61,
+		"latex": "|\\lambda_0|"
+	},
+	"lPpar": {
+		"name": "lPpar",
+		"value": 1,
+		"free": false,
+		"min": 0.7,
+		"max": 1.61,
+		"latex": "|\\lambda{\\parallel}/\\lambda_0|"
+	},
+	"lPper": {
+		"name": "lPper",
+		"value": 1,
+		"free": false,
+		"min": 0.7,
+		"max": 1.61,
+		"latex": "|\\lambda{\\perp}/\\lambda_0|"
+	},
+	"Gd": {
+		"name": "Gd",
+		"value": 0.65789,
+		"free": false,
+		"min": 0,
+		"max": 10.65789,
+		"latex": "\\Gamma_d"
+	},
+	"DGs": {
+		"name": "DGs",
+		"value": 0.08543,
+		"free": true,
+		"min": 0,
+		"max": 1,
+		"latex": "\\Delta \\Gamma_s"
+	},
+	"DGsd": {
+		"name": "DGsd",
+		"value": 0.0034801,
+		"free": true,
+		"min": -0.1,
+		"max": 0.1,
+		"latex": "\\Gamma_s - \\Gamma_d"
+	},
+	"DM": {
+		"name": "DM",
+		"value": 17.8,
+		"free": true,
+		"min": 17,
+		"max": 18,
+		"latex": "\\Delta m"
+	},
+	"CSP": {
+		"name": "CSP",
+		"value": 1,
+		"free": false,
+		"min": 0,
+		"max": 1,
+		"latex": "C_{SP}"
+	}
+}

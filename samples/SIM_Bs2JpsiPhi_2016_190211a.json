@@ -1,0 +1,18 @@
+{
+  "path" : "/scratch03/marcos.romero/BsJpsiKK/Root/BsMuMuKK20190211a.root",
+  "tree_name" : "T",
+  "name" : "SIM_Bs2JpsiPhi_2016_190211a",
+  "branches" : {
+    "time" : "time",
+    "sWeight" : "time/time",
+    "hlt1b" : "time/time",
+		"kinWeight" : "time/time",
+    "cosK" : "hel_costhetaK",
+    "cosL" : "hel_costhetamu",
+    "hphi" : "hel_phi",
+    "q" : "q",
+    "X_M" : "MPhi",
+    "sigma_t" : "0*time"
+  },
+	"cuts": "time>=0.3 & time<=15"
+}
