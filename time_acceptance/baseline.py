@@ -25,20 +25,7 @@ __email__  = ['mromerol@cern.ch']
 #       dig_tree(v,ident+'  ')
 #     ident = ident[:-2]
 
-import uproot
-import os
-from ipanema import samples
 
-os.path.isfile(file)
-
-file = os.path.join(SAMPLES_PATH,'2016','Bs2JpsiPhi','200206a_selected_bdt.root')
-file
-
-shit = samples.Sample.from_root(file, branches=['time'])
-shit.df
-
-aja = uproot.open(file)['DecayTree']
-aja.pandas.df(branches=['time'])
 
 ################################################################################
 # %% Modules ###################################################################
@@ -120,25 +107,30 @@ PATH = os.path.abspath(os.path.dirname(args['pycode']))
 NAME = os.path.splitext(os.path.basename('time/baseline.py'))[0]
 FLAG = args['flag']
 
+# Select trigger to fit
+if args['trigger'] == 'biased':
+  trigger = 'biased'; cuts = "time>=0.3 & time<=15 & hlt1b == 1"
+elif args['trigger'] == 'unbiased':
+  trigger = 'biased'; cuts = "time>=0.3 & time<=15 & hlt1b == 0"
+elif args['trigger'] == 'comb':
+  trigger = 'comb'; cuts = "time>=0.3 & time<=15"
+  print('not implemented!')
+  exit()
+
 print(f"\n{80*'='}\n{'= Settings':79}=\n{80*'='}\n")
 print(f"{'path':>15}: {PATH:50}")
 print(f"{'script':>15}: {NAME:50}")
 print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
-print(f"{'trigger':>15}: {args['trigger']:50}\n")
+print(f"{'trigger':>15}: {args['trigger']:50}")
+print(f"{'cuts':>15}: {cuts:50}\n")
+
+
+
+
 
 # Initialize backend
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],1)
-
-# Select trigger to fit
-if args['trigger'] == 'biased':
-  trigger = 'biased'; trigger_str = 'hlt1b == 1'
-elif args['trigger'] == 'unbiased':
-  trigger = 'biased'; trigger_str = 'hlt1b == 0'
-elif args['trigger'] == 'comb':
-  trigger = 'comb'; trigger_str = ''
-  print('not implemented!')
-  exit()
+initialize(os.environ['IPANEMA_BACKEND'],2)
 
 # Get bsjpsikk model and configure it
 import bsjpsikk
@@ -352,7 +344,7 @@ def plot_spline(params, time, weights, conf_level=1, name='test.pdf', bins=30, l
 ################################################################################
 #%% Get data into categories ###################################################
 
-print(f"\n{80*'='}\n{'= Plotting':79}=\n{80*'='}\n")
+print(f"\n{80*'='}\n{'= Loading categories':79}=\n{80*'='}\n")
 
 # Select samples
 samples = {}
@@ -371,12 +363,11 @@ for name, sample in zip(samples.keys(),samples.values()):
     label = (r'\mathrm{MC}',r'B^0')
   elif name == 'BdDT':
     label = (r'\mathrm{data}',r'B_s^0')
-  cats[name] = Sample.from_file(sample, cuts=trigger_str)
+  cats[name] = Sample.from_file(sample, cuts=cuts)
   cats[name].name = os.path.splitext(os.path.basename(sample))[0]+'_'+trigger
   cats[name].allocate(time='time',weight='sWeight*kinWeight',lkhd='0*time')
   param_path  = os.path.join(PATH,'init',NAME)
-  shit = os.path.splitext(os.path.basename(sample))[0]
-  param_path = os.path.join(param_path,shit[:-10]+'.json')
+  param_path = os.path.join(param_path,f"{sample.split('/')[-2]}.json")
   cats[name].assoc_params(Parameters.load(param_path))
   cats[name].label = label
   cats[name].pars_path = os.path.dirname(args[f'{name}_params'])

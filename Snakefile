@@ -5,9 +5,10 @@
 # Contributors: YOUR NAME(S)
 
 
-SCRATCH_PATH = '/scratch17/marcos.romero/phis_samples/'
+MAIN_PATH = '/scratch17/marcos.romero/phis_samples/'
+MAIN_PATH = 'samples/'
 VERSION = 'v0r2/'
-SAMPLES_PATH = SCRATCH_PATH+VERSION
+SAMPLES_PATH = MAIN_PATH+VERSION
 
 # rule rule_name:
 #     input:
@@ -19,7 +20,7 @@ SAMPLES_PATH = SCRATCH_PATH+VERSION
 #     shell:
 #         "HOW TO MIX IT ALL TOGETHER"
 
-modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','Bs2JpsiPhi','MC_Bd2JpsiKstar'];
+modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_DG0','Bs2JpsiPhi','MC_Bd2JpsiKstar'];
 years = ['2011','2012','Run1','2015','2016','Run2a','2017','2018','Run2b','Run2'];
 #flags = ['baseline']
 trigger = ['combined','biased','unbiased']
@@ -54,11 +55,15 @@ trigger = ['combined','biased','unbiased']
 
 rule decay_time_acceptance:
   input:
-    sample_BsMC = '{SAMPLES_PATH}/{year}/MC_Bs2JpsiPhi_dG0/{flag}.json',
-    sample_BdMC = '{SAMPLES_PATH}/{year}/MC_Bd2JpsiKstar/{flag}.json',
-    sample_BdDT = '{SAMPLES_PATH}/{year}/Bd2JpsiKstar/{flag}.json',
+    # sample_BsMC = SAMPLES_PATH+'{year}/MC_Bs2JpsiPhi_dG0/{flag}.root',
+    # sample_BdMC = SAMPLES_PATH+'{year}/MC_Bd2JpsiKstar/{flag}.root',
+    # sample_BdDT = SAMPLES_PATH+'{year}/Bd2JpsiKstar/{flag}.root',
+    sample_BsMC = SAMPLES_PATH+'{year}/MC_Bs2JpsiPhi_dG0/{flag}.json',
+    sample_BdMC = SAMPLES_PATH+'{year}/MC_Bd2JpsiKstar/{flag}.json',
+    sample_BdDT = SAMPLES_PATH+'{year}/Bd2JpsiKstar/{flag}.json',
     script = 'time_acceptance/baseline.py'
   output:
+    #params_BdDT = 'output/time_acceptance/{year}/{mode}/{flag}_{trigger}.json'
     params_BsMC = 'output/time_acceptance/{year}/MC_Bs2JpsiPhi_DG0/{flag}_{trigger}.json',
     params_BdMC = 'output/time_acceptance/{year}/MC_Bs_Bd_ratio/{flag}_{trigger}.json',
     params_BdDT = 'output/time_acceptance/{year}/Bs2JpsiPhi/{flag}_{trigger}.json'

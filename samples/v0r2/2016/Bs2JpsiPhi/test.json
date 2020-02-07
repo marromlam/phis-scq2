@@ -19,5 +19,5 @@
     "hminus_PT" : "hminus_PT",
     "B_PT" : "B_PT"
   },
-	"cuts": "time>=0.3 & time<=15"
+	"cuts": false
 }

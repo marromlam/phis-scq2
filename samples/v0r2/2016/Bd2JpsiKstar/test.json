@@ -8,5 +8,5 @@
     "hlt1b" : "hlt1b",
 		"kinWeight" : "time/time"
   },
-	"cuts": "time>=0.3 & time<=15"
+	"cuts": false
 }
