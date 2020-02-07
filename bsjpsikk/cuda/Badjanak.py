@@ -443,9 +443,10 @@ def full_spline_time_acceptance(
 
 
 
-def acceptance_spline(time,
-               b0=1, b1=1.3, b2=1.5, b3=1.8, b4=2.1, b5=2.3, b6=2.2, b7=2.1, b8=2.0,
-               BLOCK_SIZE=32):
+def acceptance_spline(
+      time,
+      b0=1, b1=1.3, b2=1.5, b3=1.8, b4=2.1, b5=2.3, b6=2.2, b7=2.1, b8=2.0,
+      BLOCK_SIZE=32):
   if type(time) is np.ndarray:
     time = np.atleast_1d(time)
   elif isinstance(time,float):
