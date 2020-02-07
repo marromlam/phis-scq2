@@ -1,0 +1,12 @@
+{
+  "path" : "/scratch03/marcos.romero/BsJpsiKK/Root/BdJpsiKstar_Data_2016_UpDown_20180821_tmva_cut58_sel_sw_trigCat.root",
+  "tree_name" : "DecayTree",
+  "name" : "200107a_BdDT",
+  "branches" : {
+    "time" : "time",
+    "sWeight" : "alpha(nsig_sw)",
+    "hlt1b" : "hlt1b",
+		"kinWeight" : "time/time"
+  },
+	"cuts": "time>=0.3 & time<=15"
+}
