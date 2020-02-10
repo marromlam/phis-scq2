@@ -27,7 +27,7 @@
 #define PYOPENCL_DEFINE_CDOUBLE
 #include <pyopencl-complex.h>
 
-#include "DifferentialCrossRate.c"
+#include "DifferentialCrossRate.cl"
 
 
 

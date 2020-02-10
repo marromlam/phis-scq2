@@ -109,9 +109,9 @@ FLAG = args['flag']
 
 # Select trigger to fit
 if args['trigger'] == 'biased':
-  trigger = 'biased'; cuts = "time>=0.3 & time<=15 & hlt1b == 1"
+  trigger = 'biased'; cuts = "time>=0.3 & time<=15 & hlt1b==1"
 elif args['trigger'] == 'unbiased':
-  trigger = 'biased'; cuts = "time>=0.3 & time<=15 & hlt1b == 0"
+  trigger = 'unbiased'; cuts = "time>=0.3 & time<=15 & hlt1b==0"
 elif args['trigger'] == 'comb':
   trigger = 'comb'; cuts = "time>=0.3 & time<=15"
   print('not implemented!')
@@ -371,7 +371,9 @@ for name, sample in zip(samples.keys(),samples.values()):
   cats[name].assoc_params(Parameters.load(param_path))
   cats[name].label = label
   cats[name].pars_path = os.path.dirname(args[f'{name}_params'])
+  print( cats[name].pars_path )
   cats[name].figs_path = cats[name].pars_path.replace('parameters','figures')
+  print( cats[name].figs_path )
   os.makedirs(cats[name].pars_path, exist_ok=True)
   os.makedirs(cats[name].figs_path, exist_ok=True)
 
@@ -483,6 +485,7 @@ for name, cat in zip(cats.keys(),cats.values()):
   list_params = [par for par in cat.params if len(par) ==2]
   cat.params.add(*[result.params.get(par) for par in list_params])
   cat.params.dump(os.path.join(cat.pars_path,f'{FLAG}_{trigger}'))
+  print( os.path.join(cat.pars_path,f'{FLAG}_{trigger}') )
 
 
 
@@ -507,7 +510,7 @@ for name, cat in zip(cats.keys(),cats.values()):
     log=False
   )
 
-
+"""
 # BsMC
 plot_spline(# BsMC
   cats['BsMC'].params,
@@ -540,5 +543,5 @@ plot_spline(# BsMC
   conf_level=1,
   bins=25
 )
-
+"""
 ################################################################################

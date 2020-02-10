@@ -64,9 +64,9 @@ rule decay_time_acceptance:
     script = 'time_acceptance/baseline.py'
   output:
     #params_BdDT = 'output/time_acceptance/{year}/{mode}/{flag}_{trigger}.json'
-    params_BsMC = 'output/time_acceptance/{year}/MC_Bs2JpsiPhi_DG0/{flag}_{trigger}.json',
-    params_BdMC = 'output/time_acceptance/{year}/MC_Bs_Bd_ratio/{flag}_{trigger}.json',
-    params_BdDT = 'output/time_acceptance/{year}/Bs2JpsiPhi/{flag}_{trigger}.json'
+    params_BsMC = 'output/time_acceptance/parameters/{year}/MC_Bs2JpsiPhi_DG0/{flag}_{trigger}.json',
+    params_BdMC = 'output/time_acceptance/parameters/{year}/MC_Bs_Bd_ratio/{flag}_{trigger}.json',
+    params_BdDT = 'output/time_acceptance/parameters/{year}/Bs2JpsiPhi/{flag}_{trigger}.json'
   shell:
     """
     python {input.script}\

@@ -628,9 +628,6 @@ void pySpline(double *time, double *f, double *coeffs, int Nevt)
   if (row >= Nevt) { return; }
   double t = time[row];
 
-  // Define time bin start and ending
-  double ti  = 0.0;  double tf  =  0.0;
-
   // Get spline-time-bin
   int bin   = getTimeBin(t);
 
@@ -642,14 +639,7 @@ void pySpline(double *time, double *f, double *coeffs, int Nevt)
 
   // Compute spline
   double fpdf = (c0 + t*(c1 + t*(c2 + t*c3)));
-
-  // Normalize...
-  //t   = 5.0;
-  //bin = getTimeBin(t, knots, n);
-  //c0  = getCoeff(coeffs,bin,0); c1 = getCoeff(coeffs,bin,1);
-  //c2  = getCoeff(coeffs,bin,2); c3 = getCoeff(coeffs,bin,3);
-  //double fpdf_t_norm = (c0 + t*(c1 + t*(c2 + t*c3)));
-  f[row] = (fpdf);// / (fpdf_t_norm);
+  f[row] = (fpdf);
 
 }
 

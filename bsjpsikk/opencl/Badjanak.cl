@@ -46,13 +46,18 @@
 
 // Time acceptance parameters
 #define NKNOTS {NKNOTS}
+#define NTERMS {NTERMS}
 #define NTIMEBINS {NTIMEBINS}
-__constant double KNOTS[NKNOTS] = {KNOTS};
+__constant double KNOTS[{NKNOTS}] = {KNOTS};
 
 // PDF parameters
+
+// Mass-related variables
 #define NMASSBINS {NMASSBINS}
-__constant double X_M[8] = {X_M};
-__constant double TRISTAN[10] = {TRISTAN};
+__constant double X_M[{NMASSKNOTS}] = {X_M};
+__constant double CSP[{NMASSBINS}] = {CSP};
+
+__constant double TRISTAN[{NTERMS}] = {TRISTAN};
 
 
 // Include disciplines
@@ -76,7 +81,7 @@ __constant double TRISTAN[10] = {TRISTAN};
 __kernel
 void pyDiffRate(__global double *data, __global double *lkhd,
                 double G, double DG, double DM,
-                __global const double * CSP,
+                //__global const double * CSP,
                 __global const double * ASlon,
                 __global const double * APlon,
                 __global const double * APpar,

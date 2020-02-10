@@ -41,8 +41,11 @@
 
 // Time acceptance parameters
 #define NKNOTS {NKNOTS}
+#define NTERMS {NTERMS}
 #define NTIMEBINS {NTIMEBINS}
 __device__ double KNOTS[NKNOTS] = {KNOTS};
+__device__ double ANG_ACC[NTERMS] = {ANG_ACC};
+
 
 __device__ double const SIGMA_THRESHOLD = 5.0;
 //__device__ int const TIME_ACC_BINS = 40;
@@ -52,6 +55,7 @@ __device__ int const SPL_BINS = 7;
 // PDF parameters
 #define NMASSBINS {NMASSBINS}
 __device__ double const X_M[8] = {X_M};
+__device__ double CSP[NMASSBINS] = {CSP};
 //__device__ double const TRISTAN[10] = {TRISTAN};
 
 // Include disciplines
@@ -74,7 +78,7 @@ __device__ double const X_M[8] = {X_M};
 __global__
 void pyDiffRate(double *data, double *lkhd,
                 double G, double DG, double DM,
-                double * CSP,
+                //double * CSP,
                 double *ASlon, double *APlon, double *APpar, double *APper,
                 double  pSlon, double  pPlon, double  pPpar, double  pPper,
                 double *dSlon, double  dPlon, double  dPpar, double  dPper,
