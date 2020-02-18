@@ -1,0 +1,59 @@
+common: &common
+  "time" : "time"
+  "cosK" : "helcosthetaK"
+  "cosL" : "helcosthetaL"
+  "hphi" : "helphi"
+  "q" : "B_ID"
+  "X_M" : "X_M"
+  "sigma_t" : "sigma_t"
+  "hplus_P" : "hplus_P"
+  "hplus_PT" : "hplus_PT"
+  "hminus_P" : "hminus_P"
+  "hminus_PT" : "hminus_PT"
+  "B_PT" : "B_PT"
+  "hlt1b" : "hlt1b"
+
+MC_common: &MC_common
+  <<: *common
+  "truetime" : "1000*B_TRUETAU"
+  "truecosK" : "truehelcosthetaK"
+  "truecosL" : "truehelcosthetaL"
+  "truehphi" : "truehelphi"
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+  <<: *MC_common
+  "X_ID": "X_ID"
+  "sWeight" : "alpha(sw,gb_weights)"
+  "sw" : "sw"
+  "gb_weights" : "gb_weights"
+  "kinWeight" : "kinWeight"
+
+Bs2JpsiPhi: &Bs2JpsiPhi
+  <<: *common
+  "sWeight" : "alpha(sw)"
+  "sw" : "sw"
+
+Bd2JpsiKstar: &Bd2JpsiKstar
+  <<: *common
+  "sWeight" : "alpha(sw)"
+  "sw" : "sw"
+
+MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+  <<: *MC_Bs2JpsiPhi_dG0
+
+MC_Bs2JpsiPhi_Prompt:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bd2JpsiKstar:
+  <<: *MC_Bs2JpsiPhi
+  "sWeight" : "alpha(sw)"
+  "sw" : "sw"
+
+MC_Bu2JpsiKplus:
+  <<: *common
