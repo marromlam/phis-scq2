@@ -15,16 +15,6 @@ __email__  = ['mromerol@cern.ch']
 
 ################################################################################
 
-# def dig_tree(file, ident = ""):
-#   for k,v in file.items():
-#     ident +='  '
-#     if str(v)[1:8] == 'TBranch':
-#       print(ident+"* {0}".format( k.decode() ))
-#     else:
-#       print(ident+'* '+k.decode())
-#       dig_tree(v,ident+'  ')
-#     ident = ident[:-2]
-
 
 
 ################################################################################
@@ -48,7 +38,6 @@ from ipanema import ristra
 from ipanema import Parameters, fit_report, optimize
 from ipanema import histogram
 from ipanema import Sample
-from ipanema import getDataFile
 from ipanema import plotting
 from ipanema import wrap_unc, get_confidence_bands
 
@@ -56,41 +45,41 @@ def argument_parser():
   parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
   # Samples
   parser.add_argument('--BsMC-sample',
-                      default = 'samples/MC_Bs2JpsiPhi_DG0_2016_test.json',
-                      help='Bs2JpsiPhi MC sample')
+    default = 'samples/MC_Bs2JpsiPhi_DG0_2016_test.json',
+    help='Bs2JpsiPhi MC sample')
   parser.add_argument('--BdMC-sample',
-                      default = 'samples/MC_Bd2JpsiKstar_2016_test.json',
-                      help='Bd2JpsiKstar MC sample')
+    default = 'samples/MC_Bd2JpsiKstar_2016_test.json',
+    help='Bd2JpsiKstar MC sample')
   parser.add_argument('--BdDT-sample',
-                      default = 'samples/Bd2JpsiKstar_2016_test.json',
-                      help='Bd2JpsiKstar data sample')
+    default = 'samples/Bd2JpsiKstar_2016_test.json',
+    help='Bd2JpsiKstar data sample')
   # Output parameters
   parser.add_argument('--BsMC-params',
-                      default = 'output/time_acceptance/parameters/2016/MC_Bs2JpsiPhi_DG0/test_biased.json',
-                      help='Bs2JpsiPhi MC sample')
+    default = 'output/time_acceptance/parameters/2016/MC_Bs2JpsiPhi_DG0/test_biased.json',
+    help='Bs2JpsiPhi MC sample')
   parser.add_argument('--BdMC-params',
-                      default = 'output/time_acceptance/parameters/2016/MC_Bs_Bd_ratio/test_biased.json',
-                      help='Bd2JpsiKstar MC sample')
+    default = 'output/time_acceptance/parameters/2016/MC_Bs_Bd_ratio/test_biased.json',
+    help='Bd2JpsiKstar MC sample')
   parser.add_argument('--BdDT-params',
-                      default = 'output/time_acceptance/parameters/2016/Bs2JpsiPhi/test_biased.json',
-                      help='Bd2JpsiKstar data sample')
+    default = 'output/time_acceptance/parameters/2016/Bs2JpsiPhi/test_biased.json',
+    help='Bd2JpsiKstar data sample')
   # Configuration file ---------------------------------------------------------
   parser.add_argument('--mode',
-                      default = 'baseline',
-                      help='Configuration')
+    default = 'baseline',
+    help='Configuration')
   parser.add_argument('--year',
-                      default = '2016',
-                      help='Year of data-taking')
+    default = '2016',
+    help='Year of data-taking')
   parser.add_argument('--flag',
-                      default = 'test',
-                      help='Year of data-taking')
+    default = 'test',
+    help='Year of data-taking')
   parser.add_argument('--trigger',
-                      default = 'biased',
-                      help='Trigger(s) to fit [comb/(biased)/unbiased]')
+    default = 'biased',
+    help='Trigger(s) to fit [comb/(biased)/unbiased]')
   # Report
   parser.add_argument('--pycode',
-                      default = 'baseline',
-                      help='Save a fit report with the results')
+    default = 'baseline',
+    help='Save a fit report with the results')
 
   return parser
 
@@ -106,6 +95,7 @@ args = vars(argument_parser().parse_args())
 PATH = os.path.abspath(os.path.dirname(args['pycode']))
 NAME = os.path.splitext(os.path.basename('time/baseline.py'))[0]
 FLAG = args['flag']
+YEAR = args['year']
 
 # Select trigger to fit
 if args['trigger'] == 'biased':
@@ -169,12 +159,12 @@ def lkhd_ratio_spline(parameters, data, weight = None, prob = None):
   if not prob:                                             # for ploting, mainly
     samples = []; prob = []
     for sample in range(0,2):
-      samples.append(ristra.allocate(data))
-      prob.append( ristra.allocate(np.zeros_like(data)) )
-    bsjpsikk.ratio_spline_time_acceptance(data[0], data[1], prob[0], prob[1], **pars_dict)
-    return [ p.get() for p in prob ]
+      samples.append(ristra.allocate(data[sample]))
+      prob.append( ristra.allocate(np.zeros_like(data[sample])) )
+    bsjpsikk.ratio_spline_time_acceptance(*samples, *prob, **pars_dict)
+    return prob[1].get()
   else:                               # Optimizer.optimize ready-to-use function
-    bsjpsikk.ratio_spline_time_acceptance(data[0], data[1], prob[0], prob[1], **pars_dict)
+    bsjpsikk.ratio_spline_time_acceptance(*data, *prob, **pars_dict)
     if weight is not None:
       result  = np.concatenate(((ristra.log(prob[0])*weight[0]).get(),
                                 (ristra.log(prob[1])*weight[1]).get()
@@ -190,16 +180,16 @@ def lkhd_full_spline(parameters, data, weight = None, prob = None):
   if not prob:                                             # for ploting, mainly
     samples = []; prob = []
     for sample in range(0,3):
-      samples.append(ristra.allocate(data))
-      prob.append( ristra.allocate(np.zeros_like(data)) )
-    bsjpsikk.full_spline_time_acceptance(data[0], data[1], data[2], prob[0], prob[1], prob[2], **pars_dict)
+      samples.append(ristra.allocate(data[sample]))
+      prob.append( ristra.allocate(np.zeros_like(data[sample])) )
+    bsjpsikk.full_spline_time_acceptance(*samples, *prob, **pars_dict)
     return [ p.get() for p in prob ]
   else:                               # Optimizer.optimize ready-to-use function
-    bsjpsikk.full_spline_time_acceptance(data[0], data[1], data[2], prob[0], prob[1], prob[2], **pars_dict)
+    bsjpsikk.full_spline_time_acceptance(*data, *prob, **pars_dict)
     if weight is not None:
-      result  = np.concatenate(((ristra.log(prob[0])*weight[0]).get(),
-                                (ristra.log(prob[1])*weight[1]).get(),
-                                (ristra.log(prob[2])*weight[2]).get()
+      result  = np.concatenate((( (ristra.log(prob[0])-1) *weight[0]).get(),
+                                ( (ristra.log(prob[1])-1) *weight[1]).get(),
+                                ( (ristra.log(prob[2])-1) *weight[2]).get()
                               ))
     else:
       result  = np.concatenate((ristra.log(prob[0]).get(),
@@ -216,10 +206,18 @@ def lkhd_full_spline(parameters, data, weight = None, prob = None):
 #%% Plotting functions #########################################################
 
 def plot_fcn_spline(parameters, data, weight, log=False, name='test.pdf'):
+  if name.split('/')[4].startswith('MC_Bs'): i = 0
+  elif name.split('/')[4].startswith('MC_Bd'): i = 1
+  else: i = 2
   ref = histogram.hist(data, weights=weight, bins = 100)
   fig, axplot, axpull = plotting.axes_plotpull();
   x = np.linspace(0.3,15,200)
-  y = lkhd_single_spline(parameters, x )
+  if len(parameters)>22:
+    y = lkhd_full_spline(parameters, [x, x, x] )[i]
+  elif len(parameters)>11:
+    y = lkhd_ratio_spline(parameters, [x, x] )[i]
+  else:
+    y = lkhd_single_spline(parameters, x )[i]
   y *= ref.norm*abs(ref.edges[1]-ref.edges[0])/(y.sum()*abs(x[1]-x[0]))
   axplot.plot(x,y)
   axpull.fill_between(ref.cmbins,
@@ -363,21 +361,20 @@ for name, sample in zip(samples.keys(),samples.values()):
     label = (r'\mathrm{MC}',r'B^0')
   elif name == 'BdDT':
     label = (r'\mathrm{data}',r'B_s^0')
-  cats[name] = Sample.from_file(sample, cuts=cuts)
+  cats[name] = Sample.from_root(sample, cuts=cuts)
   cats[name].name = os.path.splitext(os.path.basename(sample))[0]+'_'+trigger
-  cats[name].allocate(time='time',weight='sWeight*kinWeight',lkhd='0*time')
+  cats[name].allocate(time='time',weight='sWeight',lkhd='0*time')
   param_path  = os.path.join(PATH,'init',NAME)
-  param_path = os.path.join(param_path,f"{sample.split('/')[-2]}.json")
+  param_path = os.path.join(param_path,f"{sample.split('/')[-2]}_{YEAR}.json")
   cats[name].assoc_params(Parameters.load(param_path))
   cats[name].label = label
   cats[name].pars_path = os.path.dirname(args[f'{name}_params'])
-  print( cats[name].pars_path )
   cats[name].figs_path = cats[name].pars_path.replace('parameters','figures')
-  print( cats[name].figs_path )
   os.makedirs(cats[name].pars_path, exist_ok=True)
   os.makedirs(cats[name].figs_path, exist_ok=True)
 
 ################################################################################
+
 
 
 
@@ -463,6 +460,8 @@ if FIT_RATIO:
 # Full fit to get decay-time acceptance ----------------------------------------
 print(f"\n{80*'='}\n{'= Fitting three categories':79}=\n{80*'='}\n")
 
+# cats['BsMC'].params.lock()
+# print(cats['BsMC'].params)
 result = optimize(lkhd_full_spline, method="hesse",
             params=cats['BsMC'].params+cats['BdMC'].params+cats['BdDT'].params,
             kwgs={'data': [cats['BsMC'].time,
@@ -474,8 +473,11 @@ result = optimize(lkhd_full_spline, method="hesse",
                 'weight': [cats['BsMC'].weight,
                            cats['BdMC'].weight,
                            cats['BdDT'].weight]},
-            verbose=True);
+            #ftol=1e2*np.finfo(float).eps
+            #steps=2000, is_weighted=True, nan_policy='omit', progress=True
+            );
 
+print(result)
 
 
 # Dumping fit parameters -------------------------------------------------------
@@ -485,6 +487,9 @@ for name, cat in zip(cats.keys(),cats.values()):
   list_params = [par for par in cat.params if len(par) ==2]
   cat.params.add(*[result.params.get(par) for par in list_params])
   cat.params.dump(os.path.join(cat.pars_path,f'{FLAG}_{trigger}'))
+  # latex export
+  with open(os.path.join(cat.pars_path,f'{FLAG}_{trigger}.tex'), "w") as text:
+    text.write(cat.params.dump_latex())
   print( os.path.join(cat.pars_path,f'{FLAG}_{trigger}') )
 
 
@@ -494,23 +499,25 @@ print(f"\n{80*'='}\n{'= Plotting':79}=\n{80*'='}\n")
 
 for name, cat in zip(cats.keys(),cats.values()):
   plot_fcn_spline(
-    cat.params,
+    result.params,
     cat.time.get(),
     cat.weight.get(),
     name = os.path.join(cat.figs_path,f'{FLAG}_{trigger}_fit_log.pdf'),
     log=True
   )
+print(f"Plotted {os.path.join(cat.figs_path,f'{FLAG}_{trigger}_fit_log.pdf')}")
 
 for name, cat in zip(cats.keys(),cats.values()):
   plot_fcn_spline(
-    cat.params,
+    result.params,
     cat.time.get(),
     cat.weight.get(),
     name = os.path.join(cat.figs_path,f'{FLAG}_{trigger}_fit.pdf'),
     log=False
   )
+print(f"Plotted {os.path.join(cat.figs_path,f'{FLAG}_{trigger}_fit.pdf')}")
 
-"""
+
 # BsMC
 plot_spline(# BsMC
   cats['BsMC'].params,
@@ -528,7 +535,7 @@ plot_spline(# BsMC
   cats['BdMC'].time.get(),
   cats['BdMC'].weight.get(),
   name = os.path.join(cats['BdMC'].figs_path,f'{FLAG}_{trigger}_spline.pdf'),
-  label=r'$\varepsilon_{\mathrm{MC}}^{B_s^0}$',
+  label=r'$\varepsilon_{\mathrm{MC}}^{B_d}/\varepsilon_{\mathrm{MC}}^{B_s^0}$',
   conf_level=1,
   bins=25
 )
@@ -539,9 +546,12 @@ plot_spline(# BsMC
   cats['BdDT'].time.get(),
   cats['BdDT'].weight.get(),
   name = os.path.join(cats['BdDT'].figs_path,f'{FLAG}_{trigger}_spline.pdf'),
-  label=r'$\varepsilon_{\mathrm{MC}}^{B_s^0}$',
+  label=r'$\varepsilon_{\mathrm{data}}^{B_s^0}$',
   conf_level=1,
   bins=25
 )
-"""
+
+print(f"Splines were plotted!")
+
+
 ################################################################################
