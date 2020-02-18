@@ -1,0 +1,182 @@
+{
+  "APlon":      0.7217582697828963,
+  "ASlon":      0.0,
+  "APpar":      0.47983226235842036,
+  "APper":      0.4988246184782784,
+  "CSP":1,
+  "DG": 0.0,
+  "DM": 17.8,
+  "G":  0.66137,
+  "deltaPlon":  0.0,
+  "deltaSlon":  3.07,
+  "deltaPpar":  3.3,
+  "deltaPper":  3.07,
+  "lPlon":      1,
+  "lSlon":      1,
+  "lPpar":      1,
+  "lPper":      1,
+  "phisPlon":   0.07,
+  "phisSlon":   0.07,
+  "phisPpar":   0.07,
+  "phisPper":   0.07
+}
+
+
+{
+  "deltaPar":
+  {
+    "unc_down": -0.181,
+    "unc_up": 0.099,
+    "name": "deltaPar",
+    "value": 3.258
+  },
+
+	"DGs":
+  {
+    "unc_down": -0.0091,
+    "unc_up": 0.0091,
+    "name": "DGs",
+    "value": 0.0805
+	},
+
+	"DGsd":
+	{
+    "unc_down": -0.0027,
+    "unc_up": 0.0027,
+    "name": "DGsd",
+    "value": 0.0024
+	},
+
+	"deltaS1":
+	{
+    "unc_down": -0.20,
+    "unc_up": 0.20,
+    "name": "deltaS1",
+    "value": 0.84
+	},
+
+	"deltaS2":
+	{
+    "unc_down": -0.28,
+    "unc_up": 0.28,
+    "name": "deltaS2",
+    "value": 2.15
+	},
+
+	"deltaS3":
+	{
+    "unc_down": -0.21,
+    "unc_up": 0.21,
+    "name": "deltaS3",
+    "value": 0.47
+	},
+
+	"deltaPerp":
+	{
+    "unc_down": -0.151,
+    "unc_up": 0.141,
+    "name": "deltaPerp",
+    "value": 3.083
+	},
+
+	"deltaS5":
+	{
+    "unc_down": -0.15,
+    "unc_up": 0.15,
+    "name": "deltaS5",
+    "value": -0.59
+	},
+
+	"deltaS6":
+	{
+    "unc_down": -0.14,
+    "unc_up": 0.14,
+    "name": "deltaS6",
+    "value": -0.90
+	},
+	{
+    "unc_down": -0.057,
+    "unc_up": 0.055,
+    "name": "Dm",
+    "value": 17.711
+	},
+	{
+    "unc_down": -0.049,
+    "unc_up": 0.049,
+    "name": "phis0",
+    "value": -0.058
+	},
+	{
+    "unc_down": -0.0049,
+    "unc_up": 0.0049,
+    "name": "Aperp",
+    "value": 0.2504
+	},
+	{
+    "unc_down": -0.17,
+    "unc_up": 0.17,
+    "name": "deltaS4",
+    "value": -0.34
+	},
+	{
+    "unc_down": -0.054,
+    "unc_up": 0.054,
+    "name": "FS1",
+    "value": 0.426
+	},
+	{
+    "unc_down": -0.0034,
+    "unc_up": 0.0034,
+    "name": "A0",
+    "value": 0.5241
+	},
+	{
+    "unc_down": -0.017,
+    "unc_up": 0.017,
+    "name": "FS2",
+    "value": 0.059
+	},
+	{
+    "unc_down": -0.0067,
+    "unc_up": 0.0067,
+    "name": "FS3",
+    "value": 0.0101
+	},
+	{
+    "unc_down": -0.049,
+    "unc_up": 0.049,
+    "name": "phis",
+    "value": -0.058
+	},
+	{
+    "unc_down": -0.015,
+    "unc_up": 0.015,
+    "name": "FS5",
+    "value": 0.049
+	},
+	{
+    "unc_down": -0.025,
+    "unc_up": 0.025,
+    "name": "FS6",
+    "value": 0.193
+	},
+	{
+    "unc_down": -0.0061,
+    "unc_up": 0.0061,
+    "name": "FS4",
+    "value": 0.0103
+	},
+	{
+    "unc_down": -0.019,
+    "unc_up": 0.019,
+    "name": "lambda0",
+    "value": 0.964
+	},
+	{
+    "unc_down": -0.019,
+    "unc_up": 0.019,
+    "name": "lambda",
+    "value": 0.964
+}
+    ]
+}
