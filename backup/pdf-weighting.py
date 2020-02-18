@@ -29,11 +29,11 @@ from Badjanak import *
 ################################################################################
 
 # input parameters: NEEDS TO BE CHANGED!
-input_file      = "/home3/marcos.romero/phis-scq/MC_Bs2JpsiPhi_2016_selected_bdt_v0r1.root"
+input_file      = "/home3/marcos.romero/phis-scq-old/MC_Bs2JpsiPhi_2016_selected_bdt_v0r1.root"
 tree_name       = 'DecayTree'
-output_file     = '/home3/marcos.romero/phis-scq/MC_Bs2JpsiPhi_2016_selected_bdt_pdfWeight_v0r1.root'
-original_params = json.load(open('/home3/marcos.romero/phis-scq/input/tad-2016-both-simon1.json'))
-target_params   = json.load(open('/home3/marcos.romero/phis-scq/input/tad-2016-both-simon2.json'))
+output_file     = '/home3/marcos.romero/phis-scq-old/MC_Bs2JpsiPhi_2016_selected_bdt_pdfWeight_v0r1.root'
+original_params = json.load(open('/home3/marcos.romero/phis-scq-old/input/tad-2016-both-simon1.json'))
+target_params   = json.load(open('/home3/marcos.romero/phis-scq-old/input/tad-2016-both-simon2.json'))
 
 # the names of the different parameter files need a more descriptive name besides simon
 
@@ -128,7 +128,7 @@ def pdf_weighting(input_file, tree_name, output_file,
   # Prepare host arrays
   tad_vars = ['cosThetaKRef_GenLvl','cosThetaMuRef_GenLvl','phiHelRef_GenLvl',
               'time_GenLvl', 'X_M','sigmat','B_ID_GenLvl']
-  tad_vars = ['truehelcosthetaK','truehelcosthetaL','truehelphi','B_TRUETAU', 'X_M','sigmat','B_ID_GenLvl']
+  #tad_vars = ['truehelcosthetaK','truehelcosthetaL','truehelphi','B_TRUETAU', 'X_M','sigmat','B_ID_GenLvl']
   vars_h = np.ascontiguousarray(data[tad_vars].values)    # input array (matrix)
   vars_h[:,3] *= 1e3                                                # time in ps
   pdf_h  = np.zeros(vars_h.shape[0])                        # output array (pdf)

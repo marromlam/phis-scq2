@@ -12,18 +12,20 @@ from hep_ml import reweight
 import ast
 import math
 import json
-
+import importlib
 
 # openCL stuff
-cl_path = os.path.join(os.environ['PHIS_SCQ'],'opencl')
-import pyopencl as cl                      # Import the OpenCL GPU computing API
-import pyopencl.array as cl_array                        # Import PyOpenCL Array
-context = cl.create_some_context()                      # Initialize the Context
-queue   = cl.CommandQueue(context)
+import builtins
+import reikna.cluda as cluda
+api = cluda.ocl_api() # OpenCL API
+builtins.THREAD = api.Thread.create()
+builtins.CONTEXT = THREAD._context                      # Initialize the Context
+builtins.BACKEND = 'opencl'
+builtins.DEVICE = THREAD._device
 
-sys.path.append(cl_path)
-from Badjanak import *
 
+sys.path.append(os.getcwd())
+import bsjpsikk
 
 
 # %% Define some shit ----------------------------------------------------------
@@ -119,24 +121,19 @@ def polarity_weighting(original_file, original_treename,
 def pdf_weighting(original_file, tree_name, output_file,
                   target_params, original_params, mode = 'MC_BsJpsiPhi'):
 
-  # Flags
-  config = {
-    "USE_TIME_ACC":    "0",# NO  time acceptance
-    "USE_TIME_OFFSET": "0",# NO  time offset
-    "USE_TIME_RES":    "0",# USE time resolution
-    "USE_PERFTAG":     "1",# USE perfect tagging
-    "USE_TRUETAG":     "0",# NO  true tagging
-  }
+  # Modify flags, compile model and get kernels
+  bsjpsikk.config['debug'] = 0
+  bsjpsikk.config['use_time_acc'] = 0
+  bsjpsikk.config['use_time_offset'] = 0
+  bsjpsikk.config['use_time_res'] = 0
+  bsjpsikk.config['use_perftag'] = 1
+  bsjpsikk.config['use_truetag'] = 0
   if mode == "MC_BdJpsiKstar":
-    config["NMASSBINS"] = "4"
-    config["X_M"] = "{826, 861, 896, 931, 966}"
+    bsjpsikk.config["x_m"] = [826, 861, 896, 931, 966]
   elif mode == "MC_BsJpsiPhi":
-    config["NMASSBINS"] = "6"
-    config["X_M"] = "{990, 1008, 1016, 1020, 1024, 1032, 1050}"
-
-  # Compile model and get kernels
-  BsJpsiKK     = Badjanak(cl_path,'cl',context,queue,**config)
-  getCrossRate = BsJpsiKK.getCrossRate
+    bsjpsikk.config["x_m"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  bsjpsikk.get_kernels()
+  cross_rate = bsjpsikk.diff_cross_rate
 
   # Load file
   input_file = uproot.open(original_file)[tree_name]
@@ -154,13 +151,13 @@ def pdf_weighting(original_file, tree_name, output_file,
   pdf_h  = np.zeros(vars_h.shape[0])                        # output array (pdf)
 
   # Allocate device_arrays
-  vars_d = cl_array.to_device(queue,vars_h).astype(np.float64)
-  pdf_d  = cl_array.to_device(queue,pdf_h).astype(np.float64)
+  vars_d = THREAD.to_device(vars_h).astype(np.float64)
+  pdf_d  = THREAD.to_device(pdf_h).astype(np.float64)
 
   # Compute!
   print('Calc weights...')
-  original_pdf_h = getCrossRate(vars_d,pdf_d,original_params,7)     # 7 mKK bins
-  target_pdf_h   = getCrossRate(vars_d,pdf_d,target_params,1)        # 1 mKK bin
+  cross_rate(vars_d,pdf_d,**original_params); original_pdf_h = pdf_d.get()
+  cross_rate(vars_d,pdf_d,**target_params); target_pdf_h = pdf_d.get()
   np.seterr(divide='ignore', invalid='ignore')                 # remove warnings
   pdfWeight = np.nan_to_num(original_pdf_h/target_pdf_h)
   data['pdfWeight'] = pdfWeight
@@ -271,25 +268,52 @@ with uproot.recreate("/home3/marcos.romero/phis-scq/MC_2016_Old_AlmostSameVarsAs
 f.close()
 
 
+
+
+
+
+
+
 # polarity-weighting
-path = '/home3/marcos.romero/phis-scq/'
-original_file     = path+"MC_Bs2JpsiPhi_2016_selected_bdt_v0r1.root"
-target_file       = path+'BsJpsiPhi_Data_2016_UpDown_20190123_tmva_cut58_sel_comb_sw_corrLb.root'
+path              = '/scratch03/marcos.romero/phisRun2/testers/'
+original_file     = path+"MC_JpsiPhi_sample2016.root"
+target_file       = path+'JpsiPhi_sample2016.root'
 original_treename = 'DecayTree'
 target_treename   = 'DecayTree'
-output_file       = path+"MC_Bs2JpsiPhi_2016_selected_bdt_polWeight_v0r1.root"
+output_file       = path+"MC_JpsiPhi_sample2016_polWeight.root"
 
 polarity_weighting(original_file, original_treename,target_file, target_treename,output_file)
 
 
 
+
+
+
+
+
+
+
+
 # pdf-weighting
-path = '/home3/marcos.romero/phis-scq/'
-input_file     = path+"MC_Bs2JpsiPhi_2016_selected_bdt_polWeight_v0r1.root"
+path = '/scratch03/marcos.romero/phisRun2/testers/'
+input_file     = path+"MC_JpsiPhi_sample2016_polWeight.root"
 tree_name      = 'DecayTree'
-output_file    = path+"MC_Bs2JpsiPhi_2016_selected_bdt_pdfWeight_v0r1.root"
-original_params = json.load(open('/home3/marcos.romero/phis-scq/input/tad-2016-both-simon1.json'))
-target_params   = json.load(open('/home3/marcos.romero/phis-scq/input/tad-2016-both-simon2.json'))
+output_file    = path+"MC_JpsiPhi_sample2016_pdfWeight.root"
+original_params = json.load(open('/home3/marcos.romero/phis-scq/backup/input/tad-2016-both-simon1.json'))
+target_params   = json.load(open('/home3/marcos.romero/phis-scq/backup/input/tad-2016-both-simon2.json'))
+
+
+data = THREAD.to_device(np.array([0,0,-1,0.5,1000,0,-531])).astype(np.float64)
+pdf  = THREAD.to_device(np.array([0])).astype(np.float64)
+
+original_params
+pdf
+bsjpsikk.diff_cross_rate(data, pdf, **target_params)
+
+
+
+
+
 
 pdf_weighting(input_file, tree_name, output_file, target_params, original_params)
 
