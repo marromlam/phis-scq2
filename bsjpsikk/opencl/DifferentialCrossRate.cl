@@ -18,6 +18,8 @@
 
 
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Include headers /////////////////////////////////////////////////////////////
 
@@ -38,12 +40,12 @@
 
 
 
-__global
+//__global
 double getDiffRate( double *data, double G, double DG, double DM, double CSP,
-                    double APlon, double ASlon, double APpar, double APper,
-                    double phisPlon, double phisSlon, double phisPpar, double phisPper,
+                    double ASlon, double APlon, double APpar, double APper,
+                    double phisSlon, double phisPlon, double phisPpar, double phisPper,
                     double deltaSlon, double deltaPlon, double deltaPpar, double deltaPper,
-                    double lPlon, double lSlon, double lPpar, double lPper,
+                    double lSlon, double lPlon, double lPpar, double lPper,
                     double tLL, double tUL,
                     double *coeffs,
                     bool USE_FK)
@@ -93,7 +95,6 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
     printf("                     %+lf\t%+lf\t%+lf\t%+lf\n",
             coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
   }
-
 
   double normweights[10] = {1,1,1,0,0,0,1,0,0,0};
 

@@ -1,11 +1,11 @@
 import ipanema
-BACKEND
-ipanema.initialize('opencl',1)
+ipanema.initialize('cuda',1)
 
 import numpy as np
 import importlib
 import matplotlib.pyplot as plt
 from ipanema import ristra
+
 
 import bsjpsikk
 
@@ -53,8 +53,8 @@ if BACKEND == 'cuda':
   plt.plot(time_a.get(),pdf_a.get())
 
 #%% Test diff_cross_rate -------------------------------------------------------
-data = ristra.allocate(np.array([0,0,-1,0.5,1000,0,-531]))
-pdf  = ristra.allocate(np.array([0]))
-bsjpsikk.diff_cross_rate(data,pdf)
+data = THREAD.to_device(np.array([0,0,-1,0.5,1000,0,-531])).astype(np.float64)
+pdf  = THREAD.to_device(np.array([0])).astype(np.float64)
+bsjpsikk.diff_cross_rate(data,pdf); pdf.get()
 plt.close()
 plt.plot(pdf.get())

@@ -39,7 +39,6 @@ knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
 x_m =             [990,1050],#[990, 1008, 1016, 1020, 1024, 1032, 1050],
 tristan =         [1,1,1,0,0,0,1,0,0,0],
 ang_acc =         [1,1,1,0,0,0,1,0,0,0],
-csp =             [1]
 )
 
 
@@ -64,7 +63,8 @@ def flagger():
 #     Compile kernel against given BACKEND
 def compile():
   kernel_path = os.path.join(PATH,'Badjanak.cl')
-  print(open(kernel_path,"r").read().format(**flagger()))
+  #print(flagger())
+  #print(open(kernel_path,"r").read().format(**flagger()))
   Badjanak = cl.Program(CONTEXT,
                         open(kernel_path,"r").read().format(**flagger())
                        ).build(options=["-I "+PATH])
@@ -104,36 +104,37 @@ get_kernels()
 
 def diff_cross_rate(
       vars, pdf,
-      Gs = 0.66137, DGs = 0.08, DM = 17.7,
-      fSlon = [0],
-      fPlon = 0.7217, fPper = 0.4988,
-      dSlon = [3.07],
-      dPlon = 0, dPpar = 3.30, dPper = 3.07,
-      pSlon = 0,
-      pPlon = -0.03, pPpar = 0, pPper = 0,
-      lSlon = 1,
-      lPlon = 1, lPpar = 1, lPper = 1,
+      Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP   = 1,
+      fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
+      dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
+      pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
+      lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
+      fSlon1=0, fSlon2=0, fSlon3=0,fSlon4=0,fSlon5=0, fSlon6=0, # binned mass
+      dSlon1=0, dSlon2=0, dSlon3=0,dSlon4=0,dSlon5=0, dSlon6=0, # binned mass
+      CSP1=0, CSP2=0, CSP3=0,CSP4=0,CSP5=0, CSP6=0,             # binned mass
+      Gs = None,
       c = [1, 1.2, 1.4, 1.7, 2.2, 2.2, 2.1, 2.0, 1.9],
       BLOCK_SIZE=32):
   """
   Look at kernel definition to see help
   """
+  if CSP1: # then use binned mass
+    CSP   = [CSP1, CSP2, CSP3, CSP4, CSP5, CSP6]
+    fSlon = [fSlon1, fSlon2, fSlon3, fSlon4, fSlon5, fSlon6]
+    dSlon = [dSlon1, dSlon2, dSlon3, dSlon4, dSlon5, dSlon6]
   ASlon = np.atleast_1d(fSlon)
   FP = abs(1-ASlon)
-  APlon = FP*fPlon; APper = FP*fPper; APpar = FP*abs(1-APlon-APper) # Amplitudes
-  dSlon = np.atleast_1d(np.array(dSlon)) + dPper
-  # print(f'ASlon = {ASlon} with {ASlon.dtype}')
-  # print(f'APlon = {APlon} with {APlon.dtype}')
-  # print(f'APper = {APper} with {APper.dtype}')
-  # print(f'APpar = {APpar} with {APpar.dtype}')
-
+  APlon = FP*fPlon; APper = FP*fPper; APpar = FP*abs(1-fPlon-fPper) # Amplitudes
+  dSlon = np.atleast_1d(dSlon) + dPper                           # Strong phases
+  CSP   = np.atleast_1d(CSP)                                       # CSP factors
+  if Gs==None: Gs = Gd+DGsd+DGd
   __KERNELS.DiffRate(
     THREAD._queue,
     (int(np.ceil(pdf.shape[0]/BLOCK_SIZE)),),
-    (BLOCK_SIZE,len(config['csp']),1),
+    (BLOCK_SIZE,len(CSP),1),
     vars.data, pdf.data,
     np.float64(Gs), np.float64(DGs), np.float64(DM),
-    #cl_array.to_device(QUEUE, CSP).astype(np.float64).data,
+    QUEUE.to_device(CSP).astype(np.float64).data,
     QUEUE.to_device(np.sqrt(ASlon)).astype(np.float64).data,
     QUEUE.to_device(np.sqrt(APlon)).astype(np.float64).data,
     QUEUE.to_device(np.sqrt(APpar)).astype(np.float64).data,
@@ -148,6 +149,17 @@ def diff_cross_rate(
     QUEUE.to_device(get_4cs(c)).astype(np.float64).data,
     np.int32(pdf.shape[0]), g_times_l = True
     )
+
+
+
+
+
+
+
+
+
+
+
 
 def angular_weights(self,
                       vars_true,vars_reco,

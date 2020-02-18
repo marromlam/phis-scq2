@@ -144,11 +144,11 @@ def diff_cross_rate(
   FP = abs(1-ASlon)
   APlon = FP*fPlon; APper = FP*fPper; APpar = FP*abs(1-APlon-APper) # Amplitudes
   dSlon = np.atleast_1d(np.array(dSlon)) + dPper                 # Strong phases
-
+  # print(ASlon,APlon,APper,APpar,dSlon)
   __KERNELS.DiffRate(
     vars, pdf,
     np.float64(Gs), np.float64(DGs), np.float64(DM),
-    #cu_array.to_gpu(CSP).astype(np.float64),
+    cu_array.to_gpu(CSP).astype(np.float64),
     cu_array.to_gpu(np.sqrt(ASlon)).astype(np.float64),
     cu_array.to_gpu(np.sqrt(APlon)).astype(np.float64),
     cu_array.to_gpu(np.sqrt(APpar)).astype(np.float64),
@@ -365,7 +365,7 @@ def full_spline_time_acceptance(
       c0=1, c1=1.2, c2=1.4, c3=1.7, c4=2.2, c5=2.2, c6=2.1, c7=2.0, c8=1.9,
       mu_c=0.0, sigma_c=0.04, gamma_c=0.6,
       tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=32):
+      BLOCK_SIZE=256):
   """
   In:
           time: 3D list of 1D gpuarray with time to be fitted, the expected
@@ -403,16 +403,19 @@ def full_spline_time_acceptance(
 
 
 def acceptance_spline(
-      time, spline,
+      time, #spline=None,
       b0=1, b1=1.3, b2=1.5, b3=1.8, b4=2.1, b5=2.3, b6=2.2, b7=2.1, b8=2.0,
       BLOCK_SIZE=32):
   coeffs = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
+  time_d = cu_array.to_gpu(time).astype(np.float64)
+  spline_d = cu_array.to_gpu(0*time).astype(np.float64)
   coeffs_d = cu_array.to_gpu(get_4cs(coeffs)).astype(np.float64)
   n_evt    = len(time)
-  __KERNELS.Spline(time, spline, coeffs_d, np.int32(n_evt),
+  __KERNELS.Spline(time_d, spline_d, coeffs_d, np.int32(n_evt),
                    block = (BLOCK_SIZE,1,1),
                    grid = (int(np.ceil(n_evt/BLOCK_SIZE)),1,1)
                   )
+  return spline_d.get()
 
 
 
@@ -428,82 +431,82 @@ def get_4cs(listcoeffs):
   result = []                                           # list of bin coeffs C
   def u(j): return get_knot(j,config['knots'],config['nknots']-1)
   for i in range(0,config['nknots']-1):
-        a, b, c, d = listcoeffs[i:i+4]                    # bspline coeffs b_i
-        C = []                                   # each bin 4 coeffs c_{bin,i}
-        C.append(-((b*u(-2 + i)*pow(u(1 + i),2))/
-        ((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i)))) +
-         (a*pow(u(1 + i),3))/
-          ((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))) +
-         (c*pow(u(-1 + i),2)*u(1 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) -
-         (b*u(-1 + i)*u(1 + i)*u(2 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) +
-         (c*u(-1 + i)*u(i)*u(2 + i))/
-          ((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         (b*u(i)*pow(u(2 + i),2))/
-          ((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         (d*pow(u(i),3))/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))) +
-         (c*pow(u(i),2)*u(3 + i))/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))))
-        C.append((2*b*u(-2 + i)*u(1 + i))/
-          ((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))) -
-         (3*a*pow(u(1 + i),2))/
-          ((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))) +
-         (b*pow(u(1 + i),2))/
-          ((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))) -
-         (c*pow(u(-1 + i),2))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) +
-         (b*u(-1 + i)*u(1 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) -
-         (2*c*u(-1 + i)*u(1 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) +
-         (b*u(-1 + i)*u(2 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) +
-         (b*u(1 + i)*u(2 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) -
-         (c*u(-1 + i)*u(i))/
-          ((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         (c*u(-1 + i)*u(2 + i))/
-          ((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) +
-         (2*b*u(i)*u(2 + i))/
-          ((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         (c*u(i)*u(2 + i))/
-          ((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) +
-         (b*pow(u(2 + i),2))/
-          ((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         (c*pow(u(i),2))/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))) +
-         (3*d*pow(u(i),2))/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))) -
-         (2*c*u(i)*u(3 + i))/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))))
-        C.append(-((b*u(-2 + i))/((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*
-              (-u(i) + u(1 + i)))) + (3*a*u(1 + i))/
-          ((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))) -
-         (2*b*u(1 + i))/
-          ((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))) -
-         (b*u(-1 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) +
-         (2*c*u(-1 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) -
-         (b*u(1 + i))/((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*
-            (-u(-1 + i) + u(2 + i))) + (c*u(1 + i))/
-          ((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) -
-         (b*u(2 + i))/((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*
-            (-u(-1 + i) + u(2 + i))) + (c*u(-1 + i))/
-          ((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         (b*u(i))/((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) +
-         (c*u(i))/((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         (2*b*u(2 + i))/((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) +
-         (c*u(2 + i))/((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) +
-         (2*c*u(i))/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))) -
-         (3*d*u(i))/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))) +
-         (c*u(3 + i))/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))))
-        C.append(-(a/((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i)))) +
-         b/((-u(-2 + i) + u(1 + i))*(-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))) +
-         b/((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) -
-         c/((-u(-1 + i) + u(1 + i))*(-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))) +
-         b/((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         c/((-u(i) + u(1 + i))*(-u(-1 + i) + u(2 + i))*(-u(i) + u(2 + i))) -
-         c/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))) +
-         d/((-u(i) + u(1 + i))*(-u(i) + u(2 + i))*(-u(i) + u(3 + i))))
-        result.append(C)
+    a, b, c, d = listcoeffs[i:i+4]                    # bspline coeffs b_i
+    C = []                                   # each bin 4 coeffs c_{bin,i}
+    C.append(-((b*u(-2+i)*pow(u(1+i),2))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))))+
+        (a*pow(u(1+i),3))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
+        (c*pow(u(-1+i),2)*u(1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (b*u(-1+i)*u(1+i)*u(2+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (c*u(-1+i)*u(i)*u(2+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (b*u(i)*pow(u(2+i),2))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (d*pow(u(i),3))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
+        (c*pow(u(i),2)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
+    C.append((2*b*u(-2+i)*u(1+i))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
+        (3*a*pow(u(1+i),2))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
+        (b*pow(u(1+i),2))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
+        (c*pow(u(-1+i),2))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (b*u(-1+i)*u(1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (2*c*u(-1+i)*u(1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (b*u(-1+i)*u(2+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (b*u(1+i)*u(2+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (c*u(-1+i)*u(i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (c*u(-1+i)*u(2+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (2*b*u(i)*u(2+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (c*u(i)*u(2+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (b*pow(u(2+i),2))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (c*pow(u(i),2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
+        (3*d*pow(u(i),2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))-
+        (2*c*u(i)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
+    C.append(-((b*u(-2+i))/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*
+        (-u(i)+u(1+i))))+(3*a*u(1+i))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
+        (2*b*u(1+i))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
+        (b*u(-1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (2*c*u(-1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (b*u(1+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*
+        (-u(-1+i)+u(2+i)))+(c*u(1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (b*u(2+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*
+        (-u(-1+i)+u(2+i)))+(c*u(-1+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (b*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (c*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (2*b*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (c*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (2*c*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))-
+        (3*d*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
+        (c*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
+    C.append(-(a/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))))+
+        b/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
+        b/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        c/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        b/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        c/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        c/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
+        d/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
+    result.append(C)
   m = C[1] + 2*C[2]*u(n) + 3*C[3]*u(n)**2
   C = [C[0] + C[1]*u(n) + C[2]*u(n)**2 + C[3]*u(n)**3 - m*u(n),m,0,0]
   result.append(C)

@@ -40,7 +40,7 @@
 
 
 //__global
-void getAngularWeights(double *dtrue, double *dreco, long *w10,
+void getAngularWeights(double *dtrue, double *dreco, double *w10,
                        double G, double DG, double DM, double CSP,
                        double ASlon, double APlon, double APpar, double APper,
                        double pSlon, double pPlon, double pPpar, double pPper,
@@ -70,6 +70,6 @@ void getAngularWeights(double *dtrue, double *dreco, long *w10,
   for(int k = 0; k < 10; k++)
   {
     fk     = getF(dtrue[0],dtrue[1],dtrue[2],k+1);
-    w10[k] = convert_long(9./(16.*M_PI)*fk/pdf);
+    //w10[k] = convert_long(9./(16.*M_PI)*fk/pdf);
   }
 }

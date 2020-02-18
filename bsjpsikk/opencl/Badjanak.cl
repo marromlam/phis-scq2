@@ -55,7 +55,6 @@ __constant double KNOTS[{NKNOTS}] = {KNOTS};
 // Mass-related variables
 #define NMASSBINS {NMASSBINS}
 __constant double X_M[{NMASSKNOTS}] = {X_M};
-__constant double CSP[{NMASSBINS}] = {CSP};
 
 __constant double TRISTAN[{NTERMS}] = {TRISTAN};
 
@@ -81,7 +80,7 @@ __constant double TRISTAN[{NTERMS}] = {TRISTAN};
 __kernel
 void pyDiffRate(__global double *data, __global double *lkhd,
                 double G, double DG, double DM,
-                //__global const double * CSP,
+                __global const double * CSP,
                 __global const double * ASlon,
                 __global const double * APlon,
                 __global const double * APpar,
@@ -154,7 +153,7 @@ void pyDiffRate(__global double *data, __global double *lkhd,
 
 __kernel
 void pyAngularWeights(__global double *dtrue, __global double *dreco,
-                      __global long *w,
+                      __global double *w,
                       double G, double DG, double DM, double CSP,
                       double ASlon, double APlon, double APpar, double APper,
                       double pSlon, double pPlon, double pPpar, double pPper,
@@ -187,7 +186,7 @@ void pyAngularWeights(__global double *dtrue, __global double *dreco,
 
   for(int k = 0; k < 10; k++)
   {{
-    atom_add( &w[0]+k , w10[k] );
+   // atom_add( &w[0]+k , w10[k] );
   }}
   //__syncthreads();
 
