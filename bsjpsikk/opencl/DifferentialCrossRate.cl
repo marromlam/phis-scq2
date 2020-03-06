@@ -43,8 +43,8 @@
 //__global
 double getDiffRate( double *data, double G, double DG, double DM, double CSP,
                     double ASlon, double APlon, double APpar, double APper,
-                    double phisSlon, double phisPlon, double phisPpar, double phisPper,
-                    double deltaSlon, double deltaPlon, double deltaPpar, double deltaPper,
+                    double pSlon, double pPlon, double pPpar, double pPper,
+                    double dSlon, double dPlon, double dPpar, double dPper,
                     double lSlon, double lPlon, double lPpar, double lPper,
                     double tLL, double tUL,
                     double *coeffs,
@@ -66,14 +66,14 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
     printf("APlon              : %+lf\n", APlon);
     printf("APpar              : %+lf\n", APpar);
     printf("APper              : %+lf\n", APper);
-    printf("phisSlon           : %+lf\n", phisSlon);
-    printf("phisPlon           : %+lf\n", phisPlon);
-    printf("phisPpar           : %+lf\n", phisPpar);
-    printf("phisPper           : %+lf\n", phisPper);
-    printf("deltaSlon          : %+lf\n", deltaSlon);
-    printf("deltaPlon          : %+lf\n", deltaPlon);
-    printf("deltaPper          : %+lf\n", deltaPper);
-    printf("deltaPpar          : %+lf\n", deltaPpar);
+    printf("pSlon           : %+lf\n", pSlon);
+    printf("pPlon           : %+lf\n", pPlon);
+    printf("pPpar           : %+lf\n", pPpar);
+    printf("pPper           : %+lf\n", pPper);
+    printf("dSlon          : %+lf\n", dSlon);
+    printf("dPlon          : %+lf\n", dPlon);
+    printf("dPper          : %+lf\n", dPper);
+    printf("dPpar          : %+lf\n", dPpar);
     printf("lSlon              : %+lf\n", lSlon);
     printf("lPlon              : %+lf\n", lPlon);
     printf("lPper              : %+lf\n", lPper);
@@ -127,7 +127,7 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
   //     In order to remove the effects of conv, set sigma_t = 0, so in this way
   //     you are running the first branch of getExponentialConvolution.
   cdouble_t exp_p, exp_m, exp_i;
-  double t_offset = 0.0; double delta_t = 0.0;
+  double t_offset = 0.0; double d_t = 0.0;
   double sigma_t_mu_a = 0, sigma_t_mu_b = 0, sigma_t_mu_c = 0;
   double sigma_t_a = 0, sigma_t_b = 0, sigma_t_c = 0;
 
@@ -137,12 +137,12 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
   }
   if (USE_TIME_RES)
   {
-    delta_t  = getTimeCal(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
+    d_t  = getTimeCal(sigma_t, sigma_t_a, sigma_t_b, sigma_t_c);
   }
-  //printf("delta_t=%lf,\tt_offset=%lf\n",delta_t,t_offset);
-  exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., delta_t);
-  exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., delta_t);
-  exp_i = getExponentialConvolution(time-t_offset,          G, DM, delta_t);
+  //printf("d_t=%lf,\tt_offset=%lf\n",d_t,t_offset);
+  exp_p = getExponentialConvolution(time-t_offset, G + 0.5*DG, 0., d_t);
+  exp_m = getExponentialConvolution(time-t_offset, G - 0.5*DG, 0., d_t);
+  exp_i = getExponentialConvolution(time-t_offset,          G, DM, d_t);
 
   //double ta = pyopencl::real(0.5*(exp_m + exp_p)); // cosh = (exp_m + exp_p)/2
   //double tb = pyopencl::real(0.5*(exp_m - exp_p)); // sinh = (exp_m - exp_p)/2
@@ -166,8 +166,8 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
   }
   else if (USE_PERFTAG)
   {
-    tagOS = qOS/531;
-    tagSS = qSS/531;
+    tagOS = qOS/fabs(qOS);
+    tagSS = qSS/fabs(qSS);
     if ((tagOS == 0)|(tagSS == 0))
     {
       printf("This events is not tagged!\n");
@@ -201,6 +201,7 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
   for(int k = 1; k <= 10; k++)
   {
     nk = getN(APlon,ASlon,APpar,APper,CSP,k);
+
     if (USE_FK)
     {
       fk = (9/(16*M_PI))*getF(cosK,cosL,hphi,k);
@@ -210,25 +211,66 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
       fk = normweights[k-1]; // these are 0s or 1s
     }
 
-    ak = getA(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
-    bk = getB(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
-    ck = getC(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
-    dk = getD(phisPlon,phisSlon,phisPpar,phisPper,deltaPlon,deltaSlon,deltaPpar,deltaPper,lPlon,lSlon,lPpar,lPper,k);
+    ak = getA(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+    bk = getB(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+    ck = getC(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
+    dk = getD(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
 
-    hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);//old factor: 3./(4.*M_PI)*
-    hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
+    //hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);//old factor: 3./(4.*M_PI)*
+    //hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
 
+    if (DM != 0)
+    {
+      hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);//old factor: 3./(4.*M_PI)*
+      hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
+    }
+    else
+    {
+      // this is the Bd2JpsiKstar p.d.f
+      hk_B = ak*ta + ck*tc;
+      if ( (k==4) || (k==6)  || (k==9) )
+      {
+        hk_Bbar = tagOS*ak*ta + tagOS*ck*tc;
+      }
+      else
+      {
+        hk_Bbar = ak*ta + ck*tc;
+      }
+    }
     pdfB    += nk*fk*hk_B; pdfBbar += nk*fk*hk_Bbar;
+    vnk[k-1] = nk; vak[k-1] = ak; vbk[k-1] = bk; vck[k-1] = ck; vdk[k-1] = dk;
 
-    vnk[k-1] = 1.*nk;
-    vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
+//     if ( get_global_id(0) <5)
+//     {
+//     printf("%lf\t", k, tagOS == 1 ? nk*fk*hk_B/(    (9/(16*M_PI))  * exp(-G*time)  ) : nk*fk*hk_Bbar/(    (9/(16*M_PI))  * exp(-G*time)  ) );
+//     if (k==10){
+//     printf("\n%lf,\t%lf,\t%lf,\t%lf,\t%lf,\t%lf,\t%lf,\t%lf,\t%lf,\t%lf\t\t[%lf]\n",
+//       APlon*APlon                              * ( cosK*cosK*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)),
+//       APpar*APpar                              * ( 0.5*sqrt(1.-cosK*cosK)*sqrt(1.-cosK*cosK)*(1.-cos(hphi)*cos(hphi)*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)) ),
+//       APper*APper                              * ( 0.5*sqrt(1.-cosK*cosK)*sqrt(1.-cosK*cosK)*(1.-sin(hphi)*sin(hphi)*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)) ),
+// tagOS*APpar*APper*sin(dPper-dPpar)     * ( sqrt(1.-cosK*cosK)*sqrt(1.-cosK*cosK)*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)*sin(hphi)*cos(hphi)),
+//       APlon*APpar*cos(dPpar)               * ( sqrt(2.)*sqrt(1.-cosK*cosK)*cosK*sqrt(1.-cosL*cosL)*cosL*cos(hphi) ),
+// tagOS*APlon*APper*sin(dPper)               * (-sqrt(2.)*sqrt(1.-cosK*cosK)*cosK*sqrt(1.-cosL*cosL)*cosL*sin(hphi) ),
+//       ASlon*ASlon                              * ( sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)/3. ),
+//       APpar*ASlon*CSP*cos(dPpar-dSlon) * ( 2.*sqrt(1.-cosK*cosK)*sqrt(1.-cosL*cosL)*cosL*cos(hphi)/sqrt(6.) ),
+// tagOS*APper*ASlon*CSP*sin(dPper-dSlon) * (-2.*sqrt(1.-cosK*cosK)*sqrt(1.-cosL*cosL)*cosL*sin(hphi)/sqrt(6.) ),
+//       APlon*ASlon*CSP*cos(dSlon)           * ( 2.*cosK*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)/sqrt(3.) ) ,tagOS
+//     );
+//
+//                                                     }
+//     }
   }
+
+
+
+
+
 
 
 
   // Compute pdf integral ------------------------------------------------------
   double intBBar[2] = {0.,0.};
-  if ( (delta_t == 0) & (USE_TIME_ACC == 0) )
+  if ( (d_t == 0) & (USE_TIME_ACC == 0) )
   {
     // Here we can use the simplest 4xPi integral of the pdf since there are no
     // resolution effects
@@ -255,6 +297,26 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
 
   // Cooking the output --------------------------------------------------------
   double num = 1.0; double den = 1.0;
+//   if ( get_global_id(0) == 0)
+//   {
+//     printf("pdfB = %lf\n",  dta*(
+//           (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
+//           (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar
+//           ) );
+//     printf("simon = %lf\n", (    (9/(16*M_PI))  * exp(-G*time)  )* (
+//       APlon*APlon                              * ( cosK*cosK*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)) +
+//       APpar*APpar                              * ( 0.5*sqrt(1.-cosK*cosK)*sqrt(1.-cosK*cosK)*(1.-cos(hphi)*cos(hphi)*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)) ) +
+//       APper*APper                              * ( 0.5*sqrt(1.-cosK*cosK)*sqrt(1.-cosK*cosK)*(1.-sin(hphi)*sin(hphi)*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)) ) +
+// tagOS*APpar*APper*sin(dPper-dPpar)     * ( sqrt(1.-cosK*cosK)*sqrt(1.-cosK*cosK)*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)*sin(hphi)*cos(hphi)) +
+//       APlon*APpar*cos(dPpar)               * ( sqrt(2.)*sqrt(1.-cosK*cosK)*cosK*sqrt(1.-cosL*cosL)*cosL*cos(hphi) ) +
+// tagOS*APlon*APper*sin(dPper)               * (-sqrt(2.)*sqrt(1.-cosK*cosK)*cosK*sqrt(1.-cosL*cosL)*cosL*sin(hphi) ) +
+//       ASlon*ASlon                              * ( sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)/3. ) +
+//       APpar*ASlon*CSP*cos(dPpar-dSlon) * ( 2.*sqrt(1.-cosK*cosK)*sqrt(1.-cosL*cosL)*cosL*cos(hphi)/sqrt(6.) ) +
+// tagOS*APper*ASlon*CSP*sin(dPper-dSlon) * (-2.*sqrt(1.-cosK*cosK)*sqrt(1.-cosL*cosL)*cosL*sin(hphi)/sqrt(6.) ) +
+//       APlon*ASlon*CSP*cos(dSlon)           * ( 2.*cosK*sqrt(1.-cosL*cosL)*sqrt(1.-cosL*cosL)/sqrt(3.) )  )
+//     );
+//     printf("integrals = %lf\t %lf\n", intB, (1/G)*(exp(-G*tLL)-exp(-G*tUL))*(APlon*APlon+APpar*APpar+APper*APper+ASlon*ASlon) );
+//   }
   num = dta*(
         (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
         (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar
@@ -277,8 +339,8 @@ double getDiffRate( double *data, double G, double DG, double DM, double CSP,
     {
       printf("RESULT             : pdfB=%+lf\tpdBbar=%+lf\tipdfB=%+lf\tipdfBbar=%+lf\n",
              pdfB,pdfBbar,intB,intBbar);
-      printf("RESULT             : dta=%+lf\tpdBbar=%+lf\tipdfB=%+lf\tipdfBbar=%+lf\n",
-             dta,pdfBbar,intB,intBbar);
+      printf("RESULT             : dta=%+lf\n",
+             dta);
       if (DEBUG >= 3)
       {
         printf("TIME ACC           : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",

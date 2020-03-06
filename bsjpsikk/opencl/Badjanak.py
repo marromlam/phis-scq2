@@ -118,16 +118,22 @@ def diff_cross_rate(
   """
   Look at kernel definition to see help
   """
+  # print(f"{fSlon}\n{fPlon}\n{fPper}\n{dSlon}")
   if CSP1: # then use binned mass
-    CSP   = [CSP1, CSP2, CSP3, CSP4, CSP5, CSP6]
-    fSlon = [fSlon1, fSlon2, fSlon3, fSlon4, fSlon5, fSlon6]
-    dSlon = [dSlon1, dSlon2, dSlon3, dSlon4, dSlon5, dSlon6]
+    CSP = [c for c in (CSP1, CSP2, CSP3, CSP4, CSP5, CSP6) if c != 0]
+    fSlon = [c for c in (fSlon1, fSlon2, fSlon3, fSlon4, fSlon5, fSlon6) if c != 0]
+    dSlon = [c for c in (dSlon1, dSlon2, dSlon3, dSlon4, dSlon5, dSlon6) if c != 0]
+    #CSP   = [CSP1, CSP2, CSP3, CSP4, CSP5, CSP6]
+    #fSlon = [fSlon1, fSlon2, fSlon3, fSlon4, fSlon5, fSlon6]
+    #dSlon = [dSlon1, dSlon2, dSlon3, dSlon4, dSlon5, dSlon6]
   ASlon = np.atleast_1d(fSlon)
   FP = abs(1-ASlon)
   APlon = FP*fPlon; APper = FP*fPper; APpar = FP*abs(1-fPlon-fPper) # Amplitudes
   dSlon = np.atleast_1d(dSlon) + dPper                           # Strong phases
   CSP   = np.atleast_1d(CSP)                                       # CSP factors
   if Gs==None: Gs = Gd+DGsd+DGd
+  # print(f"{ASlon}\n{APlon}\n{APper}\n{APpar}\n{dSlon}")
+  # print(len(CSP),CSP)
   __KERNELS.DiffRate(
     THREAD._queue,
     (int(np.ceil(pdf.shape[0]/BLOCK_SIZE)),),

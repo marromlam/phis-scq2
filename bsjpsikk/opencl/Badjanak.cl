@@ -119,6 +119,10 @@ void pyDiffRate(__global double *data, __global double *lkhd,
   {{
     if ((mass >= X_M[bin]) && (mass < X_M[bin+1]))
     {{
+      if ((DEBUG > 3) && ( get_global_id(0) < DEBUG_EVT) )
+      {{
+        printf("---> CSP = %lf; mass = %lf\n",CSP[bin], mass);
+      }}
       lkhd[evt] = getDiffRate(data4,
                               G, DG, DM, CSP[bin],
                               ASlon[bin], APlon[bin], APpar[bin], APper[bin],
