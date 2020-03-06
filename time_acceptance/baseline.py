@@ -118,6 +118,7 @@ print(f"{'cuts':>15}: {cuts:50}\n")
 
 
 
+
 # Initialize backend
 from ipanema import initialize
 initialize(os.environ['IPANEMA_BACKEND'],2)
@@ -363,7 +364,7 @@ for name, sample in zip(samples.keys(),samples.values()):
     label = (r'\mathrm{data}',r'B_s^0')
   cats[name] = Sample.from_root(sample, cuts=cuts)
   cats[name].name = os.path.splitext(os.path.basename(sample))[0]+'_'+trigger
-  cats[name].allocate(time='time',weight='sWeight',lkhd='0*time')
+  cats[name].allocate(time='time',weight='sWeight*kinWeight',lkhd='0*time')
   param_path  = os.path.join(PATH,'init',NAME)
   param_path = os.path.join(param_path,f"{sample.split('/')[-2]}_{YEAR}.json")
   cats[name].assoc_params(Parameters.load(param_path))
@@ -462,9 +463,9 @@ print(f"\n{80*'='}\n{'= Fitting three categories':79}=\n{80*'='}\n")
 
 # cats['BsMC'].params.lock()
 # print(cats['BsMC'].params)
-result = optimize(lkhd_full_spline, method="hesse",
+result = optimize(lkhd_full_spline, method="minuit",
             params=cats['BsMC'].params+cats['BdMC'].params+cats['BdDT'].params,
-            kwgs={'data': [cats['BsMC'].time,
+            fcn_kwgs={'data': [cats['BsMC'].time,
                            cats['BdMC'].time,
                            cats['BdDT'].time],
                 'prob':   [cats['BsMC'].lkhd,
