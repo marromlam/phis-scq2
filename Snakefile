@@ -53,7 +53,7 @@ rule fetch_ntuples:
 def super_shit(mode,year,flag):
   file = f"{SAMPLES_PATH}{year}/"
   if mode.startswith('MC_'):
-    file += f"{mode[3:]}/{flag}"
+    file += f"{mode[3:].split('_')[0]}/{flag}"
     if mode == 'MC_Bd2JpsiKstar':
       file += '_kinWeight.root'
     else:
@@ -66,8 +66,8 @@ def super_shit(mode,year,flag):
 
 rule polarity_weighting:
   params:
-    original = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode}/{wildcards.flag}.root",
-    target = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode[3:]}/{wildcards.flag}.root",
+    original = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode}/{wildcards.flag}_selected_bdt_sw.root",
+    target = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode[3:].split('_')[0]}/{wildcards.flag}_selected_bdt_sw.root",
   output:
     sample = SAMPLES_PATH+'{year}/{mode}/{flag}_polWeight.root'
   run:
@@ -94,7 +94,7 @@ rule pdf_weighting:
     sample = expand(rules.polarity_weighting.output,
                     year='{year}', mode='{mode}', flag='{flag}'),
   params:
-    original = lambda wildcards: f'{wildcards.mode[3:]}_2016.json',
+    original = lambda wildcards: f"{wildcards.mode[3:].split('_')[0]}_2016.json",
     target = '{mode}_2016.json'
   output:
     sample = SAMPLES_PATH+'{year}/{mode}/{flag}_pdfWeight.root'
