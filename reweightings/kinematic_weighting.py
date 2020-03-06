@@ -52,14 +52,14 @@ def getStringVars(FUN):
 
 def kinematic_weighting(original_file, original_treename, original_vars, original_weight,
                         target_file, target_treename, target_vars, target_weight,
-			output_file,
+                        output_file,
                         n_estimators, learning_rate, max_depth,
                         min_samples_leaf, trunc):
+  print(f"\n{80*'='}\n{'= Kinematic weighting':79}=\n{80*'='}\n")
   # %% Build pandas dataframes -------------------------------------------------
-
   original_vars = original_vars.split()
   target_vars = target_vars.split()
-  print(original_vars,target_vars)
+
   # find all needed branches
   all_original_vars = original_vars + getStringVars(original_weight)
   all_target_vars   = target_vars + getStringVars(target_weight)
@@ -67,48 +67,13 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   # fetch variables in original files
   print('Loading branches for original_sample')
   file = uproot.open(original_file)[original_treename]
-  original_vars_df = file.pandas.df()
+  original_vars_df = file.pandas.df(flatten=False)
   original_weight = original_vars_df.eval(original_weight)
 
   print('Loading branches for target_sample')
   file = uproot.open(target_file)[target_treename]
   target_vars_df = file.pandas.df(branches=all_target_vars)
   target_weight = target_vars_df.eval(target_weight)
-
-  """
-  # fetch variables in  target files
-  target_dict = {}
-  print('Loading branches for target_sample')
-  for path in target_paths:
-    if isinstance(path,str):
-      _file = uproot.open(path)
-      _tree = _file[_file.keys()[0]]
-    else:
-      _file = uproot.open(path[0])
-      _tree = _file[path[1]]
-    _vars = []
-    for var in all_target_vars:
-      if var.encode() in _tree.keys():
-        _vars.append(var)
-        target_dict.update({var: _tree[var.encode()].array()})
-    print('    Loaded ' + len(_vars)*"%s " % tuple(_vars) + "from " + path)
-
-  # check if all needed branches are placed in df's
-  for var in all_original_vars:
-    if var not in original_dict.keys():
-      raise RuntimeError('Variable %s is missing.' % var)
-
-  for var in all_target_vars:
-    if var not in target_dict.keys():
-      raise RuntimeError('Variable %s is missing, errors are coming...' % var)
-
-  # finishing: cooking dataframe
-  original_vars_df            = pd.DataFrame.from_dict(original_dict)
-  original_vars_df['weight']  = original_vars_df.eval(original_weight)
-  target_vars_df              = pd.DataFrame.from_dict(target_dict)
-  target_vars_df['weight']    = target_vars_df.eval(target_weight)
-  """
-
 
   # %% Reweighting -------------------------------------------------------------
 
@@ -127,33 +92,28 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   kinWeight = reweighter.predict_weights(original_vars_df.get(original_vars))
 
   # Use truncation if set
-  if trunc:
+  if int(trunc):
     print('Apply a truncation at '+trunc)
     kinWeight[kinWeight > float(trunc)] = float(trunc)
   kinWeight = np.where(original_weight!=0, kinWeight, 0)
   original_vars_df['kinWeight'] = kinWeight
 
-
-
-  # %% Plot histograms ---------------------------------------------------------
-  #plt.hist(kinWeight,100, range=(0,1))
-  # TODO: write plot functions here!
-
-
-
   # %% Save weights to file ----------------------------------------------------
   if os.path.exists(output_file):
     print('Deleting previous %s'  % output_file)
     os.remove(output_file)                               # delete file if exists
-  os.system('cp '+original_file+' '+output_file)
+  #os.system('cp '+original_file+' '+output_file)
   print('Writing on %s' % output_file)
   import root_pandas
   root_pandas.to_root(original_vars_df, output_file, key=original_treename)
+  #f = uproot.recreate(output_file)
+  #f[original_treename] = uproot.newtree({var:'float64' for var in original_vars_df})
+  #f[original_treename].extend(original_vars_df.to_dict(orient='list'))
+  #f.close()
 
   return kinWeight
 
 if __name__ == '__main__':
     parser = argument_parser()
     args = parser.parse_args()
-    print(vars(args))
     kinematic_weighting(**vars(args))
