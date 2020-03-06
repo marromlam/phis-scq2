@@ -48,18 +48,20 @@ rule fetch_ntuples:
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package. .split('_')[1],
 
-# rewrite this function int order to reduce code in the rule !!!
-def parse_kinw(year,mode,flag):
-  print(year,mode,flag)
-  if mode.startswith('MC_Bs'):
-    return ["Bs2JpsiPhi", "B_PT X_M", "(sw/gb_weights)*polWeight*pdfWeight",
-            "Bs2JpsiPhi", "B_PT X_M", "sw"]
-  elif mode.startswith('MC_Bd'):
-    return ["Bd2JpsiKstar", "B_PT X_M", "sw*polWeight*pdfWeight",
-            "Bd2JpsiKstar", "B_PT X_M", "sw"]
-  elif mode.startswith('Bd'):
-    return ["Bd2JpsiKstar", "B_PT B_P", "sw",
-            "Bs2JpsiPhi", "B_PT B_P", "sw"]
+
+
+def super_shit(mode,year,flag):
+  file = f"{SAMPLES_PATH}{year}/"
+  if mode.startswith('MC_'):
+    file += f"{mode[3:]}/{flag}"
+    if mode == 'MC_Bd2JpsiKstar':
+      file += '_kinWeight.root'
+    else:
+      file += '_pdfWeight.root'
+  else:
+    file += f"{'Bs2JpsiPhi'}/{flag}_pdfWeight.root"
+  return file
+
 
 
 rule polarity_weighting:
@@ -84,6 +86,7 @@ rule polarity_weighting:
       shell(f"""
         cp {params.original} {output.sample}
       """)
+
 
 
 rule pdf_weighting:
@@ -112,19 +115,6 @@ rule pdf_weighting:
       shell(f"""
         cp {input.sample} {output.sample}
       """)
-
-
-def super_shit(mode,year,flag):
-  file = f"{SAMPLES_PATH}{year}/"
-  if mode.startswith('MC_'):
-    file += f"{mode[3:]}/{flag}"
-    if mode == 'MC_Bd2JpsiKstar':
-      file += '_kinWeight.root'
-    else:
-      file += '_pdfWeight.root'
-  else:
-    file += f"{'Bs2JpsiPhi'}/{flag}_pdfWeight.root"
-  return file
 
 
 
@@ -202,11 +192,7 @@ rule kinematic_weighting:
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package.
 
-def caca(mode):
-  if mode.startswith('MC_Bs2JpsiPhi') | mode.startswith('MC_Bd2JpsiKstar') | mode.startswith('Bd2JpsiKstar'):
-    return '_kinWeight.root'
-  else:
-    return '_selected_bdt_sw.root'
+
 
 rule reduce_ntuples:
   input:
@@ -224,43 +210,6 @@ rule reduce_ntuples:
     shell(f"""
       rm {SAMPLES_PATH}{wildcards.year}/{wildcards.mode}/{wildcards.flag}_*Weight.root
     """)
-
-# rule reduce_ntuples:
-#   params:
-#     sample = SAMPLES_PATH+'{year}/{mode}/{flag}_selected_bdt_sw.root'
-#   output:
-#     sample = SAMPLES_PATH+'{year}/{mode}/{flag,[A-Za-z0-9]+}.root'
-#   run:
-#     import os
-#     year = f'{wildcards.year}'
-#     mode = f'{wildcards.mode}'
-#     flag = f'{wildcards.flag}'
-#     end  = 'selected_bdt_sw'
-#     filename = f"{SAMPLES_PATH}{year}/{mode}/{flag}
-#     if not os.path.isfile(params.sample):
-#       shell(f"""
-#         python samples/get_samples.py -v {VERSION}
-#       """)"
-#     if mode[:5] == 'MC_Bs' | mode[:5] == 'MC_Bd' | modemode[:4] == 'Bd2J'):
-#       input_file = f"{filename}_kinWeight.root"
-#       if not os.path.isfile(f"{input_file}"):
-#         print(f"snakemake {input_file}")
-#       print(f"""
-#         python samples/reduce_ntuples.py\
-#                --input-file {input.sample}\
-#                --output-file {output.sample}\
-#                --input-tree DecayTree\
-#                --output-tree DecayTree
-#       """)
-#     else:
-#
-#     """
-#     python samples/reduce_ntuples.py\
-#            --input-file {input.sample}\
-#            --output-file {output.sample}\
-#            --input-tree DecayTree\
-#            --output-tree DecayTree
-#     """
 
 
 
