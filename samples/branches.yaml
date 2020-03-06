@@ -5,28 +5,36 @@ common: &common
   "hphi" : "helphi"
   "q" : "B_ID"
   "X_M" : "X_M"
-  "sigma_t" : "sigma_t"
+  "sigmat" : "sigmat"
   "hplus_P" : "hplus_P"
   "hplus_PT" : "hplus_PT"
   "hminus_P" : "hminus_P"
   "hminus_PT" : "hminus_PT"
   "B_PT" : "B_PT"
+  "B_P" : "B_P"
   "hlt1b" : "hlt1b"
+  "Polarity" : "Polarity"
 
 MC_common: &MC_common
   <<: *common
+  "X_ID" : "X_ID"
   "truetime" : "1000*B_TRUETAU"
   "truecosK" : "truehelcosthetaK"
   "truecosL" : "truehelcosthetaL"
   "truehphi" : "truehelphi"
+  "truetime_GenLvl" : "1000*B_TRUETAU_GenLvl"
+  "truecosK_GenLvl" : "truehelcosthetaK_GenLvl"
+  "truecosL_GenLvl" : "truehelcosthetaL_GenLvl"
+  "truehphi_GenLvl" : "truehelphi_GenLvl"
+  "kinWeight" : "kinWeight"
+  "polWeight" : "polWeight"
+  "pdfWeight" : "pdfWeight"
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
-  "X_ID": "X_ID"
-  "sWeight" : "alpha(sw,gb_weights)"
   "sw" : "sw"
   "gb_weights" : "gb_weights"
-  "kinWeight" : "kinWeight"
+  "sWeight" : "alpha(sw,gb_weights)"
 
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
@@ -37,6 +45,7 @@ Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
   "sWeight" : "alpha(sw)"
   "sw" : "sw"
+  "kinWeight" : "kinWeight"
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_Bs2JpsiPhi
