@@ -60,7 +60,7 @@ max_depth         = 3
 min_samples_leaf  = 1000
 trunc             = 0
 
-#kinematic.kinematic_weighting(original_file, original_treename, original_vars, original_weight, target_file, target_treename, target_vars, target_weight, output_file, n_estimators, learning_rate, max_depth, min_samples_leaf, trunc)
+kinematic.kinematic_weighting(original_file, original_treename, original_vars, original_weight, target_file, target_treename, target_vars, target_weight, output_file, n_estimators, learning_rate, max_depth, min_samples_leaf, trunc)
 print('TEST: kinematic-weighting is done.\n')
 
 
@@ -87,6 +87,7 @@ plt.show()
 # kinWeight
 foo = uproot.open(path+'MC_JpsiPhi_sample2016_kinWeight.root')['DecayTree'].array('kinWeight')
 bar = uproot.open(path+'BsJpsiPhi_DG0_MC_2016_UpDown_MDST_20181101_Sim09b_tmva_cut58_sel_sw_BsMCToBsData_BaselineDef_15102018.root')['weights'].array('kinWeight')
+print(foo,bar)
 plt.close()
 print(foo-bar,np.amax(np.abs(foo-bar)))
 plt.plot(foo-bar)

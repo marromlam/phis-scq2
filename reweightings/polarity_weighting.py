@@ -8,33 +8,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import uproot
 import os
-from hep_ml import reweight
-import ast
-import math
 
-# branches = ["time",
-# "Polarity",
-# "helcosthetaK",
-# "helcosthetaL",
-# "helphi",
-# "B_ID",
-# "X_M",
-# "hplus_P",
-# "hplus_PT",
-# "hminus_P",
-# "hminus_PT",
-# "B_PT",
-# "hlt1b",
-# "sw",
-# "gb_weights",
-# 'truehelcosthetaK', 'B_ID_GenLvl', 'sigmat', 'truehelcosthetaL', 'truehelphi', 'B_TRUETAU',
-# #
-# 'truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl','truehelphi_GenLvl','B_TRUETAU_GenLvl'] # Final names!]
-# #'cosThetaKRef_GenLvl','cosThetaMuRef_GenLvl','phiHelRef_GenLvl','time_GenLvl']
+
 
 # %% polarity_weighting --------------------------------------------------------
-
-
 
 def argument_parser():
   parser = argparse.ArgumentParser()
@@ -55,7 +32,8 @@ def argument_parser():
 def polarity_weighting(original_file, original_treename,
                        target_file, target_treename,
                        output_file):
-  # Get data -------------------------------------------------------------------
+  print(f"\n{80*'='}\n{'= Polarity weighting':79}=\n{80*'='}\n")
+  # Get data
   try:
     _original_file = uproot.open(original_file)
     _original_tree = _original_file[original_treename]
@@ -71,17 +49,17 @@ def polarity_weighting(original_file, original_treename,
     print('polarity-weighting.py: Missing target file. Exiting...')
     raise
 
-  if "PolWeight".encode() in _original_tree.keys():
+  if "polWeight".encode() in _original_tree.keys():
     print('polarity-weighting.py: This file already has a polWeight. Exiting...')
     exit()
   else:
-    original_df       = _original_tree.pandas.df(branches)
+    original_df       = _original_tree.pandas.df(flatten=False)
     original_polarity = original_df["Polarity"].values
     target_df         = _target_tree.pandas.df(branches="Polarity")
     target_polarity   = target_df["Polarity"].values
   print('DataFrames are ready')
 
-  # Cook weights ---------------------------------------------------------------
+  # Cook weights
   original_mean = np.mean(original_polarity)
   target_mean   = np.mean(target_polarity)
   target_down   = np.sum(np.where(original_polarity<0,1,0))
@@ -101,20 +79,19 @@ def polarity_weighting(original_file, original_treename,
   print('polWeight was succesfully calculated')
 
 
-  # Save weights to file -------------------------------------------------------
+  # Save weights to file
   #    It would be nice that uproot.update worked, but it is not yet avaliable
   #    and the function is a placeholder only according to the author. So, at
   #    moment it is needed to load the whole df and write a new one :(.
   #    This produces some problems with large files, so we are using root_pandas
   #    to store files whilst uproot can't
-  print(output_file)
   if os.path.exists(output_file):
     print('Deleting previous %s'  % output_file)
     os.remove(output_file)                               # delete file if exists
   print('Writing on %s' % output_file)
   import root_pandas
   root_pandas.to_root(original_df, output_file, key=original_treename)
-  #f = uproot.create(output_file)
+  #f = uproot.recreate(output_file)
   #f[original_treename] = uproot.newtree({var:'float64' for var in original_df})
   #f[original_treename].extend(original_df.to_dict(orient='list'))
   #f.close()
@@ -126,5 +103,4 @@ def polarity_weighting(original_file, original_treename,
 if __name__ == '__main__':
   parser = argument_parser()
   args = parser.parse_args()
-  print(vars(args))
   polarity_weighting(**vars(args))

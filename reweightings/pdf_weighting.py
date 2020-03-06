@@ -60,8 +60,9 @@ def pdf_weighting(input_file, tree_name, output_file,
                   target_params, original_params,
                   mode):
 
+  print(f"\n{80*'='}\n{'= PDF weighting':79}=\n{80*'='}\n")
   # Modify flags, compile model and get kernels
-  bsjpsikk.config['debug_evt'] = 0
+  bsjpsikk.config['debug_evt'] = 1
   bsjpsikk.config['debug'] = 0
   bsjpsikk.config['use_time_acc'] = 0
   bsjpsikk.config['use_time_offset'] = 0
@@ -71,9 +72,9 @@ def pdf_weighting(input_file, tree_name, output_file,
 
 
   #bsjpsikk.config['sigma_t'] = 0.0
-  if mode == "MC_BdJpsiKstar":
+  if mode == "MC_Bd2JpsiKstar":
     bsjpsikk.config["x_m"] = [826, 861, 896, 931, 966]
-  elif mode == "MC_BsJpsiPhi":
+  elif mode.startswith("MC_Bs2JpsiPhi"):
     bsjpsikk.config["x_m"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
   bsjpsikk.get_kernels()
   cross_rate = bsjpsikk.diff_cross_rate
@@ -81,11 +82,8 @@ def pdf_weighting(input_file, tree_name, output_file,
   # Load file
   print('Loading file...')
   input_file = uproot.open(input_file)[tree_name]
-  data = input_file.pandas.df()
-  data
+  data = input_file.pandas.df(flatten=False)
   # Prepare host arrays
-  tad_vars = ['cosThetaKRef_GenLvl','cosThetaMuRef_GenLvl','phiHelRef_GenLvl',
-              'time_GenLvl', 'X_M','sigmat','B_ID_GenLvl'] # Simon names
   tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
               'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
               'B_ID_GenLvl'] # Final names!
@@ -111,6 +109,8 @@ def pdf_weighting(input_file, tree_name, output_file,
   data['pdfWeight'] = pdfWeight
   print('pdfWeight was succesfully calculated')
 
+
+
   # Save weights to file -------------------------------------------------------
   #    It would be nice that uproot.update worked, but it is not yet avaliable
   #    and the function is a placeholder only according to the author. So, at
@@ -124,9 +124,9 @@ def pdf_weighting(input_file, tree_name, output_file,
   print('Writing on %s' % output_file)
   import root_pandas
   root_pandas.to_root(data, output_file, key=tree_name)
-  #f = uproot.create(output_file)
-  #f[original_treename] = uproot.newtree({var:'float64' for var in original_df})
-  #f[original_treename].extend(original_df.to_dict(orient='list'))
+  #f = uproot.recreate(output_file)
+  #f[tree_name] = uproot.newtree({var:'float64' for var in data})
+  #f[tree_name].extend(data.to_dict(orient='list'))
   #f.close()
   print('pdfWeight was succesfully written.')
 
