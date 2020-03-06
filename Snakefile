@@ -12,9 +12,9 @@
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
 VERSION = 'v0r2'
 MAIN_PATH = '/scratch17/marcos.romero/phis_samples/'
-SAMPLES_PATH = MAIN_PATH+VERSION+'/'
+SAMPLES_PATH = MAIN_PATH + VERSION + '/'
 
-# Some wildcards options
+# Some wildcards options ( this is not actually used )
 modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_DG0','Bs2JpsiPhi',
          'MC_Bs2JpsiPhi', 'MC_Bd2JpsiKstar'];
 years = ['2011','2012','Run1',
@@ -34,12 +34,12 @@ ruleorder: fetch_ntuples > reduce_ntuples
 rule fetch_ntuples:
   output:
     sample = SAMPLES_PATH+'{year}/{mode}/{flag}_selected_bdt_sw.root'
-  shell:
-    """
-    python samples/get_samples.py -v {VERSION}
-    """
-
-
+  run:
+    import os
+    if not os.path.exists(f"output.sample"):
+      shell("""
+        python samples/get_samples.py -v {VERSION}
+      """)
 
 
 
@@ -50,122 +50,218 @@ rule fetch_ntuples:
 
 # rewrite this function int order to reduce code in the rule !!!
 def parse_kinw(year,mode,flag):
+  print(year,mode,flag)
   if mode.startswith('MC_Bs'):
     return ["Bs2JpsiPhi", "B_PT X_M", "(sw/gb_weights)*polWeight*pdfWeight",
             "Bs2JpsiPhi", "B_PT X_M", "sw"]
   elif mode.startswith('MC_Bd'):
-    return mode,'Bd2JpsiKstar'
+    return ["Bd2JpsiKstar", "B_PT X_M", "sw*polWeight*pdfWeight",
+            "Bd2JpsiKstar", "B_PT X_M", "sw"]
   elif mode.startswith('Bd'):
-    return mode,'Bs2JpsiPhi'
-  else:
-    return 0
+    return ["Bd2JpsiKstar", "B_PT B_P", "sw",
+            "Bs2JpsiPhi", "B_PT B_P", "sw"]
 
 
 rule polarity_weighting:
-  input:
-    original = expand(rules.fetch_ntuples.output, year='{year}', mode='MC_{mode}', flag='{flag}'),
-    target = expand(rules.fetch_ntuples.output, year='{year}', mode='{mode}', flag='{flag}')
+  params:
+    original = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode}/{wildcards.flag}.root",
+    target = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode[3:]}/{wildcards.flag}.root",
   output:
-    sample = SAMPLES_PATH+'{year}/MC_{mode}/{flag}_polWeight.root'
-  shell:
-    """
-    python reweightings/polarity_weighting.py\
-           --original-file {input.original}\
-           --original-treename DecayTree\
-           --target-file {input.target}\
-           --target-treename DecayTree\
-           --output-file {output.sample}
-    """
+    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_polWeight.root'
+  run:
+    if f'{wildcards.mode}' in ('MC_Bs2JpsiPhi_dG0',
+                               'MC_Bs2JpsiPhi',
+                               'MC_Bd2JpsiKstar'):
+      shell(f"""
+        python reweightings/polarity_weighting.py\
+             --original-file {params.original}\
+             --original-treename DecayTree\
+             --target-file {params.target}\
+             --target-treename DecayTree\
+             --output-file {output.sample}
+      """)
+    else:
+      shell(f"""
+        cp {params.original} {output.sample}
+      """)
+
 
 rule pdf_weighting:
   input:
-    sample = expand(rules.polarity_weighting.output, year='{year}', mode='{mode}', flag='{flag}'),
-    original = 'reweightings/parameters/tad-2016-both-simon1.json',
-    target = 'reweightings/parameters/tad-2016-both-simon2.json'
+    sample = expand(rules.polarity_weighting.output,
+                    year='{year}', mode='{mode}', flag='{flag}'),
+  params:
+    original = lambda wildcards: f'{wildcards.mode[3:]}_2016.json',
+    target = '{mode}_2016.json'
   output:
-    sample = SAMPLES_PATH+'{year}/MC_{mode}/{flag}_pdfWeight.root'
-  shell:
-    """
-    python reweightings/pdf_weighting.py\
-           --input-file {input.sample}\
-           --tree-name DecayTree\
-           --output-file {output.sample}\
-           --target-params {input.target}\
-           --original-params {input.original}\
-           --mode MC_{wildcards.mode}
-    """
+    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_pdfWeight.root'
+  run:
+    if f'{wildcards.mode}' in ('MC_Bs2JpsiPhi_dG0',
+                               'MC_Bs2JpsiPhi',
+                               'MC_Bd2JpsiKstar'):
+      shell(f"""
+      python reweightings/pdf_weighting.py\
+             --input-file {input.sample}\
+             --tree-name DecayTree\
+             --output-file {output.sample}\
+             --target-params reweightings/parameters/{params.target}\
+             --original-params reweightings/parameters/{params.original}\
+             --mode {wildcards.mode}
+      """)
+    else:
+      shell(f"""
+        cp {input.sample} {output.sample}
+      """)
+
+
+def super_shit(mode,year,flag):
+  file = f"{SAMPLES_PATH}{year}/"
+  if mode.startswith('MC_'):
+    file += f"{mode[3:]}/{flag}"
+    if mode == 'MC_Bd2JpsiKstar':
+      file += '_kinWeight.root'
+    else:
+      file += '_pdfWeight.root'
+  else:
+    file += f"{'Bs2JpsiPhi'}/{flag}_pdfWeight.root"
+  return file
+
+
 
 rule kinematic_weighting:
   input:
-    original = lambda wildcards: expand(rules.pdf_weighting.output, year='{year}', mode='{}'.format(parse_kinw(**wildcards)[0]), flag='{flag}'),
-    target = lambda wildcards: expand(rules.pdf_weighting.output, year='{year}', mode='{}'.format(parse_kinw(**wildcards)[3]), flag='{flag}'),
-  params:
-    original_vars = lambda wildcards: "{}".format(parse_kinw(**wildcards)[1]),
-    original_weight = lambda wildcards: "{}".format(parse_kinw(**wildcards)[2]),
-    target_vars = lambda wildcards: "{}".format(parse_kinw(**wildcards)[4]),
-    target_weight = lambda wildcards: "{}".format(parse_kinw(**wildcards)[5])
+    original = SAMPLES_PATH+'{year}/{mode}/{flag}_pdfWeight.root',
+    target = lambda wildcards: super_shit(wildcards.mode,wildcards.year,wildcards.flag)
   output:
     sample = SAMPLES_PATH+'{year}/{mode}/{flag}_kinWeight.root'
-  shell:
-    """
-    python reweightings/kinematic_weighting.py\
-           --original-file {input.original}\
-           --original-treename DecayTree\
-           --original-vars "{params.original_vars}"\
-           --original-weight "{params.original_weight}"\
-           --target-file {input.target}\
-           --target-treename DecayTree\
-           --target-vars "{params.target_vars}"\
-           --target-weight "{params.target_weight}"\
-           --output-file {output.sample}\
-           --n-estimators 20\
-           --learning-rate 0.3\
-           --max-depth 3\
-           --min-samples-leaf 1000\
-           --trunc 0
-    """
+  run:
+    import os
+    year = f'{wildcards.year}'
+    mode = f'{wildcards.mode}'
+    flag = f'{wildcards.flag}'
+    end  = 'selected_bdt_sw'
+    if mode.startswith('MC_Bs2JpsiPhi'):
+      shell(f"""
+        python reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "B_PT X_M" \
+          --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "B_PT X_M"\
+          --target-weight "sw"\
+          --output-file {output.sample}\
+          --n-estimators 20\
+          --learning-rate 0.3\
+          --max-depth 3\
+          --min-samples-leaf 1000
+      """)
+    elif mode.startswith('MC_Bd2JpsiKstar'):
+      shell(f"""
+        python reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "B_PT X_M" \
+          --original-weight "sw*polWeight*pdfWeight"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "B_PT X_M"\
+          --target-weight "sw*kinWeight"\
+          --output-file {output.sample}\
+          --n-estimators 20\
+          --learning-rate 0.3\
+          --max-depth 3\
+          --min-samples-leaf 1000
+      """)
+    elif mode.startswith('Bd2JpsiKstar'):
+      shell(f"""
+        python reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "B_PT B_P" \
+          --original-weight "sw"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "B_PT B_P"\
+          --target-weight "sw"\
+          --output-file {output.sample}\
+          --n-estimators 20\
+          --learning-rate 0.3\
+          --max-depth 3\
+          --min-samples-leaf 1000
+      """)
+    else:
+      shell(f"""
+        cp {input.original} {output.sample}
+      """)
+
 
 
 # reduce_ntuples ---------------------------------------------------------------
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package.
 
-rule rename_ntuples:
-  params:
-    sample = lambda wildcards: expand(rules.kinematic_weighting.output,
-                   year=f'{wildcards.year}', mode=f'{wildcards.mode}', flag=f'{wildcards.flag}')
-  output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_full.root'
-  run:
-    import os
-    input_file = params.sample[0]
-    if os.path.isfile(input_file):
-      print(f"Renaming {input_file} to {output.sample}.")
-      os.rename(f"{input_file}",f"{output.sample}")
-    else:
-      try:
-        shell(f"snakemake {input_file}")
-      except:
-        print(f"There are no rules for {input_file}.")
-      finally:
-        print(f"Renaming {input_file} to {output.sample}.")
-        os.rename(f"{input_file}",f"{output.sample}")
+def caca(mode):
+  if mode.startswith('MC_Bs2JpsiPhi') | mode.startswith('MC_Bd2JpsiKstar') | mode.startswith('Bd2JpsiKstar'):
+    return '_kinWeight.root'
+  else:
+    return '_selected_bdt_sw.root'
 
 rule reduce_ntuples:
   input:
-    sample = expand(rules.rename_ntuples.output,
-                   year='{year}', mode='{mode}', flag='{flag}')
-    # sample = SAMPLES_PATH+'{year}/{mode}/{flag}_selected_bdt_sw.root'
+    sample = lambda wildcards: SAMPLES_PATH+"{year}/{mode}/{flag}_kinWeight.root"
   output:
     sample = SAMPLES_PATH+'{year}/{mode}/{flag,[A-Za-z0-9]+}.root'
-  shell:
-    """
-    python samples/reduce_ntuples.py\
-           --input-file {input.sample}\
-           --output-file {output.sample}\
-           --input-tree DecayTree\
-           --output-tree DecayTree
-    """
+  run:
+    shell(f"""
+      python samples/reduce_ntuples.py\
+             --input-file {input.sample}\
+             --output-file {output.sample}\
+             --input-tree DecayTree\
+             --output-tree DecayTree
+    """)
+    shell(f"""
+      rm {SAMPLES_PATH}{wildcards.year}/{wildcards.mode}/{wildcards.flag}_*Weight.root
+    """)
+
+# rule reduce_ntuples:
+#   params:
+#     sample = SAMPLES_PATH+'{year}/{mode}/{flag}_selected_bdt_sw.root'
+#   output:
+#     sample = SAMPLES_PATH+'{year}/{mode}/{flag,[A-Za-z0-9]+}.root'
+#   run:
+#     import os
+#     year = f'{wildcards.year}'
+#     mode = f'{wildcards.mode}'
+#     flag = f'{wildcards.flag}'
+#     end  = 'selected_bdt_sw'
+#     filename = f"{SAMPLES_PATH}{year}/{mode}/{flag}
+#     if not os.path.isfile(params.sample):
+#       shell(f"""
+#         python samples/get_samples.py -v {VERSION}
+#       """)"
+#     if mode[:5] == 'MC_Bs' | mode[:5] == 'MC_Bd' | modemode[:4] == 'Bd2J'):
+#       input_file = f"{filename}_kinWeight.root"
+#       if not os.path.isfile(f"{input_file}"):
+#         print(f"snakemake {input_file}")
+#       print(f"""
+#         python samples/reduce_ntuples.py\
+#                --input-file {input.sample}\
+#                --output-file {output.sample}\
+#                --input-tree DecayTree\
+#                --output-tree DecayTree
+#       """)
+#     else:
+#
+#     """
+#     python samples/reduce_ntuples.py\
+#            --input-file {input.sample}\
+#            --output-file {output.sample}\
+#            --input-tree DecayTree\
+#            --output-tree DecayTree
+#     """
+
 
 
 # decay_time_acceptance --------------------------------------------------------
