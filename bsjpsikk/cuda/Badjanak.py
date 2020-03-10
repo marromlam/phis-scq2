@@ -9,7 +9,7 @@ import pycuda.gpuarray as cu_array
 from pycuda.compiler import SourceModule
 
 import numpy as np
-
+import ipanema
 
 
 # This file path
@@ -51,8 +51,16 @@ def flagger():
   #global config
   dict_flags = {}
   for key, value in zip(config.keys(),config.values()):
+    if key == 'x_m':
+      dict_flags['nmassbins'.upper()] = len(value)-1
+      dict_flags['nmassknots'.upper()] = len(value)
+    if key == 'knots':
+      dict_flags['nknots'.upper()] = len(value)
+    if key == 'tristan':
+      dict_flags['nterms'.upper()] = len(value)
     dict_flags[key.upper()] = str(value).replace('[','{').replace(']','}')
   return dict_flags
+
 
 
 
@@ -60,6 +68,7 @@ def flagger():
 #     Compile kernel against given BACKEND
 def compile():
   kernel_path = os.path.join(PATH,'Badjanak.cu')
+  #print( open(kernel_path,"r").read().format(**flagger()) )
   Badjanak = SourceModule(open(kernel_path,"r").read().format(**flagger()),
                           no_extern_c=False, arch=None, code=None,
                           include_dirs=[PATH])
@@ -167,7 +176,7 @@ def diff_cross_rate(
 
 
 
-def getAngularWeights(data, weight, pars, coeffs=None, BLOCK_SIZE=32):
+def get_angular_weights(data, weight, pars, coeffs=None, BLOCK_SIZE=32):
   """
   getAngularWeights(data,vars_reco,weights,pars):
 
@@ -186,31 +195,24 @@ def getAngularWeights(data, weight, pars, coeffs=None, BLOCK_SIZE=32):
 
   Look at kernel definition to see more help
   """
-  if not coeffs:                           # this is only for testing purposes
-    coeffs = np.array([[-1.513859, 11.996029, -13.678216,  5.410743],
-                       [-1.340649, 11.100117, -12.133541,  4.522999],
-                       [ 2.371407, -1.137433,   1.314317, -0.402956],
-                       [ 0.895665,  2.141992,  -1.114887,  0.196846],
-                       [ 2.579169, -0.434798,   0.199802, -0.026739],
-                       [ 1.649324,  0.491956,  -0.108090,  0.007356],
-                       [ 1.898947,  0.060150,   0.000000,  0.000000]])
+
   ASlon   = pars['ASlon']
   FP      = abs(1-ASlon)
   APlon   = FP*pars['APlon']
   APper   = FP*pars['APper']
   APpar   = FP*(1-pars['APlon']-pars['APper'])
-  ang_acc = cu_array.to_gpu(np.zeros(10)).astype(np.float64)
+  ang_acc = ipanema.ristra.zeros(10)
 
-  kAngularWeights(
+  __KERNELS.AngularWeights(
         data, weight, ang_acc,
-        np.float64(["Gd"]+pars["DGsd"]), np.float64(pars["DGs"]),
+        np.float64(pars["Gd"]+pars["DGsd"]), np.float64(pars["DGs"]),
         np.float64(pars["DM"]), np.float64(pars["CSP"]),
         np.float64(np.sqrt(ASlon)), np.float64(np.sqrt(APlon)), np.float64(np.sqrt(APpar)), np.float64(np.sqrt(APper)),
         np.float64(pars["pSlon"]), np.float64(pars["pPlon"]), np.float64(pars["pPpar"]), np.float64(pars["pPper"]),
         np.float64(pars["dSlon"]), np.float64(pars["dPlon"]), np.float64(pars["dPpar"]), np.float64(pars["dPper"]),
         np.float64(pars["lSlon"]), np.float64(pars["lPlon"]), np.float64(pars["lPpar"]), np.float64(pars["lPper"]),
         np.float64(0.3), np.float64(15),
-        cu_array.to_gpu(coeffs).astype(np.float64),
+        cu_array.to_gpu(np.array([1, 1.2, 1.4, 1.7, 2.2, 2.2, 2.1, 2.0, 1.9])).astype(np.float64),
         np.int32(data.shape[0]),
         block = (BLOCK_SIZE,1,1),
         grid = (int(np.ceil(data.shape[0]/BLOCK_SIZE)),1,1)
@@ -220,7 +222,7 @@ def getAngularWeights(data, weight, pars, coeffs=None, BLOCK_SIZE=32):
 
 
 
-def getAngularCov(data, weights, pars, coeffs=None, BLOCK_SIZE=32):
+def get_angular_cov(data, weights, pars, coeffs=None, BLOCK_SIZE=32):
   """
   getAngularWeights(data,vars_reco,weights,pars):
 
@@ -256,7 +258,7 @@ def getAngularCov(data, weights, pars, coeffs=None, BLOCK_SIZE=32):
   ang_acc = cu_array.to_gpu(ang_acc_).astype(np.float64)
   cov_mat = cu_array.to_gpu(np.zeros([10,10])).astype(np.float64)
 
-  kAngularCov(
+  __KERNELS.AngularCov(
         data, weights, ang_acc, cov_mat,
         np.float64(pars["Gd"]+pars["DGsd"]), np.float64(pars["DGs"]),
         np.float64(pars["DM"]), np.float64(pars["CSP"]),
