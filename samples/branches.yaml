@@ -14,6 +14,7 @@ common: &common
   "B_P" : "B_P"
   "hlt1b" : "hlt1b"
   "Polarity" : "Polarity"
+  "B_BKGCAT" : "B_BKGCAT"
 
 MC_common: &MC_common
   <<: *common
