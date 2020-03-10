@@ -167,13 +167,14 @@ void pyAngularWeights(double *data, double *weight, double *w,
   int evt = threadIdx.x + blockDim.x * blockIdx.x;
   if (evt >= Nevt) {{ return; }}
 
+  //printf("data[%d] = %lf,%lf,%lf,%lf\n", evt, data[evt*4+0],data[evt*4+1],data[evt*4+2],data[evt*4+3]);
   double w10[10]     = {{0,0,0,0,0,0,0,0,0,0}};
-  double vec_true[6] = {{data[evt*7+0], // cosK
-                         data[evt*7+1], // cosL
-                         data[evt*7+2], // hphi
-                         data[evt*7+3], // time
-                         data[evt*7+5], // sigma_t
-                         data[evt*7+6]  // flavour
+  double vec_true[6] = {{data[evt*4+0], // cosK
+                         data[evt*4+1], // cosL
+                         data[evt*4+2], // hphi
+                         data[evt*4+3], // time
+                         0, // sigma_t
+                         0  // flavour
                        }};
 
   getAngularWeights(vec_true, weight[evt], w10,
