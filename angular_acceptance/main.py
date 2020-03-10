@@ -19,118 +19,74 @@ import os, sys
 import platform
 import json
 from hep_ml import reweight
-
-# Kernel paths
-import os
-path = os.environ['PHIS_SCQ']
-#cl_path = os.path.join(os.environ['PHIS_SCQ'],'opencl')
-cu_path = os.path.join(os.environ['PHIS_SCQ'],'cuda')
-
-# openCL stuff
-# import pyopencl as cl
-# import pyopencl.array as cl_array
-# context = cl.create_some_context()
-# queue   = cl.CommandQueue(context)
-# sys.path.append(cl_path)
-# from Badjanak import *
-
-# CUDA stuff
-import pycuda.driver as cuda
-import pycuda.autoinit
-import pycuda.gpuarray as cu_array
-sys.path.append(cu_path)
-from Badjanak import *
-
-# testing...
-MAX_EVENTS = 5
-
-sys.path.append("/home3/marcos.romero/ipanema3/")
-from ipanema import Parameters#, fit_report, minimize
 import uncertainties as unc
 from uncertainties import unumpy as unp
 
+import ipanema
+
+ipanema.initialize('cuda',1)
+
+# Kernel paths
+
+
+# Get bsjpsikk and compile it with corresponding flags
+import bsjpsikk
+bsjpsikk.config['use_time_acc'] = 0
+bsjpsikk.config['use_time_offset'] = 0
+bsjpsikk.config['use_time_res'] = 0
+bsjpsikk.config['use_perftag'] = 0
+bsjpsikk.config['use_truetag'] = 1
+bsjpsikk.get_kernels()
+
+# x = ipanema.ristra.linspace(0.3,15,100)
+# y = bsjpsikk.acceptance_spline(x.get())
+# plt.plot(x.get(),y)
+
+
+# testing...
+MAX_EVENTS = None
+
+
 
 # Load parameters
-params = Parameters.load(os.environ['PHIS_SCQ']+'/params/ang-peilian.json');
+params = ipanema.Parameters.load('angular_acceptance/input/Bs2JpsiPhi_2016.json');
 
 
 
-# %% Get data (now a test file) ------------------------------------------------
+# %% Get data ------------------------------------------------------------------
 
-dpath  = '/scratch03/marcos.romero/BsJpsiKK/Root/'
-dpath += 'BsJpsiPhi_DG0_MC_2016_UpDown_MDST_20181101_Sim09b_tmva_cut58_sel_sw'
+mc_path   = '/scratch17/marcos.romero/phis_samples/v0r2/2016/MC_Bs2JpsiPhi_dG0/test.root'
+data_path = '/scratch17/marcos.romero/phis_samples/v0r2/2016/Bs2JpsiPhi/test.root'
 
-# test files
-mc_path   = '/scratch03/marcos.romero/phisRun2/testers/MC_JpsiPhi_sample2016_kinWeight.root'
-data_path = '/scratch03/marcos.romero/phisRun2/testers/JpsiPhi_sample2016.root'
+mc_sample = ipanema.Sample.from_root(mc_path,entrystop=MAX_EVENTS)
+data_sample = ipanema.Sample.from_root(data_path,entrystop=MAX_EVENTS)
 
-mc_file   = uproot.open(mc_path)["DecayTree"]
-data_file = uproot.open(data_path)["DecayTree"]
-
-vars_true  = ['truehelcosthetaK','truehelcosthetaL','truehelphi','B_TRUETAU']
-vars_reco  = ['helcosthetaK','helcosthetaL','helphi','time']
-vars_kin   = ['hplus_P', 'hplus_PT', 'hminus_P', 'hminus_PT']
-#vars_kin  += ['muplus_P', 'muplus_PT', 'muminus_P', 'muminus_PT']
-
-mc_branches   = vars_true + vars_reco+vars_kin + ['sw','gb_weights','B_BKGCAT','kinWeight']
-mc_df   = mc_file.pandas.df(branches=mc_branches)
-mc_df   = mc_df[(mc_df['B_BKGCAT']==0) | (mc_df['B_BKGCAT']==50)]    # BKG cuts
-data_branches = vars_reco + vars_kin + ['sw']
-data_df = data_file.pandas.df(branches=data_branches)
-
-mc_true_h = np.ascontiguousarray(mc_df[vars_true].values); mc_true_h[:,3] *=1e3
-mc_reco_h = np.ascontiguousarray(mc_df[vars_reco].values)
-mc_kinWeight_h = np.ascontiguousarray(mc_df['kinWeight'].values)
-mc_sw_h   = np.ascontiguousarray(mc_df.eval('sw/gb_weights').values)
-#mc_sw_h  *= np.sum(mc_sw_h)/np.sum(mc_sw_h**2)
-
-data_reco_h = np.ascontiguousarray(data_df[vars_reco].values)
-data_sw_h   = np.ascontiguousarray(data_df['sw'].values)
-#data_sw_h  *= np.sum(data_sw_h)/np.sum(data_sw_h**2)
-
-
-#data_true_h = data_true_h[:MAX_EVENTS,:MAX_EVENTS]
-#data_reco_h = data_reco_h[:MAX_EVENTS,:]
-#sweights_h  = sweights_h[:MAX_EVENTS]
-
-pdf_true_h  = np.zeros(mc_true_h.shape[0])
-fk_true_h   = np.zeros([mc_true_h.shape[0],10])
-pdf_reco_h  = np.zeros(mc_reco_h.shape[0])
-fk_reco_h   = np.zeros([mc_reco_h.shape[0],10])
-
-# Variables in gpuarray
-mc_true_d   = cu_array.to_gpu(mc_true_h).astype(np.float64)
-mc_reco_d   = cu_array.to_gpu(mc_reco_h).astype(np.float64)
-mc_sw_d     = cu_array.to_gpu(mc_sw_h).astype(np.float64)
-data_reco_d = cu_array.to_gpu(data_reco_h).astype(np.float64)
-data_sw_d   = cu_array.to_gpu(data_sw_h).astype(np.float64)
-
-pdf_true_d  = cu_array.to_gpu(pdf_true_h).astype(np.float64)
-fk_true_d   = cu_array.to_gpu(fk_true_h).astype(np.float64)
-pdf_reco_d  = cu_array.to_gpu(pdf_reco_h).astype(np.float64)
-fk_reco_d   = cu_array.to_gpu(fk_true_h).astype(np.float64)
-
-
-
-# %% Get kernels ---------------------------------------------------------------
-
-# Flags
-config = json.load(open(path+'/angular-acceptance/config.json'))
-#config.update({'DEBUG':'0'})
-#config.update({'DEBUG_EVT':'1'})
-
-# Compile model and get kernels
-BsJpsiKK = Badjanak(cu_path,**config);
-getAngularWeights = BsJpsiKK.getAngularWeights;
-getAngularCov = BsJpsiKK.getAngularCov;
+# Allocate some arrays
+reco = ['helcosthetaK', 'helcosthetaL', 'helphi', 'time']
+true = ['true'+i for i in reco]
+genlvl = ['true'+i+'_GenLvl' for i in reco]
+mc_sample.allocate(reco=reco, weight='kinWeight')
+mc_sample.allocate(true=true)
+mc_sample.allocate(genlvl=genlvl)
+mc_sample.allocate(pdf='0*time')
+mc_sample.allocate(ones='time/time')
 
 
 
 # %% Run -----------------------------------------------------------------------
 
 # Get the angular weights
-w = getAngularWeights(mc_reco_d, params.valuesdict())
+#params.valuesdict()
 
+ipanema.ristra.ones(10)
+#mc_sample.reco
+w = bsjpsikk.get_angular_weights(mc_sample.true,
+                                 mc_sample.ones,
+                                 params.valuesdict() )
+
+w/w[0]
+
+mc_sample.true
 
 """ ----------------------------------------------------------------------------
 EXPECTED RESULTS 2016 MC DG0
