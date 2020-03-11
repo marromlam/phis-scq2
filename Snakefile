@@ -15,8 +15,8 @@ MAIN_PATH = '/scratch17/marcos.romero/phis_samples/'
 SAMPLES_PATH = MAIN_PATH + VERSION + '/'
 
 # Some wildcards options ( this is not actually used )
-modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_DG0','Bs2JpsiPhi',
-         'MC_Bs2JpsiPhi', 'MC_Bd2JpsiKstar'];
+modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0',#'MC_Bs2JpsiPhi',
+         'Bd2JpsiKstar', 'MC_Bd2JpsiKstar'];
 years = ['2011','2012','Run1',
          '2015','2016','Run2a','2017','2018','Run2b','Run2'];
 trigger = ['combined','biased','unbiased']
@@ -209,6 +209,34 @@ rule reduce_ntuples:
     """)
     shell(f"""
       rm {SAMPLES_PATH}{wildcards.year}/{wildcards.mode}/{wildcards.flag}_*Weight.root
+    """)
+
+
+
+rule plot_reweightings:
+  input:
+    sample = expand(rules.reduce_ntuples.output,
+                    mode=modes,year='{year}',flag='{flag}')
+  output:
+    A='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_B_PT.pdf',
+    B='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_B_PT_kinWeight.pdf',
+    C='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_X_M.pdf',
+    D='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_X_M_kinWeight.pdf',
+    E='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_B_PT.pdf',
+    F='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_B_PT_kinWeight.pdf',
+    G='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_X_M.pdf',
+    H='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_X_M_kinWeight.pdf',
+    I='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_PT.pdf',
+    J='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_PT_kinWeight.pdf',
+    K='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_P.pdf',
+    L='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_P_kinWeight.pdf'
+  run:
+    shell(f"""
+      python reweightings/reweightings_plots.py\
+             --samples-path {SAMPLES_PATH}\
+             --year {year}\
+             --flag {flag}\
+             --figures-path {'output/reweightings'}\
     """)
 
 
