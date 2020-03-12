@@ -276,6 +276,39 @@ rule decay_time_acceptance:
     """
 
 
+
+rule decay_time_acceptance_without_kinweights:
+  input:
+    sample_BsMC = expand(rules.reduce_ntuples.output,
+                         mode='MC_Bs2JpsiPhi_dG0',year='{year}',flag='{flag}'),
+    sample_BdMC = expand(rules.reduce_ntuples.output,
+                         mode='MC_Bd2JpsiKstar',year='{year}',flag='{flag}'),
+    sample_BdDT = expand(rules.reduce_ntuples.output,
+                         mode='Bd2JpsiKstar',year='{year}',flag='{flag}'),
+    params_BsMC = 'output/time_acceptance/parameters/{year}/MC_Bs2JpsiPhi_dG0/{flag}_{trigger}.json',
+    params_BdMC = 'output/time_acceptance/parameters/{year}/MC_Bs_Bd_ratio/{flag}_{trigger}.json',
+    params_BdDT = 'output/time_acceptance/parameters/{year}/Bs2JpsiPhi/{flag}_{trigger}.json'
+  output:
+    params_BsMC = 'output/time_acceptance/parameters/{year}/MC_Bs2JpsiPhi_dG0/{flag}_{trigger}_{script}.json',
+    params_BdMC = 'output/time_acceptance/parameters/{year}/MC_Bs_Bd_ratio/{flag}_{trigger}_{script}.json',
+    params_BdDT = 'output/time_acceptance/parameters/{year}/Bs2JpsiPhi/{flag}_{trigger}_{script}.json'
+  shell:
+    """
+    python time_acceptance/{wildcards.script}.py\
+           --BsMC-sample {input.sample_BsMC}\
+           --BdMC-sample {input.sample_BdMC}\
+           --BdDT-sample {input.sample_BdDT}\
+           --BsMC-params {output.params_BsMC}\
+           --BdMC-params {output.params_BdMC}\
+           --BdDT-params {output.params_BdDT}\
+           --mode Bs2JpsiPhi\
+           --year {wildcards.year}\
+           --flag {wildcards.flag}\
+           --trigger {wildcards.trigger}\
+           --pycode time_acceptance/{wildcards.script}.py
+    """
+
+
 rule decay_time_acceptance_single:
   input:
     sample = expand(rules.reduce_ntuples.output,
