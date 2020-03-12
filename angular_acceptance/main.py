@@ -31,6 +31,8 @@ ipanema.initialize('cuda',1)
 
 # Get bsjpsikk and compile it with corresponding flags
 import bsjpsikk
+bsjpsikk.config['debug'] = 0
+bsjpsikk.config['debug_evt'] = 0
 bsjpsikk.config['use_time_acc'] = 0
 bsjpsikk.config['use_time_offset'] = 0
 bsjpsikk.config['use_time_res'] = 0
@@ -38,55 +40,75 @@ bsjpsikk.config['use_perftag'] = 0
 bsjpsikk.config['use_truetag'] = 1
 bsjpsikk.get_kernels()
 
-# x = ipanema.ristra.linspace(0.3,15,100)
-# y = bsjpsikk.acceptance_spline(x.get())
-# plt.plot(x.get(),y)
-
-
 # testing...
 MAX_EVENTS = None
 
 
 
+
 # Load parameters
-params = ipanema.Parameters.load('angular_acceptance/input/Bs2JpsiPhi_2016.json');
+params = ipanema.Parameters.load('angular_acceptance/input/Bs2JpsiPhi_2016.json').valuesdict();
 
-
+def alpha(x, y=1):
+  z = x/y
+  return z*( (z.sum())/((z**2).sum()) )
 
 # %% Get data ------------------------------------------------------------------
+cut = '(B_BKGCAT==0 | B_BKGCAT==50) & hlt1b == 1'
+#cut = '(B_BKGCAT==0 | B_BKGCAT==50)'
 
-mc_path   = '/scratch17/marcos.romero/phis_samples/v0r2/2016/MC_Bs2JpsiPhi_dG0/test.root'
-data_path = '/scratch17/marcos.romero/phis_samples/v0r2/2016/Bs2JpsiPhi/test.root'
+mc_path   = '/scratch17/marcos.romero/phis_samples/v0r2/2015/MC_Bs2JpsiPhi/test_selected_bdt_sw.root'
+data_path = '/scratch17/marcos.romero/phis_samples/v0r2/2015/Bs2JpsiPhi/test.root'
 
-mc_sample = ipanema.Sample.from_root(mc_path,entrystop=MAX_EVENTS)
-data_sample = ipanema.Sample.from_root(data_path,entrystop=MAX_EVENTS)
+# Load MC samples
+mc_std = ipanema.Sample.from_root(
+  '/scratch03/marcos.romero/phisRun2/cooked_test_files/2016/MC_Bs2JpsiPhi/test_kinWeight.root',
+  entrystop=MAX_EVENTS, cuts=cut)
+mc_dg0 = ipanema.Sample.from_root(
+  '/scratch03/marcos.romero/phisRun2/cooked_test_files/2016/MC_Bs2JpsiPhi_dG0/test_kinWeight.root',
+  entrystop=MAX_EVENTS, cuts=cut)
 
+# Concat those samples
+mc = ipanema.Sample.from_pandas(pd.concat([mc_std.df, mc_dg0.df]))
+# # Load data sample
+# data_sample = ipanema.Sample.from_root(
+#   '/scratch03/marcos.romero/phisRun2/cooked_test_files/2015/Bs2JpsiPhi/test_kinWeight.root',
+#   entrystop=MAX_EVENTS)
+
+mc = mc_dg0
+mc.df.eval('sWeight = polWeight*sw/gb_weights', inplace=True)
+mc.df.eval('weight = @alpha(sWeight)', inplace=True)
+mc.df.eval('sWeight = @alpha(sw,gb_weights)', inplace=True)
+print(mc.df.shape)
 # Allocate some arrays
-reco = ['helcosthetaK', 'helcosthetaL', 'helphi', 'time']
+reco = ['helcosthetaK', 'helcosthetaL', 'helphi']
 true = ['true'+i for i in reco]
 genlvl = ['true'+i+'_GenLvl' for i in reco]
-mc_sample.allocate(reco=reco, weight='kinWeight')
-mc_sample.allocate(true=true)
-mc_sample.allocate(genlvl=genlvl)
-mc_sample.allocate(pdf='0*time')
-mc_sample.allocate(ones='time/time')
+mc.allocate(reco=reco+['time', 'X_M', 'sigmat', 'B_ID'])
+#mc.allocate(kinWeight='kinWeight', sWeight='sWeight', weight='sWeight*kinWeight')
+mc.allocate(weight='weight')
+mc.allocate(polWeight='polWeight', sWeight='sWeight')
+mc.allocate(true=true+['1000*B_TRUETAU', 'X_M', 'sigmat', 'B_ID'])
+mc.allocate(genlvl=genlvl+['1000*B_TRUETAU_GenLvl','X_M', 'sigmat', 'B_ID_GenLvl'])
+mc.allocate(pdf='0*time')
+mc.allocate(ones='time/time')
+mc.df.keys()
 
-
+w = bsjpsikk.get_angular_weights(mc.true, mc.true, mc.weight, params)
+print("w/w0 = "+10*"%+.4f  " % tuple(np.nan_to_num(w/w[0]).tolist()))
+w = bsjpsikk.get_angular_weights(mc.true, mc.true, mc.sWeight*mc.polWeight, params)
+print("w/w0 = "+10*"%+.4f  " % tuple(np.nan_to_num(w/w[0]).tolist()))
 
 # %% Run -----------------------------------------------------------------------
 
 # Get the angular weights
-#params.valuesdict()
+w = bsjpsikk.get_angular_weights(mc.true, mc.true, mc.ones, params)
+print("w/w0 = "+10*"%+.4f  " % tuple(np.nan_to_num(w/w[0]).tolist()))
+w = bsjpsikk.get_angular_weights(mc.reco, mc.reco, mc.ones, params)
+print("w/w0 = "+10*"%+.4f  " % tuple(np.nan_to_num(w/w[0]).tolist()))
 
-ipanema.ristra.ones(10)
-#mc_sample.reco
-w = bsjpsikk.get_angular_weights(mc_sample.true,
-                                 mc_sample.ones,
-                                 params.valuesdict() )
 
-w/w[0]
 
-mc_sample.true
 
 """ ----------------------------------------------------------------------------
 EXPECTED RESULTS 2016 MC DG0
@@ -105,7 +127,7 @@ RECO:
 
 
 # Calculate the covariance matrix of the normalization weights (for all 10)
-w, uw = getAngularCov(data_reco_d, params.valuesdict())
+w, uw = bsjpsikk.get_angular_cov(mc.reco, mc.ones, params.valuesdict())
 weights = unp.uarray(w,uw)
 weights
 """ ----------------------------------------------------------------------------
@@ -119,11 +141,21 @@ EXPECTED RESULTS 2016 MC DG0
   w7/w0:  0.0007244 +- 0.0004852
   w8/w0: -0.0006057 +- 0.0004709
   w9/w0: -0.0017923 +- 0.0010610
+
+  w1/w0:  1.0269630 +- 0.0008287
+  w2/w0:  1.0268884 +- 0.0008278
+  w3/w0:  0.0000433 +- 0.0005392
+  w4/w0: -0.0002540 +- 0.0003694
+  w5/w0: -0.0000474 +- 0.0003480
+  w6/w0:  1.0103428 +- 0.0005275
+  w7/w0:  0.0006896 +- 0.0004849
+  w8/w0: -0.0005949 +- 0.0004707
+  w9/w0: -0.0017298 +- 0.0010612
 ---------------------------------------------------------------------------- """
 
 
 
-# reweighting config
+#%% reweighting config
 n_estimators      = 20
 learning_rate     = 0.3
 max_depth         = 3
