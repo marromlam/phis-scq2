@@ -1,29 +1,53 @@
 from collections import namedtuple
 
 footprints = namedtuple('footprints', ['params', 'score'])
+
+
+import os
+os.listdir('/scratch03/marcos.romero/phisRun2/original_test_files/2016')
+%matplotlib inline
 import uproot
-a = uproot.open('/scratch17/marcos.romero/phis_samples/v0r2/2016/MC_Bs2JpsiPhi_dG0/test_pdfWeight.root')['DecayTree']
-b = uproot.open('/scratch03/marcos.romero/phisRun2/cooked_test_files/MC_Bs2JpsiPhi_dG0/test_kinWeight.root')['DecayTree']
-c = uproot.open('/scratch03/marcos.romero/phisRun2/SideCar/BsJpsiPhi_DG0_MC_2016_UpDown_MDST_20181101_Sim09b_tmva_cut58_sel_sw_BsMCToBsData_BaselineDef_15102018.root')['weights']
-a.array('pdfWeight')
-b.array('pdfWeight')
-c.array('kinWeight')-b.array('kinWeight')
-'MC_Bs'[:5]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+a = uproot.open('/scratch17/marcos.romero/phis_samples/v0r2/2015/MC_Bd2JpsiKstar/test_pdfWeight.root')['DecayTree'].array('pdfWeight')
+b = uproot.open('/home3/marcos.romero/BdJpsiKstar_MC_2015_UpDown_CombDSTLDSTMDST_20181101_CombSim09bSim09c_tmva_cut58_sel_sw_trigCat_PDFWeightsBdRun1.root')['PDFWeights'].array('PDFWeight')
+c = uproot.open('/scratch03/marcos.romero/phisRun2/original_test_files/2015/BdJpsiKstar_MC_2015_UpDown_CombDSTLDSTMDST_20181101_CombSim09bSim09c_tmva_cut58_sel_sw_trigCat_PDFWeightsSetRun1Bd.root')['PDFWeights'].array('PDFWeight')
+                                                                            BdJpsiKstar_MC_2015_UpDown_CombDSTLDSTMDST_20181101_CombSim09bSim09c_tmva_cut58_sel_sw_trigCat_PDFWeightsSetRun1Bd
+
+plt.hist(b-c)
+np.where(abs(a-b)>1e-5,1,0).sum()
+np.where(abs(a-b)<1e-5,1,0).sum()
+plt.hist(a-b)
+
+os.
+
+a = uproot.open('/scratch17/marcos.romero/phis_samples/v0r2/2016/MC_Bd2JpsiKstar/test_pdfWeight.root')['DecayTree'].array('pdfWeight')
+b = uproot.open('/home3/marcos.romero/BdJpsiKstar_MC_2016_UpDown_CombDSTLDSTMDST_20181101_CombSim09bSim09c_tmva_cut58_sel_sw_trigCat_PDFWeightsSetRun1Bd.root')['PDFWeights'].array('PDFWeight')
+
+plt.plot(a-b)
+a = uproot.open('/scratch17/marcos.romero/phis_samples/v0r2/2016/MC_Bs2JpsiPhi_dG0/test_pdfWeight.root')['DecayTree'].array('pdfWeight')
+b = uproot.open('/scratch03/marcos.romero/phisRun2/original_test_files/2016/BsJpsiPhi_DG0_MC_2016_UpDown_MDST_20181101_Sim09b_tmva_cut58_sel_sw_PDFWeightsSetRun1BsdG0.root')['PDFWeights'].array('PDFWeight')
+plt.plot(a-b)
+
+n_shit = np.where(abs(a-b)>1e-5,1,0).sum()
+n_ok   = np.where(abs(a-b)>1e-5,0,1).sum()
+print(n_shit/n_ok)
+n_shit
+plt.hist(a-b)
+for i in range(100):
+  print( (a-b)[i] )
 
 
-d = uproot.open('/scratch03/marcos.romero/phisRun2/SideCar/BsJpsiPhi_DG0_MC_2016_UpDown_MDST_20181101_Sim09b_tmva_cut58_sel_sw_PDFWeightsSetRun1BsdG0.root')['PDFWeights']
-d.array('PDFWeight')
 
 
 
-a = uproot.open('/scratch17/marcos.romero/phis_samples/v0r2/2016/Bd2JpsiKstar/test_kinWeight.root')['DecayTree']
-b = uproot.open('/scratch03/marcos.romero/phisRun2/cooked_test_files/Bd2JpsiKstar/test.root')['DecayTree']
-a.array('kinWeight')-b.array('kinWeight')
+
+df_a = uproot.open('/scratch17/marcos.romero/phis_samples/v0r2/2016/MC_Bd2JpsiKstar/test_pdfWeight.root')['DecayTree'].pandas.df()
+df_b = uproot.open('/home3/marcos.romero/BdJpsiKstar_MC_2016_UpDown_CombDSTLDSTMDST_20181101_CombSim09bSim09c_tmva_cut58_sel_sw_trigCat_PDFWeightsSetRun1Bd.root')['PDFWeights'].pandas.df()
+
+df_c = pd.concat([df_a, df_b], axis=1)
 
 
 
-foo = uproot.open('/scratch17/marcos.romero/phis_samples/v0r2/2016/MC_Bs2JpsiPhi_dG0/test_selected_bdt_sw.root')['DecayTree']
-bar = uproot.open('/scratch03/marcos.romero/phisRun2/test-files/BsJpsiPhi_DG0_MC_2016_UpDown_MDST_20181101_Sim09b_tmva_cut58_sel_sw.root')['DecayTree']
-bar.keys()
-foo.array('truehelcosthetaK_GenLvl')
-bar.array('cosThetaKRef_GenLvl')
+df_c.query("abs(pdfWeight-PDFWeight)>1e-5")[['B_ID','B_ID_GenLvl']]

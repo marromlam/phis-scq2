@@ -1,10 +1,11 @@
 # plot kinweights
 
 
-%matplotlib inline
+#%matplotlib inline
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
 
 from ipanema import Sample
 from ipanema import hist
@@ -27,14 +28,14 @@ def argument_parser():
                       help='File to store the ntuple with weights')
   return parser
 
-args = vars( parser.parse_args() )
+args = vars( argument_parser().parse_args() )
 
 #%% Run shit -------------------------------------------------------------------
 
-flag     = args['flag'];
-year     = args['year'];;
-fig_path = args['figures_path'];
-path     = args['samples_path'];
+flag     = args['flag']
+year     = args['year']
+fig_path = args['figures_path']
+path     = args['samples_path']
 
 sample = {}
 for m in ['Bd2JpsiKstar','MC_Bs2JpsiPhi_dG0','Bs2JpsiPhi','MC_Bd2JpsiKstar']:
