@@ -154,7 +154,7 @@ void pyFcoeffs(double *data, double *fk,  int Nevt)
 // GLOBAL::getAngularWeights ///////////////////////////////////////////////////
 
 __global__
-void pyAngularWeights(double *data, double *weight, double *w,
+void pyAngularWeights(double *dtrue, double *dreco, double *weight, double *w,
                       double G, double DG, double DM, double CSP,
                       double ASlon, double APlon, double APpar, double APper,
                       double pSlon, double pPlon, double pPpar, double pPper,
@@ -167,17 +167,24 @@ void pyAngularWeights(double *data, double *weight, double *w,
   int evt = threadIdx.x + blockDim.x * blockIdx.x;
   if (evt >= Nevt) {{ return; }}
 
-  //printf("data[%d] = %lf,%lf,%lf,%lf\n", evt, data[evt*4+0],data[evt*4+1],data[evt*4+2],data[evt*4+3]);
+  //printf("data[%d] = %lf,%lf,%lf,%lf\n", evt, data[evt*7+0],data[evt*7+1],data[evt*7+2],data[evt*7+3]);
   double w10[10]     = {{0,0,0,0,0,0,0,0,0,0}};
-  double vec_true[6] = {{data[evt*4+0], // cosK
-                         data[evt*4+1], // cosL
-                         data[evt*4+2], // hphi
-                         data[evt*4+3], // time
-                         0, // sigma_t
-                         0  // flavour
+  double vec_true[6] = {{dtrue[evt*7+0], // cosK
+                         dtrue[evt*7+1], // cosL
+                         dtrue[evt*7+2], // hphi
+                         dtrue[evt*7+3], // time
+                         dtrue[evt*7+5], // sigma_t
+                         dtrue[evt*7+6]  // flavour
+                       }};
+  double vec_reco[6] = {{dreco[evt*7+0], // cosK
+                         dreco[evt*7+1], // cosL
+                         dreco[evt*7+2], // hphi
+                         dreco[evt*7+3], // time
+                         dtrue[evt*7+5], // sigma_t
+                         dtrue[evt*7+6]  // flavour
                        }};
 
-  getAngularWeights(vec_true, weight[evt], w10,
+  getAngularWeights(vec_true, vec_reco, weight[evt], w10,
                     G, DG, DM, CSP,
                     ASlon, APlon, APpar, APper,
                     pSlon, pPlon, pPpar, pPper,
@@ -202,7 +209,7 @@ void pyAngularWeights(double *data, double *weight, double *w,
 // GLOBAL::getAngularWeights ///////////////////////////////////////////////////
 
 __global__
-void pyAngularCov(double *data, double *weight, double w[10], double cov[10][10],
+void pyAngularCov(double *dtrue, double *dreco, double *weight, double w[10], double cov[10][10],
                       double G, double DG, double DM, double CSP,
                       double ASlon, double APlon, double APpar, double APper,
                       double pSlon, double pPlon, double pPpar, double pPper,
@@ -217,15 +224,22 @@ void pyAngularCov(double *data, double *weight, double w[10], double cov[10][10]
 
   double w10[10]       = {{0}};
   double cov10[10][10] = {{{{0}}}};
-  double vec_true[6]   = {{data[evt*7+0], // cosK
-                           data[evt*7+1], // cosL
-                           data[evt*7+2], // hphi
-                           data[evt*7+3], // time
-                           data[evt*7+5], // sigma_t
-                           data[evt*7+6]  // flavour
-                         }};
+  double vec_true[6] = {{dtrue[evt*7+0], // cosK
+                         dtrue[evt*7+1], // cosL
+                         dtrue[evt*7+2], // hphi
+                         dtrue[evt*7+3], // time
+                         dtrue[evt*7+5], // sigma_t
+                         dtrue[evt*7+6]  // flavour
+                       }};
+  double vec_reco[6] = {{dreco[evt*7+0], // cosK
+                         dreco[evt*7+1], // cosL
+                         dreco[evt*7+2], // hphi
+                         dreco[evt*7+3], // time
+                         dtrue[evt*7+5], // sigma_t
+                         dtrue[evt*7+6]  // flavour
+                       }};
 
-  getAngularWeights(vec_true, weight[evt], w10,
+  getAngularWeights(vec_true, vec_reco, weight[evt], w10,
                     G, DG, DM, CSP,
                     ASlon, APlon, APpar, APper,
                     pSlon, pPlon, pPpar, pPper,
