@@ -230,14 +230,14 @@ rule plot_reweightings:
     J='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_PT_kinWeight.pdf',
     K='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_P.pdf',
     L='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_P_kinWeight.pdf'
-  run:
-    shell(f"""
-      python reweightings/reweightings_plots.py\
-             --samples-path {SAMPLES_PATH}\
-             --year {year}\
-             --flag {flag}\
-             --figures-path {'output/reweightings'}\
-    """)
+  shell:
+    """
+    python reweightings/reweighting_plots.py\
+           --samples-path {SAMPLES_PATH}\
+           --year {wildcards.year}\
+           --flag {wildcards.flag}\
+           --figures-path output/reweightings
+    """
 
 
 
