@@ -1,0 +1,86 @@
+{
+	"c0": {
+		"name": "c0",
+		"value": 1,
+		"free": false,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"c1": {
+		"name": "c1",
+		"value": 1.049,
+		"free": true,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"c2": {
+		"name": "c2",
+		"value": 1.039,
+		"free": true,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"c3": {
+		"name": "c3",
+		"value": 1.0,
+		"free": true,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"c4": {
+		"name": "c4",
+		"value": 1.032,
+		"free": true,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"c5": {
+		"name": "c5",
+		"value": 1.000,
+		"free": true,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"c6": {
+		"name": "c6",
+		"value": 1.010,
+		"free": true,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"c7": {
+		"name": "c7",
+		"value": 1.015,
+		"free": true,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"c8": {
+		"name": "c8",
+		"value": 1.000,
+		"free": true,
+		"min": 0.1,
+		"max": 4.0
+	},
+	"mu_c": {
+		"name": "mu_c",
+		"value": 0.0,
+		"free": false,
+		"min": 0,
+		"max": 1
+	},
+	"sigma_c": {
+		"name": "sigma_c",
+		"value": 0.04244,
+		"free": false,
+		"min": 0,
+		"max": 1
+	},
+	"gamma_c": {
+		"name": "gamma_c",
+		"value": 0.65789,
+		"free": false,
+		"min": 0,
+		"max": 5
+	}
+}

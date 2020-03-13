@@ -1,0 +1,86 @@
+{
+	"a0": {
+		"name": "a0",
+		"value": 1,
+		"free": false,
+		"min": 0.5,
+		"max": 3
+	},
+	"a1": {
+		"name": "a1",
+		"value": 1.031,
+		"free": true,
+		"min": 0.5,
+		"max": 3
+	},
+	"a2": {
+		"name": "a2",
+		"value": 1.032,
+		"free": true,
+		"min": 0.5,
+		"max": 3
+	},
+	"a3": {
+		"name": "a3",
+		"value": 0.995,
+		"free": true,
+		"min": 0.5,
+		"max": 3
+	},
+	"a4": {
+		"name": "a4",
+		"value": 1.008,
+		"free": true,
+		"min": 0.5,
+		"max": 3
+	},
+	"a5": {
+		"name": "a5",
+		"value": 0.996,
+		"free": true,
+		"min": 0.5,
+		"max": 3
+	},
+	"a6": {
+		"name": "a6",
+		"value": 1.038,
+		"free": true,
+		"min": 0.5,
+		"max": 3
+	},
+	"a7": {
+		"name": "a7",
+		"value": 0.971,
+		"free": true,
+		"min": 0.5,
+		"max": 3
+	},
+	"a8": {
+		"name": "a8",
+		"value": 0.979,
+		"free": true,
+		"min": 0.5,
+		"max": 3
+	},
+	"mu_a": {
+		"name": "mu_a",
+		"value": 0,
+		"free": false,
+		"min": 0,
+		"max": 1
+	},
+	"sigma_a": {
+		"name": "sigma_a",
+		"value": 0.0417,
+		"free": false,
+		"min": 0,
+		"max": 1
+	},
+	"gamma_a": {
+		"name": "gamma_a",
+		"value": 0.661375,
+		"free": false,
+		"min": 0,
+		"max": 1
+	}
+}
