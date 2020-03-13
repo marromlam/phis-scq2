@@ -1,0 +1,181 @@
+# reweightings -----------------------------------------------------------------
+#    Reduces the amount of branches in the original ntuples. This rule builds
+#    the ntuples that will actually be used for phis-scq analysis package. .split('_')[1],
+
+
+
+def super_shit(mode,year,flag):
+  file = f"{SAMPLES_PATH}{year}/"
+  if mode.startswith('MC_'):
+    file += f"{mode[3:].split('_')[0]}/{flag}"
+    if mode == 'MC_Bd2JpsiKstar':
+      file += '_kinWeight.root'
+    else:
+      file += '_pdfWeight.root'
+  else:
+    file += f"{'Bs2JpsiPhi'}/{flag}_pdfWeight.root"
+  return file
+
+
+
+rule polarity_weighting:
+  params:
+    original = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode}/{wildcards.flag}_selected_bdt_sw.root",
+    target = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode[3:].split('_')[0]}/{wildcards.flag}_selected_bdt_sw.root",
+  output:
+    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_polWeight.root'
+  run:
+    import os
+    if os.path.isfile(f"params.original") and os.path.isfile(f"params.target"):
+      if f'{wildcards.mode}' in ('MC_Bs2JpsiPhi_dG0',
+                                 'MC_Bs2JpsiPhi',
+                                 'MC_Bd2JpsiKstar'):
+        shell(f"""
+          python reweightings/polarity_weighting.py\
+               --original-file {params.original}\
+               --original-treename DecayTree\
+               --target-file {params.target}\
+               --target-treename DecayTree\
+               --output-file {output.sample}
+        """)
+      else:
+        shell(f"""
+          cp {params.original} {output.sample}
+        """)
+    else:
+      print(f"Required files do not exist. You should map files into",
+            f"{SAMPLES_PATH} in order to work with this pipeline. Files can",
+            f"be synced from /eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/{VERSION}",
+            f"very easily using `sync_ntuples` rule. Simply run\n\t",
+            f"snakemake sync_ntuples -v {VERSION}\nand they will be downloaded,",
+            f"correctly placed, and properly renamed.\nGood luck!")
+
+
+
+rule pdf_weighting:
+  input:
+    sample = expand(rules.polarity_weighting.output,
+                    year='{year}', mode='{mode}', flag='{flag}'),
+  params:
+    original = lambda wildcards: f"{wildcards.mode[3:].split('_')[0]}_2016.json",
+    target = '{mode}_2016.json'
+  output:
+    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_pdfWeight.root'
+  run:
+    if f'{wildcards.mode}' in ('MC_Bs2JpsiPhi_dG0',
+                               'MC_Bs2JpsiPhi',
+                               'MC_Bd2JpsiKstar'):
+      shell(f"""
+      python reweightings/pdf_weighting.py\
+             --input-file {input.sample}\
+             --tree-name DecayTree\
+             --output-file {output.sample}\
+             --target-params reweightings/parameters/{params.target}\
+             --original-params reweightings/parameters/{params.original}\
+             --mode {wildcards.mode}
+      """)
+    else:
+      shell(f"""
+        cp {input.sample} {output.sample}
+      """)
+
+
+
+rule kinematic_weighting:
+  input:
+    original = SAMPLES_PATH+'{year}/{mode}/{flag}_pdfWeight.root',
+    target = lambda wildcards: super_shit(wildcards.mode,wildcards.year,wildcards.flag)
+  output:
+    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_kinWeight.root'
+  run:
+    import os
+    year = f'{wildcards.year}'
+    mode = f'{wildcards.mode}'
+    flag = f'{wildcards.flag}'
+    end  = 'selected_bdt_sw'
+    if mode.startswith('MC_Bs2JpsiPhi'):
+      shell(f"""
+        python reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "B_PT X_M" \
+          --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "B_PT X_M"\
+          --target-weight "sw"\
+          --output-file {output.sample}\
+          --n-estimators 20\
+          --learning-rate 0.3\
+          --max-depth 3\
+          --min-samples-leaf 1000
+      """)
+    elif mode.startswith('MC_Bd2JpsiKstar'):
+      shell(f"""
+        python reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "B_PT X_M" \
+          --original-weight "sw*polWeight*pdfWeight"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "B_PT X_M"\
+          --target-weight "sw*kinWeight"\
+          --output-file {output.sample}\
+          --n-estimators 20\
+          --learning-rate 0.3\
+          --max-depth 3\
+          --min-samples-leaf 1000
+      """)
+    elif mode.startswith('Bd2JpsiKstar'):
+      shell(f"""
+        python reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "B_PT B_P" \
+          --original-weight "sw"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "B_PT B_P"\
+          --target-weight "sw"\
+          --output-file {output.sample}\
+          --n-estimators 20\
+          --learning-rate 0.3\
+          --max-depth 3\
+          --min-samples-leaf 1000
+      """)
+    else:
+      shell(f"""
+        cp {input.original} {output.sample}
+      """)
+
+
+
+
+
+
+rule plot_reweightings:
+  input:
+    sample = expand(rules.reduce_ntuples.output,
+                    mode=modes,year='{year}',flag='{flag}')
+  output:
+    A='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_B_PT.pdf',
+    B='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_B_PT_kinWeight.pdf',
+    C='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_X_M.pdf',
+    D='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_X_M_kinWeight.pdf',
+    E='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_B_PT.pdf',
+    F='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_B_PT_kinWeight.pdf',
+    G='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_X_M.pdf',
+    H='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_X_M_kinWeight.pdf',
+    I='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_PT.pdf',
+    J='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_PT_kinWeight.pdf',
+    K='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_P.pdf',
+    L='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_P_kinWeight.pdf'
+  shell:
+    """
+    python reweightings/reweighting_plots.py\
+           --samples-path {SAMPLES_PATH}\
+           --year {wildcards.year}\
+           --flag {wildcards.flag}\
+           --figures-path output/reweightings
+    """

@@ -1,0 +1,37 @@
+# sync_ntuples ----------------------------------------------------------------
+#    This rule downloads all files corresponding to a given VERSION from EOS
+#    to SAMPLES_PATH/VERSION folder. It requires you to make a kinit on your
+#    system, and then it work automatically. It takes a bit long.
+
+rule sync_ntuples:
+  output:
+    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_selected_bdt_sw.root'
+  run:
+    import os
+    if not os.path.exists(f"output.sample"):
+      shell("""
+        python samples/get_samples.py -v {VERSION}
+      """)
+
+
+
+# reduce_ntuples ---------------------------------------------------------------
+#    Reduces the amount of branches in the original ntuples. This rule builds
+#    the ntuples that will actually be used for phis-scq analysis package.
+
+rule reduce_ntuples:
+  input:
+    sample = lambda wildcards: SAMPLES_PATH+"{year}/{mode}/{flag}_kinWeight.root"
+  output:
+    sample = SAMPLES_PATH+'{year}/{mode}/{flag,[A-Za-z0-9]+}.root'
+  run:
+    shell(f"""
+      python samples/reduce_ntuples.py\
+             --input-file {input.sample}\
+             --output-file {output.sample}\
+             --input-tree DecayTree\
+             --output-tree DecayTree
+    """)
+    shell(f"""
+      rm {SAMPLES_PATH}{wildcards.year}/{wildcards.mode}/{wildcards.flag}_*Weight.root
+    """)
