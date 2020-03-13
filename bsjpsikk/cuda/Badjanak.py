@@ -176,7 +176,7 @@ def diff_cross_rate(
 
 
 
-def get_angular_weights(data, weight, pars, coeffs=None, BLOCK_SIZE=32):
+def get_angular_weights(true, reco, weight, pars, coeffs=None, BLOCK_SIZE=32):
   """
   getAngularWeights(data,vars_reco,weights,pars):
 
@@ -204,18 +204,18 @@ def get_angular_weights(data, weight, pars, coeffs=None, BLOCK_SIZE=32):
   ang_acc = ipanema.ristra.zeros(10)
 
   __KERNELS.AngularWeights(
-        data, weight, ang_acc,
+        true, reco, weight, ang_acc,
         np.float64(pars["Gd"]+pars["DGsd"]), np.float64(pars["DGs"]),
         np.float64(pars["DM"]), np.float64(pars["CSP"]),
         np.float64(np.sqrt(ASlon)), np.float64(np.sqrt(APlon)), np.float64(np.sqrt(APpar)), np.float64(np.sqrt(APper)),
-        np.float64(pars["pSlon"]), np.float64(pars["pPlon"]), np.float64(pars["pPpar"]), np.float64(pars["pPper"]),
-        np.float64(pars["dSlon"]), np.float64(pars["dPlon"]), np.float64(pars["dPpar"]), np.float64(pars["dPper"]),
-        np.float64(pars["lSlon"]), np.float64(pars["lPlon"]), np.float64(pars["lPpar"]), np.float64(pars["lPper"]),
+        np.float64(pars["pSlon"]+pars["pPlon"]), np.float64(pars["pPlon"]), np.float64(pars["pPpar"]+pars["pPlon"]), np.float64(pars["pPper"]+pars["pPlon"]),
+        np.float64(pars["dSlon"]+pars["dPper"]), np.float64(pars["dPlon"]), np.float64(pars["dPpar"]), np.float64(pars["dPper"]),
+        np.float64(pars["lSlon"]*pars["lPlon"]), np.float64(pars["lPlon"]), np.float64(pars["lPpar"]*pars["lPlon"]), np.float64(pars["lPper"]*pars["lPlon"]),
         np.float64(0.3), np.float64(15),
-        cu_array.to_gpu(np.array([1, 1.2, 1.4, 1.7, 2.2, 2.2, 2.1, 2.0, 1.9])).astype(np.float64),
-        np.int32(data.shape[0]),
+        cu_array.to_gpu(np.array(9*[1.0])).astype(np.float64),
+        np.int32(true.shape[0]),
         block = (BLOCK_SIZE,1,1),
-        grid = (int(np.ceil(data.shape[0]/BLOCK_SIZE)),1,1)
+        grid = (int(np.ceil(true.shape[0]/BLOCK_SIZE)),1,1)
       )
   result = ang_acc.get()
   return result#/result[0]
@@ -254,7 +254,7 @@ def get_angular_cov(data, weights, pars, coeffs=None, BLOCK_SIZE=32):
   APlon   = FP*pars['APlon']
   APper   = FP*pars['APper']
   APpar   = FP*(1-pars['APlon']-pars['APper'])
-  ang_acc_ = getAngularWeights(data, weights, pars)
+  ang_acc_ = get_angular_weights(data, weights, pars)
   ang_acc = cu_array.to_gpu(ang_acc_).astype(np.float64)
   cov_mat = cu_array.to_gpu(np.zeros([10,10])).astype(np.float64)
 
@@ -263,9 +263,9 @@ def get_angular_cov(data, weights, pars, coeffs=None, BLOCK_SIZE=32):
         np.float64(pars["Gd"]+pars["DGsd"]), np.float64(pars["DGs"]),
         np.float64(pars["DM"]), np.float64(pars["CSP"]),
         np.float64(np.sqrt(ASlon)), np.float64(np.sqrt(APlon)), np.float64(np.sqrt(APpar)), np.float64(np.sqrt(APper)),
-        np.float64(pars["pSlon"]), np.float64(pars["pPlon"]), np.float64(pars["pPpar"]), np.float64(pars["pPper"]),
-        np.float64(pars["dSlon"]), np.float64(pars["dPlon"]), np.float64(pars["dPpar"]), np.float64(pars["dPper"]),
-        np.float64(pars["lSlon"]), np.float64(pars["lPlon"]), np.float64(pars["lPpar"]), np.float64(pars["lPper"]),
+        np.float64(pars["pSlon"]+pars["pPlon"]), np.float64(pars["pPlon"]), np.float64(pars["pPpar"]+pars["pPlon"]), np.float64(pars["pPper"]+pars["pPlon"]),
+        np.float64(pars["dSlon"]+pars["dPper"]), np.float64(pars["dPlon"]), np.float64(pars["dPpar"]), np.float64(pars["dPper"]),
+        np.float64(pars["lSlon"]*pars["lPlon"]), np.float64(pars["lPlon"]), np.float64(pars["lPpar"]*pars["lPlon"]), np.float64(pars["lPper"]*pars["lPlon"]),
         np.float64(0.3), np.float64(15),
         cu_array.to_gpu(coeffs).astype(np.float64),
         np.int32(data.shape[0]),
