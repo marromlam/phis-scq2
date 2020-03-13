@@ -26,7 +26,7 @@ rule polarity_weighting:
     sample = SAMPLES_PATH+'{year}/{mode}/{flag}_polWeight.root'
   run:
     import os
-    if os.path.isfile(f"params.original") and os.path.isfile(f"params.target"):
+    if os.path.isfile(f"{params.original}") and os.path.isfile(f"{params.target}"):
       if f'{wildcards.mode}' in ('MC_Bs2JpsiPhi_dG0',
                                  'MC_Bs2JpsiPhi',
                                  'MC_Bd2JpsiKstar'):
@@ -49,6 +49,9 @@ rule polarity_weighting:
             f"very easily using `sync_ntuples` rule. Simply run\n\t",
             f"snakemake sync_ntuples -v {VERSION}\nand they will be downloaded,",
             f"correctly placed, and properly renamed.\nGood luck!")
+      print(f"The required unfound files were:")
+      print(f"{params.original}")
+      print(f"{params.target}")
 
 
 
