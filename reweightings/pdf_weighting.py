@@ -8,20 +8,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import uproot
 import os, sys
-import json
+import hjson
 import importlib
 
-# openCL stuff
+# openCL stuff - this can be changed to be handled by ipanema
 import builtins
 import reikna.cluda as cluda
 api = cluda.ocl_api() # OpenCL API
 
 builtins.THREAD = api.Thread.create()
-builtins.CONTEXT = THREAD._context                      # Initialize the Context
+builtins.CONTEXT = THREAD._context
 builtins.BACKEND = 'opencl'
 builtins.DEVICE = THREAD._device
 
-import bsjpsikk                                   # phis-scq module
+import bsjpsikk
 
 ################################################################################
 ################################################################################
@@ -47,15 +47,6 @@ def argument_parser():
 
 # pdf_weighting ----------------------------------------------------------------
 
-
-path = '/scratch03/marcos.romero/phisRun2/SideCar/'
-input_file      = path+'MC_JpsiPhi_sample2016_polWeight.root'
-tree_name       = 'DecayTree'
-output_file     = path+'MC_JpsiPhi_sample2016_pdfWeight.root'
-original_params = '/home3/marcos.romero/phis-scq/backup/input/tad-2016-both-simon1.json'
-target_params   = '/home3/marcos.romero/phis-scq/backup/input/tad-2016-both-simon2.json'
-
-
 def pdf_weighting(input_file, tree_name, output_file,
                   target_params, original_params,
                   mode):
@@ -67,15 +58,20 @@ def pdf_weighting(input_file, tree_name, output_file,
   bsjpsikk.config['use_time_acc'] = 0
   bsjpsikk.config['use_time_offset'] = 0
   bsjpsikk.config['use_time_res'] = 0
-  bsjpsikk.config['use_perftag'] = 1 #1
-  bsjpsikk.config['use_truetag'] = 0 #0
+  bsjpsikk.config['use_perftag'] = 1
+  bsjpsikk.config['use_truetag'] = 0
 
-
-  #bsjpsikk.config['sigma_t'] = 0.0
   if mode == "MC_Bd2JpsiKstar":
     bsjpsikk.config["x_m"] = [826, 861, 896, 931, 966]
+    tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
+                'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
+                'B_ID'] # Final names!
   elif mode.startswith("MC_Bs2JpsiPhi"):
     bsjpsikk.config["x_m"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
+                'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
+                'B_ID_GenLvl'] # Final names!
+
   bsjpsikk.get_kernels()
   cross_rate = bsjpsikk.diff_cross_rate
 
@@ -83,12 +79,6 @@ def pdf_weighting(input_file, tree_name, output_file,
   print('Loading file...')
   input_file = uproot.open(input_file)[tree_name]
   data = input_file.pandas.df(flatten=False)
-  # Prepare host arrays
-  tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
-              'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
-              'B_ID_GenLvl'] # Final names!
-  # tad_vars = ['truehelcosthetaK','truehelcosthetaL','truehelphi',
-  #             'B_TRUETAU', 'X_M','sigmat','B_ID_GenLvl'] # just for testing
   vars_h = np.ascontiguousarray(data[tad_vars].values)    # input array (matrix)
   vars_h[:,3] *= 1e3                                                # time in ps
   pdf_h  = np.zeros(vars_h.shape[0])                        # output array (pdf)
@@ -99,9 +89,9 @@ def pdf_weighting(input_file, tree_name, output_file,
 
   # Compute!
   print('Calc weights...')
-  original_params = json.load(open(original_params))
+  original_params = hjson.load(open(original_params))
   original_params
-  target_params = json.load(open(target_params))
+  target_params = hjson.load(open(target_params))
   cross_rate(vars_d,pdf_d,**original_params); original_pdf_h = pdf_d.get()
   cross_rate(vars_d,pdf_d,**target_params); target_pdf_h = pdf_d.get()
   np.seterr(divide='ignore', invalid='ignore')                 # remove warnings
