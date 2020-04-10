@@ -16,20 +16,20 @@ the evatuoation of the generator level p.d.f. of the MC events, true variables a
 In constras to data, reconstructe helicuty angle are used when evaluating the angular
 functions. As matter of fact, the normalization weights are computed as follows
 
-$`
+```math
 \tilde{w}_k = 
 \sum_{i=1}^{\# \mathrm{events}} \omega_i
 f_k({\theta_K}_i^{\mathrm{reco}},{\theta_{\mu}}_i^{\mathrm{reco}},{\phi}_{i}^{\mathrm{reco}}) 
 \frac
 { \frac{d\Gamma^4}{dtd\Omega}  (t_i^{\mathrm{true}},{\theta_K}_i^{\mathrm{true}},{\theta_{\mu}}_i^{\mathrm{true}},{\phi}_{i}^{\mathrm{true}})}
 { \frac{d\Gamma}{dt}(t_i^{\mathrm{true}})}
-`$
+```
 
 where $`\omega_i`$ stands for a per event weight, and finally the _normalization weights_ are
 
-$`
+```math
 {w}_k = \frac{1}{\tilde{w}_0} \tilde{w}_k
-`$
+```
 
 The nagular acceptance is determined with MC matched events, `BKGCAT==0|BKGCAT==50`
 withoud any weights applied. However we also take into account ome events belonging to `BKGCAT==60` (known as ghost events)
