@@ -31,7 +31,7 @@ rule single_time_acceptance:
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-    ) #&> {log} #2>&1
+    ) &> {log} #2>&1
     """)
     send_mail("Single Time Acceptance", f"{log}")
 
