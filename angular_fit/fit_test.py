@@ -29,7 +29,7 @@ from pycuda.compiler import SourceModule
 #import pycuda.gpuarray as cu_array
 
 
-THREAD
+
 
 """
 prog = SourceModule(open('kernel.cu',"r").read())
@@ -98,46 +98,10 @@ data['2016']['unbiased'].df['sWeight'] = sw
 data['2016']['unbiased'].allocate(input=real,weight='sWeight',output='0*time')
 
 
-data['2016']['unbiased'].timeacc
-data['2016']['biased'].timeacc
-
-
 
 
 
 # Prepare parameters 9.536740132617429e-07
-0.2428991560298224**2
-"""
-G                  : +0.6878900000000000
-DG                 : +0.0917000000000000
-DM                 : +17.7680000000000007
-CSP                : +0.9733718639350000
-ASlon              : +0.2428991560298224
-APlon              : +0.7021994018795517
-APpar              : +0.4611572399952103
-APper              : +0.4850257725111110
-pSlon              : +0.0700000000000000
-pPlon              : +0.0700000000000000
-pPpar              : +0.0700000000000000
-pPper              : +0.0700000000000000
-dSlon              : +2.5459999999999998
-dPlon              : +0.0000000000000000
-dPper              : +3.0259999999999998
-dPpar              : +3.2599999999999998
-lSlon              : +1.0000000000000000
-lPlon              : +1.0000000000000000
-lPper              : +1.0000000000000000
-lPpar              : +1.0000000000000000
-tLL                : +0.3000000000000000
-tUL                : +15.0000000000000000
-mu                 : +0.0000000000000000
-sigma_offset       : +0.0129700000000000
-sigma_slope        : +0.8446000000000000
-sigma_curvature    : +0.0000000000000000
-
-"""
-
-
 SWAVE = 1
 DGZERO = 0
 pars = Parameters()
@@ -220,19 +184,7 @@ Parameter(name='dp1_ss',           value=0,                    min=0.0,    max=1
 pars.add(*list_of_parameters);
 
 
-p0_OS    : +0.3890000000000000
-p1_OS    : +0.8486000000000000
-p2_OS    : +0.0000000000000000
-dp0_OS    : +0.0090000000000000
-dp1_OS    : +0.0143000000000000
-dp2_OS    : +0.0000000000000000
-p0_SSK    : +0.4325000000000000
-p1_SSK    : +0.9241000000000000
-dp0_SSK    : +0.0000000000000000
-dp1_SSK    : +0.0000000000000000
-sigma_t_a    : +0.0000000000000000
-sigma_t_b    : +0.8446000000000000
-sigma_t_c    : +0.0129700000000000
+
 
 #@profile
 def wrapper_fcn(input, output, **pars):
@@ -242,11 +194,8 @@ def wrapper_fcn(input, output, **pars):
                          use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
                          BLOCK_SIZE=256, **p)
 
-
-
 #wrapper_fcn(data['2016']['biased'].input,data['2016']['biased'].output,**pars.valuesdict(),**data['2016']['biased'].timeacc.valuesdict(),**data['2016']['biased'].angacc.valuesdict())
 #wrapper_fcn(data['2016']['unbiased'].input,data['2016']['unbiased'].output,**pars.valuesdict(),**data['2016']['unbiased'].timeacc.valuesdict(),**data['2016']['unbiased'].angacc.valuesdict())
-
 #exit()
 
 
@@ -269,7 +218,3 @@ print(result)
 
 for p in ['DGsd', 'DGs', 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DM', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6']:
   print(f"{p:>12} : {result.params[p].value:+.8f}")
-
-
-#406229.04271933885
-406229.0427193389
