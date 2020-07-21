@@ -20,7 +20,7 @@ with open(r'samples/branches.yaml') as file:
 
 # sWeight setter ---------------------------------------------------------------
 #    Doc
-def alpha(x, y=1):
+def alpha(x, y=1.0):
   z = x/y
   return z*( (z.sum())/((z**2).sum()) )
 
@@ -38,7 +38,7 @@ def reduce(input_file,output_file,
   This function reduces a root file
   """
   # load file
-  _,_,_,_,v,y,m,f = input_file.split('/')
+  _,_,_,_,y,m,f = input_file.split('/')
   in_file = uproot.open(input_file)[input_tree]
 
   # get all neeeded branches
