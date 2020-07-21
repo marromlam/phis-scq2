@@ -56,9 +56,10 @@ __device__ double factorial(int n)
 
 
 __device__
-double getTimeCal(double sigma, double sigma_a, double sigma_b, double sigma_c)
+double getTimeCal(double sigma,
+                  double sigma_offset, double sigma_slope, double sigma_curvature)
 {
-  return sigma_a*sigma*sigma + sigma_b*sigma + sigma_c;
+  return sigma_curvature*sigma*sigma + sigma_slope*sigma + sigma_offset;
 }
 
 

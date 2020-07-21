@@ -74,23 +74,109 @@ __device__
 double calcTimeAcceptance(double t, double *coeffs, double tLL, double tUL)
 {
   int bin   = getTimeBin(t);
-  if (t < tLL) { return 0.0; }
-  if (t > tUL) { return 0.0; }
-
   double c0 = getCoeff(coeffs,bin,0);
   double c1 = getCoeff(coeffs,bin,1);
   double c2 = getCoeff(coeffs,bin,2);
   double c3 = getCoeff(coeffs,bin,3);
 
-  double result = (c0 + t*(c1 + t*(c2 + t*c3)));
-  if (DEBUG >= 3 && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT))
+  #ifdef DEBUG
+  if (DEBUG >= 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT))
   {
-    printf("TIME ACC           : t=%lf\tbin=%d\tc=[%+lf\t%+lf\t%+lf\t%+lf]\tdta=%lf\n",
-           t,bin,c0,c1,c2,c3,result);
+    printf("\nTIME ACC           : t=%lf\tbin=%d\tc=[%+lf\t%+lf\t%+lf\t%+lf]\tdta=%+.16lf\n",
+           t,bin,c0,c1,c2,c3, (c0 + t*(c1 + t*(c2 + t*c3))) );
   }
+  #endif
+
+  return (c0 + t*(c1 + t*(c2 + t*c3)));
+}
+
+
+__device__
+pycuda::complex<double> ipanema_erfc(pycuda::complex<double> z)
+{
+  double re = -z.real() * z.real() + z.imag() * z.imag();
+  double im = -2. * z.real() * z.imag();
+  re = exp(re) * cos(im);
+  im = exp(re) * sin(im);
+
+  if (z.imag() < 0.0) {
+    return (2.-     pycuda::complex<double> (re, im) * faddeeva(pycuda::complex<double> (z.imag(), -z.real())));
+  }
+  if (z.real() >= 0.0) {
+    return (     pycuda::complex<double> (re, im) * faddeeva(pycuda::complex<double> (-z.imag(), z.real())));
+  }
+  else{
+    return (2. - pycuda::complex<double> (re, im) * faddeeva(pycuda::complex<double> (z.imag(), -z.real())));
+  }
+}
+
+
+
+__device__
+pycuda::complex<double> cErrF_2(pycuda::complex<double> x)
+{
+  pycuda::complex<double> I(0.0,1.0);
+  pycuda::complex<double> z(I*x);
+  pycuda::complex<double> result = exp(-x*x)*faddeeva(z);
+
+  if (x.real() > 20.0)// && fabs(x.imag()) < 20.0)
+    result = 0.0;
+  if (x.real() < -20.0)// && fabs(x.imag()) < 20.0)
+    result = 2.0;
 
   return result;
 }
+
+
+__device__
+pycuda::complex<double> getExponentialConvolution_simon(double t, double G, double omega, double sigma)
+{
+  double sigma2 = sigma*sigma;
+  pycuda::complex<double> I(0,1);
+
+  if (omega == 0)
+  {
+    if( t > -6.0*sigma ){
+      double exp_part = exp(-t*G + 0.5*G*G*sigma2 -0.5*omega*omega*sigma2);
+      pycuda::complex<double> my_erfc = ipanema_erfc(sigma*G/sqrt(2.0) - t/sigma/sqrt(2.0));
+      return 0.5 * exp_part * my_erfc;
+    }
+    else{
+      return 0.0;
+    }
+  }
+  else //(omega != 0)
+  {
+    double c1 = 0.5;
+
+    double exp1arg = 0.5*sigma2*(G*G - omega*omega) - t*G;
+    double exp1 = exp(exp1arg);
+
+    double exp2arg = -omega*(t - sigma2*G);
+    pycuda::complex<double> exp2(cos(exp2arg), sin(exp2arg));
+
+    pycuda::complex<double> cerfarg(sigma*G/sqrt(2.0) - t/(sigma*sqrt(2.0)) , +omega*sigma/sqrt(2.0));
+    pycuda::complex<double> cerf;
+
+    if  (cerfarg.real() < -20.0)
+    {
+      cerf = pycuda::complex<double>(2.0,0.0);
+    }
+    else
+    {
+      cerf = cErrF_2(cerfarg);//best complex error function
+    }
+    pycuda::complex<double> c2(exp2*cerf);
+    double im = -c2.imag();//exp*sin
+    double re = +c2.real();//exp*cos
+
+    return c1*exp1* (pycuda::real(c2) - I*pycuda::imag(c2));
+  }
+
+}
+
+
+
 
 
 
@@ -102,16 +188,16 @@ pycuda::complex<double> getExponentialConvolution(double t, double G, double ome
   pycuda::complex<double> I(0,1);
 
   if( t >SIGMA_THRESHOLD*sigma )
-  {//2.*(sqrt(0.5*M_M_PI))* this was an old factor
+  {//2.*(sqrt(0.5*M_PI))*
     return exp(-G*t+0.5*G*G*sigma2-0.5*omega*omega*sigma2)*(cos(omega*(t-G*sigma2)) + I*sin(omega*(t-G*sigma2)));
   }
   else
-  {
+  {//sqrt(0.5*M_PI)
     pycuda::complex<double> z, fad, result;
     z   = (-I*(t-sigma2*G) - omega*sigma2)/(sigma*sqrt(2.));
     fad = faddeeva(z);
     fad = (pycuda::real(fad) - I*pycuda::imag(fad));
-    return sqrt(0.5*M_PI)*exp(-0.5*t*t/sigma2)*fad;
+    return 0.5*exp(-0.5*t*t/sigma2)*fad;
   }
 }
 
@@ -159,9 +245,30 @@ __device__
 pycuda::complex<double> getM(double x, int n, double t, double sigma,
                              double gamma, double omega)
 {
-  pycuda::complex<double> conv_term;
-  conv_term = getExponentialConvolution(t,gamma,omega,sigma)/(sqrt(0.5*M_PI));
-  // printf("%lf, %lf\n",  pycuda::real(conv_term), pycuda::imag(conv_term));
+  pycuda::complex<double> conv_term, z;
+  pycuda::complex<double> I(0,1);
+  z = sigma/(sqrt(2.0)) * pycuda::complex<double>(gamma,-omega);
+  //conv_term = 5.0*getExponentialConvolution(t,gamma,omega,sigma);///(sqrt(0.5*M_PI));
+  // warning there are improvement to do here!!!
+  if (omega == 0){
+    conv_term = exp(z*z-2*x*z)*(  ipanema_erfc(-I*(I*(z-x)))  );
+  }
+  else{
+    conv_term = exp(z*z-2*x*z)*(  cErrF_2(-I*(I*(z-x)))  );
+    //conv_term = 2.0*getExponentialConvolution_simon(t,gamma,omega,sigma);
+    //conv_term = 2.0*exp(-gamma*t+0.5*gamma*gamma*sigma*sigma-0.5*omega*omega*sigma*sigma)*(cos(omega*(t-gamma*sigma*sigma)) + I*sin(omega*(t-gamma*sigma*sigma)));
+  }
+  //conv_term = 2.0*getExponentialConvolution_simon(t,gamma,omega,sigma);///(sqrt(0.5*M_PI));
+
+  // #ifdef DEBUG
+  // if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) ){
+  //   printf("\nerfc*exp = %+.16lf %+.16lfi\n",  pycuda::real(conv_term), pycuda::imag(conv_term));
+  //   printf("erfc = %+.16lf %+.16lfi\n",  pycuda::real(ipanema_erfc(-I*(I*(z-x)))), pycuda::imag(ipanema_erfc(-I*(I*(z-x)))));
+  //   printf("cErrF_2 = %+.16lf %+.16lfi\n",  pycuda::real(cErrF_2(-I*(I*(z-x)))), pycuda::imag(cErrF_2(-I*(I*(z-x)))));
+  //   printf("exp  = %+.16lf %+.16lfi\n",  pycuda::real(exp(z*z-2*x*z)), pycuda::imag(exp(z*z-2*x*z)));
+  //   printf("z    = %+.16lf %+.16lfi     %+.16lf %+.16lf %+.16lf        x = %+.16lf\n",  z.real(), z.imag(), gamma, omega, sigma, x);
+  // }
+  // #endif
 
   if (n == 0)
   {
@@ -197,16 +304,16 @@ pycuda::complex<double> getM(double x, int n, double t, double sigma,
 
 
 __device__
-void intgTimeAcceptance(double time_terms[4], double sigma,
+void intgTimeAcceptance(double time_terms[4], double delta_t,
                         double G, double DG, double DM,
                         double *coeffs, double t0)
 {
   // Some constants
-  double aux1 = 1./(sqrt(2.0)*sigma);
-  double aux2 = sigma/(sqrt(2.0));
-  if (sigma <= 0.0)
+  double cte1 = 1./(sqrt(2.0)*delta_t);
+  double cte2 = delta_t/(sqrt(2.0));
+  if (delta_t <= 0.0)
   {
-    printf("WARNING            : sigma = %.4f is not a valid value.\n", sigma);
+    printf("WARNING            : delta_t = %.4f is not a valid value.\n", delta_t);
   }
 
   // Add tUL to knots list
@@ -215,9 +322,9 @@ void intgTimeAcceptance(double time_terms[4], double sigma,
   for(int i = 0; i < NKNOTS; i++)
   {
     knots[i] = KNOTS[i];
-    x[i] = (knots[i] - t0)*aux1;
+    x[i] = (knots[i] - t0)*cte1;
   }
-  knots[NKNOTS] = 15; x[NKNOTS] = (knots[NKNOTS] - t0)*aux1; // WARNING! HARDCODED NUMBER
+  knots[NKNOTS] = 15; x[NKNOTS] = (knots[NKNOTS] - t0)*cte1; // WARNING! HARDCODED NUMBER
 
   // Fill S matrix                (TODO speed to be gained here - S is constant)
   double S[SPL_BINS][4][4];
@@ -240,43 +347,65 @@ void intgTimeAcceptance(double time_terms[4], double sigma,
     }
   }
 
-  pycuda::complex<double> z_sinh, K_sinh[4], M_sinh[SPL_BINS+1][4];
-  pycuda::complex<double> z_cosh, K_cosh[4], M_cosh[SPL_BINS+1][4];
+  pycuda::complex<double> z_expm, K_expm[4], M_expm[SPL_BINS+1][4];
+  pycuda::complex<double> z_expp, K_expp[4], M_expp[SPL_BINS+1][4];
   pycuda::complex<double> z_trig, K_trig[4], M_trig[SPL_BINS+1][4];
 
-  z_cosh = aux2 * pycuda::complex<double>(G-0.5*DG,  0);
-  z_sinh = aux2 * pycuda::complex<double>(G+0.5*DG,  0);
-  z_trig = aux2 * pycuda::complex<double>(       G,-DM);
+  z_expm = cte2 * pycuda::complex<double>(G-0.5*DG,  0);
+  z_expp = cte2 * pycuda::complex<double>(G+0.5*DG,  0);
+  z_trig = cte2 * pycuda::complex<double>(       G,-DM);
 
   // Fill Kn                 (only need to calculate this once per minimization)
   for (int j=0; j<4; ++j)
   {
-    K_cosh[j] = getK(z_cosh,j);
-    K_sinh[j] = getK(z_sinh,j);
+    K_expp[j] = getK(z_expp,j);
+    K_expm[j] = getK(z_expm,j);
     K_trig[j] = getK(z_trig,j);
+    #ifdef DEBUG
+    if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) )
+    {
+      printf("K_expp[%d](%+.14lf%+.14lf) = %+.14lf%+.14lf\n",  j,z_expp.real(),z_expp.imag(),K_expp[j].real(),K_expp[j].imag());
+      printf("K_expm[%d](%+.14lf%+.14lf) = %+.14lf%+.14lf\n",  j,z_expm.real(),z_expm.imag(),K_expm[j].real(),K_expm[j].imag());
+      printf("K_trig[%d](%+.14lf%+.14lf) = %+.14lf%+.14lf\n\n",j,z_trig.real(),z_trig.imag(),K_trig[j].real(),K_trig[j].imag());
+    }
+    #endif
   }
+
 
   // Fill Mn
   for (int j=0; j<4; ++j)
   {
     for(int bin=0; bin < SPL_BINS+1; ++bin)
     {
-      M_sinh[bin][j] = getM(x[bin],j,knots[bin]-t0,sigma,G-0.5*DG,0.);
-      M_cosh[bin][j] = getM(x[bin],j,knots[bin]-t0,sigma,G+0.5*DG,0.);
-      M_trig[bin][j] = getM(x[bin],j,knots[bin]-t0,sigma,G,DM);
+      M_expm[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G-0.5*DG,0.);
+      M_expp[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G+0.5*DG,0.);
+      M_trig[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G,DM);
+      if (bin>0){
+        #ifdef DEBUG
+        if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) )
+        {
+          pycuda::complex<double> aja = M_expp[bin][j]-M_expp[bin-1][j];
+          pycuda::complex<double> eje = M_expm[bin][j]-M_expm[bin-1][j];
+          pycuda::complex<double> iji = M_trig[bin][j]-M_trig[bin-1][j];
+          printf("bin=%d M_expp[%d] = %+.14lf%+.14lf\n",  bin,j,aja.real(),aja.imag());
+          printf("bin=%d M_expm[%d] = %+.14lf%+.14lf\n",  bin,j,eje.real(),eje.imag());
+          printf("bin=%d M_trig[%d] = %+.14lf%+.14lf\n\n",bin,j,iji.real(),iji.imag());
+        }
+        #endif
+      }
     }
   }
 
   // Fill the delta factors to multiply by the integrals
-  double sigma_fact[4];
+  double delta_t_fact[4];
   for (int i=0; i<4; ++i)
   {
-    sigma_fact[i] = pow(sigma*sqrt(2.), i+1)/sqrt(2.);
+    delta_t_fact[i] = pow(delta_t*sqrt(2.), i+1)/sqrt(2.);
   }
 
   // Integral calculation for cosh, sinh, cos, sin terms
-  double int_sinh = 0;
-  double int_cosh = 0;
+  double int_expm = 0;
+  double int_expp = 0;
   pycuda::complex<double> int_trig = pycuda::complex<double>(0.,0.);
 
   for (int ibin=0; ibin < SPL_BINS; ++ibin)
@@ -285,35 +414,49 @@ void intgTimeAcceptance(double time_terms[4], double sigma,
     {
       for (int k=0; k<=3-j; ++k)
       {
-        int_sinh += pycuda::real(S[ibin][j][k]*
-                                 (M_sinh[ibin+1][j] - M_sinh[ibin][j])*
-                                 K_cosh[k])*
-                                 sigma_fact[j+k];
+        int_expm += pycuda::real(S[ibin][j][k]*
+                                 (M_expm[ibin+1][j] - M_expm[ibin][j])*
+                                 K_expm[k])*
+                                 delta_t_fact[j+k];
 
-        int_cosh += pycuda::real(S[ibin][j][k]*
-                                 (M_cosh[ibin+1][j] - M_cosh[ibin][j])*
-                                 K_sinh[k])*
-                                 sigma_fact[j+k];
+        int_expp += pycuda::real(S[ibin][j][k]*
+                                 (M_expp[ibin+1][j] - M_expp[ibin][j])*
+                                 K_expp[k])*
+                                 delta_t_fact[j+k];
 
         int_trig +=  S[ibin][j][k]*
                      (M_trig[ibin+1][j] - M_trig[ibin][j])*
                      K_trig[k]*
-                     sigma_fact[j+k];
+                     delta_t_fact[j+k];
+
+       #ifdef DEBUG
+       if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) )
+       {
+         printf("bin=%d int_expm[%d,%d] = %+.14lf%+.14lf\n",  ibin,j,k,int_expm);
+       }
+       #endif
       }
     }
   }
 
   // Fill itengral terms - 0:cosh, 1:sinh, 2:cos, 3:sin
-  time_terms[0] = 0.5*(int_sinh + int_cosh);
-  time_terms[1] = 0.5*(int_sinh - int_cosh);
-  time_terms[2] = pycuda::real(int_trig);
-  time_terms[3] = pycuda::imag(int_trig);
+  time_terms[0] = sqrt(0.5)*0.5*(int_expm + int_expp);
+  time_terms[1] = sqrt(0.5)*0.5*(int_expm - int_expp);
+  time_terms[2] = sqrt(0.5)*pycuda::real(int_trig);
+  time_terms[3] = sqrt(0.5)*pycuda::imag(int_trig);
 
-  if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT) )
+  #ifdef DEBUG
+  if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) )
   {
-    printf("INTEGRAL           : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",
+    printf("\nNORMALIZATION      : ta=%.16lf\ttb=%.16lf\ttc=%.16lf\ttd=%.16lf\n",
            time_terms[0],time_terms[1],time_terms[2],time_terms[3]);
+    printf("                   : int_expm=%.16lf\tint_expp=%.16lf\ttc=%.16lf\ttd=%.16lf\n",
+           int_expm,int_expp,time_terms[2],time_terms[3]);
+    printf("                   : sigma=%.16lf\tgamma+=%.16lf\tgamma-=%.16lf\n",
+           delta_t, G+0.5*DG, G-0.5*DG);
+
   }
+  #endif
 }
 
 
@@ -328,23 +471,31 @@ void integralFullSpline( double result[2],
                          double *spline_coeffs)
 {
   double integrals[4] = {0., 0., 0., 0.};
-  // printf("knots --> = %lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", KNOTS[0],KNOTS[1],KNOTS[2],KNOTS[3],KNOTS[4],KNOTS[5],KNOTS[6],KNOTS[7]);
-
-  intgTimeAcceptance(integrals, delta_t, G, DG, DM,
-                     spline_coeffs, t_offset) ;
-  // printf("knots <-- = %lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", KNOTS[0],KNOTS[1],KNOTS[2],KNOTS[3],KNOTS[4],KNOTS[5],KNOTS[6],KNOTS[7]);
+  intgTimeAcceptance(integrals, delta_t, G, DG, DM, spline_coeffs, t_offset);
 
   double ta = integrals[0];
   double tb = integrals[1];
   double tc = integrals[2];
   double td = integrals[3];
+  //ta = 1.190604219926328; tb = 0.09503489583578451; tc = 0.0236229120942433; td = 0.01432583715181457;
 
   for(int k=0; k<10; k++)
   {
     result[0] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb + vc[k]*tc + vd[k]*td);
     result[1] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb - vc[k]*tc - vd[k]*td);
   }
+  #ifdef DEBUG
+  if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) )
+  {
+    printf("                   : t_offset=%+.16lf  delta_t=%+.16lf\n", t_offset, delta_t);
+  }
+  #endif
 }
+
+
+
+
+
 
 
 
@@ -352,7 +503,8 @@ void integralFullSpline( double result[2],
 // PDF = conv x sp1 ////////////////////////////////////////////////////////////
 
 __device__
-double getOneSplineTimeAcc(double t, double *coeffs, double sigma, double gamma,
+double getOneSplineTimeAcc(double t, double *coeffs,
+                           double sigma, double gamma,
                            double tLL, double tUL)
 {
 
@@ -361,6 +513,28 @@ double getOneSplineTimeAcc(double t, double *coeffs, double sigma, double gamma,
   double fpdf = 1.0; double ipdf = 0;
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
   fpdf *= calcTimeAcceptance(t, coeffs , tLL, tUL);
+
+  // if ( threadIdx.x + blockDim.x * blockIdx.x == 0 ) {
+  // printf("COEFFS             : %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  //         coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
+  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  //         coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
+  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  //         coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
+  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  //         coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
+  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  //         coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
+  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  //         coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
+  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  //         coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
+  // }
+  // if ( threadIdx.x + blockDim.x * blockIdx.x < 3 )
+  // {
+  //   printf("TIME ACC           : t=%lf, sigma=%lf, gamma=%lf, tLL=%lf, tUL=%lf,     fpdf=%lf\n",
+  //          t, sigma, gamma, tLL, tUL, fpdf);
+  // }
 
   // Compute per event normatization
   double ti  = 0.0;  double tf  =  0.0;
@@ -459,11 +633,11 @@ double getOneSplineTimeAcc(double t, double *coeffs, double sigma, double gamma,
     ti)/(sqrt(2.0)*sigma))/exp(gamma*ti)))/gamma))/2.;
   }
 
-  if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x < DEBUG_EVT) )
-  {
-    printf("TIME ACC           : integral=%.8lf\n",
-           ipdf);
-  }
+  // if ( threadIdx.x + blockDim.x * blockIdx.x == 0)
+  // {
+  //   printf("TIME ACC           : integral=%.16lf\n",
+  //          ipdf);
+  // }
   return fpdf/ipdf;
 }
 
@@ -552,7 +726,7 @@ double getTwoSplineTimeAcc(double t, double *coeffs2, double *coeffs1,
     r2*pow(tf,3) + r3*pow(tf,4)) + 2*gamma*(3*r1 + 6*r2*tf +
     10*r3*(2*pow(sigma,2) + pow(tf,2)))) + b0*pow(gamma,2)*(6*r3 +
     gamma*(2*r2 + 3*r3*tf + gamma*(r1 + 2*r3*pow(sigma,2) + r2*tf +
-    r3*pow(tf,2)))))))/(pow(gamma,6)*sqrtf(2*M_PI)));
+    r3*pow(tf,2)))))))/(pow(gamma,6)*sqrt(2*M_PI)));
     term2i = (exp(gamma*ti)*(3*b3*(240*r3 + gamma*(2*pow(gamma,2)*r0 +
     8*gamma*r1 + 40*r2 + gamma*(pow(gamma,3)*r0 + 4*pow(gamma,2)*r1 +
     20*gamma*r2 + 120*r3)*pow(sigma,2) + pow(gamma,3)*(pow(gamma,2)*r1 +
@@ -615,6 +789,7 @@ double getTwoSplineTimeAcc(double t, double *coeffs2, double *coeffs1,
     ipdf += (term1f + term2f) - (term1i + term2i);
 
   }
+  //printf("%lf\n",ipdf);
   return fpdf/ipdf;
 
 }
