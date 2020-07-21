@@ -4,19 +4,24 @@
 #
 # Contributors: Marcos Romero
 
+import hjson
+import os
+
 # Main constants ---------------------------------------------------------------
 #    VERSION: is the version Bs2JpsiPhi-FullRun2 pipeline was run against, and
 #             should be matched with this constant.
 #    MAIN_PATH: the path where all eos-samples will be synced, make sure there
 #               is enough free space there
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
-MAIN_PATH = 'phis_samples/'
-SAMPLES_PATH = MAIN_PATH
-MAILS = []
+
+config = hjson.load(open("config.json"))
+MAILS = config["mail"]
+SAMPLES_PATH = config["paths"]["else"]
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
+print(MAILS)
+
 
 def send_mail(subject, fp):
-  import os
   fp = os.path.abspath(fp)
   sp = os.path.abspath('utils/mail_signature.txt')
   start = f'Content-Type: text/html\nSubject: {subject}\n<pre style="font: monospace">'
