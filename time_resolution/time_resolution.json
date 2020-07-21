@@ -1,0 +1,26 @@
+{
+  sigma_curvature:
+  {
+    name: sigma_curvature
+    value: 0.0
+    free: false
+    stdev: 0.0
+    latex: \sigma_2
+  }
+  sigma_offset:
+  {
+    name: sigma_offset
+    value: 0.01297
+    free: false
+    stdev: 0.0
+    latex: \sigma_0
+  }
+  sigma_slope:
+  {
+    name: sigma_slope
+    value: 0.8446
+    free: false
+    stdev: 0.0
+    latex: \sigma_1
+  }
+}

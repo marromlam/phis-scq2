@@ -1,0 +1,66 @@
+rule get_resolution_from_git:
+  params:
+    repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
+  output:
+    params = "output/params/time_resolution/{year}/{mode}/{version}.json",
+  run:
+    import os
+    import hjson
+    from ipanema import Parameters
+
+    year = f"{wildcards.year}"
+    version = f"{wildcards.version}"
+
+    if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
+      params = Parameters.load(f'time_resolution/time_resolution.json')
+      print(params)
+      params.dump(f"{output.params}")
+      print(f'Dumping parameters to {output.params}')
+    else:
+      os.makedirs("./tmp/{year}",exist_ok=True)
+      csp_path = f"fitinputs/{version}/time_resolution/{year}/"     # YEARLY
+
+      print(f"\n{80*'='}\n",
+            "Get CSP from Bs2JpsiPhi-FullRun2 repository",
+            f"\n{80*'='}\n")
+
+      print(f'Downloading Bs2JpsiPhi-FullRun2:{csp_path}CspFactors{year}.json')
+      os.system(f"git archive --remote={params.repo} --prefix=./tmp/ HEAD:{csp_path} binned_fit_{year}.json | tar -x")     # YEARLY
+      #os.system(f"git archive --remote={params.repo} --prefix=./tmp/{year}/ HEAD:{csp_path} CspFactorsAll.json | tar -x")     # SHARED
+
+      print(f"Loading CspFactors{year}.json")
+      raw_json = hjson.load( open(f'./tmp/binned_fit_{year}.json','r') )     # YEARLY
+      raw_json = raw_json['TimeResParameters']
+      #exit()
+      #raw_json = hjson.load( open(f'./tmp/{year}/CspFactorsAll.json','r') )     # SHARED
+      #raw_json = raw_json[f'All']['CspFactors']
+
+      print(f'Parsing parameters to match phis-scq sctructure')
+      cooked = {};
+
+      cooked['sigma_offset'] = {'name':f'sigma_offset'}
+      cooked['sigma_offset'].update({'value':raw_json[0]['Value'], 'stdev':raw_json[0]['Error']})
+      cooked['sigma_offset'].update({'latex': f"\sigma_0"})
+      cooked['sigma_offset'].update({'free': False})
+
+      cooked['sigma_slope'] = {'name':f'sigma_slope'}
+      cooked['sigma_slope'].update({'value':raw_json[1]['Value'], 'stdev':raw_json[1]['Error']})
+      cooked['sigma_slope'].update({'latex': f"\sigma_1"})
+      cooked['sigma_slope'].update({'free': False})
+
+      cooked['sigma_curvature'] = {'name':f'sigma_curvature'}
+      cooked['sigma_curvature'].update({'value':0.0*raw_json[2]['Value'], 'stdev':raw_json[2]['Error']})
+      cooked['sigma_curvature'].update({'latex': f"\sigma_{2}"})
+      cooked['sigma_curvature'].update({'free': False})
+
+      # Build the ipanema.Parameters object
+      print(f"\nCSP parameters for {year} are:")
+      list_params = list(cooked.keys())                 # list all parameter names
+      list_params = sorted( list_params )               # sort them
+      params = Parameters()
+      [params.add(cooked[par]) for par in list_params]
+      print(params)
+      params.dump(f"{output.params}")
+      print(f'Dumping parameters to {output.params}')
+      print(f'Clean up ./tmp/binned_fit_{year}.json\n')
+      os.remove(f"./tmp/binned_fit_{year}.json")
