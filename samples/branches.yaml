@@ -3,7 +3,7 @@ common: &common
   "cosK" : "helcosthetaK"
   "cosL" : "helcosthetaL"
   "hphi" : "helphi"
-  "q" : "B_ID"
+  "B_ID" : "B_ID"
   "X_M" : "X_M"
   "sigmat" : "sigmat"
   "hplus_P" : "hplus_P"
@@ -13,12 +13,13 @@ common: &common
   "B_PT" : "B_PT"
   "B_P" : "B_P"
   "hlt1b" : "hlt1b"
+  "Jpsi_Hlt1DiMuonHighMassDecision_TOS" : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
   "Polarity" : "Polarity"
-  "B_BKGCAT" : "B_BKGCAT"
 
 MC_common: &MC_common
   <<: *common
   "X_ID" : "X_ID"
+  "B_ID_GenLvl" : "B_ID_GenLvl"
   "truetime" : "1000*B_TRUETAU"
   "truecosK" : "truehelcosthetaK"
   "truecosL" : "truehelcosthetaL"
@@ -30,21 +31,26 @@ MC_common: &MC_common
   "kinWeight" : "kinWeight"
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
+  "B_BKGCAT" : "B_BKGCAT"
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
   "sw" : "sw"
   "gb_weights" : "gb_weights"
-  "sWeight" : "alpha(sw,gb_weights)"
+  "sWeight" : "sw/gb_weights"
 
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
-  "sWeight" : "alpha(sw)"
+  "sWeight" : "sw"
   "sw" : "sw"
+  "tagOS_dec" : "B_OSKaonLatest_TAGDEC"
+  "tagSS_dec" : "B_SSKaonLatest_TAGDEC"
+  "tagOS_eta" : "B_OSKaonLatest_TAGETA"
+  "tagSS_eta" : "B_SSKaonLatest_TAGETA"
 
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
-  "sWeight" : "alpha(sw)"
+  "sWeight" : "sw"
   "sw" : "sw"
   "kinWeight" : "kinWeight"
 
@@ -62,7 +68,7 @@ MC_Bs2JpsiPhi_Prompt:
 
 MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
-  "sWeight" : "alpha(sw)"
+  "sWeight" : "sw"
   "sw" : "sw"
 
 MC_Bu2JpsiKplus:
