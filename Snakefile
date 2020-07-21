@@ -10,7 +10,7 @@
 #    MAIN_PATH: the path where all eos-samples will be synced, make sure there
 #               is enough free space there
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
-MAIN_PATH = '/scratch17/marcos.romero/phis_samples/'
+MAIN_PATH = 'phis_samples/'
 SAMPLES_PATH = MAIN_PATH
 MAILS = []
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
