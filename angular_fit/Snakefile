@@ -1,0 +1,9 @@
+
+
+rule general_fit:
+  input:
+    samples = lambda wildcards: expand(rules.reduce_ntuples.output, mode='Bs2JpsiPhi',year=yd[f'{wildcards.year}'],flag='{flag}'),
+  output:
+    params = 'output/{version}/params/angular_fit/{year}/Bs2JpsiPhi/{flag}_baseline.json'
+  run:
+    print(input.samples)
