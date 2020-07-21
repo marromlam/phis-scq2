@@ -1,0 +1,130 @@
+{
+    "%d": {
+        "TimeAccParameter": {
+            "SplineUnbiased": [
+                {
+                    "Name": "coeff0",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff1",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff2",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff3",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff4",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff5",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff6",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff7",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff8",
+                    "Value": "%f",
+                    "Error": "%f"
+                }
+            ],
+            "KnotParameter": [
+                {
+                    "Name": "knot0",
+                    "Value": "%f"
+                },
+                {
+                    "Name": "knot1",
+                    "Value": "%f"
+                },
+                {
+                    "Name": "knot2",
+                    "Value": "%f"
+                },
+                {
+                    "Name": "knot3",
+                    "Value": "%f"
+                },
+                {
+                    "Name": "knot4",
+                    "Value": "%f"
+                },
+                {
+                    "Name": "knot5",
+                    "Value": "%f"
+                },
+                {
+                    "Name": "knot6",
+                    "Value": "%f"
+                }
+            ],
+            "SplineBiased": [
+                {
+                    "Name": "coeff0",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff1",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff2",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff3",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff4",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff5",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff6",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff7",
+                    "Value": "%f",
+                    "Error": "%f"
+                },
+                {
+                    "Name": "coeff8",
+                    "Value": "%f",
+                    "Error": "%f"
+                }
+            ]
+        }
+    }
+}

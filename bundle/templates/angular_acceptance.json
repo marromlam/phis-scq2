@@ -1,0 +1,108 @@
+{
+    "%d": {
+        "AngularParameterUnbiased": [
+            {
+                "Name": "f1",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f2",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f3",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f4",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f5",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f6",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f7",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f8",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f9",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f10",
+                "Value": "%f",
+                "Error": "%f"
+            }
+        ],
+        "AngularParameterBiased": [
+            {
+                "Name": "f1",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f2",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f3",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f4",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f5",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f6",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f7",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f8",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f9",
+                "Value": "%f",
+                "Error": "%f"
+            },
+            {
+                "Name": "f10",
+                "Value": "%f",
+                "Error": "%f"
+            }
+        ]
+    }
+}

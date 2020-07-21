@@ -1,0 +1,311 @@
+\documentclass[aspectratio=43]{beamer}
+\usetheme{Compostela}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{$\phi_s$ meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}
+}
+\newcommand{\TalkAuthorShort}{Veronika Chobanova, Diego Martínez, Marcos Romero}
+\newcommand{\TalkTitle}{Acceptances}
+\newcommand{\TalkTitleShort}{Acceptances}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{July 9th}
+\newcommand{\TalkDateNumber}{2020/07/09}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\usepackage{array}
+\newcommand{\TupleVersion}{v0r5}
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE PAGE & CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[plain,overlaytitlepage=0.9]
+  \begin{minipage}[b][\textheight][b]{5cm}
+    \includegraphics[height=0.5cm]{logos/igfae_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/usc_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/xunta_bw}\hspace{1mm}\\[2mm]
+    \includegraphics[height=0.5cm]{logos/maeztu_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/lhcb_bw}\\[-1mm]
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain,overlaytoc=0.9]
+  \addtocounter{framenumber}{-1}
+  \hspace*{5.3cm}\begin{minipage}{8cm}
+    \tableofcontents
+  \end{minipage}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+\section{News}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Solving the p.d.f. problem}
+\begin{frame}[default]
+\frametitle{noframetitle}
+\framesubtitle{ \texttt{\color{scqgreen}SOLVED} }
+
+The reason HD and SCQ were different was the computation of \texttt{faddeeva}
+function, which implementation is different. Once this was solved, SCQ and HD
+agree up to $10^{-14}$.
+
+\includegraphics[width=0.45\textwidth]{gpx/wofz.pdf}
+\includegraphics[width=0.45\textwidth]{gpx/wofz_differences.pdf}
+
+Picture on the right shows comparison against Mathematica.\\
+
+\vspace*{1cm}
+\footnotesize
+As a matter of fact
+ROOT precision is
+$1.870\times10^{-7} + i 8.257\times 10^{-10}$\\
+while SciPy (best one) is
+$2.046\times10^{-14} + i 2.976 \times10^{-13}$.
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[default]
+\frametitle{noframetitle}
+
+\begin{columns}
+  \begin{column}{0.48\textwidth}
+    \begin{variableblock}{Complementary error function core}{bg=scqindigo!20}{bg=scqindigo}
+      \textbf{function} \textsc{cerfc\_core} $(z)$\\
+      \hspace{0.25cm}$a \leftarrow \text{exp}(z^2)$\\
+      \hspace{0.25cm}\textbf{if} $\Re (z) >= 0$ \textbf{then}\\
+      \hspace{0.50cm}\textbf{return} $a \cdot \text{faddeva}(-\Im(z)+\Re(z)i)$\\
+      \hspace{0.25cm}\textbf{else}\\
+      \hspace{0.50cm} $b \leftarrow a \cdot \text{faddeva}(\Im(z)-\Re(z)i)$\\
+      \hspace{0.50cm}\textbf{return} $2-\Re(b) + \Im(b)i$\\
+      \hspace{0.25cm}\textbf{end}\\
+      \textbf{end}
+    \end{variableblock}
+
+    \vspace*{6mm}
+    \textsc{faddeva}  code can be found at \url{https://github.com/PyCOMPLETE/faddeevas/blob/master/cernlib_cuda/wofz.cu}
+
+  \end{column}
+  \begin{column}{0.48\textwidth}
+    \begin{variableblock}{Complementary error function}{bg=scqorange!20}{bg=scqorange}
+      \textbf{function} \textsc{cerfc} $(z)$\\
+      \hspace{0.25cm}\textbf{if} $\Im (z) < 0$ \textbf{then}\\
+      \hspace{0.50cm}\textbf{return} $2 - \text{cerf\_core}(-z)$\\
+      \hspace{0.25cm}\textbf{else}\\
+      \hspace{0.50cm}\textbf{return} $\text{cerf\_core}(z)$\\
+      \hspace{0.25cm}\textbf{end}\\
+      \textbf{end}
+    \end{variableblock}
+
+    \begin{center}
+      \includegraphics[width=0.6\textwidth]{gpx/erfc_crop.pdf}
+    \end{center}
+
+  \end{column}
+
+\end{columns}
+
+
+
+
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[default]
+\frametitle{noframetitle}
+
+\begin{itemize}
+  \item After all changes made to \texttt{phis-scq}, OpenCL was no longer supported.
+  \item The whole code was rewritten to create a metaprogrammable kernel that runs on any platform intel CPU/GPU, (amd CPU/GPU) and nVidia GPU.
+  \begin{itemize}
+    \item It's way more complicated to read.
+    \item It swiches some keywords depending on the platform.
+    \item It's based on \texttt{reikna}, a pure Python GPGPU library.
+    \item Can't be compiled with standard \texttt{gcc} or \texttt{clang}.
+  \end{itemize}
+  \item It's not completely finished, but the previous images were created with it.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Solving differences in pdf-weighting}
+\begin{frame}[default]
+\frametitle{noframetitle}
+\framesubtitle{ \texttt{\color{scqgreen}SOLVED} }
+
+\begin{itemize}
+  \item We only faced differences in $B^0$ MC pdf-weighting.
+  \item We were using different variables within the p.d.f., due to the absence of some branches in the old tuples.
+  \item Finally we decided to use:
+\end{itemize}
+\begin{center}
+  \begin{tabular}{r|ll}
+                           & true time & true ID\\ \hline
+  HD-fitter                & \texttt{time} & \texttt{X\_ID}\\
+  bs2jpsiphi-hd, phis-scq  & \texttt{truetime\_GenLvl} & \texttt{B\_ID\_GenLvl}
+  \end{tabular}
+\end{center}
+
+\begin{itemize}
+  \item Now, we get the \textbf{same time acceptance} for all years.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Different uncertainty estimation}
+\begin{frame}[default]
+\frametitle{noframetitle}
+\framesubtitle{ \texttt{\color{scqred}UNDER INVESTIGATION} }
+
+\begin{itemize}
+  \item Although we get the same value for each time acceptance coefficient, SCQ always gets lower uncertainty estimator (reading directly from \texttt{hesse}).
+  \item SCQ got slightly better minima than HD.
+  \item Likelihood value is the same for a given parameter-set.
+\end{itemize}
+
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{BDT issues}
+\begin{frame}[default]
+\frametitle{noframetitle}
+\framesubtitle{ \texttt{\color{scqred}UNDER INVESTIGATION} }
+
+\begin{center}
+  \includegraphics[width=\textwidth]{gpx/angular_pipeline.pdf}
+\end{center}
+
+
+\begin{itemize}
+  \item Step 5 is very sensible to the BDT configuration we use. We were getting non-sense \texttt{kkpWeight}s, thus iterative procedure did not converge.
+  \item We found a BDT configuration that works out, but...
+\end{itemize}
+
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{MC combination issues}
+\begin{frame}[default,fragile]
+\frametitle{noframetitle}
+\framesubtitle{ \texttt{\color{scqred}UNDER INVESTIGATION} }
+
+\footnotesize
+
+\begin{verbatim}
+Value of chi2/dof = 3.37/9 corresponds to a p-value of 0.9478
+Current angular weights for Bs2JpsiPhi-2016-unbiased sample are:
+      MC |   MC_dG0 | Combined
++1.00000 | +1.00000 | +1.0+/-0
++1.03661 | +1.03641 | +1.03651+/-0.00070
++1.03658 | +1.03573 | +1.03620+/-0.00069
+-0.00102 | -0.00083 | -0.00090+/-0.00054
++0.00042 | +0.00059 | +0.00049+/-0.00033
++0.00025 | +0.00036 | +0.00028+/-0.00033
++1.01026 | +1.00967 | +1.01000+/-0.00047
++0.00007 | -0.00012 | -0.00002+/-0.00042
++0.00061 | -0.00059 | +0.00007+/-0.00043
+-0.00162 | -0.00257 | -0.00205+/-0.00089
+\end{verbatim}
+
+\normalsize
+
+\begin{itemize}
+  \item Here everything seems OK, p-value is in $[0.5, 0.96]$ as in the previous analysis
+\end{itemize}
+
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\addtocounter{framenumber}{-1}
+\begin{frame}[default,fragile]
+\frametitle{noframetitle}
+\framesubtitle{ \texttt{\color{scqred}UNDER INVESTIGATION} }
+
+\footnotesize
+
+\begin{verbatim}
+Value of chi2/dof = 45.32/9 corresponds to a p-value of 8.056e-07
+Current angular weights for Bs2JpsiPhi-2018-unbiased sample are:
+      MC |   MC_dG0 | Combined
++1.00000 | +1.00000 | +1.0+/-0
++1.03013 | +1.02329 | +1.0282+/-0.0013
++1.02958 | +1.02783 | +1.0291+/-0.0013
++0.00032 | -0.00434 | -0.00096+/-0.00099
++0.00002 | +0.00069 | +0.00020+/-0.00061
++0.00025 | +0.00762 | +0.00219+/-0.00062
++1.00629 | +1.00599 | +1.00610+/-0.00088
+-0.00023 | -0.00052 | -0.00026+/-0.00078
++0.00056 | +0.00092 | +0.00045+/-0.00080
++0.00053 | +0.00470 | +0.0016+/-0.0017
+\end{verbatim}
+
+\normalsize
+
+\begin{itemize}
+  \item Here MC and MC $\Delta\Gamma = 0$ gave very different angular weights
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\input{figures}
+\input{tables}
+
+
+
+\end{document}

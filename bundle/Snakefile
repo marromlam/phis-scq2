@@ -1,0 +1,258 @@
+
+
+def find_flags(v):
+  all_flags = []
+  all_files = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(f"{SAMPLES_PATH}")) for f in fn]
+  print
+  for file in all_files:
+    filename = os.path.splitext(os.path.basename(file))[0]
+    all_flags.append(filename.split('_')[0])
+  all_flags = list(dict.fromkeys(all_flags)) # remove duplicates
+  return all_flags
+
+
+
+
+
+
+
+
+rule figures_bundle:
+  wildcard_constraints:
+    version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
+  input:
+    # Reweightings figures
+    rwp1 = expand(rules.plot_time_acceptance_reweightings.output,
+                  version='{version}',
+                  mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+                  branch=['B_P','B_PT','X_M'],
+                  year=['2015','2016','2017','2018']),
+    rwp2 = expand(rules.plot_angular_acceptance_reweightings.output,
+                  version='{version}',
+                  mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
+                  branch=['B_P','B_PT','X_M'],
+                  year=['2015','2016','2017','2018']),
+    # Time acceptance outputs
+  output:
+    "output/bundle/figures/{version}.zip"
+  run:
+    import os
+    import shutil
+    all_files = []
+    for this_input in input:
+      if isinstance(this_input, list):
+        print('its a list')
+        for item in this_input:
+          all_files.append(item)
+      else:
+        all_files.append(this_input)
+
+    print(all_files)
+    print(output)
+    cpath = f'{output}'
+    cpath = os.path.abspath(os.path.dirname(cpath)) + f'/{wildcards.version}/'
+    print(cpath)
+
+    # Remove directory if it exists
+    if os.path.isdir(f"{output[:-4]}"): os.system(f"rm -rf {output[:-4]}")
+
+    # Loop over all input files and make a copy of all pdfs
+    for file in all_files:
+      if file.endswith('.pdf'):
+        out_path = file.replace('output/figures/',cpath)
+      else:
+        out_path = None # add other methods if needed
+      if out_path:
+        print(f"Copying {file} to {out_path}...")
+        os.system(f"mkdir -p {os.path.dirname(out_path)}") # create dir
+        os.system(f"cp {file} {out_path}")                 # copy file
+        #shutil.copy2(f"{file}", f"{file.replace('output/',out_path)}")
+    try:
+      print(f'{cpath}')
+      shutil.make_archive(f'{cpath}','zip',f'{cpath}')
+    except:
+      print("Couldn't zip the contents")
+
+
+
+"""
+rule repository_bundle:
+  wildcard_constraints:
+    version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
+  input:
+    # Time acceptance outputs
+    tap1 = expand(rules.decay_time_acceptance.output,
+                  version='{version}',
+                  year=['2015','2016','2017','2018'],
+                  trigger=['biased','unbiased']),
+    aap1 = expand(rules.iterativeRun2_angular_acceptance.output,
+                  version='{version}'),
+  output:
+    "output/bundle/params/{version}.zip"
+  run:
+    import os
+    import shutil
+    all_files = []
+    for this_input in input:
+      if isinstance(this_input, list):
+        print('its a list')
+        for item in this_input:
+          all_files.append(item)
+      else:
+        all_files.append(this_input)
+
+    print(all_files)
+    print(output)
+    cpath = f'{output}'
+    cpath = os.path.abspath(os.path.dirname(cpath)) + f'/{wildcards.version}/'
+    print(cpath)
+
+    # Remove directory if it exists
+    if os.path.isdir(f"{output[:-4]}"): os.system(f"rm -rf {output[:-4]}")
+
+    # Loop over all input files and make a copy of all pdfs
+    for file in all_files:
+      if file.endswith('.json'):
+        out_path = file.replace('output/params/',cpath)
+        out_path = out_path.replace('Bd2JpsiKstar','Bs2JpsiPhi')
+      else:
+        out_path = None # add other methods if needed
+      if out_path:
+        print(f"Copying {file} to {out_path}...")
+        os.system(f"mkdir -p {os.path.dirname(out_path)}") # create dir
+        os.system(f"cp {file} {out_path}")                 # copy file
+        #shutil.copy2(f"{file}", f"{file.replace('output/',out_path)}")
+    try:
+      print(f'{cpath}')
+      shutil.make_archive(f'{cpath}','zip',f'{cpath}')
+    except:
+      print("Couldn't zip the contents")
+"""
+
+
+rule translate_time_acceptance:
+  input:
+    biased = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_Baseline_biased.json',
+    unbiased = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_Baseline_unbiased.json',
+  output:
+    'output/bundle/params/{version}/time_acceptance/{year}/time_acceptance_{year}.json'
+  log:
+    'output/log/bundle/translate_parameters/{version}/{year}/time_acceptance.json'
+  run:
+    shell(f"""(time\
+    python bundle/pipeline_translation.py\
+           --params-biased {input.biased}\
+           --params-unbiased {input.unbiased}\
+           --params-output {output}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+    ) &> {log} #2>&1""")
+
+rule translate_angular_acceptance:
+  input:
+    biased = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Baseline_biased.json',
+    unbiased = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Baseline_unbiased.json',
+  output:
+    'output/bundle/params/{version}/angular_acceptance/{year}/angular_acceptance_{year}.json'
+  log:
+    'output/log/bundle/translate_parameters/{version}/{year}/angular_acceptance.json'
+  run:
+    shell(f"""(time\
+    python bundle/pipeline_translation.py\
+           --params-biased {input.biased}\
+           --params-unbiased {input.unbiased}\
+           --params-output {output}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+    ) &> {log} #2>&1""")
+
+
+
+
+rule share_acceptances:
+  # wildcard_constraints:
+  #   version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
+  input:
+    # Time acceptance outputs
+    time = expand(rules.translate_time_acceptance.output,
+                  version='{version}',year=[2015,2016]),
+    angular = expand(rules.translate_angular_acceptance.output,
+                     version='{version}',year=[2015,2016]),
+  log:
+    "output/log/bundle/share_acceptances/{version}.log"
+  output:
+    "output/bundle/params/{version}.zip"
+  run:
+    shell(f"""(time\
+    python bundle/commit.py
+    ) #&> {log} #2>&1""")
+    cpath = f'{output}'
+    try:
+      import shutil
+      shutil.make_archive(f'{cpath[:-4]}/','zip',f'{cpath[:-4]}/')
+    except:
+      print(f"Couldn't zip the contents from {cpath}")
+
+
+
+
+# rule figures_bundle:
+#   wildcard_constraints:
+#     version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
+#   input:
+#     # Reweightings figures
+#     rwp1 = expand(rules.plot_reweightings.output,
+#                   version='{version}',
+#                   mode=['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0','MC_BdJpsiKstar,MC_BdJpsiKstar'],
+#                   branch=['B_P','B_PT','X_M'],
+#                   year=['2015','2016','2017','2018']),
+#     # Time acceptance outputs
+#     tap1 = expand(rules.decay_time_acceptance.output,
+#                   version='{version}',
+#                   year=['2015','2016','2017','2018'],
+#                   trigger=['biased','unbiased'])#,
+#     # time_acceptance_2 = expand(rules.decay_time_acceptance_without_kinweights.output,
+#     #                            version='{version}',
+#     #                            year=['2015','2016'],
+#     #                            flag='test',
+#     #                            trigger=['biased','unbiased'],
+#     #                            script='nonkinweighted')
+#   output:
+#     zipfile = "output/bundle/figures/{version}.zip"
+#   run:
+#     import os
+#     import shutil
+#     all_files = []
+#     for this_input in input:
+#       if isinstance(this_input, list):
+#         print('its a list')
+#         for item in this_input:
+#           all_files.append(item)
+#       else:
+#         all_files.append(this_input)
+#
+#     if os.path.isdir(f"{output.zipfile[:-4]}"):
+#       os.system(f"rm -rf {output.zipfile[:-4]}")
+#
+#     for file in all_files:
+#       if file.endswith('.pdf'):
+#         out_path = f"{output.zipfile[:-4]}/figures/"
+#         out_path = file.replace('figures/','').replace('output/',out_path)
+#       elif file.endswith('.json'):
+#         out_path = f"{output.zipfile[:-4]}/params/"
+#         out_path = file.replace('params/','').replace('output/',out_path)
+#       elif file.endswith('.tex'):
+#         out_path = f"{output.zipfile[:-4]}/tables/"
+#         out_path = file.replace('tables/','').replace('output/',out_path)
+#       else:
+#         out_path = None # add other methods if needed
+#       if out_path:
+#         print(f"Copying {file}...")
+#         out_path = os.path.abspath(out_path)
+#         os.system(f"mkdir -p {os.path.dirname(out_path)}") # create dir
+#         os.system(f"cp {file} {out_path}")                 # copy file
+#         #shutil.copy2(f"{file}", f"{file.replace('output/',out_path)}")
+#       try:
+#         shutil.make_archive(f'{output.zipfile[:-4]}','zip',f'{output.zipfile[:-4]}')
+#       except:
+#         print("Couldn't zip the contents")

@@ -1,0 +1,13 @@
+\beamer@sectionintoc {1}{News}{3}{0}{1}
+\beamer@subsectionintoc {1}{1}{Solving the p.d.f. problem}{4}{0}{1}
+\beamer@subsectionintoc {1}{2}{Solving differences in pdf-weighting}{7}{0}{1}
+\beamer@subsectionintoc {1}{3}{Different uncertainty estimation}{8}{0}{1}
+\beamer@subsectionintoc {1}{4}{BDT issues}{9}{0}{1}
+\beamer@subsectionintoc {1}{5}{MC combination issues}{10}{0}{1}
+\beamer@sectionintoc {2}{Figures}{12}{0}{2}
+\beamer@subsectionintoc {2}{1}{Reweightings for time acceptance}{13}{0}{2}
+\beamer@subsectionintoc {2}{2}{Reweightings for angular acceptance}{25}{0}{2}
+\beamer@subsectionintoc {2}{3}{Decay-time acceptance}{33}{0}{2}
+\beamer@sectionintoc {3}{Tables and parameters}{39}{0}{3}
+\beamer@subsectionintoc {3}{1}{Decay-time acceptance}{40}{0}{3}
+\beamer@subsectionintoc {3}{2}{Angular acceptance}{46}{0}{3}
