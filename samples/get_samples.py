@@ -12,6 +12,8 @@ def ls_lxplus(code):
   out, err = proc.communicate()
   return out.split('\n')[:-1]
 
+allowed_modes = ['Bd2JpsiKstar','Bs2JpsiPhi',
+                 'MC_Bd2JpsiKstar','MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0']
 
 # Parse arguments --------------------------------------------------------------
 def argument_parser():
@@ -60,10 +62,12 @@ for i, tuple in enumerate(all_tuples):
   if not value.startswith('PID'): # do not copy PID correction tuples
     value = value.split('/')
     value[2] = value[2][(len(value[0])+len(value[1])+2):] # remove mode_year
-    value[2] = value[2][:-5] # remove root
+    value[2] = value[2][:-5] # remove .root
     if value[2].endswith(VERSION):
       value[2] = value[2][:-(len(VERSION)+1)] # remove version tag
-    samples_dict[key] = [SCQ_PATH,VERSION,value[1],value[0],f'{value[2]}.root']
+    if value[2].endswith('_sw'):
+      if value[0] in allowed_modes:
+        samples_dict[key] = [SCQ_PATH,VERSION,value[1],value[0],f'{value[2]}.root']
 
 # Some prints
 print(80*'='+'\n='+33*' '+'SYNC SAMPLES'+33*' '+'=\n'+80*'='+'\n')
