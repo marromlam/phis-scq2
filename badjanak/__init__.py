@@ -13,7 +13,7 @@ import cpuinfo
 if __name__ == '__main__':
   PATH = '/home3/marcos.romero/phis-scq/badjanak'
   import ipanema
-  ipanema.initialize('cuda',1,verbose=False)
+  ipanema.initialize('opencl',1,verbose=False)
 else:
   PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -76,7 +76,7 @@ def flagger(verbose=False):
 
 # Compiler ---------------------------------------------------------------------
 #     Compile kernel against given BACKEND
-from pycuda.compiler import SourceModule
+#from pycuda.compiler import SourceModule
 #import pycuda.driver as cuda
 #import pycuda.autoinit
 #import pycuda.gpuarray as cu_array
@@ -101,12 +101,10 @@ def compile(verbose=False, pedantic=False):
   if pedantic:
     print(prog.source)
     #prog = SourceModule(open('kernel.cu',"r").read())
-
   if verbose:
     print('\nSuccesfully compiled.\n')
   #print(open('kernel.cu',"r").read())
   #prog = SourceModule(open('kernel.cu',"r").read())
-
   return prog
 
 
