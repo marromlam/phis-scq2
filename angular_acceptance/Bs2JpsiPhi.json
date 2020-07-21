@@ -1,0 +1,402 @@
+{
+  fSlon1:
+  {
+    name: fSlon1
+    value: 0.473560718454
+    free: 1
+    min: 0.0
+    max: 0.6
+    init: 0.473560718454
+    latex: fSlon1
+  }
+  fSlon2:
+  {
+    name: fSlon2
+    value: 0.0368893354524
+    free: 1
+    min: 0.0
+    max: 0.6
+    init: 0.0368893354524
+    latex: fSlon2
+  }
+  fSlon3:
+  {
+    name: fSlon3
+    value: 0.00458919864125
+    free: 1
+    min: 0.0
+    max: 0.6
+    init: 0.00458919864125
+    latex: fSlon3
+  }
+  fSlon4:
+  {
+    name: fSlon4
+    value: 0.009023172708
+    free: 1
+    min: 0.0
+    max: 0.6
+    init: 0.009023172708
+    latex: fSlon4
+  }
+  fSlon5:
+  {
+    name: fSlon5
+    value: 0.0678419662382
+    free: 1
+    min: 0.0
+    max: 0.6
+    init: 0.0678419662382
+    latex: fSlon5
+  }
+  fSlon6:
+  {
+    name: fSlon6
+    value: 0.142729498712
+    free: 1
+    min: 0.0
+    max: 0.6
+    init: 0.142729498712
+    latex: fSlon6
+  }
+  fPlon:
+  {
+    name: fPlon
+    value: 0.512314599353
+    free: true
+    min: 0.4
+    max: 0.62
+    init: 0.512314599353
+    latex: fPlon
+  }
+  fPper:
+  {
+    name: fPper
+    value: 0.247866538577
+    free: true
+    min: 0.13
+    max: 0.36
+    init: 0.247866538577
+    latex: fPper
+  }
+  pSlon:
+  {
+    name: pSlon
+    value: 0.0
+    free: false
+    min: -0.5
+    max: 0.5
+    init: 0.0
+    latex: pSlon
+  }
+  pPlon:
+  {
+    name: pPlon
+    value: -0.107958702675
+    free: true
+    min: -3.14159
+    max: 3.14159
+    init: -0.107958702675
+    latex: pPlon
+  }
+  pPpar:
+  {
+    name: pPpar
+    value: 0.0
+    free: false
+    min: -0.5
+    max: 0.5
+    init: 0.0
+    latex: pPpar
+  }
+  pPper:
+  {
+    name: pPper
+    value: 0.0
+    free: false
+    min: -0.5
+    max: 0.5
+    init: 0.0
+    latex: pPper
+  }
+  dSlon1:
+  {
+    name: dSlon1
+    value: 2.32715533865
+    free: 1
+    min: -3.14159
+    max: 3.14159
+    init: 2.32715533865
+    latex: dSlon1
+  }
+  dSlon2:
+  {
+    name: dSlon2
+    value: 1.61459043778
+    free: 1
+    min: -3.14159
+    max: 3.14159
+    init: 1.61459043778
+    latex: dSlon2
+  }
+  dSlon3:
+  {
+    name: dSlon3
+    value: 1.06015274293
+    free: 1
+    min: -3.14159
+    max: 3.14159
+    init: 1.06015274293
+    latex: dSlon3
+  }
+  dSlon4:
+  {
+    name: dSlon4
+    value: -0.234248923015
+    free: 1
+    min: -3.14159
+    max: 3.14159
+    init: -0.234248923015
+    latex: dSlon4
+  }
+  dSlon5:
+  {
+    name: dSlon5
+    value: -0.488969205683
+    free: 1
+    min: -3.14159
+    max: 3.14159
+    init: -0.488969205683
+    latex: dSlon5
+  }
+  dSlon6:
+  {
+    name: dSlon6
+    value: -1.14817710086
+    free: 1
+    min: -3.14159
+    max: 3.14159
+    init: -1.14817710086
+    latex: dSlon6
+  }
+  dPlon:
+  {
+    name: dPlon
+    value: 0.0
+    free: false
+    min: -3.0
+    max: 3.0
+    init: 0.0
+    latex: dPlon
+  }
+  dPpar:
+  {
+    name: dPpar
+    value: 3.08736129166
+    free: true
+    min: -6.28319
+    max: 6.28319
+    init: 3.08736129166
+    latex: dPpar
+  }
+  dPper:
+  {
+    name: dPper
+    value: 2.64132238167
+    free: true
+    min: -6.28319
+    max: 6.28319
+    init: 2.64132238167
+    latex: dPper
+  }
+  lSlon:
+  {
+    name: lSlon
+    value: 1.0
+    free: false
+    min: 0.7
+    max: 1.3
+    init: 1.0
+    latex: lSlon
+  }
+  lPlon:
+  {
+    name: lPlon
+    value: 1.01646881156
+    free: true
+    min: 0.5
+    max: 1.5
+    init: 1.01646881156
+    latex: lPlon
+  }
+  lPpar:
+  {
+    name: lPpar
+    value: 1.0
+    free: false
+    min: 0.7
+    max: 1.3
+    init: 1.0
+    latex: lPpar
+  }
+  lPper:
+  {
+    name: lPper
+    value: 1.0
+    free: false
+    min: 0.7
+    max: 1.3
+    init: 1.0
+    latex: lPper
+  }
+  Gd:
+  {
+    name: Gd
+    value: 0.65789
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.65789
+    latex: Gd
+  }
+  DGs:
+  {
+    name: DGs
+    value: 0.0798542641411
+    free: 1
+    min: 0.03
+    max: 0.15
+    init: 0.0798542641411
+    latex: DGs
+  }
+  DGsd:
+  {
+    name: DGsd
+    value: -0.004509478974
+    free: true
+    min: -0.2
+    max: 0.2
+    init: -0.004509478974
+    latex: DGsd
+  }
+  DM:
+  {
+    name: DM
+    value: 17.7105963073
+    free: true
+    min: 16.0
+    max: 20.0
+    init: 17.7105963073
+    latex: DM
+  }
+  mu:
+  {
+    name: mu
+    value: 0.0
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.0
+    latex: mu
+  }
+  eta_os:
+  {
+    name: eta_os
+    value: 0.3602
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.3602
+    latex: eta_os
+  }
+  eta_ss:
+  {
+    name: eta_ss
+    value: 0.4167
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.4167
+    latex: eta_ss
+  }
+  p0_os:
+  {
+    name: p0_os
+    value: 0.389
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.389
+    latex: p0_os
+  }
+  p0_ss:
+  {
+    name: p0_ss
+    value: 0.4325
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.4325
+    latex: p0_ss
+  }
+  p1_os:
+  {
+    name: p1_os
+    value: 0.8486
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.8486
+    latex: p1_os
+  }
+  p1_ss:
+  {
+    name: p1_ss
+    value: 0.9241
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.9241
+    latex: p1_ss
+  }
+  dp0_os:
+  {
+    name: dp0_os
+    value: 0.009
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.009
+    latex: dp0_os
+  }
+  dp0_ss:
+  {
+    name: dp0_ss
+    value: 0
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0
+    latex: dp0_ss
+  }
+  dp1_os:
+  {
+    name: dp1_os
+    value: 0.0143
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0.0143
+    latex: dp1_os
+  }
+  dp1_ss:
+  {
+    name: dp1_ss
+    value: 0
+    free: false
+    min: 0.0
+    max: 1.0
+    init: 0
+    latex: dp1_ss
+  }
+}
