@@ -38,7 +38,7 @@ def reduce(input_file,output_file,
   This function reduces a root file
   """
   # load file
-  _,_,_,_,y,m,f = input_file.split('/')
+  y,m,f = input_file.split('/')[-3:]
   in_file = uproot.open(input_file)[input_tree]
 
   # get all neeeded branches
