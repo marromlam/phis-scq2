@@ -1,4 +1,4 @@
-def mode_tex(mode, mod=None, verbose=True):
+def mode_tex(mode, mod=None, verbose=False):
   fmode = mode
   if mode.startswith('MC_') and mod=='comp':
     if mode in ('MC_BsJpsiPhi','MC_BsJpsiPhi_dG0','MC_Bs2JpsiKK_Swave'):
@@ -31,7 +31,7 @@ def mode_tex(mode, mod=None, verbose=True):
     tex_str += r' \mathrm{w } \Delta \Gamma = 0'
   if 'Swave' in fmode:
     tex_str += r' \mathrm{w S-wave}'
-  print(tex_str)
+  #print(tex_str)
   return tex_str
 
 def get_range(var, mode='Bs2JpsiPhi'):

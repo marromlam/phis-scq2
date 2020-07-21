@@ -18,7 +18,6 @@ config = hjson.load(open("config.json"))
 MAILS = config["mail"]
 SAMPLES_PATH = config["paths"]["else"]
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
-print(MAILS)
 
 
 def send_mail(subject, fp):
@@ -139,6 +138,7 @@ include: 'reweightings/Snakefile'
 include: 'time_acceptance/Snakefile'
 include: 'csp_factors/Snakefile'
 include: 'time_resolution/Snakefile'
+include: 'flavor_tagging/Snakefile'
 include: 'angular_acceptance/Snakefile'
 include: 'angular_fit/Snakefile'
 include: 'bundle/Snakefile'
