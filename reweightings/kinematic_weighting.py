@@ -11,6 +11,7 @@ import os, sys
 from hep_ml import reweight
 import ast
 import math
+import yaml
 
 
 def argument_parser():
@@ -67,7 +68,7 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   # fetch variables in original files
   print('Loading branches for original_sample')
   file = uproot.open(original_file)[original_treename]
-  original_vars_df = file.pandas.df(flatten=False)
+  original_vars_df = file.pandas.df(flatten=None)
   original_weight = original_vars_df.eval(original_weight)
 
   print('Loading branches for target_sample')
@@ -84,12 +85,15 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
                                      gb_args          = {'subsample': 1})
 
   print('Reweighting...')
+  print(f"original_weight = {original_weight}")
+  print(f"target_weight = {target_weight}")
   reweighter.fit(original         = original_vars_df.get(original_vars),
                  target           = target_vars_df.get(target_vars),
                  original_weight  = original_weight,
                  target_weight    = target_weight);
 
   kinWeight = reweighter.predict_weights(original_vars_df.get(original_vars))
+  print(f"kinWeight = {kinWeight}")
 
   # Use truncation if set
   if int(trunc):
@@ -104,12 +108,12 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
     os.remove(output_file)                               # delete file if exists
   #os.system('cp '+original_file+' '+output_file)
   print('Writing on %s' % output_file)
-  import root_pandas
-  root_pandas.to_root(original_vars_df, output_file, key=original_treename)
-  #f = uproot.recreate(output_file)
-  #f[original_treename] = uproot.newtree({var:'float64' for var in original_vars_df})
-  #f[original_treename].extend(original_vars_df.to_dict(orient='list'))
-  #f.close()
+  #import root_pandas
+  #root_pandas.to_root(original_vars_df, output_file, key=original_treename)
+  f = uproot.recreate(output_file)
+  f[original_treename] = uproot.newtree({var:'float64' for var in original_vars_df})
+  f[original_treename].extend(original_vars_df.to_dict(orient='list'))
+  f.close()
 
   return kinWeight
 
