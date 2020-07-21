@@ -4,71 +4,49 @@
 
 
 
-def super_shit(mode,year,flag):
-  file = f"{SAMPLES_PATH}{year}/"
-  if mode.startswith('MC_'):
-    file += f"{mode[3:].split('_')[0]}/{flag}"
-    if mode == 'MC_Bd2JpsiKstar':
-      file += '_kinWeight.root'
-    else:
-      file += '_pdfWeight.root'
-  else:
-    file += f"{'Bs2JpsiPhi'}/{flag}_pdfWeight.root"
-  return file
-
-
-
+# polarity weighting -----------------------------------------------------------
+#    Adds polWeight to MC tuples matching the corresponding data sample. This
+#    rule runs only over MC tuples.
 rule polarity_weighting:
-  params:
-    original = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode}/{wildcards.flag}_selected_bdt_sw.root",
-    target = lambda wildcards: SAMPLES_PATH+f"{wildcards.year}/{wildcards.mode[3:].split('_')[0]}/{wildcards.flag}_selected_bdt_sw.root",
-  output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_polWeight.root'
-  run:
-    import os
-    if os.path.isfile(f"{params.original}") and os.path.isfile(f"{params.target}"):
-      if f'{wildcards.mode}' in ('MC_Bs2JpsiPhi_dG0',
-                                 'MC_Bs2JpsiPhi',
-                                 'MC_Bd2JpsiKstar'):
-        shell(f"""
-          python reweightings/polarity_weighting.py\
-               --original-file {params.original}\
-               --original-treename DecayTree\
-               --target-file {params.target}\
-               --target-treename DecayTree\
-               --output-file {output.sample}
-        """)
-      else:
-        shell(f"""
-          cp {params.original} {output.sample}
-        """)
-    else:
-      print(f"Required files do not exist. You should map files into",
-            f"{SAMPLES_PATH} in order to work with this pipeline. Files can",
-            f"be synced from /eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/{VERSION}",
-            f"very easily using `sync_ntuples` rule. Simply run\n\t",
-            f"snakemake sync_ntuples -v {VERSION}\nand they will be downloaded,",
-            f"correctly placed, and properly renamed.\nGood luck!")
-      print(f"The required unfound files were:")
-      print(f"{params.original}")
-      print(f"{params.target}")
-
-
-
-rule pdf_weighting:
+  wildcard_constraints:
+    mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
-    sample = expand(rules.polarity_weighting.output,
-                    year='{year}', mode='{mode}', flag='{flag}'),
+    original = lambda wcs: tuples(wcs,weight='sWeight'),
+    target   = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',weight='sWeight'),
+  output:
+    sample   = SAMPLES_PATH+'{year}/{mode}/{version}_polWeight.root'
+  log:
+    'output/log/reweightings/polarity_weighting/{year}/{mode}/{version}.log'
+  run:
+    shell(f"""(time\
+          python reweightings/polarity_weighting.py\
+                 --original-file {input.original}\
+                 --original-treename DecayTree\
+                 --target-file {input.target}\
+                 --target-treename DecayTree\
+                 --output-file {output.sample}
+    ) &> {log} #2>&1""")
+    send_mail(f"Polarity weighting", f"{log}")
+
+
+
+# p.d.f. weighting -------------------------------------------------------------
+#    Adds pdfWeight to MC tuples matching the corresponding data sample. This
+#    rule runs only over MC tuples.
+rule pdf_weighting:
+  wildcard_constraints:
+    mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
+  input:
+    sample = lambda wcs: tuples(wcs,weight='polWeight'),
   params:
-    original = lambda wildcards: f"{wildcards.mode[3:].split('_')[0]}_2016.json",
+    original = lambda wcs: f"{wcs.mode[3:].split('_')[0]}_2016.json",
     target = '{mode}_2016.json'
   output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_pdfWeight.root'
+    sample = SAMPLES_PATH+'{year}/{mode}/{version}_pdfWeight.root'
+  log:
+    'output/log/reweightings/pdf_weighting/{year}/{mode}/{version}.log'
   run:
-    if f'{wildcards.mode}' in ('MC_Bs2JpsiPhi_dG0',
-                               'MC_Bs2JpsiPhi',
-                               'MC_Bd2JpsiKstar'):
-      shell(f"""
+    shell(f"""(time\
       python reweightings/pdf_weighting.py\
              --input-file {input.sample}\
              --tree-name DecayTree\
@@ -76,28 +54,33 @@ rule pdf_weighting:
              --target-params reweightings/parameters/{params.target}\
              --original-params reweightings/parameters/{params.original}\
              --mode {wildcards.mode}
-      """)
-    else:
-      shell(f"""
-        cp {input.sample} {output.sample}
-      """)
+    ) &> {log} #2>&1""")
+    send_mail(f"P.D.F. weighting", f"{log}")
 
 
 
+# kinematic weighting ----------------------------------------------------------
+#    Adds kinWeight to MC_BsJpsiPhi*, MC_BdJpsiKstar and Bd2JpsiKstar tuples
+#    gb-weighting them to match kinematic distributions of their complementary
+#    sample.
 rule kinematic_weighting:
+  wildcard_constraints:
+    mode = "(MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0|_Swave)?|Bd2JpsiKstar)"
   input:
-    original = SAMPLES_PATH+'{year}/{mode}/{flag}_pdfWeight.root',
-    target = lambda wildcards: super_shit(wildcards.mode,wildcards.year,wildcards.flag)
+    original = lambda wcs: tuples(wcs,weight='pdfWeight'),
+    target = lambda wcs: tuples(wcs,mode='cdata',weight='kinWeight'),
   output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{flag}_kinWeight.root'
+    sample = SAMPLES_PATH+'{year}/{mode}/{version}_kinWeight.root'
+  log:
+    'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
   run:
     import os
     year = f'{wildcards.year}'
     mode = f'{wildcards.mode}'
-    flag = f'{wildcards.flag}'
+    version = f'{wildcards.version}'
     end  = 'selected_bdt_sw'
     if mode.startswith('MC_Bs2JpsiPhi'):
-      shell(f"""
+      shell(f"""(time\
         python reweightings/kinematic_weighting.py\
           --original-file {input.original}\
           --original-treename DecayTree\
@@ -112,9 +95,9 @@ rule kinematic_weighting:
           --learning-rate 0.3\
           --max-depth 3\
           --min-samples-leaf 1000
-      """)
+      ) &> {log} #2>&1""")
     elif mode.startswith('MC_Bd2JpsiKstar'):
-      shell(f"""
+      shell(f"""(time\
         python reweightings/kinematic_weighting.py\
           --original-file {input.original}\
           --original-treename DecayTree\
@@ -129,9 +112,9 @@ rule kinematic_weighting:
           --learning-rate 0.3\
           --max-depth 3\
           --min-samples-leaf 1000
-      """)
+      ) &> {log} #2>&1""")
     elif mode.startswith('Bd2JpsiKstar'):
-      shell(f"""
+      shell(f"""(time\
         python reweightings/kinematic_weighting.py\
           --original-file {input.original}\
           --original-treename DecayTree\
@@ -146,39 +129,84 @@ rule kinematic_weighting:
           --learning-rate 0.3\
           --max-depth 3\
           --min-samples-leaf 1000
-      """)
+      ) &> {log} #2>&1""")
     else:
-      shell(f"""
+      shell(f"""(time\
         cp {input.original} {output.sample}
-      """)
+      ) &> {log} #2>&1""")
+    send_mail(f"Kinematic weighting", f"{log}")
 
 
 
 
 
 
-rule plot_reweightings:
+rule plot_time_acceptance_reweightings:
   input:
-    sample = expand(rules.reduce_ntuples.output,
-                    mode=modes,year='{year}',flag='{flag}')
+    original = lambda wcs: tuples(wcs),
+    target = lambda wcs: tuples(wcs,mode='cdata')
   output:
-    A='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_B_PT.pdf',
-    B='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_B_PT_kinWeight.pdf',
-    C='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_X_M.pdf',
-    D='output/reweightings/{year}/MC_Bs2JpsiPhi_dG0/{flag}_X_M_kinWeight.pdf',
-    E='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_B_PT.pdf',
-    F='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_B_PT_kinWeight.pdf',
-    G='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_X_M.pdf',
-    H='output/reweightings/{year}/MC_Bd2JpsiKstar/{flag}_X_M_kinWeight.pdf',
-    I='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_PT.pdf',
-    J='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_PT_kinWeight.pdf',
-    K='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_P.pdf',
-    L='output/reweightings/{year}/Bd2JpsiKstar/{flag}_B_P_kinWeight.pdf'
-  shell:
-    """
+    sweighted = 'output/figures/reweightings/{year}/{mode}/{version,[A-Za-z0-9]+}_{branch}_sWeight.pdf',
+    kinweighted = 'output/figures/reweightings/{year}/{mode}/{version}_{branch}_kinWeight.pdf',
+  log:
+    'output/log/reweightings/plot_time_reweightings/{year}/{mode}/{version}_{branch}.log',
+  run:
+    shell(f"""(time\
     python reweightings/reweighting_plots.py\
-           --samples-path {SAMPLES_PATH}\
+           --original {input.original}\
+           --target {input.target}\
            --year {wildcards.year}\
-           --flag {wildcards.flag}\
-           --figures-path output/reweightings
-    """
+           --mode {wildcards.mode}\
+           --version {wildcards.version}\
+           --branch {wildcards.branch}\
+           --sweighted {output.sweighted}\
+           --kinweighted {output.kinweighted}\
+    ) &> {log} #2>&1""")
+
+
+rule plot_angular_acceptance_reweightings:
+  wildcard_constraints:
+    mode = "(TOY|MC)_Bs2JpsiPhi(_dG0)?"
+  input:
+    original = lambda wcs: tuples(wcs),
+    weights = lambda wcs: tuples(wcs,weight='angWeight'),
+    target = lambda wcs: tuples(wcs,mode='cdata')
+  output:
+    'output/figures/reweightings/{year}/{mode}/{version,[A-Za-z0-9]+}_{branch}_kkpWeight.pdf',
+  log:
+    'output/log/reweightings/plot_angular_reweightings/{year}/{mode}/{version}_{branch}.log',
+  run:
+    shell(f"""(time\
+    python angular_acceptance/plot1.py\
+           --original {input.original}\
+           --weights {input.weights}\
+           --target {input.target}\
+           --year {wildcards.year}\
+           --mode {wildcards.mode}\
+           --version {wildcards.version}\
+           --branch {wildcards.branch}\
+           --kkpweighted {output}\
+    ) &> {log} #2>&1""")
+    ### <<< send_mail(f"Polarity weighting", f"{log}")              # WARNING #
+
+
+rule simon_comparisons:
+  input:
+    original = lambda wcs: tuples(wcs),
+    target = lambda wcs: tuples(wcs,mode='cdata')
+  output:
+    'output/figures/reweightings/{year}/{mode}/{version,[A-Za-z0-9]+}_{branch}_comparison.pdf',
+  log:
+    'output/log/reweightings/simon_comparisons/{year}/{mode}/{version}_{branch}.log',
+  run:
+    shell(f"""(time\
+    python reweightings/reweighting_plots.py\
+           --original {input.original}\
+           --target {input.target}\
+           --year {wildcards.year}\
+           --mode {wildcards.mode}\
+           --version {wildcards.version}\
+           --branch {wildcards.branch}\
+           --sweighted {output.sweighted}\
+           --kinweighted {output.kinweighted}\
+    ) &> {log} #2>&1""")
