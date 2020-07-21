@@ -29,6 +29,11 @@
 *#
 *~
 *.cache
+tmp/
+output_backups/
+cuda_testing_kernel/
+shitty_thong/
+bsjpsikk_reikna/
 
 # Logs and databases #
 ######################
@@ -61,6 +66,6 @@ phis-scq/bsjpsikk.egg-info/
 ###############
 *.txt
 .pytest_cache
-output
+output/
 .snakemake/*
 */.fuse*
