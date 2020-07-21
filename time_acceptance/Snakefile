@@ -1,121 +1,110 @@
 
-# decay_time_acceptance --------------------------------------------------------
+# decay_time_acceptance computations -------------------------------------------
 #    These are several rules related to decay-time acceptance. The main one is
-#    decay_time_acceptance, which computes the spline coefficients of the
+#    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-rule decay_time_acceptance:
+ruleorder: single_time_acceptance > simultaneous_time_acceptance
+
+
+rule single_time_acceptance:
+  wildcard_constraints:
+    trigger = "(biased|unbiased|combined)",
   input:
-    sample_BsMC = expand(rules.reduce_ntuples.output,
-                         mode='MC_Bs2JpsiPhi_dG0',year='{year}',flag='{flag}'),
-    sample_BdMC = expand(rules.reduce_ntuples.output,
-                         mode='MC_Bd2JpsiKstar',year='{year}',flag='{flag}'),
-    sample_BdDT = expand(rules.reduce_ntuples.output,
-                         mode='Bd2JpsiKstar',year='{year}',flag='{flag}'),
-    script = 'time_acceptance/baseline.py'
+    sample = lambda wcs: tuples(wcs, mode=wcs.mode),
+  params:
+    params = 'time_acceptance/params/{year}/{mode}/baseline.json',
   output:
-    params_BsMC = 'output/time_acceptance/parameters/{year}/MC_Bs2JpsiPhi_dG0/{flag}_{trigger}.json',
-    params_BdMC = 'output/time_acceptance/parameters/{year}/MC_Bs_Bd_ratio/{flag}_{trigger}.json',
-    params_BdDT = 'output/time_acceptance/parameters/{year}/Bs2JpsiPhi/{flag}_{trigger}.json'
-  shell:
-    """
-    python {input.script}\
-           --BsMC-sample {input.sample_BsMC}\
-           --BdMC-sample {input.sample_BdMC}\
-           --BdDT-sample {input.sample_BdDT}\
-           --BsMC-params {output.params_BsMC}\
-           --BdMC-params {output.params_BdMC}\
-           --BdDT-params {output.params_BdDT}\
-           --mode Bs2JpsiPhi\
-           --year {wildcards.year}\
-           --flag {wildcards.flag}\
-           --trigger {wildcards.trigger}\
-           --pycode {input.script}
-    """
-
-
-
-rule decay_time_acceptance_without_kinweights:
-  input:
-    sample_BsMC = expand(rules.reduce_ntuples.output,
-                         mode='MC_Bs2JpsiPhi_dG0',year='{year}',flag='{flag}'),
-    sample_BdMC = expand(rules.reduce_ntuples.output,
-                         mode='MC_Bd2JpsiKstar',year='{year}',flag='{flag}'),
-    sample_BdDT = expand(rules.reduce_ntuples.output,
-                         mode='Bd2JpsiKstar',year='{year}',flag='{flag}'),
-    params_BsMC = 'output/time_acceptance/parameters/{year}/MC_Bs2JpsiPhi_dG0/{flag}_{trigger}.json',
-    params_BdMC = 'output/time_acceptance/parameters/{year}/MC_Bs_Bd_ratio/{flag}_{trigger}.json',
-    params_BdDT = 'output/time_acceptance/parameters/{year}/Bs2JpsiPhi/{flag}_{trigger}.json'
-  output:
-    params_BsMC = 'output/time_acceptance/parameters/{year}/MC_Bs2JpsiPhi_dG0/{flag}_{trigger}_{script}.json',
-    params_BdMC = 'output/time_acceptance/parameters/{year}/MC_Bs_Bd_ratio/{flag}_{trigger}_{script}.json',
-    params_BdDT = 'output/time_acceptance/parameters/{year}/Bs2JpsiPhi/{flag}_{trigger}_{script}.json'
-  shell:
-    """
-    python time_acceptance/{wildcards.script}.py\
-           --BsMC-sample {input.sample_BsMC}\
-           --BdMC-sample {input.sample_BdMC}\
-           --BdDT-sample {input.sample_BdDT}\
-           --BsMC-params {output.params_BsMC}\
-           --BdMC-params {output.params_BdMC}\
-           --BdDT-params {output.params_BdDT}\
-           --mode Bs2JpsiPhi\
-           --year {wildcards.year}\
-           --flag {wildcards.flag}\
-           --trigger {wildcards.trigger}\
-           --pycode time_acceptance/{wildcards.script}.py
-    """
-
-
-rule decay_time_acceptance_single:
-  input:
-    sample = expand(rules.reduce_ntuples.output,
-                    mode='{mode}',year='{year}',flag='{flag}'),
-    script = 'time_acceptance/single.py'
-  output:
-    params = 'output/time_acceptance/parameters/{year}/{mode}/{flag}_{trigger}_single.json'
-  shell:
-    """
-    python {input.script}\
+    params   = 'output/params/time_acceptance/{year}/{mode}/{version}_Single_{trigger}.json',
+    tables   = 'output/tables/time_acceptance/{year}/{mode}/{version}_Single_{trigger}.tex',
+  log:
+    'output/log/time_acceptance/single_time_acceptance/{year}_{mode}_{version}_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python time_acceptance/single.py\
            --sample {input.sample}\
-           --params {output.params}\
+           --input-params {params.params}\
+           --output-params {output.params}\
+           --output-tables {output.tables}\
            --mode {wildcards.mode}\
            --year {wildcards.year}\
-           --flag {wildcards.flag}\
+           --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-           --pycode {input.script}
-    """
+    ) #&> {log} #2>&1
+    """)
+    send_mail("Single Time Acceptance", f"{log}")
 
 
-# rule decay_time_acceptance_ratio:
-#   input:
-#     sample_BsMC = 'samples/MC_Bs2JpsiPhi_DG0_{year}.json',
-#     sample_BdMC = 'samples/MC_Bd2JpsiKstar_{year}.json',
-#     script = 'time_acceptance/{pycode}.py'
-#   output:
-#     shit = 'output/time_acceptance/{year}/{mode}/{pycode}/{flag}.json'
-#   shell:
-#     """
-#     python {input.script}
-#            --BsMC-sample {input.sample_BsMC}
-#            --BdMC-sample {input.sample_BdMC}
-#            --year        {input.year}
-#            --model       {input.mode}
-#            --flag        {input.flag}
-#     """
-#
-#
-# rule decay_time_acceptance_single:
-#   input:
-#     sample = 'samples/{mode}_{year}.json',
-#     script = 'time_acceptance/{pycode}.py'
-#   output:
-#     shit = 'output/time_acceptance/{year}/{mode}/{pycode}/{flag}.json'
-#   shell:
-#     """
-#     python {input.script}
-#            --BsMC-sample {input.sample}
-#            --year        {input.year}
-#            --model       {input.mode}
-#            --flag        {input.flag}
-#     """
+rule simultaneous_time_acceptance:
+  wildcard_constraints:
+    script = "(Baseline|Nonkinweighted|Nineknots|Twelveknots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    trigger = "(biased|unbiased|combined)",
+    year = "(2015|2016|2017|2018)",
+  input:
+    sample_BsMC = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
+    sample_BdMC = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar'),
+    sample_BdDT = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar'),
+    params_BsMC = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_Single_{trigger}.json',
+    params_BdMC = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_Single_{trigger}.json',
+    params_BdDT = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_Single_{trigger}.json'
+  output:
+    params_BsMC   = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{script}_{trigger}.json',
+    params_BdMC   = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{script}_{trigger}.json',
+    params_BdDT   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{script}_{trigger}.json',
+    tables_BsMC   = 'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{script}_{trigger}.tex',
+    tables_BdMC   = 'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{script}_{trigger}.tex',
+    tables_BdDT   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{script}_{trigger}.tex',
+  log:
+    'output/log/time_acceptance/simultaneous_time_acceptance/{year}_{version}_{script}_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python time_acceptance/simultaneous.py\
+           --BsMC-sample {input.sample_BsMC}\
+           --BdMC-sample {input.sample_BdMC}\
+           --BdDT-sample {input.sample_BdDT}\
+           --BsMC-input-params {input.params_BsMC}\
+           --BdMC-input-params {input.params_BdMC}\
+           --BdDT-input-params {input.params_BdDT}\
+           --BsMC-output-params {output.params_BsMC}\
+           --BdMC-output-params {output.params_BdMC}\
+           --BdDT-output-params {output.params_BdDT}\
+           --BsMC-output-tables {output.tables_BsMC}\
+           --BdMC-output-tables {output.tables_BdMC}\
+           --BdDT-output-tables {output.tables_BdDT}\
+           --mode Bd2JpsiKstar\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+           --trigger {wildcards.trigger}\
+           --script {wildcards.script}\
+    ) &> {log} #2>&1
+    """)
+    send_mail(f"Simultaneous Time Acceptance", f"{log}")
+
+
+
+# decay_time_acceptance plots --------------------------------------------------
+#    These are several rules related to decay-time acceptance. The main one is
+#    time_acceptance, which computes the spline coefficients of the
+#    Bs2JpsiPhi acceptance.
+
+
+rule plot_time_acceptance:
+  wildcard_constraints:
+    script = "(Single|Baseline|Nonkinweighted|Nineknots|Twelveknots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    trigger = "(biased|unbiased|combined)",
+    year = "(2015|2016|2017|2018)",
+  input:
+    sample_BsMC = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
+    sample_BdMC = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar'),
+    sample_BdDT = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar'),
+    params_BsMC = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{script}_{trigger}.json',
+    params_BdMC = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{script}_{trigger}.json',
+    params_BdDT = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{script}_{trigger}.json'
+  output:
+    'output/params/time_acceptance/{year}/{mode}/{version}_{script}_{trigger}_{plot}.pdf',
+  log:
+    'output/log/time_acceptance/plot_time_acceptance/{year}_{mode}_{version}_{script}_{trigger}_{plot}.log'
+  run:
+    1+1
