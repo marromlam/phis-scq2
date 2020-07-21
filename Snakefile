@@ -18,7 +18,6 @@ config = hjson.load(open("config.json"))
 MAILS = config["mail"]
 SAMPLES_PATH = config["paths"]["else"]
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
-print(MAILS)
 
 
 def send_mail(subject, fp):
