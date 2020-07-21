@@ -12,7 +12,7 @@
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
 MAIN_PATH = '/scratch17/marcos.romero/phis_samples/'
 SAMPLES_PATH = MAIN_PATH
-MAILS = ['mromerol@cern.ch']
+MAILS = []
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
 def send_mail(subject, fp):
@@ -62,17 +62,17 @@ def tuples(wcs,version=False,year=None,mode=None,weight=None):
 
   # Folder swicher
   if   v == 'v0r0':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r1':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r2':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r3':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r4':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r5':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
 
   # If version, this function only returns samples_path
   if version:
