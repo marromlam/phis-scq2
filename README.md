@@ -8,7 +8,12 @@ bla bla
 
 phis-scq relyes on basic python libraries and ipanema3 (it is not in pypy yet), 
 and so requires to have a properly working environmente to run.
-It is recommended to intall miniconda and create a clean enviroment.
+It is recommended to intall miniconda and create a clean enviroment
+```
+conda  create --name phisscq
+conda install pip 
+conda install pyopencl pocl
+```
 
 Then one needs to install ipanema3, to do so first we need to clone the respository (it's private, ask me if you wish)
 ```
@@ -26,6 +31,12 @@ libraries before).
 ```
 pip install pycuda
 ```
+
+phis-scq uses snakemake to pipeline all its outputs, so you must install it
+```
+pip install snakemake hep_ml py-cpuinfo
+```
+
 
 At this point, you shoud have no problem to run the code in this repository, but
 to go faster in future sessions it's recommended you write some piece of code 

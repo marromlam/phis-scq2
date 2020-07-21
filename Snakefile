@@ -4,19 +4,24 @@
 #
 # Contributors: Marcos Romero
 
+import hjson
+import os
+
 # Main constants ---------------------------------------------------------------
 #    VERSION: is the version Bs2JpsiPhi-FullRun2 pipeline was run against, and
 #             should be matched with this constant.
 #    MAIN_PATH: the path where all eos-samples will be synced, make sure there
 #               is enough free space there
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
-MAIN_PATH = '/scratch17/marcos.romero/phis_samples/'
-SAMPLES_PATH = MAIN_PATH
-MAILS = ['mromerol@cern.ch']
+
+config = hjson.load(open("config.json"))
+MAILS = config["mail"]
+SAMPLES_PATH = config["paths"]["else"]
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
+print(MAILS)
+
 
 def send_mail(subject, fp):
-  import os
   fp = os.path.abspath(fp)
   sp = os.path.abspath('utils/mail_signature.txt')
   start = f'Content-Type: text/html\nSubject: {subject}\n<pre style="font: monospace">'
@@ -62,17 +67,17 @@ def tuples(wcs,version=False,year=None,mode=None,weight=None):
 
   # Folder swicher
   if   v == 'v0r0':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r1':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r2':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r3':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r4':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
   elif v == 'v0r5':
-    samples_path = '/scratch17/marcos.romero/phis_samples/'
+    samples_path = 'phis_samples/'
 
   # If version, this function only returns samples_path
   if version:
