@@ -11,7 +11,8 @@ and so requires to have a properly working environmente to run.
 It is recommended to intall miniconda and create a clean enviroment
 ```
 conda  create --name phisscq
-conda install pip pocl
+conda install pip 
+conda install pyopencl pocl
 ```
 
 Then one needs to install ipanema3, to do so first we need to clone the respository (it's private, ask me if you wish)
