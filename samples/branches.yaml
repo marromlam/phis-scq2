@@ -15,6 +15,7 @@ common: &common
   "hlt1b" : "hlt1b"
   "Jpsi_Hlt1DiMuonHighMassDecision_TOS" : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
   "Polarity" : "Polarity"
+  "eta" : "eta"
 
 MC_common: &MC_common
   <<: *common
@@ -32,10 +33,13 @@ MC_common: &MC_common
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "B_BKGCAT" : "B_BKGCAT"
+  "sw_eta" : "sw_eta"
+  "sw_pt" : "sw_pt"
+  "sw_sigmat" : "sw_sigmat"
+
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
-  "sw" : "sw"
   "gb_weights" : "gb_weights"
   "sWeight" : "sw/gb_weights"
 
@@ -43,16 +47,22 @@ Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
   "sWeight" : "sw"
   "sw" : "sw"
-  "tagOS_dec" : "B_OSKaonLatest_TAGDEC"
+  "tagOS_dec" : "OS_Combination_DEC"
   "tagSS_dec" : "B_SSKaonLatest_TAGDEC"
-  "tagOS_eta" : "B_OSKaonLatest_TAGETA"
+  "tagOS_eta" : "OS_Combination_ETA"
   "tagSS_eta" : "B_SSKaonLatest_TAGETA"
+  "sw_eta" : "sw_eta"
+  "sw_pt" : "sw_pt"
+  "sw_sigmat" : "sw_sigmat"
 
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
   "sWeight" : "sw"
   "sw" : "sw"
   "kinWeight" : "kinWeight"
+  "sw_eta" : "sw_eta"
+  "sw_pt" : "sw_pt"
+  "sw_sigmat" : "sw_sigmat"
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_Bs2JpsiPhi

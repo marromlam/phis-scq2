@@ -76,11 +76,7 @@ def reduce(input_file,output_file,
    out_file[output_tree].extend(df.to_dict(orient='list'))
   out_file.close()
 
-  with uproot.recreate(output_file,compression=None) as f:
-    f[output_tree] = uproot.newtree({var:'float64' for var in df})
-    f[output_tree].extend(df.to_dict(orient='list'))
-  print(f'    Succesfully writen.')
-  out_file.close()
+
 
 ################################################################################
 
