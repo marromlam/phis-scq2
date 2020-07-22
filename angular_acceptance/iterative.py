@@ -118,6 +118,9 @@ def argument_parser():
   parser.add_argument('--input-time-resolution',
                       default = 'output/time_resolution/parameters/2016/MC_Bs2JpsiPhi_dG0/v0r1_biased.json',
                       help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--input-flavor-tagging',
+                      default = 'output/time_resolution/parameters/2016/MC_Bs2JpsiPhi_dG0/v0r1_biased.json',
+                      help='Bs2JpsiPhi MC sample')
   # Output parameters
   parser.add_argument('--output-weights-biased',
                       default = 'output/time_acceptance/parameters/2016/MC_Bs2JpsiPhi_dG0/v0r1_biased.json',
@@ -176,6 +179,7 @@ coeffs_unbiased    = args['input_coeffs_unbiased'].split(',')
 
 csp_factors    = args['input_csp'].split(',')
 time_resolution = args['input_time_resolution'].split(',')
+flavor_tagging = args['input_flavor_tagging'].split(',')
 
 
 
@@ -242,8 +246,9 @@ for i, y in enumerate(YEARS):
   csp = Parameters.load(csp_factors[i])  # <--- WARNING
   csp = csp.build(csp,csp.find('CSP.*'))
   csp_dev = ristra.allocate(np.array(csp.build(csp,csp.find('CSP.*'))))
-  flavor= Parameters.load(f'output_old/v0r4/params/flavor_tagging/{y}/Bs2JpsiPhi/200506a.json')  # <--- WARNING
+  #flavor= Parameters.load(f'output_old/v0r4/params/flavor_tagging/{y}/Bs2JpsiPhi/200506a.json')  # <--- WARNING
   resolution = Parameters.load(time_resolution[i])
+  flavor = Parameters.load(flavor_tagging[i])
   for t, T in zip(['biased','unbiased'],[0,1]):
     print(f' *  Loading {y} sample in {t} category\n    {samples_data[i]}')
     this_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}) & (time>=0.3) & (time<=15)'
@@ -281,18 +286,18 @@ for i, y in enumerate(YEARS):
 
 
 
-data[f'2016']['unbiased'].angacc = np.array([
-1.0,
-1.026188051680966,
-1.025919907820129,
--0.0008080722059112641,
-0.0007686171894090263,
-0.0002055097707937297,
-1.00647239083432,
-0.000455221821734608,
-0.0001466163291351719,
--0.000731595571913009
-])
+# data[f'2016']['unbiased'].angacc = np.array([
+# 1.0,
+# 1.026188051680966,
+# 1.025919907820129,
+# -0.0008080722059112641,
+# 0.0007686171894090263,
+# 0.0002055097707937297,
+# 1.00647239083432,
+# 0.000455221821734608,
+# 0.0001466163291351719,
+# -0.000731595571913009
+# ])
 # data[f'2016']['unbiased'].angacc = np.array([
 # 1,
 # 1.036616501815053,
@@ -305,18 +310,18 @@ data[f'2016']['unbiased'].angacc = np.array([
 # 4.092379705098602e-05,
 # -0.003959703563916721
 # ])
-data[f'2016']['biased'].angacc = np.array([
-1.0,
-1.020419588928056,
-1.020502754804629,
-0.002631350622172166,
-0.003125427462874503,
--0.0003293730619200012,
-1.011599141342973,
-0.0002557661696621679,
-4.612016290721501e-06,
--0.001331697639192716
-])
+# data[f'2016']['biased'].angacc = np.array([
+# 1.0,
+# 1.020419588928056,
+# 1.020502754804629,
+# 0.002631350622172166,
+# 0.003125427462874503,
+# -0.0003293730619200012,
+# 1.011599141342973,
+# 0.0002557661696621679,
+# 4.612016290721501e-06,
+# -0.001331697639192716
+# ])
 # data[f'2016']['biased'].angacc = np.array([
 # 1,
 # 1.034440015714541,
@@ -394,7 +399,7 @@ def fcn_data(parameters, data, weight = False, lkhd0=False):
         likelihood.append( (-2.0 * ristra.log(dt.lkhd) * dt.weight).get() );
       else:
         likelihood.append( (-2.0 * ristra.log(dt.lkhd)            ).get() );
-      exit()
+      #exit()
   if lkhd0:
     return np.sum(np.concatenate(likelihood)) - (lkhd0-100)
   return np.sum(np.concatenate(likelihood))

@@ -1,25 +1,27 @@
 
 
 ruleorder: blend_angular_acceptance > naive_angular_acceptance
-ruleorder: iterative_angular_acceptance_yearly > iterative_angular_acceptance_Run2a
 
-# Simplest angular acceptance (only sWeight and polWeight) ---------------------
+# naive angular acceptance - no correction (only sWeight and polWeight) --------
+#     Here we have 2 rules to compute angular acceptance without correcting
+#     MC samples. First rule computes angular acceptance for MC, and second one
+#     merges MC results to compute RD angular acceptance
+
 rule naive_angular_acceptance:
-  input:
-    sample = SAMPLES_PATH+'{year}/{mode}/{version}.root',
-    script = 'angular_acceptance/naive.py'
   wildcard_constraints:
     mode = "(TOY|MC)_Bs2JpsiPhi(_dG0)?"
+  input:
+    sample = SAMPLES_PATH+'{year}/{mode}/{version}.root',
   params:
     params = 'angular_acceptance/params/2016/{mode}.json'
   output:
-    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.json',
-    tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.tex'
+    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_Naive_{trigger}.json',
+    tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_Naive_{trigger}.tex'
   log:
     'output/log/angular_acceptance/naive_angular_acceptance/{year}_{mode}_{version}_{trigger}.log'
   run:
     shell(f"""(time\
-    python {input.script}\
+    python angular_acceptance/naive.py\
            --sample {input.sample}\
            --input-params {params.params}\
            --output-params {output.params}\
@@ -28,19 +30,18 @@ rule naive_angular_acceptance:
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}
-    ) #&> {log} #2>&1""")
+    ) &> {log} #2>&1""")
     send_mail(f"Naive Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
 
 
-# Combine MC and MCdG0 ---------------------------------------------------------
+
 rule blend_angular_acceptance:
   wildcard_constraints:
-    step = "(naive|corrected)",
+    step = "(Naive|Corrected)",
     mode = "Bs2JpsiPhi"
   input:
     weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{trigger}.json',
     weights_dg0 = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{step}_{trigger}.json',
-    script = 'angular_acceptance/merge.py'
   output:
     params = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.tex'
@@ -48,7 +49,7 @@ rule blend_angular_acceptance:
     'output/log/angular_acceptance/merge_angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.log'
   run:
     shell(f"""(time\
-    python {input.script}\
+    python angular_acceptance/merge.py\
            --weights-std {input.weights_std}\
            --weights-dg0 {input.weights_dg0}\
            --output-params {output.params}\
@@ -57,44 +58,84 @@ rule blend_angular_acceptance:
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --step {wildcards.step}\
-    ) #&> {log} #2>&1""")
+    ) &> {log} #2>&1""")
     send_mail(f"Blend Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.trigger}", f"{log}")
 
 
 
 
 
-# Combine MC and MCdG0 ---------------------------------------------------------
-# 1234Bla bla bla
+
+
+
+
+# Correcting MC with kinematic weights -----------------------------------------
+#     Correcting MC sample with kinematic weighting in B_P, B_PT and X_M helps
+#     to better match MC to RD.
+
 rule corrected_angular_acceptance:
   wildcard_constraints:
     mode = "MC_Bs2JpsiPhi(_dG0)?"
   input:
     sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
-    sample_data = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
-    weights_mc = 'output/params/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.json',
+    sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
   params:
     params = 'angular_acceptance/params/2016/{mode}.json',
-    output_weight_file = '/scratch17/marcos.romero/phis_samples/{year}/{mode}/{version}_angWeight.root'
   output:
-    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.json',
-    tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.tex'
+    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_Corrected_{trigger}.json',
+    tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_Corrected_{trigger}.tex',
+    weight = SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{trigger}.npy'
   log:
     'output/log/angular_acceptance/corrected_angular_acceptance/{year}/{mode}/{version}_{trigger}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/corrected.py\
            --sample-mc {input.sample_mc}\
-           --sample-data {input.sample_data}\
+           --sample-data {input.sample_rd}\
            --input-params {params.params}\
            --output-params {output.params}\
            --output-tables {output.tables}\
-           --output-weights-file {params.output_weight_file}\
+           --output-weights-file {output.weight}\
            --mode {wildcards.mode}\
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-    ) &> {log} #2>&1""")
+    ) #&> {log} #2>&1""")
+    send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
+
+rule corrected_binned_angular_acceptance:
+  wildcard_constraints:
+    mode = "MC_Bs2JpsiPhi(_dG0)?",
+    binnedvar = "(pt|sigmat|eta)",
+    bin = "(1|2|3)"
+  input:
+    sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
+    sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
+  params:
+    params = 'angular_acceptance/params/2016/{mode}.json',
+  output:
+    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_CorrectedBin{binnedvar}{bin}_{trigger}.json',
+    tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_CorrectedBin{binnedvar}{bin}_{trigger}.tex',
+    weight = SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{binnedvar}{bin}_{trigger}.npy'
+  log:
+    'output/log/angular_acceptance/corrected_binned_angular_acceptance/{year}/{mode}/{version}_{binnedvar}{bin}_{trigger}.log'
+  run:
+    shell(f"""(time\
+    python angular_acceptance/corrected.py\
+           --sample-mc {input.sample_mc}\
+           --sample-data {input.sample_rd}\
+           --input-params {params.params}\
+           --output-params {output.params}\
+           --output-tables {output.tables}\
+           --output-weights-file {output.weight}\
+           --mode {wildcards.mode}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+           --trigger {wildcards.trigger}\
+           --binvar {wildcards.binnedvar}{wildcards.bin}\
+    ) #&> {log} #2>&1""")
+    send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
+
 
 
 
@@ -129,24 +170,22 @@ rule iterativeRun2a_angular_acceptance:
     time_resolution = ['output/params/time_resolution/2015/Bs2JpsiPhi/{version}.json',
            'output/params/time_resolution/2016/Bs2JpsiPhi/{version}.json'],
     # Flavor tagging
-    # flavor = ['output/params/flavor_tagging/2015/Bs2JpsiPhi/{version}.json',
-    #           'output/params/flavor_tagging/2016/Bs2JpsiPhi/{version}.json',
-    #           'output/params/flavor_tagging/2017/Bs2JpsiPhi/{version}.json',
-    #           'output/params/flavor_tagging/2018/Bs2JpsiPhi/{version}.json']
+    flavor = ['output/params/flavor_tagging/2015/Bs2JpsiPhi/{version}.json',
+              'output/params/flavor_tagging/2016/Bs2JpsiPhi/{version}.json']
   params:
     params_std = ['angular_acceptance/params/2016/MC_Bs2JpsiPhi.json',
                   'angular_acceptance/params/2016/MC_Bs2JpsiPhi.json'],
     params_dG0 = ['angular_acceptance/params/2016/MC_Bs2JpsiPhi_dG0.json',
                   'angular_acceptance/params/2016/MC_Bs2JpsiPhi_dG0.json'],
   output:
-    angacc_biased = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2a_biased.json',
-               'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2a_biased.json'],
-    angacc_unbiased = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2a_unbiased.json',
-               'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2a_unbiased.json'],
-    tables_biased = ['output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2a_biased.tex',
-               'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2a_biased.tex'],
-    tables_unbiased = ['output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2a_unbiased.tex',
-               'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2a_unbiased.tex'],
+    angacc_biased = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2aBase_biased.json',
+               'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2aBase_biased.json'],
+    angacc_unbiased = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2aBase_unbiased.json',
+               'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2aBase_unbiased.json'],
+    tables_biased = ['output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2aBase_biased.tex',
+               'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2aBase_biased.tex'],
+    tables_unbiased = ['output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2aBase_unbiased.tex',
+               'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2aBase_unbiased.tex'],
   log:
     'output/log/angular_acceptance/iterative_angular_acceptance/Run2a/Bs2JpsiPhi/{version}.log'
   run:
@@ -165,13 +204,14 @@ rule iterativeRun2a_angular_acceptance:
            --input-coeffs-unbiased   {",".join(input.timeacc_unbiased)}\
            --input-csp               {",".join(input.csp_factors)}\
            --input-time-resolution   {",".join(input.time_resolution)}\
+           --input-flavor-tagging    {",".join(input.flavor)}\
            --output-weights-biased   {",".join(output.angacc_biased)}\
            --output-weights-unbiased {",".join(output.angacc_unbiased)}\
            --output-tables-biased    {",".join(output.tables_biased)}\
            --output-tables-unbiased  {",".join(output.tables_unbiased)}\
            --year                    {",".join(yd['Run2a'])}\
            --version                 {wildcards.version}\
-    ) #&> {log} #2>&1""")
+    ) &> {log} #2>&1""")
     #send_mail(f"Run2 Angular Acceptance", f"{log}")
 
 
@@ -283,94 +323,6 @@ rule iterativeRun2_angular_acceptance:
 
 
 
-
-
-# Run2a angular acceptance -----------------------------------------------------
-#     This rule runs the iterative procedure for Run2a years (2015&2016) using
-#     both MC and MC_dG0 files.
-rule iterative_angular_acceptance_Run2a:
-  params:
-    sample_std    = lambda wildcards: expand('/scratch17/marcos.romero/phis_samples/{year}/{mode}/{version}.root',
-                           mode='MC_Bs2JpsiPhi',
-                           year=yd[f'Run2a'],
-                           version=f'{wildcards.version}'),
-    sample_dG0    = lambda wildcards: expand('/scratch17/marcos.romero/phis_samples/{year}/{mode}/{version}.root',
-                           mode='MC_Bs2JpsiPhi_dG0',
-                           year=yd[f'Run2a'],
-                           version=f'{wildcards.version}'),
-    angWeights_std    = lambda wildcards: expand('/scratch17/marcos.romero/phis_samples/{year}/{mode}/{version}_angWeight.root',
-                           mode='MC_Bs2JpsiPhi',
-                           year=yd[f'Run2a'],
-                           version=f'{wildcards.version}'),
-    angWeights_dG0    = lambda wildcards: expand('/scratch17/marcos.romero/phis_samples/{year}/{mode}/{version}_angWeight.root',
-                           mode='MC_Bs2JpsiPhi_dG0',
-                           year=yd[f'Run2a'],
-                           version=f'{wildcards.version}'),
-    sample_data   = lambda wildcards: expand('/scratch17/marcos.romero/phis_samples/{year}/{mode}/{version}.root',
-                           mode='Bs2JpsiPhi',
-                           year=yd[f'Run2a'],
-                           version=f'{wildcards.version}'),
-    w_biased      = lambda wildcards: expand('output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.json',
-                           year=yd[f'Run2a'],
-                           step='corrected',
-                           version=f'{wildcards.version}',
-                           trigger='biased'),
-    w_unbiased    = lambda wildcards: expand('output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.json',
-                           year=yd[f'Run2a'],
-                           step='corrected',
-                           version=f'{wildcards.version}',
-                           trigger='unbiased'),
-    coeffs_biased      = lambda wildcards: expand('output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{step}_{trigger}.json',
-                           year=yd[f'Run2a'],
-                           step='Baseline',
-                           version=f'{wildcards.version}',
-                           trigger='biased'),
-    coeffs_unbiased    = lambda wildcards: expand('output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{step}_{trigger}.json',
-                           year=yd[f'Run2a'],
-                           step='Baseline',
-                           version=f'{wildcards.version}',
-                           trigger='unbiased'),
-    script        = 'angular_acceptance/iterative.py',
-    params_std    = ['angular_acceptance/params/2016/MC_Bs2JpsiPhi.json','angular_acceptance/params/2016/MC_Bs2JpsiPhi.json'],
-    params_dG0    = ['angular_acceptance/params/2016/MC_Bs2JpsiPhi_dG0.json','angular_acceptance/params/2016/MC_Bs2JpsiPhi_dG0.json'],
-  output:
-    w_biased        = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_BaselineRun2a_biased.json',
-                       'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_BaselineRun2a_biased.json'],
-    w_unbiased      = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_BaselineRun2a_unbiased.json',
-                       'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_BaselineRun2a_unbiased.json'],
-    tables_biased   = ['output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_BaselineRun2a_biased.json',
-                       'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_BaselineRun2a_biased.json'],
-    tables_unbiased = ['output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_BaselineRun2a_unbiased.json',
-                       'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_BaselineRun2a_unbiased.json'],
-    # w_unbiased      = expand('output/{version}/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Baseline_unbiased.json',
-    #                          mode='Bs2JpsiPhi', year=yd['{year}'], version='{version}'),
-    # tables_biased   = expand('output/{version}/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Baseline_biased.json',
-    #                          mode='Bs2JpsiPhi', year=yd['{year}'], version='{version}'),
-    # tables_unbiased = expand('output/{version}/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Baseline_unbiased.json',
-    #                          mode='Bs2JpsiPhi', year=yd['{year}'], version='{version}'),
-  log:
-    'output/log/angular_acceptance/iterative_angular_acceptance/Run2a/Bs2JpsiPhi/{version}.log'
-  run:
-    shell(f"""(time\
-    python {params.script}\
-           --sample-mc-std           {",".join(params.sample_std)}\
-           --sample-mc-dg0           {",".join(params.sample_dG0)}\
-           --sample-data             {",".join(params.sample_data)}\
-           --params-mc-std           {",".join(params.params_std)}\
-           --params-mc-dg0           {",".join(params.params_dG0)}\
-           --angular-weights-mc-std  {",".join(params.angWeights_std)}\
-           --angular-weights-mc-dg0  {",".join(params.angWeights_dG0)}\
-           --input-weights-biased    {",".join(params.w_biased)}\
-           --input-weights-unbiased  {",".join(params.w_unbiased)}\
-           --input-coeffs-biased     {",".join(params.coeffs_biased)}\
-           --input-coeffs-unbiased   {",".join(params.coeffs_unbiased)}\
-           --output-weights-biased   {",".join(output.w_biased)}\
-           --output-weights-unbiased {",".join(output.w_unbiased)}\
-           --output-tables-biased    {",".join(output.tables_biased)}\
-           --output-tables-unbiased  {",".join(output.tables_unbiased)}\
-           --year                    {",".join(yd['Run2a'])}\
-           --version                    {wildcards.version}\
-    ) #&> {log} #2>&1""")
 
 
 

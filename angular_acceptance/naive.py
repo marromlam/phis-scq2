@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 __author__ = ['Marcos Romero']
@@ -26,7 +27,7 @@ badjanak.get_kernels(True)
 
 # Parse arguments for this script
 def argument_parser():
-  parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
+  parser = argparse.ArgumentParser(description='Compute angular acceptance.')
   # Samples
   parser.add_argument('--sample',
     default = '/scratch17/marcos.romero/phis_samples/2016/MC_Bs2JpsiPhi_dG0/v0r1.root',
