@@ -25,6 +25,7 @@ def argument_parser():
     parser.add_argument('--target-vars', help='Names of the branches that will be used for the weighting')
     parser.add_argument('--target-weight', help='Branches string expression to calc the weight.')
     parser.add_argument('--output-file', help='Branches string expression to calc the weight.')
+    parser.add_argument('--output-name', default='kinWeight', help='Branches string expression to calc the weight.')
     parser.add_argument('--n-estimators', default=20, help='Check hep_ml.reweight docs.')
     parser.add_argument('--learning-rate', default=0.3, help='Check hep_ml.reweight docs.')
     parser.add_argument('--max-depth', default=3,help='Check hep_ml.reweight docs.')
@@ -53,10 +54,11 @@ def getStringVars(FUN):
 
 def kinematic_weighting(original_file, original_treename, original_vars, original_weight,
                         target_file, target_treename, target_vars, target_weight,
-                        output_file,
+                        output_file, output_name,
                         n_estimators, learning_rate, max_depth,
                         min_samples_leaf, trunc):
-  print(f"\n{80*'='}\n{'= Kinematic weighting':79}=\n{80*'='}\n")
+  print(f"\n{80*'='}\n", "Kinematic weighting", f"\n{80*'='}\n")
+
   # %% Build pandas dataframes -------------------------------------------------
   original_vars = original_vars.split()
   target_vars = target_vars.split()
