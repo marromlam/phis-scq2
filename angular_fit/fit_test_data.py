@@ -89,12 +89,13 @@ def argument_parser():
 
 
 
-args = vars(argument_parser().parse_args(''))
-#args = vars(argument_parser().parse_args())
+#args = vars(argument_parser().parse_args(''))
+args = vars(argument_parser().parse_args())
 YEARS = [int(y) for y in args['year'].split(',')] # years are int
 VERSION = args['version']
 
-args
+for k,v in args.items():
+  print(f'{k}: {v}')
 
 # %% Load samples --------------------------------------------------------------
 print(f"\n{80*'='}\n",
@@ -114,14 +115,14 @@ mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   data[f'{y}'] = {}
-  csp = Parameters.load(args['csp'][i])  # <--- WARNING
+  csp = Parameters.load(args['csp'].split(',')[i])  # <--- WARNING
   csp = csp.build(csp,csp.find('CSP.*'))
-  flavor = Parameters.load(args['flavor_tagging'][i])
-  resolution = Parameters.load(args['time_resolution'][i])
+  flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
+  resolution = Parameters.load(args['time_resolution'].split(',')[i])
   for t, T in zip(['biased','unbiased'],[0,1]):
-    print(f" *  Loading {y} sample in {t} category\n    {args['samples'][i]}")
+    print(f" *  Loading {y} sample in {t} category\n    {args['samples'].split(',')[i]}")
     this_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}) & (time>=0.3) & (time<=15)'
-    data[f'{y}'][f'{t}'] = Sample.from_root(args['samples'][i], cuts=this_cut)
+    data[f'{y}'][f'{t}'] = Sample.from_root(args['samples'].split(',')[i], cuts=this_cut)
     data[f'{y}'][f'{t}'].csp = csp
     data[f'{y}'][f'{t}'].flavor = flavor
     data[f'{y}'][f'{t}'].resolution = resolution
@@ -129,18 +130,18 @@ for i, y in enumerate(YEARS):
     print(data[f'{y}'][f'{t}'].flavor)
     print(data[f'{y}'][f'{t}'].resolution)
   for t, coeffs in zip(['biased','unbiased'],[args['timeacc_biased'],args['timeacc_unbiased']]):
-    print(f' *  Associating {y}-{t} time acceptance[{i}] from\n    {coeffs[i]}')
-    c = Parameters.load(coeffs[i])
+    print(f" *  Associating {y}-{t} time acceptance[{i}] from\n    {coeffs.split(',')[i]}")
+    c = Parameters.load(coeffs.split(',')[i])
     print(c)
     data[f'{y}'][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
     data[f'{y}'][f'{t}'].tLL = c['tLL'].value
     data[f'{y}'][f'{t}'].tUL = c['tUL'].value
   for t, weights in zip(['biased','unbiased'],[args['angacc_biased'],args['angacc_unbiased']]):
-    print(f' *  Associating {y}-{t} angular weights from\n    {weights[i]}')
-    w = Parameters.load(weights[i])
+    print(f" *  Associating {y}-{t} angular weights from\n    {weights.split(',')[i]}")
+    w = Parameters.load(weights.split(',')[i])
     print(w)
     data[f'{y}'][f'{t}'].angacc = Parameters.build(w,w.fetch('w.*'))
-  print(f' *  Allocating {y} arrays in device ')
+  print(f" *  Allocating {y} arrays in device ")
   for d in [data[f'{y}']['biased'],data[f'{y}']['unbiased']]:
     sw = np.zeros_like(d.df['sw'])
     for l,h in zip(mass[:-1],mass[1:]):
@@ -235,7 +236,7 @@ def fcn_data(parameters, data):
       wrapper_fcn(dt.input, dt.output, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), dt.tLL, dt.tUL)
+                  **dt.flavor.valuesdict(), tLL=dt.tLL, tUL=dt.tUL)
       chi2.append( -2.0 * (ristra.log(dt.output) * dt.weight).get() );
   return np.concatenate(chi2)
 
@@ -248,3 +249,6 @@ result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data}
 
 for p in ['DGsd', 'DGs', 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DM', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6']:
   print(f"{p:>12} : {result.params[p].value:+.8f}")
+
+
+result.params.dump(args['params'])
