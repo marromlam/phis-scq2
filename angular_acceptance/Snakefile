@@ -37,7 +37,7 @@ rule naive_angular_acceptance:
 
 rule blend_angular_acceptance:
   wildcard_constraints:
-    step = "(Naive|Corrected)",
+    step = "(Naive|Corrected)(Bin)?(pt|sigmat|eta)?(1|2|3)?",
     mode = "Bs2JpsiPhi"
   input:
     weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{trigger}.json',
@@ -107,7 +107,7 @@ rule corrected_binned_angular_acceptance:
   wildcard_constraints:
     mode = "MC_Bs2JpsiPhi(_dG0)?",
     binnedvar = "(pt|sigmat|eta)",
-    bin = "(1|2|3)"
+    #bin = "\d1"
   input:
     sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
     sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
