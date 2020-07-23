@@ -4,21 +4,26 @@
 #    and then it worka automatically.
 
 rule sync_ntuples:
+  wildcard_constraints:
+    version = "(v[1-9]r[0-9]|v0r[0-9])",
   output:
     sample = SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root'
   log:
     'output/log/samples/sync_ntuples/{year}/{mode}/{version}.log'
   run:
-    shell(f"""
-      (time\
-      python samples/new_downloader.py\
-             --year {wildcards.year}\
-             --mode {wildcards.mode}\
-             --version {wildcards.version}\
-             --tree DecayTree\
-             --output {output}\
-      ) #&> {log} #2>&1
-    """)
+    if f"{wildcards.version}" in ("v0r0", "v0r1"):
+      shell(f"cp /scratch03/marcos.romero/phisRun2/cooked_test_files/{wildcards.year}/{wildcards.mode}/{wildcards.version}_sWeight.root {output}")
+    else:
+      shell(f"""
+        (time\
+        python samples/new_downloader.py\
+               --year {wildcards.year}\
+               --mode {wildcards.mode}\
+               --version {wildcards.version}\
+               --tree DecayTree\
+               --output {output}\
+        ) #&> {log} #2>&1
+      """)
 
 
 
