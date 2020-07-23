@@ -2,7 +2,7 @@
 
 ruleorder: blend_angular_acceptance > naive_angular_acceptance
 
-# naive angular acceptance - no correction (only sWeight and polWeight) --------
+# naive angular acceptance - no correction (only sWeight and polWeight) --------
 #     Here we have 2 rules to compute angular acceptance without correcting
 #     MC samples. First rule computes angular acceptance for MC, and second one
 #     merges MC results to compute RD angular acceptance
@@ -69,7 +69,7 @@ rule blend_angular_acceptance:
 
 
 
-# Correcting MC with kinematic weights -----------------------------------------
+# Correcting MC with kinematic weights -----------------------------------------
 #     Correcting MC sample with kinematic weighting in B_P, B_PT and X_M helps
 #     to better match MC to RD.
 
@@ -100,7 +100,7 @@ rule corrected_angular_acceptance:
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-    ) #&> {log} #2>&1""")
+    ) &> {log} #2>&1""")
     send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
 
 rule corrected_binned_angular_acceptance:
@@ -133,13 +133,13 @@ rule corrected_binned_angular_acceptance:
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --binvar {wildcards.binnedvar}{wildcards.bin}\
-    ) #&> {log} #2>&1""")
+    ) &> {log} #2>&1""")
     send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
 
 
 
 
-# Run2a angular acceptance ------------------------------------------------------
+# Run2a angular acceptance ------------------------------------------------------
 #     This rule runs the iterative procedure for all Run2 years using both
 #     MC and MC_dG0 files.
 rule iterativeRun2a_angular_acceptance:
@@ -235,7 +235,7 @@ rule iterativeRun2a_angular_acceptance:
            --output-tables-unbiased  {",".join(output.tables_unbiased)}\
            --year                    {",".join(yd['Run2a'])}\
            --version                 {wildcards.version}\
-    ) &> {log} #2>&1""")
+    ) #.&> {log} #2>&1""")
     #send_mail(f"Run2 Angular Acceptance", f"{log}")
 
 

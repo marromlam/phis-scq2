@@ -181,6 +181,10 @@ csp_factors    = args['input_csp'].split(',')
 time_resolution = args['input_time_resolution'].split(',')
 flavor_tagging = args['input_flavor_tagging'].split(',')
 
+params_biased      = args['output_weights_biased'].split(',')
+params_unbiased    = args['output_weights_unbiased'].split(',')
+tables_biased      = args['output_tables_biased'].split(',')
+tables_unbiased    = args['output_tables_unbiased'].split(',')
 
 
 
@@ -272,6 +276,12 @@ for i, y in enumerate(YEARS):
     print(w)
     data[f'{y}'][f'{t}'].angacc = np.array(Parameters.build(w,w.fetch('w.*')))
     data[f'{y}'][f'{t}'].angular_weights = [Parameters.build(w,w.fetch('w.*'))]
+  for t, path in zip(['biased','unbiased'],[params_biased,params_unbiased]):
+    data[f'{y}'][f'{t}'].params_path = path[i]
+    print(path[i])
+  for t, path in zip(['biased','unbiased'],[tables_biased,tables_unbiased]):
+    data[f'{y}'][f'{t}'].tables_path = path[i]
+    print(path[i])
   print(f' *  Allocating {y} arrays in device ')
   for d in [data[f'{y}']['biased'],data[f'{y}']['unbiased']]:
     sw = np.zeros_like(d.df['sw'])
@@ -283,7 +293,7 @@ for i, y in enumerate(YEARS):
     d.allocate(data=real,weight='sWeight',lkhd='0*time')
     d.angacc_dev = ristra.allocate(d.angacc)
     d.timeacc_dev = ristra.allocate(bsjpsikk.get_4cs(d.timeacc))
-
+exit()
 
 
 # data[f'2016']['unbiased'].angacc = np.array([
@@ -871,7 +881,7 @@ for i in range(1,15):
       data[f'{y}'][trigger].angular_weights.append(merged_w)
       qwe = check_for_convergence( data[f'{y}'][trigger].angular_weights[-2], data[f'{y}'][trigger].angular_weights[-1] )
       checker.append( qwe )
-      merged_w.dump(f'output_new/params/angular_acceptance/{y}/Bs2JpsiPhi/{VERSION}_Iteration{i}_{trigger}.json')
+      merged_w.dump(f'output/params/angular_acceptance/{y}/Bs2JpsiPhi/{VERSION}_Iteration{i}_{trigger}.json')
       print(f'Value of chi2/dof = {chi2_value:.4}/{dof} corresponds to a p-value of {prob:.4}\n')
 
   # Check if they are the same as previous iteration
@@ -890,9 +900,9 @@ for i in range(1,15):
     for y, dy in data.items(): # loop over years
       for trigger in ['biased','unbiased']:
         pars = data[f'{y}'][trigger].angular_weights[-1]
-        pars.dump(f'output_new/params/angular_acceptance/{y}/Bs2JpsiPhi/{VERSION}_Baseline_{trigger}.json')
+        pars.dump(data[f'{y}'][trigger].params_path)
         print('Saving table of params in tex')
-        with open(f'output_new/tables/angular_acceptance/{y}/Bs2JpsiPhi/{VERSION}_Baseline_{trigger}.tex', "w") as tex_file:
+        with open(data[f'{y}'][trigger].tables_path, "w") as tex_file:
           tex_file.write(
             pars.dump_latex( caption="""
             Baseline angular weights for \\textbf{%s} \\texttt{\\textbf{%s}}
