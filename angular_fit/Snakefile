@@ -1,16 +1,16 @@
 
 
-# Run2a angular acceptance -----------------------------------------------------
+# Run2a angular acceptance -----------------------------------------------------
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
 rule physics_params_Run2a:
   input:
-    samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
+    samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2a'),
     # Angular acceptance
-    angacc_biased = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Baseline_biased.json',
-                     'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Baseline_biased.json'],
-    angacc_unbiased = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Baseline_unbiased.json',
-                       'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Baseline_unbiased.json'],
+    angacc_biased = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2aBaseline_biased.json',
+                     'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2aBaseline_biased.json'],
+    angacc_unbiased = ['output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2aBaseline_unbiased.json',
+                       'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2aBaseline_unbiased.json'],
     # Time acceptance coefficients
     timeacc_biased = ['output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_Baseline_biased.json',
                       'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_Baseline_biased.json'],
@@ -26,7 +26,7 @@ rule physics_params_Run2a:
     flavor = ['output/params/flavor_tagging/2015/Bs2JpsiPhi/{version}.json',
               'output/params/flavor_tagging/2016/Bs2JpsiPhi/{version}.json'],
   output:
-    params = 'output/params/angular_fit/Run2a/Bs2JpsiPhi/{version}_BaselineRun2a.json'
+    params = 'output/params/angular_fit/Run2a/Bs2JpsiPhi/{version}_Run2aBase.json'
   log:
     'output/log/angular_acceptance/physics_params_Run2a/Run2a/Bs2JpsiPhi/{version}.log'
   run:
