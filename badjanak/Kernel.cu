@@ -48,7 +48,7 @@
 
 
 // Flags
-#define FAST_INTEGRAL 1
+#define FAST_INTEGRAL {FAST_INTEGRAL}
 // #define USE_TIME_OFFSET {{USE_TIME_OFFSET}}
 // #define USE_TIME_RES {{USE_TIME_RES}}
 // #define USE_PERFTAG {{USE_PERFTAG}}

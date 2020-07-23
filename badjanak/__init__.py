@@ -32,10 +32,7 @@ global config
 config = dict(
 debug =           0, # no prints
 debug_evt =       0, # number of events to debug
-use_time_offset = 0, # no  time offset
-use_time_res =    0, # use time resolution
-use_perftag =     1, # use perfect tagging
-use_truetag =     0, # no  true tagging
+fast_integral =   1, # use fast integral
 sigma_t =         0.15,
 knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
 x_m =             [990, 1008, 1016, 1020, 1024, 1032, 1050],

@@ -236,7 +236,7 @@ ${ctype} expconv(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
     ${ctype} z, fad;
     z   = cnew(-omega*sigma2/(sigma*sqrt(2.)), -(t-sigma2*G)/(sigma*sqrt(2.)));
     fad = faddeeva(z);
-
+/*
  if ( (t>0.3006790) && (t<0.3006792) ){
            printf("z   = %+.16lf%+.16lf\n",z.x,z.y );
            printf("fad = %+.16lf%+.16lf\n",fad.x,fad.y );
@@ -244,7 +244,7 @@ ${ctype} expconv(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
            double2 res = cnew(0.5*exp(-0.5*t*t/sigma2),0.0);
            printf("res   = %+.16lf\n",res.x,res.y );
      }
-    
+ */   
     return cmul( cnew(fad.x,-fad.y), cnew(0.5*exp(-0.5*t*t/sigma2),0) );
   }
 }
