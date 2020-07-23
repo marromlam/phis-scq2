@@ -116,17 +116,17 @@ if __name__ == '__main__':
   print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {args['trigger']:50}")
-  print(f"{'cuts':>15}: {CUT:50}\n")
+  print(f"{'cuts':>15}: {CUT if CUT else 'None':50}\n")
 
   # Load Monte Carlo samples
-  mc = Sample.from_root(args['sample_mc'])
+  mc = Sample.from_root(args['sample_mc'], cuts=CUT)
   mc.assoc_params(args['input_params'])
-  #print(mc.df)
-  #print(Sample.from_root(args['sample_mc']).df)
-  #print(np.amax(Sample.from_root(args['sample_mc']).df['B_PT']))
+  print(mc.df)
+  print(Sample.from_root(args['sample_mc']).df)
+  print(np.amax(Sample.from_root(args['sample_mc']).df['B_PT']))
 
   # Load corresponding data sample
-  data = Sample.from_root(args['sample_data'])
+  data = Sample.from_root(args['sample_data'], cuts=CUT)
 
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']

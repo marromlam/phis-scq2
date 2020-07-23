@@ -544,7 +544,7 @@ bsjpsikk.get_kernels()
 
 def minuit_fit(pars, data):
   # Set model to fit data
-  bsjpsikk.config['debug']           = 5
+  bsjpsikk.config['debug']           = 0
   bsjpsikk.config['debug_evt']       = 774
   bsjpsikk.config['use_time_acc']    = 1
   bsjpsikk.config['use_time_offset'] = 0
