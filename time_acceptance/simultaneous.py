@@ -113,6 +113,13 @@ def saxsbxscxerf(params, data, weight=False, prob=None):
 
     return -2*result#.sum()
 
+# Bins of different varaibles
+bin_vars = dict(
+pt = ['(B_PT >= 0 & B_PT < 3.8e4)', '(B_PT >= 3.8e4 & B_PT < 6e4)', '(B_PT >= 6e4 & B_PT <= 9e4)'],
+eta = ['(eta >= 0 & eta <= 3.3)', '(eta >= 3.3 & eta <= 3.9)', '(eta >= 3.9 & eta <= 6)'],
+sigmat = ['(sigmat >= 0 & sigmat <= 0.031)', '(sigmat >= 0.031 & sigmat <= 0.042)', '(sigmat >= 0.042 & sigmat <= 0.15)']
+)
+
 ################################################################################
 
 
@@ -128,11 +135,26 @@ if __name__ == '__main__':
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  SCRIPT = cammel_case_split(args['script'])
-  if len(SCRIPT) > 1:
-    MINER = SCRIPT[1]; SCRIPT = SCRIPT[0]
+  FLAGS = cammel_case_split(args['script'])
+  SCRIPT = FLAGS[0]; FLAGS.pop(0)
+  if len(FLAGS) == 2:
+    MINER = FLAGS[1]
+    BINVAR, BIN = FLAGS[0][3:-1], FLAGS[0][-1]
+    CUT = bin_vars[f'{BINVAR}'][int(BIN)-1]
+  elif len(FLAGS) == 1:
+    if FLAGS[0].startswith('Bin'):
+      MINER = 'minuit';
+      BINVAR, BIN = FLAGS[0][3:-1], FLAGS[0][-1]
+      CUT = bin_vars[f'{BINVAR}'][int(BIN)-1]
+    else:
+      MINER = FLAGS[0]
+      BINVAR, BIN = None, None
+      CUT = None
   else:
-    MINER = "minuit"; SCRIPT = SCRIPT[0]
+    MINER = "minuit"
+    BINVAR, BIN = None, None
+    CUT = None
+
 
   # Initialize backend
   the_backend = os.environ['IPANEMA_BACKEND']
@@ -159,7 +181,10 @@ if __name__ == '__main__':
   print(f"{'trigger':>15}: {args['trigger']:50}")
   print(f"{'cuts':>15}: {cuts:50}")
   print(f"{'script':>15}: {SCRIPT.title():50}")
+  print(f"{'cuts':>15}: {CUT if CUT else 'None':50}")
   print(f"{'minimizer':>15}: {MINER.title():50}\n")
+
+
 
   # Get data into categories ---------------------------------------------------
   print(f"\n{80*'='}\n", "Loading categories", f"\n{80*'='}\n")
@@ -179,19 +204,23 @@ if __name__ == '__main__':
         weight='(sw/gb_weights)*polWeight*pdfWeight*kinWeight'
       elif SCRIPT == 'Nonkinweighted':
         weight='(sw/gb_weights)'
+      samplecut = f"({cuts})"
     elif name == 'BdMC':
       label = (r'\mathrm{MC}',r'B^0')
       if SCRIPT == 'Baseline':
         weight='sw*polWeight*pdfWeight*kinWeight'
       elif SCRIPT == 'Nonkinweighted':
         weight='sw'
+      samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
     elif name == 'BdDT':
       label = (r'\mathrm{data}',r'B_s^0')
       if SCRIPT == 'Baseline':
         weight='sw*kinWeight'
       elif SCRIPT == 'Nonkinweighted':
         weight='sw'
-    cats[name] = Sample.from_root(sample, cuts=cuts)
+      samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
+    print(samplecut)
+    cats[name] = Sample.from_root(sample, cuts=samplecut)
     cats[name].name = os.path.splitext(os.path.basename(sample))[0]+'_'+trigger
     cats[name].allocate(time='time',lkhd='0*time')
     cats[name].allocate(weight=weight)
