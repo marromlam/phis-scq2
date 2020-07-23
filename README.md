@@ -8,14 +8,23 @@ bla bla
 
 phis-scq relyes on basic python libraries and ipanema3 (it is not in pypy yet), 
 and so requires to have a properly working environmente to run.
-It is recommended to intall miniconda and create a clean enviroment
+It is recommended to install miniconda and create a clean enviroment. To install conda, just:
+```
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+Once installed, let's create a proper environment. In order to do that, if you are 
+using some accelerator, this is the right time to make sure 
+you have the `PATH` and `LD_LIBRATY_PATH`. Then create the enviroment running:
 ```
 conda  create --name phisscq
 conda install pip 
-conda install pyopencl pocl
+conda install -c conda-forge pyopencl
+conda install pocl
 ```
 
-Then one needs to install ipanema3, to do so first we need to clone the respository (it's private, ask me if you wish)
+Then one just needs to install _ipanema3_, to do so first we need to clone the respository
+(it's private, ask me if you wish):
 ```
 git clone ssh://git@gitlab.cern.ch:7999/mromerol/ipanema3.git
 ```
@@ -48,7 +57,7 @@ function set_phis_scq {
   conda activate ipanema3
   export PATH="${PATH//:\/cvmfs\/sft.cern.ch\/lcg\/releases\/gcc\/8.3.0-cebb0\/x86_64-slc6\/bin:/:}"
   export PATH="/usr/local/cuda-10.2/bin:${PATH}"
-  export LD_LIBRARY_PATH="/usr/local/cuda-10.2/lib64:${LD_LIBRARY_PATH}"
+  export LD_LIBRARY_PATH="/usr/local/cuda-10.2/lib64:${``}"
   export PHIS_SCQ="/home3/marcos.romero/phis-scq/"
   export IPANEMA_BACKEND="cuda"
   export PYOPENCL_COMPILER_OUTPUT=1
