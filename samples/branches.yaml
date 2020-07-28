@@ -15,7 +15,7 @@ common: &common
   "hlt1b" : "hlt1b"
   "Jpsi_Hlt1DiMuonHighMassDecision_TOS" : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
   "Polarity" : "Polarity"
-  "eta" : "eta"
+  "eta" : "B_ETA"
 
 MC_common: &MC_common
   <<: *common
