@@ -63,6 +63,8 @@ def get_nbins(var, mode='Bs2JpsiPhi'):
 def get_var_in_latex(var, mode='Bs2JpsiPhi'):
   ranges_dict = dict(
   B_PT = r"p_T(B)",
+  B_ETA = r"\eta(B)",
+  sigmat = r"\sigma_t(B)",
   B_P = r"p(B)",
   X_M = r"m(K^+\pi^-)" if 'Bd2JpsiKstar' in mode else r"m(K^+K^-)",
   hplus_P = r"m(K^+)" if 'Bd2JpsiKstar' in mode else r"p(K^+)",
@@ -74,6 +76,12 @@ def get_var_in_latex(var, mode='Bs2JpsiPhi'):
 
 
 
+def make_square_axes(ax):
+    """Make an axes square in screen units.
+
+    Should be called after plotting.
+    """
+    ax.set_aspect(1 / ax.get_data_ratio())
 
 
 
