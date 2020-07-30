@@ -1,0 +1,22 @@
+{
+  "lSlon":        1.0,
+  "lPlon":        1.0,
+  "lPpar":        1.0,
+  "lPper":        1.0,
+  "pSlon":        0.0,
+  "pPlon":        0.07,
+  "pPpar":        0.0,
+  "pPper":        0.0,
+  "DGd":          0,
+  "DGsd":         0.003486,
+  "DGs":          0,
+  "Gd":           0.65789,
+  "DM":           17.8,
+  "fPlon":        0.5213,
+  "fPper":        0.2490,
+  "dPpar":        3.3,
+  "dPper":        3.07,
+  "fSlon":        0.0,
+  "CSP":          1.0,
+  "dSlon":        0.0
+}
