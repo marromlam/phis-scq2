@@ -84,7 +84,7 @@ def argument_parser():
 
 # Bins of different varaibles
 bin_vars = dict(
-pt = ['(B_PT >= 0 & B_PT < 3.8e4)', '(B_PT >= 3.8e4 & B_PT < 6e4)', '(B_PT >= 6e4 & B_PT <= 9e4)'],
+pt = ['(B_PT >= 0 & B_PT < 3.8e3)', '(B_PT >= 3.8e3 & B_PT < 6e3)', '(B_PT >= 6e3 & B_PT <= 9e3)', '(B_PT >= 9e3)'],
 eta = ['(eta >= 0 & eta <= 3.3)', '(eta >= 3.3 & eta <= 3.9)', '(eta >= 3.9 & eta <= 6)'],
 sigmat = ['(sigmat >= 0 & sigmat <= 0.031)', '(sigmat >= 0.031 & sigmat <= 0.042)', '(sigmat >= 0.042 & sigmat <= 0.15)']
 )

@@ -459,9 +459,9 @@ ${ftype} getDiffRate( ${ftype} *data,
     ck = getC(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
     dk = getD(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
 
-    if (DM != 0)
+    if (fabs(qOS) == 511) // Bd pdf
     {
-      hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);//old factor: 3./(4.*M_PI)*
+      hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);
       hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
     }
     else
@@ -558,8 +558,7 @@ ${ftype} getDiffRate( ${ftype} *data,
         (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * intB +
         (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar
         );
-  //num = num/4;
-  //den = den/4;
+  num = num/4; den = den/4; // this is only to agree with Peilian
 
   #if DEBUG
   if ( DEBUG >= 1  && get_global_id(0) == DEBUG_EVT)

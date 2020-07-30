@@ -39,8 +39,8 @@ rule pdf_weighting:
   input:
     sample = lambda wcs: tuples(wcs,weight='polWeight'),
   params:
-    original = lambda wcs: f"{wcs.mode[3:].split('_')[0]}_2016.json",
-    target = '{mode}_2016.json'
+    original = lambda wcs: f"{wcs.year}/{wcs.mode[3:].split('_')[0]}.json",
+    target = lambda wcs: f"{wcs.year}/{wcs.mode}.json",
   output:
     sample = SAMPLES_PATH+'{year}/{mode}/{version}_pdfWeight.root'
   log:

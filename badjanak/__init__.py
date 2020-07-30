@@ -8,6 +8,22 @@ import warnings
 from reikna.cluda import functions, dtypes
 import platform
 import cpuinfo
+import re
+import math
+def get_sizes(size,BLOCK_SIZE=256):
+    '''
+    i need to check if this worls for 3d size and 3d block
+    '''
+    a = size % BLOCK_SIZE
+    if a == 0:
+      gs, ls = size, BLOCK_SIZE
+    elif size < BLOCK_SIZE:
+      gs, ls = size, 1
+    else:
+      a = np.ceil(size/BLOCK_SIZE)
+      gs, ls = a*BLOCK_SIZE, BLOCK_SIZE
+    return int(gs), int(ls)
+
 
 
 if __name__ == '__main__':
@@ -32,7 +48,7 @@ global config
 config = dict(
 debug =           0, # no prints
 debug_evt =       0, # number of events to debug
-fast_integral =   1, # use fast integral
+fast_integral  = 1, # 
 sigma_t =         0.15,
 knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
 x_m =             [990, 1008, 1016, 1020, 1024, 1032, 1050],
@@ -73,10 +89,6 @@ def flagger(verbose=False):
 
 # Compiler ---------------------------------------------------------------------
 #     Compile kernel against given BACKEND
-#from pycuda.compiler import SourceModule
-#import pycuda.driver as cuda
-#import pycuda.autoinit
-#import pycuda.gpuarray as cu_array
 
 def compile(verbose=False, pedantic=False):
   kpath = os.path.join(PATH,'Kernel.cu')
@@ -97,11 +109,8 @@ def compile(verbose=False, pedantic=False):
                  "ctype":dtypes.ctype(np.complex64)},keep=False)
   if pedantic:
     print(prog.source)
-    #prog = SourceModule(open('kernel.cu',"r").read())
   if verbose:
     print('\nSuccesfully compiled.\n')
-  #print(open('kernel.cu',"r").read())
-  #prog = SourceModule(open('kernel.cu',"r").read())
   return prog
 
 
@@ -263,16 +272,6 @@ def diff_cross_rate(
 
 
 
-import re
-pars1 = {'CSP':1.0,'CSP1':1.1, 'CSP2':1.2, 'c1':1.222, 'c2':3.33, 'c3':1.333, 'c4':4.33, 'c0':1, 'c5':0.33, 'c6':1.333, 'c7':43.33, 'c8':43.33}
-pars2 = {'CSP':1.0}
-
-
-
-#print( cross_rate_parser_new(**pars1) )
-
-
-
 
 
 def cross_rate_parser_new(
@@ -377,23 +376,13 @@ def cross_rate_parser_new(
   # Time acceptance
   timeacc = [ p[k] for k in p.keys() if re.compile('c[0-9]+').match(k)]
   if timeacc:
-    # if timeacc[1] > 1.25:
-    #   shit = [[-1.51385939016832, 11.9960294988729, -13.6782169868754, 5.41074330834188], [-1.34064982313394, 11.1001179452468, -12.1335418944165, 4.52299900233106], [2.37140756182458, -1.13743387329778, 1.31431724684124, -0.402956727067397], [0.895665736022647, 2.14199240626209, -1.11488740468459, 0.196846890593301], [2.57916936405076, -0.434798861127893, 0.199802017453152, -0.0267397458246822], [1.64932448436517, 0.491956832910906, -0.108090239702594, 0.00735684965214465], [1.89894736842106, 0.0601503759398493, 0.0, 0.0]]
-    # else:
-    #   shit = [[1.00460352919722, -0.155198055438259, 0.631202729680957, -0.550087342112342], [0.821112671499487, 0.793892587825892, -1.00516044836065, 0.390351265957555], [1.11610511304869, -0.178609966731930, 0.0635236775270647, -0.00110812081450162], [1.20868258316517, -0.384337678101882, 0.215914574838140, -0.0387355028666187], [0.896135736285030, 0.0940503528371088, -0.0281609511511421, 0.00277394032883751], [0.958414194315690, 0.0319787999826305, -0.00753917279417193, 0.000490243943791026], [0.991526315789474, -0.00150375939849623, 0.0, 0.0]]
     r['timeacc'] = THREAD.to_device(get_4cs(timeacc))
-    #r['timeacc'] = THREAD.to_device(np.array(shit))
   else:
     r['timeacc'] = THREAD.to_device(np.float64([1]))
 
   # Angular acceptance
   angacc = [ p[k] for k in p.keys() if re.compile('w[0-9]+').match(k)]
   if angacc:
-    # if angacc[1] < 1.035:
-    #   shit = [1.0, 1.0327, 1.0327, 0.0029, 0.00309, -0.00024, 1.019, 0.00012, 0.0001, 0.0054]
-    # else:
-    #   shit = [1.0, 1.03761, 1.03738, -0.0008, 0.00023, 0.00024, 1.01004, 7e-05, 9e-05, -0.00388]
-    #r['angacc'] = THREAD.to_device(np.float64(shit))
     r['angacc'] = THREAD.to_device(np.float64(angacc))
   else:
     r['angacc'] = THREAD.to_device(np.float64([1]))
@@ -491,90 +480,6 @@ def cross_rate_parser(parameters):
 
 
 
-def cross_rate_parser2(parameters):
-    pars = dict(
-    Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP   = 1,
-    fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
-    dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
-    pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
-    lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
-    Gs = None,
-    knots = np.array([0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00]),
-    coeffs = np.array([1, 1.2, 1.4, 1.7, 2.2, 2.2, 2.1, 2.0, 1.9]),
-    w = np.array([1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]),
-    # Time resolution parameters
-    sigma_offset = 0.01297,
-    sigma_slope = 0.8446,
-    sigma_curvature = 0,
-    mu = 0,
-    # Flavor tagging parameters
-    eta_os = 0.3602,
-    eta_ss = 0.4167,
-    p0_os = 0.389,
-    p0_ss = 0.4325,
-    p1_os = 0.8486,
-    p2_os = 0.,
-    p1_ss = 0.9241,
-    p2_ss = 0.,
-    dp0_os = 0.009,
-    dp0_ss = 0,
-    dp1_os = 0.0143,
-    dp2_os = 0.,
-    dp1_ss = 0,
-    dp2_ss = 0,
-    tLL = 0.3,
-    tUL = 15.0,
-    )
-    pars.update(parameters)
-    #pars['fSlon'] = np.atleast_1d(pars['fSlon'])
-    pars['fSlon'] = [pars['fSlon1'],pars['fSlon2'],pars['fSlon3'],pars['fSlon4'],pars['fSlon5'],pars['fSlon6']]
-    pars['dSlon'] = [pars['dSlon1'],pars['dSlon2'],pars['dSlon3'],pars['dSlon4'],pars['dSlon5'],pars['dSlon6']]
-    pars['dSlon'] = np.atleast_1d(pars['dSlon'])
-    pars['ASlon'] = np.atleast_1d(pars['fSlon'])
-    FP = abs(1-pars['ASlon'])
-    pars['APlon'] = FP*pars['fPlon'];
-    pars['APper'] = FP*pars['fPper'];
-    pars['APpar'] = FP*abs(1-pars['fPlon']-pars['fPper'])        # Amplitudes
-    pars['dSlon'] = pars['dSlon'] + pars['dPper']               # Strong phases
-    if pars['Gs'] == None:
-      #print('no Gs')
-      pars['Gs'] = pars['Gd']+pars['DGsd']+pars['DGd']
-    #pars['nknots'] = len(pars['knots'])
-    # for k, v in pars.items():
-    #  print(f'{k:>10}:  {v}')
-    return pars
-
-
-
-"""
-(input, output,
-# Time-dependent angular distribution
-G, DG, DM,
-CSP,
-ASlon, APlon, APpar, APper,
-pSlon, pPlon, pPpar, pPper,
-dSlon, dPlon, dPpar, dPper,
-lSlon, lPlon, lPpar, lPper,
-# Time limits
-tLL, tUL,
-# Time resolution
-sigma_offset, sigma_slope, sigma_curvature,
-mu,
-# Flavor tagging
-eta_bar_os, eta_bar_ss,
-p0_os,  p1_os, p2_os,
-p0_ss,  p1_ss, p2_ss,
-dp0_os, dp1_os, dp2_os,
-dp0_ss, dp1_ss, dp2_ss,
-# Time acceptance
-timeacc,
-# Angular acceptance
-angacc,
-# Flags
-use_fk=1, use_angacc = 0, use_timeacc = 0,
-use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-BLOCK_SIZE=256, **crap):
-"""
 
 def diff_cross_rate_full( data, pdf, use_fk=1, BLOCK_SIZE=32, **parameters):
   """
@@ -637,156 +542,6 @@ def diff_cross_rate_full( data, pdf, use_fk=1, BLOCK_SIZE=32, **parameters):
 
 
 
-
-
-def diff_cross_rate_full2( data, pdf, use_fk=1, BLOCK_SIZE=2, **parameters):
-  """
-  Look at kernel definition to see help
-  """
-  #print('\n')
-  p = cross_rate_parser2(parameters)
-  print(len(p['CSP']))
-  for k, v in p.items():
-   print(f'{k:>10}:  {v}')
-  print('\n\n')
-  __KERNELS__.DiffRate(
-    # Input and output arrays
-    data, pdf,
-    # Differential cross-rate parameters
-    np.float64(p['DGsd']+0.65789),
-    np.float64(p['DGs']),
-    np.float64(p['DM']),
-    p['CSP'],
-    THREAD.to_device(np.sqrt(p['ASlon'])).astype(np.float64),
-    THREAD.to_device(np.sqrt(p['APlon'])).astype(np.float64),
-    THREAD.to_device(np.sqrt(p['APpar'])).astype(np.float64),
-    THREAD.to_device(np.sqrt(p['APper'])).astype(np.float64),
-    np.float64(p['pSlon']+p['pPlon']),
-    np.float64(p['pPlon']),
-    np.float64(p['pPpar']+p['pPlon']),
-    np.float64(p['pPper']+p['pPlon']),
-    THREAD.to_device(p['dSlon']).astype(np.float64),
-    np.float64(p['dPlon']),
-    np.float64(p['dPpar']),
-    np.float64(p['dPper']),
-    np.float64(p['lSlon']*p['lPlon']),
-    np.float64(p['lPlon']),
-    np.float64(p['lPpar']*p['lPlon']),
-    np.float64(p['lPper']*p['lPlon']),
-    np.float64(p['tLL']), np.float64(p['tUL']),
-    # Time resolution
-    np.float64(p['sigma_offset']), np.float64(p['sigma_slope']), np.float64(p['sigma_curvature']),
-    np.float64(p['mu']),
-    # Flavor tagging
-    np.float64(p['eta_os']), np.float64(p['eta_ss']),
-    np.float64(p['p0_os']), np.float64(p['p1_os']), np.float64(p['p2_os']),
-    np.float64(p['p0_ss']), np.float64(p['p1_ss']), np.float64(p['p2_ss']),
-    np.float64(p['dp0_os']), np.float64(p['dp1_os']), np.float64(p['dp2_os']),
-    np.float64(p['dp0_ss']), np.float64(p['dp1_ss']), np.float64(p['dp2_ss']),
-    # Decay-time acceptance
-    np.int32(p['nknots']),
-    THREAD.to_device(p['knots']).astype(np.float64),
-    p['coeffs'],
-    # Angular acceptance
-    p['w'],
-    np.int32(use_fk), np.int32(pdf.shape[0]),
-    block = (BLOCK_SIZE,len(p['CSP']),1),
-    grid = (int(np.ceil(data.shape[0]/BLOCK_SIZE)),1,1))
-
-
-
-
-
-
-def diff_cross_rate_full_ready(
-    data, pdf,
-    Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7,
-    fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
-    dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
-    pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
-    lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
-    CSP = THREAD.to_device( np.atleast_1d([1]) ).astype(np.float64),
-    Gs = None,
-    knots = THREAD.to_device(np.array([0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00]) ).astype(np.float64), # optimize this!
-    timeacc = THREAD.to_device(np.array([1, 1.2, 1.4, 1.7, 2.2, 2.2, 2.1, 2.0, 1.9]) ).astype(np.float64),
-    angacc = THREAD.to_device(np.array([1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])).astype(np.float64),
-    # Time resolution parameters
-    sigma_offset = 0.01297,
-    sigma_slope = 0.8446,
-    sigma_curvature = 0,
-    mu = 0,
-    # Flavor tagging parameters
-    eta_os = 0.3602,
-    eta_ss = 0.4167,
-    p0_os = 0.389,
-    p0_ss = 0.4325,
-    p1_os = 0.8486,
-    p2_os = 0.,
-    p1_ss = 0.9241,
-    p2_ss = 0.,
-    dp0_os = 0.009,
-    dp0_ss = 0,
-    dp1_os = 0.0143,
-    dp2_os = 0.,
-    dp1_ss = 0,
-    dp2_ss = 0,
-    tLL = 0.3,
-    tUL = 15.0,
-    use_fk=1, BLOCK_SIZE=32, **shit_args):
-  """
-  Look at kernel definition to see help
-  """
-
-  dSlon = np.atleast_1d(dSlon)
-  ASlon = np.atleast_1d(fSlon)
-  FP = abs(1-ASlon)
-
-  if not Gs:
-    Gs = Gd + DGsd + DGd
-
-  __KERNELS__.DiffRate(
-    # Input and output arrays
-    data, pdf,
-    # Differential cross-rate parameters
-    np.float64( Gs ),
-    np.float64( DGs ),
-    np.float64( DM ),
-    CSP.astype(np.float64),
-    THREAD.to_device(  np.sqrt(ASlon)  ).astype(np.float64),
-    THREAD.to_device(  np.sqrt(FP* fPlon )  ).astype(np.float64),
-    THREAD.to_device(  np.sqrt(FP* fPper )  ).astype(np.float64),
-    THREAD.to_device(  np.sqrt(FP*abs(1- fPlon - fPper ))  ).astype(np.float64),
-    np.float64( pSlon + pPlon ),
-    np.float64( pPlon ),
-    np.float64( pPpar + pPlon ),
-    np.float64( pPper + pPlon ),
-    THREAD.to_device( dSlon + dPper ).astype(np.float64),
-    np.float64( dPlon ),
-    np.float64( dPpar ),
-    np.float64( dPper ),
-    np.float64( lSlon * lPlon ),
-    np.float64( lPlon ),
-    np.float64( lPpar * lPlon ),
-    np.float64( lPper * lPlon ),
-    np.float64( tLL ), np.float64( tUL ),
-    # Time resolution
-    np.float64( sigma_offset ), np.float64( sigma_slope ), np.float64( sigma_curvature ),
-    np.float64( mu ),
-    # Flavor tagging
-    np.float64( eta_os ), np.float64( eta_ss ),
-    np.float64( p0_os ), np.float64( p1_os ), np.float64( p2_os ),
-    np.float64( p0_ss ), np.float64( p1_ss ), np.float64( p2_ss ),
-    np.float64( dp0_os ), np.float64( dp1_os ), np.float64( dp2_os ),
-    np.float64( dp0_ss ), np.float64( dp1_ss ), np.float64( dp2_ss ),
-    # Decay-time acceptance
-    np.int32( len(knots) ),
-    knots.astype(np.float64),
-    timeacc.astype(np.float64),
-    # Angular acceptance
-    angacc.astype(np.float64),
-    np.int32(use_fk), np.int32(pdf.shape[0]),
-    block = (BLOCK_SIZE,len(CSP),1),
-    grid = (int(np.ceil(data.shape[0]/BLOCK_SIZE)),1,1))
 
 
 
@@ -903,7 +658,7 @@ def diff_cross_rate_mc( data, pdf,
 
 
 
-# decay_time_acceptance plots --------------------------------------------------
+# angular acceptance functions ------------------------------------------------
 #    These are several rules related to decay-time acceptance. The main one is
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
@@ -1035,24 +790,10 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=32, **parameters):
 
 
 
-import math
-def get_sizes(size,BLOCK_SIZE=256):
-    '''
-    i need to check if this worls for 3d size and 3d block
-    '''
-    a = size % BLOCK_SIZE
-    if a == 0:
-      gs, ls = size, BLOCK_SIZE
-    elif size < BLOCK_SIZE:
-      gs, ls = size, 1
-    else:
-      a = np.ceil(size/BLOCK_SIZE)
-      gs, ls = a*BLOCK_SIZE, BLOCK_SIZE
-    return int(gs), int(ls)
 
 
-################################################################################
-# Time acceptance functions ####################################################
+
+# Time acceptance functions ---------------------------------------------------
 
 def splinexerf(
       time, lkhd,
@@ -1296,7 +1037,8 @@ def get_4cs(listcoeffs):
 
 
 
-# Other Functions
+# Other Functions -------------------------------------------------------------
+#     Complex kernels running in device
 
 def cexp(z):
   z_dev = THREAD.to_device(np.complex128(z))

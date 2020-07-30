@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" --
-ANGULAR ACCEPTANCE
+__author__ = ['Marcos Romero']
+__email__  = ['mromerol@cern.ch']
 
 
-Benchmark:
-Intel(R) Core(TM) i7-7800X CPU @ 3.50GHz
-nVidia GeForce GTX 1080 Ti
--- """
 
 
-# %% Modules -------------------------------------------------------------------
+################################################################################
+# %% Modules ###################################################################
+
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,6 +23,12 @@ from uncertainties import unumpy as unp
 from scipy.stats import chi2
 from timeit import default_timer as timer
 
+
+bin_vars = dict(
+pt = ['(B_PT >= 0 & B_PT < 3.8e3)', '(B_PT >= 3.8e3 & B_PT < 6e3)', '(B_PT >= 6e3 & B_PT <= 9e3)', '(B_PT >= 9e3)'],
+eta = ['(eta >= 0 & eta <= 3.3)', '(eta >= 3.3 & eta <= 3.9)', '(eta >= 3.9 & eta <= 6)'],
+sigmat = ['(sigmat >= 0 & sigmat <= 0.031)', '(sigmat >= 0.031 & sigmat <= 0.042)', '(sigmat >= 0.042 & sigmat <= 0.15)']
+)
 
 # reweighting config
 from warnings import simplefilter
@@ -293,7 +297,7 @@ for i, y in enumerate(YEARS):
     d.allocate(data=real,weight='sWeight',lkhd='0*time')
     d.angacc_dev = ristra.allocate(d.angacc)
     d.timeacc_dev = ristra.allocate(bsjpsikk.get_4cs(d.timeacc))
-exit()
+#exit()
 
 
 # data[f'2016']['unbiased'].angacc = np.array([

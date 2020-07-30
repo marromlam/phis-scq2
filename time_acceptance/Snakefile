@@ -31,14 +31,14 @@ rule single_time_acceptance:
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-    ) &> {log} #2>&1
+    ) &> {log} 2>&1
     """)
     send_mail("Single Time Acceptance", f"{log}")
 
 
 rule simultaneous_time_acceptance:
   wildcard_constraints:
-    script = "(Baseline|Nonkinweighted|Nineknots|Twelveknots)(Bin)?(pt|sigmat|eta)?(1|2|3)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    script = "(Baseline|Nonkinweighted|Nineknots|Twelveknots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
     trigger = "(biased|unbiased|combined)",
     year = "(2015|2016|2017|2018)",
   input:
@@ -78,7 +78,7 @@ rule simultaneous_time_acceptance:
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --script {wildcards.script}\
-    ) #&> {log} #2>&1
+    ) &> {log} 2>&1
     """)
     send_mail(f"Simultaneous Time Acceptance", f"{log}")
 

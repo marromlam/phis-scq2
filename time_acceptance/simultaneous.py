@@ -115,11 +115,10 @@ def saxsbxscxerf(params, data, weight=False, prob=None):
 
 # Bins of different varaibles
 bin_vars = dict(
-pt = ['(B_PT >= 0 & B_PT < 3.8e4)', '(B_PT >= 3.8e4 & B_PT < 6e4)', '(B_PT >= 6e4 & B_PT <= 9e4)'],
+pt = ['(B_PT >= 0 & B_PT < 3.8e3)', '(B_PT >= 3.8e3 & B_PT < 6e3)', '(B_PT >= 6e3 & B_PT <= 9e3)', '(B_PT >= 9e3)'],
 eta = ['(eta >= 0 & eta <= 3.3)', '(eta >= 3.3 & eta <= 3.9)', '(eta >= 3.9 & eta <= 6)'],
 sigmat = ['(sigmat >= 0 & sigmat <= 0.031)', '(sigmat >= 0.031 & sigmat <= 0.042)', '(sigmat >= 0.042 & sigmat <= 0.15)']
 )
-
 ################################################################################
 
 
@@ -219,9 +218,10 @@ if __name__ == '__main__':
       elif SCRIPT == 'Nonkinweighted':
         weight='sw'
       samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
-    print(samplecut)
+    #print(samplecut)
     cats[name] = Sample.from_root(sample, cuts=samplecut)
     cats[name].name = os.path.splitext(os.path.basename(sample))[0]+'_'+trigger
+    #print(cats[name].df)
     cats[name].allocate(time='time',lkhd='0*time')
     cats[name].allocate(weight=weight)
     cats[name].weight *= ristra.sum(cats[name].weight)/ristra.sum(cats[name].weight**2)
@@ -233,6 +233,8 @@ if __name__ == '__main__':
       if p.startswith('a') or p.startswith('b') or p.startswith('c'):
         cats[name].params[p].value = 1.0
         cats[name].params[p].init = 1.0
+        cats[name].params[p].min = 0.1
+        cats[name].params[p].max = 10.0
     print(cats[name].params)
     print(cats[name].knots)
     cats[name].label = label

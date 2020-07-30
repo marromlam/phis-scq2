@@ -99,7 +99,7 @@
 	"gamma_a": {
 		"name": "gamma_a",
     "latex": "\\Gamma_a",
-		"value": 0.661375,
+		"value": 0.6613756614,
 		"free": false,
 		"min": 0,
 		"max": 1

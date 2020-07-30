@@ -20,7 +20,7 @@ import hjson
 import pandas
 
 from ipanema import initialize
-initialize('cuda',2)
+initialize('cuda',1)
 from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
@@ -154,10 +154,6 @@ for i, y in enumerate(YEARS):
 
 
 
-
-
-
-
 # Prepare parameters
 SWAVE = 1
 DGZERO = 0
@@ -173,16 +169,16 @@ Parameter(name='fSlon1',          value=SWAVE*+0.0009765623447890**2,         mi
 Parameter(name='fSlon2',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
 Parameter(name='fSlon3',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
 Parameter(name='fSlon4',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
-Parameter(name='fSlon5',          value=SWAVE*+0.0009765623447890**2,          min=SWAVE*0.00,   max=0.80,   free=SWAVE),
+Parameter(name='fSlon5',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
 Parameter(name='fSlon6',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
 #
 Parameter(name="fPlon", value=0.5241, min=0.4, max=0.6, latex=r'f_0'),
 Parameter(name="fPper", value=0.25, min=0.2, max=0.3, latex=r'f_{\perp}'),
 #
-Parameter(name="pSlon", value= 0.00, min=-0.5, max=0.5, free=False),
-Parameter(name="pPlon", value=-0.03, min=-0.5, max=0.5),
-Parameter(name="pPpar", value= 0.00, min=-0.5, max=0.5, free=False),
-Parameter(name="pPper", value= 0.00, min=-0.5, max=0.5, free=False),
+Parameter(name="pSlon", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisSDelFullRun2", blindengine="python", latex=r"\phi_S - \phi_0"),
+Parameter(name="pPlon", value=-0.03, min=-0.5, max=0.5, free=True,  blind="BsPhiszeroFullRun2", blindengine="python", latex=r"\phi_0" ),
+Parameter(name="pPpar", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisparaDelFullRun2", blindengine="python", latex=r"\phi_{\parallel} - \phi_0"),
+Parameter(name="pPper", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisperpDelFullRun2", blindengine="python", latex=r"\phi_{\perp} - \phi_0"),
 #
 Parameter(name='dSlon1', value=+np.pi/4*SWAVE, min=-0.0,   max=+3.0,   free=SWAVE),
 Parameter(name='dSlon2', value=+np.pi/4*SWAVE, min=-0.0,   max=+3.0,   free=SWAVE),
@@ -200,14 +196,14 @@ Parameter(name="lPlon", value=1., min=0.7, max=1.6),
 Parameter(name="lPpar", value=1., min=0.7, max=1.6, free=False),
 Parameter(name="lPper", value=1., min=0.7, max=1.6, free=False),
 # 17.768 17.757    +0.0917
-Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0, free=False),
-Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 0.2, free=1-DGZERO),
-Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1),
-Parameter(name="DM", value=17.757,   min=17.0, max=18.0),
+Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0, free=False, latex=r"\Gamma_d"),
+Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 0.2, free=1-DGZERO, blind="BsDGsFullRun2", blindengine="python", latex=r"\Delta\Gamma_s"),
+Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1, latex=r"\Gamma_s - \Gamma_d"),
+Parameter(name="DM", value=17.757,   min=17.0, max=18.0, latex=r"\Delta m"),
 #
 ]
 pars.add(*list_of_parameters);
-
+print(pars)
 
 
 

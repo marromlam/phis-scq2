@@ -124,6 +124,8 @@ if __name__ == '__main__':
     original_params = args['original_params']
     output_file = args['output_file']
     mode = args['mode']
+    print(f"target: {args['target_params']}")
+    print(f"original: {args['original_params']}")
 
     print('Loading file...')
     df = uproot.open(input_file)[tree_name].pandas.df(flatten=None)
