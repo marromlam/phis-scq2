@@ -27,7 +27,6 @@ from ipanema import Sample, Parameters, Parameter, ristra, optimize
 import badjanak
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 774
-badjanak.get_kernels(True)
 
 
 
@@ -67,7 +66,10 @@ def argument_parser():
     help='Bs2JpsiPhi MC sample')
   # Output parameters
   parser.add_argument('--params',
-    default = ['output/angular_fit/parameters/2016/Bs2JpsiPhi/v0r1_Yearly.json'],
+    default = 'output/angular_fit/params/2016/Bs2JpsiPhi/v0r1_Yearly.json',
+    help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--tables',
+    default = 'output/angular_fit/tables/2016/Bs2JpsiPhi/v0r1_Yearly.tex',
     help='Bs2JpsiPhi MC sample')
   # Configuration file ---------------------------------------------------------
   parser.add_argument('--year',
@@ -133,6 +135,9 @@ for i, y in enumerate(YEARS):
     print(f" *  Associating {y}-{t} time acceptance[{i}] from\n    {coeffs.split(',')[i]}")
     c = Parameters.load(coeffs.split(',')[i])
     print(c)
+    knots = np.array(Parameters.build(c,c.fetch('k.*'))).tolist()
+    badjanak.config['knots'] = knots
+    print(knots)
     data[f'{y}'][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
     data[f'{y}'][f'{t}'].tLL = c['tLL'].value
     data[f'{y}'][f'{t}'].tUL = c['tUL'].value
@@ -159,52 +164,50 @@ SWAVE = 1
 DGZERO = 0
 pars = Parameters()
 list_of_parameters = [#
-# Parameter(name='fSlon1', value=0.1+SWAVE*0*0.4260, min=0.00, max=0.80, free=SWAVE),
-# Parameter(name='fSlon2', value=0.1+SWAVE*0*0.0590, min=0.00, max=0.80, free=SWAVE),
-# Parameter(name='fSlon3', value=0.1+SWAVE*0*0.0101, min=0.00, max=0.80, free=SWAVE),
-# Parameter(name='fSlon4', value=0.1+SWAVE*0*0.0103, min=0.00, max=0.80, free=SWAVE),
-# Parameter(name='fSlon5', value=0.1+SWAVE*0*0.0490, min=0.00, max=0.80, free=SWAVE),
-# Parameter(name='fSlon6', value=0.1+SWAVE*0*0.1930, min=0.00, max=0.80, free=SWAVE),
-Parameter(name='fSlon1',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
-Parameter(name='fSlon2',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
-Parameter(name='fSlon3',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
-Parameter(name='fSlon4',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
-Parameter(name='fSlon5',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
-Parameter(name='fSlon6',          value=SWAVE*+0.0009765623447890**2,         min=SWAVE*0.00,   max=0.80,   free=SWAVE),
-#
+# S wave fractions
+Parameter(name='fSlon1', value=SWAVE*0.0009765623447890**2, min=SWAVE*0.00, max=0.80, free=SWAVE, latex=r'f_S^{1}'),
+Parameter(name='fSlon2', value=SWAVE*0.0009765623447890**2, min=SWAVE*0.00, max=0.80, free=SWAVE, latex=r'f_S^{2}'),
+Parameter(name='fSlon3', value=SWAVE*0.0009765623447890**2, min=SWAVE*0.00, max=0.80, free=SWAVE, latex=r'f_S^{3}'),
+Parameter(name='fSlon4', value=SWAVE*0.0009765623447890**2, min=SWAVE*0.00, max=0.80, free=SWAVE, latex=r'f_S^{4}'),
+Parameter(name='fSlon5', value=SWAVE*0.0009765623447890**2, min=SWAVE*0.00, max=0.80, free=SWAVE, latex=r'f_S^{5}'),
+Parameter(name='fSlon6', value=SWAVE*0.0009765623447890**2, min=SWAVE*0.00, max=0.80, free=SWAVE, latex=r'f_S^{6}'),
+# P wave fractions
 Parameter(name="fPlon", value=0.5241, min=0.4, max=0.6, latex=r'f_0'),
-Parameter(name="fPper", value=0.25, min=0.2, max=0.3, latex=r'f_{\perp}'),
-#
-Parameter(name="pSlon", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisSDelFullRun2", blindengine="python", latex=r"\phi_S - \phi_0"),
-Parameter(name="pPlon", value=-0.03, min=-0.5, max=0.5, free=True,  blind="BsPhiszeroFullRun2", blindengine="python", latex=r"\phi_0" ),
+Parameter(name="fPper", value=0.25, min=0.1, max=0.3, latex=r'f_{\perp}'),
+# Weak phases
+Parameter(name="pSlon", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisSDelFullRun2",    blindengine="python", latex=r"\phi_S - \phi_0"),
+Parameter(name="pPlon", value=-0.03, min=-0.5, max=0.5, free=True , blind="BsPhiszeroFullRun2",    blindengine="python", latex=r"\phi_0" ),
 Parameter(name="pPpar", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisparaDelFullRun2", blindengine="python", latex=r"\phi_{\parallel} - \phi_0"),
 Parameter(name="pPper", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisperpDelFullRun2", blindengine="python", latex=r"\phi_{\perp} - \phi_0"),
-#
+# S wave strong phases
 Parameter(name='dSlon1', value=+np.pi/4*SWAVE, min=-0.0,   max=+3.0,   free=SWAVE),
 Parameter(name='dSlon2', value=+np.pi/4*SWAVE, min=-0.0,   max=+3.0,   free=SWAVE),
 Parameter(name='dSlon3', value=+np.pi/4*SWAVE, min=-0.0,   max=+3.0,   free=SWAVE),
 Parameter(name='dSlon4', value=-np.pi/4*SWAVE, min=-3.0,   max=+0.0,   free=SWAVE),
 Parameter(name='dSlon5', value=-np.pi/4*SWAVE, min=-3.0,   max=+0.0,   free=SWAVE),
 Parameter(name='dSlon6', value=-np.pi/4*SWAVE, min=-3.0,   max=+0.0,   free=SWAVE),
-#
+# P wave strong phases
 Parameter(name="dPlon", value=0.00, min=-2*3.14, max=2*3.14, free = False),
 Parameter(name="dPpar", value=3.26, min=-2*3.14, max=2*3.14),
 Parameter(name="dPper", value=3.1, min=-2*3.14, max=2*3.14),
-#
-Parameter(name="lSlon", value=1., min=0.7, max=1.6, free=False),
-Parameter(name="lPlon", value=1., min=0.7, max=1.6),
-Parameter(name="lPpar", value=1., min=0.7, max=1.6, free=False),
-Parameter(name="lPper", value=1., min=0.7, max=1.6, free=False),
-# 17.768 17.757    +0.0917
+# lambdas
+Parameter(name="lSlon", value=1., min=0.7, max=1.6, free=False, latex="\lambda_S/\lambda_0"),
+Parameter(name="lPlon", value=1., min=0.7, max=1.6, free=True,  latex="\lambda_0"),
+Parameter(name="lPpar", value=1., min=0.7, max=1.6, free=False, latex="\lambda_{\parallel}/\lambda_0"),
+Parameter(name="lPper", value=1., min=0.7, max=1.6, free=False, latex="\lambda_{\perp}/\lambda_0"),
+# life parameters
 Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0, free=False, latex=r"\Gamma_d"),
-Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 0.2, free=1-DGZERO, blind="BsDGsFullRun2", blindengine="python", latex=r"\Delta\Gamma_s"),
+Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 0.7, free=1-DGZERO, blind="BsDGsFullRun2", blindengine="python", latex=r"\Delta\Gamma_s"),
 Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1, latex=r"\Gamma_s - \Gamma_d"),
-Parameter(name="DM", value=17.757,   min=17.0, max=18.0, latex=r"\Delta m"),
+Parameter(name="DM", value=17.757,   min=15.0, max=20.0, latex=r"\Delta m"),
 #
 ]
 pars.add(*list_of_parameters);
 print(pars)
 
+
+# compile the kernel
+badjanak.get_kernels(True)
 
 
 #@profile
@@ -225,7 +228,10 @@ def wrapper_fcn(input, output, **pars):
 
 #@profile
 def fcn_data(parameters, data):
-  pars_dict = parameters.valuesdict()
+  # here we are going to unblind the parameters to the fcn caller, thats why
+  # we call parameters.valuesdict(blind=False), by default
+  # parameters.valuesdict() has blind=True
+  pars_dict = parameters.valuesdict(blind=False)
   chi2 = []
   for y, dy in data.items():
     for dt in [dy['biased'],dy['unbiased']]:
@@ -238,13 +244,20 @@ def fcn_data(parameters, data):
 
 
 result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
-         verbose=True, tol=0.5, strategy=1)
+         verbose=False, tol=0.5, strategy=1)
 
-
+print(result)
 
 
 for p in ['DGsd', 'DGs', 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DM', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6']:
-  print(f"{p:>12} : {result.params[p].value:+.8f}")
+  if args['year'] == '2015,2016':
+    print(f"{p:>12} : {result.params[p].value:+.8f}  {result.params[p]._getval(False):+.8f}")
+  else:
+    print(f"{p:>12} : {result.params[p].value:+.8f}")
 
 
+# Dump json file
 result.params.dump(args['params'])
+# Write latex table
+with open(args['tables'], "w") as tex_file:
+  tex_file.write( result.params.dump_latex(caption="Physics parameters.") )
