@@ -3,23 +3,19 @@ import hjson
 from ipanema import Parameters
 
 
+# Download full fit_inputs from repository -------------------------------------
+#     This function will connect to gitlab and download the required file w/o
+#     modificacions.
 
-
-
-def download_fulljson(version, year, where="tmp/"):
+def download_fulljson(version, year, where="./tmp"):
   repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git"
   path = f"fitinputs/{version}/"
   os.system(f"git archive --remote={repo} --prefix={where}/{version}/ HEAD:{path} fit_inputs_{year}.json | tar -x")
 
-download_fulljson('v0r5', 2015)
 
-
-# output
-params = "output/params/time_resolution/{year}/{mode}/{version}.json",
-
-tmp_json_path = "./tmp/fit_inputs_2015.json"
-
-
+# Convert full fit_inputs to usable --------------------------------------------
+#     Convert the full json from repository to a multiple set of jsons, each
+#     one corresponding to a diffenre part of the analysis
 
 def parse_fulljson(tmp_json_path):
   tjson = hjson.load(open(f"{tmp_json_path}",'r'))
@@ -42,12 +38,12 @@ def parse_fulljson(tmp_json_path):
     timeaccunbiased.add({"name":f"c{i}", "value":v['Value'], "stdev":v['Error'],
                          "latex":"c_{i}", "free":False})
 
-
+  print(80*'-')
   print("The following parameters were loaded for time acceptance")
   print(knots)
   print(timeaccbiased)
   print(timeaccunbiased)
-
+  print(80*'-')
 
 
   # Angular acceptance -----------------------------------------------------------
@@ -61,11 +57,11 @@ def parse_fulljson(tmp_json_path):
     angaccunbiased.add({"name":f"w{i}", "value":v['Value'], "stdev":v['Error'],
                          "latex":"w_{i}", "free":False})
 
-
+  print(80*'-')
   print("The following parameters were loaded for angular acceptance")
   print(angaccbiased)
   print(angaccunbiased)
-
+  print(80*'-')
 
 
   # Time resolution --------------------------------------------------------------
@@ -92,10 +88,10 @@ def parse_fulljson(tmp_json_path):
     elif v['Name'] == "rho_p0_p2_time_res":
       timeres.add({"name":f"rho02", "value":v['Value'], "stdev":v['Error'],
                "latex":"\rho_{02}", "free":False})
-
+  print(80*'-')
   print("The following parameters were loaded for time resolution")
   print(timeres)
-
+  print(80*'-')
 
 
   # Time resolution --------------------------------------------------------------
@@ -181,10 +177,10 @@ def parse_fulljson(tmp_json_path):
       flavor.add({"name":f"eta_ss",
                   "value":v['Value'], "stdev":v['Error'],
                   "latex":"\\bar{\\eta}_{ss}", "free":False})
-
+  print(80*'-')
   print("The following parameters were loaded for flavor tagging")
   print(flavor)
-
+  print(80*'-')
 
 
 
@@ -207,8 +203,9 @@ def parse_fulljson(tmp_json_path):
                        'value':d['Bin_ul'], 'stdev':0,
                        'latex':f'm_{{KK}}^{{{bin}}}',
                        'free': False})
-
+  print(80*'-')
   print("The following parameters were loaded for CSP factors")
   print(csp_factors)
+  print(80*'-')
 
   return knots+timeaccbiased+knots, knots+timeaccunbiased, angaccbiased, angaccunbiased, timeres, flavor, csp_factors
