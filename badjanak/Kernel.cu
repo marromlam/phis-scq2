@@ -286,7 +286,7 @@ void pyAngularWeights(GLOBAL_MEM ${{ftype}} *dtrue, GLOBAL_MEM ${{ftype}} *dreco
                     coeffs,
                     angular_weights);
 
-  __syncthreads();
+  LOCAL_BARRIER;
   for(int k = 0; k < 10; k++)
   {{
     atomicAdd( &w[0]+k , w10[k]);
@@ -368,12 +368,12 @@ void pyAngularCov(GLOBAL_MEM ${{ftype}} *dtrue, GLOBAL_MEM ${{ftype}} *dreco, GL
     coeffs,
     angular_weights);
 
-  // __syncthreads();
+  // LOCAL_BARRIER;
   // for(int k = 0; k < 10; k++)
   // {{
   //   atomicAdd( &w[0]+k , w10[k]);
   // }}
-  // __syncthreads();
+  // LOCAL_BARRIER;
 
   if (DEBUG > 0 && ( get_global_id(0) < 3) )
   {{
@@ -451,7 +451,7 @@ void pyAngularCov(GLOBAL_MEM ${{ftype}} *dtrue, GLOBAL_MEM ${{ftype}} *dreco, GL
   //   printf("\n");
   // }}
 
-  __syncthreads();
+  LOCAL_BARRIER;
   for(int i=0; i<10; i++)
   {{
     for(int j=0; j<10; j++)

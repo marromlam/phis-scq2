@@ -244,7 +244,7 @@ ${ctype} expconv(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
            double2 res = cnew(0.5*exp(-0.5*t*t/sigma2),0.0);
            printf("res   = %+.16lf\n",res.x,res.y );
      }
- */   
+ */
     return cmul( cnew(fad.x,-fad.y), cnew(0.5*exp(-0.5*t*t/sigma2),0) );
   }
 }
@@ -433,7 +433,7 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
     K_expm[j] = getK(z_expm,j);
     K_trig[j] = getK(z_trig,j);
     #ifdef DEBUG
-    if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) )
+    if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
     {
       printf("K_expp[%d](%+.14lf%+.14lf) = %+.14lf%+.14lf\n",  j,z_expp.x,z_expp.y,K_expp[j].x,K_expp[j].y);
       printf("K_expm[%d](%+.14lf%+.14lf) = %+.14lf%+.14lf\n",  j,z_expm.x,z_expm.y,K_expm[j].x,K_expm[j].y);
@@ -452,7 +452,7 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
       M_trig[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G,DM);
       if (bin>0){
         #ifdef DEBUG
-        if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) )
+        if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
         {
           ${ctype} aja = M_expp[bin][j]-M_expp[bin-1][j];
           ${ctype} eje = M_expm[bin][j]-M_expm[bin-1][j];
@@ -503,7 +503,7 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
         int_trig     = cadd( int_trig, int_trig_aux );
 
         #ifdef DEBUG
-        if (DEBUG > 3 && ( threadIdx.x + blockDim.x * blockIdx.x == DEBUG_EVT) )
+        if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
         {
           //printf("bin=%d int_expm_aux[%d,%d] = %+.14lf%+.14lf\n",  bin,j,k,int_expm_aux.x,int_expm_aux.y);
           printf("bin=%d int_expm[%d,%d] = %+.14lf%+.14lf\n",  bin,j,k,int_expm.x,int_expm.y);
