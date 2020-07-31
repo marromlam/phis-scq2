@@ -20,7 +20,7 @@ import hjson
 import pandas
 
 from ipanema import initialize
-initialize('cuda',1)
+initialize('opencl',2)
 from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
@@ -242,12 +242,14 @@ def fcn_data(parameters, data):
       chi2.append( -2.0 * (ristra.log(dt.output) * dt.weight).get() );
   return np.concatenate(chi2)
 
+################################################################################
+#%% Run and get the job done ###################################################
 
+print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
 result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
-         verbose=False, tol=0.5, strategy=1)
+         verbose=False, timeit=True, tol=0.5, strategy=1)
 
 print(result)
-
 
 for p in ['DGsd', 'DGs', 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DM', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6']:
   if args['year'] == '2015,2016':

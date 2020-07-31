@@ -194,7 +194,7 @@ void integralSimple(${ftype} result[2],
   #ifdef DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
-    printf("INTEGRAL           : ta=%.8lf\ttb=%.8lf\ttc=%.8lf\ttd=%.8lf\n",
+    printf("INTEGRAL           : ta=%.8f\ttb=%.8f\ttc=%.8f\ttd=%.8f\n",
            ita,itb,itc,itd );
   }
   #endif

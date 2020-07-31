@@ -26,7 +26,7 @@ unsigned int getTimeBin(${ftype} const t)
     if( t < KNOTS[_i] ) {break;}
     _i++;
   }
-  if (0 == _i) {printf("WARNING: t=%.16lf below first knot!\n",t);}
+  if (0 == _i) {printf("WARNING: t=%.16f below first knot!\n",t);}
   return _i - 1;
 
 }
@@ -42,7 +42,7 @@ unsigned int getMassBin(${ftype} const t)
     if( t < X_M[_i] ) {break;}
     _i++;
   }
-  if (0 == _i) {printf("WARNING: t=%.16lf below first knot!\n",t);}
+  if (0 == _i) {printf("WARNING: t=%.16f below first knot!\n",t);}
   return _i - 1;
 }
 
@@ -81,7 +81,7 @@ ${ftype} calcTimeAcceptance(${ftype} t, GLOBAL_MEM ${ftype} *coeffs, ${ftype} tL
   #ifdef DEBUG
   if (DEBUG >= 3 && ( get_global_id(0) == DEBUG_EVT))
   {
-    printf("\nTIME ACC           : t=%.16lf\tbin=%d\tc=[%+lf\t%+lf\t%+lf\t%+lf]\tdta=%+.16lf\n",
+    printf("\nTIME ACC           : t=%.16f\tbin=%d\tc=[%+f\t%+f\t%+f\t%+f]\tdta=%+.16f\n",
            t,bin,c0,c1,c2,c3, (c0 + t*(c1 + t*(c2 + t*c3))) );
   }
   #endif
@@ -130,8 +130,8 @@ ${ctype} cErrF_2(${ctype} x)
   ${ctype} z = cmul(I,x);
   ${ctype} result = cmul( cexp(  cmul(cnew(-1,0),cmul(x,x))   ) , faddeeva(z) );
 
-  //printf("z = %+.16lf %+.16lfi\n", z.x, z.y);
-  //printf("fad = %+.16lf %+.16lfi\n", faddeeva(z).x, faddeeva(z).y);
+  //printf("z = %+.16f %+.16fi\n", z.x, z.y);
+  //printf("fad = %+.16f %+.16fi\n", faddeeva(z).x, faddeeva(z).y);
 
   if (x.x > 20.0){// && fabs(x.y < 20.0)
     result = cnew(0.0,0);
@@ -238,11 +238,11 @@ ${ctype} expconv(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
     fad = faddeeva(z);
 /*
  if ( (t>0.3006790) && (t<0.3006792) ){
-           printf("z   = %+.16lf%+.16lf\n",z.x,z.y );
-           printf("fad = %+.16lf%+.16lf\n",fad.x,fad.y );
-           //printf("shit = %+.16lf%+.16lf\n",shit.x,shit.y );
+           printf("z   = %+.16f%+.16f\n",z.x,z.y );
+           printf("fad = %+.16f%+.16f\n",fad.x,fad.y );
+           //printf("shit = %+.16f%+.16f\n",shit.x,shit.y );
            double2 res = cnew(0.5*exp(-0.5*t*t/sigma2),0.0);
-           printf("res   = %+.16lf\n",res.x,res.y );
+           printf("res   = %+.16f\n",res.x,res.y );
      }
  */
     return cmul( cnew(fad.x,-fad.y), cnew(0.5*exp(-0.5*t*t/sigma2),0) );
@@ -319,11 +319,11 @@ ${ctype} getM(${ftype} x, int n, ${ftype} t, ${ftype} sigma, ${ftype} gamma, ${f
 
   // #ifdef DEBUG
   // if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) ){
-  //   printf("\nerfc*exp = %+.16lf %+.16lfi\n",  conv_term.x, conv_term.y);
-  //   printf("erfc = %+.16lf %+.16lfi\n",  ipanema_erfc(arg2).x, ipanema_erfc(arg2).y );
-  //   printf("cErrF_2 = %+.16lf %+.16lfi\n",  cErrF_2(arg2).x, cErrF_2(arg2).y );
-  //   printf("exp  = %+.16lf %+.16lfi\n",  cexp(arg1).x, cexp(arg1).y );
-  //   printf("z    = %+.16lf %+.16lfi     %+.16lf %+.16lf %+.16lf        x = %+.16lf\n",  z.x, z.y, gamma, omega, sigma, x);
+  //   printf("\nerfc*exp = %+.16f %+.16fi\n",  conv_term.x, conv_term.y);
+  //   printf("erfc = %+.16f %+.16fi\n",  ipanema_erfc(arg2).x, ipanema_erfc(arg2).y );
+  //   printf("cErrF_2 = %+.16f %+.16fi\n",  cErrF_2(arg2).x, cErrF_2(arg2).y );
+  //   printf("exp  = %+.16f %+.16fi\n",  cexp(arg1).x, cexp(arg1).y );
+  //   printf("z    = %+.16f %+.16fi     %+.16f %+.16f %+.16f        x = %+.16f\n",  z.x, z.y, gamma, omega, sigma, x);
   // }
   // #endif
 
@@ -435,9 +435,9 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
     #ifdef DEBUG
     if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
     {
-      printf("K_expp[%d](%+.14lf%+.14lf) = %+.14lf%+.14lf\n",  j,z_expp.x,z_expp.y,K_expp[j].x,K_expp[j].y);
-      printf("K_expm[%d](%+.14lf%+.14lf) = %+.14lf%+.14lf\n",  j,z_expm.x,z_expm.y,K_expm[j].x,K_expm[j].y);
-      printf("K_trig[%d](%+.14lf%+.14lf) = %+.14lf%+.14lf\n\n",j,z_trig.x,z_trig.y,K_trig[j].x,K_trig[j].y);
+      printf("K_expp[%d](%+.14f%+.14f) = %+.14f%+.14f\n",  j,z_expp.x,z_expp.y,K_expp[j].x,K_expp[j].y);
+      printf("K_expm[%d](%+.14f%+.14f) = %+.14f%+.14f\n",  j,z_expm.x,z_expm.y,K_expm[j].x,K_expm[j].y);
+      printf("K_trig[%d](%+.14f%+.14f) = %+.14f%+.14f\n\n",j,z_trig.x,z_trig.y,K_trig[j].x,K_trig[j].y);
     }
     #endif
   }
@@ -457,9 +457,9 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
           ${ctype} aja = M_expp[bin][j]-M_expp[bin-1][j];
           ${ctype} eje = M_expm[bin][j]-M_expm[bin-1][j];
           ${ctype} iji = M_trig[bin][j]-M_trig[bin-1][j];
-          printf("bin=%d M_expp[%d] = %+.14lf%+.14lf\n",  bin,j,aja.x,aja.y);
-          printf("bin=%d M_expm[%d] = %+.14lf%+.14lf\n",  bin,j,eje.x,eje.y);
-          printf("bin=%d M_trig[%d] = %+.14lf%+.14lf\n\n",bin,j,iji.x,iji.y);
+          printf("bin=%d M_expp[%d] = %+.14f%+.14f\n",  bin,j,aja.x,aja.y);
+          printf("bin=%d M_expm[%d] = %+.14f%+.14f\n",  bin,j,eje.x,eje.y);
+          printf("bin=%d M_trig[%d] = %+.14f%+.14f\n\n",bin,j,iji.x,iji.y);
         }
         #endif
       }
@@ -505,8 +505,8 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
         #ifdef DEBUG
         if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
         {
-          //printf("bin=%d int_expm_aux[%d,%d] = %+.14lf%+.14lf\n",  bin,j,k,int_expm_aux.x,int_expm_aux.y);
-          printf("bin=%d int_expm[%d,%d] = %+.14lf%+.14lf\n",  bin,j,k,int_expm.x,int_expm.y);
+          //printf("bin=%d int_expm_aux[%d,%d] = %+.14f%+.14f\n",  bin,j,k,int_expm_aux.x,int_expm_aux.y);
+          printf("bin=%d int_expm[%d,%d] = %+.14f%+.14f\n",  bin,j,k,int_expm.x,int_expm.y);
         }
         #endif
       }
@@ -522,9 +522,9 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
   #ifdef DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
-    printf("\nNORMALIZATION      : ta=%.16lf\ttb=%.16lf\ttc=%.16lf\ttd=%.16lf\n",
+    printf("\nNORMALIZATION      : ta=%.16f\ttb=%.16f\ttc=%.16f\ttd=%.16f\n",
            time_terms[0],time_terms[1],time_terms[2],time_terms[3]);
-    printf("                   : sigma=%.16lf\tgamma+=%.16lf\tgamma-=%.16lf\n",
+    printf("                   : sigma=%.16f\tgamma+=%.16f\tgamma-=%.16f\n",
            delta_t, G+0.5*DG, G-0.5*DG);
   }
   #endif
@@ -557,7 +557,7 @@ void integralFullSpline( ${ftype} result[2],
   #ifdef DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
-    printf("                   : t_offset=%+.16lf  delta_t=%+.16lf\n", t_offset, delta_t);
+    printf("                   : t_offset=%+.16f  delta_t=%+.16f\n", t_offset, delta_t);
   }
   #endif
 }
@@ -586,24 +586,24 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
   fpdf *= calcTimeAcceptance(t, coeffs , tLL, tUL);
 
   // if ( get_global_id(0) == 0 ) {
-  // printf("COEFFS             : %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  // printf("COEFFS             : %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
   //         coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
-  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
   //         coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
-  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
   //         coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
-  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
   //         coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
-  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
   //         coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
-  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
   //         coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
-  // printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
   //         coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
   // }
   // if ( get_global_id(0) < 3 )
   // {
-  //   printf("TIME ACC           : t=%.16lf, sigma=%.16lf, gamma=%.16lf, tLL=%.16lf, tUL=%.16lf,     fpdf=%.16lf\n",
+  //   printf("TIME ACC           : t=%.16f, sigma=%.16f, gamma=%.16f, tLL=%.16f, tUL=%.16f,     fpdf=%.16f\n",
   //          t, sigma, gamma, tLL, tUL, fpdf);
   // }
 
@@ -706,7 +706,7 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
 
   // if ( get_global_id(0) == 0)
   // {
-  //   printf("TIME ACC           : integral=%.14lf\n",
+  //   printf("TIME ACC           : integral=%.14f\n",
   //          ipdf);
   // }
   return fpdf/ipdf;
@@ -861,7 +861,7 @@ ${ftype} getTwoSplineTimeAcc(${ftype} t,
     ipdf += (term1f + term2f) - (term1i + term2i);
 
   }
-  //printf("%.16lf\n",ipdf);
+  //printf("%.16f\n",ipdf);
   return fpdf/ipdf;
 
 }

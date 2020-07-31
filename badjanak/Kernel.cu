@@ -198,7 +198,7 @@ void pycerfc(GLOBAL_MEM ${{ctype}} *z, GLOBAL_MEM ${{ctype}} *out)
 {{
    const SIZE_T idx = get_global_id(0);
    out[idx] = cerfc(z[idx]);
-   printf("erfc(%+.4lf%+.4lfi) = %+.4lf%+.4lfi\n",z[idx].x,z[idx].y,out[idx].x,out[idx].y);
+   printf("erfc(%+.4f%+.4fi) = %+.4f%+.4fi\n",z[idx].x,z[idx].y,out[idx].x,out[idx].y);
 }}
 
 KERNEL

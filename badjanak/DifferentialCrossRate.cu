@@ -163,7 +163,7 @@ void integralSpline( ${ftype} result[2],
       tE = KNOTS[bin+1] - t_offset;
     }
     // if ( get_global_id(0) == 0){
-    // printf("integral: bin %d (%lf,%lf)\n", bin ,tS, tE);
+    // printf("integral: bin %d (%f,%f)\n", bin ,tS, tE);
     // }
 
     ${ftype} c0 = getCoeff(coeffs,bin,0);
@@ -232,45 +232,45 @@ ${ftype} getDiffRate( ${ftype} *data,
     printf("*USE_TIMEOFFSET    : %d\n", USE_TIMEOFFSET);
     printf("*USE_TIMERES       : %d\n", USE_TIMERES);
     printf("*SET_TAGGING       : %d [0:perfect,1:real,2:true]\n", SET_TAGGING);
-    printf("G                  : %+.16lf\n", G);
-    printf("DG                 : %+.16lf\n", DG);
-    printf("DM                 : %+.16lf\n", DM);
-    printf("CSP                : %+.16lf\n", CSP);
-    printf("ASlon              : %+.16lf\n", ASlon);
-    printf("APlon              : %+.16lf\n", APlon);
-    printf("APpar              : %+.16lf\n", APpar);
-    printf("APper              : %+.16lf\n", APper);
-    printf("pSlon              : %+.16lf\n", pSlon);
-    printf("pPlon              : %+.16lf\n", pPlon);
-    printf("pPpar              : %+.16lf\n", pPpar);
-    printf("pPper              : %+.16lf\n", pPper);
-    printf("dSlon              : %+.16lf\n", dSlon);
-    printf("dPlon              : %+.16lf\n", dPlon);
-    printf("dPper              : %+.16lf\n", dPper);
-    printf("dPpar              : %+.16lf\n", dPpar);
-    printf("lSlon              : %+.16lf\n", lSlon);
-    printf("lPlon              : %+.16lf\n", lPlon);
-    printf("lPper              : %+.16lf\n", lPper);
-    printf("lPpar              : %+.16lf\n", lPpar);
-    printf("tLL                : %+.16lf\n", tLL);
-    printf("tUL                : %+.16lf\n", tUL);
-    printf("mu                 : %+.16lf\n", mu);
-    printf("sigma_offset       : %+.16lf\n", sigma_offset);
-    printf("sigma_slope        : %+.16lf\n", sigma_slope);
-    printf("sigma_curvature    : %+.16lf\n", sigma_curvature);
-    printf("COEFFS             : %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+    printf("G                  : %+.16f\n", G);
+    printf("DG                 : %+.16f\n", DG);
+    printf("DM                 : %+.16f\n", DM);
+    printf("CSP                : %+.16f\n", CSP);
+    printf("ASlon              : %+.16f\n", ASlon);
+    printf("APlon              : %+.16f\n", APlon);
+    printf("APpar              : %+.16f\n", APpar);
+    printf("APper              : %+.16f\n", APper);
+    printf("pSlon              : %+.16f\n", pSlon);
+    printf("pPlon              : %+.16f\n", pPlon);
+    printf("pPpar              : %+.16f\n", pPpar);
+    printf("pPper              : %+.16f\n", pPper);
+    printf("dSlon              : %+.16f\n", dSlon);
+    printf("dPlon              : %+.16f\n", dPlon);
+    printf("dPper              : %+.16f\n", dPper);
+    printf("dPpar              : %+.16f\n", dPpar);
+    printf("lSlon              : %+.16f\n", lSlon);
+    printf("lPlon              : %+.16f\n", lPlon);
+    printf("lPper              : %+.16f\n", lPper);
+    printf("lPpar              : %+.16f\n", lPpar);
+    printf("tLL                : %+.16f\n", tLL);
+    printf("tUL                : %+.16f\n", tUL);
+    printf("mu                 : %+.16f\n", mu);
+    printf("sigma_offset       : %+.16f\n", sigma_offset);
+    printf("sigma_slope        : %+.16f\n", sigma_slope);
+    printf("sigma_curvature    : %+.16f\n", sigma_curvature);
+    printf("COEFFS             : %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
-    printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
-    printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
-    printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
-    printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
-    printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
-    printf("                     %+.16lf\t%+.16lf\t%+.16lf\t%+.16lf\n",
+    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
   }
   #endif
@@ -295,7 +295,7 @@ ${ftype} getDiffRate( ${ftype} *data,
   #if DEBUG
   if ( DEBUG > 99 && ( (time>=tUL) || (time<=tLL) ) )
   {
-    printf("WARNING            : Event with time not within [%.4lf,%.4lf].\n",
+    printf("WARNING            : Event with time not within [%.4f,%.4f].\n",
            tLL, tUL);
   }
   #endif
@@ -303,9 +303,9 @@ ${ftype} getDiffRate( ${ftype} *data,
   #if DEBUG
   if (DEBUG >= 1 && get_global_id(0) == DEBUG_EVT )
   {
-    printf("\nINPUT              : cosK=%+.8lf  cosL=%+.8lf  hphi=%+.8lf  time=%+.8lf\n",
+    printf("\nINPUT              : cosK=%+.8f  cosL=%+.8f  hphi=%+.8f  time=%+.8f\n",
            cosK,cosL,hphi,time);
-    printf("                   : sigma_t=%+.8lf  qOS=%+.8lf  qSS=%+.8lf  etaOS=%+.8lf  etaSS=%+.8lf\n",
+    printf("                   : sigma_t=%+.8f  qOS=%+.8f  qSS=%+.8f  etaOS=%+.8f  etaSS=%+.8f\n",
            sigma_t,qOS,qSS,etaOS,etaSS);
   }
   #endif
@@ -348,7 +348,7 @@ ${ftype} getDiffRate( ${ftype} *data,
     exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
     exp_i = expconv(time-t_offset,          G, DM, delta_t);
   }
-  //printf("                   : exp_p=%+.8lf%+.8lfi   exp_m=%+.8lf%+.8lfi   exp_i=%+.8lf%+.8lfi\n", exp_p.x, exp_p.y, exp_m.x, exp_m.y, exp_i.x, exp_i.y);
+  //printf("                   : exp_p=%+.8f%+.8fi   exp_m=%+.8f%+.8fi   exp_i=%+.8f%+.8fi\n", exp_p.x, exp_p.y, exp_m.x, exp_m.y, exp_i.x, exp_i.y);
 
   // ${ftype} ta = pycuda::real(0.5*(exp_m + exp_p));     // cosh = (exp_m + exp_p)/2
   // ${ftype} tb = pycuda::real(0.5*(exp_m - exp_p));     // sinh = (exp_m - exp_p)/2
@@ -494,7 +494,7 @@ ${ftype} getDiffRate( ${ftype} *data,
     printf("\nANGULAR PART       :  n            a            b            c            d            f            ang_acc\n");
     for(int k = 0; k < 10; k++)
     {
-      printf("               (%d) : %+.16lf  %+.16lf  %+.16lf  %+.16lf  %+.16lf  %+.16lf  %+.16lf\n",
+      printf("               (%d) : %+.16f  %+.16f  %+.16f  %+.16f  %+.16f  %+.16f  %+.16f\n",
              k,vnk[k], vak[k], vbk[k], vck[k], vdk[k], vfk[k], angular_weights[k]);
     }
   }
@@ -534,7 +534,7 @@ ${ftype} getDiffRate( ${ftype} *data,
     // {
     //   if ( get_global_id(0) == DEBUG_EVT){
     // {
-    //   printf("simon_j = %+d = round(%+.8lf)\n", simon_j, sigma_t/(SIGMA_T/80) );
+    //   printf("simon_j = %+d = round(%+.8f)\n", simon_j, sigma_t/(SIGMA_T/80) );
     // }
       integralFullSpline(intBBar,
                        vnk, vak, vbk, vck, vdk,
@@ -565,13 +565,13 @@ ${ftype} getDiffRate( ${ftype} *data,
   #if DEBUG
   if ( DEBUG >= 1  && get_global_id(0) == DEBUG_EVT)
   {
-    printf("\nRESULT             : <  pdf/ipdf = %+.16lf  >\n",
+    printf("\nRESULT             : <  pdf/ipdf = %+.16f  >\n",
            num/den);
     if ( DEBUG >= 2 )
     {
-     printf("                   : pdf=%+.16lf  ipdf=%+.16lf\n",
+     printf("                   : pdf=%+.16f  ipdf=%+.16f\n",
             num,den);
-     printf("                   : pdfB=%+.16lf  pdBbar=%+.16lf  ipdfB=%+.16lf  ipdfBbar=%+.16lf\n",
+     printf("                   : pdfB=%+.16f  pdBbar=%+.16f  ipdfB=%+.16f  ipdfBbar=%+.16f\n",
             pdfB,pdfBbar,intB,intBbar);
     }
   }
