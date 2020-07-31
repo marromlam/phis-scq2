@@ -48,7 +48,7 @@ global config
 config = dict(
 debug =           0, # no prints
 debug_evt =       0, # number of events to debug
-fast_integral  = 1, # 
+fast_integral  = 1, #
 sigma_t =         0.15,
 knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
 x_m =             [990, 1008, 1016, 1020, 1024, 1032, 1050],
@@ -389,6 +389,62 @@ def cross_rate_parser_new(
 
   return r
 
+################################################################################
+# wrappers arround delta_gamma5 ################################################
+
+def delta_gamma5_data(input, output, **pars):
+  """
+  delta_gamma5_data(input, output, **pars)
+  This function is intended to be used with RD input arrays. It does use
+  time acceptance and angular acceptance. The tagging and resolution will use
+  calibration parameters.
+
+    this functions is a wrap around badjanak.delta_gamma5
+
+  In:
+  0.123456789:
+        input:  Input data with proper shape
+                ipanema.ristra
+       output:  Output array with proper shape to store pdf values
+                ipanema.ristra
+         pars:  Dictionary with parameters
+                dict
+  Out:
+         void
+  """
+  p = badjanak.cross_rate_parser_new(**pars)
+  badjanak.delta_gamma5( input, output,
+                         use_fk=1, use_angacc = 1, use_timeacc = 1,
+                         use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
+                         BLOCK_SIZE=256, **p)
+
+
+
+def delta_gamma5_mc(input, output, **pars):
+  """
+  delta_gamma5_mc(input, output, **pars)
+  This function is intended to be used with MC input arrays. It doesn't use
+  time acceptance nor angular acceptance. The tagging is set to perfect tagging
+  and the time resolution is disabled.
+
+    this functions is a wrap around badjanak.delta_gamma5
+
+  In:
+  0.123456789:
+        input:  Input data with proper shape
+                ipanema.ristra
+       output:  Output array with proper shape to store pdf values
+                ipanema.ristra
+         pars:  Dictionary with parameters
+                dict
+  Out:
+         void
+  """
+  p = badjanak.cross_rate_parser_new(**pars)
+  badjanak.delta_gamma5( input, output,
+                         use_fk=1, use_angacc = 0, use_timeacc = 0,
+                         use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
+                         BLOCK_SIZE=256, **p)
 
 
 
@@ -397,6 +453,7 @@ def cross_rate_parser_new(
 
 
 
+################################################################################
 
 
 
