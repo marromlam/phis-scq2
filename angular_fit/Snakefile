@@ -31,20 +31,104 @@ rule parse_fulljson:
   run:
     from bundle.parse_full_json import parse_fulljson
     # parse
-    tb, tu, ab, au, r, f, c = parse_fulljson(f"{input}")
+    tb, tu, ab, au, res, flavor, csp = parse_fulljson(f"{input}")
     # dump
     tb.dump(f"{output.timeacc_biased}")
     tu.dump(f"{output.timeacc_unbiased}")
     ab.dump(f"{output.angacc_biased}")
     au.dump(f"{output.angacc_unbiased}")
-    r.dump(f"{output.resolution}")
-    f.dump(f"{output.flavor}")
-    c.dump(f"{output.csp_factors}")
+    res.dump(f"{output.resolution}")
+    flavor.dump(f"{output.flavor}")
+    csp.dump(f"{output.csp_factors}")
 
 # -----------------------------------------------------
 # -----------------------------------------------------
 # -----------------------------------------------------
 # -----------------------------------------------------
+
+
+
+
+# Run2 physics_params ----------------------------------------------------------
+#     This rule runs the iterative procedure for FullRun2 years using RD.
+# WARNING: needs to be BLINDED!
+rule physics_params:
+  input:
+    samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
+    # Angular acceptance
+    angacc_biased = [
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{aflag}_biased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{aflag}_biased.json',
+      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{aflag}_biased.json',
+      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{aflag}_biased.json'
+    ],
+    angacc_unbiased = [
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{aflag}_unbiased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{aflag}_unbiased.json',
+      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{aflag}_unbiased.json',
+      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{aflag}_unbiased.json'
+    ],
+    # Time acceptance coefficients
+    timeacc_biased = [
+      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{tflag}_biased.json',
+      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{tflag}_biased.json',
+      'output/params/time_acceptance/2017/Bd2JpsiKstar/{version}_{tflag}_biased.json',
+      'output/params/time_acceptance/2018/Bd2JpsiKstar/{version}_{tflag}_biased.json'
+    ],
+    timeacc_unbiased = [
+      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{tflag}_unbiased.json',
+      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{tflag}_unbiased.json',
+      'output/params/time_acceptance/2017/Bd2JpsiKstar/{version}_{tflag}_unbiased.json',
+      'output/params/time_acceptance/2018/Bd2JpsiKstar/{version}_{tflag}_unbiased.json'
+    ],
+    # CSP
+    csp_factors = [
+      'output/params/csp_factors/2015/Bs2JpsiPhi/{version}.json',
+      'output/params/csp_factors/2016/Bs2JpsiPhi/{version}.json',
+      'output/params/csp_factors/2017/Bs2JpsiPhi/{version}.json',
+      'output/params/csp_factors/2018/Bs2JpsiPhi/{version}.json'
+    ],
+    # Time resolution
+    time_resolution = [
+      'output/params/time_resolution/2015/Bs2JpsiPhi/{version}.json',
+      'output/params/time_resolution/2016/Bs2JpsiPhi/{version}.json',
+      'output/params/time_resolution/2017/Bs2JpsiPhi/{version}.json',
+      'output/params/time_resolution/2018/Bs2JpsiPhi/{version}.json'
+    ],
+    # Flavor tagging
+    flavor = [
+      'output/params/flavor_tagging/2015/Bs2JpsiPhi/{version}.json',
+      'output/params/flavor_tagging/2016/Bs2JpsiPhi/{version}.json',
+      'output/params/flavor_tagging/2017/Bs2JpsiPhi/{version}.json',
+      'output/params/flavor_tagging/2018/Bs2JpsiPhi/{version}.json'
+    ],
+  output:
+    params = 'output/params/angular_fit/Run2/Bs2JpsiPhi/{version}_{aflag}_{tflag}.json',
+    tables = 'output/tables/angular_fit/Run2/Bs2JpsiPhi/{version}_{aflag}_{tflag}.tex'
+  log:
+    'output/log/angular_acceptance/physics_params_Run2/Run2/Bs2JpsiPhi/{version}_{aflag}_{tflag}.log'
+  run:
+    print("THIS RULE SHOULD BE USED ONLY WHEN BLINDING WORKS")
+    # shell(f"""(time\
+    # python angular_fit/fit_test_data.py\
+    #        --samples                 {",".join(input.samples)}\
+    #        --angacc-biased           {",".join(input.angacc_biased)}\
+    #        --angacc-unbiased         {",".join(input.angacc_unbiased)}\
+    #        --timeacc-biased          {",".join(input.timeacc_biased)}\
+    #        --timeacc-unbiased        {",".join(input.timeacc_unbiased)}\
+    #        --csp                     {",".join(input.csp_factors)}\
+    #        --time-resolution         {",".join(input.time_resolution)}\
+    #        --flavor-tagging          {",".join(input.flavor)}\
+    #        --params                  {output.params}\
+    #        --tables                  {output.tables}\
+    #        --year                    {",".join(yd['Run2'])}\
+    #        --version                 {wildcards.version}\
+    # ) #&> {log} #2>&1""")
+    # send_mail(f"Run2 Fit", f"{log}")
+
+
+
+
 
 
 
@@ -89,7 +173,8 @@ rule physics_params_Run2aRepo:
       'output/params/flavor_tagging/2016/Bs2JpsiPhi/{version}.json'
     ],
   output:
-    params = 'output/params/angular_fit/Run2a/Bs2JpsiPhi/{version}_Run2aRepo.json'
+    params = 'output/params/angular_fit/Run2a/Bs2JpsiPhi/{version}_Run2aRepo.json',
+    tables = 'output/tables/angular_fit/Run2a/Bs2JpsiPhi/{version}_Run2aRepo.tex'
   log:
     'output/log/angular_acceptance/physics_params_Run2a/Run2aRepo/Bs2JpsiPhi/{version}.log'
   run:
@@ -104,10 +189,20 @@ rule physics_params_Run2aRepo:
            --time-resolution         {",".join(input.time_resolution)}\
            --flavor-tagging         {",".join(input.flavor)}\
            --params                  {output.params}\
+           --tables                  {output.tables}\
            --year                    {",".join(yd['Run2a'])}\
            --version                 {wildcards.version}\
-    ) &> {log} #2>&1""")
+    ) #&> {log} #2>&1""")
     send_mail(f"Run2aRepo Fit", f"{log}")
+
+
+
+
+
+
+
+
+
 
 
 
@@ -165,7 +260,7 @@ rule physics_params_Run2a:
            --timeacc-unbiased        {",".join(input.timeacc_unbiased)}\
            --csp                     {",".join(input.csp_factors)}\
            --time-resolution         {",".join(input.time_resolution)}\
-           --flavor-tagging         {",".join(input.flavor)}\
+           --flavor-tagging          {",".join(input.flavor)}\
            --params                  {output.params}\
            --year                    {",".join(yd['Run2a'])}\
            --version                 {wildcards.version}\
