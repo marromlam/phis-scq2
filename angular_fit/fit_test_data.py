@@ -20,7 +20,7 @@ import hjson
 import pandas
 
 from ipanema import initialize
-initialize('opencl',2)
+initialize('cuda',1)
 from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
@@ -175,10 +175,10 @@ Parameter(name='fSlon6', value=SWAVE*0.0009765623447890**2, min=SWAVE*0.00, max=
 Parameter(name="fPlon", value=0.5241, min=0.4, max=0.6, latex=r'f_0'),
 Parameter(name="fPper", value=0.25, min=0.1, max=0.3, latex=r'f_{\perp}'),
 # Weak phases
-Parameter(name="pSlon", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisSDelFullRun2",    blindengine="python", latex=r"\phi_S - \phi_0"),
-Parameter(name="pPlon", value=-0.03, min=-0.5, max=0.5, free=True , blind="BsPhiszeroFullRun2",    blindengine="python", latex=r"\phi_0" ),
-Parameter(name="pPpar", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisparaDelFullRun2", blindengine="python", latex=r"\phi_{\parallel} - \phi_0"),
-Parameter(name="pPper", value= 0.00, min=-0.5, max=0.5, free=False, blind="BsPhisperpDelFullRun2", blindengine="python", latex=r"\phi_{\perp} - \phi_0"),
+Parameter(name="pSlon", value= 0.00, min=-1.0, max=1.0, free=False, blind="BsPhisSDelFullRun2",    blindscale=1.0, blindengine="root", latex=r"\phi_S - \phi_0"),
+Parameter(name="pPlon", value=-0.03, min=-1.0, max=1.0, free=True , blind="BsPhiszeroFullRun2",    blindscale=1.0, blindengine="root", latex=r"\phi_0" ),
+Parameter(name="pPpar", value= 0.00, min=-1.0, max=1.0, free=False, blind="BsPhisparaDelFullRun2", blindscale=1.0, blindengine="root", latex=r"\phi_{\parallel} - \phi_0"),
+Parameter(name="pPper", value= 0.00, min=-1.0, max=1.0, free=False, blind="BsPhisperpDelFullRun2", blindscale=1.0, blindengine="root", latex=r"\phi_{\perp} - \phi_0"),
 # S wave strong phases
 Parameter(name='dSlon1', value=+np.pi/4*SWAVE, min=-0.0,   max=+3.0,   free=SWAVE),
 Parameter(name='dSlon2', value=+np.pi/4*SWAVE, min=-0.0,   max=+3.0,   free=SWAVE),
@@ -197,7 +197,7 @@ Parameter(name="lPpar", value=1., min=0.7, max=1.6, free=False, latex="\lambda_{
 Parameter(name="lPper", value=1., min=0.7, max=1.6, free=False, latex="\lambda_{\perp}/\lambda_0"),
 # life parameters
 Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0, free=False, latex=r"\Gamma_d"),
-Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 0.7, free=1-DGZERO, blind="BsDGsFullRun2", blindengine="python", latex=r"\Delta\Gamma_s"),
+Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 0.7, free=1-DGZERO, blind="BsDGsFullRun2", blindengine="root", latex=r"\Delta\Gamma_s"),
 Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1, latex=r"\Gamma_s - \Gamma_d"),
 Parameter(name="DM", value=17.757,   min=15.0, max=20.0, latex=r"\Delta m"),
 #
@@ -207,6 +207,7 @@ print(pars)
 
 
 # compile the kernel
+#    so if knots change when importing parameters, the kernel is compiled
 badjanak.get_kernels(True)
 
 
@@ -247,7 +248,7 @@ def fcn_data(parameters, data):
 
 print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
 result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
-         verbose=False, timeit=True, tol=0.5, strategy=1)
+                  verbose=False, timeit=True, tol=0.5, strategy=1)
 
 print(result)
 
