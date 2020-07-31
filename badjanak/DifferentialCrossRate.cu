@@ -459,7 +459,9 @@ ${ftype} getDiffRate( ${ftype} *data,
     ck = getC(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
     dk = getD(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
 
-    if (fabs(qOS) == 511) // Bd pdf
+    // WARNING: now I know if is Bs or Bd with DM, but I should change it asap (its clearly misleading)
+    //if (fabs(qOS) == 511) // Bd pdf
+    if (DM != 0) // Bd pdf
     {
       hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);
       hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
