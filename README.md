@@ -18,6 +18,7 @@ using some accelerator, this is the right time to make sure
 you have the `PATH` and `LD_LIBRATY_PATH`. Then create the enviroment running:
 ```
 conda  create --name phisscq
+conda activate phisscq
 conda install pip
 conda install -c conda-forge pocl
 conda install -c conda-forge pyopencl
@@ -58,7 +59,7 @@ function set_phis_scq {
   conda activate ipanema3
   export PATH="${PATH//:\/cvmfs\/sft.cern.ch\/lcg\/releases\/gcc\/8.3.0-cebb0\/x86_64-slc6\/bin:/:}"
   export PATH="/usr/local/cuda-10.2/bin:${PATH}"
-  export LD_LIBRARY_PATH="/usr/local/cuda-10.2/lib64:${``}"
+  export LD_LIBRARY_PATH="/usr/local/cuda-10.2/lib64:${LD_LIBRARY_PATH}"
   export PHIS_SCQ="/home3/marcos.romero/phis-scq/"
   export IPANEMA_BACKEND="cuda"
   export PYOPENCL_COMPILER_OUTPUT=1
