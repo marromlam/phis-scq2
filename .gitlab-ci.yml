@@ -26,7 +26,7 @@ before_script:
   - conda activate phisscq
   - conda config --add channels conda-forge
   - conda install pip pocl pyopencl ROOT
-  - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.cern.ch:7999/mromerol/ipanema3.git ipanema3/
+  - git clone ssh://git@gitlab.cern.ch:7999/mromerol/ipanema3.git ipanema3/
   - pip install -e ipanema3/
   - pip install snakemake hep_ml py-cpuinfo
 test:
