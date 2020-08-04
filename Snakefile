@@ -7,25 +7,16 @@
 import hjson
 config = hjson.load(open('config.json'))
 
-<<<<<<< HEAD
-
-=======
->>>>>>> binned-acceptances
 # Main constants ---------------------------------------------------------------
 #    VERSION: is the version Bs2JpsiPhi-FullRun2 pipeline was run against, and
 #             should be matched with this constant.
 #    MAIN_PATH: the path where all eos-samples will be synced, make sure there
 #               is enough free space there
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
-<<<<<<< HEAD
-MAIN_PATH = '/scratch17/marcos.romero/phis_samples/'
-SAMPLES_PATH = config['path']
-MAILS = config['mails']
-=======
 
 SAMPLES_PATH = config['path']
 MAILS = config['mail']
->>>>>>> binned-acceptances
+
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
 def send_mail(subject, fp):
