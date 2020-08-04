@@ -4,7 +4,61 @@ bla bla
 
 
 # Fist steps
+
 ## Set environment
+phis-scq relyes on basic python libraries and ipanema3 (it is not in pypy yet),
+and so requires to have a properly working environmente to run. One can run
+this package on both __linux__ and __macos__ against cpu or gpu, 
+but if you have a nVidia device it may worth it to install cuda binaries and 
+libraries and hence speeding up the execution.
+
+The instructions were wrapped under a bash script, so basically you clone this
+repository and then
+```
+cd phis-scq
+bash utils/install.sh
+```
+which will guide the installation by prompting some questions.
+
+After the bash script finishes, you simply need to activate your environment.
+The installer will ask you whether you want to write in you bash profile 
+an `activatephisscq` function too. 
+Finally, under config.json, you should write a proper path under 
+the homonym key.
+
+That's it! 🎉
+
+
+# 🐍 The pipeline 
+
+All the pipeline can be run with `snakemake`
+bla bla bla
+
+a good example to run is 
+
+```
+snakemake output/params/angular_fit/Run2a/Bs2JpsiPhi/v0r5_Run2aRepo.json -j
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Old Set environment
 
 phis-scq relyes on basic python libraries and ipanema3 (it is not in pypy yet),
 and so requires to have a properly working environmente to run.
