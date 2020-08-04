@@ -20,7 +20,7 @@ import hjson
 import pandas
 
 from ipanema import initialize
-initialize('cuda',1)
+initialize(os.environ['IPANEMA_BACKEND'],1)
 from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
