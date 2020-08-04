@@ -1,0 +1,15 @@
+{
+  "paths":"/scratch17/marcos.romero/phis_samples/",
+  "mails": [],
+  "binned_variables": ["B_PT", "sigmat", "B_ETA"],
+  "binned_variables_cuts": {
+    "pt": ['(B_PT >= 0 & B_PT < 3.8e3)', '(B_PT >= 3.8e3 & B_PT < 6e3)', '(B_PT >= 6e3 & B_PT <= 9e3)', '(B_PT >= 9e3)'],
+    "eta": ['(B_ETA >= 0 & B_ETA <= 3.3)', '(B_ETA >= 3.3 & B_ETA <= 3.9)', '(B_ETA >= 3.9 & B_ETA <= 6)'],
+    "sigmat": ['(sigmat >= 0 & sigmat <= 0.031)', '(sigmat >= 0.031 & sigmat <= 0.042)', '(sigmat >= 0.042 & sigmat <= 0.15)']
+  },
+  "binned_variables_ranges": {
+    "B_PT": [0, 3.8e3, 6e3, 9e3, 40e3],
+    "B_ETA": [0, 3.3, 3.9, 6],
+    "sigmat": [0, 0.031, 0.042, 0.150]
+  }
+}
