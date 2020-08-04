@@ -192,7 +192,7 @@ rule physics_params_Run2aRepo:
            --tables                  {output.tables}\
            --year                    {",".join(yd['Run2a'])}\
            --version                 {wildcards.version}\
-    ) #&> {log} #2>&1""")
+    ) &> {log} #2>&1""")
     send_mail(f"Run2aRepo Fit", f"{log}")
 
 

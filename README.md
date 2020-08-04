@@ -18,6 +18,7 @@ using some accelerator, this is the right time to make sure
 you have the `PATH` and `LD_LIBRATY_PATH`. Then create the enviroment running:
 ```
 conda  create --name phisscq
+conda activate phisscq
 conda install pip
 conda install -c conda-forge pocl
 conda install -c conda-forge pyopencl
