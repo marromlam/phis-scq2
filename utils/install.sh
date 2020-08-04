@@ -152,6 +152,7 @@ echo "
           pour yourself a drink, this is going to take a while
 "
 
+cp utils/default.json config.json
 
 if [ ${hasconda}=1 ];then
   echo "      ! wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh"
