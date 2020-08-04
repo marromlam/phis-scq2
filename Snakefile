@@ -5,7 +5,7 @@
 # Contributors: Marcos Romero
 
 import hjson
-config = hjson.load(open('utils/default.json'))
+config = hjson.load(open('config.json'))
 
 # Main constants ---------------------------------------------------------------
 #    VERSION: is the version Bs2JpsiPhi-FullRun2 pipeline was run against, and
