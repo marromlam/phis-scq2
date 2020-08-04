@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD:utils/default.json
   "paths":"/scratch17/marcos.romero/phis_samples/",
   "mails": [],
+=======
+  "path": "/samples_path/",
+  "mail": [],
+>>>>>>> binned-acceptances:config.json
   "binned_variables": ["B_PT", "sigmat", "B_ETA"],
   "binned_variables_cuts": {
     "pt": ['(B_PT >= 0 & B_PT < 3.8e3)', '(B_PT >= 3.8e3 & B_PT < 6e3)', '(B_PT >= 6e3 & B_PT <= 9e3)', '(B_PT >= 9e3)'],
