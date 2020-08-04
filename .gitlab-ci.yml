@@ -18,6 +18,8 @@ cache:
     - .cache/pip
     - venv/
 
+
+
 before_script:
   - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p conda3/
@@ -29,15 +31,15 @@ before_script:
   - git clone https://gitlab.cern.ch/mromerol/ipanema3.git ipanema3/
   - pip install -e ipanema3/
   - pip install snakemake hep_ml py-cpuinfo
+
+
+
 test:
   script:
     - python -c "import ipanema"
 
 
+
 run:
   script:
-    - python examples/parameters_test.py
-    #- python examples/simple_fit_test.py
-    #- python examples/test_cuda.py
-    #- python examples/test_opencl.py
-    - python examples/fit_python_test.py
+    #- python examples/parameters_test.py
