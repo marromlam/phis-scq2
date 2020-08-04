@@ -40,6 +40,6 @@ test:
 
 
 
-run:
-  script:
-    #- python examples/parameters_test.py
+#run:
+#  script:
+#    #- python examples/parameters_test.py
