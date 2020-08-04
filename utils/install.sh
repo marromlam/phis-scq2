@@ -132,10 +132,10 @@ if [ "$q" != "${q#[Yy]}" ] ;then
   echo -n "      "; read bashpath
   bashpath=${bashpath:-$HOME/.bashrc}
 else
-  bashpath=0
+  bashpath="None"
 fi
 
-if [ "${bashpath}" -ne "0" ];then
+if [ "${bashpath}" != "None" ];then
   echo "$function_string" >> ${bashpath}
 fi
 
@@ -189,9 +189,14 @@ if [ ${hasconda}=1 ];then
 fi
 
 unset PYTHONPATH
-source $condapath/bin/activate
-conda create --name $myenv
-conda activate $myenv
+if [ "${cudapath}" != "None" ];then
+  export PATH="${cudapath}/bin:${PATH}"
+  export LD_LIBRARY_PATH="${cudapath}/lib64:${LD_LIBRARY_PATH}"
+fi
+
+source ${condapath}/bin/activate
+conda create --name ${myenv}
+conda activate ${myenv}
 rm miniconda.sh
 
 conda config --add channels conda-forge
@@ -202,8 +207,6 @@ pip install -e ${ipapath}/
 pip install snakemake hep_ml py-cpuinfo
 
 if [ "${cudapath}" != "None" ];then
-  export PATH='${cudapath}/bin:$PATH'
-  export LD_LIBRARY_PATH='${cudapath}/lib64:$LD_LIBRARY_PATH'
   pip install pycuda
 fi
 
