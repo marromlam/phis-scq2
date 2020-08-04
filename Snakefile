@@ -4,6 +4,10 @@
 #
 # Contributors: Marcos Romero
 
+import hjson
+config = hjson.load(open('config.json'))
+
+
 # Main constants ---------------------------------------------------------------
 #    VERSION: is the version Bs2JpsiPhi-FullRun2 pipeline was run against, and
 #             should be matched with this constant.
@@ -11,8 +15,8 @@
 #               is enough free space there
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
 MAIN_PATH = '/scratch17/marcos.romero/phis_samples/'
-SAMPLES_PATH = MAIN_PATH
-MAILS = ['mromerol@cern.ch']
+SAMPLES_PATH = config['path']
+MAILS = config['mails']
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
 def send_mail(subject, fp):
@@ -60,6 +64,7 @@ def tuples(wcs,version=False,year=None,mode=None,weight=None):
   #print(f'input: {v}-{m}\nmode={mode} year={year} weight={weight}')
 
   # Folder swicher
+  """
   if   v == 'v0r0':
     samples_path = '/scratch17/marcos.romero/phis_samples/'
   elif v == 'v0r1':
@@ -72,6 +77,7 @@ def tuples(wcs,version=False,year=None,mode=None,weight=None):
     samples_path = '/scratch17/marcos.romero/phis_samples/'
   elif v == 'v0r5':
     samples_path = '/scratch17/marcos.romero/phis_samples/'
+  """
   samples_path = SAMPLES_PATH
 
   # If version, this function only returns samples_path
