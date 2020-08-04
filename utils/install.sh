@@ -67,15 +67,15 @@ fi
 echo "
 [ 2 ] Conda environment creation -----------------------------------------------
       We are now going to create a new conda enviroment to work. You will be
-      prompted to provide a name for the environment and Aall needed 
+      prompted to provide a name for the environment and Aall needed
       packages will be installed automatically. First you need to write down
       some paths for ipanema3 package and the cuda path (if you have nVidia
-      device). 
+      device).
 "
 
 read -p "      Name for new enviroment [phisscq]: " myenv
 myenv=${myenv:-phisscq}
-echo "      Where do you want to place ipanema3 [$HOME/ipanema3/]?" 
+echo "      Where do you want to place ipanema3 [$HOME/ipanema3/]?"
 read -p "      " ipapath
 ipapath=${ipapath:-$HOME/ipanema3/}
 read -p "      Does your machine have a nVidia device (y/[n])? " hascuda
@@ -102,7 +102,7 @@ echo "
 "
 
 function_string="
-function activatephisscq() { 
+function activatephisscq() {
   source $condapath/bin/activate
   conda activate $myenv
   export PYOPENCL_COMPILER_OUTPUT=1
@@ -118,7 +118,7 @@ else
   cuda_string="
   export IPANEMA_BACKEND='opencl'
   }
-  " 
+  "
 fi
 
 function_string=$function_string$cuda_string
@@ -184,7 +184,11 @@ read -p "      [PRESS ENTER]" dummy
 #################################################################################
 
 if [ ${hasconda}=1 ];then
-  wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  if [ "$(uname)" == "Darwin" ]; then
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
+  elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  fi
   bash miniconda.sh -b -p ${condapath}
 fi
 
