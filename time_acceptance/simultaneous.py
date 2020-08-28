@@ -158,9 +158,9 @@ if __name__ == '__main__':
   # Initialize backend
   the_backend = os.environ['IPANEMA_BACKEND']
   try: # Odd years to gpu 1 and even ones to 2 (if there are 2 GPUs)
-    initialize(the_backend ,1 if YEAR in (2015,2017) else 2)
+    initialize(the_backend, 1 if YEAR in (2015,2017) else 2)
   except: # Only one GPU :'(
-    initialize(the_backend ,1)
+    initialize(the_backend, 1)
 
   #import bsjpsikk # old
   import badjanak as bsjpsikk # charming new
@@ -259,6 +259,8 @@ if __name__ == '__main__':
                       verbose=False);
 
   print(result)
+  #for k,v in result.params.items():
+  #  print(f"{k:>10} : {v.value:+.8f} +/- {(v.stdev if v.stdev else 0):+.8f}")
 
   # Writing results ------------------------------------------------------------
   print(f"\n{80*'='}\n", "Dumping parameters", f"\n{80*'='}\n")
