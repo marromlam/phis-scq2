@@ -36,6 +36,10 @@ shitty_thong/
 bsjpsikk_reikna/
 config.json
 
+bundle/tex/main_*
+bundle/tex/.fuse*
+shit_params.py
+
 # Logs and databases #
 ######################
 *.log
