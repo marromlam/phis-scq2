@@ -145,7 +145,7 @@ void pyDiffRate(GLOBAL_MEM ${{ftype}} *data, GLOBAL_MEM ${{ftype}} *lkhd,
                           data[evt*10+9]  // etaSS
                         }};
 
-  unsigned int bin = getMassBin(mass);
+  unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
   lkhd[evt] = getDiffRate(data4,
                           G, DG, DM, CSP[bin],
                           ASlon[bin], APlon[bin], APpar[bin], APper[bin],

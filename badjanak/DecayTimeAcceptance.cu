@@ -215,9 +215,6 @@ ${ctype} expconv_simon(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
 
 
 
-
-
-
 WITHIN_KERNEL
 ${ctype} expconv(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
 {
@@ -308,7 +305,8 @@ ${ctype} getM(${ftype} x, int n, ${ftype} t, ${ftype} sigma, ${ftype} gamma, ${f
   //conv_term = 5.0*expconv(t,gamma,omega,sigma);///(sqrt(0.5*M_PI));
   // warning there are improvement to do here!!!
   if (omega == 0){
-    conv_term = cmul( cexp(arg1), ipanema_erfc2(arg2) );
+    //conv_term = cmul( cexp(arg1), ipanema_erfc(arg2) );
+    conv_term = cmul( cexp(arg1), cErrF_2(arg2) );
   }
   else{
     conv_term = cmul( cexp(arg1), cErrF_2(arg2) );
@@ -317,15 +315,15 @@ ${ctype} getM(${ftype} x, int n, ${ftype} t, ${ftype} sigma, ${ftype} gamma, ${f
   }
   //conv_term = 2.0*expconv_simon(t,gamma,omega,sigma);///(sqrt(0.5*M_PI));
 
-  // #ifdef DEBUG
-  // if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) ){
-  //   printf("\nerfc*exp = %+.16f %+.16fi\n",  conv_term.x, conv_term.y);
-  //   printf("erfc = %+.16f %+.16fi\n",  ipanema_erfc(arg2).x, ipanema_erfc(arg2).y );
-  //   printf("cErrF_2 = %+.16f %+.16fi\n",  cErrF_2(arg2).x, cErrF_2(arg2).y );
-  //   printf("exp  = %+.16f %+.16fi\n",  cexp(arg1).x, cexp(arg1).y );
-  //   printf("z    = %+.16f %+.16fi     %+.16f %+.16f %+.16f        x = %+.16f\n",  z.x, z.y, gamma, omega, sigma, x);
-  // }
-  // #endif
+  #ifdef DEBUG
+  if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) ){
+    printf("\nerfc*exp = %+.16f %+.16fi\n",  conv_term.x, conv_term.y);
+    // printf("erfc = %+.16f %+.16fi\n",  ipanema_erfc(arg2).x, ipanema_erfc(arg2).y );
+    // printf("cErrF_2 = %+.16f %+.16fi\n",  cErrF_2(arg2).x, cErrF_2(arg2).y );
+    // printf("exp  = %+.16f %+.16fi\n",  cexp(arg1).x, cexp(arg1).y );
+    // printf("z    = %+.16f %+.16fi     %+.16f %+.16f %+.16f        x = %+.16f\n",  z.x, z.y, gamma, omega, sigma, x);
+  }
+  #endif
 
   if (n == 0)
   {
@@ -335,10 +333,12 @@ ${ctype} getM(${ftype} x, int n, ${ftype} t, ${ftype} sigma, ${ftype} gamma, ${f
   }
   else if (n == 1)
   {
-    ${ctype} a = cnew(sqrt(1./M_PI)*exp(-x*x),0.);
+    // return 2.*(-pycuda::complex<double>(sqrt(1./M_PI)*exp(-x*x),0.)-x*conv_term);
+    //${ctype} a = cnew(sqrt(1./M_PI)*exp(-x*x),0.);
+    ${ctype} a = cnew(sqrt(1.0/M_PI)*exp(-x*x),0.);
     ${ctype} b = cnew(x,0);
     b = cmul(b,conv_term);
-    return cmul(cnew(2,0),csub(a,b));
+    return cmul(cnew(-2.0,0.0),cadd(a,b));
   }
   else if (n == 2)
   {
@@ -433,7 +433,7 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
     K_expm[j] = getK(z_expm,j);
     K_trig[j] = getK(z_trig,j);
     #ifdef DEBUG
-    if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
+    if (DEBUG > 3 && (get_global_id(0) == DEBUG_EVT) )
     {
       printf("K_expp[%d](%+.14f%+.14f) = %+.14f%+.14f\n",  j,z_expp.x,z_expp.y,K_expp[j].x,K_expp[j].y);
       printf("K_expm[%d](%+.14f%+.14f) = %+.14f%+.14f\n",  j,z_expm.x,z_expm.y,K_expm[j].x,K_expm[j].y);
@@ -449,14 +449,14 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
     {
       M_expm[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G-0.5*DG,0.);
       M_expp[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G+0.5*DG,0.);
-      M_trig[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G,DM);
+      M_trig[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G       ,DM);
       if (bin>0){
         #ifdef DEBUG
         if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
         {
-          ${ctype} aja = M_expp[bin][j]-M_expp[bin-1][j];
-          ${ctype} eje = M_expm[bin][j]-M_expm[bin-1][j];
-          ${ctype} iji = M_trig[bin][j]-M_trig[bin-1][j];
+          ${ctype} aja = M_expp[bin][j];//-M_expp[bin-1][j];
+          ${ctype} eje = M_expm[bin][j];//-M_expm[bin-1][j];
+          ${ctype} iji = M_trig[bin][j];//-M_trig[bin-1][j];
           printf("bin=%d M_expp[%d] = %+.14f%+.14f\n",  bin,j,aja.x,aja.y);
           printf("bin=%d M_expm[%d] = %+.14f%+.14f\n",  bin,j,eje.x,eje.y);
           printf("bin=%d M_trig[%d] = %+.14f%+.14f\n\n",bin,j,iji.x,iji.y);

@@ -31,6 +31,9 @@ rule figures_bundle:
                   version='{version}',
                   mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
                   branch=['B_P','B_PT','X_M'],
+                  angacc=['yearly'],
+                  timeacc=['repo'],
+                  weight=['sWeight','kinWeight','kkpWeight'],
                   year=['2015','2016','2017','2018']),
     # Time acceptance outputs
   output:
@@ -192,6 +195,38 @@ rule share_acceptances:
       shutil.make_archive(f'{cpath[:-4]}/','zip',f'{cpath[:-4]}/')
     except:
       print(f"Couldn't zip the contents from {cpath}")
+
+
+
+
+
+
+rule compile_slides:
+  # wildcard_constraints:
+  #   version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
+  input:
+    rwp2 = expand(rules.plot_angular_acceptance_reweightings.output,
+                  version=['v0r5'],
+                  mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
+                  branch=['B_P','B_PT','X_M','hplus_PT','hplus_P','hminus_PT','hminus_P'],
+                  angacc=['yearly'],
+                  timeacc=['repo'],
+                  weight=['sWeight','kinWeight','kkpWeight'],
+                  year=['2015']),
+                  #year=['2015','2016','2017','2018']),
+  output:
+    "output/bundle/main_{date}.pdf"
+  log:
+    'output/log/bundle/compile_slides/{date}.log'
+  run:
+    date = f"{wildcards.date}"
+    import os
+    if not os.path.isfile(f"bundle/tex/main_{date}.tex"):
+      print(f"Creating main_{date}.tex from main.tex template")
+      os.system(f"cp bundle/tex/main.tex bundle/tex/main_{date}.tex")
+    shell(f"cd bundle/tex/; /home3/marcos.romero/.linuxbrew/Cellar/texlive/20200715/texlive/bin/x86_64-linux/latexmk -xelatex main_{date}.tex") #-silent
+    shell(f"cp bundle/tex/main_{date}.tex output/bundle/main_{date}.pdf")
+    shell(f"cd bundle/tex/; /home3/marcos.romero/.linuxbrew/Cellar/texlive/20200715/texlive/bin/x86_64-linux/latexmk -c main_{date}.tex")
 
 
 

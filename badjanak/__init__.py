@@ -48,7 +48,7 @@ global config
 config = dict(
 debug =           0, # no prints
 debug_evt =       0, # number of events to debug
-fast_integral  = 1, #
+fast_integral   = 1, # run integrals with approximation
 sigma_t =         0.15,
 knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
 x_m =             [990, 1008, 1016, 1020, 1024, 1032, 1050],
@@ -300,7 +300,6 @@ def cross_rate_parser_new(
 
   r = {}
   r['mass_bins'] = len([ k for k in p.keys() if re.compile('CSP.*').match(k)])
-
   # Get all binned parameters and put them in ristras
   if r['mass_bins'] >= 1:
     CSP = [ p[k] for k in p.keys() if re.compile('CSP.*').match(k) ]
@@ -385,7 +384,7 @@ def cross_rate_parser_new(
   if angacc:
     r['angacc'] = THREAD.to_device(np.float64(angacc))
   else:
-    r['angacc'] = THREAD.to_device(np.float64([1]))
+    r['angacc'] = THREAD.to_device(np.float64(config['tristan']))
 
   return r
 
@@ -412,15 +411,15 @@ def delta_gamma5_data(input, output, **pars):
   Out:
          void
   """
-  p = badjanak.cross_rate_parser_new(**pars)
-  badjanak.delta_gamma5( input, output,
+  p = cross_rate_parser_new(**pars)
+  delta_gamma5( input, output,
                          use_fk=1, use_angacc = 1, use_timeacc = 1,
                          use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
                          BLOCK_SIZE=256, **p)
 
 
 
-def delta_gamma5_mc(input, output, **pars):
+def delta_gamma5_mc(input, output, use_fk=1, **pars):
   """
   delta_gamma5_mc(input, output, **pars)
   This function is intended to be used with MC input arrays. It doesn't use
@@ -440,9 +439,9 @@ def delta_gamma5_mc(input, output, **pars):
   Out:
          void
   """
-  p = badjanak.cross_rate_parser_new(**pars)
-  badjanak.delta_gamma5( input, output,
-                         use_fk=1, use_angacc = 0, use_timeacc = 0,
+  p = cross_rate_parser_new(**pars)
+  delta_gamma5( input, output,
+                         use_fk=use_fk, use_angacc = 0, use_timeacc = 0,
                          use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
                          BLOCK_SIZE=256, **p)
 

@@ -8,6 +8,8 @@ ruleorder: parse_fulljson > get_flavor_from_git
 # this rule must be moved elsewhere at some point
 #     Donwload fit_inputs_{year} from the repository to tmp folder
 rule download_fulljson:
+  wildcard_constraints:
+    version = "(v[1-9]r[0-9]|v0r[2-9])",                      # v0r0 not allowed
   output:
     "tmp/{version}/fit_inputs_{year}.json"
   run:
@@ -18,13 +20,15 @@ rule download_fulljson:
 # this rule must be moved elsewhere at some point
 #     Get fulljson file and parse it to work with phis-scq
 rule parse_fulljson:
+  wildcard_constraints:
+    version = "(v[1-9]r[0-9]|v0r[2-9])",                      # v0r0 not allowed
   input:
     "tmp/{version}/fit_inputs_{year}.json"
   output:
-    timeacc_biased = "output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_Repo_biased.json",
-    timeacc_unbiased = "output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_Repo_unbiased.json",
-    angacc_biased = "output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Repo_biased.json",
-    angacc_unbiased = "output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Repo_unbiased.json",
+    timeacc_biased = "output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_repo_biased.json",
+    timeacc_unbiased = "output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_repo_unbiased.json",
+    angacc_biased = "output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_repo_repo_biased.json",
+    angacc_unbiased = "output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_repo_repo_unbiased.json",
     flavor = "output/params/flavor_tagging/{year}/Bs2JpsiPhi/{version}.json",
     resolution = "output/params/time_resolution/{year}/Bs2JpsiPhi/{version}.json",
     csp_factors = "output/params/csp_factors/{year}/Bs2JpsiPhi/{version}.json"
@@ -123,7 +127,7 @@ rule physics_params:
     #        --tables                  {output.tables}\
     #        --year                    {",".join(yd['Run2'])}\
     #        --version                 {wildcards.version}\
-    # ) #&> {log} #2>&1""")
+    # ) &> {log} #2>&1""")
     # send_mail(f"Run2 Fit", f"{log}")
 
 
@@ -141,21 +145,21 @@ rule physics_params_Run2aRepo:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2a'),
     # Angular acceptance
     angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Repo_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Repo_biased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_repo_biased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_repo_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Repo_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Repo_unbiased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_repo_unbiased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_repo_unbiased.json'
     ],
     # Time acceptance coefficients
     timeacc_biased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_Repo_biased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_Repo_biased.json'
+      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_repo_biased.json',
+      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_repo_biased.json'
     ],
     timeacc_unbiased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_Repo_unbiased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_Repo_unbiased.json'
+      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_repo_unbiased.json',
+      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_repo_unbiased.json'
     ],
     # CSP
     csp_factors = [

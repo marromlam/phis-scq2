@@ -1,0 +1,24 @@
+
+
+
+rule v0r0_time_acceptance:
+  wildcard_constraints:
+    version = "(v0r0|v0r1)"
+  input:
+    "params/v0r0/time_acceptance/{year}/{mode}/v0r0_{timeacc}_{trigger}.json"
+  output:
+    "output/params/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}.json"
+  shell:
+    "cp {input} {output}"
+
+
+rule v0r0_angular_acceptance:
+  wildcard_constraints:
+    version = "(v0r0|v0r1)",
+    angacc = "^(yearly_base)"
+  input:
+    "params/v0r0/angular_acceptance/{year}/{mode}/v0r0_{angacc}_{trigger}.json"
+  output:
+    "output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}.json"
+  shell:
+    "cp {input} {output}"

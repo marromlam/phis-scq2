@@ -2,6 +2,8 @@
 
 
 rule get_csp_from_git:
+  wildcard_constraints:
+    version = "(v0r0|v0r1)",                      # v0r0 not allowed
   params:
     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
   output:

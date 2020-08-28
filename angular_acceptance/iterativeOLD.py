@@ -29,7 +29,6 @@ from timeit import default_timer as timer
 from warnings import simplefilter
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
-from hep_ml.metrics_utils import ks_2samp_weighted
 
 # threading
 import logging
@@ -48,21 +47,15 @@ bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 
 
 # get bsjpsikk and compile it with corresponding flags
-# import  bsjpsikk
-# bsjpsikk.config['debug'] = 0
-# bsjpsikk.config['debug_evt'] = 0
-# bsjpsikk.config['use_time_acc'] = 0
-# bsjpsikk.config['use_time_offset'] = 0
-# bsjpsikk.config['use_time_res'] = 0
-# bsjpsikk.config['use_perftag'] = 1
-# bsjpsikk.config['use_truetag'] = 0
-# bsjpsikk.get_kernels()
-
-import badjanak as bsjpsikk
-bsjpsikk.config['fast_integral'] = 0
+import  bsjpsikk
 bsjpsikk.config['debug'] = 0
-bsjpsikk.config['debug_evt'] = 20
-bsjpsikk.get_kernels(True)
+bsjpsikk.config['debug_evt'] = 0
+bsjpsikk.config['use_time_acc'] = 0
+bsjpsikk.config['use_time_offset'] = 0
+bsjpsikk.config['use_time_res'] = 0
+bsjpsikk.config['use_perftag'] = 1
+bsjpsikk.config['use_truetag'] = 0
+bsjpsikk.get_kernels()
 
 # reweighting config
 from hep_ml import reweight
@@ -147,9 +140,6 @@ def argument_parser():
   parser.add_argument('--year',
                       default = '2016',
                       help='Year of data-taking')
-  parser.add_argument('--weigths-branch',
-                      default = 'yearly_base',
-                      help='Year of data-taking')
   parser.add_argument('--version',
                       default = 'test',
                       help='Year of data-taking')
@@ -169,6 +159,7 @@ samples_data  = args['sample_data'].split(',')
 
 input_std_params = args['params_mc_std'].split(',')
 input_dg0_params = args['params_mc_dg0'].split(',')
+input_data_params = f'angular_acceptance/params/{2016}/Bs2JpsiPhi.json'
 
 angWeight_std = args['angular_weights_mc_std'].split(',')
 angWeight_dg0 = args['angular_weights_mc_dg0'].split(',')
@@ -222,10 +213,11 @@ for i, y in enumerate(YEARS):
   for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[input_std_params,input_dg0_params]):
     print(f' *  Associating {m}-{y} parameters from\n    {v[i]}')
     this_pars = hjson.load(open(v[i]))
-    mc[f'{y}'][f'{m}'].params = Parameters()
-    mc[f'{y}'][f'{m}'].params.add(*[ {"name":k, "value":v} for k,v in this_pars.items()])  # WARNING
+    #mc[f'{y}'][f'{m}'].params = Parameters()
+    #mc[f'{y}'][f'{m}'].params.add(*[ {"name":k, "value":v} for k,v in this_pars.items()])  # WARNING
     # this is what I will use in the future
-    # mc[f'{y}'][f'{m}'].assoc_params(v[i])
+    mc[f'{y}'][f'{m}'].assoc_params(v[i])
+    print(mc[f'{y}'][f'{m}'].params)
   for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[angWeight_std,angWeight_dg0]):
     print(f' *  Attaching {m}-{y} kinWeight from\n    {v[i]}')
     mc[f'{y}'][f'{m}'].kinWeight = uproot.open(v[i])['DecayTree'].array('kinWeight')
@@ -257,9 +249,6 @@ for i, y in enumerate(YEARS):
   csp = csp.build(csp,csp.find('CSP.*'))
   resolution = Parameters.load(time_resolution[i])
   flavor = Parameters.load(flavor_tagging[i])
-  data[f'{y}'][f'combined'].csp = csp
-  data[f'{y}'][f'combined'].flavor = flavor
-  data[f'{y}'][f'combined'].resolution = resolution
   for t, T in zip(['biased','unbiased'],[0,1]):
     print(f' *  Loading {y} sample in {t} category\n    {samples_data[i]}')
     this_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}) & (time>=0.3) & (time<=15)'
@@ -269,20 +258,18 @@ for i, y in enumerate(YEARS):
     data[f'{y}'][f'{t}'].resolution = resolution
     print(csp)
     print(resolution)
-    print(flavor)
   for t, coeffs in zip(['biased','unbiased'],[coeffs_biased,coeffs_unbiased]):
     print(f' *  Associating {y}-{t} time acceptance[{i}] from\n    {coeffs[i]}')
     c = Parameters.load(coeffs[i])
     print(c)
-    data[f'{y}'][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
-    print(np.array(data[f'{y}'][f'{t}'].timeacc))
+    data[f'{y}'][f'{t}'].timeacc = np.array(Parameters.build(c,c.fetch('c.*')))
     data[f'{y}'][f'{t}'].tLL = c['tLL'].value
     data[f'{y}'][f'{t}'].tUL = c['tUL'].value
   for t, weights in zip(['biased','unbiased'],[w_biased,w_unbiased]):
     print(f' *  Associating {y}-{t} angular weights from\n    {weights[i]}')
     w = Parameters.load(weights[i])
     print(w)
-    data[f'{y}'][f'{t}'].angacc = Parameters.build(w,w.fetch('w.*'))
+    data[f'{y}'][f'{t}'].angacc = np.array(Parameters.build(w,w.fetch('w.*')))
     data[f'{y}'][f'{t}'].angular_weights = [Parameters.build(w,w.fetch('w.*'))]
   for t, path in zip(['biased','unbiased'],[params_biased,params_unbiased]):
     data[f'{y}'][f'{t}'].params_path = path[i]
@@ -298,10 +285,61 @@ for i, y in enumerate(YEARS):
       this_sw = d.df.eval(f'sw*(X_M>={l} & X_M<{h})')
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
     d.df['sWeight'] = sw
+    print(sw[774])
     d.allocate(data=real,weight='sWeight',lkhd='0*time')
+    d.angacc_dev = ristra.allocate(d.angacc)
+    d.timeacc_dev = ristra.allocate(bsjpsikk.get_4cs(d.timeacc))
 #exit()
 
 
+# data[f'2016']['unbiased'].angacc = np.array([
+# 1.0,
+# 1.026188051680966,
+# 1.025919907820129,
+# -0.0008080722059112641,
+# 0.0007686171894090263,
+# 0.0002055097707937297,
+# 1.00647239083432,
+# 0.000455221821734608,
+# 0.0001466163291351719,
+# -0.000731595571913009
+# ])
+# data[f'2016']['unbiased'].angacc = np.array([
+# 1,
+# 1.036616501815053,
+# 1.036438881647181,
+# -0.000767902108603735,
+# 0.0002722187888972826,
+# 0.0002375659824330591,
+# 1.009448663033953,
+# 2.073630681856376e-05,
+# 4.092379705098602e-05,
+# -0.003959703563916721
+# ])
+# data[f'2016']['biased'].angacc = np.array([
+# 1.0,
+# 1.020419588928056,
+# 1.020502754804629,
+# 0.002631350622172166,
+# 0.003125427462874503,
+# -0.0003293730619200012,
+# 1.011599141342973,
+# 0.0002557661696621679,
+# 4.612016290721501e-06,
+# -0.001331697639192716
+# ])
+# data[f'2016']['biased'].angacc = np.array([
+# 1,
+# 1.034440015714541,
+# 1.034642153098812,
+# 0.00272584738881403,
+# 0.003038166631007048,
+# -0.0002781312683095018,
+# 1.020346829061547,
+# 0.0001065078746602566,
+# 6.226895891636155e-05,
+# 0.001126252400056541
+# ])
 
 
 
@@ -319,98 +357,103 @@ for i, y in enumerate(YEARS):
 #%% define likelihood
 
 
-pars = Parameters()
-list_of_parameters = [#
-# S wave fractions
-Parameter(name='fSlon1', value=0.480, min=0.00, max=0.90,
-          free=True, latex=r'f_S^{1}'),
-Parameter(name='fSlon2', value=0.040, min=0.00, max=0.90,
-          free=True, latex=r'f_S^{2}'),
-Parameter(name='fSlon3', value=0.004, min=0.00, max=0.90,
-          free=True, latex=r'f_S^{3}'),
-Parameter(name='fSlon4', value=0.009, min=0.00, max=0.90,
-          free=True, latex=r'f_S^{4}'),
-Parameter(name='fSlon5', value=0.059, min=0.00, max=0.90,
-          free=True, latex=r'f_S^{5}'),
-Parameter(name='fSlon6', value=0.130, min=0.00, max=0.90,
-          free=True, latex=r'f_S^{6}'),
-# P wave fractions
-Parameter(name="fPlon", value=0.5240, min=0.4, max=0.6,
-          free=True, latex=r'f_0'),
-Parameter(name="fPper", value=0.2500, min=0.1, max=0.3,
-          free=True, latex=r'f_{\perp}'),
-# Weak phases
-Parameter(name="pSlon", value= 0.00, min=-1.0, max=1.0,
-          free=False, latex=r"\phi_S - \phi_0"),
-Parameter(name="pPlon", value= 0.07, min=-1.0, max=1.0,
-          free=True , latex=r"\phi_0" ),
-Parameter(name="pPpar", value= 0.00, min=-1.0, max=1.0,
-          free=False, latex=r"\phi_{\parallel} - \phi_0"),
-Parameter(name="pPper", value= 0.00, min=-1.0, max=1.0,
-          free=False, latex=r"\phi_{\perp} - \phi_0"),
-# S wave strong phases
-Parameter(name='dSlon1', value=+2.34, min=-0.0, max=+3.0,
-          free=True, latex=r"\delta_S^{1} - \delta_{\perp}"),
-Parameter(name='dSlon2', value=+1.64, min=-0.0, max=+3.0,
-          free=True, latex=r"\delta_S^{2} - \delta_{\perp}"),
-Parameter(name='dSlon3', value=+1.09, min=-0.0, max=+3.0,
-          free=True, latex=r"\delta_S^{3} - \delta_{\perp}"),
-Parameter(name='dSlon4', value=-0.25, min=-3.0, max=+0.0,
-          free=True, latex=r"\delta_S^{4} - \delta_{\perp}"),
-Parameter(name='dSlon5', value=-0.48, min=-3.0, max=+0.0,
-          free=True, latex=r"\delta_S^{5} - \delta_{\perp}"),
-Parameter(name='dSlon6', value=-1.18, min=-3.0, max=+0.0,
-          free=True, latex=r"\delta_S^{6} - \delta_{\perp}"),
-# P wave strong phases
-Parameter(name="dPlon", value=0.000, min=-2*3.14, max=2*3.14,
-          free=False, latex=r"\delta_0"),
-Parameter(name="dPpar", value=3.260, min=-2*3.14, max=2*3.14,
-          free=True, latex=r"\delta_{\parallel} - \delta_0"),
-Parameter(name="dPper", value=3.026, min=-2*3.14, max=2*3.14,
-          free=True, latex=r"\delta_{\perp} - \delta_0"),
-# lambdas
-Parameter(name="lSlon", value=1.0, min=0.7, max=1.6,
-          free=False, latex="\lambda_S/\lambda_0"),
-Parameter(name="lPlon", value=1.0, min=0.7, max=1.6,
-          free=True,  latex="\lambda_0"),
-Parameter(name="lPpar", value=1.0, min=0.7, max=1.6,
-          free=False, latex="\lambda_{\parallel}/\lambda_0"),
-Parameter(name="lPper", value=1.0, min=0.7, max=1.6,
-          free=False, latex="\lambda_{\perp}/\lambda_0"),
-# life parameters
-Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
-          free=False, latex=r"\Gamma_d"),
-Parameter(name="DGs", value= 0.0917, min= 0.0, max= 0.7,
-          free=True, latex=r"\Delta\Gamma_s"),
-Parameter(name="DGsd", value= 0.03, min=-0.1, max= 0.1,
-          free=True, latex=r"\Gamma_s - \Gamma_d"),
-Parameter(name="DM", value=17.768, min=15.0, max=20.0,
-          free=True, latex=r"\Delta m"),
-#
-]
-pars.add(*list_of_parameters);
 
-
+pars = Parameters.load('angular_acceptance/Bs2JpsiPhi.json')
+hey = hjson.load(open('angular_acceptance/params/2016/Bs2JpsiPhi.json'))
+#hey = hjson.load(open('angular_acceptance/params/2016/iter/MC_Bs2JpsiPhi_dG0_'+str(0)+'.json'))
+for k,v in hey.items():
+  try:
+    pars[k].set(value=v)
+    pars[k].set(init=v)
+  except:
+    0
+# pars['CSP1'].value = csp_dev.get()[0]
+# pars['CSP2'].value = csp_dev.get()[1]
+# pars['CSP3'].value = csp_dev.get()[2]
+# pars['CSP4'].value = csp_dev.get()[3]
+# pars['CSP5'].value = csp_dev.get()[4]
+# pars['CSP6'].value = csp_dev.get()[5]
 print(pars)
 
+#pars = pars+Parameters.load(f'output/{VERSION}/params/flavor_tagging/{y}/Bs2JpsiPhi/200506a.json')+Parameters.load(f'output/{VERSION}/params/time_resolution/{y}/Bs2JpsiPhi/200506a.json')
+
+bsjpsikk.config['debug']           = 0
+bsjpsikk.config['debug_evt']       = 0
+bsjpsikk.config['use_time_acc']    = 1
+bsjpsikk.config['use_time_offset'] = 0
+bsjpsikk.config['use_time_res']    = 1
+bsjpsikk.config['use_perftag']     = 0
+bsjpsikk.config['use_truetag']     = 0
+bsjpsikk.get_kernels()
 
 
 
 
 
+def fcn_data(parameters, data, weight = False, lkhd0=False):
+  pars_dict = parameters.valuesdict()
+  likelihood = []
+  for y, dy in data.items():
+    for dt in [dy['unbiased'],dy['biased']]:
+      bsjpsikk.diff_cross_rate_full(dt.data, dt.lkhd,
+                                    w = dt.angacc,
+                                    coeffs = dt.timeacc,
+                                    **dt.csp.valuesdict(),
+                                    **dt.resolution.valuesdict(),
+                                    **pars_dict)
+      if weight:
+        likelihood.append( (-2.0 * ristra.log(dt.lkhd) * dt.weight).get() );
+      else:
+        likelihood.append( (-2.0 * ristra.log(dt.lkhd)            ).get() );
+  if lkhd0:
+    return np.sum(np.concatenate(likelihood)) - (lkhd0-100)
+  return np.sum(np.concatenate(likelihood))
 
 
+#print( fcn_data(pars, data=data, weight=True) )
 
 
+def fcn_data_opt(parameters, data, weight = False, lkhd0=False):
+  pars = parameters.valuesdict()
+  likelihood = []
+  for dy in data.values():
+    for dt in [dy['biased'],dy['unbiased']]:
+      bsjpsikk.new_diff_rate(dt.data, dt.lkhd,
+                             angacc = dt.angacc_dev, timeacc = dt.timeacc_dev,
+                             CSP = dt.csp_dev,
+                             tLL = dt.tLL, tUL = dt.tUL,
+                             **pars)
+      if weight:
+        likelihood.append( (-2.0 * ristra.log(dt.lkhd) * dt.weight).get() );
+      else:
+        likelihood.append( (-2.0 * ristra.log(dt.lkhd)            ).get() );
+  if lkhd0:
+    return np.sum(np.concatenate(likelihood)) - (lkhd0-100)
+  return np.sum(np.concatenate(likelihood))
 
 
+# from timeit import default_timer as timer
+# #
+# t0 = timer()
+# for i in range(10):
+#   fcn_data(pars, data=data, weight=True)
+# tf = timer()-t0
+# print(tf)
+# t0 = timer()
+# for i in range(10):
+#   fcn_data_opt(pars, data=data, weight=True)
+# tf = timer()-t0
+# print(tf)
+#
+#
+#
+#
+#
+#
+#
+# exit()
 
-
-
-
-
-
-def fcn_data(parameters, data):
+def fcn_data_final(parameters, data):
   # here we are going to unblind the parameters to the fcn caller, thats why
   # we call parameters.valuesdict(blind=False), by default
   # parameters.valuesdict() has blind=True
@@ -418,16 +461,11 @@ def fcn_data(parameters, data):
   chi2 = []
   for y, dy in data.items():
     for dt in [dy['unbiased'],dy['biased']]:
-      bsjpsikk.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
+      wrapper_fcn(dt.input, dt.output, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
                   **dt.flavor.valuesdict(), tLL=dt.tLL, tUL=dt.tUL)
-      #dt.df['pdf'] = dt.lkhd.get()
-      #dt.df.eval("check = (time > 5*sigmat)", inplace=True)
-      chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
-  # shit = pd.concat([dy['biased'].df, dy['unbiased'].df]) .sort_values(by=['entry']) [['time','sigmat','check','pdf']]
-  # print(shit.query("check==False"))
-  # exit()
+      chi2.append( -2.0 * (ristra.log(dt.output) * dt.weight).get() );
   return np.concatenate(chi2)
 
 
@@ -440,13 +478,97 @@ def fcn_data(parameters, data):
 
 
 
+#%% Prepate fitter
+
+
+
+
+
+
+def minuit_fit(pars, data):
+  # Set model to fit data
+  bsjpsikk.config['debug']           = 0
+  bsjpsikk.config['debug_evt']       = 0#774
+  bsjpsikk.config['use_time_acc']    = 1
+  bsjpsikk.config['use_time_offset'] = 0
+  bsjpsikk.config['use_time_res']    = 1
+  bsjpsikk.config['use_perftag']     = 0
+  bsjpsikk.config['use_truetag']     = 0
+  bsjpsikk.get_kernels()
+
+  lkhd0 = fcn_data(pars, data=data, weight=True)
+  # Minuit wrapper
+  def wrapper_minuit(*fvars):
+    for name, val in zip(list_of_pars, fvars):
+      pars[name].value = val
+    result =  fcn_data(pars, data=data, weight=True, lkhd0=lkhd0)
+    #exit()
+    return result
+
+  def configure_minuit( pars, pars_list, **kwgs):
+    def parameter_minuit_config(par):
+      out = {par.name: par.value}
+      lims = [None,None]
+      if abs(par.min) != np.inf: lims[0] = par.min
+      if abs(par.max) != np.inf: lims[1] = par.max
+      if not par.free:
+        out.update ({"fix_" + par.name: True})
+      out.update ({"limit_" + par.name: tuple(lims)})
+      out.update ({"error_" + par.name: 1e-6})
+      return out
+
+    config = {}
+    for par in pars.keys():
+      if par in pars_list:
+        config.update(parameter_minuit_config(pars[par]))
+    config.update(kwgs)
+    # for k,v in config.items():
+    #   print(f'{k:>15} : {v}')
+    return config
+
+  # Get info for minuit
+  #shit = Optimizer(fcn_data, params=pars); shit.prepare_fit()
+  #list_of_pars = np.copy(shit.result.param_vary).tolist()
+  list_of_pars = ['fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 'fPlon', 'fPper', 'pPlon', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 'dPpar', 'dPper', 'lPlon', 'DGs', 'DGsd', 'DM']
+  dict_of_conf = configure_minuit(pars,list_of_pars)
+
+  # Gor for it!
+  print('Fit is starting...')
+  crap = minuit(wrapper_minuit, forced_parameters=list_of_pars, **dict_of_conf, print_level=-1, errordef=1, pedantic=False)
+  crap.strategy = 2
+  crap.tol = 0.05
+  crap.errordef = 1.0
+  crap.migrad()
+  crap.hesse()
+  if not crap.migrad_ok():
+    for i in range(0,10):
+      crap.migrad()
+      crap.hesse()
+      if crap.migrad_ok():
+        break
+    if not crap.migrad_ok():
+      print("Can't do better, sorry. Be aware of the precision loss")
+      crap.hesse()
+  print('Fit is finished! Cross your fingers and pray Simon')
+
+  # Update pars
+  #pars_fitted = Parameters.clone(pars)
+  for name, val in zip(list_of_pars, crap.values.values()):
+    pars[name].value = val
+  for name, val in zip(list_of_pars, crap.errors.values()):
+    pars[name].stdev = val
+  #return pars_fitted
+
+from hep_ml.metrics_utils import ks_2samp_weighted
+
+
+
 def KS_test(original, target, original_weight, target_weight):
   vars = ['hminus_PT','hplus_PT','hminus_P','hplus_P']
   for i in range(0,4):
     xlim = np.percentile(np.hstack([target[:,i]]), [0.01, 99.99])
-    print(f'   KS({vars[i]:>10}) =',
-          ks_2samp_weighted(original[:,i], target[:,i],
-                            weights1=original_weight, weights2=target_weight))
+    print(f'KS over {vars[i]} ', ' = ', ks_2samp_weighted(original[:,i], target[:,i],
+                                     weights1=original_weight, weights2=target_weight))
 
 
 
@@ -515,57 +637,73 @@ for l in zip(*lu):
   print(*l, sep="| ")
 print(f"\n{80*'-'}\n")
 
-from ipanema import optimize
-
-
-
-
-################################################################################
-#%% Run and get the job done ###################################################
-
-
-
-
 for i in range(1,15):
   checker = []                  # here we'll store if weights do converge or not
-  itstr = f"[iteration #{i}]"
 
   # 1st step: fit data ---------------------------------------------------------
-  print(f'Simultaneous fit Bs2JpsiPhi {"&".join(list(mc.keys()))} {itstr}')
-  result = optimize(fcn_data,
-                    method='minuit', params=pars, fcn_kwgs={'data':data},
-                    verbose=False, timeit=True, tol=0.05, strategy=2)
-  print(result)
-  pars = Parameters.clone(result.params)
-  #print(pars)
+  print(f'Simultaneous fit Bs2JpsiPhi {"&".join(list(mc.keys()))} [iteration #{i}]')
+  t0 = timer()
+  minuit_fit(pars, data)
+  tf = timer()-t0
+  print(f'Fit took {tf:.3f} seconds.')
+  pars = Parameters.clone(pars)
+  print(pars)
+  # fit-final
+  # result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
+  #                   verbose=False, timeit=True, tol=0.5, strategy=1)
+  # pars = Parameters.clone(result.pars)
+
+
+  pars_loaded = hjson.load( open('angular_acceptance/params/2016/iter/MC_Bs2JpsiPhi_dG0_'+str(i-1)+'.json') )
+  # for k, v in pars.items():
+  #   print(f'{k:>10}: {v}')
+
+  pars_comparison = Parameters.clone( pars )
+  print(pars_comparison)
+
+  for k, v in pars.items():
+    try:
+      pars_comparison[k].value = pars_loaded[k]
+    except:
+      0
+    if v.free:
+      try:
+        print(f'{k:>10}: {v.value:+4.8f}   {pars_comparison[k].value:+4.8f}   {(v.value-pars_comparison[k].value):+2.2e}    {100*( (v.value-pars_comparison[k].value)/pars_comparison[k].value ):+4.4f}%')
+      except:
+        print(f'{k:>10}: {v.value:+4.8f}   ')
+
+  print(f'FCN with SCQ parameters: {fcn_data(pars, data=data, weight=True):.16f}')
+  print(f' FCN with HD parameters: {fcn_data(pars_comparison, data=data, weight=True):.16f}')
+
 
   # 2nd step: pdf weights ------------------------------------------------------
   #   We need to change bsjpsikk to handle MC samples and then we compute the
   #   desired pdf weights for a given set of fitted pars in step 1. This implies
   #   looping over years and MC samples (std and dg0)
-  print(f'\nPDF weighting MC samples to match Bs2JpsiPhi data {itstr}')
+  print(f'\nPDF weighting MC samples to match Bs2JpsiPhi data [iteration #{i}]')
+  bsjpsikk.config['debug']    = 0
+  bsjpsikk.config['debug_evt'] = 0
+  bsjpsikk.config['use_time_acc']    = 0
+  bsjpsikk.config['use_time_offset'] = 0
+  bsjpsikk.config['use_time_res']    = 0
+  bsjpsikk.config['use_perftag']     = 1
+  bsjpsikk.config['use_truetag']     = 0
+  bsjpsikk.get_kernels()
+
   t0 = timer()
   for y, dy in mc.items(): # loop over years
     for m, v in dy.items(): # loop over mc_std and mc_dg0
-      print(f' * Calculating pdfWeight for {m}-{y} sample')
-      bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=1,
-                               **v.params.valuesdict(), tLL=0.3)
+      print(f'* Calculating pdfWeight for {m}-{y} sample')
+      bsjpsikk.diff_cross_rate_full(v.true, v.pdf, use_fk=1, **v.params.valuesdict(), mass_bins=1)
       original_pdf_h = v.pdf.get()
-      bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=0,
-                               **v.params.valuesdict(), tLL=0.3)
+      bsjpsikk.diff_cross_rate_full(v.true, v.pdf, use_fk=0, **v.params.valuesdict(), mass_bins=1)
       original_pdf_h /= v.pdf.get()
-      #print(original_pdf_h)
-      bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=1,
-                               **pars.valuesdict(),
-                               **data[y]['combined'].csp.valuesdict(), tLL=0.3)
+      bsjpsikk.diff_cross_rate_full(v.true, v.pdf, use_fk=1, **pars.valuesdict())
       target_pdf_h = v.pdf.get()
-      bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=0, **pars.valuesdict(),
-                               **data[y]['combined'].csp.valuesdict(), tLL=0.3)
+      bsjpsikk.diff_cross_rate_full(v.true, v.pdf, use_fk=0, **pars.valuesdict())
       target_pdf_h /= v.pdf.get()
-      #print(target_pdf_h)
       v.pdfWeight[i] = np.nan_to_num(target_pdf_h/original_pdf_h)
-      print(f"   pdfWeight[{i}]: {v.pdfWeight[i]}")
-      #exit()
+      print(f"  pdfWeight[{i}]: {v.pdfWeight[i]}")
   tf = timer()-t0
   print(f'PDF weighting took {tf:.3f} seconds.')
 
@@ -576,7 +714,7 @@ for i in range(1,15):
   #   As a matter of fact, it's important to have data[y][combined] sample,
   #   the GBweighter gives different results when having those 0s or having
   #   nothing after cutting the sample.
-  print(f'\nKinematic reweighting MC samples in K momenta {itstr}')
+  print(f'\nKinematic reweighting MC samples in K momenta [iteration #{i}]')
   threads = list()
   logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO,
                       datefmt="%H:%M:%S")
@@ -610,7 +748,7 @@ for i in range(1,15):
   print(f'Kinematic weighting took {tf:.3f} seconds.')
 
   # 4th step: angular weights --------------------------------------------------
-  print(f'\nExtract angular weights {itstr}')
+  print(f'\nExtract angular weights [iteration #{i}]')
   for y, dy in mc.items(): # loop over years
     for m, v in dy.items(): # loop over mc_std and mc_dg0
       # write down code to save kkpWeight to root files
@@ -629,7 +767,7 @@ for i in range(1,15):
 
 
   # 5th step: merge MC std and dg0 results -------------------------------------
-  print(f'\nCombining MC_BsJpsiPhi and MC_BsJpsiPhi_dG0 {itstr}')
+  print(f'\nCombining MC_BsJpsiPhi and MC_BsJpsiPhi_dG0 [iteration #{i}]')
   for y, dy in mc.items(): # loop over years
     for trigger in ['biased','unbiased']:
       # Get angular weights for each MC
@@ -676,8 +814,8 @@ for i in range(1,15):
       print(f"Current angular weights for Bs2JpsiPhi-{y}-{trigger} sample are:")
       print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
       for _i in range(len(merged_w.keys())):
-        print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.4uP}")
-      data[f'{y}'][trigger].angacc = merged_w
+        print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.2uP}")
+      data[f'{y}'][trigger].angacc = np.array(merged_w)
       data[f'{y}'][trigger].angular_weights.append(merged_w)
       qwe = check_for_convergence( data[f'{y}'][trigger].angular_weights[-2], data[f'{y}'][trigger].angular_weights[-1] )
       checker.append( qwe )
@@ -728,7 +866,7 @@ for y, dy in mc.items(): # loop over years
       pool.update({f'kkpWeight{iter}': wvalues})
     print(pool)
     with uproot.recreate(v.path_to_weights,compression=None) as f:
-      this_treename = args['weigths_branch']
+      this_treename = '&'.join(map(str,YEARS))
       f['DecayTree'] = uproot.newtree({'kinWeight':np.float64})
       f['DecayTree'].extend({'kinWeight':v.kinWeight})
       f[this_treename] = uproot.newtree({var:np.float64 for var in pool})

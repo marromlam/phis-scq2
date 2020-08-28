@@ -4,8 +4,6 @@
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-ruleorder: single_time_acceptance > simultaneous_time_acceptance
-
 
 rule single_time_acceptance:
   wildcard_constraints:
@@ -15,10 +13,10 @@ rule single_time_acceptance:
   params:
     params = 'time_acceptance/params/{year}/{mode}/baseline.json',
   output:
-    params   = 'output/params/time_acceptance/{year}/{mode}/{version}_Single_{trigger}.json',
-    tables   = 'output/tables/time_acceptance/{year}/{mode}/{version}_Single_{trigger}.tex',
+    params   = 'output/params/time_acceptance/{year}/{mode}/{version}_single_{trigger}.json',
+    tables   = 'output/tables/time_acceptance/{year}/{mode}/{version}_single_{trigger}.tex',
   log:
-    'output/log/time_acceptance/single_time_acceptance/{year}_{mode}_{version}_{trigger}.log'
+    'output/log/time_acceptance/single_time_acceptance/{year}/{mode}/{version}_{trigger}.log'
   run:
     shell(f"""
     (time\
@@ -38,25 +36,25 @@ rule single_time_acceptance:
 
 rule simultaneous_time_acceptance:
   wildcard_constraints:
-    script = "(Baseline|Nonkinweighted|Nineknots|Twelveknots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
-    trigger = "(biased|unbiased|combined)",
-    year = "(2015|2016|2017|2018)",
+    timeacc = "(base|nonkin|9knots|12knots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    trigger = "(biased|unbiased|combined)"
   input:
     sample_BsMC = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
     sample_BdMC = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar'),
     sample_BdDT = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar'),
-    params_BsMC = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_Single_{trigger}.json',
-    params_BdMC = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_Single_{trigger}.json',
-    params_BdDT = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_Single_{trigger}.json'
+  params:
+    params_BsMC = 'time_acceptance/params/{year}/MC_Bs2JpsiPhi_dG0/baseline.json',
+    params_BdMC = 'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
+    params_BdDT = 'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
   output:
-    params_BsMC   = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{script}_{trigger}.json',
-    params_BdMC   = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{script}_{trigger}.json',
-    params_BdDT   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{script}_{trigger}.json',
-    tables_BsMC   = 'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{script}_{trigger}.tex',
-    tables_BdMC   = 'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{script}_{trigger}.tex',
-    tables_BdDT   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{script}_{trigger}.tex',
+    params_BsMC   = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.json',
+    params_BdMC   = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
+    params_BdDT   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
+    tables_BsMC   = 'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.tex',
+    tables_BdMC   = 'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex',
+    tables_BdDT   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex',
   log:
-    'output/log/time_acceptance/simultaneous_time_acceptance/{year}_{version}_{script}_{trigger}.log'
+    'output/log/time_acceptance/simultaneous_time_acceptance/{year}/{version}_{timeacc}_{trigger}.log'
   run:
     shell(f"""
     (time\
@@ -64,9 +62,9 @@ rule simultaneous_time_acceptance:
            --BsMC-sample {input.sample_BsMC}\
            --BdMC-sample {input.sample_BdMC}\
            --BdDT-sample {input.sample_BdDT}\
-           --BsMC-input-params {input.params_BsMC}\
-           --BdMC-input-params {input.params_BdMC}\
-           --BdDT-input-params {input.params_BdDT}\
+           --BsMC-input-params {params.params_BsMC}\
+           --BdMC-input-params {params.params_BdMC}\
+           --BdDT-input-params {params.params_BdDT}\
            --BsMC-output-params {output.params_BsMC}\
            --BdMC-output-params {output.params_BdMC}\
            --BdDT-output-params {output.params_BdDT}\
@@ -77,7 +75,7 @@ rule simultaneous_time_acceptance:
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-           --script {wildcards.script}\
+           --script {wildcards.timeacc}\
     ) &> {log} 2>&1
     """)
     send_mail(f"Simultaneous Time Acceptance", f"{log}")
@@ -92,19 +90,18 @@ rule simultaneous_time_acceptance:
 
 rule plot_time_acceptance:
   wildcard_constraints:
-    script = "(Single|Baseline|Nonkinweighted|Nineknots|Twelveknots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
-    trigger = "(biased|unbiased|combined)",
-    year = "(2015|2016|2017|2018)",
+    timeacc = "(single|base|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    trigger = "(biased|unbiased|combined)"
   input:
     sample_BsMC = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
     sample_BdMC = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar'),
     sample_BdDT = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar'),
-    params_BsMC = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{script}_{trigger}.json',
-    params_BdMC = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{script}_{trigger}.json',
-    params_BdDT = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{script}_{trigger}.json'
+    params_BsMC = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.json',
+    params_BdMC = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
+    params_BdDT = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json'
   output:
-    'output/params/time_acceptance/{year}/{mode}/{version}_{script}_{trigger}_{plot}.pdf',
+    'output/params/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.pdf',
   log:
-    'output/log/time_acceptance/plot_time_acceptance/{year}_{mode}_{version}_{script}_{trigger}_{plot}.log'
+    'output/log/time_acceptance/plot_time_acceptance/{year}_{mode}_{version}_{timeacc}_{trigger}_{plot}.log'
   run:
     1+1
