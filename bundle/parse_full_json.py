@@ -81,13 +81,13 @@ def parse_fulljson(tmp_json_path):
                    "latex":"\sigma_2", "free":False})
     elif v['Name'] == "rho_p0_p1_time_res":
       timeres.add({"name":f"rho01", "value":v['Value'], "stdev":v['Error'],
-               "latex":"\rho_{01}", "free":False})
+               "latex":r"\rho_{01}", "free":False})
     elif v['Name'] == "rho_p1_p2_time_res":
       timeres.add({"name":f"rho12", "value":v['Value'], "stdev":v['Error'],
-               "latex":"\rho_{12}", "free":False})
+               "latex":r"\rho_{12}", "free":False})
     elif v['Name'] == "rho_p0_p2_time_res":
       timeres.add({"name":f"rho02", "value":v['Value'], "stdev":v['Error'],
-               "latex":"\rho_{02}", "free":False})
+               "latex":r"\rho_{02}", "free":False})
   print(80*'-')
   print("The following parameters were loaded for time resolution")
   print(timeres)
@@ -101,12 +101,12 @@ def parse_fulljson(tmp_json_path):
       flavor.add({"name":f"p0_os",
                    "value":v['Value'], "stdev":v['Error'],
                    "latex":"p_{os}^0", "free":False})
-    elif v['Name'] == "p1":
-      flavor.add({"name":f"p1_OS",
+    elif v['Name'] == "p1_OS":
+      flavor.add({"name":f"p1_os",
                    "value":v['Value'], "stdev":v['Error'],
                    "latex":"p_{os}^1", "free":False})
-    elif v['Name'] == "p2":
-      flavor.add({"name":f"p2_OS",
+    elif v['Name'] == "p2_OS":
+      flavor.add({"name":f"p2_os",
                    "value":v['Value'], "stdev":v['Error'],
                    "latex":"p_{os}^2", "free":False})
     elif v['Name'] == "dp0_OS":
@@ -124,25 +124,25 @@ def parse_fulljson(tmp_json_path):
     elif v['Name'] == "rho_p0_p1_OS":
       flavor.add({"name":f"rho01_os",
                   "value":v['Value'], "stdev":v['Error'],
-                  "latex":"\rho_{os}^{01}", "free":False})
+                  "latex":r"\rho_{os}^{01}", "free":False})
     elif v['Name'] == "rho_p1_p2_OS":
       flavor.add({"name":f"rho12_os",
                   "value":v['Value'], "stdev":v['Error'],
-                  "latex":"\rho_{os}^{12}", "free":False})
+                  "latex":r"\rho_{os}^{12}", "free":False})
     elif v['Name'] == "rho_p0_p2_OS":
       flavor.add({"name":f"rho02_os",
                   "value":v['Value'], "stdev":v['Error'],
-                  "latex":"\rho_{os}^{02}", "free":False})
+                  "latex":r"\rho_{os}^{02}", "free":False})
     elif v['Name'] == "p0_SSK":
       flavor.add({"name":f"p0_ss",
                    "value":v['Value'], "stdev":v['Error'],
                    "latex":"p_{ss}^0", "free":False})
-    elif v['Name'] == "p1":
-      flavor.add({"name":f"p1_SSK",
+    elif v['Name'] == "p1_SSK":
+      flavor.add({"name":f"p1_ss",
                    "value":v['Value'], "stdev":v['Error'],
                    "latex":"p_{ss}^1", "free":False})
-    elif v['Name'] == "p2":
-      flavor.add({"name":f"p2_SSK",
+    elif v['Name'] == "p2_SSK":
+      flavor.add({"name":f"p2_ss",
                    "value":v['Value'], "stdev":v['Error'],
                    "latex":"p_{ss}^2", "free":False})
     elif v['Name'] == "dp0_SSK":
@@ -160,15 +160,15 @@ def parse_fulljson(tmp_json_path):
     elif v['Name'] == "rho_p0_p1_SSK":
       flavor.add({"name":f"rho01_ss",
                   "value":v['Value'], "stdev":v['Error'],
-                  "latex":"\rho_{ss}^{01}", "free":False})
+                  "latex":r"\rho_{ss}^{01}", "free":False})
     elif v['Name'] == "rho_p1_p2_SSK":
       flavor.add({"name":f"rho12_ss",
                   "value":v['Value'], "stdev":v['Error'],
-                  "latex":"\rho_{ss}^{12}", "free":False})
+                  "latex":r"\rho_{ss}^{12}", "free":False})
     elif v['Name'] == "rho_p0_p2_SSK":
       flavor.add({"name":f"rho02_ss",
                   "value":v['Value'], "stdev":v['Error'],
-                  "latex":"\rho_{ss}^{02}", "free":False})
+                  "latex":r"\rho_{ss}^{02}", "free":False})
     elif v['Name'] == "eta_bar_OS":
       flavor.add({"name":f"eta_os",
                   "value":v['Value'], "stdev":v['Error'],
