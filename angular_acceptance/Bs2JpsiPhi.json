@@ -5,7 +5,7 @@
     value: 0.473560718454
     free: 1
     min: 0.0
-    max: 0.6
+    max: 0.9
     init: 0.473560718454
     latex: fSlon1
   }
@@ -15,7 +15,7 @@
     value: 0.0368893354524
     free: 1
     min: 0.0
-    max: 0.6
+    max: 0.9
     init: 0.0368893354524
     latex: fSlon2
   }
@@ -25,7 +25,7 @@
     value: 0.00458919864125
     free: 1
     min: 0.0
-    max: 0.6
+    max: 0.9
     init: 0.00458919864125
     latex: fSlon3
   }
@@ -35,7 +35,7 @@
     value: 0.009023172708
     free: 1
     min: 0.0
-    max: 0.6
+    max: 0.9
     init: 0.009023172708
     latex: fSlon4
   }
@@ -45,7 +45,7 @@
     value: 0.0678419662382
     free: 1
     min: 0.0
-    max: 0.6
+    max: 0.9
     init: 0.0678419662382
     latex: fSlon5
   }
@@ -55,7 +55,7 @@
     value: 0.142729498712
     free: 1
     min: 0.0
-    max: 0.6
+    max: 0.9
     init: 0.142729498712
     latex: fSlon6
   }
@@ -65,7 +65,7 @@
     value: 0.512314599353
     free: true
     min: 0.4
-    max: 0.62
+    max: 0.92
     init: 0.512314599353
     latex: fPlon
   }
@@ -289,114 +289,114 @@
     init: 17.7105963073
     latex: DM
   }
-  mu:
-  {
-    name: mu
-    value: 0.0
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.0
-    latex: mu
-  }
-  eta_os:
-  {
-    name: eta_os
-    value: 0.3602
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.3602
-    latex: eta_os
-  }
-  eta_ss:
-  {
-    name: eta_ss
-    value: 0.4167
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.4167
-    latex: eta_ss
-  }
-  p0_os:
-  {
-    name: p0_os
-    value: 0.389
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.389
-    latex: p0_os
-  }
-  p0_ss:
-  {
-    name: p0_ss
-    value: 0.4325
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.4325
-    latex: p0_ss
-  }
-  p1_os:
-  {
-    name: p1_os
-    value: 0.8486
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.8486
-    latex: p1_os
-  }
-  p1_ss:
-  {
-    name: p1_ss
-    value: 0.9241
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.9241
-    latex: p1_ss
-  }
-  dp0_os:
-  {
-    name: dp0_os
-    value: 0.009
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.009
-    latex: dp0_os
-  }
-  dp0_ss:
-  {
-    name: dp0_ss
-    value: 0
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0
-    latex: dp0_ss
-  }
-  dp1_os:
-  {
-    name: dp1_os
-    value: 0.0143
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0.0143
-    latex: dp1_os
-  }
-  dp1_ss:
-  {
-    name: dp1_ss
-    value: 0
-    free: false
-    min: 0.0
-    max: 1.0
-    init: 0
-    latex: dp1_ss
-  }
+//mu:
+//{
+//  name: mu
+//  value: 0.0
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.0
+//  latex: mu
+//}
+//eta_os:
+//{
+//  name: eta_os
+//  value: 0.3602
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.3602
+//  latex: eta_os
+//}
+//eta_ss:
+//{
+//  name: eta_ss
+//  value: 0.4167
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.4167
+//  latex: eta_ss
+//}
+//p0_os:
+//{
+//  name: p0_os
+//  value: 0.389
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.389
+//  latex: p0_os
+//}
+//p0_ss:
+//{
+//  name: p0_ss
+//  value: 0.4325
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.4325
+//  latex: p0_ss
+//}
+//p1_os:
+//{
+//  name: p1_os
+//  value: 0.8486
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.8486
+//  latex: p1_os
+//}
+//p1_ss:
+//{
+//  name: p1_ss
+//  value: 0.9241
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.9241
+//  latex: p1_ss
+//}
+//dp0_os:
+//{
+//  name: dp0_os
+//  value: 0.009
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.009
+//  latex: dp0_os
+//}
+//dp0_ss:
+//{
+//  name: dp0_ss
+//  value: 0
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0
+//  latex: dp0_ss
+//}
+//dp1_os:
+//{
+//  name: dp1_os
+//  value: 0.0143
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0.0143
+//  latex: dp1_os
+//}
+//dp1_ss:
+//{
+//  name: dp1_ss
+//  value: 0
+//  free: false
+//  min: 0.0
+//  max: 1.0
+//  init: 0
+//  latex: dp1_ss
+//}
 }
