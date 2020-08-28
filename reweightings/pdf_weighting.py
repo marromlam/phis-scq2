@@ -22,7 +22,7 @@ import builtins
 # builtins.DEVICE = THREAD._device
 
 from ipanema import initialize
-initialize('cuda',1)
+initialize(os.environ['IPANEMA_BACKEND'],1)
 from ipanema import ristra, Sample, Parameters, Parameter, Optimizer
 
 
@@ -55,15 +55,15 @@ def argument_parser():
 
 def pdf_weighting(data, target_params, original_params, mode):
   # Modify flags, compile model and get kernels
-  badjanak.config['debug_evt'] = 1
+  badjanak.config['debug_evt'] = 0
   badjanak.config['debug'] = 0
-  badjanak.get_kernels()
+  badjanak.config['fast_integral'] = 0
 
   if mode == "MC_Bd2JpsiKstar":
     badjanak.config["x_m"] = [826, 861, 896, 931, 966]
     tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
                 'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
-                'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl','B_ID_GenLvl' ]
+                'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
   elif mode.startswith("MC_Bs2JpsiPhi"):
     badjanak.config["x_m"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
     tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
@@ -71,7 +71,7 @@ def pdf_weighting(data, target_params, original_params, mode):
                 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
 
   badjanak.get_kernels()
-  cross_rate = badjanak.diff_cross_rate_full
+  cross_rate = badjanak.delta_gamma5_mc
 
   # Load file
   vars_h = np.ascontiguousarray(data[tad_vars].values)    # input array (matrix)
@@ -88,9 +88,9 @@ def pdf_weighting(data, target_params, original_params, mode):
   print('Calc weights...')
   original_params = hjson.load(open(original_params))
   target_params = hjson.load(open(target_params))
-  cross_rate(vars_d,pdf_d,**original_params);
+  cross_rate(vars_d,pdf_d,**original_params,tLL=0.3,tUL=15.0);
   original_pdf_h = pdf_d.get()
-  cross_rate(vars_d,pdf_d,**target_params);
+  cross_rate(vars_d,pdf_d,**target_params,tLL=0.3,tUL=15.0);
   target_pdf_h = pdf_d.get()
   np.seterr(divide='ignore', invalid='ignore')                 # remove warnings
   pdfWeight = np.nan_to_num(original_pdf_h/target_pdf_h)
