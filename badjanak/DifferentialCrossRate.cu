@@ -275,7 +275,7 @@ ${ftype} getDiffRate( ${ftype} *data,
   }
   #endif
 
-  //${ftype} normweights[10] = {1,1,1,0,0,0,1,0,0,0};
+
 
   // Variables -----------------------------------------------------------------
   //     Make sure that the input it's in this order.
