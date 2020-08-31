@@ -61,16 +61,16 @@ rule physics_params:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
     # Angular acceptance
     angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{aflag}_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{aflag}_biased.json',
-      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{aflag}_biased.json',
-      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{aflag}_biased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{aflag}_{tflag}_biased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{aflag}_{tflag}_biased.json',
+      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{aflag}_{tflag}_biased.json',
+      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{aflag}_{tflag}_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{aflag}_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{aflag}_unbiased.json',
-      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{aflag}_unbiased.json',
-      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{aflag}_unbiased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{aflag}_{tflag}_unbiased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{aflag}_{tflag}_unbiased.json',
+      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{aflag}_{tflag}_unbiased.json',
+      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{aflag}_{tflag}_unbiased.json'
     ],
     # Time acceptance coefficients
     timeacc_biased = [
@@ -145,12 +145,12 @@ rule physics_params_Run2aRepo:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2a'),
     # Angular acceptance
     angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_repo_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_repo_biased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_repo_repo_biased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_repo_repo_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_repo_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_repo_unbiased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_repo_repo_unbiased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_repo_repo_unbiased.json'
     ],
     # Time acceptance coefficients
     timeacc_biased = [
