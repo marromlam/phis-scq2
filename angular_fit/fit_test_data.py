@@ -133,7 +133,7 @@ for i, y in enumerate(YEARS):
     data[f'{y}'][f'{t}'].flavor['p0_os'].free = True
     data[f'{y}'][f'{t}'].flavor['p0_os'].min = 0.0
     data[f'{y}'][f'{t}'].flavor['p0_os'].max = 1.0
-    
+
     data[f'{y}'][f'{t}'].flavor['dp0_os'].free = True
     data[f'{y}'][f'{t}'].flavor['dp0_os'].min = -0.1
     data[f'{y}'][f'{t}'].flavor['dp0_os'].max = +0.1
@@ -141,28 +141,28 @@ for i, y in enumerate(YEARS):
     data[f'{y}'][f'{t}'].flavor['p1_os'].free = True
     data[f'{y}'][f'{t}'].flavor['p1_os'].min = 0.5
     data[f'{y}'][f'{t}'].flavor['p1_os'].max = 1.5
-        
+
     data[f'{y}'][f'{t}'].flavor['dp1_os'].free = True
     data[f'{y}'][f'{t}'].flavor['dp1_os'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp1_os'].max = +0.1    
+    data[f'{y}'][f'{t}'].flavor['dp1_os'].max = +0.1
 
     data[f'{y}'][f'{t}'].flavor['p0_ss'].free = True
     data[f'{y}'][f'{t}'].flavor['p0_ss'].min = 0.0
-    data[f'{y}'][f'{t}'].flavor['p0_ss'].max = 2.0    
+    data[f'{y}'][f'{t}'].flavor['p0_ss'].max = 2.0
 
     data[f'{y}'][f'{t}'].flavor['dp0_ss'].free = True
     data[f'{y}'][f'{t}'].flavor['dp0_ss'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp0_ss'].max = +0.1    
+    data[f'{y}'][f'{t}'].flavor['dp0_ss'].max = +0.1
 
     data[f'{y}'][f'{t}'].flavor['p1_ss'].free = True
     data[f'{y}'][f'{t}'].flavor['p1_ss'].min = 0.0
     data[f'{y}'][f'{t}'].flavor['p1_ss'].max = 2.0
-    
+
     data[f'{y}'][f'{t}'].flavor['dp1_ss'].free = True
     data[f'{y}'][f'{t}'].flavor['dp1_ss'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp1_ss'].max = +0.1    
+    data[f'{y}'][f'{t}'].flavor['dp1_ss'].max = +0.1
     '''
-    
+
     print(data[f'{y}'][f'{t}'].csp)
     print(data[f'{y}'][f'{t}'].flavor)
     print(data[f'{y}'][f'{t}'].resolution)
@@ -230,7 +230,7 @@ Parameter(name="lPpar", value=1., min=0.7, max=1.6, free=False, latex="\lambda_{
 Parameter(name="lPper", value=1., min=0.7, max=1.6, free=False, latex="\lambda_{\perp}/\lambda_0"),
 # lifetime parameters
 Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0, free=False, latex=r"\Gamma_d"),
-Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 0.7, free=1-DGZERO, blind="BsDGsFullRun2", blindengine="root", latex=r"\Delta\Gamma_s"),
+Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 1.7, free=1-DGZERO, blind="BsDGsFullRun2", blindengine="root", latex=r"\Delta\Gamma_s"),
 Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1, latex=r"\Gamma_s - \Gamma_d"),
 Parameter(name="DM", value=17.757,   min=15.0, max=20.0, latex=r"\Delta m"),
 Parameter("eta_os", value = data['2016']['unbiased'].flavor['eta_os'].value, free = False),
@@ -242,7 +242,7 @@ Parameter("p1_ss",  value = data['2016']['unbiased'].flavor['p1_ss'].value,  fre
 Parameter("dp0_os", value = data['2016']['unbiased'].flavor['dp0_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{0}"),
 Parameter("dp1_os", value = data['2016']['unbiased'].flavor['dp1_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{1}"),
 Parameter("dp0_ss", value = data['2016']['unbiased'].flavor['dp0_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{0}"),
-Parameter("dp1_ss", value = data['2016']['unbiased'].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"),                                                                                                               
+Parameter("dp1_ss", value = data['2016']['unbiased'].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"),
 ]
 
 pars.add(*list_of_parameters);
@@ -298,7 +298,7 @@ def taggingConstraints(data):
   p1OS_err = data['2016']['unbiased'].flavor['p1_os'].stdev
   p0SS_err = data['2016']['unbiased'].flavor['p0_ss'].stdev
   p1SS_err = data['2016']['unbiased'].flavor['p1_ss'].stdev
-  
+
   covOS = np.matrix([[p0OS_err**2, p0OS_err*p1OS_err*rhoOS],
                      [p0OS_err*p1OS_err*rhoOS, p1OS_err**2]])
   covSS = np.matrix([[p0SS_err**2, p0SS_err*p1SS_err*rhoSS],
@@ -312,7 +312,7 @@ def taggingConstraints(data):
   return dictOut
 
 tagConstr = taggingConstraints(data)
-  
+
 #@profile
 def fcn_data(parameters, data):
   # here we are going to unblind the parameters to the fcn caller, thats why
@@ -326,7 +326,7 @@ def fcn_data(parameters, data):
   chi2TagConstr += (pars_dict['dp1_os']-data['2016']['unbiased'].flavor['dp1_os'].value)**2/data['2016']['unbiased'].flavor['dp1_os'].stdev**2
   chi2TagConstr += (pars_dict['dp0_ss']-data['2016']['unbiased'].flavor['dp0_ss'].value)**2/data['2016']['unbiased'].flavor['dp0_ss'].stdev**2
   chi2TagConstr += (pars_dict['dp1_ss']-data['2016']['unbiased'].flavor['dp1_ss'].value)**2/data['2016']['unbiased'].flavor['dp1_ss'].stdev**2
-    
+
   tagcvOS = np.matrix([pars_dict['p0_os'], pars_dict['p1_os']]) - tagConstr['pOS']
   tagcvSS = np.matrix([pars_dict['p0_ss'], pars_dict['p1_ss']]) - tagConstr['pSS']
 
@@ -337,7 +337,7 @@ def fcn_data(parameters, data):
   print('----')
   print(tagcvOS.T)
   '''
-  
+
   chi2TagConstr += np.dot(Y_OS, tagcvOS.T)
 
   '''
@@ -352,7 +352,7 @@ def fcn_data(parameters, data):
   for y, dy in data.items():
     trigCats = [dy['biased'],dy['unbiased']]
     for dt in trigCats:
-      
+
       wrapper_fcn(dt.input, dt.output, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
@@ -364,11 +364,11 @@ def fcn_data(parameters, data):
   chi2conc =  np.concatenate(chi2)
   #chi2conc = chi2conc + np.array(len(chi2conc)*[chi2TagConstr[0][0]/float(len(chi2conc))])
 
-  chi2TagConstr = chi2TagConstr[0][0]/float(len(chi2conc))
-  for i in range(len(chi2conc)): chi2conc[i] += chi2TagConstr
-  
-  print(chi2TagConstr[0][0])
-  return chi2conc#np.concatenate(chi2)
+  chi2TagConstr = float(chi2TagConstr[0][0]/len(chi2conc))
+  #for i in range(len(chi2conc)): chi2conc[i] += chi2TagConstr
+
+  #print(chi2TagConstr)
+  return chi2conc + chi2TagConstr#np.concatenate(chi2)
 
 ################################################################################
 #%% Run and get the job done ###################################################
