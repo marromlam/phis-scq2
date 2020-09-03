@@ -41,6 +41,7 @@ rule blend_angular_acceptance:
   wildcard_constraints:
     step = "(naive|corrected)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?",
     version = "(v[1-9]r[0-9]|v0r[2-9])", # v0r0 not allowed
+    trigger = "(biased|unbiased|combined)"
   input:
     weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{trigger}.json',
     weights_dg0 = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{step}_{trigger}.json',
@@ -77,7 +78,8 @@ rule blend_angular_acceptance:
 
 rule corrected_angular_acceptance:
   wildcard_constraints:
-    mode = "MC_Bs2JpsiPhi(_dG0)?"
+    mode = "MC_Bs2JpsiPhi(_dG0)?",
+    trigger = "(biased|unbiased|combined)",
   input:
     sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
     sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
@@ -156,21 +158,21 @@ rule iterativeRun2a_angular_acceptance:
     sample_data = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2a'),
     # Angular acceptance at corrected level
     angacc_biased = lambda wcs: [
-      f'output/params/angular_acceptance/2015/Bs2JpsiPhi/{wcs.version}_corrected{wcs.binflag[3:]}_biased.json',
-      f'output/params/angular_acceptance/2016/Bs2JpsiPhi/{wcs.version}_corrected{wcs.binflag[3:]}_biased.json'
+      f'output/params/angular_acceptance/2015/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_biased.json',
+      f'output/params/angular_acceptance/2016/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_biased.json'
     ],
     angacc_unbiased = lambda wcs: [
-      f'output/params/angular_acceptance/2015/Bs2JpsiPhi/{wcs.version}_corrected{wcs.binflag[3:]}_unbiased.json',
-      f'output/params/angular_acceptance/2016/Bs2JpsiPhi/{wcs.version}_corrected{wcs.binflag[3:]}_unbiased.json'
+      f'output/params/angular_acceptance/2015/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_unbiased.json',
+      f'output/params/angular_acceptance/2016/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_unbiased.json'
     ],
     # Time acceptance coefficients
     timeacc_biased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{binflag}_biased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{binflag}_biased.json'
+      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
+      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
     ],
     timeacc_unbiased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{binflag}_unbiased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{binflag}_unbiased.json'
+      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
+      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
     ],
     # CSP
     csp_factors = [
@@ -196,23 +198,23 @@ rule iterativeRun2a_angular_acceptance:
       'reweightings/parameters/2016/MC_Bs2JpsiPhi_dG0.json'], # WARNING
   output:
     angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2a{binflag}_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2a{binflag}_biased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_run2a_{timeacc}_biased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_run2a_{timeacc}_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2a{binflag}_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2a{binflag}_unbiased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_run2a_{timeacc}_unbiased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_run2a_{timeacc}_unbiased.json'
     ],
     tables_biased = [
-      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2a{binflag}_biased.tex',
-      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2a{binflag}_biased.tex'
+      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_run2a_{timeacc}_biased.tex',
+      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_run2a_{timeacc}_biased.tex'
     ],
     tables_unbiased = [
-      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_Run2a{binflag}_unbiased.tex',
-      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_Run2a{binflag}_unbiased.tex'
+      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_run2a_{timeacc}_unbiased.tex',
+      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_run2a_{timeacc}_unbiased.tex'
     ],
   log:
-    'output/log/angular_acceptance/iterative_angular_acceptance/Run2a/Bs2JpsiPhi/{version}_{binflag}.log'
+    'output/log/angular_acceptance/iterative_angular_acceptance/Run2a/Bs2JpsiPhi/{version}_{timeacc}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/iterative.py\
@@ -250,10 +252,18 @@ rule iterativeRun2a_angular_acceptance:
 # Run2 angular acceptance ------------------------------------------------------
 #     This rule runs the iterative procedure for all Run2 years using both
 #     MC and MC_dG0 files.
+from utils.strings import cammel_case_split
+
+def taparser(a):
+  b = a.split('Bin') if len(a.split('Bin')) > 1 else False
+  if b:
+    return "correctedBin"+cammel_case_split(b[1])[0]
+  return "corrected"
+
 rule iterativeRun2_angular_acceptance:
   wildcard_constraints:
     version = "(v[1-9]r[0-9]|v0r[1-9])",                      # v0r0 not allowed
-    timeacc = "(Baseline|Nonkinweighted|Nineknots|Twelveknots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    timeacc = "(base|nonkin|9knots|12knots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
   input:
     # Samples and weights
     sample_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',year='Run2'),
@@ -262,30 +272,29 @@ rule iterativeRun2_angular_acceptance:
     weights_dG0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',year='Run2',weight='angWeight'),
     sample_data = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
     # Angular acceptance at corrected level
-    # Angular acceptance at corrected level
     angacc_biased = lambda wcs: [
-      f'output/params/angular_acceptance/2015/Bs2JpsiPhi/{wcs.version}_corrected{wcs.timeacc[9:]}_biased.json',
-      f'output/params/angular_acceptance/2016/Bs2JpsiPhi/{wcs.version}_corrected{wcs.timeacc[9:]}_biased.json'
-      f'output/params/angular_acceptance/2017/Bs2JpsiPhi/{wcs.version}_corrected{wcs.timeacc[9:]}_biased.json'
-      f'output/params/angular_acceptance/2018/Bs2JpsiPhi/{wcs.version}_corrected{wcs.timeacc[9:]}_biased.json'
+      f'output/params/angular_acceptance/2015/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_biased.json',
+      f'output/params/angular_acceptance/2016/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_biased.json',
+      f'output/params/angular_acceptance/2017/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_biased.json',
+      f'output/params/angular_acceptance/2018/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_biased.json'
     ],
     angacc_unbiased = lambda wcs: [
-      f'output/params/angular_acceptance/2015/Bs2JpsiPhi/{wcs.version}_corrected{wcs.timeacc[9:]}_unbiased.json',
-      f'output/params/angular_acceptance/2016/Bs2JpsiPhi/{wcs.version}_corrected{wcs.timeacc[9:]}_unbiased.json'
-      f'output/params/angular_acceptance/2017/Bs2JpsiPhi/{wcs.version}_corrected{wcs.timeacc[9:]}_unbiased.json'
-      f'output/params/angular_acceptance/2018/Bs2JpsiPhi/{wcs.version}_corrected{wcs.timeacc[9:]}_unbiased.json'
+      f'output/params/angular_acceptance/2015/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_unbiased.json',
+      f'output/params/angular_acceptance/2016/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_unbiased.json',
+      f'output/params/angular_acceptance/2017/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_unbiased.json',
+      f'output/params/angular_acceptance/2018/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_unbiased.json'
     ],
     # Time acceptance coefficients
     timeacc_biased = [
       'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
-      'output/params/time_acceptance/2017/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
+      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
+      'output/params/time_acceptance/2017/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
       'output/params/time_acceptance/2018/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
     ],
     timeacc_unbiased = [
       'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
-      'output/params/time_acceptance/2017/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
+      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
+      'output/params/time_acceptance/2017/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
       'output/params/time_acceptance/2018/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
     ],
     # CSP
@@ -311,41 +320,41 @@ rule iterativeRun2_angular_acceptance:
     ]
   params:
     params_std = [
-      'angular_acceptance/params/2015/MC_Bs2JpsiPhi.json',
-      'angular_acceptance/params/2016/MC_Bs2JpsiPhi.json',
-      'angular_acceptance/params/2017/MC_Bs2JpsiPhi.json',
-      'angular_acceptance/params/2018/MC_Bs2JpsiPhi.json'
+      'reweightings/parameters/2015/MC_Bs2JpsiPhi.json',
+      'reweightings/parameters/2016/MC_Bs2JpsiPhi.json',
+      'reweightings/parameters/2017/MC_Bs2JpsiPhi.json',
+      'reweightings/parameters/2018/MC_Bs2JpsiPhi.json'
     ],
     params_dG0 = [
-      'angular_acceptance/params/2015/MC_Bs2JpsiPhi_dG0.json',
-      'angular_acceptance/params/2016/MC_Bs2JpsiPhi_dG0.json',
-      'angular_acceptance/params/2017/MC_Bs2JpsiPhi_dG0.json',
-      'angular_acceptance/params/2018/MC_Bs2JpsiPhi_dG0.json'
+      'reweightings/parameters/2015/MC_Bs2JpsiPhi_dG0.json',
+      'reweightings/parameters/2016/MC_Bs2JpsiPhi_dG0.json',
+      'reweightings/parameters/2017/MC_Bs2JpsiPhi_dG0.json',
+      'reweightings/parameters/2018/MC_Bs2JpsiPhi_dG0.json'
     ],
   output:
     angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Base_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Base_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_Base_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_Base_{timeacc}_biased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_base_{timeacc}_biased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_base_{timeacc}_biased.json',
+      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_base_{timeacc}_biased.json',
+      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_base_{timeacc}_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_Base_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_Base_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_Base_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_Base_{timeacc}_unbiased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.json',
+      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.json',
+      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.json'
     ],
     tables_biased = [
-      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_Base_{timeacc}_biased.tex',
-      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_Base_{timeacc}_biased.tex',
-      'output/tables/angular_acceptance/2017/Bs2JpsiPhi/{version}_Base_{timeacc}_biased.tex',
-      'output/tables/angular_acceptance/2018/Bs2JpsiPhi/{version}_Base_{timeacc}_biased.tex'
+      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_base_{timeacc}_biased.tex',
+      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_base_{timeacc}_biased.tex',
+      'output/tables/angular_acceptance/2017/Bs2JpsiPhi/{version}_base_{timeacc}_biased.tex',
+      'output/tables/angular_acceptance/2018/Bs2JpsiPhi/{version}_base_{timeacc}_biased.tex'
     ],
     tables_unbiased = [
-      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_Base_{timeacc}_unbiased.tex',
-      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_Base_{timeacc}_unbiased.tex',
-      'output/tables/angular_acceptance/2017/Bs2JpsiPhi/{version}_Base_{timeacc}_unbiased.tex',
-      'output/tables/angular_acceptance/2018/Bs2JpsiPhi/{version}_Base_{timeacc}_unbiased.tex'
+      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.tex',
+      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.tex',
+      'output/tables/angular_acceptance/2017/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.tex',
+      'output/tables/angular_acceptance/2018/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.tex'
     ],
   log:
     'output/log/angular_acceptance/iterative_angular_acceptance/Run2/{version}_Bs2JpsiPhi_{timeacc}.log'
@@ -392,10 +401,10 @@ rule iterativeYearly_angular_acceptance:
     sample_data = lambda wcs: [tuples(wcs,mode='Bs2JpsiPhi')],
     # Angular acceptance at corrected level {wcs.timeacc[9:]}
     angacc_biased = lambda wcs: [
-      f'output/params/angular_acceptance/{wcs.year}/Bs2JpsiPhi/{wcs.version}_corrected_biased.json'
+      f'output/params/angular_acceptance/{wcs.year}/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_biased.json'
     ],
     angacc_unbiased = lambda wcs: [
-      f'output/params/angular_acceptance/{wcs.year}/Bs2JpsiPhi/{wcs.version}_corrected_unbiased.json'
+      f'output/params/angular_acceptance/{wcs.year}/Bs2JpsiPhi/{wcs.version}_{taparser(f"{wcs.timeacc}")}_unbiased.json'
     ],
     # Time acceptance coefficients
     timeacc_biased = [
