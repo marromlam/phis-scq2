@@ -37,7 +37,8 @@ rule single_time_acceptance:
 rule simultaneous_time_acceptance:
   wildcard_constraints:
     timeacc = "(base|nonkin|9knots|12knots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
-    trigger = "(biased|unbiased|combined)"
+    trigger = "(biased|unbiased|combined)",
+    version = "(v[1-9]r[0-9]|v0r[2-9])", # v0r0 not allowed
   input:
     sample_BsMC = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
     sample_BdMC = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar'),
