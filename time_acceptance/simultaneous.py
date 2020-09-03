@@ -158,7 +158,7 @@ if __name__ == '__main__':
   # Initialize backend
   the_backend = os.environ['IPANEMA_BACKEND']
   try: # Odd years to gpu 1 and even ones to 2 (if there are 2 GPUs)
-    initialize(the_backend, 1 if YEAR in (2015,2017) else 2)
+    initialize(the_backend, 1 if YEAR in (2015,2017) else 1)
   except: # Only one GPU :'(
     initialize(the_backend, 1)
 
@@ -199,23 +199,23 @@ if __name__ == '__main__':
     name = name[:4] # remove _sample
     if name == 'BsMC':
       label = (r'\mathrm{MC}',r'B_s^0')
-      if SCRIPT == 'Baseline':
+      if SCRIPT == 'base':
         weight='(sw/gb_weights)*polWeight*pdfWeight*kinWeight'
-      elif SCRIPT == 'Nonkinweighted':
+      elif SCRIPT == 'nonkin':
         weight='(sw/gb_weights)'
       samplecut = f"({cuts})"
     elif name == 'BdMC':
       label = (r'\mathrm{MC}',r'B^0')
-      if SCRIPT == 'Baseline':
+      if SCRIPT == 'base':
         weight='sw*polWeight*pdfWeight*kinWeight'
-      elif SCRIPT == 'Nonkinweighted':
+      elif SCRIPT == 'nonkin':
         weight='sw'
       samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
     elif name == 'BdDT':
       label = (r'\mathrm{data}',r'B_s^0')
-      if SCRIPT == 'Baseline':
+      if SCRIPT == 'base':
         weight='sw*kinWeight'
-      elif SCRIPT == 'Nonkinweighted':
+      elif SCRIPT == 'nonkin':
         weight='sw'
       samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
     #print(samplecut)
@@ -252,7 +252,7 @@ if __name__ == '__main__':
   if MINER.lower() in ("minuit","minos"):
     result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER,
-                      verbose=False, strategy=1);
+                      verbose=False, strategy=1, tol=0.05);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER,
