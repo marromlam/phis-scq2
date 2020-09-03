@@ -66,9 +66,9 @@ bsjpsikk.get_kernels(True)
 
 # reweighting config
 from hep_ml import reweight
-reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
+#reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
 #reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={'subsample': 1})
-#reweighter = reweight.GBReweighter(n_estimators=500, learning_rate=0.1, max_depth=2, min_samples_leaf=1000, gb_args={'subsample': 1})
+reweighter = reweight.GBReweighter(n_estimators=500, learning_rate=0.1, max_depth=2, min_samples_leaf=1000, gb_args={'subsample': 1})
 
 def check_for_convergence(a,b):
   a_f = np.array( [float(a[p].unc_round[0]) for p in a] )
@@ -225,7 +225,7 @@ for i, y in enumerate(YEARS):
     mc[f'{y}'][f'{m}'].params = Parameters()
     mc[f'{y}'][f'{m}'].params.add(*[ {"name":k, "value":v} for k,v in this_pars.items()])  # WARNING
     # this is what I will use in the future
-    # mc[f'{y}'][f'{m}'].assoc_params(v[i])
+    #mc[f'{y}'][f'{m}'].assoc_params(v[i])
   for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[angWeight_std,angWeight_dg0]):
     print(f' *  Attaching {m}-{y} kinWeight from\n    {v[i]}')
     mc[f'{y}'][f'{m}'].kinWeight = uproot.open(v[i])['DecayTree'].array('kinWeight')
@@ -427,6 +427,23 @@ def fcn_data(parameters, data):
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
   # shit = pd.concat([dy['biased'].df, dy['unbiased'].df]) .sort_values(by=['entry']) [['time','sigmat','check','pdf']]
   # print(shit.query("check==False"))
+  # my_pdf = np.array(shit['pdf'])
+  # peilian_pdf = np.genfromtxt('/home3/marcos.romero/log_pdf_2015',delimiter=',')
+  # peilian_pdf = peilian_pdf[np.argsort(peilian_pdf[:, 0])]
+  # my_n = 29804
+  # print(peilian_pdf[:my_n,0])
+  # peilian_pdf = peilian_pdf[:my_n,1]
+  # my_pdf= my_pdf[10:my_n+10]
+  # print(peilian_pdf)
+  # print(my_pdf)
+  # print(f"{'idx':>8} | marcos | peilian")
+  # for i in range(0,my_n):
+  #   if (np.abs(my_pdf[i]-peilian_pdf[i]) < 1e0) & (np.abs(my_pdf[i]-peilian_pdf[i]) > 1e-5):
+  #     print(f"{i+10:>8} | {my_pdf[i]:.6f} | {peilian_pdf[i]:.6f}")
+  # print(np.max(np.abs(my_pdf-peilian_pdf)))
+  # import matplotlib.pyplot as plt
+  # plt.plot(np.abs(my_pdf-peilian_pdf))
+  # plt.show()
   # exit()
   return np.concatenate(chi2)
 
@@ -535,7 +552,7 @@ for i in range(1,15):
   result = optimize(fcn_data,
                     method='minuit', params=pars, fcn_kwgs={'data':data},
                     verbose=False, timeit=True, tol=0.05, strategy=2)
-  print(result)
+  #print(result)
   pars = Parameters.clone(result.params)
   #print(pars)
 
