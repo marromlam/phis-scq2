@@ -261,6 +261,7 @@ def taparser(a):
   return "corrected"
 
 rule iterativeRun2_angular_acceptance:
+  threads: 16
   wildcard_constraints:
     version = "(v[1-9]r[0-9]|v0r[1-9])",                      # v0r0 not allowed
     timeacc = "(base|nonkin|9knots|12knots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",

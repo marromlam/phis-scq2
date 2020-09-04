@@ -153,7 +153,7 @@ if __name__ == '__main__':
     MINER = "minuit"
     BINVAR, BIN = None, None
     CUT = None
-
+  print(f"SCRIPT = {SCRIPT}")
 
   # Initialize backend
   the_backend = os.environ['IPANEMA_BACKEND']

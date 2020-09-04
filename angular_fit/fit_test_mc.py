@@ -25,7 +25,7 @@ from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
-badjanak.config['debug'] = 5
+badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 774
 
 
@@ -89,7 +89,7 @@ print(f"\n{80*'='}\n",
       f"\n{80*'='}\n")
 
 # Lists of data variables to load and build arrays
-real  = ['helcosthetaK','helcosthetamu','helphi','time']                        # angular variables
+real  = ['helcosthetaK','helcosthetaL','helphi','time']                        # angular variables
 real += ['X_M','0*B_ID']                                     # mass and sigmat
 #real += ['tagOS_dec','tagSS_dec', 'tagOS_eta', 'tagSS_eta']  # tagging
 real += ['B_ID','B_ID', '0*B_ID', '0*B_ID']  # tagging
@@ -100,8 +100,10 @@ data = {}
 mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
-  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename='T', cuts="time>=0.3 & time<=15 & X_M>=990 & X_M<=1050")
-  csp = Parameters.load(args['csp'].split(',')[i])  # <--- WARNING
+  tree = uproot.open(args['samples'].split(',')[i]).keys()[0]
+  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename=tree, cuts="time>=0.3 & time<=15 & X_M>=990 & X_M<=1050")
+  csp = Parameters.load(args['csp'].split(',')[i])
+  print(csp)
   data[f'{y}'].csp = csp.build(csp,csp.find('CSP.*'))
   print(f" *  Allocating {y} arrays in device ")
   sw = np.ones_like(data[f'{y}'].df.eval(weight_rd))
@@ -115,10 +117,10 @@ for i, y in enumerate(YEARS):
 
 
 # Prepare parameters
-SWAVE = False
+SWAVE = True
 DGZERO = False
 POLDEP = False
-BLIND = True
+BLIND = False
 
 pars = Parameters()
 list_of_parameters = [#
@@ -189,11 +191,11 @@ Parameter(name="lPper", value=1., min=0.7, max=1.6,
 # lifetime parameters
 Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
           free=False, latex=r"\Gamma_d"),
-Parameter(name="DGs", value= (1-DGZERO)*0.1, min= 0.0, max= 1.7,
+Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 1.7,
           free=1-DGZERO, latex=r"\Delta\Gamma_s",
           blindstr="BsDGsFullRun2",
           blind=BLIND, blindscale=1.0, blindengine="root"),
-Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1,
+Parameter(name="DGsd", value= 0.03,   min=-0.1, max= 0.1,
           free=True, latex=r"\Gamma_s - \Gamma_d"),
 Parameter(name="DM", value=17.757,   min=15.0, max=20.0,
           free=True, latex=r"\Delta m"),
@@ -208,18 +210,6 @@ badjanak.get_kernels(True)
 
 
 #@profile
-def wrapper_fcn(input, output, **pars):
-  p = badjanak.cross_rate_parser_new(**pars)
-  # for k,v in p.items():
-  #     print(f"{k} : {v}")
-  # exit()
-  badjanak.delta_gamma5( input, output,
-                         use_fk=1, use_angacc = 0, use_timeacc = 0,
-                         use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-                         BLOCK_SIZE=256, **p)
-  exit()
-
-
 def fcn_data(parameters, data):
   # here we are going to unblind the parameters to the fcn caller, thats why
   # we call parameters.valuesdict(blind=False), by default
@@ -227,14 +217,9 @@ def fcn_data(parameters, data):
   pars_dict = parameters.valuesdict(blind=False)
   chi2 = []
   for y, dy in data.items():
-
-      wrapper_fcn(dy.input, dy.output, **pars_dict,
-                  **dy.csp.valuesdict(),
-                  #**dy.flavor.valuesdict(),
-                  tLL=0.3, tUL=0.15)
-
-      chi2.append( -2.0 * (ristra.log(dy.output) * 1.0 ).get() );
-  print(np.concatenate(chi2).sum())
+    badjanak.delta_gamma5_mc(dy.input, dy.output, **pars_dict,
+                             **dy.csp.valuesdict(), tLL=0.30, tUL=15.0)
+    chi2.append( -2.0 * (ristra.log(dy.output) * 1.0 ).get() );
   return np.concatenate(chi2)
 
 ################################################################################
@@ -251,6 +236,56 @@ for p in ['DGsd', 'DGs', 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', '
     print(f"{p:>12} : {result.params[p].value:+.4f}  {result.params[p]._getval(False):+.4f}")
   else:
     print(f"{p:>12} : {result.params[p].value:+.4f} +/- {result.params[p].stdev:+.4f}")
+
+"""
+SWAVE FRACTIONS
+I_f0_p1/(I_f0_p1+I_phi_p1)  = 0.433
+I_f0_p2/(I_f0_p2+I_phi_p2)  = 0.042
+I_f0_p3/(I_f0_p3+I_phi_p3)  = 0.005
+I_f0_p4/(I_f0_p4+I_phi_p4)  = 0.007
+I_f0_p5/(I_f0_p5+I_phi_p5)  = 0.034
+I_f0_p6/(I_f0_p6+I_phi_p6)  = 0.122
+
+SWAVE DELTAS
+Csp (0.990,1.008) = 0.864
+Tsp (0.990,1.008) = 5.092
+Csp (1.008,1.016) = 0.927
+Tsp (1.008,1.016) = 4.908
+Csp (1.016,1.020) = 0.905
+Tsp (1.016,1.020) = 0.950
+Csp (1.020,1.024) = 0.949
+Tsp (1.020,1.024) = 6.056
+Csp (1.024,1.032) = 0.974
+Tsp (1.024,1.032) = 5.583
+Csp (1.032,1.050) = 0.985
+Tsp (1.032,1.050) = 5.465
+"""
+
+"""
+        DGsd : +0.0054 +/- +0.0013
+         DGs : +0.0822 +/- +0.0040
+       fPper : +0.2563 +/- +0.0020
+       fPlon : +0.5158 +/- +0.0015
+       dPpar : +3.2578 +/- +0.0126
+       dPper : +3.0801 +/- +0.0110
+       pPlon : -0.0319 +/- +0.0034
+       lPlon : +0.9992 +/- +0.0022
+          DM : +17.8024 +/- +0.0036
+      fSlon1 : +0.4149 +/- +0.0162
+      fSlon2 : +0.0443 +/- +0.0021
+      fSlon3 : +0.0043 +/- +0.0003
+      fSlon4 : +0.0065 +/- +0.0005
+      fSlon5 : +0.0340 +/- +0.0017
+      fSlon6 : +0.1191 +/- +0.0041
+      dSlon1 : +1.8648 +/- +0.0253
+      dSlon2 : +1.6819 +/- +0.0273
+      dSlon3 : +0.8173 +/- +0.0405
+      dSlon4 : -0.3776 +/- +0.0366
+      dSlon5 : -0.7915 +/- +0.0263
+      dSlon6 : -0.9282 +/- +0.0195
+"""
+
+
 
 
 
