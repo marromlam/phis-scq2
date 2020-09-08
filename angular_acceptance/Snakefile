@@ -15,7 +15,7 @@ rule naive_angular_acceptance:
   input:
     sample = SAMPLES_PATH+'{year}/{mode}/{version}.root',
   params:
-    params = 'reweightings/parameters/{year}/{mode}.json'
+    params = 'params/generator/{year}/{mode}.json'
   output:
     params = 'output/params/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.tex'
@@ -84,11 +84,11 @@ rule corrected_angular_acceptance:
     sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
     sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
   params:
-    params = 'reweightings/parameters/{year}/{mode}.json',
+    params = 'params/generator/{year}/{mode}.json',
   output:
     params = 'output/params/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.tex',
-    weight = SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{trigger}.npy'
+    weight = temp(SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{trigger}.npy')
   log:
     'output/log/angular_acceptance/corrected_angular_acceptance/{year}/{mode}/{version}_{trigger}.log'
   run:
@@ -116,11 +116,11 @@ rule corrected_binned_angular_acceptance:
     sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
     sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
   params:
-    params = 'reweightings/parameters/{year}/{mode}.json',
+    params = 'params/generator/{year}/{mode}.json',
   output:
     params = 'output/params/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.tex',
-    weight = SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{binnedvar}{bin}_{trigger}.npy'
+    weight = temp(SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{binnedvar}{bin}_{trigger}.npy')
   log:
     'output/log/angular_acceptance/corrected_binned_angular_acceptance/{year}/{mode}/{version}_{binnedvar}{bin}_{trigger}.log'
   run:
@@ -191,11 +191,11 @@ rule iterativeRun2a_angular_acceptance:
     ]
   params:
     params_std = [
-      'reweightings/parameters/2015/MC_Bs2JpsiPhi.json', # WARNING
-      'reweightings/parameters/2016/MC_Bs2JpsiPhi.json'], # WARNING
+      'params/generator/2015/MC_Bs2JpsiPhi.json', # WARNING
+      'params/generator/2016/MC_Bs2JpsiPhi.json'], # WARNING
     params_dG0 = [
-      'reweightings/parameters/2015/MC_Bs2JpsiPhi_dG0.json', # WARNING
-      'reweightings/parameters/2016/MC_Bs2JpsiPhi_dG0.json'], # WARNING
+      'params/generator/2015/MC_Bs2JpsiPhi_dG0.json', # WARNING
+      'params/generator/2016/MC_Bs2JpsiPhi_dG0.json'], # WARNING
   output:
     angacc_biased = [
       'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_run2a_{timeacc}_biased.json',
@@ -321,16 +321,16 @@ rule iterativeRun2_angular_acceptance:
     ]
   params:
     params_std = [
-      'reweightings/parameters/2015/MC_Bs2JpsiPhi.json',
-      'reweightings/parameters/2016/MC_Bs2JpsiPhi.json',
-      'reweightings/parameters/2017/MC_Bs2JpsiPhi.json',
-      'reweightings/parameters/2018/MC_Bs2JpsiPhi.json'
+      'params/generator/2015/MC_Bs2JpsiPhi.json',
+      'params/generator/2016/MC_Bs2JpsiPhi.json',
+      'params/generator/2017/MC_Bs2JpsiPhi.json',
+      'params/generator/2018/MC_Bs2JpsiPhi.json'
     ],
     params_dG0 = [
-      'reweightings/parameters/2015/MC_Bs2JpsiPhi_dG0.json',
-      'reweightings/parameters/2016/MC_Bs2JpsiPhi_dG0.json',
-      'reweightings/parameters/2017/MC_Bs2JpsiPhi_dG0.json',
-      'reweightings/parameters/2018/MC_Bs2JpsiPhi_dG0.json'
+      'params/generator/2015/MC_Bs2JpsiPhi_dG0.json',
+      'params/generator/2016/MC_Bs2JpsiPhi_dG0.json',
+      'params/generator/2017/MC_Bs2JpsiPhi_dG0.json',
+      'params/generator/2018/MC_Bs2JpsiPhi_dG0.json'
     ],
   output:
     angacc_biased = [
@@ -428,10 +428,10 @@ rule iterativeYearly_angular_acceptance:
     ]
   params:
     params_std = [
-      'reweightings/parameters/{year}/MC_Bs2JpsiPhi.json'
+      'params/generator/{year}/MC_Bs2JpsiPhi.json'
     ],
     params_dG0 = [
-      'reweightings/parameters/{year}/MC_Bs2JpsiPhi_dG0.json'
+      'params/generator/{year}/MC_Bs2JpsiPhi_dG0.json'
     ],
   output:
     angacc_biased   = [
