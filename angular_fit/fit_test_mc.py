@@ -26,6 +26,7 @@ from ipanema import Sample, Parameters, Parameter, ristra, optimize
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
 badjanak.config['debug'] = 0
+badjanak.config['fast_integral'] = 1
 badjanak.config['debug_evt'] = 774
 
 
