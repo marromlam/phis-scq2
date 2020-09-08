@@ -25,7 +25,7 @@ rule download_fulljson:
   wildcard_constraints:
     version = "(v[1-9]r[0-9]|v0r[2-9])",                      # v0r0 not allowed
   output:
-    "tmp/{version}/fit_inputs_{year}.json"
+    temp("tmp/{version}/fit_inputs_{year}.json")
   run:
     from bundle.parse_full_json import download_fulljson
     download_fulljson(f"{wildcards.version}", f"{wildcards.year}")
