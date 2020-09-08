@@ -32,9 +32,9 @@ badjanak.get_kernels(True)
 
 # reweighting config
 from hep_ml import reweight
-#reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
+reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
 #reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={'subsample': 1})
-reweighter = reweight.GBReweighter(n_estimators=500, learning_rate=0.1, max_depth=2, min_samples_leaf=1000, gb_args={'subsample': 1})
+#reweighter = reweight.GBReweighter(n_estimators=500, learning_rate=0.1, max_depth=2, min_samples_leaf=1000, gb_args={'subsample': 1})
 
 #30:0.3:4:500
 #20:0.3:3:1000
@@ -120,11 +120,7 @@ if __name__ == '__main__':
 
   # Load Monte Carlo samples
   mc = Sample.from_root(args['sample_mc'], cuts=CUT)
-  mc.params = Parameters()
-  import hjson
-  this_pars = hjson.load(open( args['input_params'].replace('TOY','MC').replace('2021','2018') ))
-  mc.params.add(*[ {"name":k, "value":v} for k,v in this_pars.items()])  # WARNING)
-  #mc.assoc_params(args['input_params'])
+  mc.assoc_params(args['input_params'])
   print(mc.df)
   print(Sample.from_root(args['sample_mc']).df)
   print(np.amax(Sample.from_root(args['sample_mc']).df['B_PT']))

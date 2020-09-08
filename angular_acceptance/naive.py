@@ -80,12 +80,7 @@ if __name__ == '__main__':
   print(f"\n{80*'='}\n", "Loading category", f"\n{80*'='}\n")
 
   mc = Sample.from_root(args['sample'])
-  mc.params = Parameters()
-  import hjson
-  this_pars = hjson.load(open( args['input_params'].replace('TOY','MC').replace('2021','2018') ))
-  mc.params.add(*[ {"name":k, "value":v} for k,v in this_pars.items()])  # WARNING)
-  # ----
-  #mc.assoc_params(args['input_params'].replace('TOY','MC').replace('2021','2018'))
+  mc.assoc_params(args['input_params'].replace('TOY','MC').replace('2021','2018'))
 
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']

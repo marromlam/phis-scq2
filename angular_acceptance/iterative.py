@@ -66,9 +66,9 @@ bsjpsikk.get_kernels(True)
 
 # reweighting config
 from hep_ml import reweight
-#reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
+reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
 #reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={'subsample': 1})
-reweighter = reweight.GBReweighter(n_estimators=500, learning_rate=0.1, max_depth=2, min_samples_leaf=1000, gb_args={'subsample': 1})
+#reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
 
 def check_for_convergence(a,b):
   a_f = np.array( [float(a[p].unc_round[0]) for p in a] )
@@ -221,11 +221,7 @@ for i, y in enumerate(YEARS):
     mc[f'{y}'][f'{m}'] = Sample.from_root(v[i])
   for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[input_std_params,input_dg0_params]):
     print(f' *  Associating {m}-{y} parameters from\n    {v[i]}')
-    this_pars = hjson.load(open(v[i]))
-    mc[f'{y}'][f'{m}'].params = Parameters()
-    mc[f'{y}'][f'{m}'].params.add(*[ {"name":k, "value":v} for k,v in this_pars.items()])  # WARNING
-    # this is what I will use in the future
-    #mc[f'{y}'][f'{m}'].assoc_params(v[i])
+    mc[f'{y}'][f'{m}'].assoc_params(v[i])
   for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[angWeight_std,angWeight_dg0]):
     print(f' *  Attaching {m}-{y} kinWeight from\n    {v[i]}')
     mc[f'{y}'][f'{m}'].kinWeight = uproot.open(v[i])['DecayTree'].array('kinWeight')
@@ -380,11 +376,11 @@ Parameter(name="lPper", value=1.0, min=0.7, max=1.6,
 # life parameters
 Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
           free=False, latex=r"\Gamma_d"),
-Parameter(name="DGs", value= 0.0917, min= 0.0, max= 0.7,
+Parameter(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
           free=True, latex=r"\Delta\Gamma_s"),
-Parameter(name="DGsd", value= 0.03, min=-0.1, max= 0.1,
+Parameter(name="DGsd", value= 0.03, min=-0.2, max= 0.2,
           free=True, latex=r"\Gamma_s - \Gamma_d"),
-Parameter(name="DM", value=17.768, min=15.0, max=20.0,
+Parameter(name="DM", value=17.768, min=16.0, max=20.0,
           free=True, latex=r"\Delta m"),
 #
 ]
