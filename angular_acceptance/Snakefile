@@ -148,7 +148,7 @@ rule corrected_binned_angular_acceptance:
 #     MC and MC_dG0 files.
 rule iterativeRun2a_angular_acceptance:
   wildcard_constraints:
-    version = "(v[1-9]r[0-9]|v0r[1-9])", # v0r0 not allowed
+    version = "(v[1-9]r[0-9]|v0r[2-9])", # v0r0 not allowed
   input:
     # Samples and weights
     sample_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',year='Run2a'),
@@ -390,7 +390,7 @@ rule iterativeRun2_angular_acceptance:
 # Yearly angular acceptance ------------------------------------------------------
 #     This rule runs the iterative procedure for only one year using both
 #     MC and MC_dG0 files.
-rule iterativeYearly_angular_acceptance:
+rule angular_acceptance_iterativeYearly:
   wildcard_constraints:
     version = "(v[1-9]r[0-9]|v0r[0-9])",                      # v0r0 not allowed
     year = "\d{4}"
@@ -447,7 +447,7 @@ rule iterativeYearly_angular_acceptance:
       'output/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_yearly_{timeacc}_unbiased.json'
     ],
   log:
-    'output/log/angular_acceptance/iterative_angular_acceptance/{year}/{version}_Bs2JpsiPhi_{timeacc}.log'
+    'output/log/angular_acceptance/iterativeYearly/{year}/Bs2JpsiPhi/{version}_yearly_{timeacc}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/iterative.py\
