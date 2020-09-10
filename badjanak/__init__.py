@@ -147,6 +147,8 @@ get_kernels(verbose=False, pedantic=False)
 #     Here pythonic versions of KERNEL functions are defined. There are wrappers
 #     that are simpler to interact with
 
+################################################################################
+# delta_gamma5 #################################################################
 
 def delta_gamma5(input, output,
                   # Time-dependent angular distribution
@@ -211,66 +213,6 @@ def delta_gamma5(input, output,
     np.int32(len(output)),
     global_size=g_size, local_size=l_size)
     #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
-
-
-
-def diff_cross_rate(
-      vars, pdf,
-      Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP   = 1,
-      fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
-      dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
-      pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
-      lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
-      fSlon1=0, fSlon2=0, fSlon3=0,fSlon4=0,fSlon5=0, fSlon6=0, # binned mass
-      dSlon1=0, dSlon2=0, dSlon3=0,dSlon4=0,dSlon5=0, dSlon6=0, # binned mass
-      CSP1=0, CSP2=0, CSP3=0,CSP4=0,CSP5=0, CSP6=0,             # binned mass
-      Gs = None,
-      nknots = 7,
-      knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
-      coeffs = [1, 1.2, 1.4, 1.7, 2.2, 2.2, 2.1, 2.0, 1.9],
-      use_fk=1,
-      BLOCK_SIZE=32):
-  """
-  Look at kernel definition to see help
-  """
-  # print(f"{fSlon}\n{fPlon}\n{fPper}\n{dSlon}")
-  if CSP1: # then use binned mass
-    CSP = [c for c in (CSP1, CSP2, CSP3, CSP4, CSP5, CSP6) if c != 0]
-    fSlon = [c for c in (fSlon1, fSlon2, fSlon3, fSlon4, fSlon5, fSlon6) if c != 0]
-    dSlon = [c for c in (dSlon1, dSlon2, dSlon3, dSlon4, dSlon5, dSlon6) if c != 0]
-    #CSP   = [CSP1, CSP2, CSP3, CSP4, CSP5, CSP6]
-    #fSlon = [fSlon1, fSlon2, fSlon3, fSlon4, fSlon5, fSlon6]
-    #dSlon = [dSlon1, dSlon2, dSlon3, dSlon4, dSlon5, dSlon6]
-  ASlon = np.atleast_1d(fSlon)
-  FP = abs(1-ASlon)
-  APlon = FP*fPlon; APper = FP*fPper; APpar = FP*abs(1-fPlon-fPper) # Amplitudes
-  dSlon = np.atleast_1d(dSlon) + dPper                           # Strong phases
-  CSP   = np.atleast_1d(CSP)                                       # CSP factors
-  if Gs==None: Gs = Gd+DGsd+DGd
-  # print(f"{ASlon}\n{APlon}\n{APper}\n{APpar}\n{dSlon}")
-  # print(len(CSP),CSP)
-  delta_gamma5(
-    vars, pdf,
-    np.float64(Gs), np.float64(DGs), np.float64(DM),
-    THREAD.to_device(CSP).astype(np.float64),
-    THREAD.to_device(np.sqrt(ASlon)).astype(np.float64),
-    THREAD.to_device(np.sqrt(APlon)).astype(np.float64),
-    THREAD.to_device(np.sqrt(APpar)).astype(np.float64),
-    THREAD.to_device(np.sqrt(APper)).astype(np.float64),
-    np.float64(pSlon+pPlon),
-    np.float64(pPlon), np.float64(pPpar+pPlon), np.float64(pPper+pPlon),
-    THREAD.to_device(dSlon).astype(np.float64),
-    np.float64(dPlon), np.float64(dPpar), np.float64(dPper),
-    np.float64(lSlon*lPlon),
-    np.float64(lPlon), np.float64(lPpar*lPlon), np.float64(lPper*lPlon),
-    np.float64(0.3), np.float64(15),
-
-    THREAD.to_device(get_4cs(coeffs)).astype(np.float64),
-    np.int32(use_fk), np.int32(pdf.shape[0]),
-    block = (BLOCK_SIZE,len(CSP),1),
-    grid = (int(np.ceil(vars.shape[0]/BLOCK_SIZE)),1,1))
-
-
 
 
 
@@ -389,6 +331,10 @@ def cross_rate_parser_new(
   return r
 
 ################################################################################
+
+
+
+################################################################################
 # wrappers arround delta_gamma5 ################################################
 
 def delta_gamma5_data(input, output, **pars):
@@ -445,6 +391,7 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
                          use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
                          BLOCK_SIZE=256, **p)
 
+################################################################################
 
 
 
@@ -457,280 +404,40 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
 
 
 
-
-
-
-
-
-
-
-
-def cross_rate_parser(parameters):
-  print(parameters)
-
-  pars = dict(
-  Gd = +0.65789, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP   = 1,
-  fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
-  dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
-  pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
-  lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
-  fSlon1=0, #fSlon2=0, fSlon3=0,fSlon4=0,fSlon5=0, fSlon6=0, # binned mass
-  dSlon1=0, #dSlon2=0, dSlon3=0,dSlon4=0,dSlon5=0, dSlon6=0, # binned mass
-  CSP1=None, #CSP2=0, CSP3=0,CSP4=0,CSP5=0, CSP6=0,             # binned mass
-  Gs = None,
-  coeffs = np.array([1, 1.2, 1.4, 1.7, 2.2, 2.2, 2.1, 2.0, 1.9]),
-  w = np.array([1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]),
-  # Time resolution parameters
-  sigma_offset = 0.01297,
-  sigma_slope = 0.8446,
-  sigma_curvature = 0,
-  mu = 0,
-  # Flavor tagging parameters
-  eta_os = 0.3602,
-  eta_ss = 0.4167,
-  p0_os = 0.389,
-  p0_ss = 0.4325,
-  p1_os = 0.8486,
-  p2_os = 0.,
-  p1_ss = 0.9241,
-  p2_ss = 0.,
-  dp0_os = 0.009,
-  dp0_ss = 0,
-  dp1_os = 0.0143,
-  dp2_os = 0.,
-  dp1_ss = 0,
-  dp2_ss = 0,
-  tLL = 0.3,
-  tUL = 15.0,
-  )
-  pars.update(parameters)
-  len_csp = len([pars[p] for p in pars if p[:3]=='CSP'])
-  pars['mass_bins'] = len_csp-1
-  if pars['CSP1']: # then use binned mass
-    pars['CSP']   = [ pars['CSP'+str(i)]   for i in range(1,len_csp)]
-    pars['fSlon'] = [ pars['fSlon'+str(i)] for i in range(1,len_csp)]
-    pars['dSlon'] = [ pars['dSlon'+str(i)] for i in range(1,len_csp)]
-    #CSP   = [CSP1, CSP2, CSP3, CSP4, CSP5, CSP6]
-    #fSlon = [fSlon1, fSlon2, fSlon3, fSlon4, fSlon5, fSlon6]
-    #dSlon = [dSlon1, dSlon2, dSlon3, dSlon4, dSlon5, dSlon6]
-  pars['CSP']   = np.atleast_1d(pars['CSP'])
-  #pars['fSlon'] = np.atleast_1d(pars['fSlon'])
-  pars['dSlon'] = np.atleast_1d(pars['dSlon'])
-  pars['ASlon'] = np.atleast_1d(pars['fSlon'])
-  FP = abs(1-pars['ASlon'])
-  pars['APlon'] = FP*pars['fPlon'];
-  pars['APper'] = FP*pars['fPper'];
-  pars['APpar'] = FP*abs(1-pars['fPlon']-pars['fPper'])        # Amplitudes
-  pars['dSlon'] = pars['dSlon'] + pars['dPper']               # Strong phases
-  if pars['Gs'] == None:
-    #print('no Gs')
-    pars['Gs'] = pars['Gd']+pars['DGsd']+pars['DGd']
-  #pars['nknots'] = len(pars['knots'])
-  # for k, v in pars.items():
-  #  print(f'{k:>10}:  {v}')
-  return pars
-
-
-
-
-
-
-
-
-def diff_cross_rate_full( data, pdf, use_fk=1, BLOCK_SIZE=32, **parameters):
-  """
-  Look at kernel definition to see help
-  """
-  #print('\n')
-  p = cross_rate_parser(parameters)
-  for k, v in p.items():
-   print(f'{k:>10}:  {v}')
-  print('\n\n')
-  delta_gamma5(
-    # Input and output arrays
-    data, pdf,
-    # Differential cross-rate parameters
-    np.float64(p['Gs']),
-    np.float64(p['DGs']),
-    np.float64(p['DM']),
-    THREAD.to_device(p['CSP']).astype(np.float64),
-    THREAD.to_device(np.sqrt(p['ASlon'])).astype(np.float64),
-    THREAD.to_device(np.sqrt(p['APlon'])).astype(np.float64),
-    THREAD.to_device(np.sqrt(p['APpar'])).astype(np.float64),
-    THREAD.to_device(np.sqrt(p['APper'])).astype(np.float64),
-    np.float64(p['pSlon']+p['pPlon']),
-    np.float64(p['pPlon']),
-    np.float64(p['pPpar']+p['pPlon']),
-    np.float64(p['pPper']+p['pPlon']),
-    THREAD.to_device(p['dSlon']).astype(np.float64),
-    np.float64(p['dPlon']),
-    np.float64(p['dPpar']),
-    np.float64(p['dPper']),
-    np.float64(p['lSlon']*p['lPlon']),
-    np.float64(p['lPlon']),
-    np.float64(p['lPpar']*p['lPlon']),
-    np.float64(p['lPper']*p['lPlon']),
-    np.float64(p['tLL']), np.float64(p['tUL']),
-    # Time resolution
-    np.float64(p['sigma_offset']),
-    np.float64(p['sigma_slope']),
-    np.float64(p['sigma_curvature']),
-    np.float64(p['mu']),
-    # Flavor tagging
-    np.float64(p['eta_os']), np.float64(p['eta_ss']),
-    np.float64(p['p0_os']), np.float64(p['p1_os']), np.float64(p['p2_os']),
-    np.float64(p['p0_ss']), np.float64(p['p1_ss']), np.float64(p['p2_ss']),
-    np.float64(p['dp0_os']), np.float64(p['dp1_os']), np.float64(p['dp2_os']),
-    np.float64(p['dp0_ss']), np.float64(p['dp1_ss']), np.float64(p['dp2_ss']),
-    # Decay-time acceptance
-    #np.int32(p['nknots']),
-    #THREAD.to_device(p['knots']).astype(np.float64),
-    THREAD.to_device(get_4cs(p['coeffs'])).astype(np.float64),
-    # Angular acceptance
-    THREAD.to_device(p['w']).astype(np.float64)
-    )
-
-
-
-
-
-
-
-
-
-
-
-
-def diff_cross_rate_mc( data, pdf,
-      Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, Gs = None,
-      DM = 17.7, CSP = 1,
-      fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
-      dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
-      pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
-      lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
-      tLL = 0.3, tUL = 15.0,
-      knots = np.array([0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00]),
-      coeffs = [1, 1.2, 1.4, 1.7, 2.2, 2.2, 2.1, 2.0, 1.9],
-      w = np.array([1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]),
-      # Time resolution parameters
-      sigma_offset = 0.,
-      sigma_slope = 0.,
-      sigma_curvature = 0,
-      mu = 0,
-      # Flavor tagging parameters
-      eta_os = 0., eta_ss = 0.,
-      p0_os = 0., p0_ss = 0., p1_os = 0., p2_os = 0., p1_ss = 0., p2_ss = 0.,
-      dp0_os = 0., dp0_ss = 0, dp1_os = 0., dp2_os = 0., dp1_ss = 0, dp2_ss = 0,
-      use_fk=1,
-      BLOCK_SIZE=32):
-
-  """
-  Look at kernel definition to see help
-  """
-  if Gs==None: Gs = Gd+DGsd+DGd
-  ASlon = np.atleast_1d(fSlon)
-  CSP = np.atleast_1d(CSP)
-  FP = abs(1-ASlon)
-  APlon = FP*fPlon; APper = FP*fPper; APpar = FP*abs(1-fPlon-fPper) # Amplitudes
-  dSlon = np.atleast_1d(dSlon) + dPper                           # Strong phases
-
-  __KERNELS__.DiffRate(
-    # Input and output arrays
-    data, pdf,
-    # Differential cross-rate parameters
-    np.float64(Gs),
-    np.float64(DGs),
-    np.float64(DM),
-    THREAD.to_device(np.array(CSP)).astype(np.float64),
-    THREAD.to_device(np.sqrt(ASlon)).astype(np.float64),
-    THREAD.to_device(np.sqrt(APlon)).astype(np.float64),
-    THREAD.to_device(np.sqrt(APpar)).astype(np.float64),
-    THREAD.to_device(np.sqrt(APper)).astype(np.float64),
-    np.float64(pSlon+pPlon),
-    np.float64(pPlon),
-    np.float64(pPpar+pPlon),
-    np.float64(pPper+pPlon),
-    THREAD.to_device(np.array(dSlon)).astype(np.float64),
-    np.float64(dPlon),
-    np.float64(dPpar),
-    np.float64(dPper),
-    np.float64(lSlon*lPlon),
-    np.float64(lPlon),
-    np.float64(lPpar*lPlon),
-    np.float64(lPper*lPlon),
-    np.float64(tLL), np.float64(tUL),
-    # Time resolution
-    np.float64(sigma_offset), np.float64(sigma_slope), np.float64(sigma_curvature),
-    np.float64(mu),
-    # Flavor tagging
-    np.float64(eta_os), np.float64(eta_ss),
-    np.float64(p0_os), np.float64(p1_os), np.float64(p2_os),
-    np.float64(p0_ss), np.float64(p1_ss), np.float64(p2_ss),
-    np.float64(dp0_os), np.float64(dp1_os), np.float64(dp2_os),
-    np.float64(dp0_ss), np.float64(dp1_ss), np.float64(dp2_ss),
-    # Decay-time acceptance
-    np.int32(len(knots)),
-    THREAD.to_device(knots).astype(np.float64),
-    THREAD.to_device(get_4cs(coeffs)).astype(np.float64),
-    # Angular acceptance
-    THREAD.to_device(w).astype(np.float64),
-    # Flags and cuda management
-    np.int32(use_fk), np.int32(pdf.shape[0]),
-    block = (BLOCK_SIZE,len(CSP),1),
-    grid = (int(np.ceil(data.shape[0]/BLOCK_SIZE)),1,1))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # angular acceptance functions ------------------------------------------------
 #    These are several rules related to decay-time acceptance. The main one is
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-def get_angular_cov(true, reco, weight, BLOCK_SIZE=32, **parameters):
+def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
+  # Filter some warnings
+  warnings.filterwarnings('ignore')
+
+  # Compute weights scale and number of weights to compute
+  scale = np.sum(ipanema.ristra.get(weight))
+  terms = len(config['tristan'])
+
+  # Define the computation core function
+  def get_weights(true, reco, weight):
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
+    fk = get_fk(reco.get()[:,0:3])
+    ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
+    return ang_acc
+
+  """
+  COMPUTE ANGULAR WEIGHTS WITH KERNEL (maybe this can be removed)
+  the main reason not to use this code is to be compatible with intel backends
+
   # Prepare kernel size
   g_size, l_size = get_sizes(true.shape[0],BLOCK_SIZE)
   # Parse parameters
   p = cross_rate_parser_new(**parameters)
   # Allocate some Variables
-  terms = len(config['tristan'])
   ang_acc = ipanema.ristra.zeros(terms).astype(np.float64)
   cov_mat = THREAD.to_device(np.zeros([terms,terms])).astype(np.float64)
-  scale = np.sum(ipanema.ristra.get(weight))
-  # Filter some warnings
-  warnings.filterwarnings('ignore')
 
   # Get angular weights values
   __KERNELS__.AngularWeights(
@@ -775,7 +482,6 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=32, **parameters):
     np.int32(true.shape[0]),
     global_size=g_size, local_size=l_size
   )
-
 
   # Get angular weights covariance matrix
   __KERNELS__.AngularCov(
@@ -824,9 +530,24 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=32, **parameters):
   # Arrays from device to host
   w = ang_acc.get(); cov = cov_mat.get()
 
+  """
+
+  # Get angular weights with weight applied and sum all events
+  w = get_weights(true, reco, weight).sum(axis=0)
+  # Get angular weights without weight
+  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
+  w10 = get_weights(true, reco, ones)
+
+  # Get covariance matrix
+  cov = np.zeros((terms,terms,weight.shape[0]))
+  for i in range(0,terms):
+    for j in range(i,terms):
+      cov[i,j,:] = (w10[:,i]-w[i]/scale)*(w10[:,j]-w[j]/scale)*weight.get()**2
+  cov = cov.sum(axis=2) # sum all per event cov
+
+  # Handling cov matrix, and transform it to correlation matrix
   cov = cov + cov.T - np.eye(cov.shape[0])*cov         # fill the lower-triangle
-  final_cov = np.zeros_like(cov)
-  corr = np.zeros_like(cov)
+  final_cov = np.zeros_like(cov); corr = np.zeros_like(cov)
   # Cov relative to f0
   for i in range(0,cov.shape[0]):
     for j in range(0,cov.shape[1]):
@@ -1112,4 +833,18 @@ def wofz(z):
   z_dev = THREAD.to_device(np.complex128(z))
   w_dev = THREAD.to_device(np.complex128(0*z))
   __KERNELS__.faddeeva(z_dev, w_dev, global_size=(len(z),))
+  return w_dev.get()
+
+def get_fk(z):
+  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
+  w = np.zeros((z.shape[0],len(config['tristan'])))
+  w_dev = THREAD.to_device(np.ascontiguousarray(w, dtype=np.float64))
+  # print(z_dev)
+  # print(w_dev)
+  # print("get_fk z_dev.shape:",z.shape)
+  # print("get_fk w_dev.shape:",w.shape)
+
+
+  __KERNELS__.Fcoeffs(z_dev, w_dev, np.int32(len(z)), global_size=(len(z)))
+  #print("-->",w_dev)
   return w_dev.get()
