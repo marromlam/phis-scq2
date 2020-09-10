@@ -2,6 +2,13 @@
   "path": "/samples_path/",
   "mail": [],
   "binned_variables": ["B_PT", "sigmat", "B_ETA"],
+  "angular_acceptance_bdtconfig": {
+    "n_estimators":50,
+    "learning_rate":0.1,
+    "max_depth":3,
+    "min_samples_leaf":1000,
+    "gb_args":{"subsample": 1}
+  },
   "binned_variables_cuts": {
     "pt": ['(B_PT >= 0 & B_PT < 3.8e3)', '(B_PT >= 3.8e3 & B_PT < 6e3)', '(B_PT >= 6e3 & B_PT <= 9e3)', '(B_PT >= 9e3)'],
     "eta": ['(B_ETA >= 0 & B_ETA <= 3.3)', '(B_ETA >= 3.3 & B_ETA <= 3.9)', '(B_ETA >= 3.9 & B_ETA <= 6)'],
