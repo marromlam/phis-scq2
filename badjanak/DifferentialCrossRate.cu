@@ -344,9 +344,9 @@ ${ftype} getDiffRate( ${ftype} *data,
   }
   else
   {
-    exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
-    exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
-    exp_i = expconv(time-t_offset,          G, DM, delta_t);
+    exp_p = expconv_simon(time-t_offset, G + 0.5*DG, 0., delta_t);
+    exp_m = expconv_simon(time-t_offset, G - 0.5*DG, 0., delta_t);
+    exp_i = expconv_simon(time-t_offset,          G, DM, delta_t);
   }
   //printf("                   : exp_p=%+.8f%+.8fi   exp_m=%+.8f%+.8fi   exp_i=%+.8f%+.8fi\n", exp_p.x, exp_p.y, exp_m.x, exp_m.y, exp_i.x, exp_i.y);
 
