@@ -15,13 +15,14 @@ import os
 import sys
 import numpy as np
 import uproot
+import hjson
 
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 
 # load ipanema
 from ipanema import initialize
-initialize('cuda',1)
+initialize(os.environ['IPANEMA_BACKEND'],1)
 from ipanema import ristra, Sample, Parameters
 
 # get badjanak and compile it with corresponding flags
@@ -32,7 +33,9 @@ badjanak.get_kernels(True)
 
 # reweighting config
 from hep_ml import reweight
-reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
+bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
+print(bdconfig)
+reweighter = reweight.GBReweighter(**bdconfig)
 #reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={'subsample': 1})
 #reweighter = reweight.GBReweighter(n_estimators=500, learning_rate=0.1, max_depth=2, min_samples_leaf=1000, gb_args={'subsample': 1})
 
