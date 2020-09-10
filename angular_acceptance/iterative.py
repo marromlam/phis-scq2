@@ -66,7 +66,9 @@ bsjpsikk.get_kernels(True)
 
 # reweighting config
 from hep_ml import reweight
-reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
+bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
+print(bdconfig)
+reweighter = reweight.GBReweighter(**bdconfig)
 #reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={'subsample': 1})
 #reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
 
@@ -550,7 +552,11 @@ for i in range(1,15):
                     verbose=False, timeit=True, tol=0.05, strategy=2)
   #print(result)
   pars = Parameters.clone(result.params)
-  #print(pars)
+  if f"{'&'.join(list(mc.keys()))}" == '2015' or f"{'&'.join(list(mc.keys()))}" == '2016':
+    for p in [ 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs', 'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
+      print(f"{p:>12} : {result.params[p].value:+.8f} +/- {result.params[p].stdev:+.8f}")
+  #exit()
+
 
   # 2nd step: pdf weights ------------------------------------------------------
   #   We need to change bsjpsikk to handle MC samples and then we compute the
@@ -567,7 +573,7 @@ for i in range(1,15):
       bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=0,
                                **v.params.valuesdict(), tLL=0.3)
       original_pdf_h /= v.pdf.get()
-      #print(original_pdf_h)
+      print(original_pdf_h)
       bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=1,
                                **pars.valuesdict(),
                                **data[y]['combined'].csp.valuesdict(), tLL=0.3)
