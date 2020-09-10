@@ -177,9 +177,12 @@ KERNEL
 void pyFcoeffs(GLOBAL_MEM ${{ftype}} *data, GLOBAL_MEM ${{ftype}} *fk, int NEVT)
 {{
   const SIZE_T i = get_global_id(0);
-  const SIZE_T k = get_global_id(1);
+  //const SIZE_T k = get_global_id(1);
   if (i >= NEVT) {{ return; }}
-  fk[i*10+k]= 9./(16.*M_PI)*getF(data[i*4+0],data[i*4+1],data[i*4+2],k+1);
+  for(int k=0; k<10; k++)
+  {{
+    fk[i*10+k]= 9./(16.*M_PI)*getF(data[i*3+0],data[i*3+1],data[i*3+2],k+1);
+  }}
 }}
 
 ////////////////////////////////////////////////////////////////////////////////
