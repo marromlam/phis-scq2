@@ -13,100 +13,100 @@
   w1:
   {
     name: w1
-    value: 1.02750445729808
+    value: 1.027117981935337
     free: false
     min: null
     max: null
-    stdev: 0.00371158644286346
-    init: 1.02750445729808
+    stdev: 0.001957513624274488
+    init: 1.027117981935337
     latex: w_1
   }
   w2:
   {
     name: w2
-    value: 1.026331103262368
+    value: 1.027276831220745
     free: false
     min: null
     max: null
-    stdev: 0.003650064886404206
-    init: 1.026331103262368
+    stdev: 0.001925573594660932
+    init: 1.027276831220745
     latex: w_2
   }
   w3:
   {
     name: w3
-    value: -0.01062212369787966
+    value: -0.002603038619525901
     free: false
     min: null
     max: null
-    stdev: 0.00320931108908864
-    init: -0.01062212369787966
+    stdev: 0.001567230569638321
+    init: -0.002603038619525901
     latex: w_3
   }
   w4:
   {
     name: w4
-    value: 0.003638369827735235
+    value: 0.0003905274836583377
     free: false
     min: null
     max: null
-    stdev: 0.001786169276042916
-    init: 0.003638369827735235
+    stdev: 0.0009239013267799865
+    init: 0.0003905274836583377
     latex: w_4
   }
   w5:
   {
     name: w5
-    value: 0.001865066483154209
+    value: 0.001578460267563697
     free: false
     min: null
     max: null
-    stdev: 0.00178373964251099
-    init: 0.001865066483154209
+    stdev: 0.0009121583443333211
+    init: 0.001578460267563697
     latex: w_5
   }
   w6:
   {
     name: w6
-    value: 1.013412458070838
+    value: 1.008689453189872
     free: false
     min: null
     max: null
-    stdev: 0.002591844444552513
-    init: 1.013412458070838
+    stdev: 0.00133812751680327
+    init: 1.008689453189872
     latex: w_6
   }
   w7:
   {
     name: w7
-    value: -0.003487777869156404
+    value: -0.0008774193787764446
     free: false
     min: null
     max: null
-    stdev: 0.002373712731050776
-    init: -0.003487777869156404
+    stdev: 0.001184377499132551
+    init: -0.0008774193787764446
     latex: w_7
   }
   w8:
   {
     name: w8
-    value: -0.00116436098915749
+    value: 0.000797415001007759
     free: false
     min: null
     max: null
-    stdev: 0.002393979357640191
-    init: -0.00116436098915749
+    stdev: 0.001189166055019606
+    init: 0.000797415001007759
     latex: w_8
   }
   w9:
   {
     name: w9
-    value: -0.004587341222571963
+    value: -0.0003995055052542912
     free: false
     min: null
     max: null
-    stdev: 0.004838998126761993
-    init: -0.004587341222571963
+    stdev: 0.002525229317276763
+    init: -0.0003995055052542912
     latex: w_9
   }
 }
