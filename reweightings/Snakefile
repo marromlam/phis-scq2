@@ -75,6 +75,8 @@ rule kinematic_weighting:
     'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
   run:
     import os
+    import hjson
+    bdconfig = hjson.load(open('config.json'))['time_acceptance_bdtconfig']
     year = f'{wildcards.year}'
     mode = f'{wildcards.mode}'
     version = f'{wildcards.version}'
@@ -91,10 +93,10 @@ rule kinematic_weighting:
           --target-vars "B_PT X_M"\
           --target-weight "sw"\
           --output-file {output.sample}\
-          --n-estimators 20\
-          --learning-rate 0.3\
-          --max-depth 3\
-          --min-samples-leaf 1000
+          --n-estimators {bdconfig['n_estimators']}\
+          --learning-rate {bdconfig['learning_rate']}\
+          --max-depth {bdconfig['max_depth']}\
+          --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log} #2>&1""")
     elif mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
@@ -108,10 +110,10 @@ rule kinematic_weighting:
           --target-vars "B_PT X_M"\
           --target-weight "sw*kinWeight"\
           --output-file {output.sample}\
-          --n-estimators 20\
-          --learning-rate 0.3\
-          --max-depth 3\
-          --min-samples-leaf 1000
+          --n-estimators {bdconfig['n_estimators']}\
+          --learning-rate {bdconfig['learning_rate']}\
+          --max-depth {bdconfig['max_depth']}\
+          --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log} #2>&1""")
     elif mode.startswith('Bd2JpsiKstar'):
       shell(f"""(time\
@@ -125,10 +127,10 @@ rule kinematic_weighting:
           --target-vars "B_PT B_P"\
           --target-weight "sw"\
           --output-file {output.sample}\
-          --n-estimators 20\
-          --learning-rate 0.3\
-          --max-depth 3\
-          --min-samples-leaf 1000
+          --n-estimators {bdconfig['n_estimators']}\
+          --learning-rate {bdconfig['learning_rate']}\
+          --max-depth {bdconfig['max_depth']}\
+          --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log} #2>&1""")
     else:
       shell(f"""(time\
