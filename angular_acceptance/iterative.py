@@ -23,8 +23,6 @@ from uncertainties import unumpy as unp
 from scipy.stats import chi2
 from timeit import default_timer as timer
 
-
-
 # reweighting config
 from warnings import simplefilter
 # ignore all future warnings
@@ -37,32 +35,20 @@ import threading
 import time
 import multiprocessing
 
-from iminuit import Minuit as minuit
-
 # load ipanema
 from ipanema import initialize
 initialize(os.environ['IPANEMA_BACKEND'],1)
-from ipanema import ristra, Sample, Parameters, Parameter, Optimizer
+from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
+# binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 
-
-# get bsjpsikk and compile it with corresponding flags
-# import  bsjpsikk
-# bsjpsikk.config['debug'] = 0
-# bsjpsikk.config['debug_evt'] = 0
-# bsjpsikk.config['use_time_acc'] = 0
-# bsjpsikk.config['use_time_offset'] = 0
-# bsjpsikk.config['use_time_res'] = 0
-# bsjpsikk.config['use_perftag'] = 1
-# bsjpsikk.config['use_truetag'] = 0
-# bsjpsikk.get_kernels()
-
-import badjanak as bsjpsikk
-bsjpsikk.config['fast_integral'] = 0
-bsjpsikk.config['debug'] = 0
-bsjpsikk.config['debug_evt'] = 20
-bsjpsikk.get_kernels(True)
+# get badjanak and compile it with corresponding flags
+import badjanak
+badjanak.config['fast_integral'] = 0
+badjanak.config['debug'] = 0
+badjanak.config['debug_evt'] = 0
+badjanak.get_kernels(True)
 
 # reweighting config
 from hep_ml import reweight
@@ -80,12 +66,7 @@ def check_for_convergence(a,b):
     return True
   return False
 
-################################################################################
-################################################################################
-#%% ############################################################################
-
-
-
+# Parse arguments for this script
 def argument_parser():
   parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
   # Samples
