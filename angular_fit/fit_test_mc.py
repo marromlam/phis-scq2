@@ -25,18 +25,11 @@ from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
-badjanak.config['debug'] = 0
 badjanak.config['fast_integral'] = 1
+badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 774
 
-
-
-################################################################################
-
-
-
-
-
+# Parse arguments for this script
 def argument_parser():
   parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
   # Samples
@@ -74,20 +67,14 @@ def argument_parser():
 
 
 
-#args = vars(argument_parser().parse_args(''))
 args = vars(argument_parser().parse_args())
 YEARS = [int(y) for y in args['year'].split(',')] # years are int
 VERSION = args['version']
 
-for k,v in args.items():
-  print(f'{k}: {v}')
-
 
 
 # %% Load samples --------------------------------------------------------------
-print(f"\n{80*'='}\n",
-      "Loading samples",
-      f"\n{80*'='}\n")
+print(f"\n{80*'='}\n", "Loading samples", f"\n{80*'='}\n")
 
 # Lists of data variables to load and build arrays
 real  = ['helcosthetaK','helcosthetaL','helphi','time']                        # angular variables
@@ -102,7 +89,7 @@ mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   tree = uproot.open(args['samples'].split(',')[i]).keys()[0]
-  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename=tree, cuts="time>=0.3 & time<=15 & X_M>=990 & X_M<=1050")
+  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename=tree, cuts="time>=0.0 & time<=15 & X_M>=990 & X_M<=1050")
   csp = Parameters.load(args['csp'].split(',')[i])
   print(csp)
   data[f'{y}'].csp = csp.build(csp,csp.find('CSP.*'))
@@ -114,8 +101,6 @@ for i, y in enumerate(YEARS):
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
   data[f'{y}'].df['sWeight'] = sw
   data[f'{y}'].allocate(input=real,weight='sWeight',output='0*time')
-
-
 
 # Prepare parameters
 SWAVE = True
@@ -196,7 +181,7 @@ Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 1.7,
           free=1-DGZERO, latex=r"\Delta\Gamma_s",
           blindstr="BsDGsFullRun2",
           blind=BLIND, blindscale=1.0, blindengine="root"),
-Parameter(name="DGsd", value= 0.03,   min=-0.1, max= 0.1,
+Parameter(name="DGsd", value= 0.03,   min=-0.5, max= 0.5,
           free=True, latex=r"\Gamma_s - \Gamma_d"),
 Parameter(name="DM", value=17.757,   min=15.0, max=20.0,
           free=True, latex=r"\Delta m"),
@@ -219,24 +204,30 @@ def fcn_data(parameters, data):
   chi2 = []
   for y, dy in data.items():
     badjanak.delta_gamma5_mc(dy.input, dy.output, **pars_dict,
-                             **dy.csp.valuesdict(), tLL=0.30, tUL=15.0)
+                             **dy.csp.valuesdict(), tLL=0.00, tUL=15.0)
     chi2.append( -2.0 * (ristra.log(dy.output) * 1.0 ).get() );
   return np.concatenate(chi2)
+
+################################################################################
+
+
 
 ################################################################################
 #%% Run and get the job done ###################################################
 
 print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
 result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
-                  verbose=True, timeit=True, tol=0.5 , strategy=1)
-
+                  verbose=False, timeit=True, tol=0.05 , strategy=1)
 print(result)
 
-for p in ['DGsd', 'DGs', 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DM', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6']:
-  if args['year'] == '2015,2016':
-    print(f"{p:>12} : {result.params[p].value:+.4f}  {result.params[p]._getval(False):+.4f}")
-  else:
-    print(f"{p:>12} : {result.params[p].value:+.4f} +/- {result.params[p].stdev:+.4f}")
+# Dump json file
+result.params.dump(args['params'])
+# Write latex table
+with open(args['tables'], "w") as tex_file:
+  tex_file.write( result.params.dump_latex(caption="Physics parameters.") )
+
+################################################################################
+
 
 """
 SWAVE FRACTIONS
@@ -285,13 +276,3 @@ Tsp (1.032,1.050) = 5.465
       dSlon5 : -0.7915 +/- +0.0263
       dSlon6 : -0.9282 +/- +0.0195
 """
-
-
-
-
-
-# Dump json file
-result.params.dump(args['params'])
-# Write latex table
-with open(args['tables'], "w") as tex_file:
-  tex_file.write( result.params.dump_latex(caption="Physics parameters.") )
