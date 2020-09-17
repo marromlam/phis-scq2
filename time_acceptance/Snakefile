@@ -5,7 +5,7 @@
 #    Bs2JpsiPhi acceptance.
 
 
-rule single_time_acceptance:
+rule time_acceptance_single:
   wildcard_constraints:
     trigger = "(biased|unbiased|combined)",
   input:
@@ -16,7 +16,7 @@ rule single_time_acceptance:
     params   = 'output/params/time_acceptance/{year}/{mode}/{version}_single_{trigger}.json',
     tables   = 'output/tables/time_acceptance/{year}/{mode}/{version}_single_{trigger}.tex',
   log:
-    'output/log/time_acceptance/single_time_acceptance/{year}/{mode}/{version}_{trigger}.log'
+    'output/log/time_acceptance_single/{year}/{mode}/{version}_{trigger}.log'
   run:
     shell(f"""
     (time\
@@ -34,7 +34,38 @@ rule single_time_acceptance:
     send_mail("Single Time Acceptance", f"{log}")
 
 
-rule simultaneous_time_acceptance:
+
+
+rule lifetime_fit:
+  wildcard_constraints:
+    trigger = "(biased|unbiased|combined)",
+  input:
+    sample = lambda wcs: tuples(wcs, mode=wcs.mode),
+  params:
+    params = 'time_acceptance/params/{year}/{mode}/baseline.json',
+  output:
+    params   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_single_{trigger}.json',
+    tables   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_single_{trigger}.tex',
+  log:
+    'output/log/time_acceptance/single_time_acceptance/{year}/Bd2JpsiKstar/{version}_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python time_acceptance/single.py\
+           --sample {input.sample}\
+           --input-params {params.params}\
+           --output-params {output.params}\
+           --output-tables {output.tables}\
+           --mode {wildcards.mode}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+           --trigger {wildcards.trigger}\
+    ) &> {log} 2>&1
+    """)
+    send_mail("Single Time Acceptance", f"{log}")
+
+
+rule time_acceptance_simultaneous:
   wildcard_constraints:
     timeacc = "(base|nonkin|9knots|12knots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
     trigger = "(biased|unbiased|combined)",
@@ -89,7 +120,7 @@ rule simultaneous_time_acceptance:
 #    Bs2JpsiPhi acceptance.
 
 
-rule plot_time_acceptance:
+rule time_acceptance_plot:
   wildcard_constraints:
     timeacc = "(single|base|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
     trigger = "(biased|unbiased|combined)"
