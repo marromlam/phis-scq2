@@ -399,35 +399,15 @@ def fcn_data(parameters, data):
   # parameters.valuesdict() has blind=True
   pars_dict = parameters.valuesdict(blind=False)
   chi2 = []
+
   for y, dy in data.items():
     for dt in [dy['unbiased'],dy['biased']]:
-      bsjpsikk.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
+      badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
                   **dt.flavor.valuesdict(), tLL=dt.tLL, tUL=dt.tUL)
-      #dt.df['pdf'] = dt.lkhd.get()
-      #dt.df.eval("check = (time > 5*sigmat)", inplace=True)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
-  # shit = pd.concat([dy['biased'].df, dy['unbiased'].df]) .sort_values(by=['entry']) [['time','sigmat','check','pdf']]
-  # print(shit.query("check==False"))
-  # my_pdf = np.array(shit['pdf'])
-  # peilian_pdf = np.genfromtxt('/home3/marcos.romero/log_pdf_2015',delimiter=',')
-  # peilian_pdf = peilian_pdf[np.argsort(peilian_pdf[:, 0])]
-  # my_n = 29804
-  # print(peilian_pdf[:my_n,0])
-  # peilian_pdf = peilian_pdf[:my_n,1]
-  # my_pdf= my_pdf[10:my_n+10]
-  # print(peilian_pdf)
-  # print(my_pdf)
-  # print(f"{'idx':>8} | marcos | peilian")
-  # for i in range(0,my_n):
-  #   if (np.abs(my_pdf[i]-peilian_pdf[i]) < 1e0) & (np.abs(my_pdf[i]-peilian_pdf[i]) > 1e-5):
-  #     print(f"{i+10:>8} | {my_pdf[i]:.6f} | {peilian_pdf[i]:.6f}")
-  # print(np.max(np.abs(my_pdf-peilian_pdf)))
-  # import matplotlib.pyplot as plt
-  # plt.plot(np.abs(my_pdf-peilian_pdf))
-  # plt.show()
-  # exit()
+
   return np.concatenate(chi2)
 
 
