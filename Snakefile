@@ -134,6 +134,12 @@ def tuples(wcs,version=False,year=None,mode=None,weight=None):
   #print(path)
   return path
 
+# Set pipeline-wide constraints ------------------------------------------------
+#     Some wilcards will only have some well defined values.
+wildcard_constraints:
+  trigger = "(biased|unbiased|combined)"
+
+
 # Including Snakefiles
 include: 'samples/Snakefile'
 include: 'reweightings/Snakefile'
