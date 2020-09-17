@@ -180,7 +180,7 @@ if __name__ == '__main__':
   print(f"{'trigger':>15}: {args['trigger']:50}")
   print(f"{'cuts':>15}: {cuts:50}")
   print(f"{'script':>15}: {SCRIPT.title():50}")
-  print(f"{'cuts':>15}: {CUT if CUT else 'None':50}")
+  print(f"{'bin cuts':>15}: {CUT if CUT else 'None':50}")
   print(f"{'minimizer':>15}: {MINER.title():50}\n")
 
 
