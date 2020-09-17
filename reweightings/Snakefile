@@ -14,7 +14,7 @@ rule reweighting_polarity:
     original = lambda wcs: tuples(wcs,weight='sWeight'),
     target   = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',weight='sWeight'),
   output:
-    sample   = SAMPLES_PATH+'{year}/{mode}/{version}_polWeight.root'
+    sample   = temp(SAMPLES_PATH+'{year}/{mode}/{version}_polWeight.root')
   log:
     'output/log/reweightings/polarity_weighting/{year}/{mode}/{version}.log'
   run:
@@ -42,7 +42,7 @@ rule reweighting_pdf:
     original = lambda wcs: f"{wcs.year}/{wcs.mode[3:].split('_')[0]}.json",
     target = lambda wcs: f"{wcs.year}/{wcs.mode}.json",
   output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{version}_pdfWeight.root'
+    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_pdfWeight.root')
   log:
     'output/log/reweightings/pdf_weighting/{year}/{mode}/{version}.log'
   run:
@@ -70,7 +70,7 @@ rule reweighting_kinematic:
     original = lambda wcs: tuples(wcs,weight='pdfWeight'),
     target = lambda wcs: tuples(wcs,mode='cdata',weight='kinWeight'),
   output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{version}_kinWeight.root'
+    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_kinWeight.root')
   log:
     'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
   run:
@@ -141,7 +141,9 @@ rule reweighting_kinematic:
 
 
 
-
+# reweighting plots ------------------------------------------------------------
+#    Adds polWeight to MC tuples matching the corresponding data sample. This
+#    rule runs only over MC tuples.
 
 rule reweightings_plot_time_acceptance:
   wildcard_constraints:
@@ -196,33 +198,6 @@ rule reweightings_plot_angular_acceptance:
            --kkpweighted {output}\
     ) &> {log} #2>&1""")
     ### <<< send_mail(f"Polarity weighting", f"{log}")              # WARNING #
-
-
-
-"""
-def argument_parser():
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--original', default = f'/scratch17/marcos.romero/phis_samples/2015/MC_Bs2JpsiPhi/v0r5.root',
-                      help='File to correct')
-  parser.add_argument('--weights', default = f'/scratch17/marcos.romero/phis_samples/2015/MC_Bs2JpsiPhi/v0r5_angWeight.root',
-                      help='File to correct')
-  parser.add_argument('--target', default = f'/scratch17/marcos.romero/phis_samples/2015/Bs2JpsiPhi/v0r5.root',
-                      help='File to correct')
-  parser.add_argument('--year', default = '2015',
-                      help='File to reweight to')
-  parser.add_argument('--mode', default='MC_Bs2JpsiPhi',
-                      help='Name of the target tree')
-  parser.add_argument('--version', default='v0r5',
-                      help='Name of the target tree')
-  parser.add_argument('--branch', default='B_P',
-                      help='Name of the target tree')
-  parser.add_argument('--treename', default='yearly_repo',
-                      help='Name of the target tree')
-  parser.add_argument('--kkpweighted', default='output/figures/reweightings/2015/MC_Bs2JpsiPhi/v0r5_B_P_yearly_repo_sWeight.pdf',
-                      help='File to store the ntuple with weights')
-  return parser
-"""
-
 
 
 
