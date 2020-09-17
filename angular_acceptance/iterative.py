@@ -461,7 +461,7 @@ def get_angular_acceptance(mc,t):
     trigger = mc.biased
   elif t == 'unbiased':
     trigger = mc.unbiased
-  ang_acc = bsjpsikk.get_angular_cov(
+  ang_acc = badjanak.get_angular_cov(
               mc.true, mc.reco,
               trigger*mc.weight*ristra.allocate(mc.kkpWeight[i]*mc.kinWeight),
               **mc.params.valuesdict()
@@ -487,15 +487,15 @@ print(f"\n{80*'='}\n",
 
 lb = [ data[f'{y}']['biased'].angular_weights[-1].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
 lu = [ data[f'{y}']['unbiased'].angular_weights[-1].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
-print(f"\n{80*'-'}\n","Biased angular acceptance")
+print(f"\n{80*'-'}\nBiased angular acceptance")
 for l in zip(*lb):
   print(*l, sep="| ")
-print("\n","Unbiased angular acceptance")
+print("\nUnbiased angular acceptance")
 for l in zip(*lu):
   print(*l, sep="| ")
 print(f"\n{80*'-'}\n")
 
-from ipanema import optimize
+
 
 
 
@@ -503,14 +503,13 @@ from ipanema import optimize
 ################################################################################
 #%% Run and get the job done ###################################################
 
-
-
-
-for i in range(1,15):
+for i in range(1,20):
   checker = []                  # here we'll store if weights do converge or not
   itstr = f"[iteration #{i}]"
 
-  # 1st step: fit data ---------------------------------------------------------
+  # 1st step: fit data ---------------------------------------------------------
+  for v in pars.values():
+    v.init = v.value # start where we left
   print(f'Simultaneous fit Bs2JpsiPhi {"&".join(list(mc.keys()))} {itstr}')
   result = optimize(fcn_data,
                     method='minuit', params=pars, fcn_kwgs={'data':data},
@@ -518,13 +517,14 @@ for i in range(1,15):
   #print(result)
   pars = Parameters.clone(result.params)
   if f"{'&'.join(list(mc.keys()))}" == '2015' or f"{'&'.join(list(mc.keys()))}" == '2016':
-    for p in [ 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs', 'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
-      print(f"{p:>12} : {result.params[p].value:+.8f} +/- {result.params[p].stdev:+.8f}")
-  #exit()
+    for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs',
+              'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
+              'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
+      print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
 
 
   # 2nd step: pdf weights ------------------------------------------------------
-  #   We need to change bsjpsikk to handle MC samples and then we compute the
+  #   We need to change badjanak to handle MC samples and then we compute the
   #   desired pdf weights for a given set of fitted pars in step 1. This implies
   #   looping over years and MC samples (std and dg0)
   print(f'\nPDF weighting MC samples to match Bs2JpsiPhi data {itstr}')
@@ -532,29 +532,27 @@ for i in range(1,15):
   for y, dy in mc.items(): # loop over years
     for m, v in dy.items(): # loop over mc_std and mc_dg0
       print(f' * Calculating pdfWeight for {m}-{y} sample')
-      bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=1,
+      badjanak.delta_gamma5_mc(v.true, v.pdf, use_fk=1,
                                **v.params.valuesdict(), tLL=0.3)
       original_pdf_h = v.pdf.get()
-      bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=0,
+      badjanak.delta_gamma5_mc(v.true, v.pdf, use_fk=0,
                                **v.params.valuesdict(), tLL=0.3)
       original_pdf_h /= v.pdf.get()
-      print(original_pdf_h)
-      bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=1,
+      badjanak.delta_gamma5_mc(v.true, v.pdf, use_fk=1,
                                **pars.valuesdict(),
                                **data[y]['combined'].csp.valuesdict(), tLL=0.3)
       target_pdf_h = v.pdf.get()
-      bsjpsikk.delta_gamma5_mc(v.true, v.pdf, use_fk=0, **pars.valuesdict(),
+      badjanak.delta_gamma5_mc(v.true, v.pdf, use_fk=0, **pars.valuesdict(),
                                **data[y]['combined'].csp.valuesdict(), tLL=0.3)
       target_pdf_h /= v.pdf.get()
-      #print(target_pdf_h)
       v.pdfWeight[i] = np.nan_to_num(target_pdf_h/original_pdf_h)
-      print(f"   pdfWeight[{i}]: {v.pdfWeight[i]}")
-      #exit()
+      #print(f"   pdfWeight[{i}]: {v.pdfWeight[i]}")
   tf = timer()-t0
   print(f'PDF weighting took {tf:.3f} seconds.')
 
+
   # 3rd step: kinematic weights ------------------------------------------------
-  #   We need to change bsjpsikk to handle MC samples and then we compute the
+  #   We need to change badjanak to handle MC samples and then we compute the
   #   desired pdf weights for a given set of fitted pars in step 1. This implies
   #   looping over years and MC samples (std and dg0).
   #   As a matter of fact, it's important to have data[y][combined] sample,
@@ -562,8 +560,6 @@ for i in range(1,15):
   #   nothing after cutting the sample.
   print(f'\nKinematic reweighting MC samples in K momenta {itstr}')
   threads = list()
-  logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO,
-                      datefmt="%H:%M:%S")
   t0 = timer()
   for y, dy in mc.items(): # loop over years
     for m, v in dy.items(): # loop over mc_std and mc_dg0
@@ -593,6 +589,8 @@ for i in range(1,15):
   tf = timer()-t0
   print(f'Kinematic weighting took {tf:.3f} seconds.')
 
+
+
   # 4th step: angular weights --------------------------------------------------
   print(f'\nExtract angular weights {itstr}')
   for y, dy in mc.items(): # loop over years
@@ -610,6 +608,7 @@ for i in range(1,15):
     print(f"{'MC_Bs2JpsiPhi':<10} | {'MC_Bs2JpsiPhi_dG0':<10}")
     for evt in range(0,20):
       print(f"{dy['MC_BsJpsiPhi'].kkpWeight[i][evt]:>+.8f} | {dy['MC_BsJpsiPhi_dG0'].kkpWeight[i][evt]:>+.8f}")
+
 
 
   # 5th step: merge MC std and dg0 results -------------------------------------
@@ -665,7 +664,7 @@ for i in range(1,15):
       data[f'{y}'][trigger].angular_weights.append(merged_w)
       qwe = check_for_convergence( data[f'{y}'][trigger].angular_weights[-2], data[f'{y}'][trigger].angular_weights[-1] )
       checker.append( qwe )
-      merged_w.dump(f'output/params/angular_acceptance/{y}/Bs2JpsiPhi/{VERSION}_Iteration{i}_{trigger}.json')
+      merged_w.dump(data[f'{y}'][trigger].params_path.replace('.json',f'i{i}.json'))
       print(f'Value of chi2/dof = {chi2_value:.4}/{dof} corresponds to a p-value of {prob:.4}\n')
 
   # Check if they are the same as previous iteration
