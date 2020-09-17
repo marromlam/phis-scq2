@@ -1,7 +1,7 @@
 # Run2 physics_params ----------------------------------------------------------
 #     This rule runs the iterative procedure for FullRun2 years using RD.
 
-rule physics_params_run2_data:
+rule physics_params_data_run2:
   input:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
     # Angular acceptance
@@ -84,7 +84,7 @@ rule physics_params_run2_data:
 # Run2a angular acceptance -----------------------------------------------------
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
-rule physics_params_Run2aRepo:
+rule physics_params_data_run2a:
   input:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2a'),
     # Angular acceptance
