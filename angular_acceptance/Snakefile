@@ -9,7 +9,7 @@
 #     MC samples. First rule computes angular acceptance for MC, and second one
 #     merges MC results to compute RD angular acceptance
 
-rule naive_angular_acceptance:
+rule angular_acceptance_naive:
   wildcard_constraints:
     mode = "(TOY|MC)_Bs2JpsiPhi(_dG0)?"
   input:
@@ -20,7 +20,7 @@ rule naive_angular_acceptance:
     params = 'output/params/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.tex'
   log:
-    'output/log/angular_acceptance/naive_angular_acceptance/{year}_{mode}_{version}_{trigger}.log'
+    'output/log/angular_acceptance_naive/{year}/{mode}/{version}_{trigger}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/naive.py\
@@ -37,7 +37,7 @@ rule naive_angular_acceptance:
 
 
 
-rule blend_angular_acceptance:
+rule angular_acceptance_blend:
   wildcard_constraints:
     step = "(naive|corrected)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?",
     version = "(v[1-9]r[0-9]|v0r[2-9])", # v0r0 not allowed
@@ -49,7 +49,7 @@ rule blend_angular_acceptance:
     params = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.tex'
   log:
-    'output/log/angular_acceptance/merge_angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.log'
+    'output/log/angular_acceptance_blend/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/merge.py\
@@ -67,8 +67,21 @@ rule blend_angular_acceptance:
 
 
 
-
-
+rule angular_acceptance_joinWeights:
+  input:
+    b = SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_biased.npy',
+    u = SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_unbiased.npy'
+  output:
+     SAMPLES_PATH+'{year}/{mode}/{version}_angWeight.root'
+  run:
+    import uproot
+    import numpy as np
+    b = np.load(f"{input.b}")
+    u = np.load(f"{input.u}")
+    with uproot.recreate(f"{output}") as rfile:
+      rfile['DecayTree'] = uproot.newtree({'kinWeight':np.float64})
+      rfile['DecayTree'].extend({'kinWeight':b+u})
+    rfile.close()
 
 
 
@@ -76,7 +89,7 @@ rule blend_angular_acceptance:
 #     Correcting MC sample with kinematic weighting in B_P, B_PT and X_M helps
 #     to better match MC to RD.
 
-rule corrected_angular_acceptance:
+rule angular_acceptance_corrected:
   wildcard_constraints:
     mode = "MC_Bs2JpsiPhi(_dG0)?",
     trigger = "(biased|unbiased|combined)",
@@ -90,7 +103,7 @@ rule corrected_angular_acceptance:
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.tex',
     weight = temp(SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{trigger}.npy')
   log:
-    'output/log/angular_acceptance/corrected_angular_acceptance/{year}/{mode}/{version}_{trigger}.log'
+    'output/log/angular_acceptance_corrected/{year}/{mode}/{version}_corrected_{trigger}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/corrected.py\
@@ -107,7 +120,7 @@ rule corrected_angular_acceptance:
     ) &> {log} #2>&1""")
     send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
 
-rule corrected_binned_angular_acceptance:
+rule angular_acceptance_correctedBinned:
   wildcard_constraints:
     mode = "MC_Bs2JpsiPhi(_dG0)?",
     binnedvar = "(pt|sigmat|eta)",
@@ -122,7 +135,7 @@ rule corrected_binned_angular_acceptance:
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.tex',
     weight = temp(SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{binnedvar}{bin}_{trigger}.npy')
   log:
-    'output/log/angular_acceptance/corrected_binned_angular_acceptance/{year}/{mode}/{version}_{binnedvar}{bin}_{trigger}.log'
+    'output/log/angular_acceptance_corrected/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/corrected.py\
@@ -146,7 +159,7 @@ rule corrected_binned_angular_acceptance:
 # Run2a angular acceptance ------------------------------------------------------
 #     This rule runs the iterative procedure for all Run2 years using both
 #     MC and MC_dG0 files.
-rule iterativeRun2a_angular_acceptance:
+rule angular_acceptance_iterativeRun2a:
   wildcard_constraints:
     version = "(v[1-9]r[0-9]|v0r[2-9])", # v0r0 not allowed
   input:
@@ -214,7 +227,7 @@ rule iterativeRun2a_angular_acceptance:
       'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_run2a_{timeacc}_unbiased.tex'
     ],
   log:
-    'output/log/angular_acceptance/iterative_angular_acceptance/Run2a/Bs2JpsiPhi/{version}_{timeacc}.log'
+    'output/log/angular_acceptance_iterative/run2a/Bs2JpsiPhi/{version}_run2a_{timeacc}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/iterative.py\
@@ -260,10 +273,10 @@ def taparser(a):
     return "correctedBin"+cammel_case_split(b[1])[0]
   return "corrected"
 
-rule iterativeRun2_angular_acceptance:
+rule angular_acceptance_iterativeRun2:
   threads: 16
   wildcard_constraints:
-    version = "(v[1-9]r[0-9]|v0r[1-9])",                      # v0r0 not allowed
+    version = "(v[1-9]r[0-9]|v0r[2-9])",             # v0r0 and v0r1 not allowed
     timeacc = "(base|nonkin|9knots|12knots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
   input:
     # Samples and weights
@@ -358,7 +371,7 @@ rule iterativeRun2_angular_acceptance:
       'output/tables/angular_acceptance/2018/Bs2JpsiPhi/{version}_base_{timeacc}_unbiased.tex'
     ],
   log:
-    'output/log/angular_acceptance/iterative_angular_acceptance/Run2/{version}_Bs2JpsiPhi_{timeacc}.log'
+    'output/log/angular_acceptance_iterative/run2/Bs2JpsiPhi/{version}_base_{timeacc}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/iterative.py\
@@ -447,7 +460,7 @@ rule angular_acceptance_iterativeYearly:
       'output/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_yearly_{timeacc}_unbiased.json'
     ],
   log:
-    'output/log/angular_acceptance/iterativeYearly/{year}/Bs2JpsiPhi/{version}_yearly_{timeacc}.log'
+    'output/log/angular_acceptance_iterative/{year}/Bs2JpsiPhi/{version}_yearly_{timeacc}.log'
   run:
     shell(f"""(time\
     python angular_acceptance/iterative.py\
@@ -472,5 +485,5 @@ rule angular_acceptance_iterativeYearly:
            --year                    {",".join([wildcards.year])}\
            --weigths-branch          yearly_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) #&> {log} #2>&1""")
+    ) &> {log} #2>&1""")
     send_mail(f"Angular Acceptance :: {wildcards.year} :: {wildcards.timeacc}", f"{log}")
