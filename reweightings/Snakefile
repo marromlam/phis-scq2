@@ -7,7 +7,7 @@
 # polarity weighting -----------------------------------------------------------
 #    Adds polWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
-rule polarity_weighting:
+rule reweighting_polarity:
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
@@ -33,7 +33,7 @@ rule polarity_weighting:
 # p.d.f. weighting -------------------------------------------------------------
 #    Adds pdfWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
-rule pdf_weighting:
+rule reweighting_pdf:
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
@@ -63,7 +63,7 @@ rule pdf_weighting:
 #    Adds kinWeight to MC_BsJpsiPhi*, MC_BdJpsiKstar and Bd2JpsiKstar tuples
 #    gb-weighting them to match kinematic distributions of their complementary
 #    sample.
-rule kinematic_weighting:
+rule reweighting_kinematic:
   wildcard_constraints:
     mode = "(MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0|_Swave)?|Bd2JpsiKstar)"
   input:
@@ -143,7 +143,7 @@ rule kinematic_weighting:
 
 
 
-rule plot_time_acceptance_reweightings:
+rule reweightings_plot_time_acceptance:
   wildcard_constraints:
     branch = "((B|hplus|hminus)_P(T)?|X_M)",
     weight = "(s|kin|kkp)Weight"
@@ -169,7 +169,7 @@ rule plot_time_acceptance_reweightings:
     ) &> {log} #2>&1""")
 
 
-rule plot_angular_acceptance_reweightings:
+rule reweightings_plot_angular_acceptance:
   wildcard_constraints:
     mode = "(TOY|MC)_Bs2JpsiPhi(_dG0)?",
     branch = "((B|hplus|hminus)_P(T)?|X_M)",
@@ -226,7 +226,7 @@ def argument_parser():
 
 
 
-rule simon_comparisons:
+rule reweightings_simon_comparisons:
   input:
     original = lambda wcs: tuples(wcs),
     target = lambda wcs: tuples(wcs,mode='cdata')
