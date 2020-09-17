@@ -12,6 +12,7 @@
 		"name": "c0",
     "latex": "c_0",
 		"value": 1,
+		"stdev": 0,
 		"free": false,
 		"min": 0.5,
 		"max": 3
@@ -19,7 +20,8 @@
 	"c1": {
 		"name": "c1",
     "latex": "c_1",
-		"value": 1.688314403644336,
+		"value": 1.69,
+		"stdev": 0.27,
 		"free": true,
 		"min": 0.5,
 		"max": 3
@@ -27,7 +29,8 @@
 	"c2": {
 		"name": "c2",
     "latex": "c_2",
-		"value": 1.734886146039805,
+		"value": 1.73,
+		"stdev": 0.20,
 		"free": true,
 		"min": 0.5,
 		"max": 3
@@ -35,7 +38,8 @@
 	"c3": {
 		"name": "c3",
     "latex": "c_3",
-		"value": 1.846162928233731,
+		"value": 1.85,
+		"stdev": 0.24,
 		"free": true,
 		"min": 0.5,
 		"max": 3
@@ -43,7 +47,8 @@
 	"c4": {
 		"name": "c4",
     "latex": "c_4",
-		"value": 1.99153465684944,
+		"value": 1.99,
+		"stdev": 0.23,
 		"free": true,
 		"min": 0.5,
 		"max": 3
@@ -51,7 +56,8 @@
 	"c5": {
 		"name": "c5",
     "latex": "c_5",
-		"value": 1.917345447258337,
+		"value": 1.92,
+		"stdev": 0.23,
 		"free": true,
 		"min": 0.5,
 		"max": 3
@@ -59,7 +65,8 @@
 	"c6": {
 		"name": "c6",
     "latex": "c_6",
-		"value": 2.007600462255469,
+		"value": 2.01,
+		"stdev": 0.27,
 		"free": true,
 		"min": 0.5,
 		"max": 3
@@ -67,7 +74,8 @@
 	"c7": {
 		"name": "c7",
     "latex": "c_7",
-		"value": 2.177234430975456,
+		"value": 2.18,
+		"stdev": 0.28,
 		"free": true,
 		"min": 0.5,
 		"max": 3
@@ -76,7 +84,8 @@
 	"c8": {
 		"name": "c8",
     "latex": "c_8",
-		"value": 1.931583806591105,
+		"value": 1.93,
+		"stdev": 0.24,
 		"free": true,
 		"min": 0.5,
 		"max": 3

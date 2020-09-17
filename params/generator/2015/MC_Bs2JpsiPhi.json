@@ -119,11 +119,11 @@
   DGsd:
   {
     name: DGsd
-    value: 0.003486
+    value: 0.0034866
     free: false
     min: null
     max: null
-    init: 0.003486
+    init: 0.0034866
     latex: DGsd
     blind: false
     blindengine: python
