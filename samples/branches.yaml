@@ -17,6 +17,7 @@ common: &common
   "Polarity" : "Polarity"
   "eta" : "B_ETA"
   "B_LOKI_DTF_CTAUERR" : "B_LOKI_DTF_CTAUERR"
+  "eventNumber" : "eventNumber"
 
 MC_common: &MC_common
   <<: *common
