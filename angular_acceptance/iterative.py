@@ -171,14 +171,28 @@ params_unbiased    = args['output_weights_unbiased'].split(',')
 tables_biased      = args['output_tables_biased'].split(',')
 tables_unbiased    = args['output_tables_unbiased'].split(',')
 
+# If version is v0r1, you will be running over old tuples, I guess you
+# pursuit to reproduce HD-fitter results. So I will change a little the config
+if VERSION == 'v0r1':
+  reweighter = reweight.GBReweighter(n_estimators=40,learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={"subsample": 1})
+  input_std_params = args['params_mc_std'].replace("generator","generator_old").split(',')
+  input_dg0_params = args['params_mc_dg0'].replace("generator","generator_old").split(',')
+
+
+print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
+print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
+print(f"{'version':>15}: {VERSION:50}")
+print(f"{'year(s)':>15}: {YEARS:50}")
+print(f"{'cuts':>15}: {'time>=0.3 & time<=15':50}")
+print(f"{'bin cuts':>15}: {CUT if CUT else 'None':50}")
+print(f"{'bdtconfig':>15}: {list(bdconfig.values()).join(':'):50}\n")
+
 
 
 
 
 # %% Load samples --------------------------------------------------------------
-print(f"\n{80*'='}\n",
-      "Loading samples",
-      f"\n{80*'='}\n")
+print(f"\n{80*'='}\n", "Loading samples", f"\n{80*'='}\n")
 
 # Lists of MC variables to load and build arrays
 reco = ['cosK', 'cosL', 'hphi', 'time']
