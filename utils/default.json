@@ -1,10 +1,17 @@
 {
-  "path": "/samples_path/",
+  "path": "sidecar/",
   "mail": [],
   "binned_variables": ["B_PT", "sigmat", "B_ETA"],
   "angular_acceptance_bdtconfig": {
     "n_estimators":50,
     "learning_rate":0.1,
+    "max_depth":3,
+    "min_samples_leaf":1000,
+    "gb_args":{"subsample": 1}
+  },
+  "time_acceptance_bdtconfig": {
+    "n_estimators":20,
+    "learning_rate":0.3,
     "max_depth":3,
     "min_samples_leaf":1000,
     "gb_args":{"subsample": 1}
