@@ -25,6 +25,7 @@ from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
+badjanak.config['fast_integral'] = 1
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 774
 
@@ -172,7 +173,6 @@ for i, y in enumerate(YEARS):
     print(c)
     knots = np.array(Parameters.build(c,c.fetch('k.*'))).tolist()
     badjanak.config['knots'] = knots
-    print(knots)
     data[f'{y}'][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
     data[f'{y}'][f'{t}'].tLL = c['tLL'].value
     data[f'{y}'][f'{t}'].tUL = c['tUL'].value
@@ -408,24 +408,21 @@ def fcn_data(parameters, data):
   return chi2conc + chi2TagConstr#np.concatenate(chi2)
 
 ################################################################################
+
+
+
+################################################################################
 #%% Run and get the job done ###################################################
 
 print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
 result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
-                  verbose=False, timeit=True, tol=0.1, strategy=2)
-
+                  verbose=False, timeit=True, tol=0.05, strategy=2)
 print(result)
-
-for p in ['DGsd', 'DGs', 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DM', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6']:
-  if args['year'] == '2015,2016':
-    print(f"{p:>12} : {result.params[p].value:+.4f}  {result.params[p]._getval(False):+.4f}")
-  else:
-    print(f"{p:>12} : {result.params[p].value:+.4f} +/- {result.params[p].stdev:+.4f}")
-
-
 
 # Dump json file
 result.params.dump(args['params'])
 # Write latex table
 with open(args['tables'], "w") as tex_file:
   tex_file.write( result.params.dump_latex(caption="Physics parameters.") )
+
+################################################################################
