@@ -90,12 +90,12 @@ rule figures_bundle:
     version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
   input:
     # Reweightings figures
-    rwp1 = expand(rules.plot_time_acceptance_reweightings.output,
+    rwp1 = expand(rules.reweightings_plot_time_acceptance.output,
                   version='{version}',
                   mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
                   branch=['B_P','B_PT','X_M'],
                   year=['2015','2016','2017','2018']),
-    rwp2 = expand(rules.plot_angular_acceptance_reweightings.output,
+    rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
                   version='{version}',
                   mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
                   branch=['B_P','B_PT','X_M'],
@@ -271,15 +271,15 @@ rule share_acceptances:
 
 rule compile_slides:
   input:
-    rwp2 = expand(rules.plot_angular_acceptance_reweightings.output,
-                  version=['v0r5'],
-                  mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
-                  branch=['B_P','B_PT','X_M','hplus_PT','hplus_P','hminus_PT','hminus_P'],
-                  angacc=['yearly'],
-                  timeacc=['repo'],
-                  weight=['sWeight','kinWeight','kkpWeight'],
-                  year=['2015']),
-                  #year=['2015','2016','2017','2018']),
+    # rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
+    #               version=['v0r5'],
+    #               mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
+    #               branch=['B_P','B_PT','X_M','hplus_PT','hplus_P','hminus_PT','hminus_P'],
+    #               angacc=['yearly'],
+    #               timeacc=['repo'],
+    #               weight=['sWeight','kinWeight','kkpWeight'],
+    #               year=['2015']),
+    #               #year=['2015','2016','2017','2018']),
   output:
     "output/bundle/main_{date}.pdf"
   log:
