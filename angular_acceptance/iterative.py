@@ -131,7 +131,7 @@ def argument_parser():
                       default = '2016',
                       help='Year of data-taking')
   parser.add_argument('--weigths-branch',
-                      default = 'yearly_base',
+                      default = None,
                       help='Year of data-taking')
   parser.add_argument('--version',
                       default = 'test',
@@ -145,6 +145,13 @@ def argument_parser():
 args = vars(argument_parser().parse_args())
 YEARS = [int(y) for y in args['year'].split(',')] # years are int
 VERSION = args['version']
+CUT = None
+if args['weigths_branch']:
+  BINVAR, BIN = args['weigths_branch'][:-1], args['weigths_branch'][-1]
+  if BINVAR.startswith('Bin'):
+    CUT = bin_vars[f'{BINVAR[3:]}'][int(BIN)-1]
+  else:
+    CUT = bin_vars[f'{BINVAR}'][int(BIN)-1]
 
 samples_std   = args['sample_mc_std'].split(',')
 samples_dg0   = args['sample_mc_dg0'].split(',')
@@ -182,10 +189,10 @@ if VERSION == 'v0r1':
 print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
 print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
 print(f"{'version':>15}: {VERSION:50}")
-print(f"{'year(s)':>15}: {YEARS:50}")
+print(f"{'year(s)':>15}: {args['year']:50}")
 print(f"{'cuts':>15}: {'time>=0.3 & time<=15':50}")
 print(f"{'bin cuts':>15}: {CUT if CUT else 'None':50}")
-print(f"{'bdtconfig':>15}: {list(bdconfig.values()).join(':'):50}\n")
+print(f"{'bdtconfig':>15}: {':'.join(str(x) for x in bdconfig.values()):50}\n")
 
 
 
@@ -215,7 +222,8 @@ for i, y in enumerate(YEARS):
   mc[f'{y}'] = {}
   for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[samples_std,samples_dg0]):
     print(f' *  Loading {m}-{y} sample from\n    {v[i]}')
-    mc[f'{y}'][f'{m}'] = Sample.from_root(v[i])
+    mc[f'{y}'][f'{m}'] = Sample.from_root(v[i], cuts=CUT)
+    print("len mc = ",len(mc[f'{y}'][f'{m}'].df['time']))
   for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[input_std_params,input_dg0_params]):
     print(f' *  Associating {m}-{y} parameters from\n    {v[i]}')
     mc[f'{y}'][f'{m}'].assoc_params(v[i])
@@ -224,6 +232,7 @@ for i, y in enumerate(YEARS):
     mc[f'{y}'][f'{m}'].kinWeight = uproot.open(v[i])['DecayTree'].array('kinWeight')
     mc[f'{y}'][f'{m}'].path_to_weights = v[i]
     print(f"    {mc[f'{y}'][f'{m}'].kinWeight}")
+    print("len angWeight = ",len(mc[f'{y}'][f'{m}'].kinWeight))
 
 for y, modes in mc.items():
   for m, v in modes.items():
@@ -232,8 +241,8 @@ for y, modes in mc.items():
     mc[f'{y}'][f'{m}'].allocate(true=true)
     mc[f'{y}'][f'{m}'].allocate(pdf='0*time', ones='time/time', zeros='0*time')
     mc[f'{y}'][f'{m}'].allocate(weight=weight_mc)
-    mc[f'{y}'][f'{m}'].allocate(biased='Jpsi_Hlt1DiMuonHighMassDecision_TOS==0')
-    mc[f'{y}'][f'{m}'].allocate(unbiased='Jpsi_Hlt1DiMuonHighMassDecision_TOS==1')
+    mc[f'{y}'][f'{m}'].allocate(biased=f'Jpsi_Hlt1DiMuonHighMassDecision_TOS==0')
+    mc[f'{y}'][f'{m}'].allocate(unbiased=f'Jpsi_Hlt1DiMuonHighMassDecision_TOS==1')
     mc[f'{y}'][f'{m}'].angular_weights = {'biased':0, 'unbiased':0}
     mc[f'{y}'][f'{m}'].kkpWeight = {}
     mc[f'{y}'][f'{m}'].pdfWeight = {}
@@ -245,7 +254,7 @@ mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   data[f'{y}'] = {}
-  data[f'{y}']['combined'] = Sample.from_root(samples_data[i])
+  data[f'{y}']['combined'] = Sample.from_root(samples_data[i], cuts=f'(time>=0.3) & (time<=15) & ({CUT})')
   csp = Parameters.load(csp_factors[i])
   csp = csp.build(csp,csp.find('CSP.*'))
   resolution = Parameters.load(time_resolution[i])
@@ -255,7 +264,7 @@ for i, y in enumerate(YEARS):
   data[f'{y}'][f'combined'].resolution = resolution
   for t, T in zip(['biased','unbiased'],[0,1]):
     print(f' *  Loading {y} sample in {t} category\n    {samples_data[i]}')
-    this_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}) & (time>=0.3) & (time<=15)'
+    this_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}) & (time>=0.3) & (time<=15) & ({CUT})'
     data[f'{y}'][f'{t}'] = Sample.from_root(samples_data[i], cuts=this_cut)
     data[f'{y}'][f'{t}'].csp = csp
     data[f'{y}'][f'{t}'].flavor = flavor
@@ -710,10 +719,10 @@ for y, dy in mc.items(): # loop over years
     for iter, wvalues in v.kkpWeight.items():
       pool.update({f'kkpWeight{iter}': wvalues})
     print(pool)
-    with uproot.recreate(v.path_to_weights,compression=None) as f:
+    with uproot.recreate(v.path_to_weights.replace('angWeight','kkpWeight'),compression=None) as f:
       this_treename = args['weigths_branch']
       f['DecayTree'] = uproot.newtree({'kinWeight':np.float64})
       f['DecayTree'].extend({'kinWeight':v.kinWeight})
-      f[this_treename] = uproot.newtree({var:np.float64 for var in pool})
-      f[this_treename].extend(pool)
+      #f[this_treename] = uproot.newtree({var:np.float64 for var in pool})
+      f['DecayTree'].extend(pool)
 print(f' * Succesfully writen')
