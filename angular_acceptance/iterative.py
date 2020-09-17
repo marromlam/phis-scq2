@@ -241,7 +241,7 @@ for y, modes in mc.items():
 
 # Load corresponding data sample
 data = {}
-mass = bsjpsikk.config['x_m']
+mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   data[f'{y}'] = {}
@@ -268,13 +268,11 @@ for i, y in enumerate(YEARS):
     c = Parameters.load(coeffs[i])
     print(c)
     data[f'{y}'][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
-    print(np.array(data[f'{y}'][f'{t}'].timeacc))
     data[f'{y}'][f'{t}'].tLL = c['tLL'].value
     data[f'{y}'][f'{t}'].tUL = c['tUL'].value
   for t, weights in zip(['biased','unbiased'],[w_biased,w_unbiased]):
     print(f' *  Associating {y}-{t} angular weights from\n    {weights[i]}')
     w = Parameters.load(weights[i])
-    print(w)
     data[f'{y}'][f'{t}'].angacc = Parameters.build(w,w.fetch('w.*'))
     data[f'{y}'][f'{t}'].angular_weights = [Parameters.build(w,w.fetch('w.*'))]
   for t, path in zip(['biased','unbiased'],[params_biased,params_unbiased]):
