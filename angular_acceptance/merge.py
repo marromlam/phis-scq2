@@ -24,7 +24,7 @@ from scipy.stats import chi2
 
 # load ipanema
 from ipanema import initialize
-initialize('cuda',1)
+#initialize('cuda',1)
 from ipanema import ristra, Sample, Parameters
 
 
