@@ -10,6 +10,243 @@ def find_flags(v):
   all_flags = list(dict.fromkeys(all_flags)) # remove duplicates
   return all_flags
 
+import os
+import datetime
+
+def modification_date(filename):
+    t = os.path.getmtime(filename)
+    return datetime.datetime.fromtimestamp(t)
+
+def fast_copy_commit(input, output, repo, verbose=False):
+    import os, shutil
+    from git import Repo
+    file = output.split(f"{repo}/")[1]
+    if os.path.exists(output):
+      os.path.remove(output)
+    shutil.copy(input, output)
+    if os.path.exists(output):
+      if verbose:
+        print(f"Adding {file}")
+      repo = Repo(repo)
+      repo.git.add( file )
+      try:
+        if verbose:
+          print( repo.git.commit('-m', f"<phis-scq auto-commit> add {file}") )
+        else:
+          repo.git.commit('-m', f"<phis-scq auto-commit> add {file}")
+      except:
+        0
+
+
+
+rule bundle_translate_physics:
+  input:
+    'output/params/angular_fit/{year}/Bs2JpsiPhi/{version}_{phys}_{angacc}_{timeacc}.json'
+  output:
+    temp('output/bundle/params/{year}/Bs2JpsiPhi/{version}_{phys}_{angacc}_{timeacc}.json')
+  run:
+    from bundle.params.physics_translator import physics_params_translator
+    from ipanema import Parameters
+    physics_params_translator(
+      Parameters.load(f"{input}"), f"{output}",
+      flag=f"{wildcards.version}_{wildcards.phys}_{wildcards.angacc}_{wildcards.timeacc}"
+    )
+
+
+rule bundle_translate_time_acceptance:
+  input:
+    biased = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
+    unbiased = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
+  output:
+    temp('output/bundle/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}.json')
+  log:
+    'output/log/bundle_translate/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python bundle/pipeline_translation.py\
+           --params-biased {input.biased}\
+           --params-unbiased {input.unbiased}\
+           --params-output {output}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+    ) &> {log} #2>&1""")
+
+
+
+rule bundle_translate_angular_acceptance:
+  input:
+    biased = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json',
+    unbiased = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json',
+  output:
+    temp('output/bundle/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.json')
+  log:
+    'output/log/bundle_translate/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python bundle/pipeline_translation.py\
+           --params-biased {input.biased}\
+           --params-unbiased {input.unbiased}\
+           --params-output {output}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+    ) &> {log} #2>&1""")
+
+
+
+
+rule bundle_share_physics:
+  input:
+    repo = 'tmp/bs2jpsiphi',
+    file = 'output/bundle/params/{phys}/Bs2JpsiPhi/{version}_{phys}_run2_base.json'
+  output:
+    file = 'tmp/bs2jpsiphi/fit/results/{version}/phis-scq-{phys}.json'
+  run:
+    fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+
+
+rule bundle_share_physics_fitcheck:
+  input:
+    repo = 'tmp/bs2jpsiphi',
+    file = 'output/bundle/params/{phys}/Bs2JpsiPhi/{version}_{phys}_run2_base{var}.json'
+  output:
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/physics_params/{phys}/phis-scq-{var}.json'
+  run:
+    fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+
+rule bundle_share_physics_fitcheck2:
+  input:
+    repo = 'tmp/bs2jpsiphi',
+    file = 'output/bundle/params/{year}/Bs2JpsiPhi/{version}_yearly_yearly_base.json'
+  output:
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/physics_params/{year}/phis-scq-yearly.json'
+  run:
+    fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+
+
+rule bundle_share_time_acceptance:
+  input:
+    repo = 'tmp/bs2jpsiphi',
+    file = 'output/bundle/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_base.json'
+  output:
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/time_acceptance/{year}/time_acceptance_{year}.json'
+  run:
+    fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+
+
+rule bundle_share_time_acceptance_fitcheck:
+  input:
+    repo = 'tmp/bs2jpsiphi',
+    file = 'output/bundle/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_base{timeacc}.json'
+  output:
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/time_acceptance/{year}/{timeacc}.json'
+  run:
+    fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+
+
+rule bundle_share_angular_acceptance:
+  input:
+    repo = 'tmp/bs2jpsiphi',
+    file = 'output/bundle/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_run2_base.json'
+  output:
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/angular_acceptance/{year}/angular_acceptance_{year}.json'
+  run:
+    fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+
+
+rule bundle_share_angular_acceptance_fitcheck:
+  input:
+    repo = 'tmp/bs2jpsiphi',
+    file = 'output/bundle/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_run2_base{timeacc}.json'
+  output:
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/angular_acceptance/{year}/{timeacc}.json'
+  run:
+    fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+
+
+
+
+
+# Git rules --------------------------------------------------------------------
+
+rule bundle_share_push:
+  output:
+    repo = touch('tmp/bs2jpsiphi/push_timestamp')
+  run:
+    import os
+    from git import Repo
+    repo = Repo( os.path.dirname(f"{output.repo}") )
+    #print( repo.git.commit('-m', f"<phis-scq auto-commit> add parameters") )
+    print( repo.git.push("--set-upstream",repo.remote(name='origin'),repo.head.ref) )
+
+
+
+rule bundle_share_clone:
+  output:
+    repo = touch('tmp/bs2jpsiphi/clone_timestamp'),
+  log:
+    'output/log/bundle_share_repository/clone.log'
+  run:
+    import os.path, time
+    from dateutil import parser
+    from git import Repo
+    import shutil
+
+    git_url = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git"
+    branche = "phis-scq-parameters"
+    repo_dir = os.path.dirname(f"{output.repo}")
+
+    # Check if we need to clone the repository
+    if os.path.exists(repo_dir):
+      trepo = modification_date(repo_dir)
+      tnow = datetime.datetime.now()
+      tdiff = abs(int(str(trepo - tnow).split('day')[0]))
+      if tdiff > 1: # older than 1 day -> clone again!
+        print("The repository timestamp is greater than 1 day")
+        print("Bs2JpsiPhi-FullRun2.git will be cloned again")
+        CLONE = True
+      else:
+        CLONE = False
+    else:
+      CLONE = True
+    CLONE = True
+    print(CLONE, repo_dir)
+    # Clone if needed
+    if CLONE:
+      # Remove dir if it exists
+      try:
+        shutil.rmtree(repo_dir)
+        print(f'\nRemoving {repo_dir} to have a fresh and clean repo')
+      except:
+        0
+      # Clone repository
+      print('Cloning Bs2JpsiPhi-FullRun2.git')
+      repo = Repo.clone_from(git_url, repo_dir)
+      repo.git.checkout(f'origin/master')
+      print("  ",repo.git.status())
+
+      # Remove remote branch if it exists
+      remote = repo.remote(name='origin')
+      try:
+        remote.push(refspec=(f':{branche}'))
+        print(f'Previous {branche} branch was deleted')
+      except:
+        0
+
+      # Create phis-scq-parameters branch
+      repo.git.checkout(f'origin/master')
+      print(repo.git.status())
+      print(f'Creating {branche} branch')
+      repo.git.checkout(b=f'{branche}')
+      print("  ",repo.git.status())
+    touch(f'{output.repo}')
+
+    #
+
+
+
+
+
+
 
 
 
@@ -201,68 +438,34 @@ rule repository_bundle:
 """
 
 
-rule translate_time_acceptance:
-  input:
-    biased = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_Baseline_biased.json',
-    unbiased = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_Baseline_unbiased.json',
-  output:
-    'output/bundle/params/{version}/time_acceptance/{year}/time_acceptance_{year}.json'
-  log:
-    'output/log/bundle/translate_parameters/{version}/{year}/time_acceptance.json'
-  run:
-    shell(f"""(time\
-    python bundle/pipeline_translation.py\
-           --params-biased {input.biased}\
-           --params-unbiased {input.unbiased}\
-           --params-output {output}\
-           --year {wildcards.year}\
-           --version {wildcards.version}\
-    ) &> {log} #2>&1""")
-
-rule translate_angular_acceptance:
-  input:
-    biased = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Baseline_biased.json',
-    unbiased = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_Baseline_unbiased.json',
-  output:
-    'output/bundle/params/{version}/angular_acceptance/{year}/angular_acceptance_{year}.json'
-  log:
-    'output/log/bundle/translate_parameters/{version}/{year}/angular_acceptance.json'
-  run:
-    shell(f"""(time\
-    python bundle/pipeline_translation.py\
-           --params-biased {input.biased}\
-           --params-unbiased {input.unbiased}\
-           --params-output {output}\
-           --year {wildcards.year}\
-           --version {wildcards.version}\
-    ) &> {log} #2>&1""")
 
 
 
 
-rule share_acceptances:
-  # wildcard_constraints:
-  #   version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
-  input:
-    # Time acceptance outputs
-    time = expand(rules.translate_time_acceptance.output,
-                  version='{version}',year=[2015,2016]),
-    angular = expand(rules.translate_angular_acceptance.output,
-                     version='{version}',year=[2015,2016]),
-  log:
-    "output/log/bundle/share_acceptances/{version}.log"
-  output:
-    "output/bundle/params/{version}.zip"
-  run:
-    shell(f"""(time\
-    python bundle/commit.py
-    ) #&> {log} #2>&1""")
-    cpath = f'{output}'
-    try:
-      import shutil
-      shutil.make_archive(f'{cpath[:-4]}/','zip',f'{cpath[:-4]}/')
-    except:
-      print(f"Couldn't zip the contents from {cpath}")
+
+# rule share_acceptances:
+#   # wildcard_constraints:
+#   #   version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
+#   input:
+#     # Time acceptance outputs
+#     time = expand(rules.translate_time_acceptance.output,
+#                   version='{version}',year=[2015,2016]),
+#     angular = expand(rules.translate_angular_acceptance.output,
+#                      version='{version}',year=[2015,2016]),
+#   log:
+#     "output/log/bundle/share_acceptances/{version}.log"
+#   output:
+#     "output/bundle/params/{version}.zip"
+#   run:
+#     shell(f"""(time\
+#     python bundle/commit.py
+#     ) #&> {log} #2>&1""")
+#     cpath = f'{output}'
+#     try:
+#       import shutil
+#       shutil.make_archive(f'{cpath[:-4]}/','zip',f'{cpath[:-4]}/')
+#     except:
+#       print(f"Couldn't zip the contents from {cpath}")
 
 
 
@@ -290,70 +493,6 @@ rule compile_slides:
     if not os.path.isfile(f"bundle/tex/main_{date}.tex"):
       print(f"Creating main_{date}.tex from main.tex template")
       os.system(f"cp bundle/tex/main.tex bundle/tex/main_{date}.tex")
-    shell(f"cd bundle/tex/; /home3/marcos.romero/.linuxbrew/Cellar/texlive/20200715/texlive/bin/x86_64-linux/latexmk -xelatex main_{date}.tex") #-silent
-    shell(f"cp bundle/tex/main_{date}.tex output/bundle/main_{date}.pdf")
-    shell(f"cd bundle/tex/; /home3/marcos.romero/.linuxbrew/Cellar/texlive/20200715/texlive/bin/x86_64-linux/latexmk -c main_{date}.tex")
-
-
-
-
-# rule figures_bundle:
-#   wildcard_constraints:
-#     version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
-#   input:
-#     # Reweightings figures
-#     rwp1 = expand(rules.plot_reweightings.output,
-#                   version='{version}',
-#                   mode=['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0','MC_BdJpsiKstar,MC_BdJpsiKstar'],
-#                   branch=['B_P','B_PT','X_M'],
-#                   year=['2015','2016','2017','2018']),
-#     # Time acceptance outputs
-#     tap1 = expand(rules.decay_time_acceptance.output,
-#                   version='{version}',
-#                   year=['2015','2016','2017','2018'],
-#                   trigger=['biased','unbiased'])#,
-#     # time_acceptance_2 = expand(rules.decay_time_acceptance_without_kinweights.output,
-#     #                            version='{version}',
-#     #                            year=['2015','2016'],
-#     #                            flag='test',
-#     #                            trigger=['biased','unbiased'],
-#     #                            script='nonkinweighted')
-#   output:
-#     zipfile = "output/bundle/figures/{version}.zip"
-#   run:
-#     import os
-#     import shutil
-#     all_files = []
-#     for this_input in input:
-#       if isinstance(this_input, list):
-#         print('its a list')
-#         for item in this_input:
-#           all_files.append(item)
-#       else:
-#         all_files.append(this_input)
-#
-#     if os.path.isdir(f"{output.zipfile[:-4]}"):
-#       os.system(f"rm -rf {output.zipfile[:-4]}")
-#
-#     for file in all_files:
-#       if file.endswith('.pdf'):
-#         out_path = f"{output.zipfile[:-4]}/figures/"
-#         out_path = file.replace('figures/','').replace('output/',out_path)
-#       elif file.endswith('.json'):
-#         out_path = f"{output.zipfile[:-4]}/params/"
-#         out_path = file.replace('params/','').replace('output/',out_path)
-#       elif file.endswith('.tex'):
-#         out_path = f"{output.zipfile[:-4]}/tables/"
-#         out_path = file.replace('tables/','').replace('output/',out_path)
-#       else:
-#         out_path = None # add other methods if needed
-#       if out_path:
-#         print(f"Copying {file}...")
-#         out_path = os.path.abspath(out_path)
-#         os.system(f"mkdir -p {os.path.dirname(out_path)}") # create dir
-#         os.system(f"cp {file} {out_path}")                 # copy file
-#         #shutil.copy2(f"{file}", f"{file.replace('output/',out_path)}")
-#       try:
-#         shutil.make_archive(f'{output.zipfile[:-4]}','zip',f'{output.zipfile[:-4]}')
-#       except:
-#         print("Couldn't zip the contents")
+    shell(f"cd bundle/tex/; latexmk -xelatex main_{date}.tex") #-silent
+    shell(f"cp bundle/tex/main_{date}.tex output/bundle/b2cc_{date}.pdf")
+    shell(f"cd bundle/tex/; latexmk -c main_{date}.tex")
