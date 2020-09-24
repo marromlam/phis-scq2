@@ -1,0 +1,191 @@
+{
+    "Description:": "physics parameters from phi-scq :: ${FLAG}",
+    "ResultSetLabel": "${FLAG}",
+    "Parameter": [
+        {
+            "Name": "deltaPar",
+            "Value": ${dPpar_value},
+            "Error": ${dPpar_error}
+        },
+        {
+            "Name": "dp1os",
+            "Value": ${dp1_os_value},
+            "Error": ${dp1_os_error}
+        },
+        {
+            "Name": "phisS",
+            "Value": ${pSlon_value},
+            "Error": ${pSlon_error}
+        },
+        {
+            "Name": "p1ss",
+            "Value": ${p1_ss_value},
+            "Error": ${p1_ss_error}
+        },
+        {
+            "Name": "lambdapar",
+            "Value": ${lPpar_value},
+            "Error": ${lPpar_error}
+        },
+        {
+            "Name": "p0ss",
+            "Value": ${p0_ss_value},
+            "Error": ${p0_ss_error}
+        },
+        {
+            "Name": "phisperp",
+            "Value": ${pPper_value},
+            "Error": ${pPper_error}
+        },
+        {
+            "Name": "DGs",
+            "Value": ${DGs_value},
+            "Error": ${DGs_error}
+        },
+        {
+            "Name": "p1os",
+            "Value": ${p1_os_value},
+            "Error": ${p1_os_error}
+        },
+        {
+            "Name": "DGsd",
+            "Value": ${DGsd_value},
+            "Error": ${DGsd_error}
+        },
+        {
+            "Name": "deltaS1",
+            "Value": ${dSlon1_value},
+            "Error": ${dSlon1_error}
+        },
+        {
+            "Name": "deltaS2",
+            "Value": ${dSlon2_value},
+            "Error": ${dSlon2_error}
+        },
+        {
+            "Name": "deltaS3",
+            "Value": ${dSlon3_value},
+            "Error": ${dSlon3_error}
+        },
+        {
+            "Name": "deltaPerp",
+            "Value": ${dSlon4_value},
+            "Error": ${dSlon4_error}
+        },
+        {
+            "Name": "deltaS5",
+            "Value": ${dSlon5_value},
+            "Error": ${dSlon5_error}
+        },
+        {
+            "Name": "deltaS6",
+            "Value": ${dSlon6_value},
+            "Error": ${dSlon6_error}
+        },
+        {
+            "Name": "dp1ss",
+            "Value": ${dp1_ss_value},
+            "Error": ${dp1_ss_error}
+        },
+        {
+            "Name": "Dm",
+            "Value": ${DM_value},
+            "Error": ${DM_error}
+        },
+        {
+            "Name": "phis0",
+            "Value": ${pPlon_value},
+            "Error": ${pPlon_error}
+        },
+        {
+            "Name": "Aperp",
+            "Value": ${fPper_value},
+            "Error": ${fPper_error}
+        },
+        {
+            "Name": "p0os",
+            "Value": ${p0_os_value},
+            "Error": ${p0_os_error}
+        },
+        {
+            "Name": "deltaS4",
+            "Value": ${dSlon4_value},
+            "Error": ${dSlon4_error}
+        },
+        {
+            "Name": "dp0ss",
+            "Value": ${dp0_ss_value},
+            "Error": ${dp0_ss_error}
+        },
+        {
+            "Name": "phispar",
+            "Value": ${pPpar_value},
+            "Error": ${pPpar_error}
+        },
+        {
+            "Name": "FS1",
+            "Value": ${fSlon1_value},
+            "Error": ${fSlon1_error}
+        },
+        {
+            "Name": "lambdaperp",
+            "Value": ${lPper_value},
+            "Error": ${lPper_error}
+        },
+        {
+            "Name": "A0",
+            "Value": ${fPlon_value},
+            "Error": ${fPlon_error}
+        },
+        {
+            "Name": "FS2",
+            "Value": ${fSlon2_value},
+            "Error": ${fSlon2_error}
+        },
+        {
+            "Name": "FS3",
+            "Value": ${fSlon3_value},
+            "Error": ${fSlon3_error}
+        },
+        {
+            "Name": "phis",
+            "Value": ${pPlon_value},
+            "Error": ${pPlon_error}
+        },
+        {
+            "Name": "FS5",
+            "Value": ${fSlon5_value},
+            "Error": ${fSlon5_error}
+        },
+        {
+            "Name": "FS6",
+            "Value": ${fSlon6_value},
+            "Error": ${fSlon6_error}
+        },
+        {
+            "Name": "FS4",
+            "Value": ${fSlon4_value},
+            "Error": ${fSlon4_error}
+        },
+        {
+            "Name": "dp0os",
+            "Value": ${dp0_os_value},
+            "Error": ${dp0_os_error}
+        },
+        {
+            "Name": "lambdaS",
+            "Value": ${lSlon_value},
+            "Error": ${lSlon_error}
+        },
+        {
+            "Name": "lambda0",
+            "Value": ${lPlon_value},
+            "Error": ${lPlon_error}
+        },
+        {
+            "Name": "lambda",
+            "Value": ${lPlon_value},
+            "Error": ${lPlon_error}
+        }
+    ]
+}
