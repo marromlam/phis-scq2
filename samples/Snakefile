@@ -5,7 +5,7 @@
 
 rule sync_ntuples:
   output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root'
+    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root')
   log:
     'output/log/samples/sync_ntuples/{year}/{mode}/{version}.log'
   run:
