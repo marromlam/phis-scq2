@@ -5,7 +5,7 @@
 # Contributors: Marcos Romero
 
 import hjson
-config = hjson.load(open('config.json'))
+CONFIG = hjson.load(open('config.json'))
 
 # Main constants ---------------------------------------------------------------
 #    VERSION: is the version Bs2JpsiPhi-FullRun2 pipeline was run against, and
@@ -14,19 +14,33 @@ config = hjson.load(open('config.json'))
 #               is enough free space there
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
 
-SAMPLES_PATH = config['path']
-MAILS = config['mail']
+SAMPLES_PATH = CONFIG['path']
+MAILS = CONFIG['mail']
 
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
-def send_mail(subject, fp):
+def send_mail(subject, body, files=None):
   import os
-  fp = os.path.abspath(fp)
-  start = f'Content-Type: text/html\nSubject: {subject}\n<pre style="font: monospace">'
-  end = '</pre>'
-  cmd = f'echo "{start}\n`cat {fp}`\n{end}"'
+  body = os.path.abspath(body)
+  attachments = None
+  # Check if there are attachments
+  if files:
+    attachments = []
+    for f in files:
+      attachments.append( os.path.abspath(f) )
+  # Loop over mails
   for mail in MAILS:
-    shell(f"""ssh master '{cmd} | /usr/sbin/sendmail {mail}'""")
+    # If there are attachments, then we use mail directly
+    if attachments:
+      shell(f"""ssh master 'echo "{attachments}" | mail -s"{subject}" -a {" -a ".join(attachments)} {mail}'""")
+    else:
+      # If it's a log file, then we try to force monospace fonts in mails
+      # maybe not all of the email apps can read it as monospaced
+      # WIP
+      start = f'Content-Type: text/html\nSubject: {subject}\n<pre style="font: monospace">'
+      end = '</pre>'
+      cmd = f'echo "{start}\n`cat {body}`\n{end}"'
+      shell(f"""ssh master '{cmd} | /usr/sbin/sendmail {mail}'""")
 
 
 # Some wildcards options ( this is not actually used )
@@ -44,7 +58,6 @@ yd = {'2011':'2011',
       '2018':'2018',
       'Run2b':['2017','2018'],
       'Run2':['2015','2016','2017','2018']};
-trigger = ['combined','biased','unbiased']
 
 
 
