@@ -1,5 +1,6 @@
 # Run2 physics_params ----------------------------------------------------------
 #     This rule runs the iterative procedure for FullRun2 years using RD.
+from utils.strings import cammel_parser
 
 rule physics_params_data_run2:
   input:
@@ -52,10 +53,10 @@ rule physics_params_data_run2:
       'output/params/flavor_tagging/2018/Bs2JpsiPhi/{version}.json'
     ],
   output:
-    params = 'output/params/angular_fit/run2/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.json',
-    tables = 'output/tables/angular_fit/run2/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.tex'
+    params = 'output/params/angular_fit/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.json',
+    tables = 'output/tables/angular_fit/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.tex'
   log:
-    'output/log/angular_acceptance/physics_params/run2/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
+    'output/log/physics_params_data/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
     python angular_fit/fit_test_data.py\
@@ -70,6 +71,7 @@ rule physics_params_data_run2:
            --params                  {output.params}\
            --tables                  {output.tables}\
            --year                    {",".join(yd['Run2'])}\
+           --cuts                    '{cammel_parser(wildcards.timeacc)}'\
            --version                 {wildcards.version}\
     ) &> {log} #2>&1""")
     send_mail(f"Run2 Fit", f"{log}")
@@ -121,8 +123,8 @@ rule physics_params_data_run2a:
       'output/params/flavor_tagging/2016/Bs2JpsiPhi/{version}.json'
     ],
   output:
-    params = 'output/params/angular_fit/run2a/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.json',
-    tables = 'output/tables/angular_fit/run2a/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.tex'
+    params = 'output/params/angular_fit/run2a/Bs2JpsiPhi/{version}_run2a_{angacc}_{timeacc}.json',
+    tables = 'output/tables/angular_fit/run2a/Bs2JpsiPhi/{version}_run2a_{angacc}_{timeacc}.tex'
   log:
     'output/log/angular_acceptance/physics_params/run2a/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
   run:
@@ -139,8 +141,68 @@ rule physics_params_data_run2a:
            --params                  {output.params}\
            --tables                  {output.tables}\
            --year                    {",".join(yd['Run2a'])}\
+           --cuts                    '{cammel_parser(wildcards.timeacc)}'\
            --version                 {wildcards.version}\
     ) &> {log} #2>&1""")
+    send_mail(f"Physics Parameters Run2a", f"{log}")
+
+
+
+
+# Yearly time-dependent angular fit --------------------------------------------
+#     This rule runs the iterative procedure for Run2a years (2015&2016) using
+#     both MC and MC_dG0 files.
+rule physics_params_dataYearly:
+  input:
+    samples = lambda wcs: [tuples(wcs,mode='Bs2JpsiPhi')],
+    # Angular acceptance
+    angacc_biased = [
+      'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json'
+    ],
+    angacc_unbiased = [
+      'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json'
+    ],
+    # Time acceptance coefficients
+    timeacc_biased = [
+      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
+    ],
+    timeacc_unbiased = [
+      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
+    ],
+    # CSP
+    csp_factors = [
+      'output/params/csp_factors/{year}/Bs2JpsiPhi/{version}.json'
+    ],
+    # Time resolution
+    time_resolution = [
+      'output/params/time_resolution/{year}/Bs2JpsiPhi/{version}.json'
+    ],
+    # Flavor tagging
+    flavor = [
+      'output/params/flavor_tagging/{year}/Bs2JpsiPhi/{version}.json'
+    ],
+  output:
+    params = 'output/params/angular_fit/{year}/Bs2JpsiPhi/{version}_yearly_{angacc}_{timeacc}.json',
+    tables = 'output/tables/angular_fit/{year}/Bs2JpsiPhi/{version}_yearly_{angacc}_{timeacc}.tex'
+  log:
+    'output/log/angular_acceptance/physics_params/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python angular_fit/fit_test_data.py\
+           --samples                 {",".join(input.samples)}\
+           --angacc-biased           {",".join(input.angacc_biased)}\
+           --angacc-unbiased         {",".join(input.angacc_unbiased)}\
+           --timeacc-biased          {",".join(input.timeacc_biased)}\
+           --timeacc-unbiased        {",".join(input.timeacc_unbiased)}\
+           --csp                     {",".join(input.csp_factors)}\
+           --time-resolution         {",".join(input.time_resolution)}\
+           --flavor-tagging          {",".join(input.flavor)}\
+           --params                  {output.params}\
+           --tables                  {output.tables}\
+           --year                    {",".join([wildcards.year])}\
+           --version                 {wildcards.version}\
+           --cuts                    '{cammel_parser(wildcards.timeacc)}'\
+    ) #&> {log} #2>&1""")
     send_mail(f"Physics Parameters Run2a", f"{log}")
 
 
