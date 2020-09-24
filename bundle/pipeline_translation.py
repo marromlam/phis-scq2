@@ -72,5 +72,6 @@ if __name__ == '__main__':
   # Dump json
   fpath = os.path.join(uinfo[0],'bundle',uinfo[1],f'{version}',uinfo[2],f'{year}')
   fname = f"{uinfo[2]}_{year}.json"
-  os.makedirs(fpath, exist_ok=True)
-  json.dump( pars_out, open(os.path.join(fpath,fname),'w') )
+  #os.makedirs(fpath, exist_ok=True)
+  print(os.path.join(fpath,fname))
+  json.dump( pars_out, open(args['params_output'],'w') , indent=4)
