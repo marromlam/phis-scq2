@@ -37,7 +37,7 @@ import multiprocessing
 
 # load ipanema
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],1)
+initialize(os.environ['IPANEMA_BACKEND'],2)
 from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # binned variables
@@ -50,10 +50,12 @@ badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
 badjanak.get_kernels(True)
 
+from utils.strings import cuts_and
+
+
 # reweighting config
 from hep_ml import reweight
 bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
-print(bdconfig)
 reweighter = reweight.GBReweighter(**bdconfig)
 #reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={'subsample': 1})
 #reweighter = reweight.GBReweighter(n_estimators=50, learning_rate=0.1, max_depth=3, min_samples_leaf=1000, gb_args={'subsample': 1})
@@ -126,11 +128,17 @@ def argument_parser():
   parser.add_argument('--output-tables-unbiased',
                       default = 'output/time_acceptance/parameters/2016/MC_Bs2JpsiPhi_dG0/v0r1_biased.json',
                       help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--output-angular-weights-mc-std',
+                      default = 'output/time_acceptance/parameters/2016/Bs2JpsiPhi_dG0/v0r1_biased.json',
+                      help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--output-angular-weights-mc-dg0',
+                      default = 'output/time_acceptance/parameters/2016/MC_Bs2JpsiPhi_dG0/v0r1_biased.json',
+                      help='Bs2JpsiPhi MC sample')
   # Configuration file ---------------------------------------------------------
   parser.add_argument('--year',
                       default = '2016',
                       help='Year of data-taking')
-  parser.add_argument('--weigths-branch',
+  parser.add_argument('--cuts',
                       default = None,
                       help='Year of data-taking')
   parser.add_argument('--version',
@@ -140,18 +148,17 @@ def argument_parser():
   return parser
 
 
-# Parse arguments
-#try:
+# %% Prepare configuration -----------------------------------------------------
+print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
+
 args = vars(argument_parser().parse_args())
-YEARS = [int(y) for y in args['year'].split(',')] # years are int
+
+# List of years (int) to be fitted
+YEARS = [int(y) for y in args['year'].split(',')]
+# Version of tuples
 VERSION = args['version']
-CUT = None
-if args['weigths_branch']:
-  BINVAR, BIN = args['weigths_branch'][:-1], args['weigths_branch'][-1]
-  if BINVAR.startswith('Bin'):
-    CUT = bin_vars[f'{BINVAR[3:]}'][int(BIN)-1]
-  else:
-    CUT = bin_vars[f'{BINVAR}'][int(BIN)-1]
+# Handling cuts here
+CUT = None if args['cuts'] == 'None' else args['cuts']
 
 samples_std   = args['sample_mc_std'].split(',')
 samples_dg0   = args['sample_mc_dg0'].split(',')
@@ -178,6 +185,9 @@ params_unbiased    = args['output_weights_unbiased'].split(',')
 tables_biased      = args['output_tables_biased'].split(',')
 tables_unbiased    = args['output_tables_unbiased'].split(',')
 
+kkpWeight_std = args['output_angular_weights_mc_std'].split(',')
+kkpWeight_dg0 = args['output_angular_weights_mc_dg0'].split(',')
+
 # If version is v0r1, you will be running over old tuples, I guess you
 # pursuit to reproduce HD-fitter results. So I will change a little the config
 if VERSION == 'v0r1':
@@ -186,7 +196,6 @@ if VERSION == 'v0r1':
   input_dg0_params = args['params_mc_dg0'].replace("generator","generator_old").split(',')
 
 
-print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
 print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
 print(f"{'version':>15}: {VERSION:50}")
 print(f"{'year(s)':>15}: {args['year']:50}")
@@ -230,9 +239,11 @@ for i, y in enumerate(YEARS):
   for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[angWeight_std,angWeight_dg0]):
     print(f' *  Attaching {m}-{y} kinWeight from\n    {v[i]}')
     mc[f'{y}'][f'{m}'].kinWeight = uproot.open(v[i])['DecayTree'].array('kinWeight')
-    mc[f'{y}'][f'{m}'].path_to_weights = v[i]
     print(f"    {mc[f'{y}'][f'{m}'].kinWeight}")
     print("len angWeight = ",len(mc[f'{y}'][f'{m}'].kinWeight))
+  for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[kkpWeight_std,kkpWeight_dg0]):
+    mc[f'{y}'][f'{m}'].path_to_weights = v[i]
+    print(f"    {mc[f'{y}'][f'{m}'].path_to_weights}")
 
 for y, modes in mc.items():
   for m, v in modes.items():
@@ -254,7 +265,10 @@ mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   data[f'{y}'] = {}
-  data[f'{y}']['combined'] = Sample.from_root(samples_data[i], cuts=f'(time>=0.3) & (time<=15) & ({CUT})')
+  if CUT:
+    data[f'{y}']['combined'] = Sample.from_root(samples_data[i], cuts=f'(time>=0.3) & (time<=15) & ({CUT})')
+  else:
+    data[f'{y}']['combined'] = Sample.from_root(samples_data[i], cuts=f'(time>=0.3) & (time<=15)')
   csp = Parameters.load(csp_factors[i])
   csp = csp.build(csp,csp.find('CSP.*'))
   resolution = Parameters.load(time_resolution[i])
@@ -264,7 +278,8 @@ for i, y in enumerate(YEARS):
   data[f'{y}'][f'combined'].resolution = resolution
   for t, T in zip(['biased','unbiased'],[0,1]):
     print(f' *  Loading {y} sample in {t} category\n    {samples_data[i]}')
-    this_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}) & (time>=0.3) & (time<=15) & ({CUT})'
+    this_cut = f'Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}'
+    this_cut = cuts_and(this_cut,'time>=0.3 & time<=15', CUT)
     data[f'{y}'][f'{t}'] = Sample.from_root(samples_data[i], cuts=this_cut)
     data[f'{y}'][f'{t}'].csp = csp
     data[f'{y}'][f'{t}'].flavor = flavor
@@ -448,7 +463,7 @@ def kkp_weighting(original_v, original_w, target_v, target_w, path, y,m,t,i):
   #                original_weight = original_w, target_weight = target_w );
   # kkpWeight = np.where(original_w!=0, reweighter_fold.predict_weights(original_v), 0)
   # kkpWeight = np.where(original_w!=0, np.ones_like(original_w), 0)
-  np.save(os.path.dirname(path)+f'/kkpWeight_{t}.npy',kkpWeight)
+  np.save(path.replace('.root',f'_{t}.npy'),kkpWeight)
   print(f" * GB-weighting {m}-{y}-{t} sample is done")
   KS_test(original_v, target_v, original_w*kkpWeight, target_w)
   #print(f" * GB-weighting {m}-{y}-{t} sample\n  {kkpWeight[:10]}")
@@ -589,7 +604,7 @@ for i in range(1,20):
         # Run multicore (about 12 minutes per iteration)
         job = multiprocessing.Process(target=kkp_weighting,
                                args=(original_v, original_w, target_v, target_w,
-                               v.path, y, m, t, len(threads) ))
+                               v.path_to_weights, y, m, t, len(threads) ))
         threads.append(job); job.start()
 
   # Wait all processes to finish
@@ -606,9 +621,11 @@ for i in range(1,20):
     for m, v in dy.items(): # loop over mc_std and mc_dg0
       # write down code to save kkpWeight to root files
       # <CODE>
-      b = np.load(os.path.dirname(v.path)+f'/kkpWeight_biased.npy')
-      u = np.load(os.path.dirname(v.path)+f'/kkpWeight_unbiased.npy')
+      b = np.load(v.path_to_weights.replace('.root','_biased.npy'))
+      u = np.load(v.path_to_weights.replace('.root','_unbiased.npy'))
       v.kkpWeight[i] = b+u
+      os.remove(v.path_to_weights.replace('.root','_biased.npy'))
+      os.remove(v.path_to_weights.replace('.root','_unbiased.npy'))
       #print(f' kkpWeight[{i}] = {v.kkpWeight[i][:20]}')
       for trigger in ['biased','unbiased']:
         #print(f"Current angular weights for {m}-{y}-{trigger} sample are:")
@@ -668,7 +685,7 @@ for i in range(1,20):
       print(f"Current angular weights for Bs2JpsiPhi-{y}-{trigger} sample are:")
       print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
       for _i in range(len(merged_w.keys())):
-        print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.4uP}")
+        print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.2uP}")
       data[f'{y}'][trigger].angacc = merged_w
       data[f'{y}'][trigger].angular_weights.append(merged_w)
       qwe = check_for_convergence( data[f'{y}'][trigger].angular_weights[-2], data[f'{y}'][trigger].angular_weights[-1] )
@@ -719,10 +736,8 @@ for y, dy in mc.items(): # loop over years
     for iter, wvalues in v.kkpWeight.items():
       pool.update({f'kkpWeight{iter}': wvalues})
     print(pool)
-    with uproot.recreate(v.path_to_weights.replace('angWeight','kkpWeight'),compression=None) as f:
-      this_treename = args['weigths_branch']
-      f['DecayTree'] = uproot.newtree({'kinWeight':np.float64})
-      f['DecayTree'].extend({'kinWeight':v.kinWeight})
-      #f[this_treename] = uproot.newtree({var:np.float64 for var in pool})
-      f['DecayTree'].extend(pool)
+    with uproot.recreate(v.path_to_weights) as f:
+      f['DecayTree'] = uproot.newtree({**{'kinWeight':np.float64},
+                                       **{var:np.float64 for var in pool}})
+      f['DecayTree'].extend({**pool,**{'kinWeight':v.kinWeight}})
 print(f' * Succesfully writen')
