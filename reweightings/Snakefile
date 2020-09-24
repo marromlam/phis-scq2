@@ -169,6 +169,7 @@ rule reweightings_plot_time_acceptance:
            --sweighted {output.sweighted}\
            --kinweighted {output.kinweighted}\
     ) &> {log} #2>&1""")
+    send_mail(f"Polarity weighting", f"{log}", f"{output}".split(' '))
 
 
 rule reweightings_plot_angular_acceptance:
@@ -197,7 +198,7 @@ rule reweightings_plot_angular_acceptance:
            --treename {wildcards.angacc}_{wildcards.timeacc}\
            --kkpweighted {output}\
     ) &> {log} #2>&1""")
-    ### <<< send_mail(f"Polarity weighting", f"{log}")              # WARNING #
+    send_mail(f"Polarity weighting", f"{output}")              # WARNING #
 
 
 
