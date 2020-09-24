@@ -132,8 +132,8 @@ rule time_acceptance_plot:
     params_BdMC = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
     params_BdDT = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json'
   output:
-    'output/params/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.pdf',
+    'output/figures/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.pdf',
   log:
-    'output/log/time_acceptance/plot_time_acceptance/{year}_{mode}_{version}_{timeacc}_{trigger}_{plot}.log'
+    'output/log/time_acceptance_plot/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.log'
   run:
     1+1
