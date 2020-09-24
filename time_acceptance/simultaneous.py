@@ -203,7 +203,7 @@ if __name__ == '__main__':
         weight='(sw/gb_weights)*polWeight*pdfWeight*kinWeight'
       elif SCRIPT == 'nonkin':
         weight='(sw/gb_weights)'
-      samplecut = f"({cuts})"
+      samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
     elif name == 'BdMC':
       label = (r'\mathrm{MC}',r'B^0')
       if SCRIPT == 'base':
@@ -252,7 +252,7 @@ if __name__ == '__main__':
   if MINER.lower() in ("minuit","minos"):
     result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER,
-                      verbose=False, strategy=1, tol=0.05);
+                      verbose=False, strategy=2, tol=0.05);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER,
