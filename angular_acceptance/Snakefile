@@ -176,7 +176,7 @@ rule angular_acceptance_correctedBinned:
 
 
 # Run2a angular acceptance ------------------------------------------------------
-#     This rule runs the iterative procedure for all Run2 years using both
+#     This rule runs the iterative procedure for all Run2 YEARS using both
 #     MC and MC_dG0 files.
 rule angular_acceptance_iterativeRun2a:
   wildcard_constraints:
@@ -278,7 +278,7 @@ rule angular_acceptance_iterativeRun2a:
            --output-tables-unbiased  {",".join(output.tables_unbiased)}\
            --output-angular-weights-mc-std  {",".join(output.weights_std)}\
            --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
-           --year                    {",".join(yd['Run2a'])}\
+           --year                    {",".join(YEARS['Run2a'])}\
            --cuts                    '{cammel_parser(wildcards.timeacc)}'\
            --version                 {wildcards.version}\
     ) &> {log} #2>&1""")
@@ -293,7 +293,7 @@ rule angular_acceptance_iterativeRun2a:
 
 
 # Run2 angular acceptance ------------------------------------------------------
-#     This rule runs the iterative procedure for all Run2 years using both
+#     This rule runs the iterative procedure for all Run2 YEARS using both
 #     MC and MC_dG0 files.
 from utils.strings import cammel_case_split
 
@@ -444,7 +444,7 @@ rule angular_acceptance_iterativeRun2:
            --output-tables-unbiased  {",".join(output.tables_unbiased)}\
            --output-angular-weights-mc-std  {",".join(output.weights_std)}\
            --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
-           --year                    {",".join(yd['Run2'])}\
+           --year                    {",".join(YEARS['Run2'])}\
            --cuts                    '{cammel_parser(wildcards.timeacc)}'\
            --version                 {wildcards.version}\
     ) #&> {log} #2>&1""")
