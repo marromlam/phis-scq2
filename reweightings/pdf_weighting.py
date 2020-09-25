@@ -11,23 +11,12 @@ import os, sys
 import hjson
 import importlib
 
-# openCL stuff - this can be changed to be handled by ipanema
-import builtins
-#import reikna.cluda as cluda
-#api = cluda.ocl_api() # OpenCL API
-
-# builtins.THREAD = api.Thread.create()
-# builtins.CONTEXT = THREAD._context
-# builtins.BACKEND = 'cuda'
-# builtins.DEVICE = THREAD._device
-
 from ipanema import initialize
 initialize(os.environ['IPANEMA_BACKEND'],1)
 from ipanema import ristra, Sample, Parameters, Parameter, Optimizer
 
-
-
 import badjanak
+
 
 ################################################################################
 ################################################################################
@@ -86,11 +75,13 @@ def pdf_weighting(data, target_params, original_params, mode):
 
   # Compute!
   print('Calc weights...')
-  original_params = hjson.load(open(original_params))
-  target_params = hjson.load(open(target_params))
-  cross_rate(vars_d,pdf_d,**original_params,tLL=0.3,tUL=15.0);
+  #original_params = hjson.load(open(original_params))
+  #target_params = hjson.load(open(target_params))
+  original_params = Parameters.load(original_params)
+  target_params = Parameters.load(target_params)
+  cross_rate(vars_d,pdf_d,**original_params.valuesdict(),tLL=0.3,tUL=15.0);
   original_pdf_h = pdf_d.get()
-  cross_rate(vars_d,pdf_d,**target_params,tLL=0.3,tUL=15.0);
+  cross_rate(vars_d,pdf_d,**target_params.valuesdict(),tLL=0.3,tUL=15.0);
   target_pdf_h = pdf_d.get()
   np.seterr(divide='ignore', invalid='ignore')                 # remove warnings
   pdfWeight = np.nan_to_num(original_pdf_h/target_pdf_h)
