@@ -30,7 +30,7 @@ before_script:
   - conda install pip pocl pyopencl ROOT
   - git clone https://gitlab.cern.ch/mromerol/ipanema3.git ipanema3/
   - pip install -e ipanema3/
-  - pip install snakemake hep_ml py-cpuinfo
+  - pip install snakemake==5.8.0 hep_ml py-cpuinfo
 
 
 
@@ -40,6 +40,6 @@ test:
 
 
 
-#run:
-#  script:
-#    #- python examples/parameters_test.py
+run:
+  script:
+    - snakemake sidecar/2015/Bd2JpsiKstar/v0r5.root -j -f
