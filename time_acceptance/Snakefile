@@ -6,8 +6,6 @@
 
 
 rule time_acceptance_single:
-  wildcard_constraints:
-    trigger = "(biased|unbiased|combined)",
   input:
     sample = lambda wcs: tuples(wcs, mode=wcs.mode),
   params:
@@ -31,7 +29,7 @@ rule time_acceptance_single:
            --trigger {wildcards.trigger}\
     ) &> {log} 2>&1
     """)
-    send_mail("Single Time Acceptance", f"{log}")
+    send_mail(f"Time Acceptance :: Single {wildcards}", f"{log}")
 
 
 
@@ -44,10 +42,10 @@ rule lifetime_fit:
   params:
     params = 'time_acceptance/params/{year}/{mode}/baseline.json',
   output:
-    params   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_single_{trigger}.json',
-    tables   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_single_{trigger}.tex',
+    params   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit_{trigger}.json',
+    tables   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit_{trigger}.tex',
   log:
-    'output/log/time_acceptance/single_time_acceptance/{year}/Bd2JpsiKstar/{version}_{trigger}.log'
+    'output/log/time_acceptance_single/{year}/Bd2JpsiKstar/{version}_{trigger}.log'
   run:
     shell(f"""
     (time\
@@ -60,56 +58,52 @@ rule lifetime_fit:
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-    ) &> {log} 2>&1
-    """)
+    ) &> {log} 2>&1""")
     send_mail("Single Time Acceptance", f"{log}")
 
 
 rule time_acceptance_simultaneous:
   wildcard_constraints:
-    timeacc = "(base|nonkin|9knots|12knots)(Bin)?(pt|sigmat|eta)?(1|2|3|4)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    timeacc = "(simul|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
     trigger = "(biased|unbiased|combined)",
-    version = "(v[1-9]r[0-9]|v0r[2-9])", # v0r0 not allowed
   input:
-    sample_BsMC = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
-    sample_BdMC = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar'),
-    sample_BdDT = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar'),
+    sample = lambda wcs: [
+      tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
+      tuples(wcs,mode='MC_Bd2JpsiKstar'),
+      tuples(wcs,mode='Bd2JpsiKstar')
+    ]
   params:
-    params_BsMC = 'time_acceptance/params/{year}/MC_Bs2JpsiPhi_dG0/baseline.json',
-    params_BdMC = 'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
-    params_BdDT = 'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
+    params = [
+      'time_acceptance/params/{year}/MC_Bs2JpsiPhi_dG0/baseline.json',
+      'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
+      'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
+    ]
   output:
-    params_BsMC   = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.json',
-    params_BdMC   = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
-    params_BdDT   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
-    tables_BsMC   = 'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.tex',
-    tables_BdMC   = 'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex',
-    tables_BdDT   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex',
+    params = [
+      'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.json',
+      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
+      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json'
+    ],
+    tables = [
+      'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex'
+    ]
   log:
-    'output/log/time_acceptance/simultaneous_time_acceptance/{year}/{version}_{timeacc}_{trigger}.log'
+    'output/log/time_acceptance_simultaneous/{year}/{version}_{timeacc}_{trigger}.log'
   run:
     shell(f"""
     (time\
     python time_acceptance/simultaneous.py\
-           --BsMC-sample {input.sample_BsMC}\
-           --BdMC-sample {input.sample_BdMC}\
-           --BdDT-sample {input.sample_BdDT}\
-           --BsMC-input-params {params.params_BsMC}\
-           --BdMC-input-params {params.params_BdMC}\
-           --BdDT-input-params {params.params_BdDT}\
-           --BsMC-output-params {output.params_BsMC}\
-           --BdMC-output-params {output.params_BdMC}\
-           --BdDT-output-params {output.params_BdDT}\
-           --BsMC-output-tables {output.tables_BsMC}\
-           --BdMC-output-tables {output.tables_BdMC}\
-           --BdDT-output-tables {output.tables_BdDT}\
-           --mode Bd2JpsiKstar\
+           --samples {",".join(input.sample)}\
+           --input-params {",".join(params.params)}\
+           --output-params {",".join(output.params)}\
+           --output-tables {",".join(output.tables)}\
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-           --script {wildcards.timeacc}\
-    ) &> {log} 2>&1
-    """)
+           --timeacc {wildcards.timeacc}\
+    ) &> {log} 2>&1""")
     send_mail(f"Simultaneous Time Acceptance", f"{log}")
 
 
@@ -122,7 +116,7 @@ rule time_acceptance_simultaneous:
 
 rule time_acceptance_plot:
   wildcard_constraints:
-    timeacc = "(single|base|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    timeacc = "(single|parallel|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
     trigger = "(biased|unbiased|combined)"
   input:
     sample_BsMC = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
