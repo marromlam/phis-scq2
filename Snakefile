@@ -27,7 +27,7 @@ MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 # Some wildcards options ( this is not actually used )
 modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0',#'MC_Bs2JpsiPhi',
          'Bd2JpsiKstar', 'MC_Bd2JpsiKstar'];
-years = {#
+YEARS = {#
   '2011'  : ['2011'],
   '2012'  : ['2012'],
   'Run1'  : ['2011','2012'],
