@@ -11,6 +11,7 @@ common: &common
   "hminus_P" : "hminus_P"
   "hminus_PT" : "hminus_PT"
   "B_PT" : "B_PT"
+  "pt" : "B_PT"
   "B_P" : "B_P"
   "hlt1b" : "hlt1b"
   "Jpsi_Hlt1DiMuonHighMassDecision_TOS" : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
