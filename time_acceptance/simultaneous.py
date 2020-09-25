@@ -11,6 +11,7 @@ __email__  = ['mromerol@cern.ch']
 import argparse
 import numpy as np
 import os, sys
+import hjson
 
 from ipanema import initialize
 from ipanema import ristra
@@ -18,68 +19,25 @@ from ipanema import Parameters, optimize
 from ipanema import Sample
 
 from utils.plot import mode_tex
-from utils.strings import cammel_case_split
+from utils.strings import cammel_case_split, cuts_and
+from utils.helpers import  version_guesser, timeacc_guesser
+
+# binned variables
+bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
+Gdvalue = hjson.load(open('config.json'))['Gd_value']
 
 # Parse arguments for this script
 def argument_parser():
   parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
-  # Samples
-  parser.add_argument('--BsMC-sample',
-    default = '/scratch17/marcos.romero/phis_samples/2016/MC_Bs2JpsiPhi_dG0/v0r0.root',
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--BdMC-sample',
-    default = '/scratch17/marcos.romero/phis_samples/2016/MC_Bd2JpsiKstar/v0r0.root',
-    help='Bd2JpsiKstar MC sample')
-  parser.add_argument('--BdDT-sample',
-    default = '/scratch17/marcos.romero/phis_samples/2016/Bd2JpsiKstar/v0r0.root',
-    help='Bd2JpsiKstar data sample')
-  # Output parameters
-  parser.add_argument('--BsMC-input-params',
-    default = 'time_acceptance/params/2016/MC_Bs2JpsiPhi_dG0/baseline.json',
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--BdMC-input-params',
-    default = 'time_acceptance/params/2016/MC_Bd2JpsiKstar/baseline.json',
-    help='Bd2JpsiKstar MC sample')
-  parser.add_argument('--BdDT-input-params',
-    default = 'time_acceptance/params/2016/Bd2JpsiKstar/baseline.json',
-    help='Bd2JpsiKstar data sample')
-  # Output parameters
-  parser.add_argument('--BsMC-output-params',
-    default = 'output_new/params/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/v0r0_baseline_biased.json',
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--BdMC-output-params',
-    default = 'output_new/params/time_acceptance/2016/MC_Bd2JpsiKstar/v0r0_baseline_biased.json',
-    help='Bd2JpsiKstar MC sample')
-  parser.add_argument('--BdDT-output-params',
-    default = 'output_new/params/time_acceptance/2016/Bd2JpsiKstar/v0r0_baseline_biased.json',
-    help='Bd2JpsiKstar data sample')
-  # Output tables
-  parser.add_argument('--BsMC-output-tables',
-    default = 'output_new/params/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/v0r0_baseline_biased.json',
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--BdMC-output-tables',
-    default = 'output_new/params/time_acceptance/2016/MC_Bd2JpsiKstar/v0r0_baseline_biased.json',
-    help='Bd2JpsiKstar MC sample')
-  parser.add_argument('--BdDT-output-tables',
-    default = 'output_new/params/time_acceptance/2016/Bd2JpsiKstar/v0r0_baseline_biased.json',
-    help='Bd2JpsiKstar data sample')
-  # Configuration file ---------------------------------------------------------
-  parser.add_argument('--mode',
-    default = 'BdJpsiKstar',
-    help='Mode to fit')
-  parser.add_argument('--year',
-    default = '2016',
-    help='Year to fit')
-  parser.add_argument('--version',
-    default = 'v0r1',
-    help='Version of the tuples to use')
-  parser.add_argument('--trigger',
-    default = 'biased',
-    help='Trigger to fit, choose between comb, biased and unbiased')
-  parser.add_argument('--script',
-    default = 'baseline',
-    help='Different flag to ... ')
-
+  parser.add_argument('--samples', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--input-params', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--output-params', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--output-tables', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--year', help='Year to fit')
+  parser.add_argument('--version', help='Version of the tuples to use')
+  parser.add_argument('--trigger', help='Trigger to fit')
+  parser.add_argument('--timeacc', help='Different flag to ... ')
   return parser
 
 if __name__ != '__main__':
@@ -93,32 +51,8 @@ if __name__ != '__main__':
 ################################################################################
 #%% Likelihood functions to minimize ###########################################
 
-def saxsbxscxerf(params, data, weight=False, prob=None):
-  pars = params.valuesdict()
-  if not prob:
-    samples = list( map(ristra.allocate,data) )
-    prob = list( map(ristra.zeros_like,samples) )
-    bsjpsikk.saxsbxscxerf(*samples, *prob, **pars)
-    return [ p.get() for p in prob ]
-  else:
-    bsjpsikk.saxsbxscxerf(*data, *prob, **pars)
-    if weight:
-      result  = np.concatenate(( (ristra.log(prob[0])*weight[0]).get(),
-                                 (ristra.log(prob[1])*weight[1]).get(),
-                                 (ristra.log(prob[2])*weight[2]).get() ))
-    else:
-      result  = np.concatenate(( ristra.log(prob[0]).get(),
-                                 ristra.log(prob[1]).get(),
-                                 ristra.log(prob[2]).get() ))
 
-    return -2*result#.sum()
 
-# Bins of different varaibles
-bin_vars = dict(
-pt = ['(B_PT >= 0 & B_PT < 3.8e3)', '(B_PT >= 3.8e3 & B_PT < 6e3)', '(B_PT >= 6e3 & B_PT <= 9e3)', '(B_PT >= 9e3)'],
-eta = ['(eta >= 0 & eta <= 3.3)', '(eta >= 3.3 & eta <= 3.9)', '(eta >= 3.9 & eta <= 6)'],
-sigmat = ['(sigmat >= 0 & sigmat <= 0.031)', '(sigmat >= 0.031 & sigmat <= 0.042)', '(sigmat >= 0.042 & sigmat <= 0.15)']
-)
 ################################################################################
 
 
@@ -128,71 +62,116 @@ sigmat = ['(sigmat >= 0 & sigmat <= 0.031)', '(sigmat >= 0.031 & sigmat <= 0.042
 #%% Run and get the job done ###################################################
 
 if __name__ == '__main__':
-  # Parse arguments
+
+  # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
-  VERSION = args['version']
+  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
-  MODE = args['mode']
+  MODE = 'Bs2JpsiPhi'
   TRIGGER = args['trigger']
-  FLAGS = cammel_case_split(args['script'])
-  SCRIPT = FLAGS[0]; FLAGS.pop(0)
-  if len(FLAGS) == 2:
-    MINER = FLAGS[1]
-    BINVAR, BIN = FLAGS[0][3:-1], FLAGS[0][-1]
-    CUT = bin_vars[f'{BINVAR}'][int(BIN)-1]
-  elif len(FLAGS) == 1:
-    if FLAGS[0].startswith('Bin'):
-      MINER = 'minuit';
-      BINVAR, BIN = FLAGS[0][3:-1], FLAGS[0][-1]
-      CUT = bin_vars[f'{BINVAR}'][int(BIN)-1]
-    else:
-      MINER = FLAGS[0]
-      BINVAR, BIN = None, None
-      CUT = None
-  else:
-    MINER = "minuit"
-    BINVAR, BIN = None, None
-    CUT = None
-  print(f"SCRIPT = {SCRIPT}")
+  TIMEACC, MINER = timeacc_guesser(args['timeacc'])
 
-  # Initialize backend
-  the_backend = os.environ['IPANEMA_BACKEND']
-  try: # Odd years to gpu 1 and even ones to 2 (if there are 2 GPUs)
-    initialize(the_backend, 1 if YEAR in (2015,2017) else 1)
-  except: # Only one GPU :'(
-    initialize(the_backend, 1)
+  # Get badjanak model and configure it
+  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else -1)
+  from time_acceptance.fcn_functions import saxsbxscxerf, trigger_scissors
 
-  #import bsjpsikk # old
-  import badjanak as bsjpsikk # charming new
-
-  # Select trigger to fit                         WARNING, use pars to set cuts!
-  if args['trigger'] == 'biased':
-    trigger = 'biased'; cuts = "time>=0.3 & time<=15 & hlt1b==1"
-  elif args['trigger'] == 'unbiased':
-    trigger = 'unbiased'; cuts = "time>=0.3 & time<=15 & hlt1b==0"
-  elif args['trigger'] == 'combined':
-    trigger = 'combined'; cuts = "time>=0.3 & time<=15"
+  # Prepare the cuts
+  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
 
   # Print settings
-  shitty = f'{VERSION}_{trigger}_single'
   print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
-  print(f"{'trigger':>15}: {args['trigger']:50}")
-  print(f"{'cuts':>15}: {cuts:50}")
-  print(f"{'script':>15}: {SCRIPT.title():50}")
-  print(f"{'bin cuts':>15}: {CUT if CUT else 'None':50}")
-  print(f"{'minimizer':>15}: {MINER.title():50}\n")
+  print(f"{'trigger':>15}: {TRIGGER:50}")
+  print(f"{'cuts':>15}: {CUT:50}")
+  print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'minimizer':>15}: {MINER:50}\n")
+
+  # List samples, params and tables
+  samples = args['samples'].split(',')
+  iparams = args['input_params'].split(',')
+  oparams = args['output_params'].split(',')
+  otables = args['output_tables'].split(',')
+
+  # Check timeacc flag to set knots and weights and place the final cut
+  if TIMEACC == 'simul':
+    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
+    kinWeight = 'kinWeight*'
+  elif TIMEACC == 'nonkin':
+    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0],
+    kinWeight = ''
+  elif TIMEACC == '9knots':
+    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
+    kinWeight = 'kinWeight*'
+  elif TIMEACC == '12knots':
+    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
+    kinWeight = 'kinWeight*'
+  CUT = cuts_and(CUT,f'time>={knots[0]} & time<={knots[-1]}')
 
 
 
   # Get data into categories ---------------------------------------------------
   print(f"\n{80*'='}\n", "Loading categories", f"\n{80*'='}\n")
 
-  samples = {}
-  samples['BsMC'] = os.path.join(args['BsMC_sample'])
-  samples['BdMC'] = os.path.join(args['BdMC_sample'])
-  samples['BdDT'] = os.path.join(args['BdDT_sample'])
+  cats = {}
+  sw = f'sw_{VAR}' if VAR else 'sw'
+  for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
+    # Correctly apply weight and name for diffent samples
+    if m=='MC_Bs2JpsiPhi':
+      weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*sw/gb_weights'
+      mode = 'BsMC'; c = 'a'
+    elif m=='MC_Bs2JpsiPhi_dG0':
+      weight = f'{kinWeight}polWeight*pdfWeight*sw/gb_weights'
+      mode = 'BsMC'; c = 'a'
+    elif m=='MC_Bd2JpsiKstar':
+      weight = f'{kinWeight}polWeight*pdfWeight*sw'
+      mode = 'BdMC'; c = 'b'
+    elif m=='Bd2JpsiKstar':
+      weight = f'{kinWeight}{sw}'
+      mode = 'BdRD'; c = 'c'
 
+    # Load the sample
+    cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
+    cats[mode].allocate(time='time',lkhd='0*time')
+    cats[mode].allocate(weight=weight)
+
+    # Add knots
+    cats[mode].knots = Parameters()
+    cats[mode].knots.add(*[
+                 {'name':f'k{j}', 'value':v, 'latex':f'k_{j}', 'free':False}
+                 for j,v in enumerate(knots[:-1])
+               ])
+    cats[mode].knots.add({'name':f'tLL', 'value':knots[0],
+                          'latex':'t_{ll}', 'free':False})
+    cats[mode].knots.add({'name':f'tUL', 'value':knots[-1],
+                          'latex':'t_{ul}', 'free':False})
+
+    # Add coeffs parameters
+    cats[mode].params = Parameters()
+    cats[mode].params.add(*[
+                 {'name':f'{c}{j}', 'value':1.0, 'latex':f'{c}_{j}',
+                 'free':True if j>0 else False, 'min':0.10, 'max':15.0}
+                 for j in range(len(knots[:-1])+2)
+               ])
+    cats[mode].params.add({'name':f'gamma_{c}',
+                           'value':Gdvalue+resolutions[m]['DGsd'],
+                           'latex':f'\gamma_{c}', 'free':False})
+    cats[mode].params.add({'name':f'mu_{c}',
+                           'value':resolutions[m]['mu'],
+                           'latex':f'\mu_{c}', 'free':False})
+    cats[mode].params.add({'name':f'sigma_{c}',
+                           'value':resolutions[m]['sigma'],
+                           'latex':f'\sigma_{c}', 'free':False})
+    print(cats[mode].knots)
+    print(cats[mode].params)
+
+    # Attach labels and paths
+    cats[mode].label = mode_tex(mode)
+    cats[mode].pars_path = oparams[i]
+    cats[mode].tabs_path = otables[i]
+
+  """
+  exit()
   cats = {}
   for name, sample in zip(samples.keys(),samples.values()):
     print(f'Loading {sample} as {name} category')
@@ -211,7 +190,7 @@ if __name__ == '__main__':
       elif SCRIPT == 'nonkin':
         weight='sw'
       samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
-    elif name == 'BdDT':
+    elif name == 'BdRD':
       label = (r'\mathrm{data}',r'B_s^0')
       if SCRIPT == 'base':
         weight='sw*kinWeight'
@@ -240,19 +219,19 @@ if __name__ == '__main__':
     cats[name].label = label
     cats[name].pars_path = args[f'{name}_output_params']
     cats[name].tabs_path = args[f'{name}_output_tables']
-
+  """
   # Time to fit ----------------------------------------------------------------
   print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
-  fcn_pars = cats['BsMC'].params+cats['BdMC'].params+cats['BdDT'].params
+  fcn_pars = cats['BsMC'].params+cats['BdMC'].params+cats['BdRD'].params
   fcn_kwgs={
-    'data': [cats['BsMC'].time, cats['BdMC'].time, cats['BdDT'].time],
-    'prob': [cats['BsMC'].lkhd, cats['BdMC'].lkhd, cats['BdDT'].lkhd],
-    'weight': [cats['BsMC'].weight, cats['BdMC'].weight, cats['BdDT'].weight]
+    'data': [cats['BsMC'].time, cats['BdMC'].time, cats['BdRD'].time],
+    'prob': [cats['BsMC'].lkhd, cats['BdMC'].lkhd, cats['BdRD'].lkhd],
+    'weight': [cats['BsMC'].weight, cats['BdMC'].weight, cats['BdRD'].weight]
   }
   if MINER.lower() in ("minuit","minos"):
     result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER,
-                      verbose=False, strategy=2, tol=0.05);
+                      verbose=True, strategy=1, tol=0.1);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER,
