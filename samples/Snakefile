@@ -3,7 +3,7 @@
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
 #    and then it worka automatically.
 
-rule sync_ntuples:
+rule samples_sync_tuple:
   output:
     sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root')
   log:
@@ -30,7 +30,7 @@ rule sync_ntuples:
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package.
 
-rule reduce_ntuples:
+rule samples_reduce_tuple:
   input:
     sample = lambda wcs: tuples(wcs, weight='kinWeight')
   output:
@@ -38,16 +38,10 @@ rule reduce_ntuples:
   log:
     'output/log/samples/reduce_ntuples/{year}_{mode}_{version}.log'
   run:
-    shell(f"""
-      (time\
-      python samples/reduce_ntuples.py\
-             --input-file {input.sample}\
-             --output-file {output.sample}\
-             --input-tree DecayTree\
-             --output-tree DecayTree\
-      ) &> {log} 2>&1
-    """)
-    # Clean up files
-    # shell(f"""
-    #   rm {SAMPLES_PATH}{wildcards.year}/{wildcards.mode}/{wildcards.version}_*Weight.root
-    # """)
+    shell(f"""(time\
+    python samples/reduce_ntuples.py\
+           --input-file {input.sample}\
+           --output-file {output.sample}\
+           --input-tree DecayTree\
+           --output-tree DecayTree\
+    ) &> {log} 2>&1""")
