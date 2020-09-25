@@ -51,8 +51,8 @@ rule reweighting_pdf:
              --input-file {input.sample}\
              --tree-name DecayTree\
              --output-file {output.sample}\
-             --target-params reweightings/parameters/{params.target}\
-             --original-params reweightings/parameters/{params.original}\
+             --target-params params/generator/{params.target}\
+             --original-params params/generator/{params.original}\
              --mode {wildcards.mode}
     ) &> {log} #2>&1""")
     send_mail(f"P.D.F. weighting", f"{log}")
