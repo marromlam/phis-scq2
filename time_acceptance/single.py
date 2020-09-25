@@ -5,13 +5,13 @@ __email__  = ['mromerol@cern.ch']
 
 
 
-
 ################################################################################
 # %% Modules ###################################################################
 
 import argparse
 import numpy as np
 import os, sys
+import hjson
 
 from ipanema import initialize
 from ipanema import ristra
@@ -19,6 +19,11 @@ from ipanema import Parameters, optimize
 from ipanema import Sample
 
 from utils.plot import mode_tex
+from utils.strings import cuts_and
+from utils.helpers import  version_guesser
+
+# binned variables
+bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 
 # Parse arguments for this script
 def argument_parser():
@@ -57,30 +62,7 @@ def argument_parser():
 
 if __name__ != '__main__':
   initialize(os.environ['IPANEMA_BACKEND'],1)
-  #import bsjpsikk # old
-  import badjanak as bsjpsikk # charming new
-
-################################################################################
-
-
-
-################################################################################
-#%% Likelihood functions to minimize ###########################################
-
-def splinexerf(parameters, data, weight = None, prob = None):
-  pars_dict = list(parameters.valuesdict().values())
-  if not prob: # for ploting, mainly
-    data = ristra.allocate(data)
-    prob = ristra.allocate(np.zeros_like(data.get()))
-    bsjpsikk.splinexerf(data, prob, *pars_dict)
-    return prob.get()
-  else:
-    bsjpsikk.splinexerf(data, prob, *pars_dict)
-    if weight is not None:
-      result = (ristra.log(prob)*weight).get()
-    else:
-      result = (ristra.log(prob)).get()
-    return -2*result #+ 2*weight.get()
+  from time_acceptance.fcn_functions import splinexerf
 
 ################################################################################
 
@@ -88,34 +70,29 @@ def splinexerf(parameters, data, weight = None, prob = None):
 
 ################################################################################
 #%% Run and get the job done ###################################################
-
 if __name__ == '__main__':
-  # Parse arguments
+
+  # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
-  VERSION = args['version']
+  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
 
-  # Select trigger to fit                         WARNING, use pars to set cuts!
-  if args['trigger'] == 'biased':
-    trigger = 'biased'; cuts = "time>=0.3 & time<=15 & hlt1b==1"
-  elif args['trigger'] == 'unbiased':
-    trigger = 'unbiased'; cuts = "time>=0.3 & time<=15 & hlt1b==0"
-  elif args['trigger'] == 'combined':
-    trigger = 'combined'; cuts = "time>=0.3 & time<=15"
+  # Get badjanak model and configure it
+  initialize(os.environ['IPANEMA_BACKEND'],1)
+  from time_acceptance.fcn_functions import splinexerf, trigger_scissors
+
+  # Prepare the cuts
+  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
 
   # Print settings
-  shitty = f'{VERSION}_{trigger}_single'
   print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {args['trigger']:50}")
-  print(f"{'cuts':>15}: {cuts:50}\n")
+  print(f"{'cut':>15}: {CUT:50}\n")
 
-  # Get bsjpsikk model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'],1)
-  #import bsjpsikk # old
-  import badjanak as bsjpsikk # charming new
 
 
   # Get data into categories ---------------------------------------------------
@@ -143,8 +120,8 @@ if __name__ == '__main__':
     elif name == 'BdDT':
       label = (r'\mathrm{data}',r'B_s^0')
       weight='sw*kinWeight'
-    cats[name] = Sample.from_root(sample, cuts=cuts)
-    cats[name].name = os.path.splitext(os.path.basename(sample))[0]+'_'+trigger
+    cats[name] = Sample.from_root(sample, cuts=CUT, share=SHARE)
+    cats[name].name = os.path.splitext(os.path.basename(sample))[0]+'_'+TRIGGER
     #cats[name].assoc_params(args[f'input_params'])
     cats[name].assoc_params(args[f'input_params'].replace('TOY','MC').replace('2021','2018'))
     cats[name].allocate(time='time',lkhd='0*time')
