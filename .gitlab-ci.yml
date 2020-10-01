@@ -13,11 +13,22 @@ variables:
 #
 # If you want to also cache the installed packages, you have to install
 # them in a virtualenv and cache it as well.
-cache:
+cache: &cache_definition
+  key: build_cache
   paths:
+    - miniconda
     - .cache/pip
-    - venv/
 
+.cache_consumer:
+  cache:
+    <<: *cache_definition
+    policy: pull
+
+
+stages:
+  - setup
+  - build
+  - test
 
 
 before_script:
@@ -42,5 +53,7 @@ test:
 
 
 run:
+  stage: test
+  extends: .cache_consumer
   script:
     - snakemake sidecar/2015/Bd2JpsiKstar/v0r5.root -j -f
