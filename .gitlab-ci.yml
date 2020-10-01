@@ -20,14 +20,15 @@ cache: &cache_definition
 
 stages:
   - setup
-  - build
   - test
+  - run
 
 
 
 before_script:
   - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - mkdir sidecar
+  - export IPANEMA_BACKEND='opencl'
 
 
 
@@ -35,7 +36,8 @@ setup_environment:
   stage: setup
   script:
     - bash miniconda.sh -b -p conda3/
-    - source conda3//bin/activate
+    - source conda3/bin/activate
+    - conda update -n base -c defaults conda
     - conda create --name phisscq
     - conda activate phisscq
     - conda config --add channels conda-forge
@@ -51,11 +53,19 @@ test_environment:
   stage: test
   script:
     - python -c "import ipanema"
+    - python -c "from ipanema import initialize; initialize('opencl',1)"
 
+
+
+test_snakemake:
+  stage: test
+  extends: .cache_consumer
+  script:
+    - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
 
 
 run:
-  stage: test
+  stage: run
   extends: .cache_consumer
   script:
     - snakemake sidecar/2015/Bd2JpsiKstar/v0r5.root -j -f
