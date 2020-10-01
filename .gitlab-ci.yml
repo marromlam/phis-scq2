@@ -6,10 +6,7 @@ variables:
 cache: &cache_definition
   key: build_cache
   paths:
-    - /builds/mromerol/conda3
     - .cache/pip
-    - /builds/mromerol/sidecar
-
 
 
 .cache_consumer:
@@ -64,6 +61,11 @@ setup_environment:
       - utils/install.sh
       - utils/default.json
       - .gitlab-ci.yml
+  artifacts:
+    paths:
+      - /builds/mromerol/conda3
+      - /builds/mromerol/sidecar
+    expire_in: 1 year
 
 
 
@@ -82,6 +84,11 @@ test_snakemake:
   extends: .cache_consumer
   script:
     - snakemake /builds/mromerol/sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
+  artifacts:
+    paths:
+      - /builds/mromerol/sidecar
+    expire_in: 1 year
+
 
 
 run:
