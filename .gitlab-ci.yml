@@ -35,7 +35,7 @@ default:
     - export PYOPENCL_COMPILER_OUTPUT=1
     - export PYOPENCL_NO_CACHE=1
     - export PYTHONPATH="phis-scq":$PYTHONPATH
-
+    - ls /builds/mromerol/
 
 
 setup_environment:
@@ -44,7 +44,7 @@ setup_environment:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - mkdir -p /builds/mromerol/sidecar
     - pwd
-    - ls
+    - ls /builds/mromerol/
   script:
     - bash miniconda.sh -b -s -f -p /builds/mromerol/conda3/
     - source /builds/mromerol/conda3/bin/activate
