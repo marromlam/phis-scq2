@@ -8,18 +8,16 @@ before_script:
 job A:
   stage: build
   script:
-    - mkdir -p vendor/
-    - echo "build" > vendor/hello.txt
+    - mkdir -p .ccache
+    - echo "build" > .ccache/hello.txt
   cache:
     key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
     paths:
-      - vendor/
+      - .ccache
   after_script:
     - echo "World"
 
 job B:
   stage: test
   script:
-    - cat vendor/hello.txt
-  cache:
-    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    - cat .ccache/hello.txt
