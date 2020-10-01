@@ -6,8 +6,8 @@ variables:
 cache: &cache_definition
   key: build_cache
   paths:
-    - conda3
-    - ipanema3
+    - .cache/conda3
+    - .cache/ipanema3
     - .cache/pip
 
 
@@ -38,14 +38,13 @@ default:
   before_script:
     - pwd
     - ls
-    - ls
-    - source conda3/bin/activate
+    - source .cache/conda3/bin/activate
     - conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
     - export PYOPENCL_NO_CACHE=1
     - export PYTHONPATH="phis-scq":$PYTHONPATH
-    - ls 
+
 
 
 setup_environment:
@@ -57,15 +56,15 @@ setup_environment:
     - pwd
     - ls
   script:
-    - bash miniconda.sh -b -s -f -p conda3/
-    - source conda3/bin/activate
+    - bash miniconda.sh -b -s -f -p .cache/conda3/
+    - source .cache/conda3/bin/activate
     - conda update -n base -c defaults conda
     - conda create --name phisscq
     - conda activate phisscq
     - conda config --add channels conda-forge
     - conda install pip pocl pyopencl ROOT
-    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git ipanema3/
-    - pip install -e ipanema3/
+    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .cache/ipanema3/
+    - pip install -e .cache/ipanema3/
     - pip install snakemake==5.22.0 hep_ml py-cpuinfo
     - cp utils/default.json config.json
     - python -c "import ipanema"
@@ -76,7 +75,7 @@ setup_environment:
       - .gitlab-ci.yml
   artifacts:
     paths:
-      - sidecar
+      - /sidecar
     expire_in: 1 year
 
 
