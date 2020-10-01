@@ -1,5 +1,5 @@
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+#variables:
+#  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 
 
@@ -29,7 +29,7 @@ variables:
 
 
 stages:
-  - setup
+  - build
   - test
   - run
 
@@ -37,8 +37,8 @@ stages:
 default:
   before_script:
     - pwd
-    - ls
-    - source .cache/conda3/bin/activate
+    - ls build
+    - source $CI_PROJECT_DIR/build/conda3/bin/activate
     - conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
@@ -52,22 +52,22 @@ setup_environment:
   cache:
     key: build-cache
     paths:
-      - .cache
+      - $CI_PROJECT_DIR/build
   before_script:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-    - mkdir -p sidecar
+    - mkdir -p $CI_PROJECT_DIR/sidecar
     - pwd
     - ls
   script:
-    - bash miniconda.sh -b -s -f -p .cache/conda3/
-    - source .cache/conda3/bin/activate
+    - bash miniconda.sh -b -s -f -p $CI_PROJECT_DIR/build/conda3
+    - source $CI_PROJECT_DIR/build/conda3/bin/activate
     - conda update -n base -c defaults conda
     - conda create --name phisscq
     - conda activate phisscq
     - conda config --add channels conda-forge
     - conda install pip pocl pyopencl ROOT
-    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .cache/ipanema3/
-    - pip install -e .cache/ipanema3/
+    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git $CI_PROJECT_DIR/build/ipanema3/
+    - pip install -e $CI_PROJECT_DIR/build/ipanema3/
     - pip install snakemake==5.22.0 hep_ml py-cpuinfo
     - cp utils/default.json config.json
     - python -c "import ipanema"
@@ -78,7 +78,7 @@ setup_environment:
       - .gitlab-ci.yml
   artifacts:
     paths:
-      - /sidecar
+      - $CI_PROJECT_DIR/sidecar
     expire_in: 1 year
 
 
@@ -99,10 +99,10 @@ test_snakemake:
   cache:
     key: build-cache
   script:
-    - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
+    - snakemake $CI_PROJECT_DIR/sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
   artifacts:
     paths:
-      - sidecar
+      - $CI_PROJECT_DIR/sidecar
     expire_in: 1 year
 
 
