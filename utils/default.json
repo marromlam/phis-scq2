@@ -1,5 +1,5 @@
 {
-  "path": "sidecar/",
+  "path": "/builds/mromerol/sidecar/",
   "mail": [],
   "binned_variables": ["B_PT", "sigmat", "B_ETA"],
   "angular_acceptance_bdtconfig": {
