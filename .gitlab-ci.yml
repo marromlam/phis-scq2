@@ -26,8 +26,6 @@ stages:
 
 
 before_script:
-  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  - mkdir sidecar
   - export IPANEMA_BACKEND='opencl'
 
 
@@ -35,6 +33,8 @@ before_script:
 setup_environment:
   stage: setup
   script:
+    - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    - mkdir sidecar
     - bash miniconda.sh -b -p conda3/
     - source conda3/bin/activate
     - conda update -n base -c defaults conda
@@ -51,6 +51,7 @@ setup_environment:
     changes:
       - utils/install.sh
       - utils/default.json
+      - .gitlab-ci.yml
 
 
 
