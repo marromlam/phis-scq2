@@ -6,9 +6,9 @@ variables:
 cache: &cache_definition
   key: build_cache
   paths:
-    - conda3
+    - /builds/mromerol/conda3
     - .cache/pip
-    - sidecar
+    - /builds/mromerol/sidecar
 
 
 
@@ -29,7 +29,7 @@ default:
   before_script:
     - pwd
     - ls
-    - source conda3/bin/activate
+    - source /builds/mromerol/conda3/bin/activate
     - conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
@@ -42,19 +42,19 @@ setup_environment:
   stage: setup
   before_script:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-    - mkdir -p sidecar
+    - mkdir -p /builds/mromerol/sidecar
     - pwd
     - ls
   script:
-    - bash miniconda.sh -b -s -f -p conda3/
-    - source conda3/bin/activate
+    - bash miniconda.sh -b -s -f -p /builds/mromerol/conda3/
+    - source /builds/mromerol/conda3/bin/activate
     - conda update -n base -c defaults conda
     - conda create --name phisscq
     - conda activate phisscq
     - conda config --add channels conda-forge
     - conda install pip pocl pyopencl ROOT
-    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git ipanema3/
-    - pip install -e ipanema3/
+    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git /builds/mromerol/ipanema3/
+    - pip install -e /builds/mromerol/ipanema3/
     - pip install snakemake==5.22.0 hep_ml py-cpuinfo
     - cp utils/default.json config.json
     - python -c "import ipanema"
@@ -80,11 +80,11 @@ test_snakemake:
   stage: test
   extends: .cache_consumer
   script:
-    - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
+    - snakemake /builds/mromerol/sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
 
 
 run:
   stage: run
   extends: .cache_consumer
   script:
-    - snakemake sidecar/2015/Bd2JpsiKstar/v0r5.root -j -f
+    - snakemake /builds/mromerol/sidecar/2015/Bd2JpsiKstar/v0r5.root -j -f
