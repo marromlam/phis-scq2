@@ -48,7 +48,7 @@ default:
 
 setup_environment:
   stage: setup
-  extends: .cache_consumer
+  #extends: .cache_consumer
   before_script:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - mkdir -p /builds/mromerol/sidecar
@@ -82,7 +82,7 @@ setup_environment:
 
 test_environment:
   stage: test
-  extends: .cache_consumer
+  #extends: .cache_consumer
   script:
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
@@ -91,7 +91,7 @@ test_environment:
 
 test_snakemake:
   stage: test
-  extends: .cache_consumer
+  #extends: .cache_consumer
   script:
     - snakemake /builds/mromerol/sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
   artifacts:
@@ -103,6 +103,6 @@ test_snakemake:
 
 run:
   stage: run
-  extends: .cache_consumer
+  #extends: .cache_consumer
   script:
     - snakemake /builds/mromerol/sidecar/2015/Bd2JpsiKstar/v0r5.root -j -f
