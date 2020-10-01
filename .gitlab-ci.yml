@@ -26,6 +26,7 @@ default:
   before_script:
     - pwd
     - ls
+    - ls /builds/mromerol/
     - source /builds/mromerol/conda3/bin/activate
     - conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
