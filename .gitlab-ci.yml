@@ -3,16 +3,26 @@ variables:
 
 
 
-cache: &cache_definition
-  key: build_cache
+#cache: &cache_definition
+#  key: build_cache
+#  paths:
+#    - .cache/pip
+
+
+#.cache_consumer:
+#  cache:
+#    <<: *cache_definition
+#    policy: pull
+
+
+
+cache: &global_cache
+  #key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - .cache/pip
+    - /builds/mromerol/conda3
+  policy: pull-push
 
 
-.cache_consumer:
-  cache:
-    <<: *cache_definition
-    policy: pull
 
 
 
@@ -64,7 +74,6 @@ setup_environment:
       - .gitlab-ci.yml
   artifacts:
     paths:
-      - /builds/mromerol/conda3
       - /builds/mromerol/sidecar
     expire_in: 1 year
 
