@@ -27,6 +27,8 @@ stages:
 
 default:
   before_script:
+    - pwd
+    - ls
     - source conda3/bin/activate
     - conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
@@ -41,6 +43,8 @@ setup_environment:
   before_script:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - mkdir -p sidecar
+    - pwd
+    - ls
   script:
     - bash miniconda.sh -b -s -f -p conda3/
     - source conda3/bin/activate
