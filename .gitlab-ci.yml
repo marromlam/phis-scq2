@@ -1,28 +1,21 @@
-# This file is a template, and might need editing before it works on your project.
-# Official language image. Look for the different tagged releases at:
-# https://hub.docker.com/r/library/python/tags/
-image: python:latest
-
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
-# Pip's cache doesn't store the python packages
-# https://pip.pypa.io/en/stable/reference/pip_install/#caching
-#
-# If you want to also cache the installed packages, you have to install
-# them in a virtualenv and cache it as well.
+
+
 cache: &cache_definition
   key: build_cache
   paths:
     - miniconda
     - .cache/pip
 
+
+
 .cache_consumer:
   cache:
     <<: *cache_definition
     policy: pull
+
 
 
 stages:
@@ -31,22 +24,31 @@ stages:
   - test
 
 
+
 before_script:
   - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  - bash miniconda.sh -b -p conda3/
-  - source conda3//bin/activate
-  - conda create --name phisscq
-  - conda activate phisscq
-  - conda config --add channels conda-forge
-  - conda install pip pocl pyopencl ROOT
-  - git clone https://gitlab.cern.ch/mromerol/ipanema3.git ipanema3/
-  - pip install -e ipanema3/
-  - pip install snakemake==5.22.0 hep_ml py-cpuinfo
-  - cp utils/default.json config.json
+  - mkdir sidecar
 
 
 
-test:
+setup_environment:
+  stage: setup
+  script:
+    - bash miniconda.sh -b -p conda3/
+    - source conda3//bin/activate
+    - conda create --name phisscq
+    - conda activate phisscq
+    - conda config --add channels conda-forge
+    - conda install pip pocl pyopencl ROOT
+    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git ipanema3/
+    - pip install -e ipanema3/
+    - pip install snakemake==5.22.0 hep_ml py-cpuinfo
+    - cp utils/default.json config.json
+
+
+
+test_environment:
+  stage: test
   script:
     - python -c "import ipanema"
 
