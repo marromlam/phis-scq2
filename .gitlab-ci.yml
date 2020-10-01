@@ -47,11 +47,17 @@ setup_environment:
     - pip install snakemake==5.22.0 hep_ml py-cpuinfo
     - cp utils/default.json config.json
     - python -c "import ipanema"
+  only:
+    changes:
+      - utils/install.sh
+      - utils/default.json
+
 
 
 
 test_environment:
   stage: test
+  extends: .cache_consumer
   script:
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
