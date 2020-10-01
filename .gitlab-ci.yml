@@ -11,7 +11,7 @@ job A:
     - mkdir vendor/
     - echo "build" > vendor/hello.txt
   cache:
-    key: build-cache
+    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
     paths:
       - vendor/
   after_script:
@@ -22,4 +22,4 @@ job B:
   script:
     - cat vendor/hello.txt
   cache:
-    key: build-cache
+    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
