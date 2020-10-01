@@ -3,18 +3,18 @@ variables:
 
 
 
-cache: &cache_definition
-  key: build_cache
-  paths:
-    - .cache/conda3
-    - .cache/ipanema3
-    - .cache/pip
+#cache: &cache_definition
+#  key: build_cache
+#  paths:
+#    - .cache/conda3
+#    - .cache/pip
+#    - .cache/ipanema3
 
 
-.cache_consumer:
-  cache:
-    <<: *cache_definition
-    policy: pull
+#.cache_consumer:
+#  cache:
+#    <<: *cache_definition
+#    policy: pull
 
 
 
@@ -43,13 +43,16 @@ default:
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
     - export PYOPENCL_NO_CACHE=1
-    - export PYTHONPATH="phis-scq":$PYTHONPATH
+    - export PYTHONPATH=$PWD:$PYTHONPATH
 
 
 
 setup_environment:
   stage: setup
-  extends: .cache_consumer
+  cache:
+    key: build-cache
+    paths:
+      - .cache
   before_script:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - mkdir -p sidecar
@@ -83,7 +86,8 @@ setup_environment:
 
 test_environment:
   stage: test
-  extends: .cache_consumer
+  cache:
+    key: build-cache
   script:
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
@@ -92,7 +96,8 @@ test_environment:
 
 test_snakemake:
   stage: test
-  extends: .cache_consumer
+  cache:
+    key: build-cache
   script:
     - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
   artifacts:
