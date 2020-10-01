@@ -6,8 +6,9 @@ variables:
 cache: &cache_definition
   key: build_cache
   paths:
-    - miniconda
+    - conda3
     - .cache/pip
+    - sidecar
 
 
 
@@ -24,15 +25,14 @@ stages:
   - run
 
 
-
-before_script:
-  - source conda3/bin/activate
-  - conda activate phisscq
-  - export IPANEMA_BACKEND='opencl'
-  - export PYOPENCL_COMPILER_OUTPUT=1
-  - export PYOPENCL_NO_CACHE=1
-  - export PYTHONPATH="phis-scq":$PYTHONPATH
-
+default:
+  before_script:
+    - source conda3/bin/activate
+    - conda activate phisscq
+    - export IPANEMA_BACKEND='opencl'
+    - export PYOPENCL_COMPILER_OUTPUT=1
+    - export PYOPENCL_NO_CACHE=1
+    - export PYTHONPATH="phis-scq":$PYTHONPATH
 
 
 
