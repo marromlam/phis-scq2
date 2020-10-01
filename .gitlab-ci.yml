@@ -3,24 +3,26 @@ variables:
 
 
 
-#cache: &cache_definition
-#  key: build_cache
-#  paths:
-#    - .cache/pip
-
-
-#.cache_consumer:
-#  cache:
-#    <<: *cache_definition
-#    policy: pull
-
-
-
-cache: &global_cache
-  #key: ${CI_COMMIT_REF_SLUG}
+cache: &cache_definition
+  key: build_cache
   paths:
-    - /builds/mromerol/conda3
-  policy: pull-push
+    - conda3
+    - ipanema3
+    - .cache/pip
+
+
+.cache_consumer:
+  cache:
+    <<: *cache_definition
+    policy: pull
+
+
+
+#cache: &global_cache
+#  #key: ${CI_COMMIT_REF_SLUG}
+#  paths:
+#    - conda3
+#  policy: pull-push
 
 
 
@@ -36,34 +38,34 @@ default:
   before_script:
     - pwd
     - ls
-    - ls /builds/mromerol/
-    - source /builds/mromerol/conda3/bin/activate
+    - ls
+    - source conda3/bin/activate
     - conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
     - export PYOPENCL_NO_CACHE=1
     - export PYTHONPATH="phis-scq":$PYTHONPATH
-    - ls /builds/mromerol/
+    - ls 
 
 
 setup_environment:
   stage: setup
-  #extends: .cache_consumer
+  extends: .cache_consumer
   before_script:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-    - mkdir -p /builds/mromerol/sidecar
+    - mkdir -p sidecar
     - pwd
-    - ls /builds/mromerol/
+    - ls
   script:
-    - bash miniconda.sh -b -s -f -p /builds/mromerol/conda3/
-    - source /builds/mromerol/conda3/bin/activate
+    - bash miniconda.sh -b -s -f -p conda3/
+    - source conda3/bin/activate
     - conda update -n base -c defaults conda
     - conda create --name phisscq
     - conda activate phisscq
     - conda config --add channels conda-forge
     - conda install pip pocl pyopencl ROOT
-    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git /builds/mromerol/ipanema3/
-    - pip install -e /builds/mromerol/ipanema3/
+    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git ipanema3/
+    - pip install -e ipanema3/
     - pip install snakemake==5.22.0 hep_ml py-cpuinfo
     - cp utils/default.json config.json
     - python -c "import ipanema"
@@ -74,7 +76,7 @@ setup_environment:
       - .gitlab-ci.yml
   artifacts:
     paths:
-      - /builds/mromerol/sidecar
+      - sidecar
     expire_in: 1 year
 
 
@@ -82,7 +84,7 @@ setup_environment:
 
 test_environment:
   stage: test
-  #extends: .cache_consumer
+  extends: .cache_consumer
   script:
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
@@ -91,12 +93,12 @@ test_environment:
 
 test_snakemake:
   stage: test
-  #extends: .cache_consumer
+  extends: .cache_consumer
   script:
-    - snakemake /builds/mromerol/sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
+    - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
   artifacts:
     paths:
-      - /builds/mromerol/sidecar
+      - sidecar
     expire_in: 1 year
 
 
@@ -105,4 +107,4 @@ run:
   stage: run
   #extends: .cache_consumer
   script:
-    - snakemake /builds/mromerol/sidecar/2015/Bd2JpsiKstar/v0r5.root -j -f
+    - snakemake sidecar/2015/Bd2JpsiKstar/v0r5.root -j -f
