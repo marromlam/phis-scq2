@@ -8,7 +8,7 @@ before_script:
 job A:
   stage: build
   script:
-    - mkdir vendor/
+    - mkdir -p vendor/
     - echo "build" > vendor/hello.txt
   cache:
     key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
