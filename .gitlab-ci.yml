@@ -40,6 +40,7 @@ default:
 
 setup_environment:
   stage: setup
+  extends: .cache_consumer
   before_script:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - mkdir -p /builds/mromerol/sidecar
