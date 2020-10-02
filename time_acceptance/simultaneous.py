@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
 
-
 __author__ = ['Marcos Romero']
 __email__  = ['mromerol@cern.ch']
+
 
 
 ################################################################################
 # %% Modules ###################################################################
 
 import argparse
+import os
+import sys
 import numpy as np
-import os, sys
 import hjson
 
+# load ipanema
 from ipanema import initialize
-from ipanema import ristra
-from ipanema import Parameters, optimize
-from ipanema import Sample
+from ipanema import ristra, Parameters, optimize, Sample
 
+# import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser
+from utils.helpers import  version_guesser, timeacc_guesser, swnorm
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -45,16 +46,6 @@ if __name__ != '__main__':
   import badjanak as bsjpsikk # charming new
 
 ################################################################################
-
-
-
-################################################################################
-#%% Likelihood functions to minimize ###########################################
-
-
-
-################################################################################
-
 
 
 
@@ -96,17 +87,18 @@ if __name__ == '__main__':
   # Check timeacc flag to set knots and weights and place the final cut
   if TIMEACC == 'simul':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = 'kinWeight*'
+    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight'
   elif TIMEACC == 'nonkin':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0],
+    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
     kinWeight = ''
   elif TIMEACC == '9knots':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = 'kinWeight*'
+    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight'
   elif TIMEACC == '12knots':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = 'kinWeight*'
+    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight'
   CUT = cuts_and(CUT,f'time>={knots[0]} & time<={knots[-1]}')
+  print(CUT)
 
 
 
@@ -118,22 +110,25 @@ if __name__ == '__main__':
   for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
-      weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*sw/gb_weights'
+      weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
-      weight = f'{kinWeight}polWeight*pdfWeight*sw/gb_weights'
+      weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      weight = f'{kinWeight}polWeight*pdfWeight*sw'
+      weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
       weight = f'{kinWeight}{sw}'
       mode = 'BdRD'; c = 'c'
+    print(weight)
 
     # Load the sample
+    print(CUT, SHARE, mode)
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
     cats[mode].allocate(time='time',lkhd='0*time')
     cats[mode].allocate(weight=weight)
+    cats[mode].weight = swnorm(cats[mode].weight)
 
     # Add knots
     cats[mode].knots = Parameters()
