@@ -32,25 +32,25 @@ rule physics_params_data_run2:
       'output/params/time_acceptance/2018/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
     ],
     # CSP
-    csp_factors = [
-      'output/params/csp_factors/2015/Bs2JpsiPhi/{version}.json',
-      'output/params/csp_factors/2016/Bs2JpsiPhi/{version}.json',
-      'output/params/csp_factors/2017/Bs2JpsiPhi/{version}.json',
-      'output/params/csp_factors/2018/Bs2JpsiPhi/{version}.json'
+    csp_factors = lambda wcs: [
+      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/csp_factors/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/csp_factors/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
     # Time resolution
-    time_resolution = [
-      'output/params/time_resolution/2015/Bs2JpsiPhi/{version}.json',
-      'output/params/time_resolution/2016/Bs2JpsiPhi/{version}.json',
-      'output/params/time_resolution/2017/Bs2JpsiPhi/{version}.json',
-      'output/params/time_resolution/2018/Bs2JpsiPhi/{version}.json'
+    time_resolution = lambda wcs: [
+      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/time_resolution/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/time_resolution/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
     # Flavor tagging
-    flavor = [
-      'output/params/flavor_tagging/2015/Bs2JpsiPhi/{version}.json',
-      'output/params/flavor_tagging/2016/Bs2JpsiPhi/{version}.json',
-      'output/params/flavor_tagging/2017/Bs2JpsiPhi/{version}.json',
-      'output/params/flavor_tagging/2018/Bs2JpsiPhi/{version}.json'
+    flavor = lambda wcs: [
+      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/flavor_tagging/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/flavor_tagging/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
   output:
     params = 'output/params/angular_fit/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.json',
@@ -70,7 +70,7 @@ rule physics_params_data_run2:
            --flavor-tagging          {",".join(input.flavor)}\
            --params                  {output.params}\
            --tables                  {output.tables}\
-           --year                    {",".join(yd['Run2'])}\
+           --year                    {",".join(YEARS['Run2'])}\
            --cuts                    '{cammel_parser(wildcards.timeacc)}'\
            --version                 {wildcards.version}\
     ) &> {log} #2>&1""")
@@ -108,19 +108,19 @@ rule physics_params_data_run2a:
       'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
     ],
     # CSP
-    csp_factors = [
-      'output/params/csp_factors/2015/Bs2JpsiPhi/{version}.json',
-      'output/params/csp_factors/2016/Bs2JpsiPhi/{version}.json'
+    csp_factors = lambda wcs: [
+      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
     # Time resolution
-    time_resolution = [
-      'output/params/time_resolution/2015/Bs2JpsiPhi/{version}.json',
-      'output/params/time_resolution/2016/Bs2JpsiPhi/{version}.json'
+    time_resolution = lambda wcs: [
+      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
     # Flavor tagging
-    flavor = [
-      'output/params/flavor_tagging/2015/Bs2JpsiPhi/{version}.json',
-      'output/params/flavor_tagging/2016/Bs2JpsiPhi/{version}.json'
+    flavor = lambda wcs: [
+      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
   output:
     params = 'output/params/angular_fit/run2a/Bs2JpsiPhi/{version}_run2a_{angacc}_{timeacc}.json',
@@ -170,16 +170,16 @@ rule physics_params_dataYearly:
       'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
     ],
     # CSP
-    csp_factors = [
-      'output/params/csp_factors/{year}/Bs2JpsiPhi/{version}.json'
+    csp_factors = lambda wcs: [
+      f'output/params/csp_factors/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
     # Time resolution
-    time_resolution = [
-      'output/params/time_resolution/{year}/Bs2JpsiPhi/{version}.json'
+    time_resolution = lambda wcs: [
+      f'output/params/time_resolution/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
     # Flavor tagging
-    flavor = [
-      'output/params/flavor_tagging/{year}/Bs2JpsiPhi/{version}.json'
+    flavor = lambda wcs: [
+      f'output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
   output:
     params = 'output/params/angular_fit/{year}/Bs2JpsiPhi/{version}_yearly_{angacc}_{timeacc}.json',
@@ -226,8 +226,8 @@ rule physics_params_mc:
   input:
     samples = lambda wcs: [tuples(wcs)],
     # CSP
-    csp_factors = [
-      'output/params/csp_factors/{year}/{mode}/{version}.json',
+    csp_factors = lambda wcs: [
+      f'output/params/csp_factors/{wcs.year}/{wcs.mode}/{wcs.version.split("@")[0]}.json',
     ],
   output:
     params = 'output/params/angular_fit/{year}/{mode}/{version}_base.json',
