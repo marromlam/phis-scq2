@@ -6,8 +6,16 @@ stages:
 
 
 before_script:
-  - echo "Hello"
-  - ls .ccache
+    - echo "Hello"
+    - ls .ccache
+    - pwd
+    - source .ccache/conda3/bin/activate
+    - conda activate phisscq
+    - export IPANEMA_BACKEND='opencl'
+    - export PYOPENCL_COMPILER_OUTPUT=1
+    - export PYOPENCL_NO_CACHE=1
+    - export PYTHONPATH=$PWD:$PYTHONPATH
+
 
 
 
