@@ -45,7 +45,6 @@ Setup Environment:
       - .ccache
   only:
     changes:
-      - utils/install.sh
       - utils/default.json
       - .gitlab-ci.yml
   artifacts:
