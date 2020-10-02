@@ -25,7 +25,7 @@ Setup Environment:
   before_script:
     - ls -larth
   script:
-    - rm -rf .ccache sidecar
+    - rm -rf .ccache sidecar tmp
     - mkdir -p .ccache sidecar
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O .ccache/miniconda.sh
     - bash .ccache/miniconda.sh -b -s -f -p .ccache/conda3
@@ -49,30 +49,42 @@ Setup Environment:
   artifacts:
     paths:
       - sidecar
+      - tmp
     expire_in: 1 year
 
 
 
 Test Environment:
   stage: test
+  needs:
+    - job: Setup Environment
   script:
     - ls .ccache
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
+  cache:
+    key: build_cache
+    paths:
+      - .ccache
+    policy: pull
 
 
-
-Test pipeline:
+Test Pipeline:
   stage: test
+  needs:
+    - job: Setup Environment
+    artifacts: true
   script:
     - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
   artifacts:
     paths:
       - sidecar
+      - tmp
     expire_in: 1 year
   cache:
     key: build_cache
     paths:
       - .ccache
+    policy: pull
 
 
