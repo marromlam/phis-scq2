@@ -56,12 +56,13 @@ Setup Environment:
 
 Test Environment:
   stage: test
-  needs:
-    - job: Setup Environment
+  #needs:
+  #  - job: SetupEnvironment
   script:
     - ls .ccache
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
+    - xrdfs root://eoslhcb.cern.ch/ ls /eos
   cache:
     key: build_cache
     paths:
@@ -71,9 +72,9 @@ Test Environment:
 
 Test Pipeline:
   stage: test
-  needs:
-    - job: Setup Environment
-    artifacts: true
+  #needs:
+  #  - job: SetupEnvironment
+  #  artifacts: true
   script:
     - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
   artifacts:
