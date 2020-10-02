@@ -1,11 +1,11 @@
 stages:
     - build
     - test
-    - run
 
 
 
 before_script:
+    - echo "Before Script"
     - pwd
     - ls .ccache
     #- source .ccache/conda3/bin/activate
@@ -18,26 +18,27 @@ before_script:
 
 setup_environment:
   stage: build
-  cache:
-    key: build-cache
-    paths:
-      - .ccache
   before_script:
-    - mkdir -p sidecar
     - rm -rf .ccache
     - pwd
     - ls
   script:
+    - mkdir -p sidecar
+    - mkdir -p .ccache
     - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3
-  only:
-    changes:
-      - utils/install.sh
-      - utils/default.json
-      - .gitlab-ci.yml
-  artifacts:
+  cache:
+    key: build-cache
     paths:
-      - sidecar
-    expire_in: 1 year
+      - .ccache
+  #only:
+  #  changes:
+  #    - utils/install.sh
+  #    - utils/default.json
+  #    - .gitlab-ci.yml
+  #artifacts:
+  #  paths:
+  #    - sidecar
+  #  expire_in: 1 year
 
 
 job B:
