@@ -1,52 +1,26 @@
 stages:
-    - build
-    - test
-
-
+  - build
+  - test
 
 before_script:
-    - echo "Before Script"
-    - pwd
-    - ls .ccache
-    #- source .ccache/conda3/bin/activate
-    #- conda activate phisscq
-    - export IPANEMA_BACKEND='opencl'
-    - export PYOPENCL_COMPILER_OUTPUT=1
-    - export PYOPENCL_NO_CACHE=1
-    - export PYTHONPATH=$PWD:$PYTHONPATH
+  - echo "Hello"
 
-
-setup_environment:
+job A:
   stage: build
-  before_script:
-    - rm -rf .ccache
-    - pwd
-    - ls
   script:
-    - mkdir -p sidecar
     - mkdir -p .ccache
-    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3
-    - ls .ccache
+    - echo "build" > .ccache/hello.txt
   cache:
-    key: build-cache
+    key: build_cache
     paths:
       - .ccache
-      - .ccache/ipanema3
-  #only:
-  #  changes:
-  #    - utils/install.sh
-  #    - utils/default.json
-  #    - .gitlab-ci.yml
-  #artifacts:
-  #  paths:
-  #    - sidecar
-  #  expire_in: 1 year
-
+  after_script:
+    - echo "World"
 
 job B:
   stage: test
   script:
-    - ls .ccache/ipanema3
+    - cat .ccache/hello.txt
   cache:
     key: build_cache
     paths:
