@@ -190,7 +190,7 @@ if [ ${hasconda}=1 ];then
   elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   fi
-  bash miniconda.sh -b -p ${condapath}
+  bash miniconda.sh -b -f -p ${condapath}
 fi
 
 unset PYTHONPATH
