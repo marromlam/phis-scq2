@@ -26,10 +26,12 @@ setup_environment:
     - mkdir -p sidecar
     - mkdir -p .ccache
     - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3
+    - ls .ccache
   cache:
     key: build-cache
     paths:
       - .ccache
+      - .ccache/ipanema3
   #only:
   #  changes:
   #    - utils/install.sh
