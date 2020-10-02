@@ -60,3 +60,17 @@ Test Environment:
 
 
 
+Test pipeline:
+  stage: test
+  script:
+    - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
+  artifacts:
+    paths:
+      - sidecar
+    expire_in: 1 year
+  cache:
+    key: build_cache
+    paths:
+      - .ccache
+
+
