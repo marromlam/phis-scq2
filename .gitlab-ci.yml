@@ -1,26 +1,60 @@
 stages:
-  - build
-  - test
+    - build
+    - test
+    - run
+
+
 
 before_script:
-  - echo "Hello"
+    - pwd
+    - ls build
+    - source $CI_PROJECT_DIR/build/conda3/bin/activate
+    - conda activate phisscq
+    - export IPANEMA_BACKEND='opencl'
+    - export PYOPENCL_COMPILER_OUTPUT=1
+    - export PYOPENCL_NO_CACHE=1
+    - export PYTHONPATH=$PWD:$PYTHONPATH
 
-job A:
+
+setup_environment:
   stage: build
-  script:
-    - mkdir -p .ccache
-    - echo "build" > .ccache/hello.txt
   cache:
-    key: build_cache
+    key: build-cache
     paths:
       - .ccache
-  after_script:
-    - echo "World"
+  before_script:
+    - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    - mkdir -p sidecar
+    - pwd
+    - ls
+  script:
+    - bash miniconda.sh -b -s -f -p .ccache/conda3
+    - source .ccache/conda3/bin/activate
+    - conda update -n base -c defaults conda
+    - conda create --name phisscq
+    - conda activate phisscq
+    - conda config --add channels conda-forge
+    - conda install pip pocl pyopencl ROOT
+    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3/
+    - pip install -e .ccache/ipanema3/
+    - pip install snakemake==5.22.0 hep_ml py-cpuinfo
+    - cp utils/default.json config.json
+    - python -c "import ipanema"
+  only:
+    changes:
+      - utils/install.sh
+      - utils/default.json
+      - .gitlab-ci.yml
+  artifacts:
+    paths:
+      - sidecar
+    expire_in: 1 year
+
 
 job B:
   stage: test
   script:
-    - cat .ccache/hello.txt
+    - ls .ccache/ipanema3
   cache:
     key: build_cache
     paths:
