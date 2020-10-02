@@ -1,14 +1,23 @@
 stages:
   - build
   - test
+  - deploy
+  
+
 
 before_script:
   - echo "Hello"
+  - ls .ccache
 
-job A:
+
+
+Setup Environment:
   stage: build
+  before_script:
+    - ls -larth
   script:
-    - mkdir -p .ccache
+    - rm -rf .ccache sidecar
+    - mkdir -p .ccache sidecar
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O .ccache/miniconda.sh
     - bash .ccache/miniconda.sh -b -s -f -p .ccache/conda3
     - source .ccache/conda3/bin/activate
@@ -22,19 +31,32 @@ job A:
     - pip install snakemake==5.22.0 hep_ml py-cpuinfo
     - cp utils/default.json config.json
     - python -c "import ipanema"
-
   cache:
     key: build_cache
     paths:
       - .ccache
-  after_script:
-    - echo "World"
+  only:
+    changes:
+      - utils/install.sh
+      - utils/default.json
+      - .gitlab-ci.yml
+  artifacts:
+    paths:
+      - sidecar
+    expire_in: 1 year
 
-job B:
+
+
+Test Environment:
   stage: test
   script:
     - ls .ccache
+    - python -c "import ipanema"
+    - python -c "from ipanema import initialize; initialize('opencl',1)"
   cache:
     key: build_cache
     paths:
       - .ccache
+
+
+
