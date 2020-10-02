@@ -9,7 +9,7 @@ job A:
   stage: build
   script:
     - mkdir -p .ccache
-    - echo "build" > .ccache/hello.txt
+    - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O .ccache/miniconda.sh
   cache:
     key: build_cache
     paths:
@@ -20,7 +20,7 @@ job A:
 job B:
   stage: test
   script:
-    - cat .ccache/hello.txt
+    - cat .ccache/miniconda.sh
   cache:
     key: build_cache
     paths:
