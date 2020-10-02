@@ -23,24 +23,12 @@ setup_environment:
     paths:
       - .ccache
   before_script:
-    - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     - mkdir -p sidecar
     - rm -rf .ccache
     - pwd
     - ls
   script:
-    - bash miniconda.sh -b -s -f -p .ccache/conda3
-    - source .ccache/conda3/bin/activate
-    - conda update -n base -c defaults conda
-    - conda create --name phisscq
-    - conda activate phisscq
-    - conda config --add channels conda-forge
-    - conda install pip pocl pyopencl ROOT
-    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3/
-    - pip install -e .ccache/ipanema3/
-    - pip install snakemake==5.22.0 hep_ml py-cpuinfo
-    - cp utils/default.json config.json
-    - python -c "import ipanema"
+    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3
   only:
     changes:
       - utils/install.sh
