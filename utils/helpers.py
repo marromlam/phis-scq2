@@ -1,6 +1,8 @@
 import re
 import os
 import hjson
+import numpy as np
+from ipanema import ristra
 
 CONFIG = hjson.load(open('config.json'))
 SAMPLES_PATH = CONFIG['path']
@@ -35,6 +37,7 @@ def timeacc_guesser(timeacc):
 
 def version_guesser(version):
   # Check if the tuple will be modified
+  # print(version)
   version = version.split('@')
   v, mod = version if len(version)>1 else [version[0],None]
   # Dig in mod
@@ -51,7 +54,7 @@ def version_guesser(version):
     return v, int(100), None, None, None, None
 
 
-version_guesser('v0r5@10')
+#version_guesser('v0r5@10')
 
 
 
@@ -60,8 +63,11 @@ version_guesser('v0r5@10')
 
 def tuples(wcs,version=False,year=None,mode=None,weight=None):
   # Get version withoud modifier
-  v, share, mag, fullcut, var, bin = version_guesser(f'{wcs.version}')
-
+  if not version:
+    version = f"{wcs.version}"
+  #print(f'{version}')
+  v, share, mag, fullcut, var, bin = version_guesser(f'{version}')
+  #print(wcs)
   # Try to extract mode from wcs then from mode arg
   try:
     m = f'{wcs.mode}'
@@ -105,14 +111,24 @@ def tuples(wcs,version=False,year=None,mode=None,weight=None):
     for y in years:
       terms = [y, m, v]
       if weight:
-        path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
+        if weight=='angWeight':
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{version}']) + f'_{weight}.root' )
+        elif weight=='kkpWeight':
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{version}']) + f'_{wcs.angacc}_{wcs.timeacc}_{weight}.root' )
+        else:
+          path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
       else:
         path.append( SAMPLES_PATH + '/'.join(terms) + f'.root' )
   else:
     y = f'{wcs.year}'
     terms = [y, m, v]
     if weight:
-      path = SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
+        if weight=='angWeight':
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{version}']) + f'_{weight}.root'
+        elif weight=='kkpWeight':
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{version}']) + f'_{wcs.angacc}_{wcs.timeacc}_{weight}.root'
+        else:
+          path =  SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
     else:
       path = SAMPLES_PATH + '/'.join(terms) + f'.root'
   #print(path)
@@ -133,7 +149,7 @@ def send_mail(subject, body, files=None):
   for mail in MAILS:
     # If there are attachments, then we use mail directly
     if attachments:
-      shell(f"""ssh master 'echo "{attachments}" | mail -s"{subject}" -a {" -a ".join(attachments)} {mail}'""")
+      os.system(f"""ssh master 'echo "{attachments}" | mail -s"{subject}" -a {" -a ".join(attachments)} {mail}'""")
     else:
       # If it's a log file, then we try to force monospace fonts in mails
       # maybe not all of the email apps can read it as monospaced
@@ -142,3 +158,8 @@ def send_mail(subject, body, files=None):
       end = '</pre>'
       cmd = f'echo "{start}\n`cat {body}`\n{end}"'
       os.system(f"""ssh master '{cmd} | /usr/sbin/sendmail {mail}'""")
+
+
+def swnorm(sw):
+  sw_ = ristra.get(sw)
+  return ristra.allocate(sw_*(np.sum(sw_)/np.sum(sw_**2)))
