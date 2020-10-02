@@ -11,7 +11,7 @@ job A:
     - mkdir -p .ccache
     - echo "build" > .ccache/hello.txt
   cache:
-    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    key: build_cache
     paths:
       - .ccache
   after_script:
@@ -22,6 +22,6 @@ job B:
   script:
     - cat .ccache/hello.txt
   cache:
-    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    key: build_cache
     paths:
       - .ccache
