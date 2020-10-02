@@ -43,10 +43,10 @@ Setup Environment:
     key: build_cache
     paths:
       - .ccache
-  only:
-    changes:
-      - utils/default.json
-      - .gitlab-ci.yml
+  #only:
+  #  changes:
+  #    - utils/default.json
+  #    - .gitlab-ci.yml
   artifacts:
     paths:
       - sidecar
