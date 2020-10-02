@@ -4,7 +4,6 @@
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-
 rule time_acceptance_single:
   input:
     sample = lambda wcs: tuples(wcs, mode=wcs.mode),
@@ -27,39 +26,10 @@ rule time_acceptance_single:
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-    ) &> {log} 2>&1
+    ) &> {log}
     """)
     send_mail(f"Time Acceptance :: Single {wildcards}", f"{log}")
 
-
-
-
-rule lifetime_fit:
-  wildcard_constraints:
-    trigger = "(biased|unbiased|combined)",
-  input:
-    sample = lambda wcs: tuples(wcs, mode=wcs.mode),
-  params:
-    params = 'time_acceptance/params/{year}/{mode}/baseline.json',
-  output:
-    params   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit_{trigger}.json',
-    tables   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit_{trigger}.tex',
-  log:
-    'output/log/time_acceptance_single/{year}/Bd2JpsiKstar/{version}_{trigger}.log'
-  run:
-    shell(f"""
-    (time\
-    python time_acceptance/single.py\
-           --sample {input.sample}\
-           --input-params {params.params}\
-           --output-params {output.params}\
-           --output-tables {output.tables}\
-           --mode {wildcards.mode}\
-           --year {wildcards.year}\
-           --version {wildcards.version}\
-           --trigger {wildcards.trigger}\
-    ) &> {log} 2>&1""")
-    send_mail("Single Time Acceptance", f"{log}")
 
 
 rule time_acceptance_simultaneous:
@@ -108,26 +78,132 @@ rule time_acceptance_simultaneous:
 
 
 
+rule time_acceptance_simultaneousDGn0:
+  wildcard_constraints:
+    timeacc = "dGn0(nonkin|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    trigger = "(biased|unbiased|combined)",
+  input:
+    sample = lambda wcs: [
+      tuples(wcs,mode='MC_Bs2JpsiPhi'),
+      tuples(wcs,mode='MC_Bd2JpsiKstar'),
+      tuples(wcs,mode='Bd2JpsiKstar')
+    ]
+  params:
+    params = [
+      'time_acceptance/params/{year}/MC_Bs2JpsiPhi/baseline.json',
+      'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
+      'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
+    ]
+  output:
+    params = [
+      'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{timeacc}_{trigger}.json',
+      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
+      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json'
+    ],
+    tables = [
+      'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{timeacc}_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex'
+    ]
+  log:
+    'output/log/time_acceptance_simultaneous/{year}/{version}_{timeacc}_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python time_acceptance/simultaneous.py\
+           --samples {",".join(input.sample)}\
+           --input-params {",".join(params.params)}\
+           --output-params {",".join(output.params)}\
+           --output-tables {",".join(output.tables)}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+           --trigger {wildcards.trigger}\
+           --timeacc {wildcards.timeacc}\
+    ) &> {log} 2>&1""")
+    send_mail(f"Simultaneous Time Acceptance", f"{log}")
+
+
+
+
+# lifetime fit -----------------------------------------------------------------
+#    These are several rules related to decay-time acceptance. The main one is
+#    time_acceptance, which computes the spline coefficients of the
+#    Bs2JpsiPhi acceptance.
+rule lifetime_fit:
+  wildcard_constraints:
+    trigger = "(biased|unbiased|combined)",
+  input:
+    sample = lambda wcs: [
+      tuples(wcs,mode='MC_Bs2JpsiPhi'),
+      tuples(wcs,mode='MC_Bd2JpsiKstar'),
+      tuples(wcs,mode='Bd2JpsiKstar')
+    ]
+  params:
+    params = [
+      'time_acceptance/params/{year}/MC_Bs2JpsiPhi/baseline.json',
+      'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
+      'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
+    ]
+  output:
+    params   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit_{trigger}.json',
+    tables   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit_{trigger}.tex',
+  log:
+    'output/log/time_acceptance_single/{year}/Bd2JpsiKstar/{version}_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python time_acceptance/single.py\
+           --sample {input.sample}\
+           --input-params {params.params}\
+           --output-params {output.params}\
+           --output-tables {output.tables}\
+           --mode {wildcards.mode}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+           --trigger {wildcards.trigger}\
+    ) &> {log} 2>&1""")
+    send_mail("Single Time Acceptance", f"{log}")
+
+
+
+
 # decay_time_acceptance plots --------------------------------------------------
 #    These are several rules related to decay-time acceptance. The main one is
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-
 rule time_acceptance_plot:
   wildcard_constraints:
-    timeacc = "(single|parallel|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
-    trigger = "(biased|unbiased|combined)"
+    #timeacc = "(single|simul|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    plot = "(fit|fitlog|spline|splinelog)",
+    #trigger = "(biased|unbiased|biased+unbiased)",
   input:
-    sample_BsMC = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
-    sample_BdMC = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar'),
-    sample_BdDT = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar'),
-    params_BsMC = 'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.json',
-    params_BdMC = 'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
-    params_BdDT = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json'
+    samples = lambda wcs: sum([[
+      tuples(wcs,version=v, mode='MC_Bs2JpsiPhi_dG0'),
+      tuples(wcs,version=v, mode='MC_Bd2JpsiKstar'),
+      tuples(wcs,version=v, mode='Bd2JpsiKstar')]
+    for v in f"{wcs.version}".split('+')], []),
+    params = lambda wcs: expand([
+      'output/params/time_acceptance/{{year}}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{{trigger}}.json',
+      'output/params/time_acceptance/{{year}}/MC_Bd2JpsiKstar/{version}_{timeacc}_{{trigger}}.json',
+      'output/params/time_acceptance/{{year}}/Bd2JpsiKstar/{version}_{timeacc}_{{trigger}}.json'
+    ], timeacc=f"{wcs.timeacc}".split('+'), version=f"{wcs.version}".split('+'))
   output:
     'output/figures/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.pdf',
   log:
     'output/log/time_acceptance_plot/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.log'
   run:
-    1+1
+    shell(f"""
+    (time\
+    python time_acceptance/plot_functions.py\
+           --samples {",".join(input.samples)}\
+           --params {",".join(input.params)}\
+           --figure {output}\
+           --year {wildcards.year}\
+           --mode {wildcards.mode}\
+           --version {wildcards.version}\
+           --trigger {wildcards.trigger}\
+           --timeacc {wildcards.timeacc}\
+           --plot {wildcards.plot}\
+    ) &> {log} 2>&1""")
+    send_mail(f"Simultaneous Time Acceptance", f" ", output)
