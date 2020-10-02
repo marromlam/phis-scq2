@@ -8,8 +8,8 @@ stages:
 before_script:
     - pwd
     - ls .ccache
-    - source .ccache/conda3/bin/activate
-    - conda activate phisscq
+    #- source .ccache/conda3/bin/activate
+    #- conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
     - export PYOPENCL_NO_CACHE=1
