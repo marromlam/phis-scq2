@@ -20,7 +20,7 @@ job A:
 job B:
   stage: test
   script:
-    - cat .ccache/miniconda.sh
+    - ls .ccache
   cache:
     key: build_cache
     paths:
