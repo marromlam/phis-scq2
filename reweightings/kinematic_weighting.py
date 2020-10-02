@@ -8,11 +8,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import uproot
 import os, sys
-from hep_ml import reweight
+
 import ast
 import math
 import yaml
+import hjson
 
+# reweighting config
+from warnings import simplefilter
+simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
+from hep_ml import reweight
+
+bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+binned_vars = {'eta':'B_ETA', 'pt':'B_PT', 'sigmat':'sigmat'}
 
 def argument_parser():
     parser = argparse.ArgumentParser()
@@ -50,6 +58,31 @@ def getStringVars(FUN):
 
 
 
+def computekinWeight(original, target, original_weight, target_weight,
+                     n_estimators,learning_rate,max_depth,min_samples_leaf,
+                     trunc):
+
+  reweighter = reweight.GBReweighter(n_estimators     = int(n_estimators),
+                                     learning_rate    = float(learning_rate),
+                                     max_depth        = int(max_depth),
+                                     min_samples_leaf = int(min_samples_leaf),
+                                     gb_args          = {'subsample': 1})
+
+  reweighter.fit(original = original, target = target,
+                 original_weight = original_weight, target_weight = target_weight);
+
+  kinWeight = reweighter.predict_weights(original)
+
+  # Use truncation if set
+  if int(trunc):
+    print('Apply a truncation at '+trunc)
+    kinWeight[kinWeight > float(trunc)] = float(trunc)
+
+  kinWeight = np.where(original_weight!=0, kinWeight, 0)
+  return kinWeight
+
+
+
 # %% kinematic_weighting -------------------------------------------------------
 
 def kinematic_weighting(original_file, original_treename, original_vars, original_weight,
@@ -70,51 +103,55 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   # fetch variables in original files
   print('Loading branches for original_sample')
   file = uproot.open(original_file)[original_treename]
-  original_vars_df = file.pandas.df(flatten=None)
-  original_weight = original_vars_df.eval(original_weight)
+  ovars_df = file.pandas.df(flatten=None)
 
   print('Loading branches for target_sample')
   file = uproot.open(target_file)[target_treename]
-  target_vars_df = file.pandas.df(branches=all_target_vars)
-  target_weight = target_vars_df.eval(target_weight)
+  tvars_df = file.pandas.df(flatten=None)
+
+  sws = ['sw']+[f'sw_{var}' for var in binned_vars.keys()]
+  kws = ['kinWeight']+[f'kinWeight_{var}' for var in binned_vars.keys()]
+  print('Original sWeights')
+  print(ovars_df[sws])
+  print('Target sWeights')
+  print(tvars_df[sws])
 
   # %% Reweighting -------------------------------------------------------------
+  ovars_df['kinWeight'] = computekinWeight(
+                   ovars_df.get(original_vars),
+                   tvars_df.get(target_vars),
+                   ovars_df.eval(original_weight),
+                   tvars_df.eval(target_weight),
+                   n_estimators,learning_rate,max_depth,min_samples_leaf,
+                   trunc)
+  for var,vvar in binned_vars.items():
+    kinWeight = np.zeros_like(ovars_df['kinWeight'].values)
+    for cut in bin_vars[var]:
+      original_weight_binned = original_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
+      target_weight_binned = target_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
+      print("ORIGINAL WEIGHT =", original_weight_binned)
+      print("  TARGET WEIGHT =", target_weight_binned)
+      kinWeight_ = computekinWeight(
+              ovars_df.get(original_vars),
+              tvars_df.get(target_vars),
+              ovars_df.eval(original_weight_binned),
+              tvars_df.eval(target_weight_binned),
+              n_estimators,learning_rate,max_depth,min_samples_leaf,
+              trunc)
+      kinWeight = np.where(ovars_df.eval(cut.replace(var,vvar)), kinWeight_, kinWeight)
+    ovars_df[f'kinWeight_{var}'] = kinWeight
 
-  reweighter = reweight.GBReweighter(n_estimators     = int(n_estimators),
-                                     learning_rate    = float(learning_rate),
-                                     max_depth        = int(max_depth),
-                                     min_samples_leaf = int(min_samples_leaf),
-                                     gb_args          = {'subsample': 1})
-
-  print('Reweighting...')
-  print(f"original_weight = {original_weight}")
-  print(f"target_weight = {target_weight}")
-  reweighter.fit(original         = original_vars_df.get(original_vars),
-                 target           = target_vars_df.get(target_vars),
-                 original_weight  = original_weight,
-                 target_weight    = target_weight);
-
-  kinWeight = reweighter.predict_weights(original_vars_df.get(original_vars))
-  print(f"kinWeight = {kinWeight}")
-
-  # Use truncation if set
-  if int(trunc):
-    print('Apply a truncation at '+trunc)
-    kinWeight[kinWeight > float(trunc)] = float(trunc)
-  kinWeight = np.where(original_weight!=0, kinWeight, 0)
-  original_vars_df['kinWeight'] = kinWeight
+  print('Original kinWeights')
+  print(ovars_df[kws])
 
   # %% Save weights to file ----------------------------------------------------
   if os.path.exists(output_file):
     print('Deleting previous %s'  % output_file)
     os.remove(output_file)                               # delete file if exists
-  #os.system('cp '+original_file+' '+output_file)
   print('Writing on %s' % output_file)
-  #import root_pandas
-  #root_pandas.to_root(original_vars_df, output_file, key=original_treename)
   f = uproot.recreate(output_file)
-  f[original_treename] = uproot.newtree({var:'float64' for var in original_vars_df})
-  f[original_treename].extend(original_vars_df.to_dict(orient='list'))
+  f[original_treename] = uproot.newtree({var:'float64' for var in ovars_df})
+  f[original_treename].extend(ovars_df.to_dict(orient='list'))
   f.close()
 
   return kinWeight
