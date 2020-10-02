@@ -9,7 +9,7 @@ before_script:
     - echo "setting environment from cache"
     - ls .ccache
     - pwd
-    - kinit
+    - kinit mromerol@CERN.CH
     - cp utils/default.json config.json
     - source .ccache/conda3/bin/activate
     - conda activate phisscq
