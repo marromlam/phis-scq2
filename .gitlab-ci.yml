@@ -7,7 +7,7 @@ stages:
 
 before_script:
     - pwd
-    - ls build
+    - ls .ccache
     - source $CI_PROJECT_DIR/build/conda3/bin/activate
     - conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
