@@ -20,7 +20,7 @@ before_script:
 
 
 
-SetupEnvironment:
+Setup Environment:
   stage: build
   before_script:
     - ls -larth
@@ -54,10 +54,10 @@ SetupEnvironment:
 
 
 
-TestEnvironment:
+Test Environment:
   stage: test
-  needs:
-    - job: SetupEnvironment
+  #needs:
+  #  - job: SetupEnvironment
   script:
     - ls .ccache
     - python -c "import ipanema"
@@ -69,11 +69,11 @@ TestEnvironment:
     policy: pull
 
 
-TestPipeline:
+Test Pipeline:
   stage: test
-  needs:
-    - job: SetupEnvironment
-    artifacts: true
+  #needs:
+  #  - job: SetupEnvironment
+  #  artifacts: true
   script:
     - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
   artifacts:
