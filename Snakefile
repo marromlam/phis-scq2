@@ -51,7 +51,7 @@ YEARS = {#
 #     Some wilcards will only have some well defined values.
 wildcard_constraints:
   trigger = "(biased|unbiased|combined)",
-  year = "(2015|2016|Run2a|2017|2018|Run2b|Run2)"
+  year = "(2015|2016|run2a|2017|2018|run2b|run2|2020)"
 
 
 # Including Snakefiles
