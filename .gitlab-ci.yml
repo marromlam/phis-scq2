@@ -6,9 +6,10 @@ stages:
 
 
 before_script:
-    - echo "Hello"
+    - echo "setting environment from cache"
     - ls .ccache
     - pwd
+    - cp utils/default.json config.json
     - source .ccache/conda3/bin/activate
     - conda activate phisscq
     - export IPANEMA_BACKEND='opencl'
@@ -33,12 +34,10 @@ Setup Environment:
     - conda create --name phisscq
     - conda activate phisscq
     - conda config --add channels conda-forge
-    - conda install pip pocl pyopencl
+    - conda install pip pocl pyopencl ROOT
     - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3
     - pip install -e .ccache/ipanema3
     - pip install snakemake==5.22.0 hep_ml py-cpuinfo
-    - cp utils/default.json config.json
-    - python -c "import ipanema"
   cache:
     key: build_cache
     paths:
@@ -60,10 +59,6 @@ Test Environment:
     - ls .ccache
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
-  cache:
-    key: build_cache
-    paths:
-      - .ccache
 
 
 
