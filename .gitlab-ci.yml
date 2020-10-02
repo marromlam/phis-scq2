@@ -62,6 +62,7 @@ Test Environment:
     - ls .ccache
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
+    - xrdfs root://eoslhcb.cern.ch/ ls /eos
   cache:
     key: build_cache
     paths:
