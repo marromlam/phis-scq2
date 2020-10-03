@@ -106,6 +106,7 @@ Run Analysis:
       - tmp
       - output
     expire_in: 1 year
+    when: always
   cache:
     key: build_cache
     paths:
