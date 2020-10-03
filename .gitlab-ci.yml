@@ -62,7 +62,7 @@ Test Environment:
   script:
     - ls /etc
     - ls .ccache
-    - if [ -z ${ENCODED_KEYTAB+x} ]; then echo "ENCODED_KEYTAB not set. EOS access will not be possible."; else echo "$ENCODED_KEYTAB"  && echo "$ENCODED_KEYTAB" | base64 -d > ap.keytab && kinit lbanadat@CERN.CH -k -t ap.keytab && cat ap.keytab && rm ap.keytab; fi
+    - if [ -z ${ENCODED_KEYTAB+x} ]; then echo "ENCODED_KEYTAB not set. EOS access will not be possible."; else echo "$ENCODED_KEYTAB"  && echo "$ENCODED_KEYTAB" | base64 -d > ap.keytab && kinit mromerol@CERN.CH -k -t ap.keytab && cat ap.keytab && rm ap.keytab; fi
     - python -c "import ipanema"
     - python -c "from ipanema import initialize; initialize('opencl',1)"
     - xrdfs root://eoslhcb.cern.ch/ ls /eos
