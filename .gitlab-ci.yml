@@ -92,3 +92,23 @@ Test Pipeline:
     policy: pull
 
 
+
+Run Analysis:
+  stage: deploy
+  #needs:
+  #  - job: SetupEnvironment
+  #  artifacts: true
+  script:
+    - snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_run2_run2_simul.json -j -F
+  artifacts:
+    paths:
+      - sidecar
+      - tmp
+      - output
+    expire_in: 1 year
+  cache:
+    key: build_cache
+    paths:
+      - .ccache
+    policy: pull
+
