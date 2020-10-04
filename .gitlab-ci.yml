@@ -41,7 +41,7 @@ Setup Environment:
     - pip install -e .ccache/ipanema3
     - pip install snakemake==5.22.0 hep_ml py-cpuinfo
   cache:
-    key: build_cache
+    key: build_cache_${CI_COMMIT_REF_SLUG}
     paths:
       - .ccache
   #only:
@@ -66,7 +66,7 @@ Test Environment:
     - python -c "from ipanema import initialize; initialize('opencl',1)"
     - xrdfs root://eoslhcb.cern.ch/ ls /eos
   cache:
-    key: build_cache
+    key: build_cache_${CI_COMMIT_REF_SLUG}
     paths:
       - .ccache
     policy: pull
@@ -86,7 +86,7 @@ Test Pipeline:
       - output
     expire_in: 1 year
   cache:
-    key: build_cache
+    key: build_cache_${CI_COMMIT_REF_SLUG}
     paths:
       - .ccache
     policy: pull
@@ -106,7 +106,7 @@ Run Analysis:
     expire_in: 1 year
     when: always
   cache:
-    key: build_cache
+    key: build_cache_${CI_COMMIT_REF_SLUG}
     paths:
       - .ccache
     policy: pull
