@@ -1,14 +1,40 @@
 {
   "path": "sidecar/",
-  "mail": [],
-  "binned_variables": ["B_PT", "sigmat", "B_ETA"],
+  "mail": ['mromerol@cern.ch'],
   "angular_acceptance_bdtconfig": {
-    "n_estimators":50,
-    "learning_rate":0.1,
-    "max_depth":3,
-    "min_samples_leaf":1000,
+    "n_estimators":50//20
+    "learning_rate":0.1//0.5
+    "max_depth":3//25
+    "min_samples_leaf":1000//5000
     "gb_args":{"subsample": 1}
   },
+  // Gd value ------------------------------------------------------------------
+  //   This value is shared by all steps of this analysis, so a change here
+  //   would imply a change in the whole set of results
+  "Gd_value": 0.65789,
+  // Time acceptance parameters ------------------------------------------------
+  "time_acceptance_resolutions": {
+    "MC_Bs2JpsiPhi": {
+      "mu":0,
+      "sigma":0.0417,
+      "DGsd":0.003486
+    },
+    "MC_Bs2JpsiPhi_dG0": {
+      "mu":0,
+      "sigma":0.0417,
+      "DGsd":0.003486
+    },
+    "MC_Bd2JpsiKstar": {
+      "mu":0,
+      "sigma":0.03864,
+      "DGsd":0.00044
+    },
+    "Bd2JpsiKstar": {
+      "mu":0,
+      "sigma":0.04244,
+      "DGsd":0.0
+    },
+  }
   "time_acceptance_bdtconfig": {
     "n_estimators":20,
     "learning_rate":0.3,
@@ -16,14 +42,15 @@
     "min_samples_leaf":1000,
     "gb_args":{"subsample": 1}
   },
+  "binned_variables": ["pt", "sigmat", "eta"],
   "binned_variables_cuts": {
-    "pt": ['B_PT >= 0 & B_PT < 3.8e3', 'B_PT >= 3.8e3 & B_PT < 6e3', 'B_PT >= 6e3 & B_PT <= 9e3', 'B_PT >= 9e3'],
-    "eta": ['B_ETA >= 0 & B_ETA <= 3.3', 'B_ETA >= 3.3 & B_ETA <= 3.9', 'B_ETA >= 3.9 & B_ETA <= 6'],
+    "pt": ['pt >= 0 & pt < 3.8e3', 'pt >= 3.8e3 & pt < 6e3', 'pt >= 6e3 & pt <= 9e3', 'pt >= 9e3'],
+    "eta": ['eta >= 0 & eta <= 3.3', 'eta >= 3.3 & eta <= 3.9', 'eta >= 3.9 & eta <= 6'],
     "sigmat": ['sigmat >= 0 & sigmat <= 0.031', 'sigmat >= 0.031 & sigmat <= 0.042', 'sigmat >= 0.042 & sigmat <= 0.15']
   },
   "binned_variables_ranges": {
-    "B_PT": [0, 3.8e3, 6e3, 9e3, 40e3],
-    "B_ETA": [0, 3.3, 3.9, 6],
+    "pt": [0, 3.8e3, 6e3, 9e3, 40e3],
+    "eta": [0, 3.3, 3.9, 6],
     "sigmat": [0, 0.031, 0.042, 0.150]
   }
 }
