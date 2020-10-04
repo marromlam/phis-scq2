@@ -1,6 +1,7 @@
 stages:
   - build # create environment
   - test # test environment and run one snakemake rule
+  - sync_tuples
   - deploy # run the complete analysis
   
 
@@ -113,8 +114,8 @@ Test Snakemake:
 
 # Run analysis #################################################################
 
-Download Tuples:
-  stage: deploy
+Sync Tuples:
+  stage: sync_tuples
   script:
     - snakemake sidecar/201{5,6,7,8}/{Bd2JpsiKstar,Bs2JpsiPhi,MC_Bd2JpsiKstar,MC_Bs2JpsiPhi,MC_Bs2JpsiPhi_dG0}/v0r5.root -j -f
   artifacts:
@@ -134,7 +135,7 @@ Download Tuples:
 Run Analysis:
   stage: deploy
   dependencies:
-    - "Download Tuples"
+    - "Sync Tuples"
   script:
     - snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_run2_run2_simul.json -j -f
   artifacts:
