@@ -612,7 +612,7 @@ def sbxscxerf(
       b0=1, b1=1.2, b2=1.4, b3=1.7, b4=2.2, b5=2.2, b6=2.1, b7=2.0, b8=1.9,
       mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
       tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256):
+      BLOCK_SIZE=256, **crap):
   """
   In:
           time: 2D list of 1D gpuarray with time to be fitted, the expected
@@ -653,7 +653,7 @@ def saxsbxscxerf(
       c0=1, c1=1.2, c2=1.4, c3=1.7, c4=2.2, c5=2.2, c6=2.1, c7=2.0, c8=1.9,
       mu_c=0.0, sigma_c=0.04, gamma_c=0.6,
       tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256):
+      BLOCK_SIZE=256, **crap):
   """
   In:
           time: 3D list of 1D gpuarray with time to be fitted, the expected
