@@ -8,7 +8,7 @@ from ipanema import Parameters
 #     modificacions.
 
 def download_fulljson(version, year, where="./tmp"):
-  repo = "https://gitlab.cern.ch/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git"
+  repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git"
   path = f"fitinputs/{version}/"
   os.system(f"git archive --remote={repo} --prefix={where}/{version}/ HEAD:{path} fit_inputs_{year}.json | tar -x")
 
