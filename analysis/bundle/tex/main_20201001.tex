@@ -1,0 +1,114 @@
+\documentclass[aspectratio=43]{beamer}
+\usetheme{Compostela}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{$\phi_s$ meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}
+}
+\newcommand{\TalkAuthorShort}{Veronika Chobanova, Diego Martínez, Marcos Romero}
+\newcommand{\TalkTitle}{\textit{phis SCQ} status}
+\newcommand{\TalkTitleShort}{\textit{phis SCQ} status}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{October 1st}
+\newcommand{\TalkDateNumber}{2020/10/01}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\usepackage{array}
+\newcommand{\TupleVersion}{v0r5}
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE PAGE & CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[plain,overlaytitlepage=0.9]
+  \begin{minipage}[b][\textheight][b]{5cm}
+    \includegraphics[height=0.5cm]{logos/igfae_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/usc_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/xunta_bw}\hspace{1mm}\\[2mm]
+    \includegraphics[height=0.5cm]{logos/maeztu_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/lhcb_bw}\\[-1mm]
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain,overlaytoc=0.9]
+  \addtocounter{framenumber}{-1}
+  \hspace*{5.3cm}\begin{minipage}{8cm}
+    \tableofcontents
+  \end{minipage}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+\section{News}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Acceptances are consistent}
+\begin{frame}[default]
+\frametitle{noframetitle}
+
+\begin{center}
+\scriptsize
+\begin{tabular}{ccc}
+$\phi_0                         $&$ +0.293\pm0.022   $&$ 0.2929599    \pm 0.0215003 $ \\
+$\lambda_0                      $&$ +1.006{\color{red}4}\pm0.0096 $&$  1.00634445   \pm 0.00956186 $ \\
+$\Gamma_s - \Gamma_d            $&$ -0.0086\pm0.0013 $&$ -0.00864345  \pm 0.00134943 $ \\
+$\Delta\Gamma_s                 $&$ +0.2672\pm0.0044 $&$ 0.26715641   \pm 0.00441993 $ \\
+$\Delta m                       $&$ +17.739\pm0.032  $&$ 17.7388902   \pm 0.0317482 $ \\
+$f_{\perp}                      $&$ +0.2458\pm0.0023 $&$ 0.24583108   \pm 0.00229777 $ \\
+$ f_0                           $&$ +0.5189\pm0.0017 $&$ 0.51891064   \pm 0.00167744  $ \\
+$f_S^{1}                        $&$ +0.467\pm0.024   $&$ 0.4674951    \pm 0.0239823 $ \\
+$f_S^{2}                        $&$ +0.0421\pm0.0049 $&$ 0.04212804   \pm 0.00494299  $ \\
+$f_S^{3}                        $&$ +0.0035\pm0.0015 $&$ 0.00345173   \pm 0.00151636  $ \\
+$f_S^{4}                        $&$ +0.0045\pm0.0026 $&$ 0.00447188   \pm 0.00258970 $ \\
+$f_S^{5}                        $&$ +0.0560\pm0.0071 $&$ 0.05604941   \pm 0.00711962 $ \\
+$f_S^{6}                        $&$ +0.152\pm0.011   $&$ 0.1522906    \pm 0.0110965 $ \\
+$\delta_{\parallel} - \delta_0  $&$ +3.130\pm0.062   $&$ 3.1303943    \pm 0.0615116 $ \\
+$\delta_{\perp} - \delta_0      $&$ +2.767\pm0.073   $&$ 2.7674537    \pm 0.0725485  $ \\
+$\delta_S^{1} - \delta_{\perp}  $&$ +2.03\pm0.13     $&$ 2.027623     \pm 0.129485 $ \\
+$\delta_S^{2} - \delta_{\perp}  $&$ +1.71\pm0.18     $&$ 1.714150     \pm 0.183749 $ \\
+$\delta_S^{3} - \delta_{\perp}  $&$ +0.98\pm0.31     $&$ 0.980505     \pm 0.308862 $ \\
+$\delta_S^{4} - \delta_{\perp}  $&$ -0.16\pm0.12     $&$ -0.158452    \pm 0.118364 $ \\
+$\delta_S^{5} - \delta_{\perp}  $&$ -0.596\pm0.066   $&$ -0.5957289   \pm 0.0654950 $ \\
+$\delta_S^{6} - \delta_{\perp}  $&$ -0.987\pm0.076   $&$ -0.9868681   \pm 0.0761527 $ \\
+\end{tabular}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Add images
+
+\input{figures_reweightings}
+%\input{angacc_figures}
+%\input{tables}
+
+
+
+\end{document}

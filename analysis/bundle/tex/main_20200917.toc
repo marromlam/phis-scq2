@@ -1,0 +1,2 @@
+\beamer@sectionintoc {1}{News}{3}{0}{1}
+\beamer@subsectionintoc {1}{1}{Acceptances are consistent}{4}{0}{1}
