@@ -1,7 +1,7 @@
 stages:
   - build # create environment
   - test # test environment and run one snakemake rule
-  - sync_tuples
+  - download
   - deploy # run the complete analysis
   
 
@@ -115,7 +115,7 @@ Test Snakemake:
 # Run analysis #################################################################
 
 Sync Tuples:
-  stage: sync_tuples
+  stage: download
   script:
     - snakemake sidecar/201{5,6,7,8}/{Bd2JpsiKstar,Bs2JpsiPhi,MC_Bd2JpsiKstar,MC_Bs2JpsiPhi,MC_Bs2JpsiPhi_dG0}/v0r5.root -j -f
   artifacts:
@@ -131,11 +131,28 @@ Sync Tuples:
     policy: pull
 
 
+Repository Parameters:
+  stage: download
+  script:
+    - snakemake output/params/{csp_factors,time_resolution,flavor_tagging}/201{5,6,7,8}/Bs2JpsiPhi/v0r5.json -j -f
+  artifacts:
+    paths:
+      - output
+      - sidecar
+    expire_in: 1 year
+    when: always
+  cache:
+    key: build_cache_${CI_COMMIT_REF_SLUG}
+    paths:
+      - .ccache
+    policy: pull
+
 
 Run Analysis:
   stage: deploy
   dependencies:
     - "Sync Tuples"
+    - "Repository Parameters"
   script:
     - snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_run2_run2_simul.json -j -f
   artifacts:
