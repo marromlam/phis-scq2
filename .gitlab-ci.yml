@@ -85,8 +85,7 @@ Setup Environment:
 
 Test Environment:
   stage: test
-  needs:
-    - job: ["Setup Environment"]
+  needs: ["Setup Environment"]
   script:
     - ls .ccache
     - python -c "import ipanema"
@@ -101,9 +100,7 @@ Test Environment:
 
 Test Snakemake:
   stage: test
-  needs:
-    - job: ["Setup Environment"]
-    artifacts: true
+  needs: ["Setup Environment"]
   script:
     - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
   cache:
@@ -120,8 +117,7 @@ Test Snakemake:
 
 Download Tuples:
   stage: deploy
-  needs:
-    - job: ["Test Environment", "Test Snakemake"]
+  needs: ["Test Environment", "Test Snakemake"]
   script:
     - snakemake sidecar/201{5,6,7,8}/{Bd2JpsiKstar,Bs2JpsiPhi,MC_Bd2JpsiKstar,MC_Bs2JpsiPhi,MC_Bs2JpsiPhi_dG0}/v0r5.root -j -f
   artifacts:
@@ -143,8 +139,7 @@ Download Tuples:
 
 Run Analysis:
   stage: deploy
-  needs:
-    - job: ["Download Tuples"]
+  needs: ["Download Tuples"]
   script:
     - snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_run2_run2_simul.json -j -f
   artifacts:
