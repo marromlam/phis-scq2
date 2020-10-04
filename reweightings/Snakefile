@@ -33,6 +33,32 @@ rule reweighting_polarity:
 # p.d.f. weighting -------------------------------------------------------------
 #    Adds pdfWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
+rule reweighting_dg0:
+  wildcard_constraints:
+    mode = "MC_Bs2JpsiPhi"
+  input:
+    sample = lambda wcs: tuples(wcs,weight='pdfWeight'),
+  params:
+    original = "{year}/MC_Bs2JpsiPhi_dG0.json",
+    target = "{year}/MC_Bs2JpsiPhi.json",
+  output:
+    sample = temp(SAMPLES_PATH+'{year}/MC_Bs2JpsiPhi/{version}_dg0Weight.root')
+  log:
+    'output/log/reweightings/pdf_weighting/{year}/MC_Bs2JpsiPhi/{version}.log'
+  run:
+    shell(f"""(time\
+      python reweightings/pdf_weighting.py\
+             --input-file {input.sample}\
+             --tree-name DecayTree\
+             --output-file {output.sample}\
+             --target-params params/generator/{params.target}\
+             --original-params params/generator/{params.original}\
+             --mode {wildcards.mode}
+    ) &> {log} #2>&1""")
+    send_mail(f"P.D.F. weighting", f"{log}")
+
+
+
 rule reweighting_pdf:
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
