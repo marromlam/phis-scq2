@@ -9,9 +9,6 @@ before_script:
     - echo "setting environment from cache"
     # Use keytab
     #- if [ -z ${ENCODED_KEYTAB+x} ]; then echo "ENCODED_KEYTAB not set. EOS access will not be possible."; else echo "EOS access granted" && echo "$ENCODED_KEYTAB" | base64 -d > ap.keytab && kinit mromerol@CERN.CH -k -t ap.keytab && rm ap.keytab; fi
-    # Use password
-    - echo "$SERVICE_PASS" | base64 -d | kinit mromerol@CERN.CH
-    - klist
     - cp utils/default.json config.json
     - source .ccache/conda3/bin/activate
     - conda activate phisscq
@@ -19,6 +16,10 @@ before_script:
     - export PYOPENCL_COMPILER_OUTPUT=1
     - export PYOPENCL_NO_CACHE=1
     - export PYTHONPATH=$PWD:$PYTHONPATH
+    # pass kerberos sending password
+    - export KRB5_CONFIG="$PWD/krb5.conf"
+    - echo "$SERVICE_PASS" | base64 -d | kinit mromerol@CERN.CH
+    - klist
 
 
 
