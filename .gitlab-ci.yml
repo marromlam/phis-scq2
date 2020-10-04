@@ -137,7 +137,6 @@ Download Tuples:
 
 Run Analysis:
   stage: deploy
-  needs: ["Download Tuples"]
   script:
     - snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_run2_run2_simul.json -j -f
   artifacts:
