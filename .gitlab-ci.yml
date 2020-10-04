@@ -1,28 +1,43 @@
 stages:
-  - build
-  - test
-  - deploy
+  - build # create environment
+  - test # test environment and run one snakemake rule
+  - deploy # run the complete analysis
   
 
 
+# activatephisscq ##############################################################
+#     This before_script key aims to reproduce the behavior of the homonymous
+#     bash function created by utils/install.sh. 
+
 before_script:
-    - echo "setting environment from cache"
-    # Use keytab
-    #- if [ -z ${ENCODED_KEYTAB+x} ]; then echo "ENCODED_KEYTAB not set. EOS access will not be possible."; else echo "EOS access granted" && echo "$ENCODED_KEYTAB" | base64 -d > ap.keytab && kinit mromerol@CERN.CH -k -t ap.keytab && rm ap.keytab; fi
+    # Copy original utils/default.json as will be done by utils/install.sh
     - cp utils/default.json config.json
+    # Activate conda phisscq environment
     - source .ccache/conda3/bin/activate
     - conda activate phisscq
+    - export PYTHONPATH=$PWD:$PYTHONPATH # add phi-scq folder to $PYTHONPATH
+    # Use opencl as default (it's slower than cuda, but it runs on more devices)
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
     - export PYOPENCL_NO_CACHE=1
-    - export PYTHONPATH=$PWD:$PYTHONPATH
-    # pass kerberos sending password
+    # provide kerberos conf file
     - export KRB5_CONFIG="$PWD/krb5.conf"
+    # bypass kerberos sending password
     - echo "$SERVICE_PASS" | base64 -d | kinit mromerol@CERN.CH
-    - klist
+    # bypass kerberos sending keytab
+    #- if [ -z ${ENCODED_KEYTAB+x} ]; then echo "ENCODED_KEYTAB not set. EOS access will not be possible."; else echo "EOS access granted" && echo "$ENCODED_KEYTAB" | base64 -d > ap.keytab && kinit mromerol@CERN.CH -k -t ap.keytab && rm ap.keytab; fi
+    - klist # check if we have generated the ticket
+
+################################################################################
 
 
 
+# Setup Environment ############################################################
+#     This stage installs miniconda3 and prepares the environment phisscq to run
+#     the full stack of code of this repository. Basically it reproduces the
+#     install instructions utils/install.sh will perform.
+#
+#     only triggered when changing utils/install.sh  
 
 Setup Environment:
   stage: build
@@ -46,22 +61,32 @@ Setup Environment:
     key: build_cache_${CI_COMMIT_REF_SLUG}
     paths:
       - .ccache
-  #only:
-  #  changes:
-  #    - utils/default.json
-  #    - .gitlab-ci.yml
+  only:
+    changes:
+      #- utils/default.json
+      - utils/install.sh
   artifacts:
     paths:
       - sidecar
       - tmp
     expire_in: 1 year
 
+################################################################################
 
+
+
+
+# Test Environment #############################################################
+#     This stage tests the correct setup of miniconda, ipanema, xrootd and
+#     snakemake. Testing these packages ensures a proper environment, although
+#     the full analysis can fail for other reasons.
+#
+#     always triggered 
 
 Test Environment:
   stage: test
-  #needs:
-  #  - job: SetupEnvironment
+  needs:
+    - job: ["Setup Environment"]
   script:
     - ls .ccache
     - python -c "import ipanema"
@@ -74,37 +99,58 @@ Test Environment:
     policy: pull
 
 
-Test Pipeline:
+Test Snakemake:
   stage: test
-  #needs:
-  #  - job: SetupEnvironment
-  #  artifacts: true
+  needs:
+    - job: ["Setup Environment"]
+    artifacts: true
   script:
     - snakemake sidecar/2015/Bd2JpsiKstar/v0r5_sWeight.root -j -f
-  artifacts:
-    paths:
-      - sidecar
-      - tmp
-      - output
-    expire_in: 1 year
   cache:
     key: build_cache_${CI_COMMIT_REF_SLUG}
     paths:
       - .ccache
     policy: pull
 
+################################################################################
+
+
+
+# Run analysis #################################################################
+
+Download Tuples:
+  stage: deploy
+  needs:
+    - job: ["Test Environment", "Test Snakemake"]
+  script:
+    - snakemake sidecar/201{5,6,7,8}/{Bd2JpsiKstar,Bs2JpsiPhi,MC_Bd2JpsiKstar,MC_Bs2JpsiPhi,MC_Bs2JpsiPhi_dG0}/v0r5.root -j -f
+  artifacts:
+    paths:
+      - output
+      - sidecar
+    expire_in: 1 year
+    when: always
+  cache:
+    key: build_cache_${CI_COMMIT_REF_SLUG}
+    paths:
+      - .ccache
+    policy: pull
+  only:
+    changes:
+      - samples
+
 
 
 Run Analysis:
   stage: deploy
-  #needs:
-  #  - job: SetupEnvironment
-  #  artifacts: true
+  needs:
+    - job: ["Download Tuples"]
   script:
-    - snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_run2_run2_simul.json -j -F
+    - snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_run2_run2_simul.json -j -f
   artifacts:
     paths:
       - output
+      - sidecar
     expire_in: 1 year
     when: always
   cache:
@@ -113,3 +159,4 @@ Run Analysis:
       - .ccache
     policy: pull
 
+################################################################################
