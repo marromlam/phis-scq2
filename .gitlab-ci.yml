@@ -1,7 +1,6 @@
 stages:
   - build # create environment
   - test # test environment and run one snakemake rule
-  - tuples_sync # run the complete analysis
   - deploy # run the complete analysis
   
 
@@ -115,7 +114,7 @@ Test Snakemake:
 # Run analysis #################################################################
 
 Download Tuples:
-  stage: tuples_sync
+  stage: deploy
   script:
     - snakemake sidecar/201{5,6,7,8}/{Bd2JpsiKstar,Bs2JpsiPhi,MC_Bd2JpsiKstar,MC_Bs2JpsiPhi,MC_Bs2JpsiPhi_dG0}/v0r5.root -j -f
   artifacts:
@@ -129,14 +128,13 @@ Download Tuples:
     paths:
       - .ccache
     policy: pull
-  only:
-    changes:
-      - samples
 
 
 
 Run Analysis:
   stage: deploy
+  dependencies:
+    - "Download Tuples"
   script:
     - snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_run2_run2_simul.json -j -f
   artifacts:
