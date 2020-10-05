@@ -87,16 +87,16 @@ if __name__ == '__main__':
   # Check timeacc flag to set knots and weights and place the final cut
   if TIMEACC == 'simul':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight'
+    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   elif TIMEACC == 'nonkin':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
     kinWeight = ''
   elif TIMEACC == '9knots':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight'
+    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   elif TIMEACC == '12knots':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight'
+    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   CUT = cuts_and(CUT,f'time>={knots[0]} & time<={knots[-1]}')
   print(CUT)
 
