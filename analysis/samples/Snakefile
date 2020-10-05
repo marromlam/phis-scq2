@@ -15,7 +15,7 @@ rule samples_sync_tuple:
     else:
       shell(f"""
         (time\
-        python samples/new_downloader.py\
+        python analysis/samples/new_downloader.py\
                --year {wildcards.year}\
                --mode {wildcards.mode}\
                --version {wildcards.version}\
@@ -39,7 +39,7 @@ rule samples_reduce_tuple:
     'output/log/samples/reduce_ntuples/{year}_{mode}_{version}.log'
   run:
     shell(f"""(time\
-    python samples/reduce_ntuples.py\
+    python analysis/samples/reduce_ntuples.py\
            --input-file {input.sample}\
            --output-file {output.sample}\
            --input-tree DecayTree\

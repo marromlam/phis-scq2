@@ -19,7 +19,7 @@ rule reweighting_polarity:
     'output/log/reweightings/polarity_weighting/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
-          python reweightings/polarity_weighting.py\
+          python analysis/reweightings/polarity_weighting.py\
                  --original-file {input.original}\
                  --original-treename DecayTree\
                  --target-file {input.target}\
@@ -47,12 +47,12 @@ rule reweighting_dg0:
     'output/log/reweightings/pdf_weighting/{year}/MC_Bs2JpsiPhi/{version}.log'
   run:
     shell(f"""(time\
-      python reweightings/pdf_weighting.py\
+      python analysis/reweightings/pdf_weighting.py\
              --input-file {input.sample}\
              --tree-name DecayTree\
              --output-file {output.sample}\
-             --target-params params/generator/{params.target}\
-             --original-params params/generator/{params.original}\
+             --target-params analysis/params/generator/{params.target}\
+             --original-params analysis/params/generator/{params.original}\
              --mode {wildcards.mode}
     ) &> {log} #2>&1""")
     send_mail(f"P.D.F. weighting", f"{log}")
@@ -73,12 +73,12 @@ rule reweighting_pdf:
     'output/log/reweightings/pdf_weighting/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
-      python reweightings/pdf_weighting.py\
+      python analysis/reweightings/pdf_weighting.py\
              --input-file {input.sample}\
              --tree-name DecayTree\
              --output-file {output.sample}\
-             --target-params params/generator/{params.target}\
-             --original-params params/generator/{params.original}\
+             --target-params analysis/params/generator/{params.target}\
+             --original-params analysis/params/generator/{params.original}\
              --mode {wildcards.mode}
     ) &> {log} #2>&1""")
     send_mail(f"P.D.F. weighting", f"{log}")
@@ -109,7 +109,7 @@ rule reweighting_kinematic:
     end  = 'selected_bdt_sw'
     if mode.startswith('MC_Bs2JpsiPhi'):
       shell(f"""(time\
-        python reweightings/kinematic_weighting.py\
+        python analysis/reweightings/kinematic_weighting.py\
           --original-file {input.original}\
           --original-treename DecayTree\
           --original-vars "B_PT X_M" \
@@ -126,7 +126,7 @@ rule reweighting_kinematic:
       ) &> {log} #2>&1""")
     elif mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
-        python reweightings/kinematic_weighting.py\
+        python analysis/reweightings/kinematic_weighting.py\
           --original-file {input.original}\
           --original-treename DecayTree\
           --original-vars "B_PT X_M" \
@@ -143,7 +143,7 @@ rule reweighting_kinematic:
       ) &> {log} #2>&1""")
     elif mode.startswith('Bd2JpsiKstar'):
       shell(f"""(time\
-        python reweightings/kinematic_weighting.py\
+        python analysis/reweightings/kinematic_weighting.py\
           --original-file {input.original}\
           --original-treename DecayTree\
           --original-vars "B_PT B_P" \
@@ -185,7 +185,7 @@ rule reweightings_plot_time_acceptance:
     'output/log/reweightings/plot_time_reweightings/{year}/{mode}/{version}_{branch}.log',
   run:
     shell(f"""(time\
-    python reweightings/reweighting_plots.py\
+    python analysis/reweightings/reweighting_plots.py\
            --original {input.original}\
            --target {input.target}\
            --year {wildcards.year}\
@@ -213,7 +213,7 @@ rule reweightings_plot_angular_acceptance:
     'output/log/reweightings/plot_angular_reweightings/{year}/{mode}/{version}_{branch}_{angacc}_{timeacc}_{weight}.log',
   run:
     shell(f"""(time\
-    python angular_acceptance/plot1.py\
+    python analysis/angular_acceptance/plot1.py\
            --original {input.original}\
            --weights {input.weights}\
            --target {input.target}\
@@ -238,7 +238,7 @@ rule reweightings_simon_comparisons:
     'output/log/reweightings/simon_comparisons/{year}/{mode}/{version}_{branch}.log',
   run:
     shell(f"""(time\
-    python reweightings/reweighting_plots.py\
+    python analysis/reweightings/reweighting_plots.py\
            --original {input.original}\
            --target {input.target}\
            --year {wildcards.year}\
