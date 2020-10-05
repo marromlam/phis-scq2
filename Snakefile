@@ -55,13 +55,13 @@ wildcard_constraints:
 
 
 # Including Snakefiles
-include: 'samples/Snakefile'
-include: 'reweightings/Snakefile'
-include: 'time_acceptance/Snakefile'
-include: 'flavor_tagging/Snakefile'
-include: 'csp_factors/Snakefile'
-include: 'time_resolution/Snakefile'
-include: 'angular_acceptance/Snakefile'
-include: 'angular_fit/Snakefile'
-include: 'bundle/Snakefile'
-include: 'params/Snakefile'
+include: 'analysis/samples/Snakefile'
+include: 'analysis/reweightings/Snakefile'
+include: 'analysis/time_acceptance/Snakefile'
+include: 'analysis/flavor_tagging/Snakefile'
+include: 'analysis/csp_factors/Snakefile'
+include: 'analysis/time_resolution/Snakefile'
+include: 'analysis/angular_acceptance/Snakefile'
+include: 'analysis/angular_fit/Snakefile'
+include: 'analysis/bundle/Snakefile'
+include: 'analysis/params/Snakefile'
