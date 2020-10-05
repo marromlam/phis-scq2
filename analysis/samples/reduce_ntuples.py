@@ -12,7 +12,7 @@ from ipanema.tools.misc import get_vars_from_string
 # Define some functions ########################################################
 
 # Load branches.yaml -----------------------------------------------------------
-with open(r'samples/branches.yaml') as file:
+with open(r'analysis/samples/branches.yaml') as file:
   # The FullLoader parameter handles the conversion from YAML
   # scalar values to Python the dictionary format
   branches = yaml.load(file, Loader=yaml.FullLoader)
