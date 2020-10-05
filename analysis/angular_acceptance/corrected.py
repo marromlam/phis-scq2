@@ -100,10 +100,10 @@ if __name__ == '__main__':
   print(f"\n{80*'='}\n", "Loading categories", f"\n{80*'='}\n")
 
   # Load Monte Carlo samples
-  mc = Sample.from_root(args['sample_mc'], cuts=CUT, share=SHARE, name=MODE)
+  mc = Sample.from_root(args['sample_mc'], share=SHARE, name=MODE)
   mc.assoc_params(args['input_params'])
   # Load corresponding data sample
-  rd = Sample.from_root(args['sample_data'], cuts=CUT, share=SHARE, name='data')
+  rd = Sample.from_root(args['sample_data'], share=SHARE, name='data')
 
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
@@ -112,16 +112,15 @@ if __name__ == '__main__':
   weight_mc = f'(polWeight*{weight_rd}/gb_weights)'
   print(weight_mc,weight_rd)
 
-
   # Select trigger
   if TRIGGER == 'biased':
     trigger = 'biased';
-    weight_mc += '*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==0)'
-    weight_rd += '*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==0)'
+    weight_mc += f'*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==0)*({CUT})'
+    weight_rd += f'*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==0)*({CUT})'
   elif TRIGGER == 'unbiased':
     trigger = 'unbiased';
-    weight_mc += '*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==1)'
-    weight_rd += '*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==1)'
+    weight_mc += f'*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==1)*({CUT})'
+    weight_rd += f'*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==1)*({CUT})'
   elif TRIGGER == 'combined':
     trigger = 'combined';
 
@@ -136,7 +135,7 @@ if __name__ == '__main__':
   #%% Compute standard kinematic weights ---------------------------------------
   #     This means compute the kinematic weights using 'X_M','B_P' and 'B_PT'
   #     variables
-  print(f"\n{80*'='}\n", "Compute angWeights correcting MC sample in kinematics", f"\n{80*'='}\n")
+  print(f"\n{80*'='}\nCompute angWeights correcting MC sample in kinematics\n{80*'='}\n")
   print(f" * Computing kinematic GB-weighting in B_PT, B_P and X_M")
 
   reweighter.fit(original        = mc.df[['X_M','B_P','B_PT']],

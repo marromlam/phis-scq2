@@ -278,7 +278,7 @@ if __name__ == '__main__':
     mc[f'{y}'] = {}
     for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[samples_std,samples_dg0]):
       print(f'\n *  Loading {m}-{y} sample')
-      mc[f'{y}'][f'{m}'] = Sample.from_root(v[i], cuts=CUT)
+      mc[f'{y}'][f'{m}'] = Sample.from_root(v[i], share=SHARE)
     for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[input_std_params,input_dg0_params]):
       print(f' *  Associating {m}-{y} parameters from\n    {v[i]}')
       mc[f'{y}'][f'{m}'].assoc_params(v[i])
@@ -317,7 +317,7 @@ if __name__ == '__main__':
   for i, y in enumerate(YEARS):
     print(f'Fetching elements for {y}[{i}] data sample')
     data[f'{y}'] = {}
-    data[f'{y}']['combined'] = Sample.from_root(samples_data[i], cuts=CUT)
+    data[f'{y}']['combined'] = Sample.from_root(samples_data[i], share=SHARE)
     csp = Parameters.load(csp_factors[i]);
     csp = csp.build(csp,csp.find('CSP.*'))
     resolution = Parameters.load(time_resolution[i])
@@ -510,8 +510,8 @@ if __name__ == '__main__':
       for m, v in dy.items(): # loop over mc_std and mc_dg0
         #v.kkpWeight = np.zeros_like(v.pdfWeight)
         for t, t_cut in zip(['biased','unbiased'],[0,1]):
-          t_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={t_cut})*'
-          #print(t_cut)
+          t_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={t_cut})*({ bin_vars[VAR][BIN] if FULLCUT else "1" })*'
+          print(t_cut)
           original_v = v.df[['hminus_PT','hplus_PT','hminus_P','hplus_P']].values
           original_w = v.df.eval(t_cut+f'polWeight*{weight_rd}/gb_weights')*v.pdfWeight[i]*v.kinWeight
           target_v = data[f'{y}']['combined'].df[['hminus_PT','hplus_PT','hminus_P','hplus_P']].values
