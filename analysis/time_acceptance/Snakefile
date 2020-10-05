@@ -17,7 +17,7 @@ rule time_acceptance_single:
   run:
     shell(f"""
     (time\
-    python time_acceptance/single.py\
+    python analysis/time_acceptance/single.py\
            --sample {input.sample}\
            --input-params {params.params}\
            --output-params {output.params}\
@@ -64,7 +64,7 @@ rule time_acceptance_simultaneous:
   run:
     shell(f"""
     (time\
-    python time_acceptance/simultaneous.py\
+    python analysis/time_acceptance/simultaneous.py\
            --samples {",".join(input.sample)}\
            --input-params {",".join(params.params)}\
            --output-params {",".join(output.params)}\
@@ -110,7 +110,7 @@ rule time_acceptance_simultaneousDGn0:
   run:
     shell(f"""
     (time\
-    python time_acceptance/simultaneous.py\
+    python analysis/time_acceptance/simultaneous.py\
            --samples {",".join(input.sample)}\
            --input-params {",".join(params.params)}\
            --output-params {",".join(output.params)}\
@@ -152,7 +152,7 @@ rule lifetime_fit:
   run:
     shell(f"""
     (time\
-    python time_acceptance/single.py\
+    python analysis/time_acceptance/single.py\
            --sample {input.sample}\
            --input-params {params.params}\
            --output-params {output.params}\
@@ -195,7 +195,7 @@ rule time_acceptance_plot:
   run:
     shell(f"""
     (time\
-    python time_acceptance/plot_functions.py\
+    python analysis/time_acceptance/plot_functions.py\
            --samples {",".join(input.samples)}\
            --params {",".join(input.params)}\
            --figure {output}\
