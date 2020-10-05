@@ -1,6 +1,6 @@
 # Run2 physics_params ----------------------------------------------------------
 #     This rule runs the iterative procedure for FullRun2 years using RD.
-from utils.strings import cammel_parser
+from analysis.utils.strings import cammel_parser
 
 rule physics_params_data_run2:
   input:
@@ -59,7 +59,7 @@ rule physics_params_data_run2:
     'output/log/physics_params_data/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
-    python angular_fit/fit_test_data.py\
+    python analysis/angular_fit/fit_test_data.py\
            --samples                 {",".join(input.samples)}\
            --angacc-biased           {",".join(input.angacc_biased)}\
            --angacc-unbiased         {",".join(input.angacc_unbiased)}\
@@ -129,7 +129,7 @@ rule physics_params_data_run2a:
     'output/log/angular_acceptance/physics_params/run2a/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
-    python angular_fit/fit_test_data.py\
+    python analysis/angular_fit/fit_test_data.py\
            --samples                 {",".join(input.samples)}\
            --angacc-biased           {",".join(input.angacc_biased)}\
            --angacc-unbiased         {",".join(input.angacc_unbiased)}\
@@ -188,7 +188,7 @@ rule physics_params_dataYearly:
     'output/log/angular_acceptance/physics_params/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
-    python angular_fit/fit_test_data.py\
+    python analysis/angular_fit/fit_test_data.py\
            --samples                 {",".join(input.samples)}\
            --angacc-biased           {",".join(input.angacc_biased)}\
            --angacc-unbiased         {",".join(input.angacc_unbiased)}\
@@ -236,7 +236,7 @@ rule physics_params_mc:
     'output/log/angular_acceptance/physics_params_mc/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
-    python angular_fit/fit_test_mc.py\
+    python analysis/angular_fit/fit_test_mc.py\
            --samples                 {",".join(input.samples)}\
            --csp                     {",".join(input.csp_factors)}\
            --params                  {output.params}\

@@ -14,7 +14,7 @@ rule angular_acceptance_naive:
   input:
     sample = lambda wcs: tuples(wcs),
   params:
-    params = 'params/generator/{year}/{mode}.json'
+    params = 'analysis/params/generator/{year}/{mode}.json'
   output:
     params = 'output/params/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_naive_{trigger}.tex'
@@ -22,7 +22,7 @@ rule angular_acceptance_naive:
     'output/log/angular_acceptance_naive/{year}/{mode}/{version}_naive_{trigger}.log'
   run:
     shell(f"""(time\
-    python angular_acceptance/naive.py\
+    python analysis/angular_acceptance/naive.py\
            --sample {input.sample}\
            --input-params {params.params}\
            --output-params {output.params}\
@@ -49,7 +49,7 @@ rule angular_acceptance_blend:
     'output/log/angular_acceptance_blend/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.log'
   run:
     shell(f"""(time\
-    python angular_acceptance/merge.py\
+    python analysis/angular_acceptance/merge.py\
            --weights-std {input.weights_std}\
            --weights-dg0 {input.weights_dg0}\
            --output-params {output.params}\
@@ -114,7 +114,7 @@ rule angular_acceptance_corrected:
     sample_mc = lambda wcs: tuples(wcs),
     sample_rd = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi'),
   params:
-    params = 'params/generator/{year}/{mode}.json',
+    params = 'analysis/params/generator/{year}/{mode}.json',
   output:
     params = 'output/params/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.tex',
@@ -123,7 +123,7 @@ rule angular_acceptance_corrected:
     'output/log/angular_acceptance_corrected/{year}/{mode}/{version}_corrected_{trigger}.log'
   run:
     shell(f"""(time\
-    python angular_acceptance/corrected.py\
+    python analysis/angular_acceptance/corrected.py\
            --sample-mc {input.sample_mc}\
            --sample-data {input.sample_rd}\
            --input-params {params.params}\
@@ -146,7 +146,7 @@ rule angular_acceptance_correctedBinned:
     sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
     sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
   params:
-    params = 'params/generator/{year}/{mode}.json',
+    params = 'analysis/params/generator/{year}/{mode}.json',
   output:
     params = 'output/params/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.json',
     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.tex',
@@ -155,7 +155,7 @@ rule angular_acceptance_correctedBinned:
     'output/log/angular_acceptance_corrected/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.log'
   run:
     shell(f"""(time\
-    python angular_acceptance/corrected.py\
+    python analysis/angular_acceptance/corrected.py\
            --sample-mc {input.sample_mc}\
            --sample-data {input.sample_rd}\
            --input-params {params.params}\
@@ -221,11 +221,11 @@ rule angular_acceptance_iterativeRun2a:
     ]
   params:
     params_std = [
-      'params/generator/2015/MC_Bs2JpsiPhi.json', # WARNING
-      'params/generator/2016/MC_Bs2JpsiPhi.json'], # WARNING
+      'analysis/params/generator/2015/MC_Bs2JpsiPhi.json', # WARNING
+      'analysis/params/generator/2016/MC_Bs2JpsiPhi.json'], # WARNING
     params_dG0 = [
-      'params/generator/2015/MC_Bs2JpsiPhi_dG0.json', # WARNING
-      'params/generator/2016/MC_Bs2JpsiPhi_dG0.json'], # WARNING
+      'analysis/params/generator/2015/MC_Bs2JpsiPhi_dG0.json', # WARNING
+      'analysis/params/generator/2016/MC_Bs2JpsiPhi_dG0.json'], # WARNING
   output:
     angacc_biased = [
       'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json',
@@ -255,7 +255,7 @@ rule angular_acceptance_iterativeRun2a:
     'output/log/angular_acceptance_iterative/{angacc}/Bs2JpsiPhi/{version}_run2a_{timeacc}.log'
   run:
     shell(f"""(time\
-    python angular_acceptance/iterative.py\
+    python analysis/angular_acceptance/iterative.py\
            --sample-mc-std           {",".join(input.sample_std)}\
            --sample-mc-dg0           {",".join(input.sample_dG0)}\
            --sample-data             {",".join(input.sample_data)}\
@@ -354,16 +354,16 @@ rule angular_acceptance_iterativeRun2:
     ]
   params:
     params_std = [
-      'params/generator/2015/MC_Bs2JpsiPhi.json',
-      'params/generator/2016/MC_Bs2JpsiPhi.json',
-      'params/generator/2017/MC_Bs2JpsiPhi.json',
-      'params/generator/2018/MC_Bs2JpsiPhi.json'
+      'analysis/params/generator/2015/MC_Bs2JpsiPhi.json',
+      'analysis/params/generator/2016/MC_Bs2JpsiPhi.json',
+      'analysis/params/generator/2017/MC_Bs2JpsiPhi.json',
+      'analysis/params/generator/2018/MC_Bs2JpsiPhi.json'
     ],
     params_dG0 = [
-      'params/generator/2015/MC_Bs2JpsiPhi_dG0.json',
-      'params/generator/2016/MC_Bs2JpsiPhi_dG0.json',
-      'params/generator/2017/MC_Bs2JpsiPhi_dG0.json',
-      'params/generator/2018/MC_Bs2JpsiPhi_dG0.json'
+      'analysis/params/generator/2015/MC_Bs2JpsiPhi_dG0.json',
+      'analysis/params/generator/2016/MC_Bs2JpsiPhi_dG0.json',
+      'analysis/params/generator/2017/MC_Bs2JpsiPhi_dG0.json',
+      'analysis/params/generator/2018/MC_Bs2JpsiPhi_dG0.json'
     ],
   output:
     angacc_biased = [
@@ -406,7 +406,7 @@ rule angular_acceptance_iterativeRun2:
     'output/log/angular_acceptance_iterative/{angacc}/Bs2JpsiPhi/{version}_base_{timeacc}.log'
   run:
     shell(f"""(time\
-    python angular_acceptance/iterative.py\
+    python analysis/angular_acceptance/iterative.py\
            --sample-mc-std           {",".join(input.sample_std)}\
            --sample-mc-dg0           {",".join(input.sample_dG0)}\
            --sample-data             {",".join(input.sample_data)}\
@@ -476,10 +476,10 @@ rule angular_acceptance_iterativeYearly:
     ]
   params:
     params_std = [
-      'params/generator/{year}/MC_Bs2JpsiPhi.json'
+      'analysis/params/generator/{year}/MC_Bs2JpsiPhi.json'
     ],
     params_dG0 = [
-      'params/generator/{year}/MC_Bs2JpsiPhi_dG0.json'
+      'analysis/params/generator/{year}/MC_Bs2JpsiPhi_dG0.json'
     ],
   output:
     angacc_biased   = [
@@ -504,7 +504,7 @@ rule angular_acceptance_iterativeYearly:
     'output/log/angular_acceptance_iterative/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
-    python angular_acceptance/iterative.py\
+    python analysis/angular_acceptance/iterative.py\
            --sample-mc-std                  {",".join(input.sample_std)}\
            --sample-mc-dg0                  {",".join(input.sample_dG0)}\
            --sample-data                    {",".join(input.sample_data)}\
@@ -541,7 +541,7 @@ rule angular_acceptance_compareCuts:
     'output/log/angular_acceptance_plot/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}_{variable}.log'
   run:
     shell(f"""(time\
-    python angular_acceptance/plot_binned_weights.py\
+    python analysis/angular_acceptance/plot_binned_weights.py\
            --params {",".join(input.params)}\
            --figure {output}\
            --mode {wildcards.mode}\
