@@ -19,234 +19,251 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Inlude headers //////////////////////////////////////////////////////////////
 
-#include <math.h>
-#include <stdio.h>
-// #include <thrust/complex.h>
-#include <pycuda-complex.hpp>
-#include<curand.h>
-#include<curand_kernel.h>
-#include "/home3/marcos.romero/JpsiKKAna/cuda/AngularDistribution.c"
 
-extern "C"
+#include <curand.h>
+#include <curand_kernel.h>
+
 
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+WITHIN_KERNEL
+double tagOSgen(double x)
+{
+  return 3.8 - 134.6*x + 1341.*x*x;
+}
+
+WITHIN_KERNEL
+double tagSSgen(double x)
+{
+  if (x < 0.46) return exp(16*x -.77);
+  else return 10*(16326 - 68488*x + 72116*x*x);
+}
+
+
+
+KERNEL
+void dG5toy(GLOBAL_MEM ${ftype} * out,
+            ${ftype} G, ${ftype} DG, ${ftype} DM,
+            GLOBAL_MEM ${ftype} * CSP,
+            //GLOBAL_MEM ${ftype} * CSD,
+            //GLOBAL_MEM ${ftype} * CPD,
+            GLOBAL_MEM ${ftype} * ASlon,
+            GLOBAL_MEM ${ftype} * APlon,
+            GLOBAL_MEM ${ftype} * APpar,
+            GLOBAL_MEM ${ftype} * APper,
+            //${ftype} ADlon, ${ftype} ADpar, ${ftype} ADper,
+            ${ftype} pSlon,
+            ${ftype} pPlon, ${ftype} pPpar, ${ftype} pPper,
+            //${ftype} pDlon, ${ftype} pDpar, ${ftype} pDper,
+            GLOBAL_MEM ${ftype} *dSlon,
+            ${ftype} dPlon, ${ftype} dPpar, ${ftype} dPper,
+            //${ftype} dDlon, ${ftype} dDpar, ${ftype} dDper,
+            ${ftype} lSlon,
+            ${ftype} lPlon, ${ftype} lPpar, ${ftype} lPper,
+            //${ftype} lDlon, ${ftype} lDpar, ${ftype} lDper,
+            // Time limits
+            ${ftype} tLL, ${ftype} tUL,
+            // Time resolution
+            ${ftype} sigma_offset, ${ftype} sigma_slope, ${ftype} sigma_curvature,
+            ${ftype} mu,
+            // Flavor tagging
+            ${ftype} eta_bar_os, ${ftype} eta_bar_ss,
+            ${ftype} p0_os,  ${ftype} p1_os, ${ftype} p2_os,
+            ${ftype} p0_ss,  ${ftype} p1_ss, ${ftype} p2_ss,
+            ${ftype} dp0_os, ${ftype} dp1_os, ${ftype} dp2_os,
+            ${ftype} dp0_ss, ${ftype} dp1_ss, ${ftype} dp2_ss,
+            // Time acceptance
+            GLOBAL_MEM ${ftype} *coeffs,
+            // Angular acceptance
+            GLOBAL_MEM  ${ftype} *angular_weights,
+            int USE_FK, int BINS, int USE_ANGACC, int USE_TIMEACC,
+            int USE_TIMEOFFSET, int SET_TAGGING, int USE_TIMERES,
+            ${ftype} PROB_MAX, int NEVT)
 
 
 {
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-
-__global__
-void Generate(${ftype} *out,  ${ftype} ASlon,
-              ${ftype} APper, ${ftype} APlon, ${ftype} APpar,
-              ${ftype} ADper, ${ftype} ADlon, ${ftype} ADpar,
-              ${ftype} CSP, ${ftype} CSD, ${ftype} CPD,
-              ${ftype} phisSlon,
-              ${ftype} phisPper, ${ftype} phisPlon, ${ftype} phisPpar,
-              ${ftype} phisDper, ${ftype} phisDlon, ${ftype} phisDpar,
-              ${ftype} dSlon,
-              ${ftype} dPper, ${ftype} dPpar,
-              ${ftype} dDper, ${ftype} dDlon, ${ftype} dDpar,
-              ${ftype} lamSlon,
-              ${ftype} lamPper, ${ftype} lamPlon, ${ftype} lamPpar,
-              ${ftype} lamDper, ${ftype} lamDlon, ${ftype} lamDpar,
-              ${ftype} Gamma, ${ftype} DeltaGamma, ${ftype} DeltaM,
-              ${ftype} tLL, ${ftype} tUL,
-              ${ftype} *normweights,
-              ${ftype} q, ${ftype} Probmax, int Nevt)
-
-
-{
-
-  // Elementwise
-  int row = threadIdx.x + blockDim.x * blockIdx.x; //ntuple entry
-
-  if (row >= Nevt) { return;}
-
-  int i0        = row*13;
-  int idx       =  0 + i0;
-  int idy       =  1 + i0;
-  int idz       =  2 + i0;
-  int idt       =  3 + i0;
-  int idsigma_t =  4 + i0;
-  int idq_OS    =  5 + i0;
-  int idq_SSK   =  6 + i0;
-  int ideta_OS  =  7 + i0;
-  int ideta_SSK =  8 + i0;
-  int i_shit1   =  9 + i0;
-  int i_shit2   = 10 + i0;
-  int i_shit3   = 11 + i0;
-  int iyear     = 12 + i0;
+  int evt = get_global_id(0);
+  if (evt >= NEVT) { return; }
 
   // Prepare curand
   curandState state;
-  curand_init((unsigned long long)clock(), row, 0, &state);
-  ${ftype} Niter = 0.0;
+  curand_init((unsigned long long)clock(), evt, 0, &state);
+
+  ${ftype} iter = 0.0;
 
   // Decay time resolution HARDCODED!
-  ${ftype} sigma_t = 0.04554;
-  //${ftype} sigma_t = curand_log_normal(&state,-3.22,0.309);
-
-
-
-  // Tagging parameters ////////////////////////////////////////////////////////
-
-  ${ftype} q_OS    = 0.0;
-  ${ftype} q_SSK   = 0.0;//data[idq_SSK];
-  ${ftype} eta_OS  = 0.5;
-  ${ftype} eta_SSK = 0.5;//ta[ideta_SSK];
-
-
-  // HARDCODDED STUFF --- take a look
-  ${ftype} sigma_t_mu_a = 0;
-  ${ftype} sigma_t_mu_b = 0;
-  ${ftype} sigma_t_mu_c = 0;
-  ${ftype} sigma_t_a = 0;
-  ${ftype} sigma_t_b = 0.8721;
-  ${ftype} sigma_t_c = 0.01225;
-
-    // Hardcoded tagging parameters
-  ${ftype} p0_OS = 0.39; ${ftype} dp0_OS = 0.009;
-  ${ftype} p1_OS = 0.85; ${ftype} dp1_OS = 0.014;
-  ${ftype} p2_OS = 0; ${ftype} dp2_OS = 0;
-  ${ftype} eta_bar_OS = 0.379;
-  ${ftype} p0_SSK = 0.43; ${ftype} dp0_SSK = 0.0;
-  ${ftype} p1_SSK = 0.92; ${ftype} dp1_SSK = 0;
-  ${ftype} eta_bar_SSK = 0.4269;
-
-
-  if ( q == 0 ){
-    ${ftype} tag = curand_uniform(&state);
-    if (tag < 0.16)
-    {
-      q_OS = 1.0;
-    }
-    else if (tag<0.32)
-    {
-      q_OS = -1.;
-    }
-    else
-    {
-      q_OS = 0.;
-    }
-
-    tag = curand_uniform(&state);
-    if (tag < 0.31)
-    {
-      q_SSK = 1.;
-    }
-    else if (tag<0.62)
-    {
-      q_SSK = -1.;
-    }
-    else
-    {
-      q_SSK = 0.;
-    }
-
-    ${ftype} OSmax = P_omega_os(0.5);
-    ${ftype} SSmax = P_omega_ss(0.5);
-    ${ftype} thr;//, mt, pt;
-
-    if (q_OS > 0.5 || q_OS < -0.5)
-    {
-      while(1)
-      {
-        tag = .499*curand_uniform(&state);
-        thr = OSmax*curand_uniform(&state);
-        if (P_omega_os(tag) > thr) break;
-      }
-      eta_OS = tag;
-    }
-
-    if (q_SSK > 0.5 || q_SSK < -0.5)
-    {
-      while(1)
-      {
-        tag = .499*curand_uniform(&state);
-        thr = SSmax*curand_uniform(&state);
-        if (P_omega_ss(tag) > thr) break;
-      }
-      eta_SSK = tag;
-    }
-
+  ${ftype} sigmat = 0.0;
+  if (USE_TIMERES)
+  {
+    sigmat = curand_log_normal(&state,-3.22,0.309);
+  }
+  else
+  {
+    sigmat = 0.04554;
   }
 
 
+
+  // Flavor tagging ------------------------------------------------------------
+  ${ftype} qOS = 0;
+  ${ftype} qSS = 0;
+  ${ftype} etaOS = 0;
+  ${ftype} etaSS = 0;
+
+  if (SET_TAGGING == 1) // DATA
+  {
+    ${ftype} tagOS = curand_uniform(&state);
+    ${ftype} tagSS = curand_uniform(&state);
+    ${ftype} OSmax = tagOSgen(0.5);
+    ${ftype} SSmax = tagSSgen(0.5);
+    ${ftype} tag = 0;
+      ${ftype} threshold;//, mt, pt;
+
+    // generate qOS
+    if (tagOS < 0.16) {
+      qOS = 1.;
+    }
+    else if (tagOS<0.32){
+      qOS = -1.;
+    }
+    else {
+      qOS = 0.;
+    }
+    // generate qSS
+    if (tagSS < 0.31) {
+      qSS = 1.;
+    }
+    else if (tagSS<0.62){
+      qSS = -1.;
+    }
+    else {
+      qSS = 0.;
+    }
+
+    // generate etaOS
+    if (qOS > 0.5 || qOS < -0.5)
+    {
+      while(1)
+      {
+        tag = 0.49*curand_uniform(&state);
+        threshold = OSmax*curand_uniform(&state);
+        if (tagOSgen(tag) > threshold) break;
+      }
+      etaOS = tag;
+    }
+    // generate etaSS
+    if (qSS > 0.5 || qSS < -0.5)
+    {
+      while(1)
+      {
+        tag = 0.49*curand_uniform(&state);
+        threshold = SSmax*curand_uniform(&state);
+        if (tagSSgen(tag) > threshold) break;
+      }
+      etaSS = tag;
+    }
+  }
+  else if (SET_TAGGING == 0) // PERFECT, MC
+  {
+    ${ftype} tag = curand_uniform(&state);
+    if (tag < 0.5){
+      qOS = +1.0;
+      qSS = +1.0;
+    }
+    else
+    {
+      qOS = -1.0;
+      qSS = -1.0;
+    }
+    etaOS = 0.5;
+    etaSS = 0.5;
+  }
+  else //TRUE
+  {
+    qOS = 0.0;
+    qSS = 0.0;
+    etaOS = 0.5;
+    etaSS = 0.5;
+  }
+
+
+  // Loop and generate ---------------------------------------------------------
   while(1)
   {
     // Random numbers
-    ${ftype} x = - 1.0  +    2.0*curand_uniform(&state);
-    ${ftype} y = - 1.0  +    2.0*curand_uniform(&state);
-    ${ftype} z = - M_PI + 2*M_PI*curand_uniform(&state);
-    ${ftype} t = tLL - log(curand_uniform(&state))/(Gamma-0.5*DeltaGamma);
+    ${ftype} cosK = - 1.0  +    2.0*curand_uniform(&state);
+    ${ftype} cosL = - 1.0  +    2.0*curand_uniform(&state);
+    ${ftype} hphi = - M_PI + 2*M_PI*curand_uniform(&state);
+    ${ftype} time = tLL - log(curand_uniform(&state))/(G-0.5*DG);
 
     // PDF threshold
-    ${ftype} thr = Probmax*curand_uniform(&state);
+    ${ftype} threshold = PROB_MAX*curand_uniform(&state);
 
     // Prepare data and pdf variables to DiffRate CUDA function
-    ${ftype} data[10] = {x,y,z,t, sigma_t, q_OS, q_SSK, eta_OS, eta_SSK, 2019};
-    ${ftype} pdf      = 0.0;
+    ${ftype} mass = out[evt*10+4];
+    ${ftype} data[9] = {cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS};
+    //printf("cosK=%lf cosL=%lf hphi=%lf time=%lf sigmat=%lf qOS=%lf qSS=%lf etaOS=%lf etaSS=%lf", cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS);
+    ${ftype} pdf = 0.0;
 
     // Get pdf value from angular distribution
-    pdf = DiffRate( data, ASlon, APper, APlon, APpar, ADper, ADlon, ADpar,
-                          CSP,  CSD,  CPD,
-                          phisSlon, phisPper, phisPlon, phisPpar,
-                          phisDper,  phisDlon, phisDpar,
-                          dSlon, dPper, dPpar, dDper, dDlon, dDpar,
-                          lamSlon, lamPper, lamPlon, lamPpar,
-                          lamDper, lamDlon, lamDpar,
-                          Gamma, DeltaGamma, DeltaM,
-                          p0_OS, dp0_OS, p1_OS,
-                          dp1_OS, p2_OS, dp2_OS,
-                          eta_bar_OS,
-                          p0_SSK, dp0_SSK,
-                          p1_SSK, dp1_SSK,
-                          eta_bar_SSK,
-                          sigma_t_a, sigma_t_b, sigma_t_c,
-                          sigma_t_mu_a, sigma_t_mu_b, sigma_t_mu_c,
-                          tLL, tUL, normweights);
+    unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
+    pdf = getDiffRate(data,
+                      G, DG, DM, CSP[bin],
+                      ASlon[bin], APlon[bin], APpar[bin], APper[bin],
+                      pSlon,      pPlon,      pPpar,      pPper,
+                      dSlon[bin], dPlon,      dPpar,      dPper,
+                      lSlon,      lPlon,      lPpar,      lPper,
+                      tLL, tUL,
+                      sigma_offset, sigma_slope, sigma_curvature, mu,
+                      eta_bar_os, eta_bar_ss,
+                      p0_os,  p1_os, p2_os,
+                      p0_ss,  p1_ss, p2_ss,
+                      dp0_os, dp1_os, dp2_os,
+                      dp0_ss, dp1_ss, dp2_ss,
+                      coeffs,
+                      angular_weights,
+                      USE_FK, USE_ANGACC, USE_TIMEACC,
+                      USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
 
-    pdf *= exp((Gamma-0.5*DeltaGamma)*(t-tLL));
-    pdf *= (Gamma-0.5*DeltaGamma)*(1- exp((Gamma-0.5*DeltaGamma)*(-tUL+tLL)));
+    pdf *= exp((G-0.5*DG)*(time-tLL));
+    pdf *= (G-0.5*DG)*(1- exp((G-0.5*DG)*(-tUL+tLL)));
 
+    // final checks ------------------------------------------------------------
 
-    if (pdf > Probmax) {
-      printf("WARNING: PDF [ = %lf] > Probmax [ = %lf]\n", pdf, Probmax);
+    // check if probability is greater than the PROB_MAX
+    if (pdf > PROB_MAX) {
+      printf("WARNING: PDF [ = %lf] > PROB_MAX [ = %lf]\n", pdf, PROB_MAX);
     }
 
-    if (t > tUL) {
-      pdf = 0.0;
-    }
+    // if time is larger than asked, put pdf to zero
+    if (time > tUL) { pdf = 0.0; }
 
-    Niter++;
-    if(Niter > 1000000)
+    // stop if it's taking too much iterations ---------------------------------
+    iter++;
+    if(iter > 1000000)
     {
-      printf("this p.d.f. is too hard...");
+      printf("ERROR: This p.d.f. is too hard...");
       return;
     }
 
-    if (pdf>= thr)
+    // Store generated values --------------------------------------------------
+    if (pdf >= threshold)
     {
-      // Store
-      out[idx] = x; out[idy] = y; out[idz] = z; out[idt] = t;
-      out[idsigma_t] = sigma_t;
-      out[idq_OS] = q_OS; out[idq_SSK] = q_SSK;
-      out[ideta_OS] = eta_OS ; out[ideta_SSK] = eta_SSK;
-      out[i_shit1] = 0.0; out[i_shit2] = 0.0; out[i_shit3] = 0.0;
-      out[iyear] = 2019;
-
+      out[evt*10+0] = data[0]; // cosK
+      out[evt*10+1] = data[1]; // cosL
+      out[evt*10+2] = data[2]; // hphi
+      out[evt*10+3] = data[3]; // time
+      // mass (index 4) is already in the array :)
+      out[evt*10+5] = data[4]; // sigma_t
+      out[evt*10+6] = data[5]; // qOS
+      out[evt*10+7] = data[6]; // qSS
+      out[evt*10+8] = data[7]; // etaOS
+      out[evt*10+9] = data[8];  // etaSS
       return;
     }
 
   }
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 
 }
