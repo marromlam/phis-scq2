@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else -1)
-  from time_acceptance.fcn_functions import saxsbxscxerf, trigger_scissors
+  from time_acceptance.fcn_functions import saxsbxscxerf
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
