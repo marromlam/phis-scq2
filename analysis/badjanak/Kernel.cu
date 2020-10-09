@@ -91,7 +91,10 @@ const CONSTANT_MEM ${{ftype}} TRISTAN[{NTERMS}] = {TRISTAN};
 {DIFFERENTIALCROSSRATE_CU}
 
 //#include "AngularAcceptance.cu"
-{ANGULARACCEPTANCE_CU}
+//ANGULARACCEPTANCE_CU
+
+//#include "Toy.cu"
+{TOY_CU}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -223,6 +226,7 @@ void pycexp(GLOBAL_MEM ${{ctype}} *z, GLOBAL_MEM ${{ctype}} *out)
 ////////////////////////////////////////////////////////////////////////////////
 // KERNEL::getAngularWeights ///////////////////////////////////////////////////
 
+/*
 KERNEL
 void pyAngularWeights(GLOBAL_MEM ${{ftype}} *dtrue, GLOBAL_MEM ${{ftype}} *dreco, GLOBAL_MEM ${{ftype}} *weight, GLOBAL_MEM ${{ftype}} *w,
                       // Time-dependent angular distribution
@@ -473,7 +477,7 @@ void pyAngularCov(GLOBAL_MEM ${{ftype}} *dtrue, GLOBAL_MEM ${{ftype}} *dreco, GL
 }}
 
 ////////////////////////////////////////////////////////////////////////////////
-
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
