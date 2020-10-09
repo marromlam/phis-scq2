@@ -21,7 +21,7 @@ from ipanema import ristra, Parameters, optimize, Sample
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser, swnorm
+from utils.helpers import  version_guesser, timeacc_guesser, swnorm, trigger_scissors
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -249,10 +249,8 @@ if __name__ == '__main__':
 
     print(f"Dumping tex table to {cats[name].tabs_path}")
     with open(cat.tabs_path, "w") as text:
-      text.write( cat.params.dump_latex( caption="""
-      Time acceptance for the \\textbf{%s} $%s$ \\texttt{\\textbf{%s}} $%s$
-      category in simultaneous fit.""" % (YEAR,cat.label[1],TRIGGER,cat.label[0]) ) )
-    print( cat.pars_path )
-
+      text.write( cat.params.dump_latex(caption=f"Time acceptance for the \
+      ${mode_tex(f'{MODE}')}$ ${YEAR}$ {TRIGGER} category in simultaneous fit.") )
+    text.close()
 ################################################################################
 # that's all folks!

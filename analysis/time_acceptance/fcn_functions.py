@@ -13,12 +13,6 @@ import badjanak
 from utils.plot import mode_tex
 from utils.strings import cuts_and
 
-def trigger_scissors(trigger, CUT=""):
-  if trigger == 'biased':
-    CUT = cuts_and("hlt1b==1",CUT)
-  elif trigger == 'unbiased':
-    CUT = cuts_and("hlt1b==0",CUT)
-  return CUT
 
 
 def splinexerf(parameters, data, weight = None, prob = None):

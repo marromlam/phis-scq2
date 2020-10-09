@@ -20,7 +20,7 @@ from ipanema import Sample
 
 from utils.plot import mode_tex
 from utils.strings import cuts_and
-from utils.helpers import  version_guesser
+from utils.helpers import  version_guesser, swnorm, trigger_scissors
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
-  from time_acceptance.fcn_functions import splinexerf, trigger_scissors
+  from time_acceptance.fcn_functions import splinexerf
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
