@@ -2,12 +2,15 @@
 #
 #    This is the Snakefile for the phis analysis within Santiago framework
 #
-# Contributors: Marcos Romero
+# Contributors:
+#       Marcos Romero Lamas, mromerol@cern.ch
 
 import hjson
 CONFIG = hjson.load(open('config.json'))
 
 from utils.helpers import tuples, version_guesser, send_mail
+
+
 
 # Main constants ---------------------------------------------------------------
 #    VERSION: is the version Bs2JpsiPhi-FullRun2 pipeline was run against, and
@@ -20,7 +23,6 @@ SAMPLES_PATH = CONFIG['path']
 MAILS = CONFIG['mail']
 
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
-
 
 
 
@@ -49,12 +51,16 @@ YEARS = {#
 
 # Set pipeline-wide constraints ------------------------------------------------
 #     Some wilcards will only have some well defined values.
+
 wildcard_constraints:
   trigger = "(biased|unbiased|combined)",
   year = "(2015|2016|run2a|2017|2018|run2b|run2|2020)"
 
 
-# Including Snakefiles
+
+# Including Snakefiles ---------------------------------------------------------
+#     dfdf
+
 include: 'analysis/samples/Snakefile'
 include: 'analysis/reweightings/Snakefile'
 include: 'analysis/time_acceptance/Snakefile'
