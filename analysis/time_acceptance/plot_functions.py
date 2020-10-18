@@ -3,7 +3,7 @@
 __author__ = ['Marcos Romero']
 __email__  = ['mromerol@cern.ch']
 
-
+__all__ = ['plot_timeacc_fit', 'plot_timeacc_spline']
 
 ################################################################################
 # %% Modules ###################################################################
@@ -16,7 +16,7 @@ import hjson
 
 # load ipanema
 from ipanema import initialize
-from ipanema import ristra, Parameters, optimize, Sample
+from ipanema import ristra, Parameters, optimize, Sample, extrap1d
 
 import pandas as pd
 import uproot
@@ -42,7 +42,7 @@ from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser
+from utils.helpers import  version_guesser, timeacc_guesser, swnorm
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -52,52 +52,59 @@ Gdvalue = hjson.load(open('config.json'))['Gd_value']
 
 # Parse arguments for this script
 def argument_parser():
-  parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
-  parser.add_argument('--samples', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--params', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--figure', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--mode', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--year', help='Year to fit')
-  parser.add_argument('--version', help='Version of the tuples to use')
-  parser.add_argument('--trigger', help='Trigger to fit')
-  parser.add_argument('--timeacc', help='Different flag to ... ')
-  parser.add_argument('--plot', help='Different flag to ... ')
-  return parser
+  p = argparse.ArgumentParser(description='Compute decay-time acceptance.')
+  p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--figure', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--mode', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--year', help='Year to fit')
+  p.add_argument('--version', help='Version of the tuples to use')
+  p.add_argument('--trigger', help='Trigger to fit')
+  p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--plot', help='Different flag to ... ')
+  return p
 
 ################################################################################
 
 
 
 
-def plot_timeacc_fit(params, data, weight, mode, axes=None, log=False, label=None):
+def plot_timeacc_fit(params, data, weight,
+                     mode, axes=None, log=False, label=None, nob=100, nop=200):
   # Look for axes
   if not axes:
     fig,axplot,axpull = plotting.axes_plotpull()
   else:
     fig,axplot,axpull = axes
-
-  ref = histogram.hist(ristra.get(data), weights=ristra.get(weight), bins=100)
-
-
-
-  x = np.linspace(params['tLL'].value, params['tUL'].value, 200)
-  if mode == 'BsMC':  i = 0
+  
+  # Get bins and counts for data histogram
+  ref = histogram.hist(ristra.get(data), weights=ristra.get(weight), bins=nob,
+                       range=(params['tLL'].value, params['tUL'].value))
+  
+  # Get x and y for pdf plot
+  x = np.linspace(params['tLL'].value, params['tUL'].value, nop)
+  if   mode == 'BsMC': i = 0
   elif mode == 'BdMC': i = 1
   elif mode == 'BdRD': i = 2
   if len(params.fetch('gamma.*')) > 1: # then is the simultaneous fit or similar
     y = saxsbxscxerf(params, [x, x, x] )[i]
+    y_norm = saxsbxscxerf(params, [ref.bins, ref.bins, ref.bins] )[i]
   else: # the single fit
     y = splinexerf(params, x )
+    y_norm = saxsbxscxerf(params, [ref.bins] )
 
-  y *= ref.norm*abs(ref.edges[1]-ref.edges[0])/(y.sum()*abs(x[1]-x[0]))
+  # normalize y to histogram counts     [[[I don't understand it completely...
+  y *= np.trapz( ref.counts,ref.bins ) / np.trapz(y_norm,ref.bins)
+  #*abs(ref.edges[1]-ref.edges[0])/(y.sum()*abs(x[1]-x[0]))
+
   if label:
     axplot.plot(x,y, label=label)
   else:
     axplot.plot(x,y)
-  axpull.fill_between(ref.cmbins,
-                      histogram.pull_pdf(x,y,ref.cmbins,ref.counts,ref.errl,ref.errh),
+  axpull.fill_between(ref.bins,
+                      histogram.pull_pdf(x,y,ref.bins,ref.counts,ref.errl,ref.errh),
                       0)
-  axplot.errorbar(ref.cmbins,ref.counts,yerr=[ref.errl,ref.errh], fmt='.', color='k')
+  axplot.errorbar(ref.bins,ref.counts,yerr=[ref.errl,ref.errh], fmt='.', color='k')
   if log:
     axplot.set_yscale('log')
   axpull.set_xlabel(r'$t$ [ps]')
@@ -106,7 +113,7 @@ def plot_timeacc_fit(params, data, weight, mode, axes=None, log=False, label=Non
 
 
 
-def plot_timeacc_spline(params, time, weights, mode=None ,conf_level=1, name='test.pdf', bins=25, log=False, axes=False, modelabel=None, label=None):
+def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=20, log=False, axes=False, modelabel=None, label=None):
   """
   Hi Marcos,
 
@@ -123,39 +130,30 @@ def plot_timeacc_spline(params, time, weights, mode=None ,conf_level=1, name='te
   """
   # Look for axes
   if not axes:
-    fig, axplot = plotting.axes_plot()
+    fig, axplot, axpull = plotting.axes_plotpull()
+    FMTCOLOR = 'k'
   else:
-    fig, axplot = axes
+    fig, axplot, axpull = axes
+    FMTCOLOR = next(axplot._get_lines.prop_cycler)['color']
 
-  # a = params.build(params,params.find('a.*')+['gamma_a'])
-  # b = params.build(params,params.find('b.*')+['gamma_b'])
-  # c = params.build(params,params.find('c.*')+['gamma_c'])
+  a = params.build(params, params.find('a.*')) if params.find('a.*') else None
+  b = params.build(params, params.find('b.*')) if params.find('b.*') else None
+  c = params.build(params, params.find('c.*')) if params.find('c.*') else None
   #
-  # print(a,b,c)
   # exit()
-  list_coeffs = [key for key in params if key[0]=='c']
-  if not list_coeffs:
-    list_coeffs = [key for key in params if key[0]=='b']
-    if not list_coeffs:
-      list_coeffs = [key for key in params if key[0]=='a']
-      if not list_coeffs:
-        print('shit')
-      else:
-        gamma = params['gamma_a'].value
-        kind = 'single'
-    else:
-      gamma = params['gamma_b'].value
-      if not [key for key in params if key[0]=='a']:
-        kind = 'single'
-      else:
-        kind = 'ratio'
-  else:
+  if 'BsMC' in mode:
+    list_coeffs = list(a.keys())
+    kind = 'single'
+    gamma = params['gamma_a'].value
+  elif 'BdMC' == mode:
+    list_coeffs = list(b.keys())
+    kind = 'ratio' if a else 'single'
+    gamma = params['gamma_b'].value
+  elif 'BdRD' == mode:
+    list_coeffs = list(c.keys())
+    kind = 'full' if b else 'single'
     gamma = params['gamma_c'].value
-    if not [key for key in params if key[0]=='b']:
-      kind = 'single'
-    else:
-      kind = 'full'
-  print(kind)
+  print(mode,kind)
 
   # Prepare coeffs as ufloats
   coeffs = []
@@ -181,15 +179,21 @@ def plot_timeacc_spline(params, time, weights, mode=None ,conf_level=1, name='te
     widths.append(tf-ti)
   bins = np.array(list_bins); int_pdf = np.array(ipdf)
 
-  # Manipulate the decay-time dependence of the efficiency
-  x = np.linspace(0.3,15,200)
-  y = wrap_unc(badjanak.bspline, x, *coeffs)
-  y_nom = unp.nominal_values(y)
-  y_spl = interp1d(x, y_nom, kind='cubic', fill_value='extrapolate')(5)
 
   # Manipulate data
   ref = histogram.hist(ristra.get(time), bins=bins, weights=ristra.get(weights))
   ref.counts *= int_pdf; ref.errl *= int_pdf; ref.errh *= int_pdf
+
+  # Manipulate the decay-time dependence of the efficiency
+  x = ref.cmbins#np.linspace(0.3,15,200)
+  X = np.linspace(0.3,15,200)
+  y = wrap_unc(badjanak.bspline, x, *coeffs)
+  y_nom = unp.nominal_values(y)
+  y_spl = interp1d(x, y_nom, kind='cubic', fill_value='extrapolate')(5)
+  y_norm = np.trapz(y_nom/y_spl, x)
+  
+
+
   if kind == 'ratio':
     coeffs_a = [params[key].value for key in params if key[0]=='a']
     spline_a = badjanak.bspline(ref.cmbins,*coeffs_a)
@@ -197,30 +201,56 @@ def plot_timeacc_spline(params, time, weights, mode=None ,conf_level=1, name='te
   if kind == 'full':
     coeffs_a = [params[key].value for key in params if key[0]=='a']
     coeffs_b = [params[key].value for key in params if key[0]=='b']
-    spline_a = badjanak.bspline(ref.cmbins,*coeffs_a)
-    spline_b = badjanak.bspline(ref.cmbins,*coeffs_b)
+    spline_a = badjanak.bspline(ref.cmbins, *coeffs_a)
+    spline_b = badjanak.bspline(ref.cmbins, *coeffs_b)
     ref.counts /= spline_b; ref.errl /= spline_b; ref.errh /= spline_b
     #ref.counts *= spline_a; ref.errl *= spline_a; ref.errh *= spline_a
+  
   counts_spline = interp1d(ref.bins, ref.counts, kind='cubic')
   int_5 = counts_spline(5)
   ref.counts /= int_5; ref.errl /= int_5; ref.errh /= int_5
+  
+  ref_norm = np.trapz(ref.counts,ref.cmbins)
+  #y_norm = np.trapz(y_nom/y_spl, x)
+  
+  # Splines for pdf ploting
+  y_upp, y_low = get_confidence_bands(x, y, sigma=conf_level)/y_spl
+  y_nom_s = interp1d(x, y_nom/y_spl, kind='cubic')
+  y_upp_s = interp1d(x, y_upp, kind='cubic')
+  y_low_s = interp1d(x, y_low, kind='cubic')
+  y_nom_s = extrap1d(y_nom_s)
+  y_upp_s = extrap1d(y_upp_s)
+  y_low_s = extrap1d(y_low_s)
 
   # Actual ploting
   axplot.set_ylim(0.4, 1.5)
-  axplot.plot(x,y_nom/y_spl)
-  axplot.errorbar(ref.cmbins,ref.counts,
+  # Plot pdf
+  axplot.plot(X, y_nom_s(X), color=FMTCOLOR if FMTCOLOR!='k' else None)
+  # Plot confidence bands
+  axplot.errorbar(ref.cmbins,y_norm*ref.counts/ref_norm,
                   yerr=[ref.errl,ref.errh],
-                  xerr=[-ref.edges[:-1]+ref.cmbins,-ref.cmbins+ref.edges[1:]],
-                  fmt='.', color='k')
-  y_upp, y_low = get_confidence_bands(x, y, sigma=conf_level)
-  axplot.fill_between(x, y_upp/y_spl, y_low/y_spl, alpha=0.2, edgecolor="none",
-                      label='$'+str(conf_level)+'\sigma$ confidence band')
+                  xerr=[ref.cmbins-ref.edges[:-1],ref.edges[1:]-ref.cmbins],
+                  fmt='.', color=FMTCOLOR)
+
+  axplot.fill_between(X, y_upp_s(X), y_low_s(X), alpha=0.2, edgecolor="none",
+                      label=f'${conf_level}\sigma$ c.b.')
+  
+  axpull.fill_between(ref.cmbins,
+                      histogram.pull_pdf(
+                          x, y_nom/y_spl, ref.cmbins, y_norm*ref.counts/ref_norm, ref.errl, ref.errh),
+                      0)
+  
+  # If log, then log both axes
   if log:
     axplot.set_yscale('log')
+    axplot.set_xscale('log')
+  
+  # Labeling
   axplot.set_xlabel(r'$t$ [ps]')
   axplot.set_ylabel(r'$\epsilon_{%s}$ [a.u.]' % modelabel)
   axplot.legend()
-  return fig, axplot
+
+  return fig, axplot, axpull
 
 
 
@@ -307,6 +337,7 @@ def plotter(args,axes):
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
     cats[mode].allocate(time='time',lkhd='0*time')
     cats[mode].allocate(weight=weight)
+    cats[mode].weight = swnorm(cats[mode].weight)
     cats[mode].assoc_params(params[i])
 
     # Attach labels and paths
@@ -322,7 +353,7 @@ def plotter(args,axes):
     pars = Parameters()
     for cat in cats:
       pars = pars + cats[cat].params
-  print(pars)
+  #print(pars)
 
   if PLOT=='fit':
     axes = plot_timeacc_fit(pars,
@@ -354,6 +385,7 @@ def plotter(args,axes):
 if __name__ == '__main__':
   args = vars(argument_parser().parse_args())
   axes = plotting.axes_plotpull()
+  print('hello')
 
   initialize(os.environ['IPANEMA_BACKEND'], 1)
   from time_acceptance.fcn_functions import badjanak, saxsbxscxerf, splinexerf
@@ -395,8 +427,9 @@ if __name__ == '__main__':
 
   if 'spline' in args['plot']:
     axes = plotting.axes_plot()
+    axes = None#plotting.axes_plotpull()
   else:
-    axes = plotting.axes_plotpull();
+    axes = plotting.axes_plotpull()
 
   if mix_timeacc:
     for i,m in enumerate(mixers):
@@ -426,7 +459,7 @@ if __name__ == '__main__':
         "timeacc": f"{args['timeacc']}",
         "plot":    f"{args['plot']}"
       }
-      axes = plotter(args, axes )
+      axes = plotter(args, axes=axes )
       axes[1].legend()
   else:
     args = {
@@ -441,8 +474,12 @@ if __name__ == '__main__':
       "plot":     f"{args['plot']}"
     }
     axes = plotter(args, axes )
-
-  watermark(axes[1],version=f"${version_guesser(args['version'])[0]}$",scale=1.01)
+  
+  VWATERMARK = version_guesser(args['version'])[0] # version to watermark plots
+  if 'log' in args['plot'] and not 'spline' in args['plot']:
+    watermark(axes[1],version=f"${VWATERMARK}$",scale=10.01)
+  else:
+    watermark(axes[1],version=f"${VWATERMARK}$",scale=1.01)
   axes[0].savefig(args['figure'])
 
   exit()
