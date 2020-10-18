@@ -12,7 +12,7 @@ rule get_flavor_from_git:
     version = f"{wildcards.version}"
 
     if version in ('v0r0','v0r1','v0r2','v0r3','v0r4','v0r5'):
-      params = Parameters.load(f'flavor_tagging/flavor_tagging.json')
+      params = Parameters.load(f'analysis/flavor_tagging/flavor_tagging.json')
       print(params)
       params.dump(f"{output.params}")
       print(f'Dumping parameters to {output.params}')
