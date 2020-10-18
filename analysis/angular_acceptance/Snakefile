@@ -66,6 +66,8 @@ rule angular_acceptance_blend:
 
 
 rule angular_acceptance_joinWeights:
+  resources:
+    mem_mb=4096
   wildcard_constraints:
     wflag = "(angWeight|angWeightBin.*)"
   input:
@@ -85,6 +87,8 @@ rule angular_acceptance_joinWeights:
 
 
 rule angular_acceptance_veronikaWeights:
+  resources:
+    mem_mb=4096
   input:
     a = lambda wcs: tuples(wcs,weight='kkpWeight'),
     b = lambda wcs: tuples(wcs,weight='sWeight')
@@ -108,6 +112,8 @@ rule angular_acceptance_veronikaWeights:
 #     to better match MC to RD.
 
 rule angular_acceptance_corrected:
+  resources:
+    mem_mb=4096
   wildcard_constraints:
     mode = "MC_Bs2JpsiPhi(_dG0)?",
     trigger = "(biased|unbiased|combined)",
