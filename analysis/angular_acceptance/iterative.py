@@ -626,34 +626,16 @@ if __name__ == '__main__':
         print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
         for _i in range(len(merged_w.keys())):
           print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.2uP}")
-        if i>50:
-          print( list(merged_w.values()) )
-          print( list(data[f'{y}'][trigger].angular_weights[-1].values()) )
-          for wk in merged_w.keys():
-            new = merged_w[wk].value
-            old = data[f'{y}'][trigger].angular_weights[-1][wk].value
-            print(f"  = > {new}+{old} ")
-            merged_w[wk].set(value = 0.5*(new+old))
-          print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8} -- mod")
-          for _i in range(len(merged_w.keys())):
-            print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.2uP}")
-        data[y][trigger].angacc = merged_w
-        data[y][trigger].angaccs[i] = merged_w
-        _check = []
-        for oi in range(0,i):
-          _check.append( check_for_convergence( data[y][trigger].angaccs[oi], data[y][trigger].angaccs[i] )) 
-        my_checker.append(_check)
-        #print("my_checker",my_checker)
-        #print("_check", my_checker)
-
-        qwe = check_for_convergence( data[y][trigger].angaccs[i-1], data[y][trigger].angaccs[i] )
+        data[f'{y}'][trigger].angacc = merged_w
+        data[f'{y}'][trigger].angular_weights.append(merged_w)
+        qwe = check_for_convergence( data[f'{y}'][trigger].angular_weights[-2], data[f'{y}'][trigger].angular_weights[-1] )
         checker.append( qwe )
         merged_w.dump(data[f'{y}'][trigger].params_path.replace('.json',f'i{i}.json'))
         print(f'Value of chi2/dof = {chi2_value:.4}/{dof} corresponds to a p-value of {prob:.4}\n')
 
     # Check if they are the same as previous iteration
-    lb = [ data[f'{y}']['biased'].angular_weights[-1].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
-    lu = [ data[f'{y}']['unbiased'].angular_weights[-1].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
+    lb = [ data[f'{y}']['biased'].angaccs[i].__str__(['value']).splitlines() for i__,y in enumerate(YEARS) ]
+    lu = [ data[f'{y}']['unbiased'].angaccs[i].__str__(['value']).splitlines() for i__,y in enumerate(YEARS) ]
     print(f"\n{80*'-'}\nBiased angular acceptance")
     for l in zip(*lb):
       print(*l, sep="| ")
@@ -662,19 +644,21 @@ if __name__ == '__main__':
       print(*l, sep="| ")
     print(f"\n{80*'-'}\n")
 
+
+    print("CHECK: ", checker)
     if all(checker):
       print(f"\nDone! Convergence was achieved within {i} iterations")
       for y, dy in data.items(): # loop over years
         for trigger in ['biased','unbiased']:
-          pars = data[f'{y}'][trigger].angular_weights[-1]
+          pars = data[y][trigger].angaccs[i]
           print('Saving table of params in tex')
-          pars.dump(data[f'{y}'][trigger].params_path)
+          pars.dump(data[y][trigger].params_path)
           print('Saving table of params in tex')
-          with open(data[f'{y}'][trigger].tables_path, "w") as tex_file:
+          with open(data[y][trigger].tables_path, "w") as tex_file:
             tex_file.write(
               pars.dump_latex( caption="""
-              Baseline angular weights for \\textbf{%s} \\texttt{\\textbf{%s}}
-              category using combined MC samples.""" % (y,trigger)
+              Angular acceptance for \\textbf{%s} \\texttt{\\textbf{%s}}
+              category.""" % (y,trigger)
               )
             )
           tex_file.close()
