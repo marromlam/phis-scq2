@@ -22,7 +22,7 @@ initialize(os.environ['IPANEMA_BACKEND'],1)
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser
+from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -61,6 +61,8 @@ def argument_parser():
   return p
 
 
+def printsec(string):
+  print(f"\n{80*'='}\n{string}\n{80*'='}\n")
 
 ################################################################################
 
@@ -80,49 +82,39 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else -1)
-  from time_acceptance.fcn_functions import trigger_scissors
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-  #CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
 
   # Print settings
-  print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
+  printsec('Settings')
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
-  print(f"{'cuts':>15}: {CUT:50}")
-  #print(f"{'angacc':>15}: {ANGACC:50}")
+  print(f"{'cuts':>15}: {trigger_scissors(TRIGGER, CUT):50}")
+  print(f"{'angacc':>15}: {'corrected':50}")
   print(f"{'bdtconfig':>15}: {list(bdconfig.values())}\n")
 
 
 
   # %% Load samples ------------------------------------------------------------
-  print(f"\n{80*'='}\n", "Loading categories", f"\n{80*'='}\n")
+  printsec("Loading categories")
 
   # Load Monte Carlo samples
   mc = Sample.from_root(args['sample_mc'], share=SHARE, name=MODE)
   mc.assoc_params(args['input_params'])
+  kinWeight = np.zeros_like(list(mc.df.index)).astype(np.float64)
+  mc.chop(trigger_scissors(TRIGGER, CUT))
   # Load corresponding data sample
   rd = Sample.from_root(args['sample_data'], share=SHARE, name='data')
+  rd.chop(trigger_scissors(TRIGGER, CUT))
 
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
-  true = [f'gen{i}' for i in reco]
+  #true = [f'gen{i}' for i in reco]
+  true = [f'true{i}_GenLvl' for i in reco]
   weight_rd = f'(sw_{VAR})' if VAR else '(sw)'
   weight_mc = f'(polWeight*{weight_rd}/gb_weights)'
   print(weight_mc,weight_rd)
-
-  # Select trigger
-  if TRIGGER == 'biased':
-    trigger = 'biased';
-    weight_mc += f'*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==0)*({CUT})'
-    weight_rd += f'*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==0)*({CUT})'
-  elif TRIGGER == 'unbiased':
-    trigger = 'unbiased';
-    weight_mc += f'*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==1)*({CUT})'
-    weight_rd += f'*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==1)*({CUT})'
-  elif TRIGGER == 'combined':
-    trigger = 'combined';
 
   # Allocate some arrays with the needed branches
   mc.allocate(reco=reco+['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time'])
@@ -130,21 +122,24 @@ if __name__ == '__main__':
   mc.allocate(pdf='0*time', ones='time/time', zeros='0*time')
   mc.allocate(weight=weight_mc)
 
-
-
   #%% Compute standard kinematic weights ---------------------------------------
   #     This means compute the kinematic weights using 'X_M','B_P' and 'B_PT'
   #     variables
-  print(f"\n{80*'='}\nCompute angWeights correcting MC sample in kinematics\n{80*'='}\n")
+  printsec('Compute angWeights correcting MC sample in kinematics')
   print(f" * Computing kinematic GB-weighting in B_PT, B_P and X_M")
 
   reweighter.fit(original        = mc.df[['X_M','B_P','B_PT']],
                  target          = rd.df[['X_M','B_P','B_PT']],
                  original_weight = mc.df.eval(weight_mc),
                  target_weight   = rd.df.eval(weight_rd));
+  angWeight = reweighter.predict_weights(mc.df[['X_M', 'B_P', 'B_PT']])
+  kinWeight[list(mc.df.index)] = angWeight
+  
+  print(f"{'idx':>3} | {'sw':>11} | {'polWeight':>11} | {'angWeight':>11} ")
+  for i in range(0,100):
+    if kinWeight[i] != 0:
+      print(f"{str(i):>3} | {mc.df['sWeight'][i]:+.8f} | {mc.df['polWeight'][i]:+.8f} | {kinWeight[i]:+.8f} ")
 
-  kinWeight = reweighter.predict_weights(mc.df[['X_M','B_P','B_PT']])
-  kinWeight = np.where(mc.df.eval(weight_mc)!=0, kinWeight, 0)
   np.save(args['output_weights_file'], kinWeight)
 
   #%% Compute angWeights correcting with kinematic weights ---------------------
@@ -152,19 +147,23 @@ if __name__ == '__main__':
   #     variables
   print(" * Computing angular weights")
 
-  ang_acc = badjanak.get_angular_cov(mc.true, mc.reco, mc.weight*ristra.allocate(kinWeight), **mc.params.valuesdict() )
-  w, uw, cov, corr = ang_acc
+  angacc = badjanak.get_angular_cov(mc.true, mc.reco, 
+                                     mc.weight*ristra.allocate(angWeight),
+                                     **mc.params.valuesdict())
+
+  w, uw, cov, corr = angacc
   pars = Parameters()
   for i in range(0,len(w)):
     #print(f'w[{i}] = {w[i]:+.16f}')
     correl = {f'w{j}':cov[i][j] for j in range(0,len(w)) if i>0 and j>0}
     pars.add({'name': f'w{i}', 'value': w[i], 'stdev': uw[i], 'correl': correl,
               'free': False, 'latex': f'w_{i}'})
-  print(f"Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
+  print(f" * Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
+  
   print(f"{pars}")
 
   # Writing results ------------------------------------------------------------
-  print(f"\n{80*'='}\n", "Dumping parameters", f"\n{80*'='}\n")
+  printsec("Dumping parameters")
   # Dump json file
   print(f"Dumping json parameters to {args['output_params']}")
   pars.dump(args['output_params'])
