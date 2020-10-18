@@ -173,6 +173,8 @@ rule lifetime_fit:
 #    Bs2JpsiPhi acceptance.
 
 rule time_acceptance_plot:
+  resources:
+    mem_mb=16384
   wildcard_constraints:
     #timeacc = "(single|simul|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
     plot = "(fit|fitlog|spline|splinelog)",
