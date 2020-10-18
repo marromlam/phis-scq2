@@ -74,3 +74,6 @@ phis-scq/bsjpsikk.egg-info/
 output/
 .snakemake/*
 */.fuse*
+.vscode
+sidecar/
+.ccache
