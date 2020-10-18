@@ -77,3 +77,10 @@ output/
 .vscode
 sidecar/
 .ccache
+
+# LaTeX stuff
+slides/__latexindent_temp.tex
+slides/*.toc
+slides/*.pdf
+slides/*.xdv
+
