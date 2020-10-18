@@ -370,8 +370,6 @@ if __name__ == '__main__':
 
   # %% Prepare dict of parameters ----------------------------------------------
   print(f"\n{80*'='}\nParameters and initial status\n{80*'='}\n")
-
-  print(f"\nFitting parameters\n{80*'='}")
   pars = Parameters()
   # S wave fractions
   pars.add(dict(name='fSlon1', value=0.480, min=0.00, max=0.90,
@@ -401,17 +399,17 @@ if __name__ == '__main__':
   pars.add(dict(name="pPper", value= 0.00, min=-1.0, max=1.0,
             free=False, latex=r"\phi_{\perp} - \phi_0"))
   # S wave strong phases
-  pars.add(dict(name='dSlon1', value=+2.34, min=-0.0, max=+4.0,
+  pars.add(dict(name='dSlon1', value=+2.34, min=-0.0, max=+3.0,
             free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon2', value=+1.64, min=-0.0, max=+4.0,
+  pars.add(dict(name='dSlon2', value=+1.64, min=-0.0, max=+3.0,
             free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon3', value=+1.09, min=-0.0, max=+4.0,
+  pars.add(dict(name='dSlon3', value=+1.09, min=-0.0, max=+3.0,
             free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon4', value=-0.25, min=-4.0, max=+0.0,
+  pars.add(dict(name='dSlon4', value=-0.25, min=-3.0, max=+0.0,
             free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon5', value=-0.48, min=-4.0, max=+0.0,
+  pars.add(dict(name='dSlon5', value=-0.48, min=-3.0, max=+0.0,
             free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon6', value=-1.18, min=-4.0, max=+0.0,
+  pars.add(dict(name='dSlon6', value=-1.18, min=-3.0, max=+0.0,
             free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-2*3.14, max=2*3.14,
@@ -476,10 +474,10 @@ if __name__ == '__main__':
   print(f"\nBiased angular acceptance\n{80*'='}")
   for l in zip(*lb):
     print(*l, sep="| ")
-  print("\nUnbiased angular acceptance")
+  print(f"\nUnbiased angular acceptance\n{80*'='}")
   for l in zip(*lu):
     print(*l, sep="| ")
-  print(f"\n{80*'-'}\n")
+  print(f"\n")
 
   for i in range(1,30):
     print(f"\n{80*'='}\nIteration {i} of the procedure\n{80*'='}\n")
