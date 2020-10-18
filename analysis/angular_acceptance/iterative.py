@@ -515,35 +515,38 @@ if __name__ == '__main__':
 
 
 
-    # 3rd step: kinematic weights ------------------------------------------------
-    #   We need to change badjanak to handle MC samples and then we compute the
-    #   desired pdf weights for a given set of fitted pars in step 1. This implies
-    #   looping over years and MC samples (std and dg0).
-    #   As a matter of fact, it's important to have data[y][combined] sample,
-    #   the GBweighter gives different results when having those 0s or having
-    #   nothing after cutting the sample.
+    # 3rd step: kinematic weights ----------------------------------------------
+    #    We need to change badjanak to handle MC samples and then we compute the
+    #    desired pdf weights for a given set of fitted pars in step 1. This
+    #    implies looping over years and MC samples (std and dg0).
+    #    As a matter of fact, it's important to have data[y][combined] sample,
+    #    the GBweighter gives different results when having those 0s or having
+    #    nothing after cutting the sample.
     print(f'\nKinematic reweighting MC samples in K momenta {itstr}')
     threads = list()
     t0 = timer()
     for y, dy in mc.items(): # loop over years
-      for m, v in dy.items(): # loop over mc_std and mc_dg0
-        #v.kkpWeight = np.zeros_like(v.pdfWeight)
-        for t, t_cut in zip(['biased','unbiased'],[0,1]):
-          t_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={t_cut})*({ bin_vars[VAR][BIN] if FULLCUT else "1" })*'
-          print(t_cut)
-          original_v = v.df[['hminus_PT','hplus_PT','hminus_P','hplus_P']].values
-          original_w = v.df.eval(t_cut+f'polWeight*{weight_rd}/gb_weights')*v.pdfWeight[i]*v.kinWeight
-          target_v = data[f'{y}']['combined'].df[['hminus_PT','hplus_PT','hminus_P','hplus_P']].values
-          target_w = data[f'{y}']['combined'].df.eval(t_cut+f'{weight_rd}').values
+      for m, dm in dy.items(): # loop over mc_std and mc_dg0
+        for t, v in dm.items():
+          # original variables + weight (mc)
+          ov  = v.df[['hminus_PT','hplus_PT','hminus_P','hplus_P']]
+          ow  = v.df.eval(f'angWeight*polWeight*{weight_rd}/gb_weights')
+          ow *= v.pdfWeight[i]
+          # target variables + weight (real data)
+          tv = data[y][t].df[['hminus_PT','hplus_PT','hminus_P','hplus_P']]
+          tw = data[y][t].df.eval(f'{weight_rd}')
+
           # Run in single core (REALLY SLOW 10+ h)
-          # kkp_weighting(original_v, original_w, target_v, target_w, v.kkpWeight[f'{t}'], y, m, t, 0)
+          # kkp_weighting(ov, ow, tv, tw, v.kkpWeight[t], y, m, t, 0)
+          
           # Run in multithread mode (still has some problems with memory)
           # job = threading.Thread(target=kkp_weighting,
-          #                        args=(original_v, original_w, target_v, target_w,
-          #                        v.kkpWeight[f'{t}'], y, m, t))
-          # Run multicore (about 12 minutes per iteration)
-          job = multiprocessing.Process(target=kkp_weighting,
-                                 args=(original_v, original_w, target_v, target_w,
+          #                        args=(ov, ow, tv, tw,
+          #                        v.kkpWeight[t], y, m, t))
+          
+          # Run multicore (about 15 minutes per iteration)
+          job = multiprocessing.Process(target=kkp_weighting, args=(
+                                ov.values, ow.values, tv.values, tw.values,
                                  v.path_to_weights, y, m, t, len(threads) ))
           threads.append(job); job.start()
 
