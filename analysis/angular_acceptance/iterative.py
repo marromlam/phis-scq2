@@ -479,9 +479,16 @@ if __name__ == '__main__':
     print(*l, sep="| ")
   print(f"\n")
 
-  for i in range(1,30):
+
+  # The iterative procedure starts ---------------------------------------------
+  #     First print angular acceptance before iterative procedure
+  CHECK_DICT = {}
+  for i in range(1,15):
     print(f"\n{80*'='}\nIteration {i} of the procedure\n{80*'='}\n")
-    checker = []                  # here we'll store if weights do converge or not
+    checker = []                # here we'll store if weights do converge or not
+    my_checker = []             # here we'll store if weights do converge or not
+    CHECK_DICT[i] = {}
+    likelihoods = []
     itstr = f"[iteration #{i}]"
 
     # 1st step: fit data -------------------------------------------------------
