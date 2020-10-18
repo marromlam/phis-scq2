@@ -71,3 +71,49 @@ include: 'analysis/angular_acceptance/Snakefile'
 include: 'analysis/angular_fit/Snakefile'
 include: 'analysis/bundle/Snakefile'
 include: 'analysis/params/Snakefile'
+
+
+# Final rule (compile slides) --------------------------------------------------
+
+rule all:
+  input:
+    "output/b2cc_all.pdf"
+
+rule compile_slides:
+  input:
+    rwp1 = expand(rules.reweightings_plot_time_acceptance.output,
+                  version='v0r5',
+                  mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+                  branch=['B_P','B_PT','X_M'],
+                  year=['2015','2016','2017','2018']),
+    tap1 = expand(rules.time_acceptance_plot.output,
+                  #version=['v0r5@cutpt1','v0r5@cutpt2','v0r5@cutpt3','v0r5@cutpt4'],
+                  version=['v0r5','v0r5@cutpt1','v0r5@cutpt2','v0r5@cutpt3','v0r5@cutpt4','v0r5+v0r5@cutpt1+v0r5@cutpt2+v0r5@cutpt3+v0r5@cutpt4','v0r5@cutsigmat1','v0r5@cutsigmat2','v0r5@cutsigmat3','v0r5+v0r5@cutsigmat1+v0r5@cutsigmat2+v0r5@cutsigmat3','v0r5@cuteta1','v0r5@cuteta2','v0r5@cuteta3','v0r5+v0r5@cuteta1+v0r5@cuteta2+v0r5@cuteta3'],
+                  mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+                  timeacc=['simul'],
+                  year=['2015','2016','2017','2018'],
+                  plot=['fitlog','spline'],
+                  trigger=['biased','unbiased']),
+    # rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
+    #               version=['v0r5'],
+    #               mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
+    #               branch=['B_P','B_PT','X_M','hplus_PT','hplus_P','hminus_PT','hminus_P'],
+    #               angacc=['yearly'],
+    #               timeacc=['repo'],
+    #               weight=['sWeight','kinWeight','kkpWeight'],
+    #               year=['2015']),
+    #               #year=['2015','2016','2017','2018']),
+  output:
+    "output/bundle/b2cc_{date}.pdf"
+  log:
+    'output/log/bundle/compile_slides/{date}.log'
+  run:
+    date = f"{wildcards.date}"
+    import os
+    if not os.path.isfile(f"slides/main_{date}.tex"):
+      print(f"Creating main_{date}.tex from main.tex template")
+      os.system(f"cp slides/containers/main.tex slides/main_{date}.tex")
+    shell(f"cd slides/; latexmk -xelatex main_{date}.tex")
+    shell(f"mv slides/main_{date}.pdf output/b2cc_{date}.pdf")
+    shell(f"cd slides/; latexmk -c -silent main_{date}.tex")
+    shell(f"rm slides/*.xdv")
