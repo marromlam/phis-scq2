@@ -37,7 +37,7 @@ import multiprocessing
 
 # load ipanema
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],2)
+initialize(os.environ['IPANEMA_BACKEND'],1)
 from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # get badjanak and compile it with corresponding flags
