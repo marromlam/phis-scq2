@@ -295,10 +295,10 @@ rule angular_acceptance_iterativeRun2a:
 #     MC and MC_dG0 files.
 
 rule angular_acceptance_iterativeRun2:
-  threads: 16
-  wildcard_constraints:
   resources:
     mem_mb=16384
+  threads: 16
+  wildcard_constraints:
     angacc = "run2(shit)?"
   input:
     # Samples and weights
