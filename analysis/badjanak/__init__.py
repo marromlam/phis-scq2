@@ -95,11 +95,13 @@ def compile(verbose=False, pedantic=False):
   kstrg = open(kpath,"r").read()
   kstrg = kstrg.format(**{
             **flagger(verbose),
+            "FKHELPERS_CU":open(PATH+'/FkHelpers.cu').read(),
             "FUNCTIONS_CU":open(PATH+'/Functions.cu').read(),
             "TIMEANGULARDISTRIBUTION_CU":open(PATH+'/TimeAngularDistribution.cu').read(),
             "DECAYTIMEACCEPTANCE_CU":open(PATH+'/DecayTimeAcceptance.cu').read(),
             "DIFFERENTIALCROSSRATE_CU":open(PATH+'/DifferentialCrossRate.cu').read(),
-            "ANGULARACCEPTANCE_CU":open(PATH+'/AngularAcceptance.cu').read(),
+            #"ANGULARACCEPTANCE_CU":open(PATH+'/AngularAcceptance.cu').read(),
+            "TOY_CU":open(PATH+'/Toy.cu').read(),
            })
   if config['precision'] == 'double':
     prog = THREAD.compile(kstrg,render_kwds={"ftype":dtypes.ctype(np.float64),
@@ -126,9 +128,10 @@ def get_kernels(verbose=False, pedantic=False):
   global __KERNELS__
   prog = compile(verbose, pedantic)
   items = ['pyDiffRate',
-           'pyFcoeffs', 'pyAngularWeights', 'pyAngularCov',
+           'pyFcoeffs', #'pyAngularWeights', 'pyAngularCov',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
-           'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc']
+           'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
+           'dG5toy', 'integral_ijk_fx']
   for item in items:
     setattr(prog, item[2:], prog.__getattr__(item))
     #print(item)
