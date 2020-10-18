@@ -3,7 +3,7 @@ import os
 import hjson
 import numpy as np
 from ipanema import ristra
-
+# %%
 CONFIG = hjson.load(open('config.json'))
 SAMPLES_PATH = CONFIG['path']
 MAILS = CONFIG['mail']
@@ -21,7 +21,7 @@ YEARS = {#
   'Run2'  : ['2015','2016','2017','2018']
 };
 
-from utils.strings import cammel_case_split
+from utils.strings import cammel_case_split, cuts_and
 import numpy as np
 
 def timeacc_guesser(timeacc):
@@ -171,3 +171,5 @@ def trigger_scissors(trigger, CUT=""):
 def swnorm(sw):
   sw_ = ristra.get(sw)
   return ristra.allocate(sw_*(np.sum(sw_)/np.sum(sw_**2)))
+
+# %%
