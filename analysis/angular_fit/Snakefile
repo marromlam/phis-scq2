@@ -245,3 +245,30 @@ rule physics_params_mc:
            --version                 {wildcards.version}\
     ) #&> {log} #2>&1""")
     send_mail(f"Run2a Fit", f"{log}")
+
+
+rule physics_params_mcfit_vs_mcgen:
+  wildcard_constraints:
+    mode = "(TOY|MC)_(Bs2JpsiPhi(_dG0)?|Bs2JpsiKK_Swave)"
+  input:
+    fit = 'output/params/angular_fit/{year}/{mode}/{version}_base.json',
+    gen = 'analysis/params/generator/2018/{mode}.json'
+  output:
+    tables = 'output/tables/angular_fit/{year}/{mode}/{version}_base_comparisonFitGen.tex'
+  log:
+    'output/log/angular_fit/physics_params_mcfit_vs_mcgen/{year}/{mode}/{version}_base.log'
+  run:
+    from ipanema import Parameters
+    fit = Parameters.load(f'{input.fit}')
+    gen = Parameters.load(f'{input.gen}')
+    table = []
+    table.append(f' {"Parameter":>30}  &  {"Fit":>20}  &  {"Gen":>7}  &  {"Pull":>4}')
+    for par in fit.keys():
+      if par in gen.keys():
+        table.append(f'${fit[par].latex:>30} $&$ {f"{fit[par].uvalue:.2uL}":>25} $&$ {gen[par].value:+.4f} $&$ {(fit[par].value-gen[par].value)/fit[par].stdev if fit[par].stdev else 0:+.1f}')
+      else:
+        table.append(f'${fit[par].latex:>30} $&$ {f"{fit[par].uvalue:.2uL}":>25}')
+    print(" \\\\ \n".join(table))
+    with open(f'{output}','w') as f:
+      f.write("\n".join(table))
+    f.close()
