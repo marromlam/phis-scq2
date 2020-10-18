@@ -37,7 +37,7 @@ import multiprocessing
 
 # load ipanema
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],2)
+initialize(os.environ['IPANEMA_BACKEND'],1)
 from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # get badjanak and compile it with corresponding flags
@@ -74,6 +74,8 @@ def check_for_convergence(a,b):
     return True
   return False
 
+
+
 def pdf_reweighting(mcsample, mcparams, rdparams):
   badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
                            **mcparams.valuesdict(), tLL=0.3)
@@ -90,6 +92,8 @@ def pdf_reweighting(mcsample, mcparams, rdparams):
   #print(f"   pdfWeight[{i}]: { np.nan_to_num(target_pdf_h/original_pdf_h) }")
   return np.nan_to_num(target_pdf_h/original_pdf_h)
 
+
+
 def KS_test(original, target, original_weight, target_weight):
   vars = ['hminus_PT','hplus_PT','hminus_P','hplus_P']
   for i in range(0,4):
@@ -104,7 +108,7 @@ def KS_test(original, target, original_weight, target_weight):
 def kkp_weighting(original_v, original_w, target_v, target_w, path, y,m,t,i):
   reweighter.fit(original = original_v, target = target_v,
                  original_weight = original_w, target_weight = target_w );
-  kkpWeight = np.where(original_w!=0, reweighter.predict_weights(original_v), 0)
+  kkpWeight = reweighter.predict_weights(original_v)
   # reweighter_fold.fit(original = original_v, target = target_v,
   #                original_weight = original_w, target_weight = target_w );
   # kkpWeight = np.where(original_w!=0, reweighter_fold.predict_weights(original_v), 0)
@@ -125,24 +129,25 @@ def kkp_weighting_bins(original_v, original_w, target_v, target_w, path, y,m,t,i
   print(f" * GB-weighting {m}-{y}-{t} sample\n  {kkpWeight[:10]}")
 
 
-def get_angular_acceptance(mc,t):
-  # Select t
-  if t == 'biased':
-    trigger = mc.biased
-  elif t == 'unbiased':
-    trigger = mc.unbiased
-  ang_acc = badjanak.get_angular_cov(
-              mc.true, mc.reco,
-              trigger*mc.weight*ristra.allocate(mc.kkpWeight[i]*mc.kinWeight),
-              **mc.params.valuesdict()
-            )
-  # Create parameters
-  w, uw, cov, corr = ang_acc
-  mc.angular_weights[t] = Parameters()
+def get_angular_acceptance(mc, kkpWeight=False):
+  # cook weight for angular acceptance
+  weight  = mc.df.eval(f'angWeight*polWeight*{weight_rd}/gb_weights').values
+  i = len(mc.kkpWeight.keys())
+  
+  if kkpWeight:
+    weight *= ristra.get(mc.kkpWeight[i])
+  weight = ristra.allocate(weight)
+
+  # compute angular acceptance
+  ans = badjanak.get_angular_cov(mc.true, mc.reco, weight, **mc.params.valuesdict())
+  
+  # create ipanema.Parameters
+  w, uw, cov, corr = ans
+  mc.angaccs[i] = Parameters()
   for k in range(0,len(w)):
     correl = {f'w{j}':cov[k][j] for j in range(0,len(w)) if k>0 and j>0}
-    mc.angular_weights[t].add({'name': f'w{k}', 'value': w[k], 'stdev': uw[k],
-                           'free': False, 'latex': f'w_{k}', 'correl': correl})
+    mc.angaccs[i].add({'name': f'w{k}', 'value': w[k], 'stdev': uw[k],
+                       'free': False, 'latex': f'w_{k}', 'correl': correl})
   #print(f"{  np.array(mc.angular_weights[t])}")
 
 
@@ -160,6 +165,7 @@ def fcn_data(parameters, data):
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
                   **dt.flavor.valuesdict(), tLL=dt.tLL, tUL=dt.tUL)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
+      #exit()
 
   return np.concatenate(chi2)
 
@@ -207,11 +213,9 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
-  from time_acceptance.fcn_functions import trigger_scissors
 
   # Prepare the cuts -----------------------------------------------------------
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-  #CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
   CUT = cuts_and(CUT,'time>=0.3 & time<=15')
 
   # List samples, params and tables --------------------------------------------
@@ -246,7 +250,7 @@ if __name__ == '__main__':
   # If version is v0r1, you will be running over old tuples, I guess you
   # pursuit to reproduce HD-fitter results. So I will change a little the config
   if VERSION == 'v0r1':
-    reweighter = reweight.GBReweighter(n_estimators=40,learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={"subsample": 1})
+    reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={"subsample": 1})
     input_std_params = args['params_mc_std'].replace("generator","generator_old").split(',')
     input_dg0_params = args['params_mc_dg0'].replace("generator","generator_old").split(',')
 
@@ -312,12 +316,6 @@ if __name__ == '__main__':
       mc[Y][m]['unbiased'].path_to_weights = v[i]
 
 
-      mc[f'{y}'][f'{m}'].allocate(weight=weight_mc)
-      mc[f'{y}'][f'{m}'].allocate(biased=f'Jpsi_Hlt1DiMuonHighMassDecision_TOS==0')
-      mc[f'{y}'][f'{m}'].allocate(unbiased=f'Jpsi_Hlt1DiMuonHighMassDecision_TOS==1')
-      mc[f'{y}'][f'{m}'].angular_weights = {'biased':0, 'unbiased':0}
-      mc[f'{y}'][f'{m}'].kkpWeight = {}
-      mc[f'{y}'][f'{m}'].pdfWeight = {}
 
   # Lists of data variables to load and build arrays ---------------------------
   real  = ['cosK','cosL','hphi','time']                        # angular variables
@@ -456,29 +454,29 @@ if __name__ == '__main__':
   print(f"\nBiased time acceptance\n{80*'='}")
   for l in zip(*lb):
     print(*l, sep="| ")
-
+  
   print(f"\nUnbiased time acceptance\n{80*'='}")
   for l in zip(*lu):
     print(*l, sep="| ")
-
+  
   # print csp factors
   lb = [ data[f'{y}']['biased'].csp.__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
   print(f"\nCSP factors\n{80*'='}")
   for l in zip(*lb):
     print(*l, sep="| ")
-
+  
   # print flavor tagging parameters
   lb = [ data[f'{y}']['biased'].flavor.__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
   print(f"\nFlavor tagging parameters\n{80*'='}")
   for l in zip(*lb):
     print(*l, sep="| ")
-
+  
   # print time resolution
   lb = [ data[f'{y}']['biased'].resolution.__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
   print(f"\nResolution parameters\n{80*'='}")
   for l in zip(*lb):
     print(*l, sep="| ")
-
+  
   # print angular acceptance
   lb = [ data[f'{y}']['biased'].angaccs[0].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
   lu = [ data[f'{y}']['unbiased'].angaccs[0].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
@@ -585,7 +583,7 @@ if __name__ == '__main__':
           # Run multicore (about 15 minutes per iteration)
           job = multiprocessing.Process(target=kkp_weighting, args=(
                                 ov.values, ow.values, tv.values, tw.values,
-                                 v.path_to_weights, y, m, t, len(threads) ))
+                                v.path_to_weights, y, m, t, len(threads) ))
           threads.append(job); job.start()
 
     # Wait all processes to finish
@@ -619,13 +617,13 @@ if __name__ == '__main__':
 
 
 
-    # 5th step: merge MC std and dg0 results -------------------------------------
+    # 5th step: merge MC std and dg0 results -----------------------------------
     print(f'\nCombining MC_BsJpsiPhi and MC_BsJpsiPhi_dG0 {itstr}')
     for y, dy in mc.items(): # loop over years
       for trigger in ['biased','unbiased']:
         # Get angular weights for each MC
-        std = dy['MC_BsJpsiPhi'].angular_weights[trigger]
-        dg0 = dy['MC_BsJpsiPhi_dG0'].angular_weights[trigger]
+        std = dy['MC_BsJpsiPhi'][trigger].angaccs[i]
+        dg0 = dy['MC_BsJpsiPhi_dG0'][trigger].angaccs[i]
 
         # Create w and cov arrays
         std_w = np.array([std[f'w{i}'].value for i in range(1,len(std))])
