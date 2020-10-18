@@ -4,6 +4,7 @@
 rule v0r0_time_acceptance:
   wildcard_constraints:
     year = "(2015|2016)",
+    version = "(v0r1|v0r2)",
   input:
     "analysis/params/v0r0/time_acceptance/{year}/{mode}/v0r0_base_{trigger}.json"
   output:
@@ -16,7 +17,8 @@ rule v0r0_angular_acceptance:
   wildcard_constraints:
     year = "(2015|2016)",
     trigger = "(biased|unbiased|combined)",
-    angacc = "(oldbase_oldbase|corrected)"
+    angacc = "(oldbase_oldbase|corrected)",
+    version = "(v0r0|v0r1)"
   input:
     "analysis/params/v0r0/angular_acceptance/{year}/{mode}/v0r0_{angacc}_{trigger}.json"
   output:
