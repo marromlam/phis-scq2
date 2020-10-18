@@ -178,6 +178,8 @@ rule angular_acceptance_correctedBinned:
 #     This rule runs the iterative procedure for all Run2 YEARS using both
 #     MC and MC_dG0 files.
 rule angular_acceptance_iterativeRun2a:
+  resources:
+    mem_mb=16384
   wildcard_constraints:
     angacc = "run2a(shit)?"
   input:
