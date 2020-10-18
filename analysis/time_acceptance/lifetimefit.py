@@ -125,7 +125,8 @@ if __name__ == '__main__':
 
     # Load the sample
     print(CUT, SHARE, mode)
-    cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
+    cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode, backup=True)
+    cats[mode].cut('(eventNumber % 2) == 0')
     cats[mode].allocate(time='time',lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
@@ -165,56 +166,8 @@ if __name__ == '__main__':
     cats[mode].pars_path = oparams[i]
     cats[mode].tabs_path = otables[i]
 
-  """
-  exit()
-  cats = {}
-  for name, sample in zip(samples.keys(),samples.values()):
-    print(f'Loading {sample} as {name} category')
-    name = name[:4] # remove _sample
-    if name == 'BsMC':
-      label = (r'\mathrm{MC}',r'B_s^0')
-      if SCRIPT == 'base':
-        weight='(sw/gb_weights)*polWeight*pdfWeight*kinWeight'
-      elif SCRIPT == 'nonkin':
-        weight='(sw/gb_weights)'
-      samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
-    elif name == 'BdMC':
-      label = (r'\mathrm{MC}',r'B^0')
-      if SCRIPT == 'base':
-        weight='sw*polWeight*pdfWeight*kinWeight'
-      elif SCRIPT == 'nonkin':
-        weight='sw'
-      samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
-    elif name == 'BdRD':
-      label = (r'\mathrm{data}',r'B_s^0')
-      if SCRIPT == 'base':
-        weight='sw*kinWeight'
-      elif SCRIPT == 'nonkin':
-        weight='sw'
-      samplecut = f"({cuts}) {f'&({CUT})' if CUT else ' '}"
-    #print(samplecut)
-    cats[name] = Sample.from_root(sample, cuts=samplecut)
-    cats[name].name = os.path.splitext(os.path.basename(sample))[0]+'_'+trigger
-    #print(cats[name].df)
-    cats[name].allocate(time='time',lkhd='0*time')
-    cats[name].allocate(weight=weight)
-    cats[name].weight *= ristra.sum(cats[name].weight)/ristra.sum(cats[name].weight**2)
-    cats[name].assoc_params(args[f'{name}_input_params'])
-    knots = cats[name].params.find('k.*') + ['tLL','tUL']
-    cats[name].knots = Parameters.build(cats[name].params, knots)
-    [cats[name].params.pop(k, None) for k in knots]
-    for p in cats[name].params:
-      if p.startswith('a') or p.startswith('b') or p.startswith('c'):
-        cats[name].params[p].value = 1.0
-        cats[name].params[p].init = 1.0
-        cats[name].params[p].min = 0.1
-        cats[name].params[p].max = 10.0
-    print(cats[name].params)
-    print(cats[name].knots)
-    cats[name].label = label
-    cats[name].pars_path = args[f'{name}_output_params']
-    cats[name].tabs_path = args[f'{name}_output_tables']
-  """
+
+
   # Time to fit ----------------------------------------------------------------
   print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
   fcn_pars = cats['BsMC'].params+cats['BdMC'].params+cats['BdRD'].params
@@ -224,15 +177,32 @@ if __name__ == '__main__':
     'weight': [cats['BsMC'].weight, cats['BdMC'].weight, cats['BdRD'].weight]
   }
   if MINER.lower() in ("minuit","minos"):
-    result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
-                      method=MINER,
-                      verbose=True, strategy=1, tol=0.1);
+    result1 = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
+                       method=MINER,
+                       verbose=True, strategy=1, tol=0.1);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
-    result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
-                      method=MINER,
-                      verbose=False);
+    result1 = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
+                       method=MINER,
+                       verbose=False);
 
-  print(result)
+  print(result1)
+  [cats[cat].back_to_original() for cat in cats]
+  [cats[mode].cut('(eventNumber % 2) != 0') for cat in cats]
+
+  result1.params.lock()
+  result1.params.unlock('gamma_c')
+
+  if MINER.lower() in ("minuit","minos"):
+    result2 = optimize(fcn_call=saxsbxscxerf, params=result1.params, fcn_kwgs=fcn_kwgs,
+                       method=MINER,
+                       verbose=True, strategy=1, tol=0.1);
+  elif MINER.lower() in ('bfgs', 'lbfgsb'):
+    result2 = optimize(fcn_call=saxsbxscxerf, params=result1.params, fcn_kwgs=fcn_kwgs,
+                       method=MINER,
+                       verbose=False);
+                       
+  print(result2)
+  exit()
   #for k,v in result.params.items():
   #  print(f"{k:>10} : {v.value:+.8f} +/- {(v.stdev if v.stdev else 0):+.8f}")
 
