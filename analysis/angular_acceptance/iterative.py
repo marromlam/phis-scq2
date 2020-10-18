@@ -320,42 +320,39 @@ if __name__ == '__main__':
   for i, y in enumerate(YEARS):
     print(f'Fetching elements for {y}[{i}] data sample')
     data[f'{y}'] = {}
-    data[f'{y}']['combined'] = Sample.from_root(samples_data[i], share=SHARE)
     csp = Parameters.load(csp_factors[i]);
-    csp = csp.build(csp,csp.find('CSP.*'))
     resolution = Parameters.load(time_resolution[i])
     flavor = Parameters.load(flavor_tagging[i])
-    data[f'{y}'][f'combined'].csp = csp
-    data[f'{y}'][f'combined'].flavor = flavor
-    data[f'{y}'][f'combined'].resolution = resolution
+
     for t, T in zip(['biased','unbiased'],[0,1]):
-      print(f'\n *  Loading {y} sample in {t} category')
-      this_cut = cuts_and(f'Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}', CUT)
-      data[f'{y}'][f'{t}'] = Sample.from_root(samples_data[i], cuts=this_cut)
-      data[f'{y}'][f'{t}'].csp = csp
-      data[f'{y}'][f'{t}'].flavor = flavor
-      data[f'{y}'][f'{t}'].resolution = resolution
-      print(csp)
-      print(resolution)
-      print(flavor)
+      data[f'{y}'][t] = Sample.from_root(samples_data[i], share=SHARE)
+      data[f'{y}'][t].name = f"{m}-{y}-{t}"
+      data[f'{y}'][t].csp = csp.build(csp, csp.find('CSP.*'))
+      data[f'{y}'][t].flavor = flavor
+      data[f'{y}'][t].resolution = resolution
+
     for t, coeffs in zip(['biased','unbiased'],[coeffs_biased,coeffs_unbiased]):
       print(f' *  Associating {y}-{t} time acceptance[{i}] from\n    {coeffs[i]}')
       c = Parameters.load(coeffs[i])
-      print(c)
-      data[f'{y}'][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
-      data[f'{y}'][f'{t}'].tLL = c['tLL'].value
-      data[f'{y}'][f'{t}'].tUL = c['tUL'].value
+      data[f'{y}'][t].timeacc = Parameters.build(c,c.fetch('c.*'))
+      data[f'{y}'][t].tLL = c['tLL'].value
+      data[f'{y}'][t].tUL = c['tUL'].value
+      dtCUT = cuts_and(f"time>={c['tLL'].value} & time<={c['tUL'].value}", CUT)
+      #print(data[f'{y}'][t])
+      data[f'{y}'][t].chop( trigger_scissors(t, dtCUT) ) 
+      print(data[f'{y}'][t])
+
     for t, weights in zip(['biased','unbiased'],[w_biased,w_unbiased]):
-      print(f' *  Associating {y}-{t} angular weights from\n    {weights[i]}')
       w = Parameters.load(weights[i])
-      data[f'{y}'][f'{t}'].angacc = Parameters.build(w,w.fetch('w.*'))
-      data[f'{y}'][f'{t}'].angular_weights = [Parameters.build(w,w.fetch('w.*'))]
+      data[f'{y}'][t].angacc = Parameters.build(w,w.fetch('w.*'))
+      data[f'{y}'][t].angaccs = {0:Parameters.build(w,w.fetch('w.*'))}
+
     for t, path in zip(['biased','unbiased'],[params_biased,params_unbiased]):
-      data[f'{y}'][f'{t}'].params_path = path[i]
-      print(path[i])
+      data[f'{y}'][t].params_path = path[i]
+
     for t, path in zip(['biased','unbiased'],[tables_biased,tables_unbiased]):
-      data[f'{y}'][f'{t}'].tables_path = path[i]
-      print(path[i])
+      data[f'{y}'][t].tables_path = path[i]
+
     print(f' *  Allocating {y} arrays in device ')
     print(weight_rd)
     for d in [data[f'{y}']['biased'],data[f'{y}']['unbiased']]:
