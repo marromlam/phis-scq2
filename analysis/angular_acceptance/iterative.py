@@ -37,7 +37,7 @@ import multiprocessing
 
 # load ipanema
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],1)
+initialize(os.environ['IPANEMA_BACKEND'],2)
 from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # get badjanak and compile it with corresponding flags
@@ -246,7 +246,7 @@ if __name__ == '__main__':
   # If version is v0r1, you will be running over old tuples, I guess you
   # pursuit to reproduce HD-fitter results. So I will change a little the config
   if VERSION == 'v0r1':
-    reweighter = reweight.GBReweighter(n_estimators=40,learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={"subsample": 1})
+    reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={"subsample": 1})
     input_std_params = args['params_mc_std'].replace("generator","generator_old").split(',')
     input_dg0_params = args['params_mc_dg0'].replace("generator","generator_old").split(',')
 
