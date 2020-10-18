@@ -20,7 +20,7 @@ import hjson
 import pandas
 
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],1)
+initialize(os.environ['IPANEMA_BACKEND'],-1)
 from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
@@ -77,6 +77,7 @@ VERSION = args['version']
 print(f"\n{80*'='}\n", "Loading samples", f"\n{80*'='}\n")
 
 # Lists of data variables to load and build arrays
+real  = ['cosK','cosL','hphi','time']                        # angular variables
 real  = ['helcosthetaK','helcosthetaL','helphi','time']                        # angular variables
 real += ['X_M','0*B_ID']                                     # mass and sigmat
 #real += ['tagOS_dec','tagSS_dec', 'tagOS_eta', 'tagSS_eta']  # tagging
