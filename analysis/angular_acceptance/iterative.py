@@ -436,23 +436,39 @@ if __name__ == '__main__':
   print(pars)
 
 
+  # print time acceptances
+  lb = [ data[f'{y}']['biased'].timeacc.__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
+  lu = [ data[f'{y}']['unbiased'].timeacc.__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
+  print(f"\nBiased time acceptance\n{80*'='}")
+  for l in zip(*lb):
+    print(*l, sep="| ")
 
+  print(f"\nUnbiased time acceptance\n{80*'='}")
+  for l in zip(*lu):
+    print(*l, sep="| ")
 
+  # print csp factors
+  lb = [ data[f'{y}']['biased'].csp.__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
+  print(f"\nCSP factors\n{80*'='}")
+  for l in zip(*lb):
+    print(*l, sep="| ")
 
+  # print flavor tagging parameters
+  lb = [ data[f'{y}']['biased'].flavor.__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
+  print(f"\nFlavor tagging parameters\n{80*'='}")
+  for l in zip(*lb):
+    print(*l, sep="| ")
 
+  # print time resolution
+  lb = [ data[f'{y}']['biased'].resolution.__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
+  print(f"\nResolution parameters\n{80*'='}")
+  for l in zip(*lb):
+    print(*l, sep="| ")
 
-
-
-
-
-
-  # The iterative procedure starts ---------------------------------------------
-  #     First print angular acceptance before iterative procedure
-
-
-  lb = [ data[f'{y}']['biased'].angular_weights[-1].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
-  lu = [ data[f'{y}']['unbiased'].angular_weights[-1].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
-  print(f"\n{80*'-'}\nBiased angular acceptance")
+  # print angular acceptance
+  lb = [ data[f'{y}']['biased'].angaccs[0].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
+  lu = [ data[f'{y}']['unbiased'].angaccs[0].__str__(['value']).splitlines() for i,y in enumerate(YEARS) ]
+  print(f"\nBiased angular acceptance\n{80*'='}")
   for l in zip(*lb):
     print(*l, sep="| ")
   print("\nUnbiased angular acceptance")
