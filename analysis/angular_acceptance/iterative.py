@@ -491,10 +491,17 @@ if __name__ == '__main__':
     result = optimize(fcn_data,
                       method='minuit', params=pars, fcn_kwgs={'data':data},
                       verbose=False, timeit=True, tol=0.05, strategy=2)
-    print(result) # parameters are not blinded, so we dont print the result
+    #print(result) # parameters are not blinded, so we dont print the result
+    likelihoods.append(result.chi2)
+
     pars = Parameters.clone(result.params)
-    if f"{'&'.join(list(mc.keys()))}" == '2015' or f"{'&'.join(list(mc.keys()))}" == '2016':
+    if not '2018' in data.keys() and not '2017' in data.keys():
       for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs',
+                'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
+                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
+        print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
+    else:
+      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'lPlon', 'DGsd',
                 'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
                 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
         print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
