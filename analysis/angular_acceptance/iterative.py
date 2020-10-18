@@ -555,25 +555,26 @@ if __name__ == '__main__':
 
 
 
-    # 4th step: angular weights --------------------------------------------------
+    # 4th step: angular weights ------------------------------------------------
     print(f'\nExtract angular weights {itstr}')
     for y, dy in mc.items(): # loop over years
-      for m, v in dy.items(): # loop over mc_std and mc_dg0
-        # write down code to save kkpWeight to root files
-        # <CODE>
-        b = np.load(v.path_to_weights.replace('.root','_biased.npy'))
-        u = np.load(v.path_to_weights.replace('.root','_unbiased.npy'))
-        v.kkpWeight[i] = b+u
-        os.remove(v.path_to_weights.replace('.root','_biased.npy'))
-        os.remove(v.path_to_weights.replace('.root','_unbiased.npy'))
-        #print(f' kkpWeight[{i}] = {v.kkpWeight[i][:20]}')
-        for trigger in ['biased','unbiased']:
-          #print(f"Current angular weights for {m}-{y}-{trigger} sample are:")
-          get_angular_acceptance(v,trigger)
-      print(f'kkpWeight[{i}] for {y}')
-      print(f"{'MC_Bs2JpsiPhi':<10} | {'MC_Bs2JpsiPhi_dG0':<10}")
-      for evt in range(0,20):
-        print(f"{dy['MC_BsJpsiPhi'].kkpWeight[i][evt]:>+.8f} | {dy['MC_BsJpsiPhi_dG0'].kkpWeight[i][evt]:>+.8f}")
+      for m, dm in dy.items(): # loop over mc_std and mc_dg0
+        for t, v in dm.items(): # loop over biased and unbiased triggers
+          path_to_weights = v.path_to_weights.replace('.root',f'_{t}.npy')
+          v.kkpWeight[i] = np.load(path_to_weights)
+          os.remove(path_to_weights)
+          get_angular_acceptance(v, kkpWeight=True)
+      print(f'Show 10 fist kkpWeight[{i}] for {y}')
+      print(f"{'MC_Bs2JpsiPhi':<24} | {'MC_Bs2JpsiPhi_dG0':<24}")
+      print(f"{'biased':<11}  {'unbiased':<11} | {'biased':<11}  {'unbiased':<11}")
+      for evt in range(0,10):
+        print(f"{dy['MC_BsJpsiPhi']['biased'].kkpWeight[i][evt]:>+.8f}", end='')
+        print(f"  ", end='')
+        print(f"{dy['MC_BsJpsiPhi']['unbiased'].kkpWeight[i][evt]:>+.8f}", end='')
+        print(f" | ", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['biased'].kkpWeight[i][evt]:>+.8f}", end='')
+        print(f"  ", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['unbiased'].kkpWeight[i][evt]:>+.8f}")
 
 
 
