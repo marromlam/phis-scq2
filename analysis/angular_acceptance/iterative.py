@@ -246,7 +246,7 @@ if __name__ == '__main__':
   # If version is v0r1, you will be running over old tuples, I guess you
   # pursuit to reproduce HD-fitter results. So I will change a little the config
   if VERSION == 'v0r1':
-    reweighter = reweight.GBReweighter(n_estimators=40, learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={"subsample": 1})
+    reweighter = reweight.GBReweighter(n_estimators=40,learning_rate=0.25, max_depth=5, min_samples_leaf=500, gb_args={"subsample": 1})
     input_std_params = args['params_mc_std'].replace("generator","generator_old").split(',')
     input_dg0_params = args['params_mc_dg0'].replace("generator","generator_old").split(',')
 
@@ -267,12 +267,15 @@ if __name__ == '__main__':
   # Lists of MC variables to load and build arrays
   reco = ['cosK', 'cosL', 'hphi', 'time']
   true = [f'gen{i}' for i in reco]
+  #true = [f'true{i}_GenLvl' for i in reco]
   reco += ['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time']
   true += ['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time']
-  weight_mc = '(polWeight*sw/gb_weights)'
+  #weight_mc = '(polWeight*sw/gb_weights)'
 
   # Load Monte Carlo samples ---------------------------------------------------
   mc = {}
+  mcmodes = ['MC_BsJpsiPhi', 'MC_BsJpsiPhi_dG0']
+  
   for i, y in enumerate(YEARS):
     print(f'\nFetching elements for {y} MC samples')
     mc[f'{y}'] = {}
