@@ -277,28 +277,40 @@ if __name__ == '__main__':
   mcmodes = ['MC_BsJpsiPhi', 'MC_BsJpsiPhi_dG0']
   
   for i, y in enumerate(YEARS):
-    print(f'\nFetching elements for {y} MC samples')
-    mc[f'{y}'] = {}
-    for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[samples_std,samples_dg0]):
-      print(f'\n *  Loading {m}-{y} sample')
-      mc[f'{y}'][f'{m}'] = Sample.from_root(v[i], share=SHARE)
-    for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[input_std_params,input_dg0_params]):
-      print(f' *  Associating {m}-{y} parameters from\n    {v[i]}')
-      mc[f'{y}'][f'{m}'].assoc_params(v[i])
-    for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[angWeight_std,angWeight_dg0]):
-      print(f' *  Attaching {m}-{y} kinWeight from\n    {v[i]}')
-      mc[f'{y}'][f'{m}'].kinWeight = uproot.open(v[i])['DecayTree'].array('kinWeight')
-      print("len angWeight = ",len(mc[f'{y}'][f'{m}'].kinWeight))
-    for m, v in zip(['MC_BsJpsiPhi','MC_BsJpsiPhi_dG0'],[kkpWeight_std,kkpWeight_dg0]):
-      mc[f'{y}'][f'{m}'].path_to_weights = v[i]
-      print(f"    {mc[f'{y}'][f'{m}'].path_to_weights}")
+    Y = str(y)
+    print(f'\nLoading {y} MC samples')
+    mc[Y] = {}
+    for m, v in zip(mcmodes,[samples_std,samples_dg0]):
+      mc[Y][m] = {'biased':   Sample.from_root(v[i], share=SHARE),
+                  'unbiased': Sample.from_root(v[i], share=SHARE)}
+      mc[Y][m]['biased'].name = f"{m}-{y}-biased"
+      mc[Y][m]['unbiased'].name = f"{m}-{y}-unbiased"
 
-  for y, modes in mc.items():
-    for m, v in modes.items():
-      print(f' *  Allocating arrays in device for {m}-{y}')
-      mc[f'{y}'][f'{m}'].allocate(reco=reco)
-      mc[f'{y}'][f'{m}'].allocate(true=true)
-      mc[f'{y}'][f'{m}'].allocate(pdf='0*time', ones='time/time', zeros='0*time')
+    for m, v in zip(mcmodes,[input_std_params,input_dg0_params]):
+      mc[Y][m]['biased'].assoc_params(v[i])
+      print(m, mc[Y][m]['biased'])
+      mc[Y][m]['unbiased'].assoc_params(v[i])
+
+    for m, v in zip(mcmodes,[angWeight_std,angWeight_dg0]):
+      angWeight = uproot.open(v[i])['DecayTree'].array('kinWeight')
+      mc[Y][m]['biased'].df['angWeight'] = angWeight
+      mc[Y][m]['unbiased'].df['angWeight'] = angWeight
+      mc[Y][m]['biased'].olen = len(angWeight)
+      mc[Y][m]['unbiased'].olen = len(angWeight)
+      mc[Y][m]['biased'].chop(trigger_scissors('biased', CUT))  
+      mc[Y][m]['unbiased'].chop(trigger_scissors('unbiased', CUT))  
+    
+      for t in ['biased', 'unbiased']:
+        mc[Y][m][t].allocate(reco=reco, true=true, pdf='0*time')
+        mc[Y][m][t].angaccs = {}
+        mc[Y][m][t].kkpWeight = {}
+        mc[Y][m][t].pdfWeight = {}
+        print(mc[Y][m][t])
+
+    for m, v in zip(mcmodes,[kkpWeight_std,kkpWeight_dg0]):
+      mc[Y][m]['biased'].path_to_weights = v[i]
+      mc[Y][m]['unbiased'].path_to_weights = v[i]
+
 
       mc[f'{y}'][f'{m}'].allocate(weight=weight_mc)
       mc[f'{y}'][f'{m}'].allocate(biased=f'Jpsi_Hlt1DiMuonHighMassDecision_TOS==0')
