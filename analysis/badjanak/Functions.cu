@@ -219,4 +219,70 @@ WITHIN_KERNEL ${ctype} faddeeva( ${ctype} z)
 
 
 
+
+WITHIN_KERNEL
+${ftype} legendre_poly(int l, int m, ${ftype} cos_theta)
+{
+    if(l == 0 && m == 0)
+    {
+        return 1.;
+    }
+    else if(l == 1 && m == 0)
+    {
+        return cos_theta;
+    }
+    else if(l == 2 && m == 0)
+    {
+        return 0.5*(3.*cos_theta*cos_theta - 1.);
+    }
+    else if(l == 2 && (m == 1 || m == -1))
+    {
+        return -3.*cos_theta*sqrt(1.-cos_theta*cos_theta);
+    }
+    else if(l == 2 && (m == 2 || m == -2))
+    {
+        return 3.*cos_theta*(1.-cos_theta*cos_theta);
+    }
+    else
+        printf("ATTENTION: Legendre polynomial index l,m is out of the range of this function. Check code.");
+
+    return 0.;
+}
+
+//Spherical harmonics up to l = 2
+WITHIN_KERNEL
+${ftype} sph_harm(int l, int m, ${ftype} cos_theta, ${ftype} phi)
+{
+    if(m == 0)
+    {
+        return sqrt((2*l + 1)/(4.*M_PI))*legendre_poly(l, m, cos_theta);
+    }
+    else if(m > 0)
+    {
+        return pow(-1.,m)*sqrt(2.)*sqrt((2*l + 1)/(4.*M_PI))*(sqrt(factorial(l-m))/sqrt(factorial(l+m)))*legendre_poly(l, m, cos_theta)*cos(m*phi);
+    }
+    else
+    {
+        return pow(-1.,m)*sqrt(2.)*sqrt((2*l + 1)/(4.*M_PI))*(sqrt(factorial(l-(-1.*m)))/sqrt(factorial(l-1.*m)))*legendre_poly(l, -1.*m, cos_theta)*sin(-1.*m*phi);
+    }
+
+    return 0.;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
