@@ -110,8 +110,8 @@ if __name__ == '__main__':
 
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
-  #true = [f'gen{i}' for i in reco]
-  true = [f'true{i}_GenLvl' for i in reco]
+  true = [f'gen{i}' for i in reco]
+  #true = [f'true{i}_GenLvl' for i in reco]
   weight_rd = f'(sw_{VAR})' if VAR else '(sw)'
   weight_mc = f'(polWeight*{weight_rd}/gb_weights)'
   print(weight_mc,weight_rd)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     pars.add({'name': f'w{i}', 'value': w[i], 'stdev': uw[i], 'correl': correl,
               'free': False, 'latex': f'w_{i}'})
   print(f" * Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
-  
+
   print(f"{pars}")
 
   # Writing results ------------------------------------------------------------
