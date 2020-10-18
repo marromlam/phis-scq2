@@ -662,6 +662,14 @@ if __name__ == '__main__':
           tex_file.close()
       break
 
+  # plot likelihood evolution
+  lkhd_x = [i+1 for i, j in enumerate(likelihoods)]
+  lkhd_y = [j+0 for i, j in enumerate(likelihoods)]
+  import termplotlib
+  lkhd_p = termplotlib.figure()
+  lkhd_p.plot(lkhd_x, lkhd_y, xlabel='iteration', label='likelihood',
+              xlim=(0, 30), ylim=(0.9*min(lkhd_y), 1.1*max(lkhd_y)))
+  lkhd_p.show()
 
   # Storing some weights in disk -------------------------------------------------
   #     For future use of computed weights created in this loop, these should be
@@ -671,25 +679,13 @@ if __name__ == '__main__':
   for y, dy in mc.items(): # loop over years
     for m, v in dy.items(): # loop over mc_std and mc_dg0
       pool = {}
-      for i in v['biased'].pdfWeight.keys(): # loop over iterations
-        wb = np.zeros((v['biased'].olen))
-        wu = np.zeros((v['unbiased'].olen))
-        wb[list(v['biased'].df.index)] = v['biased'].pdfWeight[i]
-        wu[list(v['unbiased'].df.index)] = v['unbiased'].pdfWeight[i]
-        pool.update({f'pdfWeight{i}': wb + wu})
-      for i in v['biased'].kkpWeight.keys():  # loop over iterations
-        wb = np.zeros((v['biased'].olen))
-        wu = np.zeros((v['unbiased'].olen))
-        wb[list(v['biased'].df.index)] = v['biased'].kkpWeight[i]
-        wu[list(v['unbiased'].df.index)] = v['unbiased'].kkpWeight[i]
-        print(len(wb + wu))
-        pool.update({f'kkpWeight{i}': wb + wu})
-      wb = np.zeros((v['biased'].olen))
-      wu = np.zeros((v['unbiased'].olen))
-      wb[list(v['biased'].df.index)] = v['biased'].df['angWeight'].values
-      wu[list(v['unbiased'].df.index)] = v['unbiased'].df['angWeight'].values
-      pool.update({f'angWeight{i}': wb + wu})
-      with uproot.recreate(v['biased'].path_to_weights) as f:
-        f['DecayTree'] = uproot.newtree({var:np.float64 for var in pool.keys()})
-        f['DecayTree'].extend(pool)
+      for iter, wvalues in v.pdfWeight.items():
+        pool.update({f'pdfWeight{iter}': wvalues})
+      for iter, wvalues in v.kkpWeight.items():
+        pool.update({f'kkpWeight{iter}': wvalues})
+      print(pool)
+      with uproot.recreate(v.path_to_weights) as f:
+        f['DecayTree'] = uproot.newtree({**{'kinWeight':np.float64},
+                                         **{var:np.float64 for var in pool}})
+        f['DecayTree'].extend({**pool,**{'kinWeight':v.kinWeight}})
   print(f' * Succesfully writen')
