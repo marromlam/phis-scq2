@@ -26,9 +26,18 @@ from ipanema import Sample, Parameters, Parameter, ristra, optimize
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
 badjanak.config['debug'] = 0
+badjanak.config['fast_integral'] = 0
 badjanak.config['debug_evt'] = 774
 
+# import some phis-scq utils
+from utils.plot import mode_tex
+from utils.strings import cammel_case_split, cuts_and
+from utils.helpers import  version_guesser, timeacc_guesser
 
+# binned variables
+bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
+Gdvalue = hjson.load(open('config.json'))['Gd_value']
 
 ################################################################################
 
@@ -78,7 +87,9 @@ def argument_parser():
   parser.add_argument('--version',
     default = 'v0r1',
     help='Year of data-taking')
-
+  parser.add_argument('--flag',
+    default = 'v0r1',
+    help='Year of data-taking')
   return parser
 
 
@@ -92,9 +103,21 @@ def argument_parser():
 
 
 #args = vars(argument_parser().parse_args(''))
+#args = vars(argument_parser().parse_args())
+#YEARS = [int(y) for y in args['year'].split(',')] # years are int
+#VERSION = args['version']
+
+
 args = vars(argument_parser().parse_args())
-YEARS = [int(y) for y in args['year'].split(',')] # years are int
-VERSION = args['version']
+VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+YEARS = [int(y) for y in args['year'].split(',')]        # years as list of int
+MODE = 'Bs2JpsiPhi'
+ANGACC = args['flag']
+
+# Prepare the cuts -----------------------------------------------------------
+CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+#CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
+CUT = cuts_and(CUT,'time>=0.3 & time<=15')
 
 for k,v in args.items():
   print(f'{k}: {v}')
@@ -123,8 +146,8 @@ for i, y in enumerate(YEARS):
   resolution = Parameters.load(args['time_resolution'].split(',')[i])
   for t, T in zip(['biased','unbiased'],[0,1]):
     print(f" *  Loading {y} sample in {t} category\n    {args['samples'].split(',')[i]}")
-    this_cut = f'(Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}) & (time>=0.3) & (time<=15)'
-    data[f'{y}'][f'{t}'] = Sample.from_root(args['samples'].split(',')[i], cuts=this_cut)
+    tc = cuts_and(f'Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}', CUT)
+    data[f'{y}'][f'{t}'] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
     data[f'{y}'][f'{t}'].csp = csp
     data[f'{y}'][f'{t}'].flavor = flavor
     data[f'{y}'][f'{t}'].resolution = resolution
@@ -416,7 +439,9 @@ result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data}
 
 print(result)
 
-for p in ['DGsd', 'DGs', 'fPper', 'fPlon', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DM', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6']:
+for p in  ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs',
+                'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
+                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
   if args['year'] == '2015,2016':
     print(f"{p:>12} : {result.params[p].value:+.4f}  {result.params[p]._getval(False):+.4f}")
   else:
