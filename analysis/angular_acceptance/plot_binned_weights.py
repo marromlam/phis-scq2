@@ -62,12 +62,7 @@ if __name__ == '__main__':
     # Get arguments
     args = vars(argument_parser().parse_args())
     VERSION = args['version']
-    if args['variable']=='Binpt':
-       VAR = 'B_PT'
-    elif args['variable']=='Binsigmat':
-       VAR = 'sigmat'
-    elif args['variable']=='Bineta':
-       VAR = 'B_ETA'
+    VAR = args['variable']
 
     # Get parameters
     params = [Parameters.load(p) for p in args['params'].split(',')]
