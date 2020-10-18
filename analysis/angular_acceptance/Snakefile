@@ -39,6 +39,7 @@ rule angular_acceptance_naive:
 rule angular_acceptance_blend:
   wildcard_constraints:
     step = "(naive|corrected)",
+    version = "^(v0r1)",
   input:
     weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{trigger}.json',
     weights_dg0 = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{step}_{trigger}.json',
