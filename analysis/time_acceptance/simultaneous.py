@@ -63,7 +63,7 @@ if __name__ == '__main__':
   TIMEACC, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else -1)
+  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
   from time_acceptance.fcn_functions import saxsbxscxerf
 
   # Prepare the cuts
@@ -226,7 +226,7 @@ if __name__ == '__main__':
   if MINER.lower() in ("minuit","minos"):
     result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER,
-                      verbose=True, strategy=1, tol=0.1);
+                      verbose=False, strategy=1, tol=0.05);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     result = optimize(fcn_call=saxsbxscxerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER,
