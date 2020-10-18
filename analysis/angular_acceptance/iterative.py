@@ -500,16 +500,29 @@ if __name__ == '__main__':
         print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
 
 
-    # 2nd step: pdf weights ------------------------------------------------------
+    # 2nd step: pdf weights ----------------------------------------------------
     #   We need to change badjanak to handle MC samples and then we compute the
-    #   desired pdf weights for a given set of fitted pars in step 1. This implies
-    #   looping over years and MC samples (std and dg0)
+    #   desired pdf weights for a given set of fitted pars in step 1. This
+    #   implies looping over years and MC samples (std and dg0)
     print(f'\nPDF weighting MC samples to match Bs2JpsiPhi data {itstr}')
     t0 = timer()
     for y, dy in mc.items(): # loop over years
-      for m, v in dy.items(): # loop over mc_std and mc_dg0
-        print(f' * Calculating pdfWeight for {m}-{y} sample')
-        v.pdfWeight[i] = pdf_reweighting(v,v.params,pars+data[y]['combined'].csp)
+      for m, dm in dy.items(): # loop over mc_std and mc_dg0
+        for t, v in dm.items(): # loop over mc_std and mc_dg0
+          print(f' * Calculating pdfWeight for {m}-{y}-{t} sample')
+          v.pdfWeight[i] = pdf_reweighting(v,v.params,pars+data[y][t].csp)
+      print(f'Show 10 fist pdfWeight[{i}] for {y}')
+      print(f"{'MC_Bs2JpsiPhi':<24} | {'MC_Bs2JpsiPhi_dG0':<24}")
+      print(f"{'biased':<11}  {'unbiased':<11} | {'biased':<11}  {'unbiased':<11}")
+      for evt in range(0, 10):
+        print(f"{dy['MC_BsJpsiPhi']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"  ", end='')
+        print(f"{dy['MC_BsJpsiPhi']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f" | ", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"  ", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['unbiased'].pdfWeight[i][evt]:>+.8f}")
+
     tf = timer()-t0
     print(f'PDF weighting took {tf:.3f} seconds.')
 
