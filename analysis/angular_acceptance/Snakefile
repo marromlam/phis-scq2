@@ -138,39 +138,39 @@ rule angular_acceptance_corrected:
     ) &> {log} #2>&1""")
     send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
 
-rule angular_acceptance_correctedBinned:
-  wildcard_constraints:
-    mode = "MC_Bs2JpsiPhi(_dG0)?",
-    binnedvar = "(pt|sigmat|eta)",
-    bin = "(1|2|3|4)"
-  input:
-    sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
-    sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
-  params:
-    params = 'analysis/params/generator/{year}/{mode}.json',
-  output:
-    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.json',
-    tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.tex',
-    weight = temp(SAMPLES_PATH+'{year}/{mode}/{version}_angWeightBin{binnedvar}{bin}_{trigger}.npy')
-  log:
-    'output/log/angular_acceptance_corrected/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.log'
-  run:
-    shell(f"""(time\
-    python analysis/angular_acceptance/corrected.py\
-           --sample-mc {input.sample_mc}\
-           --sample-data {input.sample_rd}\
-           --input-params {params.params}\
-           --output-params {output.params}\
-           --output-tables {output.tables}\
-           --output-weights-file {output.weight}\
-           --mode {wildcards.mode}\
-           --year {wildcards.year}\
-           --version {wildcards.version}\
-           --trigger {wildcards.trigger}\
-           --binvar {wildcards.binnedvar}{wildcards.bin}\
-    ) &> {log} #2>&1""")
-    send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
-
+# rule angular_acceptance_correctedBinned:
+#   wildcard_constraints:
+#     mode = "MC_Bs2JpsiPhi(_dG0)?",
+#     binnedvar = "(pt|sigmat|eta)",
+#     bin = "(1|2|3|4)"
+#   input:
+#     sample_mc = SAMPLES_PATH+'{year}/{mode}/{version}.root',
+#     sample_rd = SAMPLES_PATH+'{year}/Bs2JpsiPhi/{version}.root',
+#   params:
+#     params = 'analysis/params/generator/{year}/{mode}.json',
+#   output:
+#     params = 'output/params/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.json',
+#     tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.tex',
+#     weight = temp(SAMPLES_PATH+'{year}/{mode}/{version}_angWeightBin{binnedvar}{bin}_{trigger}.npy')
+#   log:
+#     'output/log/angular_acceptance_corrected/{year}/{mode}/{version}_correctedBin{binnedvar}{bin}_{trigger}.log'
+#   run:
+#     shell(f"""(time\
+#     python analysis/angular_acceptance/corrected.py\
+#            --sample-mc {input.sample_mc}\
+#            --sample-data {input.sample_rd}\
+#            --input-params {params.params}\
+#            --output-params {output.params}\
+#            --output-tables {output.tables}\
+#            --output-weights-file {output.weight}\
+#            --mode {wildcards.mode}\
+#            --year {wildcards.year}\
+#            --version {wildcards.version}\
+#            --trigger {wildcards.trigger}\
+#            --binvar {wildcards.binnedvar}{wildcards.bin}\
+#     ) &> {log} #2>&1""")
+#     send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
+#
 
 
 
