@@ -78,6 +78,8 @@ const CONSTANT_MEM ${{ftype}} TRISTAN[{NTERMS}] = {TRISTAN};
 #define XLIM 5.33
 #define YLIM 4.29
 
+
+{FKHELPERS_CU}
 //#include "Functions.cu"
 {FUNCTIONS_CU}
 
