@@ -429,7 +429,9 @@ ${ftype} getDiffRate( ${ftype} *data,
 
   // Compute per event pdf -----------------------------------------------------
   ${ftype} vnk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  ${ftype} vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  #if DEBUG
+    ${ftype} vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  #endif
   ${ftype} vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   ${ftype} vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   ${ftype} vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
@@ -484,8 +486,12 @@ ${ftype} getDiffRate( ${ftype} *data,
       hk_Bbar = 3./(4.*M_PI)*hk_Bbar;
     #endif
     pdfB += nk*fk*hk_B; pdfBbar += nk*fk*hk_Bbar;
-    vnk[k-1] = 1.*nk; vfk[k-1] = 1.*fk;
+    vnk[k-1] = 1.*nk;
     vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
+    
+    #if DEBUG
+      vfk[k-1] = 1.*fk;
+    #endif
   }
 
   #if DEBUG
@@ -541,7 +547,6 @@ ${ftype} getDiffRate( ${ftype} *data,
                        angular_weights, G, DG, DM,
                        delta_t,
                        //sigma_t,
-                       //parabola(  (0.5+simon_j-1)*(SIGMA_T/80)  , sigma_offset, sigma_slope, sigma_curvature),
                        //parabola(  (0.5+simon_j)*(SIGMA_T/80)  , sigma_offset, sigma_slope, sigma_curvature),
                        tLL, tUL, t_offset,
                        coeffs);
