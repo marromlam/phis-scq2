@@ -627,9 +627,27 @@ if __name__ == '__main__':
         print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
         for _i in range(len(merged_w.keys())):
           print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.2uP}")
-        data[f'{y}'][trigger].angacc = merged_w
-        data[f'{y}'][trigger].angular_weights.append(merged_w)
-        qwe = check_for_convergence( data[f'{y}'][trigger].angular_weights[-2], data[f'{y}'][trigger].angular_weights[-1] )
+        if i>50:
+          print( list(merged_w.values()) )
+          print( list(data[f'{y}'][trigger].angular_weights[-1].values()) )
+          for wk in merged_w.keys():
+            new = merged_w[wk].value
+            old = data[f'{y}'][trigger].angular_weights[-1][wk].value
+            print(f"  = > {new}+{old} ")
+            merged_w[wk].set(value = 0.5*(new+old))
+          print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8} -- mod")
+          for _i in range(len(merged_w.keys())):
+            print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.2uP}")
+        data[y][trigger].angacc = merged_w
+        data[y][trigger].angaccs[i] = merged_w
+        _check = []
+        for oi in range(0,i):
+          _check.append( check_for_convergence( data[y][trigger].angaccs[oi], data[y][trigger].angaccs[i] )) 
+        my_checker.append(_check)
+        #print("my_checker",my_checker)
+        #print("_check", my_checker)
+
+        qwe = check_for_convergence( data[y][trigger].angaccs[i-1], data[y][trigger].angaccs[i] )
         checker.append( qwe )
         merged_w.dump(data[f'{y}'][trigger].params_path.replace('.json',f'i{i}.json'))
         print(f'Value of chi2/dof = {chi2_value:.4}/{dof} corresponds to a p-value of {prob:.4}\n')
