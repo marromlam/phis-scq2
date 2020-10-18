@@ -83,4 +83,9 @@ slides/__latexindent_temp.tex
 slides/*.toc
 slides/*.pdf
 slides/*.xdv
+slides/*.snm
+slides/*.aux
+slides/*.nav
+slides/main_*.tex
+
 
