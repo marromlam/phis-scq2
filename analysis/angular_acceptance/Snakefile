@@ -66,8 +66,6 @@ rule angular_acceptance_blend:
 
 
 rule angular_acceptance_joinWeights:
-  resources:
-    mem_mb=4096
   wildcard_constraints:
     wflag = "(angWeight|angWeightBin.*)"
   input:
@@ -87,8 +85,6 @@ rule angular_acceptance_joinWeights:
 
 
 rule angular_acceptance_veronikaWeights:
-  resources:
-    mem_mb=4096
   input:
     a = lambda wcs: tuples(wcs,weight='kkpWeight'),
     b = lambda wcs: tuples(wcs,weight='sWeight')
@@ -112,8 +108,6 @@ rule angular_acceptance_veronikaWeights:
 #     to better match MC to RD.
 
 rule angular_acceptance_corrected:
-  resources:
-    mem_mb=4096
   wildcard_constraints:
     mode = "MC_Bs2JpsiPhi(_dG0)?",
     trigger = "(biased|unbiased|combined)",
@@ -545,11 +539,14 @@ rule angular_acceptance_iterativeYearly:
 
 rule angular_acceptance_compareCuts:
   input:
-    params = lambda wcs: [f'output/params/angular_acceptance/{wcs.year}/{wcs.mode}/{wcs.version}_{wcs.angacc}_{wcs.timeacc}_{wcs.trigger}.json'] + [f'output/params/angular_acceptance/{wcs.year}/{wcs.mode}/{wcs.version}_{wcs.angacc}_{wcs.timeacc}{wcs.variable}{i}_{wcs.trigger}.json' for i in range(1,5 if f'{wcs.variable}'=='Binpt' else 4)]
+    params = lambda wcs: [
+                f'output/params/angular_acceptance/{wcs.year}/{wcs.mode}/{wcs.version}_{wcs.angacc}_{wcs.timeacc}_{wcs.trigger}.json'] +
+               [f'output/params/angular_acceptance/{wcs.year}/{wcs.mode}/{wcs.version}@cut{wcs.variable}{i}_{wcs.angacc}_{wcs.timeacc}_{wcs.trigger}.json' for i in range(1,5 if f'{wcs.variable}'=='pt' else 4)
+            ]
   output:
-    'output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}_{variable}.pdf',
+    'output/figures/angular_acceptance/{year}/{mode}/{version}@cut{variable}_{angacc}_{timeacc}_{trigger}.pdf',
   log:
-    'output/log/angular_acceptance_plot/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}_{variable}.log'
+    'output/log/angular_acceptance_plot/{year}/{mode}/{version}@cut{variable}_{angacc}_{timeacc}_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/plot_binned_weights.py\
