@@ -52,7 +52,8 @@ if __name__ == "__main__":
   print(f"Downloading {m}_{y}_selected_bdt_sw_{v}.root")
   eos_path  = f'/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2'
   eos_path += f'/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
-  status = os.system(f"""scp lxplus:{eos_path} {scq_path}""")
+  #status = os.system(f"""scp lxplus:{eos_path} {scq_path}""")
+  status = os.system(f"""xrdcp root://eoslhcb.cern.ch/{eos_path} {scq_path}""")
   print(status)
   if status==0:
     all_files.append([f"{m}_{y}_selected_bdt_sw_{v}.root",None])
@@ -63,7 +64,8 @@ if __name__ == "__main__":
     print(f"Downloading {m}_{y}_selected_bdt_sw_{var}_{v}.root")
     eos_path  = f'/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2'
     eos_path += f'/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_{var}_{v}.root'
-    status = os.system(f"""scp -r lxplus:{eos_path} {scq_path}""")
+    #status = os.system(f"""scp -r lxplus:{eos_path} {scq_path}""")
+    status = os.system(f"""xrdcp root://eoslhcb.cern.ch/{eos_path} {scq_path}""")
     print(status)
     if status==0:
       all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root",f"{var}"])
