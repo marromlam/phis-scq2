@@ -129,6 +129,12 @@ Sync Tuples:
     paths:
       - .ccache
     policy: pull
+  only:
+    - merge_requests
+  except:
+    variables:
+      - $CI_MERGE_REQUEST_TITLE =~ /^WIP:.*/
+
 
 
 Repository Parameters:
@@ -146,6 +152,12 @@ Repository Parameters:
     paths:
       - .ccache
     policy: pull
+  only:
+    - merge_requests
+  except:
+    variables:
+      - $CI_MERGE_REQUEST_TITLE =~ /^WIP:.*/
+
 
 
 Run Analysis:
@@ -166,5 +178,11 @@ Run Analysis:
     paths:
       - .ccache
     policy: pull
+  only:
+    - merge_requests
+  except:
+    variables:
+      - $CI_MERGE_REQUEST_TITLE =~ /^WIP:.*/
+
 
 ################################################################################
