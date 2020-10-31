@@ -62,6 +62,51 @@ rule time_acceptance_simultaneous:
     (time\
     python analysis/time_acceptance/simultaneous.py\
            --samples {",".join(input.sample)}\
+           --params {",".join(output.params)}\
+           --tables {",".join(output.tables)}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+           --trigger {wildcards.trigger}\
+           --timeacc {wildcards.timeacc}\
+    ) #&> {log} 2>&1""")
+    send_mail(f"Simultaneous Time Acceptance", f"{log}")
+
+
+
+rule time_acceptance_simultaneousDGn0:
+  wildcard_constraints:
+    timeacc = "dGn0(nonkin|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
+    trigger = "(biased|unbiased|combined)",
+  input:
+    sample = lambda wcs: [
+      tuples(wcs,mode='MC_Bs2JpsiPhi'),
+      tuples(wcs,mode='MC_Bd2JpsiKstar'),
+      tuples(wcs,mode='Bd2JpsiKstar')
+    ]
+  params:
+    params = [
+      'time_acceptance/params/{year}/MC_Bs2JpsiPhi/baseline.json',
+      'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
+      'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
+    ]
+  output:
+    params = [
+      'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{timeacc}DGn0_{trigger}.json',
+      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}DGn0_{trigger}.json',
+      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}DGn0_{trigger}.json'
+    ],
+    tables = [
+      'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{timeacc}DGn0_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}DGn0_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}DGn0_{trigger}.tex'
+    ]
+  log:
+    'output/log/time_acceptance_simultaneous/{year}/{version}_{timeacc}DGn0_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python analysis/time_acceptance/simultaneous.py\
+           --samples {",".join(input.sample)}\
            --input-params {",".join(params.params)}\
            --output-params {",".join(output.params)}\
            --output-tables {",".join(output.tables)}\
