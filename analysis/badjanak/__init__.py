@@ -320,14 +320,14 @@ def cross_rate_parser_new(
   r['dp2_ss'] = dp2_ss
 
   # Time acceptance
-  timeacc = [ p[k] for k in p.keys() if re.compile('c[0-9]+').match(k)]
+  timeacc = [ p[k] for k in p.keys() if re.compile('c([0-9])([0-9])?(u|b)').match(k)]
   if timeacc:
     r['timeacc'] = THREAD.to_device(get_4cs(timeacc))
   else:
     r['timeacc'] = THREAD.to_device(np.float64([1]))
 
   # Angular acceptance
-  angacc = [ p[k] for k in p.keys() if re.compile('w[0-9]+').match(k)]
+  angacc = [ p[k] for k in p.keys() if re.compile('w([0-9])([0-9])?(u|b)').match(k)]
   if angacc:
     r['angacc'] = THREAD.to_device(np.float64(angacc))
   else:
@@ -474,7 +474,7 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
 
 def splinexerf(
       time, lkhd,
-      b0=1, b1=1.3, b2=1.5, b3=1.8, b4=2.1, b5=2.3, b6=2.2, b7=2.1, b8=2.0,
+      coeffs,
       mu=0.0, sigma=0.04, gamma=0.6,
       tLL = 0.3, tUL = 15,
       BLOCK_SIZE=256
@@ -491,12 +491,12 @@ def splinexerf(
 
   Look at pySingleTimeAcc kernel definition to see more help.
   """
-  b = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
-  #print(b,mu,sigma,gamma)
   g_size, l_size = get_sizes(lkhd.shape[0],BLOCK_SIZE)
+  #print(coeffs,mu,sigma,gamma)
+
   __KERNELS__.SingleTimeAcc(
       time, lkhd, # input, output
-      THREAD.to_device(get_4cs(b)).astype(np.float64),
+      THREAD.to_device(get_4cs(coeffs)).astype(np.float64),
       np.float64(mu), np.float64(sigma), np.float64(gamma),
       np.float64(tLL),np.float64(tUL),
       np.int32(lkhd.shape[0]),
@@ -507,9 +507,8 @@ def splinexerf(
 
 def sbxscxerf(
       time_a, time_b, lkhd_a, lkhd_b,
-      a0=1, a1=1.3, a2=1.5, a3=1.8, a4=2.1, a5=2.3, a6=2.2, a7=2.1, a8=2.0,
+      coeffs_a, coeffs_b,
       mu_a=0.0, sigma_a=0.04, gamma_a=0.6,
-      b0=1, b1=1.2, b2=1.4, b3=1.7, b4=2.2, b5=2.2, b6=2.1, b7=2.0, b8=1.9,
       mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
       tLL = 0.3, tUL = 15,
       BLOCK_SIZE=256, **crap):
@@ -526,15 +525,13 @@ def sbxscxerf(
 
   Look at kernel definition to see more help
   """
-  a = [a0, a1, a2, a3, a4, a5, a6, a7, a8]
-  b = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
   size_a  = np.int32(lkhd_a.shape[0]);
   size_b  = np.int32(lkhd_b.shape[0])
   size_max = max(size_a,size_b)
   __KERNELS__.RatioTimeAcc(
     time_a, time_b, lkhd_a, lkhd_b,
-    THREAD.to_device(get_4cs(a)).astype(np.float64),
-    THREAD.to_device(get_4cs(b)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_a)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_b)).astype(np.float64),
     np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
     np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(tLL),np.float64(tUL),
@@ -546,11 +543,9 @@ def sbxscxerf(
 # --- #
 def saxsbxscxerf(
       time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-      a0=1, a1=1.3, a2=1.5, a3=1.8, a4=2.1, a5=2.3, a6=2.2, a7=2.1, a8=2.0,
+      coeffs_a, coeffs_b, coeffs_c,
       mu_a=0.0, sigma_a=0.04, gamma_a=0.6,
-      b0=1, b1=1.2, b2=1.4, b3=1.7, b4=2.2, b5=2.2, b6=2.1, b7=2.0, b8=1.9,
       mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
-      c0=1, c1=1.2, c2=1.4, c3=1.7, c4=2.2, c5=2.2, c6=2.1, c7=2.0, c8=1.9,
       mu_c=0.0, sigma_c=0.04, gamma_c=0.6,
       tLL = 0.3, tUL = 15,
       BLOCK_SIZE=256, **crap):
@@ -567,9 +562,6 @@ def saxsbxscxerf(
 
   Look at kernel definition to see more help
   """
-  a = [a0, a1, a2, a3, a4, a5, a6, a7, a8]
-  b = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
-  c = [c0, c1, c2, c3, c4, c5, c6, c7, c8]
   size_a  = np.int32(lkhd_a.shape[0]);
   size_b  = np.int32(lkhd_b.shape[0])
   size_c  = np.int32(lkhd_c.shape[0])
@@ -577,9 +569,9 @@ def saxsbxscxerf(
   g_size, l_size = get_sizes(size_max,BLOCK_SIZE)
   __KERNELS__.FullTimeAcc(
     time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-    THREAD.to_device(get_4cs(a)).astype(np.float64),
-    THREAD.to_device(get_4cs(b)).astype(np.float64),
-    THREAD.to_device(get_4cs(c)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_a)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_b)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_c)).astype(np.float64),
     np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
     np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(mu_c), np.float64(sigma_c), np.float64(gamma_c),
