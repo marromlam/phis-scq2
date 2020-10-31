@@ -175,34 +175,29 @@ rule lifetime_fit:
     trigger = "(biased|unbiased|combined)",
   input:
     sample = lambda wcs: [
-      tuples(wcs,mode='MC_Bs2JpsiPhi'),
       tuples(wcs,mode='MC_Bd2JpsiKstar'),
       tuples(wcs,mode='Bd2JpsiKstar')
     ]
   params:
     params = [
-      'time_acceptance/params/{year}/MC_Bs2JpsiPhi/baseline.json',
       'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
       'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
     ]
   output:
-    params   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit_{trigger}.json',
-    tables   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit_{trigger}.tex',
+    params   = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit.json',
+    tables   = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimefit.tex',
   log:
-    'output/log/time_acceptance_single/{year}/Bd2JpsiKstar/{version}_{trigger}.log'
+    'output/log/time_acceptance_single/{year}/Bd2JpsiKstar/{version}.log'
   run:
     shell(f"""
     (time\
-    python analysis/time_acceptance/single.py\
-           --sample {input.sample}\
-           --input-params {params.params}\
-           --output-params {output.params}\
+    python analysis/time_acceptance/lifetimefit.py\
+           --sample {",".join(input.sample)}\
+           --output-params {",".join(output.params)}\
            --output-tables {output.tables}\
-           --mode {wildcards.mode}\
            --year {wildcards.year}\
            --version {wildcards.version}\
-           --trigger {wildcards.trigger}\
-    ) &> {log} 2>&1""")
+    ) #&> {log} 2>&1""")
     send_mail("Single Time Acceptance", f"{log}")
 
 
