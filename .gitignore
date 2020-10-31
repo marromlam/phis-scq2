@@ -87,5 +87,7 @@ slides/*.snm
 slides/*.aux
 slides/*.nav
 slides/main_*.tex
+slides/AandS*
+slides/*/*.aux
 
 
