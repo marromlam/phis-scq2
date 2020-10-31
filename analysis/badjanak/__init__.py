@@ -414,7 +414,7 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
+def get_angular_acceptance_weights(true, reco, weight, BLOCK_SIZE=256, **parameters):
   # Filter some warnings
   warnings.filterwarnings('ignore')
 
