@@ -147,7 +147,7 @@ if __name__ == '__main__':
   #     variables
   print(" * Computing angular weights")
 
-  angacc = badjanak.get_angular_cov(mc.true, mc.reco, 
+  angacc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, 
                                      mc.weight*ristra.allocate(angWeight),
                                      **mc.params.valuesdict())
 

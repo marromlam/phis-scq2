@@ -139,7 +139,7 @@ def get_angular_acceptance(mc, kkpWeight=False):
   weight = ristra.allocate(weight)
 
   # compute angular acceptance
-  ans = badjanak.get_angular_cov(mc.true, mc.reco, weight, **mc.params.valuesdict())
+  ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
 
   # create ipanema.Parameters
   w, uw, cov, corr = ans
