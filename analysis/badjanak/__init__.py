@@ -4,12 +4,15 @@ import os
 import builtins
 import numpy as np
 import ipanema
+from ipanema import ristra
 import warnings
 from reikna.cluda import functions, dtypes
 import platform
 import cpuinfo
 import re
 import math
+
+
 def get_sizes(size,BLOCK_SIZE=256):
     '''
     i need to check if this worls for 3d size and 3d block
@@ -100,7 +103,6 @@ def compile(verbose=False, pedantic=False):
             "TIMEANGULARDISTRIBUTION_CU":open(PATH+'/TimeAngularDistribution.cu').read(),
             "DECAYTIMEACCEPTANCE_CU":open(PATH+'/DecayTimeAcceptance.cu').read(),
             "DIFFERENTIALCROSSRATE_CU":open(PATH+'/DifferentialCrossRate.cu').read(),
-            #"ANGULARACCEPTANCE_CU":open(PATH+'/AngularAcceptance.cu').read(),
             "TOY_CU":open(PATH+'/Toy.cu').read(),
            })
   if config['precision'] == 'double':
@@ -128,7 +130,7 @@ def get_kernels(verbose=False, pedantic=False):
   global __KERNELS__
   prog = compile(verbose, pedantic)
   items = ['pyDiffRate',
-           'pyFcoeffs', #'pyAngularWeights', 'pyAngularCov',
+           'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
            'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
            'dG5toy', 'integral_ijk_fx']
@@ -430,111 +432,6 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
     ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
     return ang_acc
 
-  """
-  COMPUTE ANGULAR WEIGHTS WITH KERNEL (maybe this can be removed)
-  the main reason not to use this code is to be compatible with intel backends
-
-  # Prepare kernel size
-  g_size, l_size = get_sizes(true.shape[0],BLOCK_SIZE)
-  # Parse parameters
-  p = cross_rate_parser_new(**parameters)
-  # Allocate some Variables
-  ang_acc = ipanema.ristra.zeros(terms).astype(np.float64)
-  cov_mat = THREAD.to_device(np.zeros([terms,terms])).astype(np.float64)
-
-  # Get angular weights values
-  __KERNELS__.AngularWeights(
-    true, reco, weight, ang_acc,
-    # Differential cross-rate parameters
-    np.float64(p['G']),
-    np.float64(p['DG']),
-    np.float64(p['DM']),
-    p['CSP'].astype(np.float64),
-    p['ASlon'].astype(np.float64),
-    p['APlon'].astype(np.float64),
-    p['APpar'].astype(np.float64),
-    p['APper'].astype(np.float64),
-    np.float64(p['pSlon']),
-    np.float64(p['pPlon']),
-    np.float64(p['pPpar']),
-    np.float64(p['pPper']),
-    p['dSlon'].astype(np.float64),
-    np.float64(p['dPlon']),
-    np.float64(p['dPpar']),
-    np.float64(p['dPper']),
-    np.float64(p['lSlon']),
-    np.float64(p['lPlon']),
-    np.float64(p['lPpar']),
-    np.float64(p['lPper']),
-    np.float64(p['tLL']), np.float64(p['tUL']),
-    # Time resolution
-    np.float64(p['sigma_offset']),
-    np.float64(p['sigma_slope']),
-    np.float64(p['sigma_curvature']),
-    np.float64(p['mu']),
-    # Flavor tagging
-    np.float64(p['eta_os']), np.float64(p['eta_ss']),
-    np.float64(p['p0_os']), np.float64(p['p1_os']), np.float64(p['p2_os']),
-    np.float64(p['p0_ss']), np.float64(p['p1_ss']), np.float64(p['p2_ss']),
-    np.float64(p['dp0_os']), np.float64(p['dp1_os']), np.float64(p['dp2_os']),
-    np.float64(p['dp0_ss']), np.float64(p['dp1_ss']), np.float64(p['dp2_ss']),
-    # Decay-time acceptance
-    THREAD.to_device(np.float64([1])).astype(np.float64),
-    # Angular acceptance
-    THREAD.to_device(np.float64([1])).astype(np.float64),
-    np.int32(true.shape[0]),
-    global_size=g_size, local_size=l_size
-  )
-
-  # Get angular weights covariance matrix
-  __KERNELS__.AngularCov(
-    true, reco, weight, ang_acc, cov_mat, np.float64(scale),
-    # Differential cross-rate parameters
-    np.float64(p['G']),
-    np.float64(p['DG']),
-    np.float64(p['DM']),
-    p['CSP'].astype(np.float64),
-    p['ASlon'].astype(np.float64),
-    p['APlon'].astype(np.float64),
-    p['APpar'].astype(np.float64),
-    p['APper'].astype(np.float64),
-    np.float64(p['pSlon']),
-    np.float64(p['pPlon']),
-    np.float64(p['pPpar']),
-    np.float64(p['pPper']),
-    p['dSlon'].astype(np.float64),
-    np.float64(p['dPlon']),
-    np.float64(p['dPpar']),
-    np.float64(p['dPper']),
-    np.float64(p['lSlon']),
-    np.float64(p['lPlon']),
-    np.float64(p['lPpar']),
-    np.float64(p['lPper']),
-    np.float64(p['tLL']), np.float64(p['tUL']),
-    # Time resolution
-    np.float64(p['sigma_offset']),
-    np.float64(p['sigma_slope']),
-    np.float64(p['sigma_curvature']),
-    np.float64(p['mu']),
-    # Flavor tagging
-    np.float64(p['eta_os']), np.float64(p['eta_ss']),
-    np.float64(p['p0_os']), np.float64(p['p1_os']), np.float64(p['p2_os']),
-    np.float64(p['p0_ss']), np.float64(p['p1_ss']), np.float64(p['p2_ss']),
-    np.float64(p['dp0_os']), np.float64(p['dp1_os']), np.float64(p['dp2_os']),
-    np.float64(p['dp0_ss']), np.float64(p['dp1_ss']), np.float64(p['dp2_ss']),
-    # Decay-time acceptance
-    THREAD.to_device(np.float64([1])).astype(np.float64),
-    # Angular acceptance
-    THREAD.to_device(np.float64([1])).astype(np.float64),
-    np.int32(true.shape[0]),
-    global_size=g_size, local_size=l_size
-      )
-
-  # Arrays from device to host
-  w = ang_acc.get(); cov = cov_mat.get()
-
-  """
-
   # Get angular weights with weight applied and sum all events
   w = get_weights(true, reco, weight).sum(axis=0)
   # Get angular weights without weight
@@ -563,7 +460,7 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
   for i in range(0,cov.shape[0]):
     for j in range(0,cov.shape[1]):
       corr[i,j] = final_cov[i][j]/np.sqrt(final_cov[i][i]*final_cov[j][j])
-  return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr #result#/result[0]
+  return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr
 
 
 
