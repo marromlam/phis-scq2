@@ -702,33 +702,47 @@ def get_4cs(listcoeffs):
 #     Complex kernels running in device
 
 def cexp(z):
-  z_dev = THREAD.to_device(np.complex128(z))
+  if isinstance(z, np.ndarray):
+    z_dev = THREAD.to_device(np.complex128(z))
+    deallocate = True
+  else:
+    z_dev = z
+    deallocate = False
   w_dev = THREAD.to_device(np.complex128(0*z))
   __KERNELS__.cexp(z_dev, w_dev, global_size=(len(z),))
-  return w_dev.get()
+  return ristra.get(w_dev) if deallocate else w_dev
+
+
 
 def cerfc(z):
-  z_dev = THREAD.to_device(np.complex128(z))
+  if isinstance(z, np.ndarray):
+    z_dev = THREAD.to_device(np.complex128(z))
+    deallocate = True
+  else:
+    z_dev = z
+    deallocate = False
   w_dev = THREAD.to_device(np.complex128(0*z))
   __KERNELS__.cerfc(z_dev, w_dev, global_size=(len(z),))
-  return w_dev.get()
+  return ristra.get(w_dev) if deallocate else w_dev
+
+
 
 def wofz(z):
-  z_dev = THREAD.to_device(np.complex128(z))
+  if isinstance(z, np.ndarray):
+    z_dev = THREAD.to_device(np.complex128(z))
+    deallocate = True
+  else:
+    z_dev = z
+    deallocate = False
   w_dev = THREAD.to_device(np.complex128(0*z))
-  __KERNELS__.faddeeva(z_dev, w_dev, global_size=(len(z),))
-  return w_dev.get()
+  __KERNELS__.wofz(z_dev, w_dev, global_size=(len(z),))
+  return ristra.get(w_dev) if deallocate else w_dev
+
+
 
 def get_fk(z):
   z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
   w = np.zeros((z.shape[0],len(config['tristan'])))
   w_dev = THREAD.to_device(np.ascontiguousarray(w, dtype=np.float64))
-  # print(z_dev)
-  # print(w_dev)
-  # print("get_fk z_dev.shape:",z.shape)
-  # print("get_fk w_dev.shape:",w.shape)
-
-
   __KERNELS__.Fcoeffs(z_dev, w_dev, np.int32(len(z)), global_size=(len(z)))
-  #print("-->",w_dev)
-  return w_dev.get()
+  return ristra.get(w_dev)
