@@ -583,29 +583,21 @@ def saxsbxscxerf(
 
 
 def bspline(time, *coeffs, BLOCK_SIZE=32):
-  time_d = THREAD.to_device(time).astype(np.float64)
-  spline_d = THREAD.to_device(0*time).astype(np.float64)
+  if isinstance(time, np.ndarray):
+    time_d = THREAD.to_device(time).astype(np.float64)
+    spline_d = THREAD.to_device(0*time).astype(np.float64)
+    deallocate = True
+  else:
+    time_d = time
+    spline_d = THREAD.to_device(0*time).astype(np.float64)
+    deallocate = False
   coeffs_d = THREAD.to_device(get_4cs(coeffs)).astype(np.float64)
-  n_evt = len(time)
   __KERNELS__.Spline(
-    time_d, spline_d, coeffs_d, np.int32(n_evt),
-    global_size=(n_evt,)
+    time_d, spline_d, coeffs_d, np.int32(len(time)),
+    global_size=(len(time),)
   )
-  return spline_d.get()
+  return ristra.get(spline_d) if deallocate else spline_d
 
-
-# def bspline(time, BLOCK_SIZE=32, *coeffs):
-#   #coeffs = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
-#   print(coeffs)
-#   time_d = THREAD.to_device(time).astype(np.float64)
-#   spline_d = THREAD.to_device(0*time).astype(np.float64)
-#   coeffs_d = THREAD.to_device(get_4cs(coeffs)).astype(np.float64)
-#   n_evt = len(time)
-#   __KERNELS__.Spline(
-#     time_d, spline_d, coeffs_d, np.int32(n_evt),
-#     global_size=(n_evt,)
-#   )
-#   return spline_d.get()
 
 
 
