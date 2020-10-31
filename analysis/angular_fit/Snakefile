@@ -83,6 +83,164 @@ rule physics_params_data_run2:
 
 
 
+rule physics_params_dll_data:
+  input:
+    samples = lambda wcs: tuples(wcs,version=f'{wcs.dversion}',mode='Bs2JpsiPhi',year=f'{wcs.dyear}'.title()),
+    # Angular acceptance
+    angacc_biased = lambda wcs: [
+      f'output/params/angular_acceptance/{y}/Bs2JpsiPhi/{wcs.dversion}_{wcs.dangacc}_{wcs.dtimeacc}_biased.json'
+    for y in YEARS[ f"{wcs.dyear}".title() ] ],
+    angacc_unbiased = lambda wcs: [
+      f'output/params/angular_acceptance/{y}/Bs2JpsiPhi/{wcs.dversion}_{wcs.dangacc}_{wcs.dtimeacc}_unbiased.json'
+    for y in YEARS[ f"{wcs.dyear}".title() ] ],
+    # Time acceptance coefficients
+    timeacc_biased = lambda wcs: [
+      f'output/params/time_acceptance/{y}/Bd2JpsiKstar/{wcs.dversion}_{wcs.dtimeacc}_biased.json'
+    for y in YEARS[ f"{wcs.dyear}".title() ]],
+    timeacc_unbiased = lambda wcs: [
+      f'output/params/time_acceptance/{y}/Bd2JpsiKstar/{wcs.dversion}_{wcs.dtimeacc}_unbiased.json'
+    for y in YEARS[ f"{wcs.dyear}".title() ]],
+    # CSP
+    csp_factors = lambda wcs: [
+      f'output/params/csp_factors/{y}/Bs2JpsiPhi/{wcs.dversion.split("@")[0]}.json'
+    for y in YEARS[ f"{wcs.dyear}".title() ] ],
+    # Time resolution
+    time_resolution = lambda wcs: [
+      f'output/params/time_resolution/{y}/Bs2JpsiPhi/{wcs.dversion.split("@")[0]}.json'
+    for y in YEARS[ f"{wcs.dyear}".title() ] ],
+    # Flavor tagging
+    flavor = lambda wcs: [
+      f'output/params/flavor_tagging/{y}/Bs2JpsiPhi/{wcs.dversion.split("@")[0]}.json'
+    for y in YEARS[ f"{wcs.dyear}".title() ] ],
+    params = 'output/params/physics_params/{pyear}/Bs2JpsiPhi/{pversion}_{pfit}_{pangacc}_{ptimeacc}.json',
+  params:
+    params = 'output/params/physics_params/{dyear}/Bs2JpsiPhi/{dversion}_{dfit}_{dangacc}_{dtimeacc}.json',
+  output:
+    temp('tmp/dlls/Bs2JpsiPhi/{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}.npy')
+  log:
+    'tmp/dlls/Bs2JpsiPhi/{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}.log'
+  run:
+    shell(f"""(time\
+    python analysis/angular_fit/fit_data_agreement.py\
+           --samples                 {",".join(input.samples)}\
+           --angacc-biased           {",".join(input.angacc_biased)}\
+           --angacc-unbiased         {",".join(input.angacc_unbiased)}\
+           --timeacc-biased          {",".join(input.timeacc_biased)}\
+           --timeacc-unbiased        {",".join(input.timeacc_unbiased)}\
+           --csp                     {",".join(input.csp_factors)}\
+           --time-resolution         {",".join(input.time_resolution)}\
+           --flavor-tagging          {",".join(input.flavor)}\
+           --params                  {input.params}\
+           --dll                     {output}\
+           --year                    {",".join(YEARS[f'{wildcards.dyear}'.title()])}\
+           --flag                    run2_{wildcards.dangacc}_{wildcards.dtimeacc}\
+           --version                 {wildcards.dversion}\
+    ) &> {log}""")
+
+
+
+
+rule physics_params_dll_compare:
+  input:
+    pars_d = 'output/params/physics_params/{dyear}/Bs2JpsiPhi/{dversion}_{dfit}_{dangacc}_{dtimeacc}.json',
+    pars_p = 'output/params/physics_params/{pyear}/Bs2JpsiPhi/{pversion}_{pfit}_{pangacc}_{ptimeacc}.json',
+    logl_dd = 'tmp/dlls/Bs2JpsiPhi/{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}.npy',
+    logl_dp = 'tmp/dlls/Bs2JpsiPhi/{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}.npy',
+    logl_pd = 'tmp/dlls/Bs2JpsiPhi/{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}__vs__{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}.npy',
+    logl_pp = 'tmp/dlls/Bs2JpsiPhi/{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}.npy'
+  output:
+    temp('tmp/dlls/Bs2JpsiPhi/{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex')
+  run:
+    import numpy as np
+    from ipanema import Parameters
+    from utils.stats import check_DLL_agreement
+
+    # load likelihoods
+    logls = np.zeros((2,2))
+    logls[0,0] = np.load(f"{input.logl_dd}")
+    logls[0,1] = np.load(f"{input.logl_dp}")
+    logls[1,0] = np.load(f"{input.logl_pd}")
+    logls[1,1] = np.load(f"{input.logl_pp}")
+
+    # load parameters
+    pars = [
+      Parameters.load(f'{input.pars_d}'),
+      Parameters.load(f'{input.pars_p}')
+    ]
+
+    # check agreement
+    s, p, d = check_DLL_agreement(logls, pars, sigmas=True, pvalue=True, ndof=True, mdof=8)
+    ans = f"{wildcards.pyear:>10} & {wildcards.pversion:>10} & {wildcards.pfit:>10} & {wildcards.pangacc:>10} & {wildcards.ptimeacc:>10} & {wildcards.dyear:>10} & {wildcards.dversion:>10} & {wildcards.dfit:>10} & {wildcards.dangacc:>10} & {wildcards.dtimeacc:>10} & ${s:+.2f}\sigma$ & ${p:.4f}$ & ${d:.0f}$"
+
+    #print(ans)
+
+    # write
+    with open(f'{output}','w') as fp:
+      fp.write(ans)
+    fp.close()
+
+
+
+rule physics_params_dll_table:
+  input:
+    run2_vs_yearly = [
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__2015_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__2016_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__2017_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__2018_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex'
+    ],
+    yearly_vs_yearly = [
+      'tmp/dlls/Bs2JpsiPhi/2018_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2015_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2018_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2016_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2018_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2017_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2018_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2018_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2017_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2015_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2017_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2016_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2017_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2017_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2017_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2018_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2016_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2015_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2016_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2016_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2016_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2017_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2016_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2018_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2015_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2015_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2015_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2016_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2015_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2017_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/2015_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2018_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+    ],
+  output:
+    'output/tables/systematics/dlls/Bs2JpsiPhi/{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex'
+  run:
+    import numpy as np
+    from ipanema import Parameters
+    from utils.stats import check_DLL_agreement
+
+    table = []
+    table.append("\\begin{tabular}{ccccc|ccccc|ccc}")
+    table.append("\multicolumn{5}{c|}{Parameter set} & \multicolumn{5}{c|}{Sample set} \\ ")
+    table.append(f"{'year':>10} & {'version':>10} & {'fit':>10} & {'angacc':>10} & {'timeacc':>10} & {'year':>10} & {'version':>10} & {'fit':>10} & {'angacc':>10} & {'timeacc':>10} & {'Prob':>10}  & {'p-value':>8} & {'dof':>3} \\\\")
+    table.append('\\hline')
+    for i in input.run2_vs_yearly:
+      with open(i,'r') as fp:
+        table.append(fp.read()+"\\\\")
+    table.append('\\hline')
+    for i in input.yearly_vs_yearly:
+      with open(i,'r') as fp:
+        table.append(fp.read()+"\\\\")
+    table.append("\\end{tabular}")
+
+    print("\n".join(table))
+
+    # write
+    with open(f'{output}','w') as fp:
+      fp.write( "\n".join(table) )
+    fp.close()
+
+
+
+
+
+
+
 # Run2a angular acceptance -----------------------------------------------------
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
