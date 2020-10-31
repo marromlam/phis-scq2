@@ -138,7 +138,7 @@ if __name__ == '__main__':
   print(f"{'idx':>3} | {'sw':>11} | {'polWeight':>11} | {'angWeight':>11} ")
   for i in range(0,100):
     if kinWeight[i] != 0:
-      print(f"{str(i):>3} | {mc.df['sWeight'][i]:+.8f} | {mc.df['polWeight'][i]:+.8f} | {kinWeight[i]:+.8f} ")
+      print(f"{str(i):>3} | {mc.df['sw'][i]:+.8f} | {mc.df['polWeight'][i]:+.8f} | {kinWeight[i]:+.8f} ")
 
   np.save(args['output_weights_file'], kinWeight)
 
