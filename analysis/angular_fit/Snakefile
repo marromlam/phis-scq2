@@ -1,6 +1,5 @@
 # Run2 physics_params ----------------------------------------------------------
 #     This rule runs the iterative procedure for FullRun2 years using RD.
-from analysis.utils.strings import cammel_parser
 
 rule physics_params_data_run2:
   input:
@@ -53,13 +52,13 @@ rule physics_params_data_run2:
       f'output/params/flavor_tagging/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
   output:
-    params = 'output/params/angular_fit/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.json',
+    params = 'output/params/physics_params/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.json',
     tables = 'output/tables/angular_fit/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.tex'
   log:
     'output/log/physics_params_data/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
-    python analysis/angular_fit/fit_test_data.py\
+    python analysis/angular_fit/fit_data.py\
            --samples                 {",".join(input.samples)}\
            --angacc-biased           {",".join(input.angacc_biased)}\
            --angacc-unbiased         {",".join(input.angacc_unbiased)}\
@@ -73,8 +72,8 @@ rule physics_params_data_run2:
            --year                    {",".join(YEARS['Run2'])}\
            --flag                    run2_{wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) &> {log} #2>&1""")
-    send_mail(f"Run2 Fit", f"{log}")
+    ) &> {log}""")
+    send_mail(f"Physics Parameters RD Run2 :: {wildcards}", f"{log}")
 
 
 
@@ -281,13 +280,13 @@ rule physics_params_data_run2a:
       f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
   output:
-    params = 'output/params/angular_fit/run2a/Bs2JpsiPhi/{version}_run2a_{angacc}_{timeacc}.json',
+    params = 'output/params/physics_params/run2a/Bs2JpsiPhi/{version}_run2a_{angacc}_{timeacc}.json',
     tables = 'output/tables/angular_fit/run2a/Bs2JpsiPhi/{version}_run2a_{angacc}_{timeacc}.tex'
   log:
-    'output/log/angular_acceptance/physics_params/run2a/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
+    'output/log/physics_params_data/run2a/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
-    python analysis/angular_fit/fit_test_data.py\
+    python analysis/angular_fit/fit_data.py\
            --samples                 {",".join(input.samples)}\
            --angacc-biased           {",".join(input.angacc_biased)}\
            --angacc-unbiased         {",".join(input.angacc_unbiased)}\
@@ -298,11 +297,11 @@ rule physics_params_data_run2a:
            --flavor-tagging          {",".join(input.flavor)}\
            --params                  {output.params}\
            --tables                  {output.tables}\
-           --year                    {",".join(yd['Run2a'])}\
-           --cuts                    '{cammel_parser(wildcards.timeacc)}'\
+           --year                    {",".join(YEARS['Run2a'])}\
+           --flag                    run2a_{wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) &> {log} #2>&1""")
-    send_mail(f"Physics Parameters Run2a", f"{log}")
+    ) &> {log}""")
+    send_mail(f"Physics Parameters RD Run2a", f"{log}")
 
 
 
@@ -340,13 +339,13 @@ rule physics_params_dataYearly:
       f'output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
   output:
-    params = 'output/params/angular_fit/{year}/Bs2JpsiPhi/{version}_yearly_{angacc}_{timeacc}.json',
+    params = 'output/params/physics_params/{year}/Bs2JpsiPhi/{version}_yearly_{angacc}_{timeacc}.json',
     tables = 'output/tables/angular_fit/{year}/Bs2JpsiPhi/{version}_yearly_{angacc}_{timeacc}.tex'
   log:
-    'output/log/angular_acceptance/physics_params/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
+    'output/log/physics_params_data/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
-    python analysis/angular_fit/fit_test_data.py\
+    python analysis/angular_fit/fit_data.py\
            --samples                 {",".join(input.samples)}\
            --angacc-biased           {",".join(input.angacc_biased)}\
            --angacc-unbiased         {",".join(input.angacc_unbiased)}\
@@ -359,9 +358,9 @@ rule physics_params_dataYearly:
            --tables                  {output.tables}\
            --year                    {",".join([wildcards.year])}\
            --version                 {wildcards.version}\
-           --cuts                    '{cammel_parser(wildcards.timeacc)}'\
-    ) #&> {log} #2>&1""")
-    send_mail(f"Physics Parameters Run2a", f"{log}")
+           --flag                    yearly_{wildcards.angacc}_{wildcards.timeacc}\
+    ) &> {log}""")
+    send_mail(f"Physics Parameters RD Yearly :: {wildcards}", f"{log}")
 
 
 
@@ -388,28 +387,28 @@ rule physics_params_mc:
       f'output/params/csp_factors/{wcs.year}/{wcs.mode}/{wcs.version.split("@")[0]}.json',
     ],
   output:
-    params = 'output/params/angular_fit/{year}/{mode}/{version}_base.json',
+    params = 'output/params/physics_params/{year}/{mode}/{version}_base.json',
     tables = 'output/tables/angular_fit/{year}/{mode}/{version}_base.tex'
   log:
     'output/log/angular_acceptance/physics_params_mc/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
-    python analysis/angular_fit/fit_test_mc.py\
+    python analysis/angular_fit/fit_mc.py\
            --samples                 {",".join(input.samples)}\
            --csp                     {",".join(input.csp_factors)}\
            --params                  {output.params}\
            --tables                  {output.tables}\
            --year                    {",".join([wildcards.year])}\
            --version                 {wildcards.version}\
-    ) #&> {log} #2>&1""")
-    send_mail(f"Run2a Fit", f"{log}")
+    ) #&> {log}""")
+    send_mail(f"Physics Parameters MC :: {wildcards}", f"{log}")
 
 
 rule physics_params_mcfit_vs_mcgen:
   wildcard_constraints:
     mode = "(TOY|MC)_(Bs2JpsiPhi(_dG0)?|Bs2JpsiKK_Swave)"
   input:
-    fit = 'output/params/angular_fit/{year}/{mode}/{version}_base.json',
+    fit = 'output/params/physics_params/{year}/{mode}/{version}_base.json',
     gen = 'analysis/params/generator/2018/{mode}.json'
   output:
     tables = 'output/tables/angular_fit/{year}/{mode}/{version}_base_comparisonFitGen.tex'
