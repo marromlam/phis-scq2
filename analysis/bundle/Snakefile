@@ -69,7 +69,7 @@ rule bundle_translate_time_acceptance:
            --params-output {output}\
            --year {wildcards.year}\
            --version {wildcards.version}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
 
 
 
@@ -89,7 +89,7 @@ rule bundle_translate_angular_acceptance:
            --params-output {output}\
            --year {wildcards.year}\
            --version {wildcards.version}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
 
 
 
@@ -459,16 +459,10 @@ rule repository_bundle:
 #   run:
 #     shell(f"""(time\
 #     python analysis/bundle/commit.py
-#     ) #&> {log} #2>&1""")
+#     ) #&> {log}""")
 #     cpath = f'{output}'
 #     try:
 #       import shutil
 #       shutil.make_archive(f'{cpath[:-4]}/','zip',f'{cpath[:-4]}/')
 #     except:
 #       print(f"Couldn't zip the contents from {cpath}")
-
-
-
-
-
-

@@ -25,7 +25,7 @@ rule reweighting_polarity:
                  --target-file {input.target}\
                  --target-treename DecayTree\
                  --output-file {output.sample}
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Polarity weighting", f"{log}")
 
 
@@ -54,7 +54,7 @@ rule reweighting_dg0:
              --target-params analysis/params/generator/{params.target}\
              --original-params analysis/params/generator/{params.original}\
              --mode {wildcards.mode}
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"P.D.F. weighting", f"{log}")
 
 
@@ -80,7 +80,7 @@ rule reweighting_pdf:
              --target-params analysis/params/generator/{params.target}\
              --original-params analysis/params/generator/{params.original}\
              --mode {wildcards.mode}
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"P.D.F. weighting", f"{log}")
 
 
@@ -123,7 +123,7 @@ rule reweighting_kinematic:
           --learning-rate {bdconfig['learning_rate']}\
           --max-depth {bdconfig['max_depth']}\
           --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log} #2>&1""")
+      ) &> {log}""")
     elif mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
         python analysis/reweightings/kinematic_weighting.py\
@@ -140,7 +140,7 @@ rule reweighting_kinematic:
           --learning-rate {bdconfig['learning_rate']}\
           --max-depth {bdconfig['max_depth']}\
           --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log} #2>&1""")
+      ) &> {log}""")
     elif mode.startswith('Bd2JpsiKstar'):
       shell(f"""(time\
         python analysis/reweightings/kinematic_weighting.py\
@@ -157,11 +157,11 @@ rule reweighting_kinematic:
           --learning-rate {bdconfig['learning_rate']}\
           --max-depth {bdconfig['max_depth']}\
           --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log} #2>&1""")
+      ) &> {log}""")
     else:
       shell(f"""(time\
         cp {input.original} {output.sample}
-      ) &> {log} #2>&1""")
+      ) &> {log}""")
     send_mail(f"Kinematic weighting", f"{log}")
 
 
@@ -194,7 +194,7 @@ rule reweightings_plot_time_acceptance:
            --branch {wildcards.branch}\
            --sweighted {output.sweighted}\
            --kinweighted {output.kinweighted}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Polarity weighting", f"{log}", f"{output}".split(' '))
 
 
@@ -223,7 +223,7 @@ rule reweightings_plot_angular_acceptance:
            --branch {wildcards.branch}\
            --treename {wildcards.angacc}_{wildcards.timeacc}\
            --kkpweighted {output}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Polarity weighting", f"{output}")              # WARNING #
 
 
@@ -247,4 +247,4 @@ rule reweightings_simon_comparisons:
            --branch {wildcards.branch}\
            --sweighted {output.sweighted}\
            --kinweighted {output.kinweighted}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
