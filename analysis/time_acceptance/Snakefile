@@ -44,12 +44,6 @@ rule time_acceptance_simultaneous:
       tuples(wcs,mode='MC_Bd2JpsiKstar'),
       tuples(wcs,mode='Bd2JpsiKstar')
     ]
-  params:
-    params = [
-      'time_acceptance/params/{year}/MC_Bs2JpsiPhi_dG0/baseline.json',
-      'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
-      'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
-    ]
   output:
     params = [
       'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{trigger}.json',
