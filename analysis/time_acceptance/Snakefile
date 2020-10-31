@@ -119,35 +119,35 @@ rule time_acceptance_simultaneousDGn0:
 
 
 
-rule time_acceptance_simultaneousDGn0:
+rule time_acceptance_simultaneousBdasBs:
   wildcard_constraints:
     timeacc = "dGn0(nonkin|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder)?",
     trigger = "(biased|unbiased|combined)",
   input:
     sample = lambda wcs: [
-      tuples(wcs,mode='MC_Bs2JpsiPhi'),
+      tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
       tuples(wcs,mode='MC_Bd2JpsiKstar'),
       tuples(wcs,mode='Bd2JpsiKstar')
     ]
   params:
     params = [
-      'time_acceptance/params/{year}/MC_Bs2JpsiPhi/baseline.json',
+      'time_acceptance/params/{year}/MC_Bs2JpsiPhi_dG0/baseline.json',
       'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
       'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
     ]
   output:
     params = [
-      'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{timeacc}_{trigger}.json',
-      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
-      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json'
+      'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}BdasBs_{trigger}.json',
+      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}BdasBs_{trigger}.json',
+      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}BdasBs_{trigger}.json'
     ],
     tables = [
-      'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{timeacc}_{trigger}.tex',
-      'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex',
-      'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.tex'
+      'output/tables/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}BdasBs_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}BdasBs_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}BdasBs_{trigger}.tex'
     ]
   log:
-    'output/log/time_acceptance_simultaneous/{year}/{version}_{timeacc}_{trigger}.log'
+    'output/log/time_acceptance_simultaneous/{year}/{version}_{timeacc}BdasBs_{trigger}.log'
   run:
     shell(f"""
     (time\
