@@ -106,7 +106,10 @@ function activatephisscq() {
   source $condapath/bin/activate
   conda activate $myenv
   export PYOPENCL_COMPILER_OUTPUT=1
-  export PYOPENCL_NO_CACHE=1"
+  export PYOPENCL_NO_CACHE=1
+  export PHISSCQ=${PWD}
+  export PYTHONPATH=\$PHISSCQ/analysis:\$PYTHONPATH
+  export KRB5_CONFIG=\$PHISSCQ/krb5.conf"
 if [ "${cudapath}" != "None" ];then
   cuda_string="
   export PATH='${cudapath}/bin:\$PATH'
