@@ -10,7 +10,7 @@
 #     merges MC results to compute RD angular acceptance
 rule angular_acceptance_naive:
   wildcard_constraints:
-    mode = "(TOY|MC)_Bs2JpsiPhi(_dG0)?"
+    mode = "(TOY|MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
     sample = lambda wcs: tuples(wcs),
   params:
@@ -31,11 +31,14 @@ rule angular_acceptance_naive:
            --mode {wildcards.mode}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}
-    ) &> {log} #2>&1""")
-    send_mail(f"Naive Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
+    ) &> {log}""")
+    send_mail(f"Naive Angular Acceptance :: {wildcards}", f"{log}")
 
 
-
+# blend angular acceptance - no correction (only sWeight and polWeight) --------
+#     Here we have 2 rules to compute angular acceptance without correcting
+#     MC samples. First rule computes angular acceptance for MC, and second one
+#     merges MC results to compute RD angular acceptance
 rule angular_acceptance_blend:
   wildcard_constraints:
     step = "(naive|corrected)",
@@ -59,11 +62,14 @@ rule angular_acceptance_blend:
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --step {wildcards.step}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Blend Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.trigger}", f"{log}")
 
 
-
+# naive angular acceptance - no correction (only sWeight and polWeight) --------
+#     Here we have 2 rules to compute angular acceptance without correcting
+#     MC samples. First rule computes angular acceptance for MC, and second one
+#     merges MC results to compute RD angular acceptance
 
 rule angular_acceptance_joinWeights:
   resources:
@@ -115,11 +121,10 @@ rule angular_acceptance_corrected:
   resources:
     mem_mb=4096
   wildcard_constraints:
-    mode = "MC_Bs2JpsiPhi(_dG0)?",
-    trigger = "(biased|unbiased|combined)",
+    mode = "(MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
   input:
     sample_mc = lambda wcs: tuples(wcs),
-    sample_rd = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi'),
+    sample_rd = lambda wcs: tuples(wcs,mode='cmode'),
   params:
     params = 'analysis/params/generator/{year}/{mode}.json',
   output:
@@ -141,7 +146,7 @@ rule angular_acceptance_corrected:
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
 
 
@@ -255,7 +260,7 @@ rule angular_acceptance_iterativeRun2a:
            --year                    {",".join(YEARS['Run2a'])}\
            --angacc                    '{cammel_parser(wildcards.timeacc)}'\
            --version                 {wildcards.version}\
-    ) &> {log} #2>&1""")
+    ) #&> {log}""")
     send_mail(f"Angular Acceptance :: Run2a :: {wildcards.timeacc}", f"{log}")
 
 
@@ -566,16 +571,16 @@ rule angular_acceptance_iterativeYearly:
       'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
     ],
     # CSP
-    csp_factors = [
-      'output/params/csp_factors/{year}/Bs2JpsiPhi/{version}.json'
+    csp_factors = lambda wcs: [
+      f'output/params/csp_factors/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
     # Time resolution
-    time_resolution = [
-      'output/params/time_resolution/{year}/Bs2JpsiPhi/{version}.json'
+    time_resolution = lambda wcs: [
+      f'output/params/time_resolution/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
     # Flavor tagging
-    flavor = [
-      'output/params/flavor_tagging/{year}/Bs2JpsiPhi/{version}.json'
+    flavor = lambda wcs: [
+      f'output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ]
   params:
     params_std = [
@@ -631,7 +636,7 @@ rule angular_acceptance_iterativeYearly:
            --year                           {",".join([wildcards.year])}\
            --angacc                           '{cammel_parser(wildcards.timeacc)}'\
            --version                        {wildcards.version}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance :: {wildcards.year} :: {wildcards.timeacc}", f"{log}")
 
 
@@ -655,5 +660,5 @@ rule angular_acceptance_compareCuts:
            --trigger {wildcards.trigger}\
            --year {wildcards.year}\
            --variable {wildcards.variable}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance :: Plot comparison binned variables cuts :: {wildcards.year} :: {wildcards.mode} :: {wildcards.version} :: {wildcards.variable}", f"{log}", [f"{output}"])
