@@ -1,8 +1,4 @@
-
-
-#ruleorder: blend_angular_acceptance > naive_angular_acceptance
-#ruleorder: blend_angular_acceptance > corrected_binned_angular_acceptance
-#ruleorder: blend_angular_acceptance > corrected_angular_acceptance
+# ---
 
 # naive angular acceptance - no correction (only sWeight and polWeight) --------
 #     Here we have 2 rules to compute angular acceptance without correcting
@@ -32,7 +28,7 @@ rule angular_acceptance_naive:
            --version {wildcards.version}\
            --trigger {wildcards.trigger}
     ) &> {log}""")
-    send_mail(f"Naive Angular Acceptance :: {wildcards}", f"{log}")
+    send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
 
 
 # blend angular acceptance - no correction (only sWeight and polWeight) --------
@@ -42,7 +38,7 @@ rule angular_acceptance_naive:
 rule angular_acceptance_blend:
   wildcard_constraints:
     step = "(naive|corrected)",
-    version = "^((?!hede).)*$",
+    # version = "^((?!v0r0).)*$",
   input:
     weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{trigger}.json',
     weights_dg0 = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{step}_{trigger}.json',
@@ -63,14 +59,13 @@ rule angular_acceptance_blend:
            --trigger {wildcards.trigger}\
            --step {wildcards.step}\
     ) &> {log}""")
-    send_mail(f"Blend Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.trigger}", f"{log}")
+    send_mail(f"Angular Acceptance Blend :: {wildcards}", f"{log}")
 
 
 # naive angular acceptance - no correction (only sWeight and polWeight) --------
 #     Here we have 2 rules to compute angular acceptance without correcting
 #     MC samples. First rule computes angular acceptance for MC, and second one
 #     merges MC results to compute RD angular acceptance
-
 rule angular_acceptance_joinWeights:
   resources:
     mem_mb=4096
@@ -87,8 +82,8 @@ rule angular_acceptance_joinWeights:
     b = np.load(f"{input.b}")
     u = np.load(f"{input.u}")
     with uproot.recreate(f"{output}") as rfile:
-      rfile['DecayTree'] = uproot.newtree({'kinWeight':np.float64})
-      rfile['DecayTree'].extend({'kinWeight':b+u})
+      rfile['DecayTree'] = uproot.newtree({'angWeight':np.float64})
+      rfile['DecayTree'].extend({'angWeight':b+u})
     rfile.close()
 
 
@@ -107,8 +102,8 @@ rule angular_acceptance_veronikaWeights:
     b = uproot.open(f"{input.b}")['DecayTree'].arrays()
     c = {**a,**b}
     with uproot.recreate(f"{output}") as rfile:
-      rfile['DecayTree'] = uproot.newtree( {f'{k}':np.float64 for k in c.keys()} )
-      rfile['DecayTree'].extend( {f'{k}':v for k,v in c.items()} )
+      rfile['DecayTree'] = uproot.newtree( {k:np.float64 for k in c.keys()} )
+      rfile['DecayTree'].extend( {k:v for k,v in c.items()} )
     rfile.close()
 
 
@@ -116,7 +111,6 @@ rule angular_acceptance_veronikaWeights:
 # Correcting MC with kinematic weights -----------------------------------------
 #     Correcting MC sample with kinematic weighting in B_P, B_PT and X_M helps
 #     to better match MC to RD.
-
 rule angular_acceptance_corrected:
   resources:
     mem_mb=4096
@@ -124,7 +118,7 @@ rule angular_acceptance_corrected:
     mode = "(MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
   input:
     sample_mc = lambda wcs: tuples(wcs),
-    sample_rd = lambda wcs: tuples(wcs,mode='cmode'),
+    sample_rd = lambda wcs: tuples(wcs,mode='data'),
   params:
     params = 'analysis/params/generator/{year}/{mode}.json',
   output:
@@ -147,7 +141,7 @@ rule angular_acceptance_corrected:
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
     ) &> {log}""")
-    send_mail(f"Corrected Angular Acceptance :: {wildcards.version} {wildcards.year} {wildcards.mode} {wildcards.trigger}", f"{log}")
+    send_mail(f"Angular Acceptance Corrected :: {wildcards}", f"{log}")
 
 
 
@@ -258,10 +252,10 @@ rule angular_acceptance_iterativeRun2a:
            --output-angular-weights-mc-std  {",".join(output.weights_std)}\
            --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
            --year                    {",".join(YEARS['Run2a'])}\
-           --angacc                    '{cammel_parser(wildcards.timeacc)}'\
+           --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
     ) #&> {log}""")
-    send_mail(f"Angular Acceptance :: Run2a :: {wildcards.timeacc}", f"{log}")
+    send_mail(f"Angular Acceptance Run2a :: {wildcards}", f"{log}")
 
 
 
@@ -274,7 +268,6 @@ rule angular_acceptance_iterativeRun2a:
 # Run2 angular acceptance ------------------------------------------------------
 #     This rule runs the iterative procedure for all Run2 YEARS using both
 #     MC and MC_dG0 files.
-
 rule angular_acceptance_iterativeRun2:
   resources:
     mem_mb=16384
@@ -413,8 +406,8 @@ rule angular_acceptance_iterativeRun2:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) &> {log}""")
-    send_mail(f"Angular Acceptance :: Run2 :: {wildcards.timeacc}", f"{log}")
+    ) #&> {log}""")
+    send_mail(f"Angular Acceptance Run2 :: {wildcards}", f"{log}")
 
 
 
@@ -634,12 +627,16 @@ rule angular_acceptance_iterativeYearly:
            --output-angular-weights-mc-std  {",".join(output.weights_std)}\
            --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
            --year                           {",".join([wildcards.year])}\
-           --angacc                           '{cammel_parser(wildcards.timeacc)}'\
+           --angacc                         {wildcards.angacc}_{wildcards.timeacc}\
            --version                        {wildcards.version}\
     ) &> {log}""")
-    send_mail(f"Angular Acceptance :: {wildcards.year} :: {wildcards.timeacc}", f"{log}")
+    send_mail(f"Angular Acceptance Yearly :: {wildcards}", f"{log}")
 
 
+
+# Yearly angular acceptance ------------------------------------------------------
+#     This rule runs the iterative procedure for only one year using both
+#     MC and MC_dG0 files.
 rule angular_acceptance_compareCuts:
   input:
     params = lambda wcs: [
@@ -661,4 +658,4 @@ rule angular_acceptance_compareCuts:
            --year {wildcards.year}\
            --variable {wildcards.variable}\
     ) &> {log}""")
-    send_mail(f"Angular Acceptance :: Plot comparison binned variables cuts :: {wildcards.year} :: {wildcards.mode} :: {wildcards.version} :: {wildcards.variable}", f"{log}", [f"{output}"])
+    send_mail(f"Angular Acceptance Comparison :: {wildcards}", f"{log}", [f"{output}"])
