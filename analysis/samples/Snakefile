@@ -4,6 +4,8 @@
 #    and then it worka automatically.
 
 rule samples_sync_tuple:
+  resources:
+    mem_mb=4096
   output:
     # here I remove the temp for the sWeight file, in the future it will be added again
     sample = SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root'
@@ -32,6 +34,8 @@ rule samples_sync_tuple:
 #    the ntuples that will actually be used for phis-scq analysis package.
 
 rule samples_reduce_tuple:
+  resources:
+    mem_mb=2048
   input:
     sample = lambda wcs: tuples(wcs, weight='kinWeight')
   output:
