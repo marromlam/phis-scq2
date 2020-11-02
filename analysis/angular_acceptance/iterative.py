@@ -56,6 +56,8 @@ from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
+tLL = hjson.load(open('config.json'))['tLL']
+tUL = hjson.load(open('config.json'))['tUL']
 
 # reweighting config
 from warnings import simplefilter
@@ -78,16 +80,16 @@ def check_for_convergence(a,b):
 
 def pdf_reweighting(mcsample, mcparams, rdparams):
   badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
-                           **mcparams.valuesdict(), tLL=0.3)
+                           **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h = mcsample.pdf.get()
   badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
-                           **mcparams.valuesdict(), tLL=0.3)
+                           **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h /= mcsample.pdf.get()
   badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
-                           **rdparams.valuesdict(), tLL=0.3)
+                           **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h = mcsample.pdf.get()
   badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
-                           **rdparams.valuesdict(), tLL=0.3)
+                           **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h /= mcsample.pdf.get()
   #print(f"   pdfWeight[{i}]: { np.nan_to_num(target_pdf_h/original_pdf_h) }")
   return np.nan_to_num(target_pdf_h/original_pdf_h)
@@ -95,7 +97,7 @@ def pdf_reweighting(mcsample, mcparams, rdparams):
 
 
 def KS_test(original, target, original_weight, target_weight):
-  vars = ['hminus_PT','hplus_PT','hminus_P','hplus_P']
+  vars = ['pTHm','pTHp','pHm','pHp']
   for i in range(0,4):
     xlim = np.percentile(np.hstack([target[:,i]]), [0.01, 99.99])
     print(f'   KS({vars[i]:>10}) =',
@@ -163,7 +165,7 @@ def fcn_data(parameters, data):
       badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), tLL=dt.tLL, tUL=dt.tUL)
+                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
       #exit()
 
@@ -216,7 +218,7 @@ if __name__ == '__main__':
 
   # Prepare the cuts -----------------------------------------------------------
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-  CUT = cuts_and(CUT,'time>=0.3 & time<=15')
+  CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
 
   # List samples, params and tables --------------------------------------------
   samples_std   = args['sample_mc_std'].split(',')
@@ -266,15 +268,18 @@ if __name__ == '__main__':
 
 
   # %% Load samples ------------------------------------------------------------
-  print(f"\n{80*'='}\n", "Loading samples", f"\n{80*'='}\n")
+  print(f"\n{80*'='}\nLoading samples\n{80*'='}\n")
 
-  # Lists of MC variables to load and build arrays
-  reco = ['cosK', 'cosL', 'hphi', 'time']
-  true = [f'gen{i}' for i in reco]
-  #true = [f'true{i}_GenLvl' for i in reco]
-  reco += ['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time']
-  true += ['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time']
-  #weight_mc = '(polWeight*sw/gb_weights)'
+  reco  = ['cosK', 'cosL', 'hphi', 'time']
+  true  = [f'gen{i}' for i in reco]
+  reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
+  true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
+
+  real  = ['cosK','cosL','hphi','time']
+  real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta'] 
+  weight_rd = f'sw_{VAR}' if VAR else 'sw'
+
+
 
   # Load Monte Carlo samples ---------------------------------------------------
   mc = {}
@@ -369,8 +374,8 @@ if __name__ == '__main__':
     for d in [data[f'{y}']['biased'],data[f'{y}']['unbiased']]:
       sw = np.zeros_like(d.df[f'{weight_rd}'])
       for l,h in zip(mass[:-1],mass[1:]):
-        pos = d.df.eval(f'X_M>={l} & X_M<{h}')
-        this_sw = d.df.eval(f'{weight_rd}*(X_M>={l} & X_M<{h})')
+        pos = d.df.eval(f'mHH>={l} & mHH<{h}')
+        this_sw = d.df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
         sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
       d.df['sWeight'] = sw
       d.allocate(data=real,weight='sWeight',lkhd='0*time')
@@ -566,11 +571,11 @@ if __name__ == '__main__':
       for m, dm in dy.items(): # loop over mc_std and mc_dg0
         for t, v in dm.items():
           # original variables + weight (mc)
-          ov  = v.df[['hminus_PT','hplus_PT','hminus_P','hplus_P']]
+          ov  = v.df[['pTHm','pTHp','pHm','pHp']]
           ow  = v.df.eval(f'angWeight*polWeight*{weight_rd}/gb_weights')
           ow *= v.pdfWeight[i]
           # target variables + weight (real data)
-          tv = data[y][t].df[['hminus_PT','hplus_PT','hminus_P','hplus_P']]
+          tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
           tw = data[y][t].df.eval(f'{weight_rd}')
 
           # Run in single core (REALLY SLOW 10+ h)
