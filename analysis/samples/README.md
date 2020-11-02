@@ -31,13 +31,16 @@ a different name.
 Basically to handle the tuple sync and reduction one needs to run two rules
 * samples_sync_tuples: This rules directly dowloads from esos the asked version of tuples
 to run it one ask for
-```
-aaaa
+```bash
+snakemake /path/to/sidecar/year/mode/version_sWeight.root
 ```
 * samples_reduce_tuples: This rule takes the last step of the reweightings 
 and applies different renamings to the branches (see §1.1 below).
-Afterwards, the tuplesis saved in disk using less space and previous root files
+Afterwards, the tuples is saved in disk using less space and previous root files
 deleted.
+```bash
+snakemake /path/to/sidecar/year/mode/version.root
+```
 
 Tuples are first named with flag being `dateflag_selected_bdt` or 
 `dateflag_selected_bdt_sw` as those are the final steps of _Bs2JpsiPhi-FullRun2_
