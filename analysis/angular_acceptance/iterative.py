@@ -147,7 +147,8 @@ def get_angular_acceptance(mc, kkpWeight=False):
   w, uw, cov, corr = ans
   mc.angaccs[i] = Parameters()
   for k in range(0,len(w)):
-    correl = {f'w{j}':cov[k][j] for j in range(0,len(w)) if k>0 and j>0}
+    correl = {f'w{j}': corr[k][j]
+              for j in range(0, len(w)) if k > 0 and j > 0}
     mc.angaccs[i].add({'name': f'w{k}', 'value': w[k], 'stdev': uw[k],
                        'free': False, 'latex': f'w_{k}', 'correl': correl})
   #print(f"{  np.array(mc.angular_weights[t])}")
@@ -634,8 +635,8 @@ if __name__ == '__main__':
         # Create w and cov arrays
         std_w = np.array([std[f'w{i}'].value for i in range(1,len(std))])
         dg0_w = np.array([dg0[f'w{i}'].value for i in range(1,len(dg0))])
-        std_cov = std.correl_mat()[1:,1:];
-        dg0_cov = dg0.correl_mat()[1:,1:];
+        std_cov = std.cov()[1:,1:];
+        dg0_cov = dg0.cov()[1:,1:];
 
         # Some matrixes
         std_covi = np.linalg.inv(std_cov)
@@ -665,13 +666,14 @@ if __name__ == '__main__':
         # Create parameters
         merged_w = Parameters()
         for k in range(0,len(w)):
-          correl = {f'w{j}':corr[k][j] for j in range(0,len(w)) if k>0 and j>0}
-          merged_w.add({'name': f'w{k}', 'value': w[k], 'stdev': uw[k],
-                        'free': False, 'latex': f'w_{k}', 'correl': correl})
+          correl = {f'w{j}{trigger[0]}': corr[k][j]
+                    for j in range(0, len(w)) if k > 0 and j > 0}
+          merged_w.add({'name': f'w{k}{trigger[0]}', 'value': w[k], 'stdev': uw[k],
+                        'free': False, 'latex': f'w_{k}^{trigger[0]}', 'correl': correl})
         print(f"Current angular weights for Bs2JpsiPhi-{y}-{trigger} sample are:")
         print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
         for _i in range(len(merged_w.keys())):
-          print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.2uP}")
+          print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}{trigger[0]}'].uvalue:+1.2uP}")
 
         if i>5:
           for wk in merged_w.keys():
@@ -681,7 +683,7 @@ if __name__ == '__main__':
             merged_w[wk].set(value = 0.5*(new+old))
           print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8} -- mod")
           for _i in range(len(merged_w.keys())):
-            print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}'].uvalue:+1.2uP}")
+            print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}{trigger[0]}'].uvalue:+1.2uP}")
 
         # Save current set of angular weights
         data[y][trigger].angacc = merged_w

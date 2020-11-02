@@ -117,8 +117,8 @@ if __name__ == '__main__':
   print(weight_mc,weight_rd)
 
   # Allocate some arrays with the needed branches
-  mc.allocate(reco=reco+['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time'])
-  mc.allocate(true=true+['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time'])
+  mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
+  mc.allocate(true=true+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
   mc.allocate(pdf='0*time', ones='time/time', zeros='0*time')
   mc.allocate(weight=weight_mc)
 
@@ -155,9 +155,10 @@ if __name__ == '__main__':
   pars = Parameters()
   for i in range(0,len(w)):
     #print(f'w[{i}] = {w[i]:+.16f}')
-    correl = {f'w{j}':cov[i][j] for j in range(0,len(w)) if i>0 and j>0}
-    pars.add({'name': f'w{i}', 'value': w[i], 'stdev': uw[i], 'correl': correl,
-              'free': False, 'latex': f'w_{i}'})
+    correl = {f'w{j}{TRIGGER[0]}': corr[i][j]
+              for j in range(0, len(w)) if i > 0 and j > 0}
+    pars.add({'name': f'w{i}{TRIGGER[0]}', 'value': w[i], 'stdev': uw[i], 'correl': correl,
+              'free': False, 'latex': f'w_{i}^{TRIGGER[0]}'})
   print(f" * Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
 
   print(f"{pars}")

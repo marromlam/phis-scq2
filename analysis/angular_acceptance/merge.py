@@ -115,13 +115,13 @@ output_params_path = args['output_params']
 std = Parameters.load(weights_std_path)
 dg0 = Parameters.load(weights_dg0_path)
 
-std_cov = std.correl_mat()[1:,1:];
-dg0_cov = dg0.correl_mat()[1:,1:];
+std_cov = std.cov()[1:,1:];
+dg0_cov = dg0.cov()[1:,1:];
 std_covi = np.linalg.inv(std_cov)
 dg0_covi = np.linalg.inv(dg0_cov)
 
-std_w = np.array([std[f'w{i}'].value for i in range(1,len(std))])
-dg0_w = np.array([dg0[f'w{i}'].value for i in range(1,len(dg0))])
+std_w = np.array([std[f'w{i}{TRIGGER[0]}'].value for i in range(1, len(std))])
+dg0_w = np.array([dg0[f'w{i}{TRIGGER[0]}'].value for i in range(1, len(dg0))])
 
 cov_comb_inv = np.linalg.inv( std_cov + dg0_cov )
 cov_comb = np.linalg.inv( std_covi + dg0_covi )
@@ -150,17 +150,17 @@ for i in range(1,cov_comb.shape[0]):
 pars = Parameters()
 for i in range(0,len(w)):
   print(f'w[{i}] = {w[i]:+.16f}')
-  correl = {f'w{j}':corr[i][j] for j in range(0,len(w)) if i>0 and j>0}
-  pars.add({'name': f'w{i}',
+  correl = {f'w{j}{TRIGGER[0]}':corr[i][j] for j in range(0,len(w)) if i>0 and j>0}
+  pars.add({'name': f'w{i}{TRIGGER[0]}',
                         'value': w[i],
                         'stdev': uw[i],
                         'free': False,
-                        'latex': f'w_{i}',
+                        'latex': f'w_{i}^{TRIGGER[0]}',
                         'correl': correl
                       })
 print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
 for _i in range(len(pars.keys())):
-  print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {pars[f'w{_i}'].uvalue:+1.2uP}")
+  print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {pars[f'w{_i}{TRIGGER[0]}'].uvalue:+1.2uP}")
 # Dump the parameters
 print('Dumping parameters')
 pars.dump(output_params_path)
