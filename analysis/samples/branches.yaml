@@ -47,19 +47,19 @@ MC_common: &MC_common
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "bkgcatB" : "B_BKGCAT"
+  "gb_weights" : "gb_weights"
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
-  "gb_weights" : "gb_weights"
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
-  <<: *MC_Bs2JpsiPhi_dG0
+  <<: *MC_common
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
-  <<: *MC_Bs2JpsiPhi_dG0
+  <<: *MC_common
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
-  <<: *MC_Bs2JpsiPhi_dG0
+  <<: *MC_common
 
 MC_Bs2JpsiPhi_Prompt:
   <<: *MC_Bs2JpsiPhi
