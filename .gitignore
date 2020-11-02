@@ -33,9 +33,11 @@ tmp/
 output_backups/
 cuda_testing_kernel/
 shitty_thong/
+veronika_fit_bins/*
 bsjpsikk_reikna/
 config.json
-
+backup
+bsjpsikk
 analysis/bundle/tex/main_*
 bundle/tex/.fuse*
 shit_params.py
@@ -89,5 +91,3 @@ slides/*.nav
 slides/main_*.tex
 slides/AandS*
 slides/*/*.aux
-
-
