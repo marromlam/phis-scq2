@@ -488,7 +488,7 @@ ${ftype} getDiffRate( ${ftype} *data,
     pdfB += nk*fk*hk_B; pdfBbar += nk*fk*hk_Bbar;
     vnk[k-1] = 1.*nk;
     vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
-    
+
     #if DEBUG
       vfk[k-1] = 1.*fk;
     #endif
