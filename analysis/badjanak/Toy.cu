@@ -119,7 +119,7 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
     ${ftype} OSmax = tagOSgen(0.5);
     ${ftype} SSmax = tagSSgen(0.5);
     ${ftype} tag = 0;
-      ${ftype} threshold;//, mt, pt;
+    ${ftype} threshold;
 
     // generate qOS
     if (tagOS < 0.16) {
