@@ -35,7 +35,7 @@ def dG5toys(output,
             # Flags
             use_fk=1, use_angacc = 0, use_timeacc = 0,
             use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-            prob_max = 4.2,
+            prob_max = 2.7,
             BLOCK_SIZE=256, **crap):
   """
   Look at kernel definition to see help
