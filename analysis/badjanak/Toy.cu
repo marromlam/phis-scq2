@@ -101,7 +101,7 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
   }
   else
   {
-    sigmat = 0.04554;
+    sigmat = 0*0.04554;
   }
 
 
