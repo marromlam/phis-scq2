@@ -111,11 +111,13 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
 
   sws = ['sw']+[f'sw_{var}' for var in binned_vars.keys()]
   kws = ['kinWeight']+[f'kinWeight_{var}' for var in binned_vars.keys()]
-  print('Original sWeights')
-  print(ovars_df[sws])
-  print('Target sWeights')
-  print(tvars_df[sws])
-
+  try:
+    print('Original sWeights')
+    print(ovars_df[sws])
+    print('Target sWeights')
+    print(tvars_df[sws])
+  except:
+    0
   # %% Reweighting -------------------------------------------------------------
   ovars_df['kinWeight'] = computekinWeight(
                    ovars_df.get(original_vars),
@@ -124,22 +126,25 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
                    tvars_df.eval(target_weight),
                    n_estimators,learning_rate,max_depth,min_samples_leaf,
                    trunc)
-  for var,vvar in binned_vars.items():
-    kinWeight = np.zeros_like(ovars_df['kinWeight'].values)
-    for cut in bin_vars[var]:
-      original_weight_binned = original_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
-      target_weight_binned = target_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
-      print("ORIGINAL WEIGHT =", original_weight_binned)
-      print("  TARGET WEIGHT =", target_weight_binned)
-      kinWeight_ = computekinWeight(
-              ovars_df.get(original_vars),
-              tvars_df.get(target_vars),
-              ovars_df.eval(original_weight_binned),
-              tvars_df.eval(target_weight_binned),
-              n_estimators,learning_rate,max_depth,min_samples_leaf,
-              trunc)
-      kinWeight = np.where(ovars_df.eval(cut.replace(var,vvar)), kinWeight_, kinWeight)
-    ovars_df[f'kinWeight_{var}'] = kinWeight
+  try:
+    for var,vvar in binned_vars.items():
+      kinWeight = np.zeros_like(ovars_df['kinWeight'].values)
+      for cut in bin_vars[var]:
+        original_weight_binned = original_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
+        target_weight_binned = target_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
+        print("ORIGINAL WEIGHT =", original_weight_binned)
+        print("  TARGET WEIGHT =", target_weight_binned)
+        kinWeight_ = computekinWeight(
+                ovars_df.get(original_vars),
+                tvars_df.get(target_vars),
+                ovars_df.eval(original_weight_binned),
+                tvars_df.eval(target_weight_binned),
+                n_estimators,learning_rate,max_depth,min_samples_leaf,
+                trunc)
+        kinWeight = np.where(ovars_df.eval(cut.replace(var,vvar)), kinWeight_, kinWeight)
+      ovars_df[f'kinWeight_{var}'] = kinWeight
+  except:
+    print('There arent such branches')
 
   print('Original kinWeights')
   print(ovars_df[kws])
