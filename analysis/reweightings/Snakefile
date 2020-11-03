@@ -12,7 +12,7 @@ rule reweighting_polarity:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
     original = lambda wcs: tuples(wcs,weight='sWeight'),
-    target   = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',weight='sWeight'),
+    target   = lambda wcs: tuples(wcs,mode='cdata',weight='sWeight'),
   output:
     sample   = temp(SAMPLES_PATH+'{year}/{mode}/{version}_polWeight.root')
   log:
@@ -33,14 +33,6 @@ rule reweighting_polarity:
 # p.d.f. weighting -------------------------------------------------------------
 #    Adds pdfWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
-rule reweighting_dg0:
-  wildcard_constraints:
-    mode = "MC_Bs2JpsiPhi"
-  input:
-    sample = lambda wcs: tuples(wcs,weight='pdfWeight'),
-  params:
-    original = "{year}/MC_Bs2JpsiPhi_dG0.json",
-    target = "{year}/MC_Bs2JpsiPhi.json",
 rule reweighting_pdf:
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
