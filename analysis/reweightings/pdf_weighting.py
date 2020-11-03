@@ -157,12 +157,11 @@ if __name__ == '__main__':
 
   print(f'Loading {input_file}')
   df = uproot.open(input_file)[tree_name].pandas.df(flatten=None)
-  if 'pdfWeight' in output_file:
-    df['pdfWeight'] = pdf_weighting(df, target_params, original_params, mode)
-    print('dg0Weight was succesfully calculated')
-  elif 'dg0Weight' in output_file:
+  df['pdfWeight'] = pdf_weighting(df, target_params, original_params, mode)
+  print('pdfWeight was succesfully calculated')
+  if 'MC_Bs2JpsiPhi' == mode:
     df['dg0Weight'] = dg0_weighting(df, target_params, original_params, mode)
-    print('pdfWeight was succesfully calculated')
+    print('dg0Weight was succesfully calculated')
 
   # Save weights to file -------------------------------------------------------
   #    Save pdfWeight to the file
