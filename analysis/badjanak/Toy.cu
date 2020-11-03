@@ -208,37 +208,41 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
     ${ftype} pdf = 0.0;
 
     // Get pdf value from angular distribution
-    unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
-    pdf = getDiffRate(data,
-                      G, DG, DM, CSP[bin],
-                      ASlon[bin], APlon[bin], APpar[bin], APper[bin],
-                      pSlon,      pPlon,      pPpar,      pPper,
-                      dSlon[bin], dPlon,      dPpar,      dPper,
-                      lSlon,      lPlon,      lPpar,      lPper,
-                      tLL, tUL,
-                      sigma_offset, sigma_slope, sigma_curvature, mu,
-                      eta_bar_os, eta_bar_ss,
-                      p0_os,  p1_os, p2_os,
-                      p0_ss,  p1_ss, p2_ss,
-                      dp0_os, dp1_os, dp2_os,
-                      dp0_ss, dp1_ss, dp2_ss,
-                      coeffs,
-                      angular_weights,
-                      USE_FK, USE_ANGACC, USE_TIMEACC,
-                      USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
+    // if time is larger than asked, put pdf to zero
+    if ((time < tLL) || (time > tUL))
+    {
+      pdf = 0.0;
+    }
+    else
+    {
+      unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
+      pdf = getDiffRate(data,
+                        G, DG, DM, CSP[bin],
+                        ASlon[bin], APlon[bin], APpar[bin], APper[bin],
+                        pSlon,      pPlon,      pPpar,      pPper,
+                        dSlon[bin], dPlon,      dPpar,      dPper,
+                        lSlon,      lPlon,      lPpar,      lPper,
+                        tLL, tUL,
+                        sigma_offset, sigma_slope, sigma_curvature, mu,
+                        eta_bar_os, eta_bar_ss,
+                        p0_os,  p1_os, p2_os,
+                        p0_ss,  p1_ss, p2_ss,
+                        dp0_os, dp1_os, dp2_os,
+                        dp0_ss, dp1_ss, dp2_ss,
+                        coeffs,
+                        angular_weights,
+                        USE_FK, USE_ANGACC, USE_TIMEACC,
+                        USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
 
-    pdf *= exp((G-0.5*DG)*(time-tLL));
-    pdf *= (G-0.5*DG)*(1- exp((G-0.5*DG)*(-tUL+tLL)));
-
+      pdf *= exp((G-0.5*DG)*(time-tLL));
+      pdf *= (G-0.5*DG)*(1- exp((G-0.5*DG)*(-tUL+tLL)));
+    }
     // final checks ------------------------------------------------------------
 
     // check if probability is greater than the PROB_MAX
     if (pdf > PROB_MAX) {
       printf("WARNING: PDF [ = %lf] > PROB_MAX [ = %lf]\n", pdf, PROB_MAX);
     }
-
-    // if time is larger than asked, put pdf to zero
-    if (time > tUL) { pdf = 0.0; }
 
     // stop if it's taking too much iterations ---------------------------------
     iter++;
