@@ -24,7 +24,6 @@ from ipanema import ristra, Sample, Parameters, Parameter, Optimizer
 
 import badjanak
 
-
 # Parse arguments for this script
 def argument_parser():
   p = argparse.ArgumentParser()
@@ -45,7 +44,7 @@ def argument_parser():
 
 def pdf_weighting(data, target_params, original_params, mode):
   # Modify flags, compile model and get kernels
-  badjanak.config['debug_evt'] = 0
+  badjanak.config['debug_evt'] = 2930619
   badjanak.config['debug'] = 0
   badjanak.config['fast_integral'] = 0
 
@@ -60,7 +59,7 @@ def pdf_weighting(data, target_params, original_params, mode):
                 'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
                 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
 
-  badjanak.get_kernels()
+  badjanak.get_kernels(True)
   cross_rate = badjanak.delta_gamma5_mc
 
   # Load file
