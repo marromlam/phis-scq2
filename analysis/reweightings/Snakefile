@@ -41,24 +41,6 @@ rule reweighting_dg0:
   params:
     original = "{year}/MC_Bs2JpsiPhi_dG0.json",
     target = "{year}/MC_Bs2JpsiPhi.json",
-  output:
-    sample = temp(SAMPLES_PATH+'{year}/MC_Bs2JpsiPhi/{version}_dg0Weight.root')
-  log:
-    'output/log/reweightings/pdf_weighting/{year}/MC_Bs2JpsiPhi/{version}.log'
-  run:
-    shell(f"""(time\
-      python analysis/reweightings/pdf_weighting.py\
-             --input-file {input.sample}\
-             --tree-name DecayTree\
-             --output-file {output.sample}\
-             --target-params analysis/params/generator/{params.target}\
-             --original-params analysis/params/generator/{params.original}\
-             --mode {wildcards.mode}
-    ) &> {log}""")
-    send_mail(f"P.D.F. weighting", f"{log}")
-
-
-
 rule reweighting_pdf:
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
