@@ -38,6 +38,8 @@ from utils.helpers import  version_guesser, timeacc_guesser
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
+tLL = hjson.load(open('config.json'))['tLL']
+tUL = hjson.load(open('config.json'))['tUL']
 
 ################################################################################
 
@@ -116,8 +118,7 @@ ANGACC = args['flag']
 
 # Prepare the cuts -----------------------------------------------------------
 CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-#CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
-CUT = cuts_and(CUT,'time>=0.3 & time<=15')
+CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
 
 for k,v in args.items():
   print(f'{k}: {v}')
@@ -129,10 +130,8 @@ print(f"\n{80*'='}\n",
 
 # Lists of data variables to load and build arrays
 real  = ['cosK','cosL','hphi','time']                        # angular variables
-real += ['X_M','sigmat']                                     # mass and sigmat
-#real += ['tagOS_dec','tagSS_dec', 'tagOS_eta', 'tagSS_eta']  # tagging
-real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']  # tagging
-#real += ['0*B_ID','0*B_ID', '0*B_ID', '0*B_ID']  # tagging
+real += ['mHH','sigmat']                                     # mass and sigmat
+real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']      # tagging
 weight_rd='(sw)'
 
 
@@ -199,8 +198,8 @@ for i, y in enumerate(YEARS):
   for d in [data[f'{y}']['biased'],data[f'{y}']['unbiased']]:
     sw = np.zeros_like(d.df['sw'])
     for l,h in zip(mass[:-1],mass[1:]):
-      pos = d.df.eval(f'X_M>={l} & X_M<{h}')
-      this_sw = d.df.eval(f'sw*(X_M>={l} & X_M<{h})')
+      pos = d.df.eval(f'mHH>={l} & mHH<{h}')
+      this_sw = d.df.eval(f'sw*(mHH>={l} & mHH<{h})')
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
     d.df['sWeight'] = sw
     d.allocate(input=real,weight='sWeight',output='0*time')
