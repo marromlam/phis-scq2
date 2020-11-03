@@ -113,7 +113,7 @@ def plot_timeacc_fit(params, data, weight,
 
 
 
-def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=20, log=False, axes=False, modelabel=None, label=None):
+def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24, log=False, axes=False, modelabel=None, label=None):
   """
   Hi Marcos,
 
@@ -186,6 +186,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=20,
 
   # Manipulate the decay-time dependence of the efficiency
   x = ref.cmbins#np.linspace(0.3,15,200)
+  print(x)
   X = np.linspace(0.3,15,200)
   y = wrap_unc(badjanak.bspline, x, *coeffs)
   y_nom = unp.nominal_values(y)
@@ -215,9 +216,10 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=20,
   
   # Splines for pdf ploting
   y_upp, y_low = get_confidence_bands(x, y, sigma=conf_level)/y_spl
-  y_nom_s = interp1d(x, y_nom/y_spl, kind='cubic')
-  y_upp_s = interp1d(x, y_upp, kind='cubic')
-  y_low_s = interp1d(x, y_low, kind='cubic')
+  y_nom_s = interp1d(x[:-1], y_nom[:-1]/y_spl, kind='cubic')
+  y_upp_s = interp1d(x[:-1], y_upp[:-1], kind='cubic')
+  y_low_s = interp1d(x[:-1], y_low[:-1], kind='cubic')
+  print(x[:-1])
   y_nom_s = extrap1d(y_nom_s)
   y_upp_s = extrap1d(y_upp_s)
   y_low_s = extrap1d(y_low_s)
@@ -242,7 +244,6 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=20,
   
   # If log, then log both axes
   if log:
-    axplot.set_yscale('log')
     axplot.set_xscale('log')
   
   # Labeling
