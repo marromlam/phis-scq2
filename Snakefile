@@ -27,7 +27,7 @@ MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
 
 # Some wildcards options ( this is not actually used )
-modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0',#'MC_Bs2JpsiPhi',
+modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bs2JpsiPhi',
          'Bd2JpsiKstar', 'MC_Bd2JpsiKstar'];
 YEARS = {#
   '2011'  : ['2011'],
@@ -71,6 +71,7 @@ include: 'analysis/angular_acceptance/Snakefile'
 include: 'analysis/angular_fit/Snakefile'
 include: 'analysis/bundle/Snakefile'
 include: 'analysis/params/Snakefile'
+include: 'analysis/toys/Snakefile'
 
 
 # Final rule (compile slides) --------------------------------------------------
