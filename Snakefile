@@ -104,7 +104,7 @@ rule compile_slides:
     #               year=['2015']),
     #               #year=['2015','2016','2017','2018']),
   output:
-    "output/bundle/b2cc_{date}.pdf"
+    "output/b2cc_{date}.pdf"
   log:
     'output/log/bundle/compile_slides/{date}.log'
   run:
@@ -114,6 +114,6 @@ rule compile_slides:
       print(f"Creating main_{date}.tex from main.tex template")
       os.system(f"cp slides/containers/main.tex slides/main_{date}.tex")
     shell(f"cd slides/; latexmk -xelatex main_{date}.tex")
-    shell(f"mv slides/main_{date}.pdf output/b2cc_{date}.pdf")
+    shell(f"cp slides/main_{date}.pdf output/b2cc_{date}.pdf")
     shell(f"cd slides/; latexmk -c -silent main_{date}.tex")
     shell(f"rm slides/*.xdv")

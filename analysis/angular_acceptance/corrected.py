@@ -117,37 +117,37 @@ if __name__ == '__main__':
   print(weight_mc,weight_rd)
 
   # Allocate some arrays with the needed branches
-  mc.allocate(reco=reco+['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time'])
-  mc.allocate(true=true+['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time'])
+  mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
+  mc.allocate(true=true+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
   mc.allocate(pdf='0*time', ones='time/time', zeros='0*time')
   mc.allocate(weight=weight_mc)
 
   #%% Compute standard kinematic weights ---------------------------------------
-  #     This means compute the kinematic weights using 'X_M','B_P' and 'B_PT'
+  #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
   printsec('Compute angWeights correcting MC sample in kinematics')
-  print(f" * Computing kinematic GB-weighting in B_PT, B_P and X_M")
+  print(f" * Computing kinematic GB-weighting in pTB, pB and mHH")
 
-  reweighter.fit(original        = mc.df[['X_M','B_P','B_PT']],
-                 target          = rd.df[['X_M','B_P','B_PT']],
+  reweighter.fit(original        = mc.df[['mHH','pB','pTB']],
+                 target          = rd.df[['mHH','pB','pTB']],
                  original_weight = mc.df.eval(weight_mc),
                  target_weight   = rd.df.eval(weight_rd));
-  angWeight = reweighter.predict_weights(mc.df[['X_M', 'B_P', 'B_PT']])
+  angWeight = reweighter.predict_weights(mc.df[['mHH', 'pB', 'pTB']])
   kinWeight[list(mc.df.index)] = angWeight
   
   print(f"{'idx':>3} | {'sw':>11} | {'polWeight':>11} | {'angWeight':>11} ")
   for i in range(0,100):
     if kinWeight[i] != 0:
-      print(f"{str(i):>3} | {mc.df['sWeight'][i]:+.8f} | {mc.df['polWeight'][i]:+.8f} | {kinWeight[i]:+.8f} ")
+      print(f"{str(i):>3} | {mc.df.eval('sw/gb_weights')[i]:+.8f} | {mc.df['polWeight'][i]:+.8f} | {kinWeight[i]:+.8f} ")
 
   np.save(args['output_weights_file'], kinWeight)
 
   #%% Compute angWeights correcting with kinematic weights ---------------------
-  #     This means compute the kinematic weights using 'X_M','B_P' and 'B_PT'
+  #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
   print(" * Computing angular weights")
 
-  angacc = badjanak.get_angular_cov(mc.true, mc.reco, 
+  angacc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, 
                                      mc.weight*ristra.allocate(angWeight),
                                      **mc.params.valuesdict())
 
@@ -155,9 +155,10 @@ if __name__ == '__main__':
   pars = Parameters()
   for i in range(0,len(w)):
     #print(f'w[{i}] = {w[i]:+.16f}')
-    correl = {f'w{j}':cov[i][j] for j in range(0,len(w)) if i>0 and j>0}
-    pars.add({'name': f'w{i}', 'value': w[i], 'stdev': uw[i], 'correl': correl,
-              'free': False, 'latex': f'w_{i}'})
+    correl = {f'w{j}{TRIGGER[0]}': corr[i][j]
+              for j in range(0, len(w)) if i > 0 and j > 0}
+    pars.add({'name': f'w{i}{TRIGGER[0]}', 'value': w[i], 'stdev': uw[i], 'correl': correl,
+              'free': False, 'latex': f'w_{i}^{TRIGGER[0]}'})
   print(f" * Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
 
   print(f"{pars}")

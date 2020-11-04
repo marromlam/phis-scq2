@@ -43,15 +43,14 @@ access that place with your CERN credentials which basically involves doing
 In order not to be prompted your password every time a file is being synced,
 it is very useful to set up a passwordless login to lxplus (basically involves)
 using `kinit user@CERN.CH` therefore bypasing ssh with your kerberos
-credentials. Sometimes conda harms kinit access to credential cache, hence it is
-better to do kinit before activating the environment.
+credentials.
 
 Now one should be able to run all the pipeline without doing nothing but
 running a rule. So, for example, if you want to do the final fit, you are
 running the following example and that is it!
 ```bash
-kinit user@CERN.CH
 activatephisscq
+kinit user@CERN.CH
 snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_base_base.json -j
 ```
 
@@ -64,14 +63,17 @@ read before running any of the related rules concerning that part
 This pipeline can run
 - [x] *Tuples syncronization:* automatically download files from eos and correctly sync them locally
   - [x] Download tuples from eos
+  - [x] Reduction of branches
   - [ ] Convert them to `.hdf5` format
 - [ ] *Subtract background*: computing sWeights for different samples
 - [x] *Reweighting*: compute different reweightings needed to attain other parts of the analysis (or computed in other parts of the pipeline)
   - [x] Compute `polWeight`, `pdfWeight`, `dg0Weight` and `kinWeight` for time acceptance.
   - [x] Compute `angWeight` and `kkpWeight` for angular acceptance.
+  - [x] Plots
 - [x] *Time acceptance*: compute the decay-time dependence of the efficiency
   - [x] B-splines method
   - [ ] Histogram method
+  - [x] Plots
 - [ ] *CSP factors*: compute the interference between S-wave, P-wave and D-wave amplitudes
 - [ ] *Time resolution*: ...
 - [ ] *Flavor tagging*: ...
@@ -79,21 +81,26 @@ This pipeline can run
   - [x] Angular weights method
   - [ ] Histogram method
   - [ ] Ylm method
+  - [ ] Plots
 - [x] *Time-dependent angular fit*: extract the physics parameters
   - [ ] Real Run1 data samples
   - [x] Real Run2 data samples
   - [x] Monte Carlo samples
   - [x] Toy samples
+  - [ ] Plots
 - [ ] *Toy MC generator*: generate toys to estimate fit bias
-  - [ongoing] Generate pdf events
-  - [ ] Generate momenta
+  - [x] Generate pdf events
+  - [ongoing] Generate momenta
 - [ ] *Cross-checks*: different studies for fit validation
-  - [ongoing] J/psiK+/K* lifetime
+  - [ongoing] J/psiK* lifetime
+  - [ongoing] J/psiK+ lifetime
   - [x] Binned studies: `sigmat`, `B_ETA`, `B_PT`, `time`
   - [x] Yearly studies: from 2015 to 2018
-  - [x] Time dependence of angular acceptance: check whether angles and time do factorize
+  - [ ] Time dependence of angular acceptance: check whether angles and time do factorize
   - [ ] Magnet studies: dependence on magnet polarity
-  - [ ] Other channels angular acceptance: $`B_d`$ and $`B_u`$
+  - [ ] $`B_u`$ angular acceptance
+  - [ ] $`B_d`$ Other channels angular acceptance
+  - [ongoing ] Fit bias
 
 
 

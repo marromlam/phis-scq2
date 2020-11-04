@@ -4,12 +4,15 @@ import os
 import builtins
 import numpy as np
 import ipanema
+from ipanema import ristra
 import warnings
 from reikna.cluda import functions, dtypes
 import platform
 import cpuinfo
 import re
 import math
+
+
 def get_sizes(size,BLOCK_SIZE=256):
     '''
     i need to check if this worls for 3d size and 3d block
@@ -100,7 +103,6 @@ def compile(verbose=False, pedantic=False):
             "TIMEANGULARDISTRIBUTION_CU":open(PATH+'/TimeAngularDistribution.cu').read(),
             "DECAYTIMEACCEPTANCE_CU":open(PATH+'/DecayTimeAcceptance.cu').read(),
             "DIFFERENTIALCROSSRATE_CU":open(PATH+'/DifferentialCrossRate.cu').read(),
-            #"ANGULARACCEPTANCE_CU":open(PATH+'/AngularAcceptance.cu').read(),
             "TOY_CU":open(PATH+'/Toy.cu').read(),
            })
   if config['precision'] == 'double':
@@ -128,7 +130,7 @@ def get_kernels(verbose=False, pedantic=False):
   global __KERNELS__
   prog = compile(verbose, pedantic)
   items = ['pyDiffRate',
-           'pyFcoeffs', #'pyAngularWeights', 'pyAngularCov',
+           'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
            'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
            'dG5toy', 'integral_ijk_fx']
@@ -318,14 +320,14 @@ def cross_rate_parser_new(
   r['dp2_ss'] = dp2_ss
 
   # Time acceptance
-  timeacc = [ p[k] for k in p.keys() if re.compile('c[0-9]+').match(k)]
+  timeacc = [ p[k] for k in p.keys() if re.compile('c([0-9])([0-9])?(u|b)').match(k)]
   if timeacc:
     r['timeacc'] = THREAD.to_device(get_4cs(timeacc))
   else:
     r['timeacc'] = THREAD.to_device(np.float64([1]))
 
   # Angular acceptance
-  angacc = [ p[k] for k in p.keys() if re.compile('w[0-9]+').match(k)]
+  angacc = [ p[k] for k in p.keys() if re.compile('w([0-9])([0-9])?(u|b)').match(k)]
   if angacc:
     r['angacc'] = THREAD.to_device(np.float64(angacc))
   else:
@@ -412,7 +414,7 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
+def get_angular_acceptance_weights(true, reco, weight, BLOCK_SIZE=256, **parameters):
   # Filter some warnings
   warnings.filterwarnings('ignore')
 
@@ -429,111 +431,6 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
     fk = get_fk(reco.get()[:,0:3])
     ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
     return ang_acc
-
-  """
-  COMPUTE ANGULAR WEIGHTS WITH KERNEL (maybe this can be removed)
-  the main reason not to use this code is to be compatible with intel backends
-
-  # Prepare kernel size
-  g_size, l_size = get_sizes(true.shape[0],BLOCK_SIZE)
-  # Parse parameters
-  p = cross_rate_parser_new(**parameters)
-  # Allocate some Variables
-  ang_acc = ipanema.ristra.zeros(terms).astype(np.float64)
-  cov_mat = THREAD.to_device(np.zeros([terms,terms])).astype(np.float64)
-
-  # Get angular weights values
-  __KERNELS__.AngularWeights(
-    true, reco, weight, ang_acc,
-    # Differential cross-rate parameters
-    np.float64(p['G']),
-    np.float64(p['DG']),
-    np.float64(p['DM']),
-    p['CSP'].astype(np.float64),
-    p['ASlon'].astype(np.float64),
-    p['APlon'].astype(np.float64),
-    p['APpar'].astype(np.float64),
-    p['APper'].astype(np.float64),
-    np.float64(p['pSlon']),
-    np.float64(p['pPlon']),
-    np.float64(p['pPpar']),
-    np.float64(p['pPper']),
-    p['dSlon'].astype(np.float64),
-    np.float64(p['dPlon']),
-    np.float64(p['dPpar']),
-    np.float64(p['dPper']),
-    np.float64(p['lSlon']),
-    np.float64(p['lPlon']),
-    np.float64(p['lPpar']),
-    np.float64(p['lPper']),
-    np.float64(p['tLL']), np.float64(p['tUL']),
-    # Time resolution
-    np.float64(p['sigma_offset']),
-    np.float64(p['sigma_slope']),
-    np.float64(p['sigma_curvature']),
-    np.float64(p['mu']),
-    # Flavor tagging
-    np.float64(p['eta_os']), np.float64(p['eta_ss']),
-    np.float64(p['p0_os']), np.float64(p['p1_os']), np.float64(p['p2_os']),
-    np.float64(p['p0_ss']), np.float64(p['p1_ss']), np.float64(p['p2_ss']),
-    np.float64(p['dp0_os']), np.float64(p['dp1_os']), np.float64(p['dp2_os']),
-    np.float64(p['dp0_ss']), np.float64(p['dp1_ss']), np.float64(p['dp2_ss']),
-    # Decay-time acceptance
-    THREAD.to_device(np.float64([1])).astype(np.float64),
-    # Angular acceptance
-    THREAD.to_device(np.float64([1])).astype(np.float64),
-    np.int32(true.shape[0]),
-    global_size=g_size, local_size=l_size
-  )
-
-  # Get angular weights covariance matrix
-  __KERNELS__.AngularCov(
-    true, reco, weight, ang_acc, cov_mat, np.float64(scale),
-    # Differential cross-rate parameters
-    np.float64(p['G']),
-    np.float64(p['DG']),
-    np.float64(p['DM']),
-    p['CSP'].astype(np.float64),
-    p['ASlon'].astype(np.float64),
-    p['APlon'].astype(np.float64),
-    p['APpar'].astype(np.float64),
-    p['APper'].astype(np.float64),
-    np.float64(p['pSlon']),
-    np.float64(p['pPlon']),
-    np.float64(p['pPpar']),
-    np.float64(p['pPper']),
-    p['dSlon'].astype(np.float64),
-    np.float64(p['dPlon']),
-    np.float64(p['dPpar']),
-    np.float64(p['dPper']),
-    np.float64(p['lSlon']),
-    np.float64(p['lPlon']),
-    np.float64(p['lPpar']),
-    np.float64(p['lPper']),
-    np.float64(p['tLL']), np.float64(p['tUL']),
-    # Time resolution
-    np.float64(p['sigma_offset']),
-    np.float64(p['sigma_slope']),
-    np.float64(p['sigma_curvature']),
-    np.float64(p['mu']),
-    # Flavor tagging
-    np.float64(p['eta_os']), np.float64(p['eta_ss']),
-    np.float64(p['p0_os']), np.float64(p['p1_os']), np.float64(p['p2_os']),
-    np.float64(p['p0_ss']), np.float64(p['p1_ss']), np.float64(p['p2_ss']),
-    np.float64(p['dp0_os']), np.float64(p['dp1_os']), np.float64(p['dp2_os']),
-    np.float64(p['dp0_ss']), np.float64(p['dp1_ss']), np.float64(p['dp2_ss']),
-    # Decay-time acceptance
-    THREAD.to_device(np.float64([1])).astype(np.float64),
-    # Angular acceptance
-    THREAD.to_device(np.float64([1])).astype(np.float64),
-    np.int32(true.shape[0]),
-    global_size=g_size, local_size=l_size
-      )
-
-  # Arrays from device to host
-  w = ang_acc.get(); cov = cov_mat.get()
-
-  """
 
   # Get angular weights with weight applied and sum all events
   w = get_weights(true, reco, weight).sum(axis=0)
@@ -563,7 +460,7 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
   for i in range(0,cov.shape[0]):
     for j in range(0,cov.shape[1]):
       corr[i,j] = final_cov[i][j]/np.sqrt(final_cov[i][i]*final_cov[j][j])
-  return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr #result#/result[0]
+  return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr
 
 
 
@@ -577,7 +474,7 @@ def get_angular_cov(true, reco, weight, BLOCK_SIZE=256, **parameters):
 
 def splinexerf(
       time, lkhd,
-      b0=1, b1=1.3, b2=1.5, b3=1.8, b4=2.1, b5=2.3, b6=2.2, b7=2.1, b8=2.0,
+      coeffs,
       mu=0.0, sigma=0.04, gamma=0.6,
       tLL = 0.3, tUL = 15,
       BLOCK_SIZE=256
@@ -594,12 +491,12 @@ def splinexerf(
 
   Look at pySingleTimeAcc kernel definition to see more help.
   """
-  b = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
-  #print(b,mu,sigma,gamma)
   g_size, l_size = get_sizes(lkhd.shape[0],BLOCK_SIZE)
+  #print(coeffs,mu,sigma,gamma)
+
   __KERNELS__.SingleTimeAcc(
       time, lkhd, # input, output
-      THREAD.to_device(get_4cs(b)).astype(np.float64),
+      THREAD.to_device(get_4cs(coeffs)).astype(np.float64),
       np.float64(mu), np.float64(sigma), np.float64(gamma),
       np.float64(tLL),np.float64(tUL),
       np.int32(lkhd.shape[0]),
@@ -610,9 +507,8 @@ def splinexerf(
 
 def sbxscxerf(
       time_a, time_b, lkhd_a, lkhd_b,
-      a0=1, a1=1.3, a2=1.5, a3=1.8, a4=2.1, a5=2.3, a6=2.2, a7=2.1, a8=2.0,
+      coeffs_a, coeffs_b,
       mu_a=0.0, sigma_a=0.04, gamma_a=0.6,
-      b0=1, b1=1.2, b2=1.4, b3=1.7, b4=2.2, b5=2.2, b6=2.1, b7=2.0, b8=1.9,
       mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
       tLL = 0.3, tUL = 15,
       BLOCK_SIZE=256, **crap):
@@ -629,15 +525,13 @@ def sbxscxerf(
 
   Look at kernel definition to see more help
   """
-  a = [a0, a1, a2, a3, a4, a5, a6, a7, a8]
-  b = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
   size_a  = np.int32(lkhd_a.shape[0]);
   size_b  = np.int32(lkhd_b.shape[0])
   size_max = max(size_a,size_b)
   __KERNELS__.RatioTimeAcc(
     time_a, time_b, lkhd_a, lkhd_b,
-    THREAD.to_device(get_4cs(a)).astype(np.float64),
-    THREAD.to_device(get_4cs(b)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_a)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_b)).astype(np.float64),
     np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
     np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(tLL),np.float64(tUL),
@@ -649,11 +543,9 @@ def sbxscxerf(
 # --- #
 def saxsbxscxerf(
       time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-      a0=1, a1=1.3, a2=1.5, a3=1.8, a4=2.1, a5=2.3, a6=2.2, a7=2.1, a8=2.0,
+      coeffs_a, coeffs_b, coeffs_c,
       mu_a=0.0, sigma_a=0.04, gamma_a=0.6,
-      b0=1, b1=1.2, b2=1.4, b3=1.7, b4=2.2, b5=2.2, b6=2.1, b7=2.0, b8=1.9,
       mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
-      c0=1, c1=1.2, c2=1.4, c3=1.7, c4=2.2, c5=2.2, c6=2.1, c7=2.0, c8=1.9,
       mu_c=0.0, sigma_c=0.04, gamma_c=0.6,
       tLL = 0.3, tUL = 15,
       BLOCK_SIZE=256, **crap):
@@ -670,9 +562,6 @@ def saxsbxscxerf(
 
   Look at kernel definition to see more help
   """
-  a = [a0, a1, a2, a3, a4, a5, a6, a7, a8]
-  b = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
-  c = [c0, c1, c2, c3, c4, c5, c6, c7, c8]
   size_a  = np.int32(lkhd_a.shape[0]);
   size_b  = np.int32(lkhd_b.shape[0])
   size_c  = np.int32(lkhd_c.shape[0])
@@ -680,9 +569,9 @@ def saxsbxscxerf(
   g_size, l_size = get_sizes(size_max,BLOCK_SIZE)
   __KERNELS__.FullTimeAcc(
     time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-    THREAD.to_device(get_4cs(a)).astype(np.float64),
-    THREAD.to_device(get_4cs(b)).astype(np.float64),
-    THREAD.to_device(get_4cs(c)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_a)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_b)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_c)).astype(np.float64),
     np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
     np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(mu_c), np.float64(sigma_c), np.float64(gamma_c),
@@ -694,29 +583,21 @@ def saxsbxscxerf(
 
 
 def bspline(time, *coeffs, BLOCK_SIZE=32):
-  time_d = THREAD.to_device(time).astype(np.float64)
-  spline_d = THREAD.to_device(0*time).astype(np.float64)
+  if isinstance(time, np.ndarray):
+    time_d = THREAD.to_device(time).astype(np.float64)
+    spline_d = THREAD.to_device(0*time).astype(np.float64)
+    deallocate = True
+  else:
+    time_d = time
+    spline_d = THREAD.to_device(0*time).astype(np.float64)
+    deallocate = False
   coeffs_d = THREAD.to_device(get_4cs(coeffs)).astype(np.float64)
-  n_evt = len(time)
   __KERNELS__.Spline(
-    time_d, spline_d, coeffs_d, np.int32(n_evt),
-    global_size=(n_evt,)
+    time_d, spline_d, coeffs_d, np.int32(len(time)),
+    global_size=(len(time),)
   )
-  return spline_d.get()
+  return ristra.get(spline_d) if deallocate else spline_d
 
-
-# def bspline(time, BLOCK_SIZE=32, *coeffs):
-#   #coeffs = [b0, b1, b2, b3, b4, b5, b6, b7, b8]
-#   print(coeffs)
-#   time_d = THREAD.to_device(time).astype(np.float64)
-#   spline_d = THREAD.to_device(0*time).astype(np.float64)
-#   coeffs_d = THREAD.to_device(get_4cs(coeffs)).astype(np.float64)
-#   n_evt = len(time)
-#   __KERNELS__.Spline(
-#     time_d, spline_d, coeffs_d, np.int32(n_evt),
-#     global_size=(n_evt,)
-#   )
-#   return spline_d.get()
 
 
 
@@ -821,33 +702,47 @@ def get_4cs(listcoeffs):
 #     Complex kernels running in device
 
 def cexp(z):
-  z_dev = THREAD.to_device(np.complex128(z))
+  if isinstance(z, np.ndarray):
+    z_dev = THREAD.to_device(np.complex128(z))
+    deallocate = True
+  else:
+    z_dev = z
+    deallocate = False
   w_dev = THREAD.to_device(np.complex128(0*z))
   __KERNELS__.cexp(z_dev, w_dev, global_size=(len(z),))
-  return w_dev.get()
+  return ristra.get(w_dev) if deallocate else w_dev
+
+
 
 def cerfc(z):
-  z_dev = THREAD.to_device(np.complex128(z))
+  if isinstance(z, np.ndarray):
+    z_dev = THREAD.to_device(np.complex128(z))
+    deallocate = True
+  else:
+    z_dev = z
+    deallocate = False
   w_dev = THREAD.to_device(np.complex128(0*z))
   __KERNELS__.cerfc(z_dev, w_dev, global_size=(len(z),))
-  return w_dev.get()
+  return ristra.get(w_dev) if deallocate else w_dev
+
+
 
 def wofz(z):
-  z_dev = THREAD.to_device(np.complex128(z))
+  if isinstance(z, np.ndarray):
+    z_dev = THREAD.to_device(np.complex128(z))
+    deallocate = True
+  else:
+    z_dev = z
+    deallocate = False
   w_dev = THREAD.to_device(np.complex128(0*z))
-  __KERNELS__.faddeeva(z_dev, w_dev, global_size=(len(z),))
-  return w_dev.get()
+  __KERNELS__.wofz(z_dev, w_dev, global_size=(len(z),))
+  return ristra.get(w_dev) if deallocate else w_dev
+
+
 
 def get_fk(z):
   z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
   w = np.zeros((z.shape[0],len(config['tristan'])))
   w_dev = THREAD.to_device(np.ascontiguousarray(w, dtype=np.float64))
-  # print(z_dev)
-  # print(w_dev)
-  # print("get_fk z_dev.shape:",z.shape)
-  # print("get_fk w_dev.shape:",w.shape)
-
-
   __KERNELS__.Fcoeffs(z_dev, w_dev, np.int32(len(z)), global_size=(len(z)))
-  #print("-->",w_dev)
-  return w_dev.get()
+  return ristra.get(w_dev)

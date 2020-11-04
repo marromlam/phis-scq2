@@ -1,3 +1,13 @@
+DESCRIPTION = """
+    This script downloads tuples from open('config.json')->['eos'] and places
+    them, properly renamed within the convention of phis-scq, in the
+    open('config.json')->['path'] (the so-called sidecar folder)
+"""
+
+__author__ = ['Marcos Romero Lamas']
+__email__ = ['mromerol@cern.ch']
+__all__ = []
+
 import uproot
 import argparse
 import os
@@ -7,39 +17,22 @@ import numpy as np
 
 binned_vars = {'eta':'B_ETA', 'pt':'B_PT', 'sigmat':'sigmat'}
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-
-def argument_parser():
-  parser = argparse.ArgumentParser(description='Sync tuples.')
-  # Samples
-  parser.add_argument('--year',
-                      default = '2015',
-                      help='Full root file with huge amount of branches.')
-  parser.add_argument('--mode',
-                      default = 'Bd2JpsiKstar',
-                      help='Full root file with huge amount of branches.')
-  parser.add_argument('--version',
-                      default = 'v0r5',
-                      help='Full root file with huge amount of branches.')
-  parser.add_argument('--tree',
-                      default = 'DecayTree',
-                      help='Input file tree name.')
-  parser.add_argument('--output',
-                      default = '/scratch17/marcos.romero/phis_samples/2015/Bd2JpsiKstar/v0r5_sWeight.root',
-                      help='Input file tree name.')
-  parser.add_argument('--uproot-kwargs',
-                      #default = '{"entrystart":0, "entrystop":100}',
-                      help='Arguments to uproot.pandas.df')
-
-  return parser
-
-
+EOSPATH = hjson.load(open('config.json'))['eos']
 
 
 
 
 
 if __name__ == "__main__":
-  args = vars(argument_parser().parse_args())
+  p = argparse.ArgumentParser(description=DESCRIPTION)
+  # Samples
+  p.add_argument('--year', help='Full root file with huge amount of branches.')
+  p.add_argument('--mode', help='Full root file with huge amount of branches.')
+  p.add_argument('--version', help='Full root file with huge amount of branches.')
+  p.add_argument('--tree', help='Input file tree name.')
+  p.add_argument('--output', help='Input file tree name.')
+  p.add_argument('--uproot-kwargs', help='Arguments to uproot.pandas.df')
+  args = vars(p.parse_args())
 
   # Get the flags and that stuff
   v = args['version']
@@ -48,11 +41,12 @@ if __name__ == "__main__":
   tree = args['tree']
   scq_path = os.path.dirname(os.path.abspath(args['output']))
   all_files = []; all_dfs = []
+
   # Downloading everything xrdcp root://eoslhcb.cern.ch/
   print(f"Downloading {m}_{y}_selected_bdt_sw_{v}.root")
-  eos_path  = f'/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2'
-  eos_path += f'/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
-  status = os.system(f"""scp lxplus:{eos_path} {scq_path}""")
+  eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
+  #status = os.system(f"""scp lxplus:{eos_path} {scq_path}""")
+  status = os.system(f"""xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}""")
   print(status)
   if status==0:
     all_files.append([f"{m}_{y}_selected_bdt_sw_{v}.root",None])
@@ -61,9 +55,9 @@ if __name__ == "__main__":
 
   for var in binned_vars.keys():
     print(f"Downloading {m}_{y}_selected_bdt_sw_{var}_{v}.root")
-    eos_path  = f'/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2'
-    eos_path += f'/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_{var}_{v}.root'
-    status = os.system(f"""scp -r lxplus:{eos_path} {scq_path}""")
+    eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_{var}_{v}.root'
+    #status = os.system(f"""scp -r lxplus:{eos_path} {scq_path}""")
+    status = os.system(f"""xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}""")
     print(status)
     if status==0:
       all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root",f"{var}"])

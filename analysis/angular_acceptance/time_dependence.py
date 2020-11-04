@@ -26,15 +26,11 @@ initialize('cuda',1)
 from ipanema import ristra, Sample, Parameters
 
 # get bsjpsikk and compile it with corresponding flags
-import bsjpsikk
-bsjpsikk.config['debug'] = 0
-bsjpsikk.config['debug_evt'] = 0
-bsjpsikk.config['use_time_acc'] = 0
-bsjpsikk.config['use_time_offset'] = 0
-bsjpsikk.config['use_time_res'] = 0
-bsjpsikk.config['use_perftag'] = 1
-bsjpsikk.config['use_truetag'] = 0
-bsjpsikk.get_kernels()
+import badjanak
+badjanak.config['fast_integral'] = 0
+badjanak.config['debug'] = 0
+badjanak.config['debug_evt'] = 0
+badjanak.get_kernels(True)
 
 ################################################################################
 

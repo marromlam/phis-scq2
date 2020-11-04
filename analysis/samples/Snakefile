@@ -4,25 +4,28 @@
 #    and then it worka automatically.
 
 rule samples_sync_tuple:
+  resources:
+    mem_mb=4096
   output:
-    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root')
+    # here I remove the temp for the sWeight file, in the future it will be added again
+    sample = SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root'
   log:
-    'output/log/samples/sync_ntuples/{year}/{mode}/{version}.log'
+    'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
   run:
-    if f"{wildcards.version}" in ("v0r0", "v0r1"):
-      # WARNING:  this works only in Santiago
-      shell(f"cp /scratch03/marcos.romero/phisRun2/cooked_test_files/{wildcards.year}/{wildcards.mode}/{wildcards.version}_sWeight.root {output}")
-    else:
+    try:
       shell(f"""
         (time\
-        python analysis/samples/new_downloader.py\
+        python analysis/samples/sync_tuples.py\
                --year {wildcards.year}\
                --mode {wildcards.mode}\
                --version {wildcards.version}\
                --tree DecayTree\
                --output {output}\
-        ) &> {log} 2>&1
-      """)
+        ) &> {log}""")
+    except:
+      print("These tuples are not yet avaliable at root://eoslhcb.cern.ch/*.",
+      'You may need to create those tuples yourself or ask B2CC people to'
+      'produce them')
 
 
 
@@ -31,17 +34,19 @@ rule samples_sync_tuple:
 #    the ntuples that will actually be used for phis-scq analysis package.
 
 rule samples_reduce_tuple:
+  resources:
+    mem_mb=2048
   input:
     sample = lambda wcs: tuples(wcs, weight='kinWeight')
   output:
     sample = SAMPLES_PATH+'{year}/{mode}/{version,[A-Za-z0-9]+}.root'
   log:
-    'output/log/samples/reduce_ntuples/{year}_{mode}_{version}.log'
+    'output/log/samples_reduce_tuple/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
-    python analysis/samples/reduce_ntuples.py\
+    python analysis/samples/reduce_tuples.py\
            --input-file {input.sample}\
            --output-file {output.sample}\
            --input-tree DecayTree\
            --output-tree DecayTree\
-    ) &> {log} 2>&1""")
+    ) &> {log}""")

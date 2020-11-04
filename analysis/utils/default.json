@@ -1,56 +1,85 @@
 {
-  "path": "sidecar/",
-  "mail": ['mromerol@cern.ch'],
-  "angular_acceptance_bdtconfig": {
-    "n_estimators":50//20
-    "learning_rate":0.1//0.5
-    "max_depth":3//25
-    "min_samples_leaf":1000//5000
-    "gb_args":{"subsample": 1}
-  },
+  // Sidecar path --------------------------------------------------------------
+  //    Sidecar is the folder where all tuples will be placed, and from rules
+  //    are fed from.
+  "path" : "sidecar/",
+  //
+  // EOS path ------------------------------------------------------------------
+  //    This is the EOS folder where all tuples for the Run2 phis analysis are
+  //    placed. 
+  "eos" : "/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2",
+  //
+  // Mail list -----------------------------------------------------------------
+  //    If a rule runs succesfully, its log will be forwarded to all the emails
+  //    in the following list (by default it is empty).
+  "mail" : ["mromerol@cern.ch"],
   // Gd value ------------------------------------------------------------------
-  //   This value is shared by all steps of this analysis, so a change here
-  //   would imply a change in the whole set of results
-  "Gd_value": 0.65789,
+  //    This value is shared by all steps of this analysis, so a change here
+  //    would imply a change in the whole set of results. By default this value
+  //    is set to the World Average
+  "Gd_value" :  0.65789, //1/ps
+  //
+  // Cuts in decay-time --------------------------------------------------------
+  //    When doing computations, some cuts for decay-time are applied, both to
+  //    low decay-times (removing prompt background) and to higher decay-times
+  //    (since there there is no statistics)
+  "tLL" :  0.30, // ps
+  "tUL" :  15.0, // ps
+  //
   // Time acceptance parameters ------------------------------------------------
-  "time_acceptance_resolutions": {
-    "MC_Bs2JpsiPhi": {
-      "mu":0,
-      "sigma":0.0417,
-      "DGsd":0.003486
+  "time_acceptance_resolutions" : {
+    "MC_Bs2JpsiPhi" : {
+      "mu" : 0,
+      "sigma" : 0.0417,
+      "DGsd" : 0.003486
     },
-    "MC_Bs2JpsiPhi_dG0": {
-      "mu":0,
-      "sigma":0.0417,
-      "DGsd":0.003486
+    "MC_Bs2JpsiPhi_dG0" : {
+      "mu" : 0,
+      "sigma" : 0.0417,
+      "DGsd" : 0.003486
     },
-    "MC_Bd2JpsiKstar": {
-      "mu":0,
-      "sigma":0.03864,
-      "DGsd":0.00044
+    "MC_Bd2JpsiKstar" : {
+      "mu" : 0,
+      "sigma" : 0.03864,
+      "DGsd" : 0.00044
     },
-    "Bd2JpsiKstar": {
-      "mu":0,
-      "sigma":0.04244,
-      "DGsd":0.0
+    "Bd2JpsiKstar" : {
+      "mu" : 0,
+      "sigma" : 0.04244,
+      "DGsd" : 0.0
     },
   }
-  "time_acceptance_bdtconfig": {
-    "n_estimators":20,
-    "learning_rate":0.3,
-    "max_depth":3,
-    "min_samples_leaf":1000,
-    "gb_args":{"subsample": 1}
+  "time_acceptance_bdtconfig" : {
+    "n_estimators" : 20,
+    "learning_rate" : 0.3,
+    "max_depth" : 3,
+    "min_samples_leaf" : 1000,
+    "gb_args" : {"subsample" :  1}
   },
-  "binned_variables": ["pt", "sigmat", "eta"],
-  "binned_variables_cuts": {
-    "pt": ['pt >= 0 & pt < 3.8e3', 'pt >= 3.8e3 & pt < 6e3', 'pt >= 6e3 & pt <= 9e3', 'pt >= 9e3'],
-    "eta": ['eta >= 0 & eta <= 3.3', 'eta >= 3.3 & eta <= 3.9', 'eta >= 3.9 & eta <= 6'],
-    "sigmat": ['sigmat >= 0 & sigmat <= 0.031', 'sigmat >= 0.031 & sigmat <= 0.042', 'sigmat >= 0.042 & sigmat <= 0.15']
+  //
+  // Angular acceptance parameters ----------------------------------------------
+  //    The bdtconfig that is going to correct MC variables to RD during the
+  //    iterative procedure is defined here.
+  "angular_acceptance_bdtconfig": {
+    "n_estimators": 20
+    "learning_rate": 0.1 //0.5
+    "max_depth": 3 //25
+    "min_samples_leaf": 1000 //5000
+    "gb_args": {"subsample": 1}
   },
-  "binned_variables_ranges": {
-    "pt": [0, 3.8e3, 6e3, 9e3, 40e3],
-    "eta": [0, 3.3, 3.9, 6],
-    "sigmat": [0, 0.031, 0.042, 0.150]
+  //
+  // Fit-check in bins ----------------------------------------------------------
+  //    As systematic checks, some fits in bins of variables are done. These ones
+  //    must be defined here in order to phis-scq properly handle them. 
+  "binned_variables" :  ["pt", "sigmat", "eta"],
+  "binned_variables_cuts" : {
+    "pt" :  ["pt >= 0 & pt < 3.8e3", "pt >= 3.8e3 & pt < 6e3", "pt >= 6e3 & pt <= 9e3", "pt >= 9e3"],
+    "eta" :  ["eta >= 0 & eta <= 3.3", "eta >= 3.3 & eta <= 3.9", "eta >= 3.9 & eta <= 6"],
+    "sigmat" :  ["sigmat >= 0 & sigmat <= 0.031", "sigmat >= 0.031 & sigmat <= 0.042", "sigmat >= 0.042 & sigmat <= 0.15"]
+  },
+  "binned_variables_ranges" : {
+    "pt" :  [0, 3.8e3, 6e3, 9e3, 40e3],
+    "eta" :  [0, 3.3, 3.9, 6],
+    "sigmat" :  [0, 0.031, 0.042, 0.150]
   }
 }

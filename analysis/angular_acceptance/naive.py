@@ -117,7 +117,7 @@ if __name__ == '__main__':
         f"\n{80*'='}\n")
 
   print('Computing angular weights')
-  ang_acc = badjanak.get_angular_cov(mc.true, mc.reco, mc.weight, **mc.params.valuesdict() )
+  ang_acc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, mc.weight, **mc.params.valuesdict() )
   w, uw, cov, corr = ang_acc
   pars = Parameters()
   for i in range(0,len(w)):

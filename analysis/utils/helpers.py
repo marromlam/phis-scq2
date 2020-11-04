@@ -26,14 +26,13 @@ import numpy as np
 
 def timeacc_guesser(timeacc):
   # Check if the tuple will be modified
-  pattern = r'\A(simul|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?\Z'
+  pattern = r'\A(single|simul|lifeBd|lifeBu)(Noncorr|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder)?\Z'
   p = re.compile(pattern)
   try:
-    timeacc, minimizer = p.search(timeacc).groups()
-    return timeacc, minimizer.lower() if minimizer else 'minuit'
+    timeacc, kind, minimizer = p.search(timeacc).groups()
+    return timeacc, kind, minimizer.lower() if minimizer else 'minuit'
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
-
 
 def version_guesser(version):
   # Check if the tuple will be modified

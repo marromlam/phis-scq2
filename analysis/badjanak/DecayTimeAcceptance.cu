@@ -585,28 +585,6 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
   fpdf *= calcTimeAcceptance(t, coeffs , tLL, tUL);
 
-  // if ( get_global_id(0) == 0 ) {
-  // printf("COEFFS             : %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
-  //         coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
-  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
-  //         coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
-  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
-  //         coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
-  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
-  //         coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
-  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
-  //         coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
-  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
-  //         coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
-  // printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
-  //         coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
-  // }
-  // if ( get_global_id(0) < 3 )
-  // {
-  //   printf("TIME ACC           : t=%.16f, sigma=%.16f, gamma=%.16f, tLL=%.16f, tUL=%.16f,     fpdf=%.16f\n",
-  //          t, sigma, gamma, tLL, tUL, fpdf);
-  // }
-
   // Compute per event normatization
   ${ftype} ti  = 0.0;  ${ftype} tf  =  0.0;
   for (int k = 0; k < NKNOTS; k++) {

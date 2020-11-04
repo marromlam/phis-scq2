@@ -12,7 +12,7 @@ rule reweighting_polarity:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
     original = lambda wcs: tuples(wcs,weight='sWeight'),
-    target   = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',weight='sWeight'),
+    target   = lambda wcs: tuples(wcs,mode='cdata',weight='sWeight'),
   output:
     sample   = temp(SAMPLES_PATH+'{year}/{mode}/{version}_polWeight.root')
   log:
@@ -25,7 +25,7 @@ rule reweighting_polarity:
                  --target-file {input.target}\
                  --target-treename DecayTree\
                  --output-file {output.sample}
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Polarity weighting", f"{log}")
 
 
@@ -33,32 +33,6 @@ rule reweighting_polarity:
 # p.d.f. weighting -------------------------------------------------------------
 #    Adds pdfWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
-rule reweighting_dg0:
-  wildcard_constraints:
-    mode = "MC_Bs2JpsiPhi"
-  input:
-    sample = lambda wcs: tuples(wcs,weight='pdfWeight'),
-  params:
-    original = "{year}/MC_Bs2JpsiPhi_dG0.json",
-    target = "{year}/MC_Bs2JpsiPhi.json",
-  output:
-    sample = temp(SAMPLES_PATH+'{year}/MC_Bs2JpsiPhi/{version}_dg0Weight.root')
-  log:
-    'output/log/reweightings/pdf_weighting/{year}/MC_Bs2JpsiPhi/{version}.log'
-  run:
-    shell(f"""(time\
-      python analysis/reweightings/pdf_weighting.py\
-             --input-file {input.sample}\
-             --tree-name DecayTree\
-             --output-file {output.sample}\
-             --target-params analysis/params/generator/{params.target}\
-             --original-params analysis/params/generator/{params.original}\
-             --mode {wildcards.mode}
-    ) &> {log} #2>&1""")
-    send_mail(f"P.D.F. weighting", f"{log}")
-
-
-
 rule reweighting_pdf:
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
@@ -80,7 +54,7 @@ rule reweighting_pdf:
              --target-params analysis/params/generator/{params.target}\
              --original-params analysis/params/generator/{params.original}\
              --mode {wildcards.mode}
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"P.D.F. weighting", f"{log}")
 
 
@@ -123,7 +97,7 @@ rule reweighting_kinematic:
           --learning-rate {bdconfig['learning_rate']}\
           --max-depth {bdconfig['max_depth']}\
           --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log} #2>&1""")
+      ) &> {log}""")
     elif mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
         python analysis/reweightings/kinematic_weighting.py\
@@ -140,7 +114,7 @@ rule reweighting_kinematic:
           --learning-rate {bdconfig['learning_rate']}\
           --max-depth {bdconfig['max_depth']}\
           --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log} #2>&1""")
+      ) &> {log}""")
     elif mode.startswith('Bd2JpsiKstar'):
       shell(f"""(time\
         python analysis/reweightings/kinematic_weighting.py\
@@ -157,11 +131,11 @@ rule reweighting_kinematic:
           --learning-rate {bdconfig['learning_rate']}\
           --max-depth {bdconfig['max_depth']}\
           --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log} #2>&1""")
+      ) &> {log}""")
     else:
       shell(f"""(time\
         cp {input.original} {output.sample}
-      ) &> {log} #2>&1""")
+      ) &> {log}""")
     send_mail(f"Kinematic weighting", f"{log}")
 
 
@@ -194,7 +168,7 @@ rule reweightings_plot_time_acceptance:
            --branch {wildcards.branch}\
            --sweighted {output.sweighted}\
            --kinweighted {output.kinweighted}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Polarity weighting", f"{log}", f"{output}".split(' '))
 
 
@@ -223,7 +197,7 @@ rule reweightings_plot_angular_acceptance:
            --branch {wildcards.branch}\
            --treename {wildcards.angacc}_{wildcards.timeacc}\
            --kkpweighted {output}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")
     send_mail(f"Polarity weighting", f"{output}")              # WARNING #
 
 
@@ -247,4 +221,4 @@ rule reweightings_simon_comparisons:
            --branch {wildcards.branch}\
            --sweighted {output.sweighted}\
            --kinweighted {output.kinweighted}\
-    ) &> {log} #2>&1""")
+    ) &> {log}""")

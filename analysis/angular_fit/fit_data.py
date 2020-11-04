@@ -26,7 +26,7 @@ from ipanema import Sample, Parameters, Parameter, ristra, optimize
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
 badjanak.config['debug'] = 0
-badjanak.config['fast_integral'] = 0
+badjanak.config['fast_integral'] = 1
 badjanak.config['debug_evt'] = 774
 
 # import some phis-scq utils
@@ -38,6 +38,8 @@ from utils.helpers import  version_guesser, timeacc_guesser
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
+tLL = hjson.load(open('config.json'))['tLL']
+tUL = hjson.load(open('config.json'))['tUL']
 
 ################################################################################
 
@@ -116,8 +118,7 @@ ANGACC = args['flag']
 
 # Prepare the cuts -----------------------------------------------------------
 CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-#CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
-CUT = cuts_and(CUT,'time>=0.3 & time<=15')
+CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
 
 for k,v in args.items():
   print(f'{k}: {v}')
@@ -129,9 +130,8 @@ print(f"\n{80*'='}\n",
 
 # Lists of data variables to load and build arrays
 real  = ['cosK','cosL','hphi','time']                        # angular variables
-real += ['X_M','sigmat']                                     # mass and sigmat
-real += ['tagOS_dec','tagSS_dec', 'tagOS_eta', 'tagSS_eta']  # tagging
-#real += ['0*B_ID','0*B_ID', '0*B_ID', '0*B_ID']  # tagging
+real += ['mHH','sigmat']                                     # mass and sigmat
+real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']      # tagging
 weight_rd='(sw)'
 
 
@@ -185,31 +185,21 @@ for i, y in enumerate(YEARS):
     data[f'{y}'][f'{t}'].flavor['dp1_ss'].min = -0.1
     data[f'{y}'][f'{t}'].flavor['dp1_ss'].max = +0.1
     '''
-
-    print(data[f'{y}'][f'{t}'].csp)
-    print(data[f'{y}'][f'{t}'].flavor)
-    print(data[f'{y}'][f'{t}'].resolution)
   for t, coeffs in zip(['biased','unbiased'],[args['timeacc_biased'],args['timeacc_unbiased']]):
-    print(f" *  Associating {y}-{t} time acceptance[{i}] from\n    {coeffs.split(',')[i]}")
     c = Parameters.load(coeffs.split(',')[i])
-    print(c)
     knots = np.array(Parameters.build(c,c.fetch('k.*'))).tolist()
     badjanak.config['knots'] = knots
-    print(knots)
     data[f'{y}'][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
     data[f'{y}'][f'{t}'].tLL = c['tLL'].value
     data[f'{y}'][f'{t}'].tUL = c['tUL'].value
   for t, weights in zip(['biased','unbiased'],[args['angacc_biased'],args['angacc_unbiased']]):
-    print(f" *  Associating {y}-{t} angular weights from\n    {weights.split(',')[i]}")
     w = Parameters.load(weights.split(',')[i])
-    print(w)
     data[f'{y}'][f'{t}'].angacc = Parameters.build(w,w.fetch('w.*'))
-  print(f" *  Allocating {y} arrays in device ")
   for d in [data[f'{y}']['biased'],data[f'{y}']['unbiased']]:
     sw = np.zeros_like(d.df['sw'])
     for l,h in zip(mass[:-1],mass[1:]):
-      pos = d.df.eval(f'X_M>={l} & X_M<{h}')
-      this_sw = d.df.eval(f'sw*(X_M>={l} & X_M<{h})')
+      pos = d.df.eval(f'mHH>={l} & mHH<{h}')
+      this_sw = d.df.eval(f'sw*(mHH>={l} & mHH<{h})')
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
     d.df['sWeight'] = sw
     d.allocate(input=real,weight='sWeight',output='0*time')
@@ -246,7 +236,7 @@ Parameter(name="pSlon", value= 0.00, min=-1.0, max=1.0,
           free=POLDEP, latex=r"\phi_S - \phi_0",
           blindstr="BsPhisSDelFullRun2",
           blind=BLIND, blindscale=2.0, blindengine="root"),
-Parameter(name="pPlon", value=-0.03, min=-5.0, max=5.0,
+Parameter(name="pPlon", value=-0.03, min=-1.0, max=1.0,
           free=True, latex=r"\phi_0",
           blindstr="BsPhiszeroFullRun2" if POLDEP else "BsPhisFullRun2",
           blind=BLIND, blindscale=2.0 if POLDEP else 1.0, blindengine="root"),
@@ -292,17 +282,17 @@ Parameter(name="DGs", value= (1-DGZERO)*0.1, min= 0.0, max= 1.7,
           free=1-DGZERO, blindstr="BsDGsFullRun2", blind=BLIND, blindscale=1.0, blindengine="root", latex=r"\Delta\Gamma_s"),
 Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1, latex=r"\Gamma_s - \Gamma_d"),
 Parameter(name="DM", value=17.757,   min=15.0, max=20.0, latex=r"\Delta m"),
-Parameter("eta_os", value = data['2016']['unbiased'].flavor['eta_os'].value,
+Parameter("eta_os", value = data[str(YEARS[0])]['unbiased'].flavor['eta_os'].value,
           free = False),
-Parameter("eta_ss", value = data['2016']['unbiased'].flavor['eta_ss'].value, free = False),
-Parameter("p0_os",  value = data['2016']['unbiased'].flavor['p0_os'].value,  free = True, min =  0.0, max = 1.0, latex = "p^{\rm OS}_{0}"),
-Parameter("p1_os",  value = data['2016']['unbiased'].flavor['p1_os'].value,  free = True, min =  0.5, max = 1.5, latex = "p^{\rm OS}_{1}"),
-Parameter("p0_ss",  value = data['2016']['unbiased'].flavor['p0_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{0}"),
-Parameter("p1_ss",  value = data['2016']['unbiased'].flavor['p1_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{1}"),
-Parameter("dp0_os", value = data['2016']['unbiased'].flavor['dp0_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{0}"),
-Parameter("dp1_os", value = data['2016']['unbiased'].flavor['dp1_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{1}"),
-Parameter("dp0_ss", value = data['2016']['unbiased'].flavor['dp0_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{0}"),
-Parameter("dp1_ss", value = data['2016']['unbiased'].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"),
+Parameter("eta_ss", value = data[str(YEARS[0])]['unbiased'].flavor['eta_ss'].value, free = False),
+Parameter("p0_os",  value = data[str(YEARS[0])]['unbiased'].flavor['p0_os'].value,  free = True, min =  0.0, max = 1.0, latex = "p^{\rm OS}_{0}"),
+Parameter("p1_os",  value = data[str(YEARS[0])]['unbiased'].flavor['p1_os'].value,  free = True, min =  0.5, max = 1.5, latex = "p^{\rm OS}_{1}"),
+Parameter("p0_ss",  value = data[str(YEARS[0])]['unbiased'].flavor['p0_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{0}"),
+Parameter("p1_ss",  value = data[str(YEARS[0])]['unbiased'].flavor['p1_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{1}"),
+Parameter("dp0_os", value = data[str(YEARS[0])]['unbiased'].flavor['dp0_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{0}"),
+Parameter("dp1_os", value = data[str(YEARS[0])]['unbiased'].flavor['dp1_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{1}"),
+Parameter("dp0_ss", value = data[str(YEARS[0])]['unbiased'].flavor['dp0_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{0}"),
+Parameter("dp1_ss", value = data[str(YEARS[0])]['unbiased'].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"),
 ]
 
 pars.add(*list_of_parameters);
@@ -311,16 +301,16 @@ print(pars)
 tagging_pars = Parameters()
 list_tagging_parameters = [
   # tagging parameters - currently set to the same values for all years!!!
-  Parameter("eta_os", value = data['2016']['unbiased'].flavor['eta_os'].value, free = False),
-  Parameter("eta_ss", value = data['2016']['unbiased'].flavor['eta_ss'].value, free = False),
-  Parameter("p0_os",  value = data['2016']['unbiased'].flavor['p0_os'].value,  free = True, min =  0.0, max = 1.0, latex = "p^{\rm OS}_{0}"),
-  Parameter("p1_os",  value = data['2016']['unbiased'].flavor['p1_os'].value,  free = True, min =  0.5, max = 1.5, latex = "p^{\rm OS}_{1}"),
-  Parameter("p0_ss",  value = data['2016']['unbiased'].flavor['p0_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{0}"),
-  Parameter("p1_ss",  value = data['2016']['unbiased'].flavor['p1_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{1}"),
-  Parameter("dp0_os", value = data['2016']['unbiased'].flavor['dp0_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{0}"),
-  Parameter("dp1_os", value = data['2016']['unbiased'].flavor['dp1_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{1}"),
-  Parameter("dp0_ss", value = data['2016']['unbiased'].flavor['dp0_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{0}"),
-  Parameter("dp1_ss", value = data['2016']['unbiased'].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"),
+  Parameter("eta_os", value = data[str(YEARS[0])]['unbiased'].flavor['eta_os'].value, free = False),
+  Parameter("eta_ss", value = data[str(YEARS[0])]['unbiased'].flavor['eta_ss'].value, free = False),
+  Parameter("p0_os",  value = data[str(YEARS[0])]['unbiased'].flavor['p0_os'].value,  free = True, min =  0.0, max = 1.0, latex = "p^{\rm OS}_{0}"),
+  Parameter("p1_os",  value = data[str(YEARS[0])]['unbiased'].flavor['p1_os'].value,  free = True, min =  0.5, max = 1.5, latex = "p^{\rm OS}_{1}"),
+  Parameter("p0_ss",  value = data[str(YEARS[0])]['unbiased'].flavor['p0_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{0}"),
+  Parameter("p1_ss",  value = data[str(YEARS[0])]['unbiased'].flavor['p1_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{1}"),
+  Parameter("dp0_os", value = data[str(YEARS[0])]['unbiased'].flavor['dp0_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{0}"),
+  Parameter("dp1_os", value = data[str(YEARS[0])]['unbiased'].flavor['dp1_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{1}"),
+  Parameter("dp0_ss", value = data[str(YEARS[0])]['unbiased'].flavor['dp0_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{0}"),
+  Parameter("dp1_ss", value = data[str(YEARS[0])]['unbiased'].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"),
 ]
 tagging_pars.add(*list_tagging_parameters)
 print(tagging_pars)
@@ -339,26 +329,26 @@ def wrapper_fcn(input, output, **pars):
                          BLOCK_SIZE=256, **p)
 # test here crap
 # wrapper_fcn(data['2016']['biased'].input,data['2016']['biased'].output,**pars.valuesdict(),**data['2016']['biased'].timeacc.valuesdict(),**data['2016']['biased'].angacc.valuesdict())
-# wrapper_fcn(data['2016']['unbiased'].input,data['2016']['unbiased'].output,**pars.valuesdict(),**data['2016']['unbiased'].timeacc.valuesdict(),**data['2016']['unbiased'].angacc.valuesdict())
+# wrapper_fcn(data[str(YEARS[0])]['unbiased'].input,data[str(YEARS[0])]['unbiased'].output,**pars.valuesdict(),**data[str(YEARS[0])]['unbiased'].timeacc.valuesdict(),**data[str(YEARS[0])]['unbiased'].angacc.valuesdict())
 #
 # wrapper_fcn(data['2016']['biased'].input,data['2016']['biased'].output,**pars.valuesdict(),**data['2016']['biased'].timeacc.valuesdict(),**data['2016']['biased'].angacc.valuesdict())
-# wrapper_fcn(data['2016']['unbiased'].input,data['2016']['unbiased'].output,**pars.valuesdict(),**data['2016']['unbiased'].timeacc.valuesdict(),**data['2016']['unbiased'].angacc.valuesdict())
+# wrapper_fcn(data[str(YEARS[0])]['unbiased'].input,data[str(YEARS[0])]['unbiased'].output,**pars.valuesdict(),**data[str(YEARS[0])]['unbiased'].timeacc.valuesdict(),**data[str(YEARS[0])]['unbiased'].angacc.valuesdict())
 # exit()
 
 #Calculate tagging constraints - currently using one value for all years only!!!
 def taggingConstraints(data):
-  rhoOS = data['2016']['unbiased'].flavor['rho01_os'].value
-  rhoSS = data['2016']['unbiased'].flavor['rho01_ss'].value
+  rhoOS = data[str(YEARS[0])]['unbiased'].flavor['rho01_os'].value
+  rhoSS = data[str(YEARS[0])]['unbiased'].flavor['rho01_ss'].value
 
-  pOS = np.matrix([data['2016']['unbiased'].flavor['p0_os'].value,
-                  data['2016']['unbiased'].flavor['p1_os'].value])
-  pSS = np.matrix([data['2016']['unbiased'].flavor['p0_ss'].value,
-                  data['2016']['unbiased'].flavor['p1_ss'].value])
+  pOS = np.matrix([data[str(YEARS[0])]['unbiased'].flavor['p0_os'].value,
+                  data[str(YEARS[0])]['unbiased'].flavor['p1_os'].value])
+  pSS = np.matrix([data[str(YEARS[0])]['unbiased'].flavor['p0_ss'].value,
+                  data[str(YEARS[0])]['unbiased'].flavor['p1_ss'].value])
 
-  p0OS_err = data['2016']['unbiased'].flavor['p0_os'].stdev
-  p1OS_err = data['2016']['unbiased'].flavor['p1_os'].stdev
-  p0SS_err = data['2016']['unbiased'].flavor['p0_ss'].stdev
-  p1SS_err = data['2016']['unbiased'].flavor['p1_ss'].stdev
+  p0OS_err = data[str(YEARS[0])]['unbiased'].flavor['p0_os'].stdev
+  p1OS_err = data[str(YEARS[0])]['unbiased'].flavor['p1_os'].stdev
+  p0SS_err = data[str(YEARS[0])]['unbiased'].flavor['p0_ss'].stdev
+  p1SS_err = data[str(YEARS[0])]['unbiased'].flavor['p1_ss'].stdev
 
   covOS = np.matrix([[p0OS_err**2, p0OS_err*p1OS_err*rhoOS],
                      [p0OS_err*p1OS_err*rhoOS, p1OS_err**2]])
@@ -382,10 +372,10 @@ def fcn_data(parameters, data):
   pars_dict = parameters.valuesdict(blind=False)
   chi2TagConstr = 0.
 
-  chi2TagConstr += (pars_dict['dp0_os']-data['2016']['unbiased'].flavor['dp0_os'].value)**2/data['2016']['unbiased'].flavor['dp0_os'].stdev**2
-  chi2TagConstr += (pars_dict['dp1_os']-data['2016']['unbiased'].flavor['dp1_os'].value)**2/data['2016']['unbiased'].flavor['dp1_os'].stdev**2
-  chi2TagConstr += (pars_dict['dp0_ss']-data['2016']['unbiased'].flavor['dp0_ss'].value)**2/data['2016']['unbiased'].flavor['dp0_ss'].stdev**2
-  chi2TagConstr += (pars_dict['dp1_ss']-data['2016']['unbiased'].flavor['dp1_ss'].value)**2/data['2016']['unbiased'].flavor['dp1_ss'].stdev**2
+  chi2TagConstr += (pars_dict['dp0_os']-data[str(YEARS[0])]['unbiased'].flavor['dp0_os'].value)**2/data[str(YEARS[0])]['unbiased'].flavor['dp0_os'].stdev**2
+  chi2TagConstr += (pars_dict['dp1_os']-data[str(YEARS[0])]['unbiased'].flavor['dp1_os'].value)**2/data[str(YEARS[0])]['unbiased'].flavor['dp1_os'].stdev**2
+  chi2TagConstr += (pars_dict['dp0_ss']-data[str(YEARS[0])]['unbiased'].flavor['dp0_ss'].value)**2/data[str(YEARS[0])]['unbiased'].flavor['dp0_ss'].stdev**2
+  chi2TagConstr += (pars_dict['dp1_ss']-data[str(YEARS[0])]['unbiased'].flavor['dp1_ss'].value)**2/data[str(YEARS[0])]['unbiased'].flavor['dp1_ss'].stdev**2
 
   tagcvOS = np.matrix([pars_dict['p0_os'], pars_dict['p1_os']]) - tagConstr['pOS']
   tagcvSS = np.matrix([pars_dict['p0_ss'], pars_dict['p1_ss']]) - tagConstr['pSS']
@@ -430,6 +420,72 @@ def fcn_data(parameters, data):
   #print(chi2TagConstr)
   return chi2conc + chi2TagConstr#np.concatenate(chi2)
 
+
+
+
+
+
+
+
+
+################################################################################
+
+
+# print csp factors
+lb = [data[f'{y}']['biased'].csp.__str__(
+    ['value']).splitlines() for i, y in enumerate(YEARS)]
+print(f"\nCSP factors\n{80*'='}")
+for l in zip(*lb):
+  print(*l, sep="| ")
+
+# print flavor tagging parameters
+lb = [data[f'{y}']['biased'].flavor.__str__(
+    ['value']).splitlines() for i, y in enumerate(YEARS)]
+print(f"\nFlavor tagging parameters\n{80*'='}")
+for l in zip(*lb):
+  print(*l, sep="| ")
+
+# print time resolution
+lb = [data[f'{y}']['biased'].resolution.__str__(
+    ['value']).splitlines() for i, y in enumerate(YEARS)]
+print(f"\nResolution parameters\n{80*'='}")
+for l in zip(*lb):
+  print(*l, sep="| ")
+
+# print time acceptances
+lb = [data[f'{y}']['biased'].timeacc.__str__(
+    ['value']).splitlines() for i, y in enumerate(YEARS)]
+lu = [data[f'{y}']['unbiased'].timeacc.__str__(
+    ['value']).splitlines() for i, y in enumerate(YEARS)]
+print(f"\nBiased time acceptance\n{80*'='}")
+for l in zip(*lb):
+  print(*l, sep="| ")
+
+print(f"\nUnbiased time acceptance\n{80*'='}")
+for l in zip(*lu):
+  print(*l, sep="| ")
+
+# print angular acceptance
+lb = [data[f'{y}']['biased'].angacc.__str__(
+    ['value']).splitlines() for i, y in enumerate(YEARS)]
+lu = [data[f'{y}']['unbiased'].angacc.__str__(
+    ['value']).splitlines() for i, y in enumerate(YEARS)]
+print(f"\nBiased angular acceptance\n{80*'='}")
+for l in zip(*lb):
+  print(*l, sep="| ")
+print(f"\nUnbiased angular acceptance\n{80*'='}")
+for l in zip(*lu):
+  print(*l, sep="| ")
+print(f"\n")
+
+
+
+
+
+
+
+
+
 ################################################################################
 #%% Run and get the job done ###################################################
 
@@ -437,15 +493,18 @@ print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
 result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
                   verbose=False, timeit=True, tol=0.1, strategy=2)
 
-print(result)
+
 
 for p in  ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs',
                 'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
                 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
   if args['year'] == '2015,2016':
-    print(f"{p:>12} : {result.params[p].value:+.4f}  {result.params[p]._getval(False):+.4f}")
+    #print(f"{p:>12} : {result.params[p].value:+.4f}  {result.params[p]._getval(False):+.4f}")
+    print(f"{p:>12} : {result.params[p]._getval(False):+.4f} +/- {result.params[p].stdev:+.4f}")
   else:
     print(f"{p:>12} : {result.params[p].value:+.4f} +/- {result.params[p].stdev:+.4f}")
+
+print(result)
 
 
 

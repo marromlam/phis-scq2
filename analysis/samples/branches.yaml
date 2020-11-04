@@ -3,30 +3,35 @@ common: &common
   "cosK" : "helcosthetaK"
   "cosL" : "helcosthetaL"
   "hphi" : "helphi"
-  "B_ID" : "B_ID"
-  "X_M" : "X_M"
+  "idB" : "B_ID"
+  "mHH" : "X_M"
+  "idHH" : "X_ID"
   "sigmat" : "sigmat"
-  "hplus_P" : "hplus_P"
-  "hplus_PT" : "hplus_PT"
-  "hminus_P" : "hminus_P"
-  "hminus_PT" : "hminus_PT"
+  "pHp" : "hplus_P"
+  "pTHp" : "hplus_PT"
+  "pHm" : "hminus_P"
+  "pTHm" : "hminus_PT"
   "B_PT" : "B_PT"
-  "pt" : "B_PT"
-  "B_P" : "B_P"
+  "pTB" : "B_PT"
+  "pB" : "B_P"
   "hlt1b" : "hlt1b"
   "Jpsi_Hlt1DiMuonHighMassDecision_TOS" : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
-  "Polarity" : "Polarity"
-  "eta" : "B_ETA"
-  "eventNumber" : "eventNumber"
+  "magnet" : "Polarity"
+  "etaB" : "B_ETA"
+  "evtN" : "eventNumber"
   "sw" : "sw"
-  "sw_eta" : "sw_eta"
-  "sw_pt" : "sw_pt"
+  "sw_etaB" : "sw_eta"
+  "sw_pTB" : "sw_pt"
   "sw_sigmat" : "sw_sigmat"
+  "sWeight" : "sw"
+  "sWeight_etaB" : "sw_eta"
+  "sWeight_pTB" : "sw_pt"
+  "sWeight_sigmat" : "sw_sigmat"
+  "logIPChi2B" : "log_B_IPCHI2_mva"
 
 MC_common: &MC_common
   <<: *common
-  "X_ID" : "X_ID"
-  "B_ID_GenLvl" : "B_ID_GenLvl"
+  "genidB" : "B_ID_GenLvl"
   "truetime" : "1000*B_TRUETAU"
   "truecosK" : "truehelcosthetaK"
   "truecosL" : "truehelcosthetaL"
@@ -36,52 +41,48 @@ MC_common: &MC_common
   "gencosL" : "truehelcosthetaL_GenLvl"
   "genhphi" : "truehelphi_GenLvl"
   "kinWeight" : "kinWeight"
-  "kinWeight_eta" : "kinWeight_eta"
+  "kinWeight_etaB" : "kinWeight_eta"
   "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pt" : "kinWeight_pt"
+  "kinWeight_pTB" : "kinWeight_pt"
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
-  "B_BKGCAT" : "B_BKGCAT"
+  "bkgcatB" : "B_BKGCAT"
+  "gb_weights" : "gb_weights"
 
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+  <<: *MC_common
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
-  "gb_weights" : "gb_weights"
-  "sWeight" : "sw/gb_weights"
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
-  <<: *MC_Bs2JpsiPhi
-
-MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
-  <<: *MC_Bs2JpsiPhi
+  <<: *MC_common
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
-  <<: *MC_Bs2JpsiPhi_dG0
+  <<: *MC_common
 
 MC_Bs2JpsiPhi_Prompt:
   <<: *MC_Bs2JpsiPhi
 
 MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
-  "sWeight" : "sw"
 
 MC_Bu2JpsiKplus:
   <<: *common
 
-
-
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
-  "sWeight" : "sw"
-  "tagOS_dec" : "OS_Combination_DEC"
-  "tagSS_dec" : "B_SSKaonLatest_TAGDEC"
-  "tagOS_eta" : "OS_Combination_ETA"
-  "tagSS_eta" : "B_SSKaonLatest_TAGETA"
+  "tagOSdec" : "OS_Combination_DEC"
+  "tagSSdec" : "B_SSKaonLatest_TAGDEC"
+  "tagOSeta" : "OS_Combination_ETA"
+  "tagSSeta" : "B_SSKaonLatest_TAGETA"
 
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
-  "sWeight" : "sw"
   "kinWeight" : "kinWeight"
-  "kinWeight_eta" : "kinWeight_eta"
+  "kinWeight_etaB" : "kinWeight_eta"
   "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pt" : "kinWeight_pt"
+  "kinWeight_pTB" : "kinWeight_pt"
+
+Bu2JpsiKplus:
+  <<: *common

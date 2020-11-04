@@ -46,14 +46,10 @@ def polarity_weighting(original_file, original_treename,
     print('polarity-weighting.py: Missing target file. Exiting...')
     raise
 
-  if "polWeight".encode() in _original_tree.keys():
-    print('polarity-weighting.py: This file already has a polWeight. Exiting...')
-    exit()
-  else:
-    original_df       = _original_tree.pandas.df(flatten=None)
-    original_polarity = original_df["Polarity"].values
-    target_df         = _target_tree.pandas.df(branches="Polarity")
-    target_polarity   = target_df["Polarity"].values
+  original_df       = _original_tree.pandas.df(flatten=None)
+  original_polarity = original_df["Polarity"].values
+  target_df         = _target_tree.pandas.df(branches="Polarity")
+  target_polarity   = target_df["Polarity"].values
   print('DataFrames are ready')
 
   # Cook weights
