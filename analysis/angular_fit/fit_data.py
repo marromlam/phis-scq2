@@ -32,7 +32,7 @@ badjanak.config['debug_evt'] = 774
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser
+from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -92,6 +92,7 @@ def argument_parser():
   parser.add_argument('--flag',
     default = 'v0r1',
     help='Year of data-taking')
+  parser.add_argument('--blind', default=0, help='Year of data-taking')
   return parser
 
 
@@ -146,45 +147,12 @@ for i, y in enumerate(YEARS):
   resolution = Parameters.load(args['time_resolution'].split(',')[i])
   for t, T in zip(['biased','unbiased'],[0,1]):
     print(f" *  Loading {y} sample in {t} category\n    {args['samples'].split(',')[i]}")
-    tc = cuts_and(f'Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}', CUT)
+    tc = trigger_scissors(T, CUT)
     data[f'{y}'][f'{t}'] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
     data[f'{y}'][f'{t}'].csp = csp
     data[f'{y}'][f'{t}'].flavor = flavor
     data[f'{y}'][f'{t}'].resolution = resolution
-
-    '''
-    data[f'{y}'][f'{t}'].flavor['p0_os'].free = True
-    data[f'{y}'][f'{t}'].flavor['p0_os'].min = 0.0
-    data[f'{y}'][f'{t}'].flavor['p0_os'].max = 1.0
-
-    data[f'{y}'][f'{t}'].flavor['dp0_os'].free = True
-    data[f'{y}'][f'{t}'].flavor['dp0_os'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp0_os'].max = +0.1
-
-    data[f'{y}'][f'{t}'].flavor['p1_os'].free = True
-    data[f'{y}'][f'{t}'].flavor['p1_os'].min = 0.5
-    data[f'{y}'][f'{t}'].flavor['p1_os'].max = 1.5
-
-    data[f'{y}'][f'{t}'].flavor['dp1_os'].free = True
-    data[f'{y}'][f'{t}'].flavor['dp1_os'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp1_os'].max = +0.1
-
-    data[f'{y}'][f'{t}'].flavor['p0_ss'].free = True
-    data[f'{y}'][f'{t}'].flavor['p0_ss'].min = 0.0
-    data[f'{y}'][f'{t}'].flavor['p0_ss'].max = 2.0
-
-    data[f'{y}'][f'{t}'].flavor['dp0_ss'].free = True
-    data[f'{y}'][f'{t}'].flavor['dp0_ss'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp0_ss'].max = +0.1
-
-    data[f'{y}'][f'{t}'].flavor['p1_ss'].free = True
-    data[f'{y}'][f'{t}'].flavor['p1_ss'].min = 0.0
-    data[f'{y}'][f'{t}'].flavor['p1_ss'].max = 2.0
-
-    data[f'{y}'][f'{t}'].flavor['dp1_ss'].free = True
-    data[f'{y}'][f'{t}'].flavor['dp1_ss'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp1_ss'].max = +0.1
-    '''
+    print(data[f'{y}'][f'{t}'])
   for t, coeffs in zip(['biased','unbiased'],[args['timeacc_biased'],args['timeacc_unbiased']]):
     c = Parameters.load(coeffs.split(',')[i])
     knots = np.array(Parameters.build(c,c.fetch('k.*'))).tolist()
@@ -209,7 +177,7 @@ for i, y in enumerate(YEARS):
 SWAVE = True
 DGZERO = False
 POLDEP = False
-BLIND = True
+BLIND = args['blind']
 
 pars = Parameters()
 list_of_parameters = [#
