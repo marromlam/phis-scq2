@@ -285,9 +285,10 @@ ${ftype} getDiffRate( ${ftype} *data,
   ${ftype} hphi       = data[2];
   ${ftype} time       = data[3];
 
-  ${ftype} sigma_t    = data[4];                                // Time resolution
+  //${ftype} sigma_t    = 0.04554;                            // Time resolution
+  ${ftype} sigma_t    = data[4];                              // Time resolution
 
-  ${ftype} qOS        = data[5];                                        // Tagging
+  ${ftype} qOS        = data[5];                                      // Tagging
   ${ftype} qSS        = data[6];
   ${ftype} etaOS 	  	= data[7];
   ${ftype} etaSS 	    = data[8];
