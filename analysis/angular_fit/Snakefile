@@ -72,6 +72,7 @@ rule physics_params_data_run2:
            --year                    {",".join(YEARS['Run2'])}\
            --flag                    run2_{wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
+           --blind                   1\
     ) &> {log}""")
     send_mail(f"Physics Parameters RD Run2 :: {wildcards}", f"{log}")
 
