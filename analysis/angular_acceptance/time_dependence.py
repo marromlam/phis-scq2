@@ -90,11 +90,13 @@ YEAR = 2016
 VERSION = 'v0r5'
 MODE = 'MC_Bs2JpsiPhi'
 TRIGGER = 'unbiased'
-mc_params = f'angular_acceptance/params/{2016}/MC_Bs2JpsiPhi_dG0.json'
-mc_sample = f'/scratch17/marcos.romero/phis_samples/{YEAR}/{MODE}/{VERSION}.root'
-mc_weights = f'/scratch17/marcos.romero/phis_samples/{YEAR}/{MODE}/{VERSION}_angWeight.root'
-angular_acceptance = f'output_new/params/angular_acceptance/{YEAR}/Bs2JpsiPhi/{VERSION}_iteration4_{TRIGGER}.json'
-time_acceptance = f'output_new/params/time_acceptance/{YEAR}/Bd2JpsiKstar/{VERSION}_baseline_{TRIGGER}.json'
+mc_params = f'analysis/params/generator/{2016}/MC_Bs2JpsiPhi_dG0.json'
+mc_sample = f'/scratch17/marcos.romero/sidecar/{YEAR}/{MODE}/{VERSION}.root'
+mc_weights = f'/scratch17/marcos.romero/sidecar/{YEAR}/{MODE}/{VERSION}_run2_simul_kkpWeight.root'
+angular_acceptance = f'output/params/angular_acceptance/{YEAR}/Bs2JpsiPhi/{VERSION}_run2_simul_{TRIGGER}.json'
+time_acceptance = f'output/params/time_acceptance/{YEAR}/Bd2JpsiKstar/{VERSION}_simul_{TRIGGER}.json'
+
+
 
 #print(input_params_path,sample_path,output_tables_path)
 
@@ -114,14 +116,15 @@ output_params_path = args['output_params']
 ################################################################################
 
 
-
+pd
 
 # %% Load samples --------------------------------------------------------------
 
 # Load Monte Carlo sample
 smc = Sample.from_root(mc_sample)
 kin = Sample.from_root(mc_weights, treename='DecayTree')
-kkp = Sample.from_root(mc_weights, treename='2015&2016&2017&2018')
+smc.df = pd.concat([smc.df,kin.df],axis=1)
+del kin
 smc.assoc_params(mc_params.replace('TOY','MC').replace('2021','2018'))
 
 
@@ -135,26 +138,24 @@ elif TRIGGER == 'comb':
   trigger = 'comb';
 
 # Calculating the weight
-niter = len(kkp.find('kkp.*')) # get last iteration number
-mckin = smc.df.eval(weight)*kin.df.eval('kinWeight')
-smc.df['weight'] = mckin*kkp.df.eval(f'pdfWeight{niter}*kkpWeight{niter}').values
+n = len(smc.find('kkp.*')) # get last iteration number
+smc.df['weight'] = smc.df.eval(f'angWeight{n}*kkpWeight{n}*polWeight*sw/gb_weights').values
 
 # Load acceptances
 timeacc = Parameters.load(time_acceptance)
 angacc = Parameters.load(angular_acceptance)
 
 time = np.array( Parameters.build(timeacc,timeacc.find('k.*')+['tUL'])  )
-
+time
 smc.subdfs = []
 for i in range(0,len(time)-1):
   smc.subdfs.append( smc.df.query(f'time >= {time[i]} & time < {time[i+1]}') )
 
 
-f'time >= {time[i]} && time < {time[i+1]}'
 
 # Variables and branches to be used
 reco  = ['cosK', 'cosL', 'hphi', 'time']
-true  = ['true'+i+'_GenLvl' for i in reco]
+true  = ['gen'+i for i in reco]
 reco += ['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time']
 true += ['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time']
 
@@ -179,12 +180,17 @@ print(f"\n{80*'='}\n",
 w = []
 for i in range(0,len(time)-1):
   print(f'Computing angular weights for time >= {time[i]} & time < {time[i+1]}')
-  vtrue = ristra.allocate(np.array(smc.subdfs[i].eval(true)))
-  vreco = ristra.allocate(np.array(smc.subdfs[i].eval(reco)))
-  vweight = ristra.allocate(smc.subdfs[i]['weight'].values)
-  ang_acc = bsjpsikk.get_angular_cov(vtrue, vreco, vweight, **smc.params.valuesdict() )
+  vt = ristra.allocate(np.array(smc.subdfs[i].eval(true)).T)
+  vr = ristra.allocate(np.array(smc.subdfs[i].eval(reco)).T)
+  vw = ristra.allocate(smc.subdfs[i]['weight'].values)
+  ang_acc = badjanak.get_angular_acceptance_weights(vt, vr, vw, **smc.params.valuesdict() )
   print(ang_acc[0])
   w.append( unp.uarray(ang_acc[0], ang_acc[1]) )
+
+np.array(smc.subdfs[i].eval(true)).T.shape
+
+
+
 
 
 for k,v in angacc.items():
