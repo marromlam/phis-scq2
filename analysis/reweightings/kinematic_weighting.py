@@ -143,11 +143,12 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
                 trunc)
         kinWeight = np.where(ovars_df.eval(cut.replace(var,vvar)), kinWeight_, kinWeight)
       ovars_df[f'kinWeight_{var}'] = kinWeight
+      print('Original kinWeights')
+      print(ovars_df[kws])
   except:
     print('There arent such branches')
-
-  print('Original kinWeights')
-  print(ovars_df[kws])
+    print('Original kinWeights')
+    print(ovars_df[kws[0]])
 
   # %% Save weights to file ----------------------------------------------------
   if os.path.exists(output_file):
