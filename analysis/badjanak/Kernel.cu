@@ -89,6 +89,9 @@ const CONSTANT_MEM ${{ftype}} TRISTAN[{NTERMS}] = {TRISTAN};
 //#include "DecayTimeAcceptance.cu"
 {DECAYTIMEACCEPTANCE_CU}
 
+//#include "DecayTimeAcceptance.cu"
+{TAGGING_CU}
+
 //#include "DifferentialCrossRate.cu"
 {DIFFERENTIALCROSSRATE_CU}
 
