@@ -14,6 +14,10 @@ import math
 import yaml
 import hjson
 
+ROOT_PANDAS = True
+if ROOT_PANDAS:
+  import root_pandas
+
 # reweighting config
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
@@ -151,15 +155,15 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
     print(ovars_df[kws[0]])
 
   # %% Save weights to file ----------------------------------------------------
-  if os.path.exists(output_file):
-    print('Deleting previous %s'  % output_file)
-    os.remove(output_file)                               # delete file if exists
   print('Writing on %s' % output_file)
-  f = uproot.recreate(output_file)
-  f[original_treename] = uproot.newtree({var:'float64' for var in ovars_df})
-  f[original_treename].extend(ovars_df.to_dict(orient='list'))
-  f.close()
-
+  if ROOT_PANDAS:
+    root_pandas.to_root(ovars_df, output_file, key=original_treename)
+  else:
+    f = uproot.recreate(output_file)
+    f[original_treename] = uproot.newtree({var:'float64' for var in ovars_df})
+    f[original_treename].extend(ovars_df.to_dict(orient='list'))
+    f.close()
+    
   return kinWeight
 
 if __name__ == '__main__':
