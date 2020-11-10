@@ -1,10 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                       CUDA decay rate Bs -> mumuKK                         //
+//                         DIFFERENTIAL CROSS RATE                            //
 //                                                                            //
-//   Created: 2019-01-25                                                      //
-//  Modified: 2019-11-21                                                      //
-//    Author: Marcos Romero                                                   //
+//   Created: 2020-06-25                                                      //
+//    Author: Marcos Romero Lamas (mromerol@cern.ch)                          //
 //                                                                            //
 //    This file is part of phis-scq packages, Santiago's framework for the    //
 //                     phi_s analysis in Bs -> Jpsi K+ K-                     //
@@ -17,172 +16,7 @@
 
 
 
-// these lines should be moved to a taggin.cu file
 
-WITHIN_KERNEL
-${ftype} get_omega(${ftype} eta, ${ftype} tag,
-                 ${ftype} p0,  ${ftype} p1, ${ftype} p2,
-                 ${ftype} dp0, ${ftype} dp1, ${ftype} dp2,
-                 ${ftype} eta_bar)
-{
-    ${ftype} result = 0;
-    result += (p0 + tag*0.5*dp0);
-    result += (p1 + tag*0.5*dp1)*(eta - eta_bar);
-    result += (p2 + tag*0.5*dp2)*(eta - eta_bar)*(eta - eta_bar);
-
-    if(result < 0.0)
-    {
-      return 0;
-    }
-    return result;
-}
-
-
-
-WITHIN_KERNEL ${ftype} get_int_ta_spline(${ftype} delta_t,${ftype} G,${ftype} DM,${ftype} DG,${ftype} a,${ftype} b,${ftype} c,${ftype} d,${ftype} t_0,${ftype} t_1)
-{
-    ${ftype} G_sq = G*G;
-    ${ftype} G_cub = G_sq*G;
-    ${ftype} DG_sq = DG*DG;
-    ${ftype} DG_cub = DG_sq*DG;
-    ${ftype} delta_t_sq = delta_t*delta_t;
-    ${ftype} t_0_sq = t_0*t_0;
-    ${ftype} t_0_cub = t_0_sq*t_0;
-    ${ftype} t_1_sq = t_1*t_1;
-    ${ftype} t_1_cub = t_1_sq*t_1;
-
-    return -0.5*sqrt(2.)*sqrt(delta_t)
-    *(-2*a*pow(DG - 2*G, 4.)*pow(DG + 2*G, 3.)*(-exp(-0.5*t_1*(DG + 2*G)) + exp(-0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq)
-     + 2*a*pow(DG - 2*G, 3.)*pow(DG + 2*G, 4.)*(exp(0.5*t_0*(DG - 2*G)) - exp(0.5*t_1*(DG - 2*G)))
-     + b*pow(DG - 2*G, 4.)*pow(DG + 2*G, 2.)*(-2*(DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*t_1*(DG + 2*G)) + 2*(DG*t_1 + 2*G*t_1 + 2.)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
-     - 2*b*pow(DG - 2*G, 2.)*pow(DG + 2*G, 4.)*((-DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*DG*t_0 + G*t_1) + (DG*t_1 - 2*G*t_1 - 2.)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
-     + 2*c*pow(DG - 2*G, 4.)*(DG + 2*G)*(-(DG_sq*t_0_sq + 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*t_1*(DG + 2*G)) + (DG_sq*t_1_sq + 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
-     - 2*c*(DG - 2*G)*pow(DG + 2*G, 4.)*(-(DG_sq*t_0_sq - 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*DG*t_0 + G*t_1) + (DG_sq*t_1_sq - 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
-     + 2*d*pow(DG - 2*G, 4.)*((-DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) - 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 + 48*exp(0.5*t_0*(DG + 2*G)) - 48)*exp(-0.5*t_0*(DG + 2*G)) + (DG_cub*t_1_cub + 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) + 8*G_cub*t_1_cub + 24*G_sq*t_1_sq + 48*G*t_1 - 48*exp(0.5*t_1*(DG + 2*G)) + 48)*exp(-0.5*t_1*(DG + 2*G)))*exp(DG*G*delta_t_sq)
-     + 2*d*pow(DG + 2*G, 4.)*(((DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) + 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 - 48)*exp(0.5*DG*t_0) + 48*exp(G*t_0))*exp(-G*t_0) - ((DG_cub*t_1_cub - 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) - 8*G_cub*t_1_cub - 24*G_sq*t_1_sq - 48*G*t_1 - 48)*exp(0.5*DG*t_1) + 48*exp(G*t_1))*exp(-G*t_1)))
-    *exp(0.125*delta_t_sq*pow(DG - 2*G, 2.))/pow(DG_sq - 4*G_sq, 4.);
-}
-
-WITHIN_KERNEL ${ftype} get_int_tb_spline(${ftype} delta_t,${ftype} G,${ftype} DM,${ftype} DG,${ftype} a,${ftype} b,${ftype} c,${ftype} d,${ftype} t_0,${ftype} t_1)
-{
-    ${ftype} G_sq = G*G;
-    ${ftype} G_cub = G_sq*G;
-    ${ftype} DG_sq = DG*DG;
-    ${ftype} DG_cub = DG_sq*DG;
-    ${ftype} delta_t_sq = delta_t*delta_t;
-    ${ftype} t_0_sq = t_0*t_0;
-    ${ftype} t_0_cub = t_0_sq*t_0;
-    ${ftype} t_1_sq = t_1*t_1;
-    ${ftype} t_1_cub = t_1_sq*t_1;
-
-    return 0.5*sqrt(2.)*sqrt(delta_t)
-    *(-2*a*pow(DG - 2*G, 4.)*pow(DG + 2*G, 3.)*(-exp(-0.5*t_1*(DG + 2*G)) + exp(-0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq)
-    - 2*a*pow(DG - 2*G, 3.)*pow(DG + 2*G, 4.)*(exp(0.5*t_0*(DG - 2*G)) - exp(0.5*t_1*(DG - 2*G))) + b*pow(DG - 2*G, 4.)*pow(DG + 2*G, 2.)*(-2*(DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*t_1*(DG + 2*G)) + 2*(DG*t_1 + 2*G*t_1 + 2.)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
-    + 2*b*pow(DG - 2*G, 2.)*pow(DG + 2*G, 4.)*((-DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*DG*t_0 + G*t_1) + (DG*t_1 - 2*G*t_1 - 2.)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
-    + 2*c*pow(DG - 2*G, 4.)*(DG + 2*G)*(-(DG_sq*t_0_sq + 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*t_1*(DG + 2*G)) + (DG_sq*t_1_sq + 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
-    + 2*c*(DG - 2*G)*pow(DG + 2*G, 4.)*(-(DG_sq*t_0_sq - 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*DG*t_0 + G*t_1) + (DG_sq*t_1_sq - 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
-    + 2*d*pow(DG - 2*G, 4.)*((-DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) - 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 + 48*exp(0.5*t_0*(DG + 2*G)) - 48)*exp(-0.5*t_0*(DG + 2*G)) + (DG_cub*t_1_cub + 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) + 8*G_cub*t_1_cub + 24*G_sq*t_1_sq + 48*G*t_1 - 48*exp(0.5*t_1*(DG + 2*G)) + 48)*exp(-0.5*t_1*(DG + 2*G)))*exp(DG*G*delta_t_sq)
-    - 2*d*pow(DG + 2*G, 4.)*(((DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) + 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 - 48)*exp(0.5*DG*t_0) + 48*exp(G*t_0))*exp(-G*t_0) - ((DG_cub*t_1_cub - 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) - 8*G_cub*t_1_cub - 24*G_sq*t_1_sq - 48*G*t_1 - 48)*exp(0.5*DG*t_1) + 48*exp(G*t_1))*exp(-G*t_1)))
-    *exp(0.125*delta_t_sq*pow(DG - 2*G, 2.))/pow(DG_sq - 4*G_sq, 4.);
-}
-
-WITHIN_KERNEL ${ftype} get_int_tc_spline(${ftype} delta_t,${ftype} G,${ftype} DM,${ftype} DG,${ftype} a,${ftype} b,${ftype} c,${ftype} d,${ftype} t_0,${ftype} t_1)
-{
-    ${ftype} G_sq = G*G;
-    ${ftype} G_cub = G_sq*G;
-    ${ftype} DM_sq = DM*DM;
-    ${ftype} DM_fr = DM_sq*DM_sq;
-    ${ftype} DM_sx = DM_fr*DM_sq;
-    ${ftype} G_fr = G_sq*G_sq;
-    ${ftype} delta_t_sq = delta_t*delta_t;
-    ${ftype} t_0_sq = t_0*t_0;
-    ${ftype} t_0_cub = t_0_sq*t_0;
-    ${ftype} t_1_sq = t_1*t_1;
-    ${ftype} t_1_cub = t_1_sq*t_1;
-    ${ftype} exp_0_sin_1_term = exp(G*t_0)*sin(DM*G*delta_t_sq - DM*t_1);
-    ${ftype} exp_1_sin_0_term = exp(G*t_1)*sin(DM*G*delta_t_sq - DM*t_0);
-    ${ftype} exp_0_cos_1_term = exp(G*t_0)*cos(DM*G*delta_t_sq - DM*t_1);
-    ${ftype} exp_1_cos_0_term = exp(G*t_1)*cos(DM*G*delta_t_sq - DM*t_0);
-
-    return (a*pow(DM_sq + G_sq, 3.)*(-DM*exp_0_sin_1_term + DM*exp_1_sin_0_term - G*exp_0_cos_1_term + G*exp_1_cos_0_term)
-    + b*pow(DM_sq + G_sq, 2.)*(DM*((DM_sq*t_0 + G_sq*t_0 + 2*G)*exp_1_sin_0_term - (DM_sq*t_1 + G_sq*t_1 + 2*G)*exp_0_sin_1_term) + (DM_sq*(G*t_0 - 1) + G_sq*(G*t_0 + 1))*exp_1_cos_0_term - (DM_sq*(G*t_1 - 1) + G_sq*(G*t_1 + 1))*exp_0_cos_1_term)
-    + c*(DM_sq + G_sq)*(DM*((DM_fr*t_0_sq + 2*DM_sq*(G_sq*t_0_sq + 2*G*t_0 - 1) + G_sq*(G_sq*t_0_sq + 4*G*t_0 + 6))*exp_1_sin_0_term - (DM_fr*t_1_sq + 2*DM_sq*(G_sq*t_1_sq + 2*G*t_1 - 1) + G_sq*(G_sq*t_1_sq + 4*G*t_1 + 6))*exp_0_sin_1_term) + (DM_fr*t_0*(G*t_0 - 2.) + 2*DM_sq*G*(G_sq*t_0_sq - 3.) + G_cub*(G_sq*t_0_sq + 2*G*t_0 + 2.))*exp_1_cos_0_term - (DM_fr*t_1*(G*t_1 - 2.) + 2*DM_sq*G*(G_sq*t_1_sq - 3.) + G_cub*(G_sq*t_1_sq + 2*G*t_1 + 2.))*exp_0_cos_1_term)
-    + d*(DM*((DM_sx*t_0_cub + 3*DM_fr*t_0*(G_sq*t_0_sq + 2*G*t_0 - 2.) + 3*DM_sq*G*(G_cub*t_0_cub + 4*G_sq*t_0_sq + 4*G*t_0 - 8) + G_cub*(G_cub*t_0_cub + 6*G_sq*t_0_sq + 18*G*t_0 + 24.))*exp_1_sin_0_term - (DM_sx*t_1_cub + 3*DM_fr*t_1*(G_sq*t_1_sq + 2*G*t_1 - 2.) + 3*DM_sq*G*(G_cub*t_1_cub + 4*G_sq*t_1_sq + 4*G*t_1 - 8) + G_cub*(G_cub*t_1_cub + 6*G_sq*t_1_sq + 18*G*t_1 + 24.))*exp_0_sin_1_term) + (DM_sx*t_0_sq*(G*t_0 - 3.) + 3*DM_fr*(G_cub*t_0_cub - G_sq*t_0_sq - 6*G*t_0 + 2.) + 3*DM_sq*G_sq*(G_cub*t_0_cub + G_sq*t_0_sq - 4*G*t_0 - 12.) + G_fr*(G_cub*t_0_cub + 3*G_sq*t_0_sq + 6*G*t_0 + 6))*exp_1_cos_0_term - (DM_sx*t_1_sq*(G*t_1 - 3.) + 3*DM_fr*(G_cub*t_1_cub - G_sq*t_1_sq - 6*G*t_1 + 2.) + 3*DM_sq*G_sq*(G_cub*t_1_cub + G_sq*t_1_sq - 4*G*t_1 - 12.) + G_fr*(G_cub*t_1_cub + 3*G_sq*t_1_sq + 6*G*t_1 + 6))*exp_0_cos_1_term))*sqrt(2.)*sqrt(delta_t)*exp(-G*(t_0 + t_1) + 0.5*delta_t_sq*(-DM_sq + G_sq))/pow(DM_sq + G_sq, 4.);
-}
-
-WITHIN_KERNEL ${ftype} get_int_td_spline(${ftype} delta_t,${ftype} G,${ftype} DM,${ftype} DG,${ftype} a,${ftype} b,${ftype} c,${ftype} d,${ftype} t_0,${ftype} t_1)
-{
-    ${ftype} G_sq = G*G;
-    ${ftype} G_cub = G_sq*G;
-    ${ftype} G_fr = G_sq*G_sq;
-    ${ftype} G_fv = G_cub*G_sq;
-    ${ftype} DM_sq = DM*DM;
-    ${ftype} DM_fr = DM_sq*DM_sq;
-    ${ftype} DM_sx = DM_fr*DM_sq;
-    ${ftype} delta_t_sq = delta_t*delta_t;
-    ${ftype} t_0_sq = t_0*t_0;
-    ${ftype} t_0_cub = t_0_sq*t_0;
-    ${ftype} t_1_sq = t_1*t_1;
-    ${ftype} t_1_cub = t_1_sq*t_1;
-    ${ftype} exp_0_sin_1_term = exp(G*t_0)*sin(DM*G*delta_t_sq - DM*t_1);
-    ${ftype} exp_1_sin_0_term = exp(G*t_1)*sin(DM*G*delta_t_sq - DM*t_0);
-    ${ftype} exp_0_cos_1_term = exp(G*t_0)*cos(DM*G*delta_t_sq - DM*t_1);
-    ${ftype} exp_1_cos_0_term = exp(G*t_1)*cos(DM*G*delta_t_sq - DM*t_0);
-
-
-    return -(a*pow(DM_sq + G_sq, 3.)*(DM*exp_0_cos_1_term - DM*exp_1_cos_0_term - G*exp_0_sin_1_term + G*exp_1_sin_0_term)
-    + b*pow(DM_sq + G_sq, 2.)*(DM_sq*G*t_0*exp_1_sin_0_term - DM_sq*G*t_1*exp_0_sin_1_term + DM_sq*exp_0_sin_1_term - DM_sq*exp_1_sin_0_term - DM*(DM_sq*t_0 + G_sq*t_0 + 2*G)*exp_1_cos_0_term + DM*(DM_sq*t_1 + G_sq*t_1 + 2*G)*exp_0_cos_1_term + G_cub*t_0*exp_1_sin_0_term - G_cub*t_1*exp_0_sin_1_term - G_sq*exp_0_sin_1_term + G_sq*exp_1_sin_0_term)
-    + c*(DM_sq + G_sq)*(DM_fr*G*t_0_sq*exp_1_sin_0_term - DM_fr*G*t_1_sq*exp_0_sin_1_term - 2*DM_fr*t_0*exp_1_sin_0_term + 2*DM_fr*t_1*exp_0_sin_1_term + 2*DM_sq*G_cub*t_0_sq*exp_1_sin_0_term - 2*DM_sq*G_cub*t_1_sq*exp_0_sin_1_term + 6*DM_sq*G*exp_0_sin_1_term - 6*DM_sq*G*exp_1_sin_0_term - DM*(DM_fr*t_0_sq + 2*DM_sq*(G_sq*t_0_sq + 2*G*t_0 - 1) + G_sq*(G_sq*t_0_sq + 4*G*t_0 + 6))*exp_1_cos_0_term + DM*(DM_fr*t_1_sq + 2*DM_sq*(G_sq*t_1_sq + 2*G*t_1 - 1) + G_sq*(G_sq*t_1_sq + 4*G*t_1 + 6))*exp_0_cos_1_term + G_fv*t_0_sq*exp_1_sin_0_term - G_fv*t_1_sq*exp_0_sin_1_term + 2*G_fr*t_0*exp_1_sin_0_term - 2*G_fr*t_1*exp_0_sin_1_term - 2*G_cub*exp_0_sin_1_term + 2*G_cub*exp_1_sin_0_term)
-    + d*(DM_sx*G*t_0_cub*exp_1_sin_0_term - DM_sx*G*t_1_cub*exp_0_sin_1_term - 3*DM_sx*t_0_sq*exp_1_sin_0_term + 3*DM_sx*t_1_sq*exp_0_sin_1_term + 3*DM_fr*G_cub*t_0_cub*exp_1_sin_0_term - 3*DM_fr*G_cub*t_1_cub*exp_0_sin_1_term - 3*DM_fr*G_sq*t_0_sq*exp_1_sin_0_term + 3*DM_fr*G_sq*t_1_sq*exp_0_sin_1_term - 18*DM_fr*G*t_0*exp_1_sin_0_term + 18*DM_fr*G*t_1*exp_0_sin_1_term - 6*DM_fr*exp_0_sin_1_term + 6*DM_fr*exp_1_sin_0_term + 3*DM_sq*G_fv*t_0_cub*exp_1_sin_0_term - 3*DM_sq*G_fv*t_1_cub*exp_0_sin_1_term + 3*DM_sq*G_fr*t_0_sq*exp_1_sin_0_term - 3*DM_sq*G_fr*t_1_sq*exp_0_sin_1_term - 12*DM_sq*G_cub*t_0*exp_1_sin_0_term + 12*DM_sq*G_cub*t_1*exp_0_sin_1_term + 36*DM_sq*G_sq*exp_0_sin_1_term - 36*DM_sq*G_sq*exp_1_sin_0_term - DM*(DM_sx*t_0_cub + 3*DM_fr*t_0*(G_sq*t_0_sq + 2*G*t_0 - 2.) + 3*DM_sq*G*(G_cub*t_0_cub + 4*G_sq*t_0_sq + 4*G*t_0 - 8) + G_cub*(G_cub*t_0_cub + 6*G_sq*t_0_sq + 18*G*t_0 + 24.))*exp_1_cos_0_term + DM*(DM_sx*t_1_cub + 3*DM_fr*t_1*(G_sq*t_1_sq + 2*G*t_1 - 2.) + 3*DM_sq*G*(G_cub*t_1_cub + 4*G_sq*t_1_sq + 4*G*t_1 - 8) + G_cub*(G_cub*t_1_cub + 6*G_sq*t_1_sq + 18*G*t_1 + 24.))*exp_0_cos_1_term + pow(G, 7)*t_0_cub*exp_1_sin_0_term - pow(G, 7)*t_1_cub*exp_0_sin_1_term + 3*pow(G, 6)*t_0_sq*exp_1_sin_0_term - 3*pow(G, 6)*t_1_sq*exp_0_sin_1_term + 6*G_fv*t_0*exp_1_sin_0_term - 6*G_fv*t_1*exp_0_sin_1_term - 6*G_fr*exp_0_sin_1_term + 6*G_fr*exp_1_sin_0_term))
-    *sqrt(2.)*sqrt(delta_t)*exp(-G*(t_0 + t_1) + 0.5*delta_t_sq*(-DM_sq + G_sq))/pow(DM_sq + G_sq, 4.);
-}
-
-
-WITHIN_KERNEL
-void integralSpline( ${ftype} result[2],
-                     ${ftype} vn[10], ${ftype} va[10],${ftype} vb[10], ${ftype} vc[10],${ftype} vd[10],
-                     GLOBAL_MEM ${ftype} *norm, ${ftype} G, ${ftype} DG, ${ftype} DM,
-                     ${ftype} delta_t,
-                     ${ftype} tLL, ${ftype} tUL,
-                     ${ftype} t_offset,
-                     GLOBAL_MEM ${ftype} *coeffs)
-{
-  //int bin0 = 0;
-  // ${ftype} tS = tLL-t_offset;
-  ${ftype} tS = 0;
-  // ${ftype} tE = KNOTS[bin0+1]-t_offset;
-  ${ftype} tE = 0;
-  for(int bin = 0; bin < NKNOTS; bin++)
-  {
-    if (bin == NKNOTS-1){
-      tS = KNOTS[bin+0];
-      tE = tUL-t_offset;
-    }
-    else{
-      tS = KNOTS[bin+0] - t_offset;
-      tE = KNOTS[bin+1] - t_offset;
-    }
-    // if ( get_global_id(0) == 0){
-    // printf("integral: bin %d (%f,%f)\n", bin ,tS, tE);
-    // }
-
-    ${ftype} c0 = getCoeff(coeffs,bin,0);
-    ${ftype} c1 = getCoeff(coeffs,bin,1);
-    ${ftype} c2 = getCoeff(coeffs,bin,2);
-    ${ftype} c3 = getCoeff(coeffs,bin,3);
-
-    ${ftype} ta = get_int_ta_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
-    ${ftype} tb = get_int_tb_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
-    ${ftype} tc = get_int_tc_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
-    ${ftype} td = get_int_td_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
-
-    for(int k=0; k<10; k++)
-    {
-      result[0] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb + vc[k]*tc + vd[k]*td);
-      result[1] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb - vc[k]*tc - vd[k]*td);
-    }
-  }
-}
 
 
 
@@ -285,9 +119,10 @@ ${ftype} getDiffRate( ${ftype} *data,
   ${ftype} hphi       = data[2];
   ${ftype} time       = data[3];
 
-  ${ftype} sigma_t    = data[4];                                // Time resolution
+  //${ftype} sigma_t    = 0.04554;                            // Time resolution
+  ${ftype} sigma_t    = data[4];                              // Time resolution
 
-  ${ftype} qOS        = data[5];                                        // Tagging
+  ${ftype} qOS        = data[5];                                      // Tagging
   ${ftype} qSS        = data[6];
   ${ftype} etaOS 	  	= data[7];
   ${ftype} etaSS 	    = data[8];

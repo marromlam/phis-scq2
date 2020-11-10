@@ -14,12 +14,15 @@ import argparse
 import numpy as np
 import pandas as pd
 import uproot
-import os, sys
-import hjson
-import importlib
+import os
+
+ROOT_PANDAS = True
+if ROOT_PANDAS:
+  import root_pandas
+
 
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],1)
+initialize('opencl',1)
 from ipanema import ristra, Sample, Parameters, Parameter, Optimizer
 
 import badjanak
@@ -69,9 +72,17 @@ def pdf_weighting(data, target_params, original_params, mode):
   vars_h[:,8] *= 0                                                  # time in ps
   vars_h[:,9] *= 0                                                  # time in ps
   pdf_h  = np.zeros(vars_h.shape[0])                        # output array (pdf)
+  
+  print(tad_vars)
+  print(data)
+  print(vars_h)
   # Allocate device_arrays
   vars_d = ristra.allocate(vars_h).astype(np.float64)
   pdf_d  = ristra.allocate(pdf_h).astype(np.float64)
+<<<<<<< HEAD
+=======
+   
+>>>>>>> 981b1e39dc8f7ff9aee84132aa8d7a342bc01de1
   # Compute!
   original_params = Parameters.load(original_params)
   target_params = Parameters.load(target_params)
@@ -168,9 +179,13 @@ if __name__ == '__main__':
     print(f'Deleting previous {output_file}')
     os.remove(output_file)                               # delete file if exists
   print(f'Writing on {output_file}')
-  with uproot.recreate(output_file) as f:
+  if ROOT_PANDAS:
+    root_pandas.to_root(df, output_file, key=tree_name)
+  else:
+    f = uproot.recreate(output_file)
     f[tree_name] = uproot.newtree({var:'float64' for var in df})
     f[tree_name].extend(df.to_dict(orient='list'))
+    f.close()
   print('pdfWeight was succesfully written\n')
 
 ################################################################################

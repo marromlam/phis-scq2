@@ -8,6 +8,8 @@
 #    Adds polWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
 rule reweighting_polarity:
+  resources:
+    mem_mb=6144
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
@@ -35,6 +37,8 @@ rule reweighting_polarity:
 #    rule runs only over MC tuples.
 
 rule reweighting_pdf:
+  resources:
+    mem_mb=6144
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
@@ -65,6 +69,8 @@ rule reweighting_pdf:
 #    gb-weighting them to match kinematic distributions of their complementary
 #    sample.
 rule reweighting_kinematic:
+  resources:
+    mem_mb=6144
   wildcard_constraints:
     mode = "(MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0|_Swave)?|Bd2JpsiKstar)"
   input:
@@ -147,6 +153,8 @@ rule reweighting_kinematic:
 #    rule runs only over MC tuples.
 
 rule reweightings_plot_time_acceptance:
+  resources:
+    mem_mb=1024
   wildcard_constraints:
     branch = "((B|hplus|hminus)_P(T)?|X_M)",
     weight = "(s|kin|kkp)Weight"
@@ -204,6 +212,8 @@ rule reweightings_plot_angular_acceptance:
 
 
 rule reweightings_simon_comparisons:
+  resources:
+    mem_mb=1024
   input:
     original = lambda wcs: tuples(wcs),
     target = lambda wcs: tuples(wcs,mode='cdata')

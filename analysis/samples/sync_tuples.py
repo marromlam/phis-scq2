@@ -15,6 +15,10 @@ import pandas as pd
 import hjson
 import numpy as np
 
+ROOT_PANDAS = True
+if ROOT_PANDAS:
+  import root_pandas
+
 binned_vars = {'eta':'B_ETA', 'pt':'B_PT', 'sigmat':'sigmat'}
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 EOSPATH = hjson.load(open('config.json'))['eos']
@@ -86,11 +90,14 @@ if __name__ == "__main__":
 
   # write
   print(f"\nStarting to write {os.path.basename(args['output'])} file.")
-  with uproot.recreate(args['output'],compression=None) as f:
-    f[tree] = uproot.newtree({var:'float64' for var in result})
+  if ROOT_PANDAS:
+    root_pandas.to_root(result, args['output'], key=tree)
+  else:
+    f = uproot.recreate(args['output'])
+    f[tree] = uproot.newtree({var: 'float64' for var in result})
     f[tree].extend(result.to_dict(orient='list'))
+    f.close()
   print(f'    Succesfully writen.')
-  f.close()
 
   # delete donwloaded files
   for file in all_files:
