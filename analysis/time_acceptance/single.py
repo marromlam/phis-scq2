@@ -107,25 +107,25 @@ if __name__ == '__main__':
   for i, m in enumerate([MODE]):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
-      if CORR='Noncorr':
+      if CORR=='Noncorr':
         weight = f'dg0Weight*{sw}/gb_weights'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
-      if CORR='Noncorr':
+      if CORR=='Noncorr':
         weight = f'{sw}/gb_weights'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      if CORR='Noncorr':
+      if CORR=='Noncorr':
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      if CORR='Noncorr':
+      if CORR=='Noncorr':
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}{sw}'
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     cats[mode].allocate(time='time', lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
-
+    print(cats[mode])
     # Add knots
     cats[mode].knots = Parameters()
     cats[mode].knots.add(*[
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     # Add coeffs parameters
     cats[mode].params = Parameters()
     cats[mode].params.add(*[
-                    {'name':f'{c}{j}{TRIGGER[0]}', 'value':1.0, 
+                    {'name':f'{c}{j}{TRIGGER[0]}', 'value':1.0,
                      'latex':f'{c}_{j}^{TRIGGER[0]}',
                      'free':True if j > 0 else False, 'min':0.10, 'max':3.0
                     } for j in range(len(knots[:-1])+2)
@@ -173,15 +173,14 @@ if __name__ == '__main__':
     cats[mode].label = mode_tex(mode)
     cats[mode].pars_path = oparams[i]
     cats[mode].tabs_path = otables[i]
-  
+
 
 
   # Configure kernel -----------------------------------------------------------
   fcns.badjanak.config['knots'] = knots[:-1]
   fcns.badjanak.get_kernels(True)
-  
 
-  
+
   # Time to fit ----------------------------------------------------------------
   print(f"\n{80*'='}\nMinimization procedure\n{80*'='}\n")
   fcn_call = fcns.splinexerf
@@ -193,7 +192,7 @@ if __name__ == '__main__':
   }
   if MINER.lower() in ("minuit", "minos"):
     result = optimize(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs,
-                      method=MINER, verbose=False, timeit=True, tol=0.05)
+                      method=MINER, verbose=True, timeit=True, tol=0.05)
   elif MINER.lower() in ('bfgfs', 'lbfgsb'):
     result = optimize(fcn_call=splinexerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER, verbose=False)
@@ -201,11 +200,13 @@ if __name__ == '__main__':
 
 
 
+
+
   # Writing results ------------------------------------------------------------
   print(f"\n{80*'='}\nDumping parameters\n{80*'='}\n")
 
   cats[mode].params = cats[mode].knots + result.params
-  
+
   print(f"Dumping json parameters to {cats[mode].pars_path}")
   cats[mode].params.dump(cats[mode].pars_path)
 

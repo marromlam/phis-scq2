@@ -67,7 +67,7 @@ rule time_acceptance_simultaneous:
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --timeacc {wildcards.timeacc}\
-    ) &> {log} 2>&1""")
+    ) #&> {log} 2>&1""")
     send_mail(f"Simultaneous Time Acceptance", f"{log}")
 
 
@@ -81,6 +81,12 @@ rule time_acceptance_simultaneousDGn0:
       tuples(wcs,mode='MC_Bs2JpsiPhi'),
       tuples(wcs,mode='MC_Bd2JpsiKstar'),
       tuples(wcs,mode='Bd2JpsiKstar')
+    ]
+  params:
+    params = [
+      'time_acceptance/params/{year}/MC_Bs2JpsiPhi/baseline.json',
+      'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
+      'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
     ]
   output:
     params = [
@@ -100,16 +106,15 @@ rule time_acceptance_simultaneousDGn0:
     (time\
     python analysis/time_acceptance/simultaneous.py\
            --samples {",".join(input.sample)}\
-           --params {",".join(output.params)}\
-           --tables {",".join(output.tables)}\
+           --input-params {",".join(params.params)}\
+           --output-params {",".join(output.params)}\
+           --output-tables {",".join(output.tables)}\
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --timeacc {wildcards.timeacc}\
     ) &> {log} 2>&1""")
-    send_mail(f"Simultaneous Time Acceptance :: {wildcards}", f"{log}")
-
-
+    send_mail(f"Simultaneous Time Acceptance", f"{log}")
 
 rule time_acceptance_simultaneousBdasBs:
   wildcard_constraints:

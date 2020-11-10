@@ -72,7 +72,6 @@ def pdf_weighting(data, target_params, original_params, mode):
   # Allocate device_arrays
   vars_d = ristra.allocate(vars_h).astype(np.float64)
   pdf_d  = ristra.allocate(pdf_h).astype(np.float64)
-
   # Compute!
   original_params = Parameters.load(original_params)
   target_params = Parameters.load(target_params)

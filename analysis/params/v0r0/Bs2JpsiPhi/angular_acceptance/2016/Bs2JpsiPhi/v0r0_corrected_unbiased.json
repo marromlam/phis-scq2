@@ -1,0 +1,112 @@
+{
+  w0:
+  {
+    name: w0
+    value: 1
+    free: false
+    min: null
+    max: null
+    stdev: 0
+    init: 1
+    latex: w_0
+  }
+  w1:
+  {
+    name: w1
+    value: 1.026188051680966
+    free: false
+    min: null
+    max: null
+    stdev: 0.0006913758815965363
+    init: 1.026188051680966
+    latex: w_1
+  }
+  w2:
+  {
+    name: w2
+    value: 1.025919907820129
+    free: false
+    min: null
+    max: null
+    stdev: 0.0006827133559525752
+    init: 1.025919907820129
+    latex: w_2
+  }
+  w3:
+  {
+    name: w3
+    value: -0.0008080722059112641
+    free: false
+    min: null
+    max: null
+    stdev: 0.0005425654046216319
+    init: -0.0008080722059112641
+    latex: w_3
+  }
+  w4:
+  {
+    name: w4
+    value: 0.0007686171894090263
+    free: false
+    min: null
+    max: null
+    stdev: 0.0003275882187815939
+    init: 0.0007686171894090263
+    latex: w_4
+  }
+  w5:
+  {
+    name: w5
+    value: 0.0002055097707937297
+    free: false
+    min: null
+    max: null
+    stdev: 0.0003286869638351543
+    init: 0.0002055097707937297
+    latex: w_5
+  }
+  w6:
+  {
+    name: w6
+    value: 1.00647239083432
+    free: false
+    min: null
+    max: null
+    stdev: 0.0004689941343474889
+    init: 1.00647239083432
+    latex: w_6
+  }
+  w7:
+  {
+    name: w7
+    value: 0.000455221821734608
+    free: false
+    min: null
+    max: null
+    stdev: 0.0004178186420038242
+    init: 0.000455221821734608
+    latex: w_7
+  }
+  w8:
+  {
+    name: w8
+    value: 0.0001466163291351719
+    free: false
+    min: null
+    max: null
+    stdev: 0.0004229718550995737
+    init: 0.0001466163291351719
+    latex: w_8
+  }
+  w9:
+  {
+    name: w9
+    value: -0.000731595571913009
+    free: false
+    min: null
+    max: null
+    stdev: 0.0008884173755299144
+    init: -0.000731595571913009
+    latex: w_9
+  }
+}

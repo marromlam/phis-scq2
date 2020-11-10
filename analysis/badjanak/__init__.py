@@ -55,6 +55,7 @@ fast_integral   = 1, # run integrals with approximation
 sigma_t =         0.15,
 knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
 x_m =             [990, 1008, 1016, 1020, 1024, 1032, 1050],
+x_mbd =           [826, 861, 896, 931, 966],      
 tristan =         [1,1,1,0,0,0,1,0,0,0],
 precision =       'double',
 )

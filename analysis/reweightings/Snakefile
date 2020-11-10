@@ -33,6 +33,7 @@ rule reweighting_polarity:
 # p.d.f. weighting -------------------------------------------------------------
 #    Adds pdfWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
+
 rule reweighting_pdf:
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"

@@ -132,6 +132,7 @@ print(f"\n{80*'='}\n",
 real  = ['cosK','cosL','hphi','time']                        # angular variables
 real += ['mHH','sigmat']                                     # mass and sigmat
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']      # tagging
+
 weight_rd='(sw)'
 
 
