@@ -3,6 +3,8 @@ import hjson
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 
 
+def printsec(string):
+  print(f"\n{80*'='}\n{string}\n{80*'='}\n")
 
 def cammel_case_split(str):
   return re.sub('([A-Z][a-z]+)',r' \1',re.sub('([A-Z]+)',r' \1', str)).split()

@@ -60,7 +60,7 @@ def version_guesser(version):
 
 
 
-def tuples(wcs,version=False,year=None,mode=None,weight=None):
+def tuples(wcs, version=False, year=None, mode=None, weight=None):
   # Get version withoud modifier
   if not version:
     version = f"{wcs.version}"

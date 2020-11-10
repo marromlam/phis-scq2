@@ -32,7 +32,7 @@ badjanak.config['debug_evt'] = 774
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser
+from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -92,6 +92,7 @@ def argument_parser():
   parser.add_argument('--flag',
     default = 'v0r1',
     help='Year of data-taking')
+  parser.add_argument('--blind', default=0, help='Year of data-taking')
   return parser
 
 
@@ -112,7 +113,7 @@ def argument_parser():
 
 args = vars(argument_parser().parse_args())
 VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
-YEARS = [int(y) for y in args['year'].split(',')]        # years as list of int
+YEARS = args['year'].split(',')
 MODE = 'Bs2JpsiPhi'
 ANGACC = args['flag']
 
@@ -121,16 +122,13 @@ CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
 CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
 
 for k,v in args.items():
-  print(f'{k}: {v}')
+  print(f'{k}: {v}\n')
 
 # %% Load samples --------------------------------------------------------------
-print(f"\n{80*'='}\n",
-      "Loading samples",
-      f"\n{80*'='}\n")
+print(f"\n{80*'='}\n"Loading samples"\n{80*'='}\n")
 
 # Lists of data variables to load and build arrays
-real  = ['cosK','cosL','hphi','time']                        # angular variables
-real += ['mHH','sigmat']                                     # mass and sigmat
+real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']      # tagging
 weight_rd='(sw)'
 
@@ -139,63 +137,27 @@ data = {}
 mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
-  data[f'{y}'] = {}
-  csp = Parameters.load(args['csp'].split(',')[i])  # <--- WARNING
+  data[y] = {}
+  csp = Parameters.load(args['csp'].split(',')[i])
   csp = csp.build(csp,csp.find('CSP.*'))
   flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
   resolution = Parameters.load(args['time_resolution'].split(',')[i])
-  for t, T in zip(['biased','unbiased'],[0,1]):
+  for t, in ['biased','unbiased']:
     print(f" *  Loading {y} sample in {t} category\n    {args['samples'].split(',')[i]}")
-    tc = cuts_and(f'Jpsi_Hlt1DiMuonHighMassDecision_TOS=={T}', CUT)
-    data[f'{y}'][f'{t}'] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
-    data[f'{y}'][f'{t}'].csp = csp
-    data[f'{y}'][f'{t}'].flavor = flavor
-    data[f'{y}'][f'{t}'].resolution = resolution
-
-    '''
-    data[f'{y}'][f'{t}'].flavor['p0_os'].free = True
-    data[f'{y}'][f'{t}'].flavor['p0_os'].min = 0.0
-    data[f'{y}'][f'{t}'].flavor['p0_os'].max = 1.0
-
-    data[f'{y}'][f'{t}'].flavor['dp0_os'].free = True
-    data[f'{y}'][f'{t}'].flavor['dp0_os'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp0_os'].max = +0.1
-
-    data[f'{y}'][f'{t}'].flavor['p1_os'].free = True
-    data[f'{y}'][f'{t}'].flavor['p1_os'].min = 0.5
-    data[f'{y}'][f'{t}'].flavor['p1_os'].max = 1.5
-
-    data[f'{y}'][f'{t}'].flavor['dp1_os'].free = True
-    data[f'{y}'][f'{t}'].flavor['dp1_os'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp1_os'].max = +0.1
-
-    data[f'{y}'][f'{t}'].flavor['p0_ss'].free = True
-    data[f'{y}'][f'{t}'].flavor['p0_ss'].min = 0.0
-    data[f'{y}'][f'{t}'].flavor['p0_ss'].max = 2.0
-
-    data[f'{y}'][f'{t}'].flavor['dp0_ss'].free = True
-    data[f'{y}'][f'{t}'].flavor['dp0_ss'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp0_ss'].max = +0.1
-
-    data[f'{y}'][f'{t}'].flavor['p1_ss'].free = True
-    data[f'{y}'][f'{t}'].flavor['p1_ss'].min = 0.0
-    data[f'{y}'][f'{t}'].flavor['p1_ss'].max = 2.0
-
-    data[f'{y}'][f'{t}'].flavor['dp1_ss'].free = True
-    data[f'{y}'][f'{t}'].flavor['dp1_ss'].min = -0.1
-    data[f'{y}'][f'{t}'].flavor['dp1_ss'].max = +0.1
-    '''
-  for t, coeffs in zip(['biased','unbiased'],[args['timeacc_biased'],args['timeacc_unbiased']]):
-    c = Parameters.load(coeffs.split(',')[i])
-    knots = np.array(Parameters.build(c,c.fetch('k.*'))).tolist()
-    badjanak.config['knots'] = knots
-    data[f'{y}'][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
-    data[f'{y}'][f'{t}'].tLL = c['tLL'].value
-    data[f'{y}'][f'{t}'].tUL = c['tUL'].value
-  for t, weights in zip(['biased','unbiased'],[args['angacc_biased'],args['angacc_unbiased']]):
-    w = Parameters.load(weights.split(',')[i])
-    data[f'{y}'][f'{t}'].angacc = Parameters.build(w,w.fetch('w.*'))
-  for d in [data[f'{y}']['biased'],data[f'{y}']['unbiased']]:
+    tc = trigger_scissors(t, CUT)
+    data[y][f'{t}'] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
+    data[y][f'{t}'].csp = csp
+    data[y][f'{t}'].flavor = flavor
+    data[y][f'{t}'].resolution = resolution
+    c = Parameters.load(args[f'timeacc_{t}'].split(',')[i])
+    knots = np.array(Parameters.build(c,c.fetch('k.*')))
+    badjanak.config['knots'] = knots.tolist()
+    data[y][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
+    w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
+    data[y][f'{t}'].angacc = Parameters.build(w,w.fetch('w.*'))
+    print(data[y][f'{t}'])
+  
+  for d in [data[y]['biased'],data[y]['unbiased']]:
     sw = np.zeros_like(d.df['sw'])
     for l,h in zip(mass[:-1],mass[1:]):
       pos = d.df.eval(f'mHH>={l} & mHH<{h}')
@@ -204,27 +166,30 @@ for i, y in enumerate(YEARS):
     d.df['sWeight'] = sw
     d.allocate(input=real,weight='sWeight',output='0*time')
 
+# compile the kernel
+#    so if knots change when importing parameters, the kernel is compiled
+badjanak.get_kernels(True)
 
 # Prepare parameters
 SWAVE = True
 DGZERO = False
 POLDEP = False
-BLIND = True
+BLIND = args['blind']
 
 pars = Parameters()
 list_of_parameters = [#
 # S wave fractions
-Parameter(name='fSlon1', value=SWAVE*0.0009765623447890**2, min=0.00, max=0.80,
+Parameter(name='fSlon1', value=SWAVE*0.2, min=0.00, max=0.80,
           free=SWAVE, latex=r'f_S^{1}'),
-Parameter(name='fSlon2', value=SWAVE*0.0009765623447890**2, min=0.00, max=0.80,
+Parameter(name='fSlon2', value=SWAVE*0.2, min=0.00, max=0.80,
           free=SWAVE, latex=r'f_S^{2}'),
-Parameter(name='fSlon3', value=SWAVE*0.0009765623447890**2, min=0.00, max=0.80,
+Parameter(name='fSlon3', value=SWAVE*0.2, min=0.00, max=0.80,
           free=SWAVE, latex=r'f_S^{3}'),
-Parameter(name='fSlon4', value=SWAVE*0.0009765623447890**2, min=0.00, max=0.80,
+Parameter(name='fSlon4', value=SWAVE*0.2, min=0.00, max=0.80,
           free=SWAVE, latex=r'f_S^{4}'),
-Parameter(name='fSlon5', value=SWAVE*0.0009765623447890**2, min=0.00, max=0.80,
+Parameter(name='fSlon5', value=SWAVE*0.2, min=0.00, max=0.80,
           free=SWAVE, latex=r'f_S^{5}'),
-Parameter(name='fSlon6', value=SWAVE*0.0009765623447890**2, min=0.00, max=0.80,
+Parameter(name='fSlon6', value=SWAVE*0.2, min=0.00, max=0.80,
           free=SWAVE, latex=r'f_S^{6}'),
 # P wave fractions
 Parameter(name="fPlon", value=0.5241, min=0.4, max=0.6,
@@ -315,9 +280,7 @@ list_tagging_parameters = [
 tagging_pars.add(*list_tagging_parameters)
 print(tagging_pars)
 '''
-# compile the kernel
-#    so if knots change when importing parameters, the kernel is compiled
-badjanak.get_kernels(True)
+
 
 
 #@profile
@@ -407,8 +370,7 @@ def fcn_data(parameters, data):
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
                   #**dt.flavor.valuesdict(),
-                  tLL=dt.tLL, tUL=dt.tUL)
-
+                  tLL=tLL, tUL=tUL)
       chi2.append( -2.0 * (ristra.log(dt.output) * dt.weight).get() );
 
   chi2conc =  np.concatenate(chi2)
@@ -432,30 +394,30 @@ def fcn_data(parameters, data):
 
 
 # print csp factors
-lb = [data[f'{y}']['biased'].csp.__str__(
+lb = [data[y]['biased'].csp.__str__(
     ['value']).splitlines() for i, y in enumerate(YEARS)]
 print(f"\nCSP factors\n{80*'='}")
 for l in zip(*lb):
   print(*l, sep="| ")
 
 # print flavor tagging parameters
-lb = [data[f'{y}']['biased'].flavor.__str__(
+lb = [data[y]['biased'].flavor.__str__(
     ['value']).splitlines() for i, y in enumerate(YEARS)]
 print(f"\nFlavor tagging parameters\n{80*'='}")
 for l in zip(*lb):
   print(*l, sep="| ")
 
 # print time resolution
-lb = [data[f'{y}']['biased'].resolution.__str__(
+lb = [data[y]['biased'].resolution.__str__(
     ['value']).splitlines() for i, y in enumerate(YEARS)]
 print(f"\nResolution parameters\n{80*'='}")
 for l in zip(*lb):
   print(*l, sep="| ")
 
 # print time acceptances
-lb = [data[f'{y}']['biased'].timeacc.__str__(
+lb = [data[y]['biased'].timeacc.__str__(
     ['value']).splitlines() for i, y in enumerate(YEARS)]
-lu = [data[f'{y}']['unbiased'].timeacc.__str__(
+lu = [data[y]['unbiased'].timeacc.__str__(
     ['value']).splitlines() for i, y in enumerate(YEARS)]
 print(f"\nBiased time acceptance\n{80*'='}")
 for l in zip(*lb):
@@ -466,9 +428,9 @@ for l in zip(*lu):
   print(*l, sep="| ")
 
 # print angular acceptance
-lb = [data[f'{y}']['biased'].angacc.__str__(
+lb = [data[y]['biased'].angacc.__str__(
     ['value']).splitlines() for i, y in enumerate(YEARS)]
-lu = [data[f'{y}']['unbiased'].angacc.__str__(
+lu = [data[y]['unbiased'].angacc.__str__(
     ['value']).splitlines() for i, y in enumerate(YEARS)]
 print(f"\nBiased angular acceptance\n{80*'='}")
 for l in zip(*lb):
@@ -491,7 +453,7 @@ print(f"\n")
 
 print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
 result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
-                  verbose=False, timeit=True, tol=0.1, strategy=2)
+                  verbose=True, timeit=True, tol=0.1, strategy=2)
 
 
 

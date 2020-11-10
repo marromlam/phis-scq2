@@ -7,6 +7,9 @@ import numpy as np
 import uproot
 import os
 
+ROOT_PANDAS = True
+if ROOT_PANDAS:
+  import root_pandas
 
 
 # %% polarity_weighting --------------------------------------------------------
@@ -31,26 +34,12 @@ def polarity_weighting(original_file, original_treename,
                        target_file, target_treename,
                        output_file, verbose=False):
   # Get data
-  try:
-    _original_file = uproot.open(original_file)
-    _original_tree = _original_file[original_treename]
-    print('Loaded %s correctly' % original_file)
-  except:
-    print('polarity-weighting.py: Missing original file. Exiting...')
-    raise
-  try:
-    _target_file = uproot.open(target_file)
-    _target_tree = _target_file[target_treename]
-    print('Loaded %s correctly' % target_file)
-  except:
-    print('polarity-weighting.py: Missing target file. Exiting...')
-    raise
-
-  original_df       = _original_tree.pandas.df(flatten=None)
-  original_polarity = original_df["Polarity"].values
-  target_df         = _target_tree.pandas.df(branches="Polarity")
-  target_polarity   = target_df["Polarity"].values
+  odf = uproot.open(original_file)[original_treename].pandas.df(flatten=None)
+  original_polarity = odf["Polarity"].values
+  tdf = uproot.open(target_file)[target_treename].pandas.df(branches="Polarity")
+  target_polarity = tdf["Polarity"].values
   print('DataFrames are ready')
+  print(odf)
 
   # Cook weights
   original_mean = np.mean(original_polarity)
@@ -76,8 +65,9 @@ def polarity_weighting(original_file, original_treename,
   # print(polWeight[0],polWeight[-1])
   # print(f"CHECK: {np.amax( polWeight - bee.array('PolWeight') )}")
 
-  original_df['polWeight'] = polWeight
+  odf['polWeight'] = polWeight
   print('polWeight was succesfully calculated')
+  print(odf)
 
   # Save weights to file
   #    It would be nice that uproot.update worked, but it is not yet avaliable
@@ -85,16 +75,13 @@ def polarity_weighting(original_file, original_treename,
   #    moment it is needed to load the whole df and write a new one :(.
   #    This produces some problems with large files, so we are using root_pandas
   #    to store files whilst uproot can't
-  if os.path.exists(output_file):
-    print('Deleting previous %s'  % output_file)
-    os.remove(output_file)                               # delete file if exists
-  print('Writing on %s' % output_file)
-  #import root_pandas
-  #root_pandas.to_root(original_df, output_file, key=original_treename)
-  f = uproot.recreate(output_file)
-  f[original_treename] = uproot.newtree({var:'float64' for var in original_df})
-  f[original_treename].extend(original_df.to_dict(orient='list'))
-  f.close()
+  if ROOT_PANDAS:
+    root_pandas.to_root(odf, output_file, key=original_treename)
+  else:
+    f = uproot.recreate(output_file)
+    f[original_treename] = uproot.newtree({var:'float64' for var in odf})
+    f[original_treename].extend(odf.to_dict(orient='list'))
+    f.close()
   print('polWeight was succesfully written.')
 
   return polWeight
@@ -103,6 +90,6 @@ def polarity_weighting(original_file, original_treename,
 if __name__ == '__main__':
   parser = argument_parser()
   args = parser.parse_args()
-  print(f"\n{80*'='}\n{'= Polarity weighting':79}=\n{80*'='}\n")
+  print(f"\n{80*'='}\nPolarity weighting\n{80*'='}\n")
   polarity_weighting(**vars(args), verbose=True)
   print(f"\n")

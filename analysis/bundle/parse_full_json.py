@@ -10,7 +10,8 @@ from ipanema import Parameters
 def download_fulljson(version, year, where="./tmp"):
   repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git"
   path = f"fitinputs/{version}/"
-  os.system(f"git archive --remote={repo} --prefix={where}/{version}/ HEAD:{path} fit_inputs_{year}.json | tar -x")
+  os.system(f"git archive --remote={repo} --prefix={where}/{version}/ "+\
+            f"HEAD:{path} fit_inputs_{year}.json | tar -x")
 
 
 # Convert full fit_inputs to usable --------------------------------------------
@@ -21,7 +22,7 @@ def parse_fulljson(tmp_json_path):
   tjson = hjson.load(open(f"{tmp_json_path}",'r'))
 
 
-  # Time acceptance --------------------------------------------------------------
+  # Time acceptance ------------------------------------------------------------
   knots = Parameters()
   timeaccbiased = Parameters(); timeaccunbiased = Parameters()
 
@@ -38,15 +39,16 @@ def parse_fulljson(tmp_json_path):
     timeaccunbiased.add({"name":f"c{i}", "value":v['Value'], "stdev":v['Error'],
                          "latex":"c_{i}", "free":False})
 
-  print(80*'-')
-  print("The following parameters were loaded for time acceptance")
-  print(knots)
-  print(timeaccbiased)
-  print(timeaccunbiased)
-  print(80*'-')
+  # print(80*'-')
+  # print("The following parameters were loaded for time acceptance")
+  # print(knots)
+  # print(timeaccbiased)
+  # print(timeaccunbiased)
+  # print(80*'-')
+  0
 
 
-  # Angular acceptance -----------------------------------------------------------
+  # Angular acceptance ---------------------------------------------------------
   angaccbiased = Parameters(); angaccunbiased = Parameters()
 
   for i,v in enumerate(tjson["AngularParameterBiased"]):
@@ -64,20 +66,23 @@ def parse_fulljson(tmp_json_path):
   print(80*'-')
 
 
-  # Time resolution --------------------------------------------------------------
+  # Time resolution ------------------------------------------------------------
   timeres = Parameters();
   for i,v in enumerate(tjson["TimeResParameters"]):
     if v['Name'] == "p0":
       timeres.add({"name":f"sigma_offset",
                    "value":v['Value'], "stdev":v['Error'],
+                   "correl": {"sigma_offset": 0, "sigma_curvature": 0},
                    "latex":"\sigma_0", "free":False})
     elif v['Name'] == "p1":
       timeres.add({"name":f"sigma_slope",
                    "value":v['Value'], "stdev":v['Error'],
+                   "correl":{"sigma_offset":0, "sigma_curvature":0},
                    "latex":"\sigma_1", "free":False})
     elif v['Name'] == "p2":
       timeres.add({"name":f"sigma_curvature",
                    "value":v['Value'], "stdev":v['Error'],
+                   "correl": {"sigma_offset": 0, "sigma_curvature": 0},
                    "latex":"\sigma_2", "free":False})
     elif v['Name'] == "rho_p0_p1_time_res":
       timeres.add({"name":f"rho01", "value":v['Value'], "stdev":v['Error'],
@@ -94,7 +99,7 @@ def parse_fulljson(tmp_json_path):
   print(80*'-')
 
 
-  # Time resolution --------------------------------------------------------------
+  # Time resolution ------------------------------------------------------------
   flavor = Parameters();
   for i,v in enumerate(tjson["TaggingParameter"]):
     if v['Name'] == "p0_OS":
@@ -208,4 +213,5 @@ def parse_fulljson(tmp_json_path):
   print(csp_factors)
   print(80*'-')
 
-  return knots+timeaccbiased+knots, knots+timeaccunbiased, angaccbiased, angaccunbiased, timeres, flavor, csp_factors
+  return (knots+timeaccbiased, knots+timeaccunbiased, angaccbiased, 
+          angaccunbiased, timeres, flavor, csp_factors)
