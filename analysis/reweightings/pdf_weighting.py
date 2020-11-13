@@ -72,17 +72,13 @@ def pdf_weighting(data, target_params, original_params, mode):
   vars_h[:,8] *= 0                                                  # time in ps
   vars_h[:,9] *= 0                                                  # time in ps
   pdf_h  = np.zeros(vars_h.shape[0])                        # output array (pdf)
-  
+
   print(tad_vars)
   print(data)
   print(vars_h)
   # Allocate device_arrays
   vars_d = ristra.allocate(vars_h).astype(np.float64)
   pdf_d  = ristra.allocate(pdf_h).astype(np.float64)
-<<<<<<< HEAD
-=======
-   
->>>>>>> 981b1e39dc8f7ff9aee84132aa8d7a342bc01de1
   # Compute!
   original_params = Parameters.load(original_params)
   target_params = Parameters.load(target_params)

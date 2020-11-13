@@ -70,7 +70,7 @@ const CONSTANT_MEM ${{ftype}} KNOTS[NKNOTS] = {KNOTS};
 // PDF parameters
 #define NTERMS {NTERMS}
 #define MKNOTS {NMASSKNOTS}
-const CONSTANT_MEM ${{ftype}} X_M[7] = {X_M};
+const CONSTANT_MEM ${{ftype}} X_M[MKNOTS] = {X_M};
 const CONSTANT_MEM ${{ftype}} TRISTAN[{NTERMS}] = {TRISTAN};
 
 // Other definitions

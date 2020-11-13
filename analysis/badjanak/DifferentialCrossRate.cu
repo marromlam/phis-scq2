@@ -302,6 +302,9 @@ ${ftype} getDiffRate( ${ftype} *data,
     {
       hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);
       hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
+      if (get_global_id(0) <=1){
+      printf("voy por aqui jefe");
+    }
     }
     else
     {

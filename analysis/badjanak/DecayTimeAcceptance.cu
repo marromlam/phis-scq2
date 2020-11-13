@@ -746,12 +746,12 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
   ${ftype} c1 = 0;
   ${ftype} c2 = 0;
   ${ftype} c3 = 0;
-  
+
   // ${ftype} ta = 0;
   // ${ftype} tb = 0;
   // ${ftype} tc = 0;
   // ${ftype} td = 0;
-  
+
 
   // Compute pdf value
   ${ftype} erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
@@ -764,7 +764,7 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
   //intgTimeAcceptance(integrals, sigma, gamma, 0, 0, coeffs, 0, tLL, tUL);
 
   // Compute per event normatization
-  
+
   ${ftype} ti  = 0.0;  ${ftype} tf  =  0.0;
   for (int k = 0; k < NKNOTS; k++) {
 
@@ -859,19 +859,19 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
     erfc((gamma*pow(sigma,2) - tf)/(sqrt(2.0)*sigma))/exp(gamma*tf) +
     erfc((gamma*pow(sigma,2) -
     ti)/(sqrt(2.0)*sigma))/exp(gamma*ti)))/gamma))/2.;
-    
+
     // ta += get_int_ta_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
     // tb += get_int_tb_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
     // tc += get_int_tc_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
     // td += get_int_td_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
-    
+
     /*
     intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
                         ${ftype} G, ${ftype} DG, ${ftype} DM,
                         GLOBAL_MEM ${ftype} *coeffs, ${ftype} t0, ${ftype} tLL, ${ftype} tUL)
     */
 
-    
+
     // ipdf += term;
     // if ( get_global_id(0) == 0)
     // {

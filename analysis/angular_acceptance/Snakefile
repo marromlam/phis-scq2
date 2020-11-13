@@ -406,14 +406,14 @@ rule angular_acceptance_iterativeRun2:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 :: {wildcards}", f"{log}")
 
 
 
 rule angular_acceptance_iterativeRun2Bd:
   resources:
-    mem_mb=16384
+    mem_mb=8192
   threads: 16
   wildcard_constraints:
     angacc = "run2(shit)?"
@@ -531,7 +531,7 @@ rule angular_acceptance_iterativeRun2Bd:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) &> {log}""")
+    ) #&> {log}""")
     send_mail(f"Angular Acceptance Run2 Bd :: {wildcards}", f"{log}")
 
 

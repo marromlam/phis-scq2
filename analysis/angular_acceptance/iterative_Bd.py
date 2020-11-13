@@ -4,6 +4,7 @@
 __author__ = ['Marcos Romero']
 __email__  = ['mromerol@cern.ch']
 
+#The idea of this program is to use it for tests in angular acceptance using only one MC (Bd and Bs)
 
 
 
@@ -115,6 +116,12 @@ def kkp_weighting(original_v, original_w, target_v, target_w, path, y,m,t,i):
   #                original_weight = original_w, target_weight = target_w );
   # kkpWeight = np.where(original_w!=0, reweighter_fold.predict_weights(original_v), 0)
   # kkpWeight = np.where(original_w!=0, np.ones_like(original_w), 0)
+  print('calculamos kkpWeight')
+  print(kkpWeight)
+  print('path')
+  print(path)
+  print('t')
+  print(t)
   np.save(path.replace('.root',f'_{t}.npy'),kkpWeight)
   print(f" * GB-weighting {m}-{y}-{t} sample is done")
   KS_test(original_v, target_v, original_w*kkpWeight, target_w)
@@ -160,13 +167,12 @@ def fcn_data(parameters, data):
   # parameters.valuesdict() has blind=True
   pars_dict = parameters.valuesdict(blind=False)
   chi2 = []
-
   for y, dy in data.items():
     for dt in [dy['unbiased'],dy['biased']]:
       badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                    **dt.angacc.valuesdict(),
                    **dt.csp.valuesdict(),
-                   tLL=tLL, tUL=tUL, use_timeacc=0, set_tagging=0, use_timeres=0)
+                   tLL=tLL, tUL=tUL, use_timeacc=0, set_tagging=2, use_timeres=0)
 
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
       #exit()
@@ -187,8 +193,8 @@ def argument_parser():
   p.add_argument('--input-coeffs-biased', help='BdJpsiKstar MC sample')
   p.add_argument('--input-coeffs-unbiased', help='BdJpsiKstar MC sample')
   p.add_argument('--input-csp', help='BdJpsiKstar MC sample')
-  p.add_argument('--input-time-resolution', help='BdJpsiKstar MC sample') #Es posible que haya que quitarlo
-  p.add_argument('--input-flavor-tagging', help='BdJpsiKstar MC sample') #Sudamos polla en el fit -> no se si habrá que quitarlo
+  p.add_argument('--input-time-resolution', help='BdJpsiKstar MC sample')
+  p.add_argument('--input-flavor-tagging', help='BdJpsiKstar MC sample')
   p.add_argument('--output-weights-biased', help='BdJpsiKstar MC sample')
   p.add_argument('--output-weights-unbiased', help='BdJpsiKstar MC sample')
   p.add_argument('--output-tables-biased', help='BdJpsiKstar MC sample')
@@ -233,13 +239,13 @@ if __name__ == '__main__':
   coeffs_biased      = args['input_coeffs_biased'].split(',')
   coeffs_unbiased    = args['input_coeffs_unbiased'].split(',')
 
-  #Para Bd solo son necesarios csp_factors en ppio
   csp_factors    = args['input_csp'].split(',')
   time_resolution = args['input_time_resolution'].split(',')
   flavor_tagging = args['input_flavor_tagging'].split(',')
 
   params_biased      = args['output_weights_biased'].split(',')
   params_unbiased    = args['output_weights_unbiased'].split(',')
+
   tables_biased      = args['output_tables_biased'].split(',')
   tables_unbiased    = args['output_tables_unbiased'].split(',')
 
@@ -265,7 +271,7 @@ if __name__ == '__main__':
   true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
 
   real  = ['cosK','cosL','hphi','time']
-  real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
+  real += ['mHH','0*sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
   weight_rd = f'sw_{VAR}' if VAR else 'sw'
 
 
@@ -302,16 +308,16 @@ if __name__ == '__main__':
         mc[y][m][t].kkpWeight = {}
         mc[y][m][t].pdfWeight = {}
         print(mc[y][m][t])
-
-    for m, v in zip(mcmodes,kkpWeight_std):
+    for m, v in zip(mcmodes,[kkpWeight_std]):
       mc[y][m]['biased'].path_to_weights = v[i]
       mc[y][m]['unbiased'].path_to_weights = v[i]
 
-
-
+  if MODE== 'Bd2JpsiKstar':
+    badjanak.config['x_m'] =  [826, 861, 896, 931, 966]
+  mass = badjanak.config['x_m']
   # Load corresponding data sample ---------------------------------------------
+
   data = {}
-  mass = badjanak.config['x_mbd'] # warning here!
   for i, y in enumerate(YEARS):
     print(f'Fetching elements for {y}[{i}] data sample')
     data[y] = {}
@@ -323,8 +329,8 @@ if __name__ == '__main__':
       data[y][t] = Sample.from_root(samples_data[i], share=SHARE)
       data[y][t].name = f"{m}-{y}-{t}"
       data[y][t].csp = csp.build(csp, csp.find('CSP.*'))
-      data[y][t].flavor = flavor #-> Esto diriamos que no hace falta
-      data[y][t].resolution = resolution #-> Esto diríamos que no hace falta hay que corregirlo para que marcos pueda hacer sus rollos
+      data[y][t].flavor = flavor
+      data[y][t].resolution = resolution
 
     for t, coeffs in zip(['biased','unbiased'],[coeffs_biased,coeffs_unbiased]):
         for t in ['biased', 'unbiased']: #WARNING PROBLEMA RAMON
@@ -347,15 +353,14 @@ if __name__ == '__main__':
       data[y][t].tables_path = path[i]
 
     print(f' *  Allocating {y} arrays in device ')
-    print(weight_rd)
     for d in [data[y]['biased'],data[y]['unbiased']]:
       sw = np.zeros_like(d.df[f'{weight_rd}'])
       for l,h in zip(mass[:-1],mass[1:]):
         pos = d.df.eval(f'mHH>={l} & mHH<{h}')
         this_sw = d.df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
         sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
+    #NORAMLIZACIÓN DE LOS SWEIGHTS QUE ENTRAN EN LOS BINS DE MASA
       d.df['sWeight'] = sw
-      #print (list(d))
       d.allocate(data=real,weight='sWeight',lkhd='0*time')
 
 
@@ -373,10 +378,10 @@ if __name__ == '__main__':
             free=True, latex=r'f_S^{3}'))
   pars.add(dict(name='fSlon4', value=0.009, min=0.00, max=0.90,
             free=True, latex=r'f_S^{4}'))
-  pars.add(dict(name='fSlon5', value=0.059, min=0.00, max=0.90,
-            free=True, latex=r'f_S^{5}'))
-  pars.add(dict(name='fSlon6', value=0.130, min=0.00, max=0.90,
-            free=True, latex=r'f_S^{6}'))
+  #pars.add(dict(name='fSlon5', value=0.059, min=0.00, max=0.90,
+              #free=True, latex=r'f_S^{5}'))
+  #pars.add(dict(name='fSlon6', value=0.130, min=0.00, max=0.90,
+            #free=True, latex=r'f_S^{6}'))
   # P wave fractions
   pars.add(dict(name="fPlon", value=0.5240, min=0.4, max=0.6,
             free=True, latex=r'f_0'))
@@ -385,8 +390,8 @@ if __name__ == '__main__':
   # Weak phases
   pars.add(dict(name="pSlon", value= 0.00, min=-1.0, max=1.0,
             free=False, latex=r"\phi_S - \phi_0"))
-  pars.add(dict(name="pPlon", value= 0.07, min=-1.0, max=1.0,
-            free=True , latex=r"\phi_0" ))
+  pars.add(dict(name="pPlon", value= 0.00, min=-1.0, max=1.0,
+            free=False , latex=r"\phi_0" ))
   pars.add(dict(name="pPpar", value= 0.00, min=-1.0, max=1.0,
             free=False, latex=r"\phi_{\parallel} - \phi_0"))
   pars.add(dict(name="pPper", value= 0.00, min=-1.0, max=1.0,
@@ -400,10 +405,10 @@ if __name__ == '__main__':
             free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
   pars.add(dict(name='dSlon4', value=-0.25, min=-4.0, max=+0.0,
             free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon5', value=-0.48, min=-4.0, max=+0.0,
-            free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon6', value=-1.18, min=-4.0, max=+0.0,
-            free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
+  #pars.add(dict(name='dSlon5', value=-0.48, min=-4.0, max=+0.0,
+            #free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
+  #pars.add(dict(name='dSlon6', value=-1.18, min=-4.0, max=+0.0,
+            #free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-2*3.14, max=2*3.14,
             free=False, latex=r"\delta_0"))
@@ -415,7 +420,7 @@ if __name__ == '__main__':
   pars.add(dict(name="lSlon", value=1.0, min=0.7, max=1.6,
             free=False, latex="\lambda_S/\lambda_0"))
   pars.add(dict(name="lPlon", value=1.0, min=0.7, max=1.6,
-            free=True,  latex="\lambda_0"))
+            free=False,  latex="\lambda_0"))
   pars.add(dict(name="lPpar", value=1.0, min=0.7, max=1.6,
             free=False, latex="\lambda_{\parallel}/\lambda_0"))
   pars.add(dict(name="lPper", value=1.0, min=0.7, max=1.6,
@@ -423,26 +428,27 @@ if __name__ == '__main__':
   # life parameters
   pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
             free=False, latex=r"\Gamma_d"))
-  pars.add(dict(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
-            free=True, latex=r"\Delta\Gamma_s"))
+  #pars.add(dict(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
+            #free=True, latex=r"\Delta\Gamma_s"))
+  pars.add(dict(name="DGs", value= 0.0, min= 0.0, max= 0.15,
+            free=False, latex=r"\Delta\Gamma_s"))
   pars.add(dict(name="DGsd", value= 0.03, min=-0.2, max= 0.2,
             free=True, latex=r"\Gamma_s - \Gamma_d"))
-  pars.add(dict(name="DM", value=17.768, min=16.0, max=20.0,
-            free=True, latex=r"\Delta m"))
+  pars.add(dict(name="DM", value=0.0, min=0.1, max=1.0,
+            free=False, latex=r"\Delta m"))
   print(pars)
 
 
   # print time acceptances
-  #Ramon esto para Bd diriamos que no hace falta.
-  #lb = [ data[y]['biased'].timeacc.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
-  #lu = [ data[y]['unbiased'].timeacc.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
-  #print(f"\nBiased time acceptance\n{80*'='}")
-  #for l in zip(*lb):
-    #print(*l, sep="| ")
+  lb = [ data[y]['biased'].timeacc.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
+  lu = [ data[y]['unbiased'].timeacc.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
+  print(f"\nBiased time acceptance\n{80*'='}")
+  for l in zip(*lb):
+    print(*l, sep="| ")
 
-  #print(f"\nUnbiased time acceptance\n{80*'='}")
-  #for l in zip(*lu):
-    #print(*l, sep="| ")
+  print(f"\nUnbiased time acceptance\n{80*'='}")
+  for l in zip(*lu):
+    print(*l, sep="| ")
 
   # print csp factors
   lb = [ data[y]['biased'].csp.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
@@ -451,16 +457,16 @@ if __name__ == '__main__':
     print(*l, sep="| ")
 
   # print flavor tagging parameters
-  #lb = [ data[y]['biased'].flavor.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
-  #print(f"\nFlavor tagging parameters\n{80*'='}")
-  #for l in zip(*lb):
-    #print(*l, sep="| ")
+  lb = [ data[y]['biased'].flavor.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
+  print(f"\nFlavor tagging parameters\n{80*'='}")
+  for l in zip(*lb):
+    print(*l, sep="| ")
 
   # print time resolution
-  #lb = [ data[y]['biased'].resolution.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
-  #print(f"\nResolution parameters\n{80*'='}")
-  #for l in zip(*lb):
-    #print(*l, sep="| ")
+  lb = [ data[y]['biased'].resolution.__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
+  print(f"\nResolution parameters\n{80*'='}")
+  for l in zip(*lb):
+    print(*l, sep="| ")
 
   # print angular acceptance
   lb = [ data[y]['biased'].angaccs[0].__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
@@ -473,7 +479,8 @@ if __name__ == '__main__':
     print(*l, sep="| ")
   print(f"\n")
 
-
+  badjanak.get_kernels(True)
+  #print(badjanak.__KERNELS__.source)
   # The iterative procedure starts ---------------------------------------------
   #     First print angular acceptance before iterative procedure
   CHECK_DICT = {}
@@ -489,10 +496,12 @@ if __name__ == '__main__':
     for v in pars.values():
       v.init = v.value # start where we left
     print(f'Simultaneous fit Bd2JpsiKstar {"&".join(list(mc.keys()))} {itstr}')
+    print(pars)
+    print(data.__str__())
     result = optimize(fcn_data,
                       method='minuit', params=pars, fcn_kwgs={'data':data},
-                      verbose=False, timeit=True, tol=0.05, strategy=2)
-    #print(result) # parameters are not blinded, so we dont print the result
+                      verbose=True, timeit=True, tol=0.5, strategy=1)
+    print(result) # parameters are not blinded, so we dont print the result
     likelihoods.append(result.chi2)
 
     pars = Parameters.clone(result.params)
@@ -503,8 +512,8 @@ if __name__ == '__main__':
         print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
     else:
       for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'lPlon', 'DGsd',
-                'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
-                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
+                'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4',
+                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4']:
         print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
 
     # 2nd step: pdf weights ----------------------------------------------------
@@ -553,9 +562,8 @@ if __name__ == '__main__':
           # target variables + weight (real data)
           tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
           tw = data[y][t].df.eval(f'{weight_rd}')
-
           # Run in single core (REALLY SLOW 10+ h)
-          # kkp_weighting(ov, ow, tv, tw, v.kkpWeight[t], y, m, t, 0)
+          #kkp_weighting(ov.values, ow.values, tv.values, tw.values, v.kkpWeight[t], y, m, t, 0)
 
           # Run in multithread mode (still has some problems with memory)
           # job = threading.Thread(target=kkp_weighting,
@@ -563,9 +571,11 @@ if __name__ == '__main__':
           #                        v.kkpWeight[t], y, m, t))
 
           # Run multicore (about 15 minutes per iteration)
+          print('v path to weights')
+          print(v.path_to_weights)
           job = multiprocessing.Process(target=kkp_weighting, args=(
-                                ov.values, ow.values, tv.values, tw.values,
-                                v.path_to_weights, y, m, t, len(threads) ))
+                              ov.values, ow.values, tv.values, tw.values,
+                                  v.path_to_weights, y, m, t, len(threads) ))
           threads.append(job); job.start()
 
     # Wait all processes to finish
@@ -598,34 +608,25 @@ if __name__ == '__main__':
 
     # 5th step: merge MC std and dg0 results -----------------------------------
     #Step 5 comentado todo por ramon
-    print(f'\nCombining MC_BsJpsiPhi and MC_BsJpsiPhi_dG0 {itstr}')
+    print(f'\Parameters Angacc MC_BdJsiKstar {itstr}')
     for y, dy in mc.items(): # loop over years
       for trigger in ['biased','unbiased']:
-        '''
         # Get angular weights for each MC
-        std = dy['MC_BsJpsiPhi'][trigger].angaccs[i]
-        dg0 = dy['MC_BsJpsiPhi_dG0'][trigger].angaccs[i]
+        std = dy['MC_Bd2JpsiKstar'][trigger].angaccs[i]
 
         # Create w and cov arrays
         std_w = np.array([std[f'w{i}'].value for i in range(1,len(std))])
-        dg0_w = np.array([dg0[f'w{i}'].value for i in range(1,len(dg0))])
         std_cov = std.cov()[1:,1:];
-        dg0_cov = dg0.cov()[1:,1:];
 
         # Some matrixes
         std_covi = np.linalg.inv(std_cov)
-        dg0_covi = np.linalg.inv(dg0_cov)
-        cov_comb_inv = np.linalg.inv( std_cov + dg0_cov )
-        cov_comb = np.linalg.inv( std_covi + dg0_covi )
-
-        # Check p-value
-        chi2_value = (std_w-dg0_w).dot(cov_comb_inv.dot(std_w-dg0_w));
+        cov_comb_inv = np.linalg.inv( std_cov )
+        cov_comb = np.linalg.inv( std_covi )
         dof = len(std_w)
-        prob = chi2.sf(chi2_value,dof)
 
         # Combine angular weights
         w = np.ones((dof+1))
-        w[1:] = cov_comb.dot( std_covi.dot(std_w.T) + dg0_covi.dot(dg0_w.T)  )
+        w[1:] = cov_comb.dot( std_covi.dot(std_w.T))
 
         # Combine uncertainties
         uw = np.zeros_like(w)
@@ -644,10 +645,10 @@ if __name__ == '__main__':
                     for j in range(0, len(w)) if k > 0 and j > 0}
           merged_w.add({'name': f'w{k}{trigger[0]}', 'value': w[k], 'stdev': uw[k],
                         'free': False, 'latex': f'w_{k}^{trigger[0]}', 'correl': correl})
-        print(f"Current angular weights for Bs2JpsiPhi-{y}-{trigger} sample are:")
-        print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
+        print(f"Current angular weights for BdJpsiKstar-{y}-{trigger} sample are:")
+        print(f"{'MC':>8}")
         for _i in range(len(merged_w.keys())):
-          print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}{trigger[0]}'].uvalue:+1.2uP}")
+          print(f"{np.array(merged_w)[_i]:+1.5f}")
 
         if i>5:
           for wk in merged_w.keys():
@@ -655,14 +656,14 @@ if __name__ == '__main__':
             old = data[y][trigger].angaccs[i-1][wk].value
             print(f"  = > {new}+{old} ")
             merged_w[wk].set(value = 0.5*(new+old))
-          print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8} -- mod")
+          print(f"{'MC':>8}")
           for _i in range(len(merged_w.keys())):
-            print(f"{np.array(std)[_i]:+1.5f} | {np.array(dg0)[_i]:+1.5f} | {merged_w[f'w{_i}{trigger[0]}'].uvalue:+1.2uP}")
+            print(f"{np.array(merged_w)[_i]:+1.5f}")
 
         # Save current set of angular weights
         data[y][trigger].angacc = merged_w
         data[y][trigger].angaccs[i] = merged_w
-        '''
+
         # Check for all iterations if existed convergence
         for ci in range(0,i):
             CHECK_DICT[ci].append(check_for_convergence(
@@ -671,7 +672,7 @@ if __name__ == '__main__':
         qwe = check_for_convergence( data[y][trigger].angaccs[i-1], data[y][trigger].angaccs[i] )
         checker.append( qwe )
         merged_w.dump(data[y][trigger].params_path.replace('.json',f'i{i}.json'))
-        print(f'Value of chi2/dof = {chi2_value:.4}/{dof} corresponds to a p-value of {prob:.4}\n')
+        #print(f'Value of chi2/dof = {chi2_value:.4}/{dof} corresponds to a p-value of {prob:.4}\n')
 
     # Check if they are the same as previous iteration
     lb = [ data[y]['biased'].angaccs[i].__str__(['value']).splitlines() for i__,y in enumerate( YEARS ) ]
