@@ -1,18 +1,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                      OPENCL decay rate Bs -> mumuKK                        //
+//                      KERNEL FOR THE PHIS-SCQ ANALYSIS                      //
 //                                                                            //
 //   Created: 2019-11-18                                                      //
-//  Modified: 2019-11-21                                                      //
-//    Author: Marcos Romero                                                   //
+//    Author: Marcos Romero Lamas (mromerol@cern.ch)                          //
 //                                                                            //
 //    This file is part of phis-scq packages, Santiago's framework for the    //
 //                     phi_s analysis in Bs -> Jpsi K+ K-                     //
 //                                                                            //
-//  This file contains the following KERNELs:                                 //
-//    * pyDiffRate: Computes Bs2MuMuKK pdf looping over the events. Now it    //
-//                  handles a binned X_M fit without splitting beforehand the //
-//                  data --it launches a thread per mass bin.                 //
+//  This file exposes the following KERNELs:                                  //
+//    * pyrateBs: Computes Bs2MuMuKK pdf looping over the events. Now it      //
+//                handles a binned X_M fit without splitting beforehand the   //
+//                data --it launches a thread per mass bin.                   //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
