@@ -59,6 +59,6 @@ void plot_moments(GLOBAL_MEM const ftype *nw, GLOBAL_MEM ftype *out,
 {
   const int evt = get_global_id(0);
   ftype moments[NTERMS] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  angWeightsToMoments(moments, nw);
+  angular_weights2moments(nw, moments);
   out[evt] = angular_efficiency(cosK[evt], cosL[evt], hphi[evt], moments);
 }
