@@ -51,7 +51,7 @@ const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 #include <ipanema/random.cpp>
 
 // Include analysis parts
-#include "FkHelpers.cu"
+//#include "FkHelpers.cu"
 #include "Tagging.cu"
 #include "TimeAngularDistribution.cu"
 #include "DecayTimeAcceptance.cu"
