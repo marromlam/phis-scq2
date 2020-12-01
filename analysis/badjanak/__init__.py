@@ -1,4 +1,12 @@
-# -*- coding: utf-8 -*-
+DESCRIPTION = """
+    This file contains 3 fcn functions to be minimized under ipanema3 framework
+    those functions are, actually functions of badjanak kernels.
+"""
+
+__author__ = ['Marcos Romero Lamas']
+__email__ = ['mromerol@cern.ch']
+
+
 
 import os
 import builtins
@@ -20,7 +28,7 @@ if __name__ == '__main__':
 else:
   PATH = os.path.dirname(os.path.abspath(__file__))
 
-# Get builtins
+# Get builtins (ipanema initialization exposes them)
 BACKEND = builtins.BACKEND
 DEVICE = builtins.DEVICE
 CONTEXT = builtins.CONTEXT
@@ -97,26 +105,20 @@ def compile(verbose=False, pedantic=False):
 
 
 
-
-
-
-
-
 # Get kernels ------------------------------------------------------------------
 #    Hey ja
 def get_kernels(verbose=False, pedantic=False):
   global __KERNELS__
   prog = compile(verbose, pedantic)
-  items = ['pyDiffRate',
+  items = ['pyrateBs',
            'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
            'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
-           #'dG5toy', 
-           'integral_ijk_fx']
+           'dG5toy',
+           #'integral_ijk_fx'
+           ]
   for item in items:
     setattr(prog, item[2:], prog.__getattr__(item))
-    #print(item)
-    #setattr(prog, item[2:], prog.get_function(item))
   __KERNELS__ = prog
 
 
@@ -166,7 +168,7 @@ def delta_gamma5(input, output,
   The aim of this function is to be the fastest wrapper
   """
   g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
-  __KERNELS__.DiffRate(
+  __KERNELS__.rateBs(
     # Input and output arrays
     input, output,
     # Differential cross-rate parameters
@@ -200,7 +202,7 @@ def delta_gamma5(input, output,
 
 
 
-def cross_rate_parser_new(
+def parser_rateBs(
       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
       # Time-dependent angular distribution
       fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
@@ -341,7 +343,7 @@ def delta_gamma5_data(input, output, **pars):
   Out:
          void
   """
-  p = cross_rate_parser_new(**pars)
+  p = parser_rateBs(**pars)
   delta_gamma5( input, output,
                          use_fk=1, use_angacc = 1, use_timeacc = 1,
                          use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
@@ -369,7 +371,7 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
   Out:
          void
   """
-  p = cross_rate_parser_new(**pars)
+  p = parser_rateBs(**pars)
   delta_gamma5( input, output,
                          use_fk=use_fk, use_angacc = 0, use_timeacc = 0,
                          use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
