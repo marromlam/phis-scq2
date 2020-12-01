@@ -5,29 +5,13 @@ import builtins
 import numpy as np
 import ipanema
 from ipanema import ristra
+from ipanema.core.utils import get_sizes
 import warnings
 from reikna.cluda import functions, dtypes
 import platform
 import cpuinfo
 import re
 import math
-
-
-def get_sizes(size,BLOCK_SIZE=256):
-    '''
-    i need to check if this worls for 3d size and 3d block
-    '''
-    a = size % BLOCK_SIZE
-    if a == 0:
-      gs, ls = size, BLOCK_SIZE
-    elif size < BLOCK_SIZE:
-      gs, ls = size, 1
-    else:
-      a = np.ceil(size/BLOCK_SIZE)
-      gs, ls = a*BLOCK_SIZE, BLOCK_SIZE
-    return int(gs), int(ls)
-
-
 
 if __name__ == '__main__':
   PATH = '/home3/marcos.romero/phis-scq/badjanak'
