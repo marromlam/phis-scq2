@@ -78,24 +78,17 @@ def flagger(verbose=False):
 #     Compile kernel against given BACKEND
 
 def compile(verbose=False, pedantic=False):
-  kpath = os.path.join(PATH,'Kernel.cu')
-  kstrg = open(kpath,"r").read()
-  kstrg = kstrg.format(**{
-            **flagger(verbose),
-            "FKHELPERS_CU":open(PATH+'/FkHelpers.cu').read(),
-            "FUNCTIONS_CU":open(PATH+'/Functions.cu').read(),
-            "TIMEANGULARDISTRIBUTION_CU":open(PATH+'/TimeAngularDistribution.cu').read(),
-            "TAGGING_CU":open(PATH+'/Tagging.cu').read(),
-            "DECAYTIMEACCEPTANCE_CU":open(PATH+'/DecayTimeAcceptance.cu').read(),
-            "DIFFERENTIALCROSSRATE_CU":open(PATH+'/DifferentialCrossRate.cu').read(),
-            "TOY_CU":"//"#open(PATH+'/Toy.cu').read(),
-           })
+  kstrg = open(os.path.join(PATH, 'Kernel.cu'), "r").read()
   if config['precision'] == 'double':
-    prog = THREAD.compile(kstrg,render_kwds={"ftype":dtypes.ctype(np.float64),
-                 "ctype":dtypes.ctype(np.complex128)},keep=False)
+    prog = THREAD.compile(kstrg,
+              render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
+              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH}"],
+              keep=False)
   else:
-    prog = THREAD.compile(kstrg,render_kwds={"ftype":dtypes.ctype(np.float32),
-                 "ctype":dtypes.ctype(np.complex64)},keep=False)
+    prog = THREAD.compile(kstrg,
+              render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
+              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH}"],
+              keep=False)  
   if pedantic:
     print(prog.source)
   if verbose:
