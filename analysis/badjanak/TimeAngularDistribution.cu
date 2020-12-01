@@ -20,11 +20,10 @@
 // Functions ///////////////////////////////////////////////////////////////////
 
 
-
 WITHIN_KERNEL
-${ftype} getN(${ftype} A10, ${ftype} A00, ${ftype} A1a, ${ftype} A1e, ${ftype} C01, int k)
+ftype getN(const ftype A10, const ftype A00, const ftype A1a, const ftype A1e, const ftype C01, const int k)
 {
-  ${ftype} nk;
+  ftype nk;
   switch(k) {
     case 1:  nk = A10*A10; break;
     case 2:  nk = A1a*A1a; break;
@@ -45,14 +44,14 @@ ${ftype} getN(${ftype} A10, ${ftype} A00, ${ftype} A1a, ${ftype} A1e, ${ftype} C
 
 
 WITHIN_KERNEL
-${ftype} getF(${ftype} cosK, ${ftype} cosL, ${ftype} hphi, int k)
+ftype getF(const ftype cosK, const ftype cosL, const ftype hphi, const int k)
 {
-  ${ftype} sinK   = sqrt(1. - cosK*cosK);
-  ${ftype} sinL   = sqrt(1. - cosL*cosL);
-  ${ftype} sinphi = sin(hphi);
-  ${ftype} cosphi = cos(hphi);
+  ftype sinK   = sqrt(1. - cosK*cosK);
+  ftype sinL   = sqrt(1. - cosL*cosL);
+  ftype sinphi = sin(hphi);
+  ftype cosphi = cos(hphi);
 
-  ${ftype} fk;
+  ftype fk;
   switch(k) {
     case 1:  fk = cosK*cosK*sinL*sinL; break;
     case 2:  fk = 0.5*sinK*sinK*(1.-cosphi*cosphi*sinL*sinL); break;
@@ -73,11 +72,11 @@ ${ftype} getF(${ftype} cosK, ${ftype} cosL, ${ftype} hphi, int k)
 
 
 WITHIN_KERNEL
-${ftype} getA(${ftype} p10, ${ftype} p00, ${ftype} p1a, ${ftype} p1e, ${ftype} d10,
-						${ftype} d00, ${ftype} d1a, ${ftype} d1e, ${ftype} l10, ${ftype} l00,
-						${ftype} l1a, ${ftype} l1e, int k)
+ftype getA(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, const ftype d10,
+						const ftype d00, const ftype d1a, const ftype d1e, const ftype l10, const ftype l00,
+						const ftype l1a, const ftype l1e, const int k)
 {
-  ${ftype} ak;
+  ftype ak;
   switch(k) {
     case 1:  ak = 0.5*(1.+l10*l10); break;
     case 2:  ak = 0.5*(1.+l1a*l1a); break;
@@ -98,11 +97,11 @@ ${ftype} getA(${ftype} p10, ${ftype} p00, ${ftype} p1a, ${ftype} p1e, ${ftype} d
 
 
 WITHIN_KERNEL
-${ftype} getB(${ftype} p10, ${ftype} p00, ${ftype} p1a, ${ftype} p1e, ${ftype} d10,
-						${ftype} d00, ${ftype} d1a, ${ftype} d1e, ${ftype} l10, ${ftype} l00,
-						${ftype} l1a, ${ftype} l1e, int k)
+ftype getB(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, const ftype d10,
+						const ftype d00, const ftype d1a, const ftype d1e, const ftype l10, const ftype l00,
+						const ftype l1a, const ftype l1e, const int k)
 {
-  ${ftype} bk;
+  ftype bk;
   switch(k) {
     case 1:  bk = -l10*cos(p10); break;
     case 2:  bk = -l1a*cos(p1a); break;
@@ -123,12 +122,12 @@ ${ftype} getB(${ftype} p10, ${ftype} p00, ${ftype} p1a, ${ftype} p1e, ${ftype} d
 
 
 WITHIN_KERNEL
-${ftype} getC(${ftype} p10, ${ftype} p00, ${ftype} p1a, ${ftype} p1e, ${ftype} d10,
-						${ftype} d00, ${ftype} d1a, ${ftype} d1e, ${ftype} l10, ${ftype} l00,
-						${ftype} l1a, ${ftype} l1e, int k)
+ftype getC(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, const ftype d10,
+						const ftype d00, const ftype d1a, const ftype d1e, const ftype l10, const ftype l00,
+						const ftype l1a, const ftype l1e, const int k)
 {
 
-  ${ftype} ck;
+  ftype ck;
   switch(k) {
     case 1:  ck = 0.5*(1.-l10*l10); break;
     case 2:  ck = 0.5*(1.-l1a*l1a); break;
@@ -149,12 +148,12 @@ ${ftype} getC(${ftype} p10, ${ftype} p00, ${ftype} p1a, ${ftype} p1e, ${ftype} d
 
 
 WITHIN_KERNEL
-${ftype} getD(${ftype} p10, ${ftype} p00, ${ftype} p1a, ${ftype} p1e, ${ftype} d10,
-						${ftype} d00, ${ftype} d1a, ${ftype} d1e, ${ftype} l10, ${ftype} l00,
-						${ftype} l1a, ${ftype} l1e, int k)
+ftype getD(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, const ftype d10,
+						const ftype d00, const ftype d1a, const ftype d1e, const ftype l10, const ftype l00,
+						const ftype l1a, const ftype l1e, const int k)
 {
 
-  ${ftype} dk;
+  ftype dk;
   switch(k) {
     case 1:  dk = l10*sin(p10); break;
     case 2:  dk = l1a*sin(p1a); break;
@@ -175,16 +174,16 @@ ${ftype} getD(${ftype} p10, ${ftype} p00, ${ftype} p1a, ${ftype} p1e, ${ftype} d
 
 
 WITHIN_KERNEL
-void integralSimple(${ftype} result[2],
-                    ${ftype} vn[10],
-                    ${ftype} va[10], ${ftype} vb[10], ${ftype} vc[10], ${ftype} vd[10],
-                    GLOBAL_MEM ${ftype} *norm,
-                    ${ftype} G, ${ftype} DG, ${ftype} DM, ${ftype} ti, ${ftype} tf)
+void integralSimple(ftype result[2],
+                    const ftype vn[10],
+                    const ftype va[10], const ftype vb[10], const ftype vc[10], const ftype vd[10],
+                    GLOBAL_MEM const ftype *norm,
+                    const ftype G, const ftype DG, const ftype DM, const ftype ti, const ftype tf)
 {
-  ${ftype} ita = (2*(DG*sinh(.5*DG*ti) + 2*G*cosh(.5*DG*ti))*exp(G*tf) - 2*(DG*sinh(.5*DG*tf) + 2*G*cosh(.5*DG*tf))*exp(G*ti))*exp(-G*(ti + tf))/(-pow(DG, 2) + 4 *pow(G, 2));
-  ${ftype} itb = (2*(DG*cosh(.5*DG*ti) + 2*G*sinh(.5*DG*ti))*exp(G*tf) - 2*(DG*cosh(.5*DG*tf) + 2*G*sinh(.5*DG*tf))*exp(G*ti))*exp(-G*(ti + tf))/(-pow(DG, 2) + 4*pow(G, 2));
-  ${ftype} itc = ((-DM*sin(DM*ti) + G*cos(DM*ti))*exp(G*tf) + (DM*sin(DM*tf) - G*cos(DM*tf))*exp(G*ti))*exp(-G*(ti + tf))/(pow(DM, 2) + pow(G, 2));
-  ${ftype} itd = ((DM*cos(DM*ti) + G*sin(DM*ti))*exp(G*tf) - (DM*cos(DM*tf) + G*sin(DM*tf))*exp(G*ti))*exp(-G*(ti + tf))/(pow(DM, 2) + pow(G, 2));;
+  ftype ita = (2*(DG*sinh(.5*DG*ti) + 2*G*cosh(.5*DG*ti))*exp(G*tf) - 2*(DG*sinh(.5*DG*tf) + 2*G*cosh(.5*DG*tf))*exp(G*ti))*exp(-G*(ti + tf))/(-pow(DG, 2) + 4 *pow(G, 2));
+  ftype itb = (2*(DG*cosh(.5*DG*ti) + 2*G*sinh(.5*DG*ti))*exp(G*tf) - 2*(DG*cosh(.5*DG*tf) + 2*G*sinh(.5*DG*tf))*exp(G*ti))*exp(-G*(ti + tf))/(-pow(DG, 2) + 4*pow(G, 2));
+  ftype itc = ((-DM*sin(DM*ti) + G*cos(DM*ti))*exp(G*tf) + (DM*sin(DM*tf) - G*cos(DM*tf))*exp(G*ti))*exp(-G*(ti + tf))/(pow(DM, 2) + pow(G, 2));
+  ftype itd = ((DM*cos(DM*ti) + G*sin(DM*ti))*exp(G*tf) - (DM*cos(DM*tf) + G*sin(DM*tf))*exp(G*ti))*exp(-G*(ti + tf))/(pow(DM, 2) + pow(G, 2));;
 
   for(int k=0; k<10 ; k++)
   {
