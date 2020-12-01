@@ -16,8 +16,7 @@
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Inlude headers //////////////////////////////////////////////////////////////
+#include <ipanema/random.hpp>
 
 
 #include <curand.h>
@@ -97,7 +96,7 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
   ${ftype} sigmat = 0.0;
   if (USE_TIMERES)
   {
-    sigmat = curand_log_normal(&state,-3.22,0.309);
+    sigmat = rngLogNormal(-3.22,0.309, &state, 100);
   }
   else
   {
@@ -114,12 +113,8 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
 
   if (SET_TAGGING == 1) // DATA
   {
-    ${ftype} tagOS = curand_uniform(&state);
-    ${ftype} tagSS = curand_uniform(&state);
-    ${ftype} OSmax = tagOSgen(0.5);
-    ${ftype} SSmax = tagSSgen(0.5);
-    ${ftype} tag = 0;
-    ${ftype} threshold;
+    ftype tagOS = rng_uniform(&state, 100);
+    ftype tagSS = rng_uniform(&state, 100);
 
     // generate qOS
     if (tagOS < 0.16) {
@@ -147,8 +142,8 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
     {
       while(1)
       {
-        tag = 0.49*curand_uniform(&state);
-        threshold = OSmax*curand_uniform(&state);
+        tag = 0.49*rng_uniform(&state, 100);
+        threshold = OSmax*rng_uniform(&state, 100);
         if (tagOSgen(tag) > threshold) break;
       }
       etaOS = tag;
@@ -158,8 +153,8 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
     {
       while(1)
       {
-        tag = 0.49*curand_uniform(&state);
-        threshold = SSmax*curand_uniform(&state);
+        tag = 0.49*rng_uniform(&state, 100);
+        threshold = SSmax*rng_uniform(&state, 100);
         if (tagSSgen(tag) > threshold) break;
       }
       etaSS = tag;
@@ -167,7 +162,7 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
   }
   else if (SET_TAGGING == 0) // PERFECT, MC
   {
-    ${ftype} tag = curand_uniform(&state);
+    ftype tag = rng_uniform(&state, 100);
     if (tag < 0.5){
       qOS = +1.0;
       qSS = +1.0;
@@ -193,10 +188,10 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
   while(1)
   {
     // Random numbers
-    ${ftype} cosK = - 1.0  +    2.0*curand_uniform(&state);
-    ${ftype} cosL = - 1.0  +    2.0*curand_uniform(&state);
-    ${ftype} hphi = - M_PI + 2*M_PI*curand_uniform(&state);
-    ${ftype} time = tLL - log(curand_uniform(&state))/(G-0.5*DG);
+    ftype cosK = - 1.0  +    2.0*rng_uniform(&state, 100);
+    ftype cosL = - 1.0  +    2.0*rng_uniform(&state, 100);
+    ftype hphi = - M_PI + 2*M_PI*rng_uniform(&state, 100);
+    ftype time = tLL - log(rng_uniform(&state, 100))/(G-0.5*DG);
 
     // PDF threshold
     ${ftype} threshold = PROB_MAX*curand_uniform(&state);
