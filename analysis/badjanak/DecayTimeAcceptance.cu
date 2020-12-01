@@ -15,6 +15,8 @@
 // Functions ///////////////////////////////////////////////////////////////////
 
 
+#include <ipanema/complex.hpp>
+#include <ipanema/special.hpp>
 
 WITHIN_KERNEL
 unsigned int getTimeBin(${ftype} const t)
