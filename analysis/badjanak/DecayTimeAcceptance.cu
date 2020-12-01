@@ -92,58 +92,12 @@ ${ftype} calcTimeAcceptance(${ftype} t, GLOBAL_MEM ${ftype} *coeffs, ${ftype} tL
 }
 
 
-WITHIN_KERNEL
-${ctype} ipanema_erfc2(${ctype} z)
-{
-  ${ftype} re = -z.x * z.x + z.y * z.y;
-  ${ftype} im = -2. * z.x * z.y;
-  ${ctype} expmz = cexp( cnew(re,im) );
-
-  if (z.x >= 0.0) {
-    return                 cmul( expmz, faddeeva(cnew(-z.y,+z.x)) );
-  }
-  else{
-    ${ctype} ans = cmul( expmz, faddeeva(cnew(+z.y,-z.x)) );
-    return cnew(2.0-ans.x, ans.y);
-  }
-}
 
 
 
-WITHIN_KERNEL
-${ctype} ipanema_erfc(${ctype} z)
-{
-  if (z.y<0)
-  {
-    ${ctype} ans = ipanema_erfc2( cnew(-z.x, -z.y) );
-    return cnew( 2.0-ans.x, -ans.y);
-  }
-  else{
-    return ipanema_erfc2(z);
-  }
-}
 
 
 
-WITHIN_KERNEL
-${ctype} cErrF_2(${ctype} x)
-{
-  ${ctype} I = cnew(0.0,1.0);
-  ${ctype} z = cmul(I,x);
-  ${ctype} result = cmul( cexp(  cmul(cnew(-1,0),cmul(x,x))   ) , faddeeva(z) );
-
-  //printf("z = %+.16f %+.16fi\n", z.x, z.y);
-  //printf("fad = %+.16f %+.16fi\n", faddeeva(z).x, faddeeva(z).y);
-
-  if (x.x > 20.0){// && fabs(x.y < 20.0)
-    result = cnew(0.0,0);
-  }
-  if (x.x < -20.0){// && fabs(x.y < 20.0)
-    result = cnew(2.0,0);
-  }
-
-  return result;
-}
 
 
 WITHIN_KERNEL
