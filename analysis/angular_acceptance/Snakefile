@@ -665,3 +665,42 @@ rule angular_acceptance_compareCuts:
            --variable {wildcards.variable}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Comparison :: {wildcards}", f"{log}", [f"{output}"])
+
+
+
+rule angular_acceptance_time_dependence:
+  resources:
+    mem_mb = 8192
+  input:
+    sample_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi'),
+    sample_dg0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
+    weights_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',weight=f'kkpWeight'),
+    weights_dg0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',weight=f'kkpWeight'),
+    timeacc = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
+    angacc = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_{trigger}.json',
+  params:
+    params_std = 'analysis/params/generator/{year}/MC_Bs2JpsiPhi.json',
+    params_dg0 = 'analysis/params/generator/{year}/MC_Bs2JpsiPhi_dG0.json'
+  output:
+    figure = 'output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}Timedep_{timeacc}_{trigger}.pdf',
+  log:
+    'output/log/angular_acceptance_time_dependence/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}.log'
+  run:
+    shell(f"""(time\
+    python analysis/angular_acceptance/time_dependence.py\
+           --sample-std             {input.sample_std}\
+           --sample-dg0             {input.sample_dg0}\
+           --params-std             {params.params_std}\
+           --params-dg0             {params.params_dg0}\
+           --kkpweight-std          {input.weights_std}\
+           --kkpweight-dg0          {input.weights_dg0}\
+           --angacc                 {input.angacc}\
+           --timeacc                 {input.timeacc}\
+           --figure                 {output.figure}\
+           --mode                   {wildcards.mode}\
+           --version                {wildcards.version}\
+           --trigger                {wildcards.trigger}\
+           --year                   {wildcards.year}\
+           --shit                   {wildcards.angacc}_{wildcards.timeacc}\
+    ) &> {log}""")
+    send_mail(f"Angular Acceptance Time Dependence :: {wildcards}", f"{log}", [f"{output}"])
