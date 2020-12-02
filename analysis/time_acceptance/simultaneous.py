@@ -1,4 +1,3 @@
-from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 DESCRIPTION = """
     This file contains 3 fcn functions to be minimized under ipanema3 framework
     those functions are, actually functions of badjanak kernels.
@@ -19,6 +18,7 @@ import hjson
 
 # load ipanema
 from ipanema import initialize, plotting
+from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 
 # import some phis-scq utils
 from utils.plot import mode_tex
@@ -142,8 +142,6 @@ if __name__ == '__main__':
     cats[mode].allocate(time='time',lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
-    print( cats[mode] )
-    print(cats[mode].weight)
 
     # Add knots
     cats[mode].knots = Parameters()
