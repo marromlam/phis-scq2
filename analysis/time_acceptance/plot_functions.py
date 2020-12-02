@@ -76,11 +76,11 @@ def plot_timeacc_fit(params, data, weight,
     fig,axplot,axpull = plotting.axes_plotpull()
   else:
     fig,axplot,axpull = axes
-  
+
   # Get bins and counts for data histogram
   ref = histogram.hist(ristra.get(data), weights=ristra.get(weight), bins=nob,
                        range=(params['tLL'].value, params['tUL'].value))
-  
+
   # Get x and y for pdf plot
   x = np.linspace(params['tLL'].value, params['tUL'].value, nop)
   if   mode == 'BsMC': i = 0
@@ -195,28 +195,31 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   y_nom = unp.nominal_values(y)
   y_spl = interp1d(x, y_nom, kind='cubic', fill_value='extrapolate')(5)
   y_norm = np.trapz(y_nom/y_spl, x)
-  
 
-
+  ylabel_str = r'$\varepsilon_{%s}$ [a.u.]' % modelabel
   if kind == 'ratio':
     coeffs_a = [params[key].value for key in params if key[0]=='a']
     spline_a = badjanak.bspline(ref.cmbins,*coeffs_a)
     ref.counts /= spline_a; ref.errl /= spline_a; ref.errh /= spline_a
+    ylabel_str = r'$\varepsilon_{MC}^{B_d^0/B_s^0}$ [a.u.]'
+
   if kind == 'full':
     coeffs_a = [params[key].value for key in params if key[0]=='a']
     coeffs_b = [params[key].value for key in params if key[0]=='b']
     spline_a = badjanak.bspline(ref.cmbins, *coeffs_a)
     spline_b = badjanak.bspline(ref.cmbins, *coeffs_b)
     ref.counts /= spline_b; ref.errl /= spline_b; ref.errh /= spline_b
+    ylabel_str = r'$\varepsilon_{RD}^{B_d^0}$ [a.u.]'
+
     #ref.counts *= spline_a; ref.errl *= spline_a; ref.errh *= spline_a
-  
+
   counts_spline = interp1d(ref.bins, ref.counts, kind='cubic')
   int_5 = counts_spline(5)
   ref.counts /= int_5; ref.errl /= int_5; ref.errh /= int_5
-  
+
   ref_norm = np.trapz(ref.counts,ref.cmbins)
   #y_norm = np.trapz(y_nom/y_spl, x)
-  
+
   # Splines for pdf ploting
   y_upp, y_low = get_confidence_bands(x, y, sigma=conf_level)/y_spl
   y_nom_s = interp1d(x[:-1], y_nom[:-1]/y_spl, kind='cubic')
@@ -229,6 +232,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
 
   # Actual ploting
   axplot.set_ylim(0.4, 1.5)
+  #axplot.set_ylim(0.96, 1.05)#0.96, 1.05
   # Plot pdf
   axplot.plot(X, y_nom_s(X), color=FMTCOLOR if FMTCOLOR!='k' else None)
   # Plot confidence bands
@@ -238,20 +242,20 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
                   fmt='.', color=FMTCOLOR)
 
   axplot.fill_between(X, y_upp_s(X), y_low_s(X), alpha=0.2, edgecolor="none",
-                      label=f'${conf_level}\sigma$ c.b.')
-  
+                      label=f'${conf_level}\sigma$ c.b. {label}')
+
   axpull.fill_between(ref.cmbins,
                       histogram.pull_pdf(
                           x, y_nom/y_spl, ref.cmbins, y_norm*ref.counts/ref_norm, ref.errl, ref.errh),
                       0)
-  
+
   # If log, then log both axes
   if log:
     axplot.set_xscale('log')
-  
+
   # Labeling
-  axplot.set_xlabel(r'$t$ [ps]')
-  axplot.set_ylabel(r'$\epsilon_{%s}$ [a.u.]' % modelabel)
+  axpull.set_xlabel("$t$ [ps]")
+  axplot.set_ylabel(ylabel_str)
   axplot.legend()
 
   return fig, axplot, axpull
@@ -272,10 +276,14 @@ def plotter(args,axes):
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
   LOGSCALE = True if 'log' in args['plot'] else False
   PLOT = args['plot'][:-3] if LOGSCALE else args['plot']
-
+  LABELED = args['labeled']
+  if LABELED:
+    thelabel = f"${args['version']} - {args['timeacc']}$"
+  else:
+    thelabel=""
   def trigger_scissors(trigger, CUT=""):
     if trigger == 'biased':
       CUT = cuts_and("hlt1b==1",CUT)
@@ -302,18 +310,15 @@ def plotter(args,axes):
   params = args['params'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  if TIMEACC == 'simul':
+  knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
+  kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
+  if CORR == '9knots':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = 'kinWeight*'
-  elif TIMEACC == 'nonkin':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = ''
-  elif TIMEACC == '9knots':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = 'kinWeight*'
-  elif TIMEACC == '12knots':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = 'kinWeight*'
+    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
+  elif CORR == '12knots':
+    knots = [0.30, 0.43, 0.58, 0.74, 0.91, 1.11, 1.35,
+             1.63, 1.96, 2.40, 3.01, 4.06, 9.00, 15.0]
+    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   CUT = cuts_and(CUT,f'time>={knots[0]} & time<={knots[-1]}')
 
 
@@ -325,17 +330,29 @@ def plotter(args,axes):
   for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
-      weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*sw/gb_weights'
-      mode = 'BsMC';
+      if CORR=='Noncorr':
+        weight = f'dg0Weight*{sw}/gb_weights'
+      else:
+        weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
+      mode = 'BsMC'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
-      weight = f'{kinWeight}polWeight*pdfWeight*sw/gb_weights'
-      mode = 'BsMC';
+      if CORR=='Noncorr':
+        weight = f'{sw}/gb_weights'
+      else:
+        weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
+      mode = 'BsMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      weight = f'{kinWeight}polWeight*pdfWeight*sw'
-      mode = 'BdMC';
+      if CORR=='Noncorr':
+        weight = f'{sw}'
+      else:
+        weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+      mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      weight = f'{kinWeight}{sw}'
-      mode = 'BdRD';
+      if CORR=='Noncorr':
+        weight = f'{sw}'
+      else:
+        weight = f'{kinWeight}{sw}'
+      mode = 'BdRD'; c = 'c'
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
@@ -363,14 +380,14 @@ def plotter(args,axes):
     axes = plot_timeacc_fit(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           MMODE, log=LOGSCALE, axes=axes,
-                                          label=f"${args['version']} - {args['timeacc']}$")
+                                          label=thelabel)
   elif PLOT=='spline':
     axes = plot_timeacc_spline(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           mode=MMODE, log=LOGSCALE, axes=axes,
                                           conf_level=1,
                                           modelabel=mode_tex(MODE),
-                                          label=f"${args['version']} - {args['timeacc']}$")
+                                          label=thelabel)
   return axes
 
 
@@ -446,7 +463,8 @@ if __name__ == '__main__':
         "version": f"{args['version']}",
         "trigger": f"{args['trigger']}",
         "timeacc": f"{m}",
-        "plot":    f"{args['plot']}"
+        "plot":    f"{args['plot']}",
+        "labeled":  True
       }
       axes = plotter(args, axes )
       axes[1].legend()
@@ -461,7 +479,8 @@ if __name__ == '__main__':
         "version": f"{m}",
         "trigger": f"{args['trigger']}",
         "timeacc": f"{args['timeacc']}",
-        "plot":    f"{args['plot']}"
+        "plot":    f"{args['plot']}",
+        "labeled":  True
       }
       axes = plotter(args, axes=axes )
       axes[1].legend()
@@ -475,10 +494,11 @@ if __name__ == '__main__':
       "version":  f"{args['version']}",
       "trigger":  f"{args['trigger']}",
       "timeacc":  f"{args['timeacc']}",
-      "plot":     f"{args['plot']}"
+      "plot":     f"{args['plot']}",
+      "labeled":  False
     }
     axes = plotter(args, axes )
-  
+
   VWATERMARK = version_guesser(args['version'])[0] # version to watermark plots
   if 'log' in args['plot'] and not 'spline' in args['plot']:
     watermark(axes[1],version=f"${VWATERMARK}$",scale=10.01)
