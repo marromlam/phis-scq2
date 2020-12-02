@@ -36,8 +36,11 @@ def polarity_weighting(original_file, original_treename,
   # Get data
   odf = uproot.open(original_file)[original_treename].pandas.df(flatten=None)
   original_polarity = odf["Polarity"].values
+  #original_polarity = odf["magnet"].values
   tdf = uproot.open(target_file)[target_treename].pandas.df(branches="Polarity")
   target_polarity = tdf["Polarity"].values
+  #tdf = uproot.open(targ#et_file)[target_treename].pandas.df(branches="magnet")
+  #target_polarity = tdf["magnet"].values
   print('DataFrames are ready')
   print(odf)
 

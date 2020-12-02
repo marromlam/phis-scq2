@@ -22,7 +22,8 @@ if ROOT_PANDAS:
 
 
 from ipanema import initialize
-initialize('opencl',1)
+#initialize('opencl',1)
+initialize(os.environ['IPANEMA_BACKEND'],1)
 from ipanema import ristra, Sample, Parameters, Parameter, Optimizer
 
 import badjanak

@@ -111,7 +111,6 @@ ftype rateBs( const ftype *data,
   #endif
 
 
-
   // Variables -----------------------------------------------------------------
   //     Make sure that the input it's in this order.
   //     lalala
@@ -299,13 +298,13 @@ ftype rateBs( const ftype *data,
 
     // WARNING: now I know if is Bs or Bd with DM, but I should change it asap (its clearly misleading)
     //if (fabs(qOS) == 511) // Bd pdf
-    if (fabs(qOS) != 511) // Bs PDF
+    if (abs(int(qOS)) != 511) // Bs PDF
     {
       hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);
       hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
       if (get_global_id(0) <=1){
-      printf("voy por aqui jefe");
-    }
+        printf("%f", fabs(qOS));
+      }
     }
     else
     {

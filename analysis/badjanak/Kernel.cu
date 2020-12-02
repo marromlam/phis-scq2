@@ -16,7 +16,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
+#define ftype double
 ////////////////////////////////////////////////////////////////////////////////
 // Include headers /////////////////////////////////////////////////////////////
 
@@ -57,6 +57,7 @@ const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 #include "DecayTimeAcceptance.cu"
 #include "DifferentialCrossRate.cu"
 #include "AngularAcceptance.cu"
+#include "DifferentialCrossRateIntegratedTime.cu"
 #include "Toy.cu"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,17 +72,17 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
               // Time-dependent angular distribution
               const ftype G, const ftype DG, const ftype DM,
               GLOBAL_MEM const ftype * CSP,
-              GLOBAL_MEM const ftype *ASlon, GLOBAL_MEM const ftype *APlon, 
+              GLOBAL_MEM const ftype *ASlon, GLOBAL_MEM const ftype *APlon,
               GLOBAL_MEM const ftype *APpar, GLOBAL_MEM const ftype *APper,
               const ftype pSlon, const ftype pPlon, const ftype pPpar,
-              const ftype pPper, GLOBAL_MEM const ftype *dSlon, 
+              const ftype pPper, GLOBAL_MEM const ftype *dSlon,
               const ftype dPlon, const ftype dPpar, const ftype dPper,
-              const ftype lSlon, const ftype lPlon, const ftype lPpar, 
+              const ftype lSlon, const ftype lPlon, const ftype lPpar,
               const ftype lPper,
               // Time limits
               const ftype tLL, const ftype tUL,
               // Time resolution
-              const ftype sigma_offset, const ftype sigma_slope, 
+              const ftype sigma_offset, const ftype sigma_slope,
               const ftype sigma_curvature, const ftype mu,
               // Flavor tagging
               const ftype eta_bar_os, const ftype eta_bar_ss,
@@ -94,8 +95,8 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
               // Angular acceptance
               GLOBAL_MEM const ftype *angular_weights,
               // Flags
-              const int USE_FK, const int BINS, const int USE_ANGACC, 
-              const int USE_TIMEACC, const int USE_TIMEOFFSET, 
+              const int USE_FK, const int BINS, const int USE_ANGACC,
+              const int USE_TIMEACC, const int USE_TIMEOFFSET,
               const int SET_TAGGING, const int USE_TIMERES, const int NEVT)
 {
   const int evt = get_global_id(0);
@@ -133,6 +134,7 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
                      USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
 }
 
+}}
 //////////////////////////////////////////////////////////////////////////////
 
 

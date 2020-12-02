@@ -22,7 +22,7 @@ import re
 import math
 
 if __name__ == '__main__':
-  PATH = '/home3/marcos.romero/phis-scq/badjanak'
+  PATH = '/home3/ramon.ruiz/phis-scq/badjanak'
   import ipanema
   ipanema.initialize('opencl',1,verbose=False)
 else:
@@ -96,7 +96,7 @@ def compile(verbose=False, pedantic=False):
     prog = THREAD.compile(kstrg,
               render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
               compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH}"],
-              keep=False)  
+              keep=False)
   if pedantic:
     print(prog.source)
   if verbose:
@@ -200,12 +200,60 @@ def delta_gamma5(input, output,
     global_size=g_size, local_size=l_size)
     #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
 
-
+def delta_gamma5Bd(input, output,
+                  # Time-dependent angular distribution
+                  G, DG, DM,
+                  CSP,
+                  ASlon, APlon, APpar, APper,
+                  pSlon, pPlon, pPpar, pPper,
+                  dSlon, dPlon, dPpar, dPper,
+                  lSlon, lPlon, lPpar, lPper,
+                  # Time limits
+                  tLL, tUL,
+                  # Time resolution
+                  sigma_offset, sigma_slope, sigma_curvature,
+                  mu,
+                  # Flavor tagging
+                  eta_os, eta_ss,
+                  p0_os,  p1_os, p2_os,
+                  p0_ss,  p1_ss, p2_ss,
+                  dp0_os, dp1_os, dp2_os,
+                  dp0_ss, dp1_ss, dp2_ss,
+                  # Time acceptance
+                  timeacc,
+                  # Angular acceptance
+                  angacc,
+                  # Flags
+                  use_fk=1, use_angacc = 0, use_timeacc = 0,
+                  use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
+                  BLOCK_SIZE=256, **crap):
+  """
+  Look at kernel definition to see help
+  The aim of this function is to be the fastest wrapper
+  """
+  g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
+  __KERNELS__.DiffRateBd(
+    # Input and output arrays
+    input, output,
+    # Differential cross-rate parameters
+    CSP.astype(np.float64),
+    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
+    dSlon.astype(np.float64),          np.float64(dPlon),                 np.float64(dPpar),                 np.float64(dPper),
+    # Angular acceptance
+    angacc.astype(np.float64),
+    # Flags
+    np.int32(use_fk),
+    # BINS
+    np.int32(len(CSP)),
+    # events
+    np.int32(len(output)),
+    global_size=g_size, local_size=l_size)
 
 def parser_rateBs(
       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
       # Time-dependent angular distribution
-      fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
+      #cambiado ramon
+      fSlon = 0.00, fPpar =  0.200,                 fPper = 0.50,
       dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
       pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
       lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
@@ -252,15 +300,16 @@ def parser_rateBs(
   # Compute fractions of S and P wave objects
   FP = abs(1-fSlon)
   r['ASlon'] = ipanema.ristra.sqrt( fSlon )
-  r['APlon'] = ipanema.ristra.sqrt( FP*fPlon )
+  #r['APlon'] = ipanema.ristra.sqrt( FP*fPlon ) ramon
   r['APper'] = ipanema.ristra.sqrt( FP*fPper )
-  r['APpar'] = ipanema.ristra.sqrt( FP*abs(1-fPlon-fPper) )
+  r['APpar'] = ipanema.ristra.sqrt( FP*fPpar)
+  r['APlon'] = ipanema.ristra.sqrt( FP*abs(1-fPpar-fPper) )
 
   # Strong phases
   r['dPlon'] = dPlon
   r['dPper'] = dPper + r['dPlon']
   r['dPpar'] = dPpar + r['dPlon']
-  r['dSlon'] = dSlon + r['dPper']
+  r['dSlon'] = dSlon #+ r['dPper']
 
   # Weak phases
   r['pPlon'] = pPlon
@@ -352,6 +401,33 @@ BLOCK_SIZE=256, **pars):
                          BLOCK_SIZE=BLOCK_SIZE, **p)
 
 
+def delta_gamma5_data_Bd(input, output, use_fk=1, use_angacc = 1, use_timeacc = 1,
+use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
+BLOCK_SIZE=256, **pars):
+  """
+  delta_gamma5_data(input, output, **pars)
+  This function is intended to be used with RD input arrays. It does use
+  time acceptance and angular acceptance. The tagging and resolution will use
+  calibration parameters.
+
+    this functions is a wrap around badjanak.delta_gamma5
+
+  In:
+  0.123456789:
+        input:  Input data with proper shape
+                ipanema.ristra
+       output:  Output array with proper shape to store pdf values
+                ipanema.ristra
+         pars:  Dictionary with parameters
+                dict
+  Out:
+         void
+  """
+  p = cross_rate_parser_new(**pars)
+  delta_gamma5Bd( input, output,
+                         use_fk=use_fk, use_angacc = use_angacc, use_timeacc = use_timeacc,
+                         use_timeoffset = use_timeoffset, set_tagging = set_tagging, use_timeres = use_timeres,
+                         BLOCK_SIZE=BLOCK_SIZE, **p)
 
 def delta_gamma5_mc(input, output, use_fk=1, **pars):
   """
@@ -379,6 +455,31 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
                          use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
                          BLOCK_SIZE=256, **p)
 
+def delta_gamma5_mc_Bd(input, output, use_fk=1, **pars):
+  """
+  delta_gamma5_mc_Bd(input, output, **pars)
+  This function is intended to be used with MC input arrays. It doesn't use
+  time acceptance nor angular acceptance. The tagging is set to perfect tagging
+  and the time resolution is disabled.
+
+    this functions is a wrap around badjanak.delta_gamma5
+
+  In:
+  0.123456789:
+        input:  Input data with proper shape
+                ipanema.ristra
+       output:  Output array with proper shape to store pdf values
+                ipanema.ristra
+         pars:  Dictionary with parameters
+                dict
+  Out:
+         void
+  """
+  p = cross_rate_parser_new(**pars)
+  delta_gamma5Bd( input, output,
+                         use_fk=use_fk, use_angacc = 0, use_timeacc = 0,
+                         use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
+                         BLOCK_SIZE=256, **p)
 ################################################################################
 
 
@@ -445,6 +546,53 @@ def get_angular_acceptance_weights(true, reco, weight, BLOCK_SIZE=256, **paramet
       corr[i,j] = final_cov[i][j]/np.sqrt(final_cov[i][i]*final_cov[j][j])
   return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr
 
+def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **parameters):
+  # Filter some warnings
+  warnings.filterwarnings('ignore')
+
+  # Compute weights scale and number of weights to compute
+  scale = np.sum(ipanema.ristra.get(weight))
+  terms = len(config['tristan'])
+
+  # Define the computation core function
+  def get_weights_Bd(true, reco, weight):
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc_Bd(true, pdf, use_fk=0, **parameters); den = pdf.get()
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc_Bd(true, pdf, use_fk=1, **parameters); num = pdf.get()
+    fk = get_fk(reco.get()[:,0:3])
+    ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
+    return ang_acc
+
+  # Get angular weights with weight applied and sum all events
+  w = get_weights_Bd(true, reco, weight).sum(axis=0)
+  # Get angular weights without weight
+  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
+  w10 = get_weights_Bd(true, reco, ones)
+
+  # Get covariance matrix
+  cov = np.zeros((terms,terms,weight.shape[0]))
+  for i in range(0,terms):
+    for j in range(i,terms):
+      cov[i,j,:] = (w10[:,i]-w[i]/scale)*(w10[:,j]-w[j]/scale)*weight.get()**2
+  cov = cov.sum(axis=2) # sum all per event cov
+
+  # Handling cov matrix, and transform it to correlation matrix
+  cov = cov + cov.T - np.eye(cov.shape[0])*cov         # fill the lower-triangle
+  final_cov = np.zeros_like(cov); corr = np.zeros_like(cov)
+  # Cov relative to f0
+  for i in range(0,cov.shape[0]):
+    for j in range(0,cov.shape[1]):
+      final_cov[i,j] = 1.0/(w[0]*w[0])*(
+                                w[i]*w[j]/(w[0]*w[0])*cov[0][0]+cov[i][j]-
+                                w[i]/w[0]*cov[0][j]-w[j]/w[0]*cov[0][i]);
+  final_cov[np.isnan(final_cov)] = 0
+  final_cov = np.where(np.abs(final_cov)<1e-12,0,final_cov)
+  # Correlation matrix
+  for i in range(0,cov.shape[0]):
+    for j in range(0,cov.shape[1]):
+      corr[i,j] = final_cov[i][j]/np.sqrt(final_cov[i][i]*final_cov[j][j])
+  return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr
 
 
 

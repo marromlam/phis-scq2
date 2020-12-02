@@ -68,7 +68,29 @@ ftype getF(const ftype cosK, const ftype cosL, const ftype hphi, const int k)
   }
   return fk;
 }
-
+//RAMON ANADIDO
+WITHIN_KERNEL
+${ftype} getAbd(${ftype} aslon, ${ftype} aplon, ${ftype} appar, ${ftype} apper,
+                ${ftype} dslon, ${ftype} dplon, ${ftype} dppar, ${ftype} dpper,
+                ${ftype} csp,  int k)
+{
+  ${ftype} ak;
+  switch(k) {
+    case 1:  ak = aplon*aplon; break;
+    case 2:  ak = appar*appar; break;
+    case 3:  ak = apper*apper; break;
+    case 4:  ak = apper*appar*sin(dpper-dppar); break;
+    case 5:  ak = aplon*appar*cos(dppar); break;
+    case 6:  ak = aplon*apper*sin(dpper); break;
+    case 7:  ak = aslon*aslon; break;
+    case 8:  ak = csp*aslon*appar*cos(dppar-dslon); break;
+    case 9:  ak = csp*aslon*apper*sin(dpper-dslon); break;
+    case 10: ak = csp*aslon*aplon*cos(dslon); break;
+    default: printf("Wrong k index in ak, please check code %d\\n", k);
+             return 0.;
+  }
+  return ak;
+}
 
 
 WITHIN_KERNEL

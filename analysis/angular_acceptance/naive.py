@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-  
+
   knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
   if ANGACC != 'naive':
     timebin = int(ANGACC.split('Time')[1])
@@ -88,7 +88,7 @@ if __name__ == '__main__':
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {trigger_scissors(TRIGGER, CUT):50}")
   print(f"{'angacc':>15}: {ANGACC:50}")
-  
+
   if VERSION == 'v0r1':
     args['input_params'] = args['input_params'].replace('generator','generator_old')
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
   # Load samples ---------------------------------------------------------------
   printsec('Loading category')
-
+  
   mc = Sample.from_root(args['sample'], share=SHARE, name=MODE)
   mc.assoc_params(args['input_params'].replace('TOY','MC'))
   mc.chop(trigger_scissors(TRIGGER, CUT))
@@ -112,8 +112,8 @@ if __name__ == '__main__':
 
   # Allocate some arrays with the needed branches
   try:
-    mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
-    mc.allocate(true=true+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
+    mc.allocate(reco=reco+['mHH', '0*mHH', 'idHH', 'idHH', '0*mHH', '0*mHH'])
+    mc.allocate(true=true+['mHH', '0*mHH', 'idHH', 'idHH', '0*mHH', '0*mHH'])
   except:
     print('Guessing you are working with TOY files. No X_M provided')
     mc.allocate(reco=reco+['0*time', '0*time', 'B_ID', 'B_ID', '0*B_ID', '0*B_ID'])
@@ -139,7 +139,7 @@ if __name__ == '__main__':
   for i in range(0,len(w)):
     correl = {f'w{j}{TRIGGER[0]}': corr[i][j]
               for j in range(0, len(w)) if i > 0 and j > 0}
-    pars.add({'name': f'w{i}{TRIGGER[0]}', 'value': w[i], 'stdev': uw[i], 
+    pars.add({'name': f'w{i}{TRIGGER[0]}', 'value': w[i], 'stdev': uw[i],
               'correl': correl, 'free': False, 'latex': f'w_{i}^{TRIGGER[0]}'})
 
 

@@ -19,7 +19,7 @@ rule get_csp_from_gitBd:
 
 rule get_csp_from_git:
   wildcard_constraints:
-    version = "(v0r0|v0r1)",                      # v0r0 not allowed
+    version = "v0r0",#"(v0r0|v0r1)",                      # v0r0 not allowed
   params:
     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
   output:
@@ -31,8 +31,8 @@ rule get_csp_from_git:
 
     year = f"{wildcards.year}"
     version = f"{wildcards.version}"
-
-    if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
+    if version in ('v0r0', 'v0r2', 'v0r3', 'v0r4'): ##ramon para poder hacer test con simon
+    #if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
       params = Parameters.load(f'analysis/params/v0r0/Bs2JpsiPhi/csp_factors/CSP.json')
       print(params)
       params.dump(f"{output.params}")
