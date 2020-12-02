@@ -40,9 +40,11 @@ rule angular_acceptance_naive:
 #     MC samples. First rule computes angular acceptance for MC, and second one
 #     merges MC results to compute RD angular acceptance
 rule angular_acceptance_blend:
+  resources:
+    mem_mb = 512
   wildcard_constraints:
-    step = "(naive|corrected)",
-    version = "^((?!v0r1).)*$",
+    step = "(naive|corrected).*",
+    #version = "^((?!v0r1).)*$",
   input:
     weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{trigger}.json',
     weights_dg0 = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{step}_{trigger}.json',
@@ -72,14 +74,14 @@ rule angular_acceptance_blend:
 #     merges MC results to compute RD angular acceptance
 rule angular_acceptance_joinWeights:
   resources:
-    mem_mb=4096
+    mem_mb = 4096
   wildcard_constraints:
     wflag = "(angWeight|angWeightBin.*)"
   input:
     b = SAMPLES_PATH+'{year}/{mode}/{version}_{wflag}_biased.npy',
     u = SAMPLES_PATH+'{year}/{mode}/{version}_{wflag}_unbiased.npy'
   output:
-     temp(SAMPLES_PATH+'{year}/{mode}/{version}_{wflag}.root')
+    SAMPLES_PATH+'{year}/{mode}/{version}_{wflag}.root'
   run:
     import uproot
     import numpy as np
@@ -93,7 +95,7 @@ rule angular_acceptance_joinWeights:
 
 rule angular_acceptance_veronikaWeights:
   resources:
-    mem_mb=4096
+    mem_mb = 4096
   input:
     a = lambda wcs: tuples(wcs,weight='kkpWeight'),
     b = lambda wcs: tuples(wcs,weight='sWeight')
@@ -117,7 +119,7 @@ rule angular_acceptance_veronikaWeights:
 #     to better match MC to RD.
 rule angular_acceptance_corrected:
   resources:
-    mem_mb=4096
+    mem_mb = 4096
   wildcard_constraints:
     mode = "(MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
   input:
@@ -155,7 +157,7 @@ rule angular_acceptance_corrected:
 #     MC and MC_dG0 files.
 rule angular_acceptance_iterativeRun2a:
   resources:
-    mem_mb=16384
+    mem_mb = 16384
   wildcard_constraints:
     angacc = "run2a(shit)?"
   input:
@@ -258,7 +260,7 @@ rule angular_acceptance_iterativeRun2a:
            --year                    {",".join(YEARS['Run2a'])}\
            --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Run2a :: {wildcards}", f"{log}")
 
 
@@ -274,7 +276,7 @@ rule angular_acceptance_iterativeRun2a:
 #     MC and MC_dG0 files.
 rule angular_acceptance_iterativeRun2:
   resources:
-    mem_mb=16384
+    mem_mb = 16384
   threads: 16
   wildcard_constraints:
     angacc = "run2(shit)?"
@@ -410,14 +412,14 @@ rule angular_acceptance_iterativeRun2:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 :: {wildcards}", f"{log}")
 
 
 
 rule angular_acceptance_iterativeRun2Bd:
   resources:
-    mem_mb=16384
+    mem_mb = 16384
   threads: 16
   wildcard_constraints:
     angacc = "run2(shit)?"
