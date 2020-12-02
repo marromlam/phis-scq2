@@ -15,13 +15,15 @@ import numpy as np
 
 # load ipanema
 from ipanema import initialize
-from ipanema import ristra, Parameters, optimize, Sample
+from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
+from ipanema import plotting
 
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser
-from utils.helpers import  swnorm, trigger_scissors
+from utils.helpers import version_guesser, timeacc_guesser
+from utils.helpers import swnorm, trigger_scissors
+from utils.strings import printsec
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -62,7 +64,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, CORR, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
@@ -79,6 +81,7 @@ if __name__ == '__main__':
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'minimizer':>15}: {MINER:50}")
   print(f"{'contour':>15}: {args['contour']:50}\n")
 
   # List samples, params and tables
@@ -108,25 +111,25 @@ if __name__ == '__main__':
   for i, m in enumerate([MODE]):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
-      if CORR='Noncorr':
+      if CORR=='Noncorr':
         weight = f'dg0Weight*{sw}/gb_weights'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
-      if CORR='Noncorr':
+      if CORR=='Noncorr':
         weight = f'{sw}/gb_weights'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      if CORR='Noncorr':
+      if CORR=='Noncorr':
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      if CORR='Noncorr':
+      if CORR=='Noncorr':
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}{sw}'
@@ -153,9 +156,9 @@ if __name__ == '__main__':
     # Add coeffs parameters
     cats[mode].params = Parameters()
     cats[mode].params.add(*[
-                    {'name':f'{c}{j}{TRIGGER[0]}', 'value':1.0, 
-                     'latex':f'{c}_{j}^{TRIGGER[0]}',
-                     'free':True if j > 0 else False, 'min':0.10, 'max':3.0
+                    {'name': f'{c}{j}{TRIGGER[0]}', 'value': 1.0,
+                     'latex': f'{c}_{j}^{TRIGGER[0]}',
+                     'free': True if j > 0 else False, 'min': 0.10, 'max': 50.0
                     } for j in range(len(knots[:-1])+2)
     ])
     cats[mode].params.add({'name': f'gamma_{c}',
@@ -174,15 +177,15 @@ if __name__ == '__main__':
     cats[mode].label = mode_tex(mode)
     cats[mode].pars_path = oparams[i]
     cats[mode].tabs_path = otables[i]
-  
+
 
 
   # Configure kernel -----------------------------------------------------------
   fcns.badjanak.config['knots'] = knots[:-1]
   fcns.badjanak.get_kernels(True)
-  
 
-  
+
+
   # Time to fit ----------------------------------------------------------------
   print(f"\n{80*'='}\nMinimization procedure\n{80*'='}\n")
   fcn_call = fcns.splinexerf
@@ -192,12 +195,15 @@ if __name__ == '__main__':
       'prob': cats[mode].lkhd,
       'weight': cats[mode].weight
   }
+  mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
   if MINER.lower() in ("minuit", "minos"):
-    result = optimize(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs,
-                      method=MINER, verbose=False, timeit=True, tol=0.05)
-  elif MINER.lower() in ('bfgfs', 'lbfgsb'):
-    result = optimize(fcn_call=splinexerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
-                      method=MINER, verbose=False)
+    result = mini.optimize(method=MINER, verbose=False, timeit=True, tol=0.05)
+  elif MINER.lower() in ('bfgfs', 'lbfgsb','nelder'):
+    result = mini.optimize(method=MINER, verbose=False)
+  elif MINER.lower() in ('emcee'):
+    result = mini.optimize(method='minuit', verbose=False)
+    result = mini.optimize(method='emcee', verbose=False, steps=1000,
+                           nwalkers=100, is_weighted=False)
   print(result)
 
 
@@ -220,13 +226,10 @@ if __name__ == '__main__':
 
 
   # Writing results ------------------------------------------------------------
-  print(f"\n{80*'='}\nDumping parameters\n{80*'='}\n")
-
+  printsec('Dumping parameters')
   cats[mode].params = cats[mode].knots + result.params
-  
   print(f"Dumping json parameters to {cats[mode].pars_path}")
   cats[mode].params.dump(cats[mode].pars_path)
-
   print(f"Dumping tex table to {cats[mode].tabs_path}")
   with open(cats[mode].tabs_path, "w") as text:
     text.write( cats[mode].params.dump_latex(caption=f"Time acceptance for the \
