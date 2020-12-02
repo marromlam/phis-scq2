@@ -70,11 +70,11 @@ ftype getF(const ftype cosK, const ftype cosL, const ftype hphi, const int k)
 }
 //RAMON ANADIDO
 WITHIN_KERNEL
-${ftype} getAbd(${ftype} aslon, ${ftype} aplon, ${ftype} appar, ${ftype} apper,
-                ${ftype} dslon, ${ftype} dplon, ${ftype} dppar, ${ftype} dpper,
-                ${ftype} csp,  int k)
+ftype getAbd(ftype aslon, ftype aplon, ftype appar, ftype apper,
+                ftype dslon, ftype dplon, ftype dppar, ftype dpper,
+                ftype csp,  int k)
 {
-  ${ftype} ak;
+  ftype ak;
   switch(k) {
     case 1:  ak = aplon*aplon; break;
     case 2:  ak = appar*appar; break;

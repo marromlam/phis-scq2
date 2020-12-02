@@ -560,7 +560,7 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
     delta_gamma5_mc_Bd(true, pdf, use_fk=0, **parameters); den = pdf.get()
     pdf = THREAD.to_device(np.zeros(true.shape[0]))
     delta_gamma5_mc_Bd(true, pdf, use_fk=1, **parameters); num = pdf.get()
-    fk = get_fk(reco.get()[:,0:3])
+    fk = get_fk(true.get()[:,0:3])
     ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
     return ang_acc
 
