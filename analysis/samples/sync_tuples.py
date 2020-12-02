@@ -19,7 +19,7 @@ ROOT_PANDAS = True
 if ROOT_PANDAS:
   import root_pandas
 
-binned_vars = {'eta':'B_ETA', 'pt':'B_PT', 'sigmat':'sigmat'}
+binned_vars = {'etaB':'B_ETA', 'pTB':'B_PT', 'sigmat':'sigmat'}
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 EOSPATH = hjson.load(open('config.json'))['eos']
 
@@ -76,6 +76,7 @@ if __name__ == "__main__":
     fp = f"{scq_path}/{f}"
     if b: b = f"sw_{b}"
     all_dfs.append( uproot.open(fp)[tree].pandas.df(branches=b, flatten=None) )
+    print(uproot.open(fp)[tree].pandas.df(branches=b, flatten=None))
 
   # concatenate all columns
   result = pd.concat(all_dfs, axis=1)

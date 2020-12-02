@@ -12,13 +12,17 @@ YEARS = {#
   '2011'  : ['2011'],
   '2012'  : ['2012'],
   'Run1'  : ['2011','2012'],
+  'run1'  : ['2011','2012'],
   '2015'  : ['2015'],
   '2016'  : ['2016'],
   'Run2a' : ['2015','2016'],
+  'run2a' : ['2015','2016'],
   '2017'  : ['2017'],
   '2018'  : ['2018'],
   'Run2b' : ['2017','2018'],
-  'Run2'  : ['2015','2016','2017','2018']
+  'run2b' : ['2017','2018'],
+  'Run2'  : ['2015','2016','2017','2018'],
+  'run2'  : ['2015','2016','2017','2018']
 };
 
 from utils.strings import cammel_case_split, cuts_and
@@ -26,13 +30,28 @@ import numpy as np
 
 def timeacc_guesser(timeacc):
   # Check if the tuple will be modified
-  pattern = r'\A(single|simul|lifeBd|lifeBu)(Noncorr|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder)?\Z'
+  pattern = r'\A(single|simul|lifeBd|lifeBu)(Noncorr|9knots|12knots)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
   try:
-    timeacc, kind, minimizer = p.search(timeacc).groups()
-    return timeacc, kind, minimizer.lower() if minimizer else 'minuit'
+    timeacc, kind, lifecut, minimizer = p.search(timeacc).groups()
+    return timeacc, kind, lifecut, minimizer.lower() if minimizer else 'minuit'
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
+
+
+
+def physpar_guesser(physics):
+  # Check if the tuple will be modified
+  pattern = r'\A(0)(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
+  p = re.compile(pattern)
+  try:
+    timeacc, kind, lifecut, minimizer = p.search(timeacc).groups()
+    return timeacc, kind, lifecut, minimizer.lower() if minimizer else 'minuit'
+  except:
+    raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
+
+
+
 
 def version_guesser(version):
   # Check if the tuple will be modified
@@ -42,7 +61,7 @@ def version_guesser(version):
   # Dig in mod
   if mod:
     #pattern = r'\A(\d+)?(magUp|magDown)?(cut(B_PT|B_ETA|sigmat)(\d{1}))?\Z'
-    pattern = r'\A(\d+)?(magUp|magDown)?(cut(pt|eta|sigmat)(\d{1}))?\Z'
+    pattern = r'\A(\d+)?(magUp|magDown)?(cut(pTB|etaB|sigmat)(\d{1}))?\Z'
     p = re.compile(pattern)
     try:
       share, mag, fullcut, var, bin = p.search(mod).groups()

@@ -1,33 +1,25 @@
-# -*- coding: utf-8 -*-
+DESCRIPTION = """
+    This file contains 3 fcn functions to be minimized under ipanema3 framework
+    those functions are, actually functions of badjanak kernels.
+"""
+
+__author__ = ['Marcos Romero Lamas']
+__email__ = ['mromerol@cern.ch']
+
+
 
 import os
 import builtins
 import numpy as np
 import ipanema
 from ipanema import ristra
+from ipanema.core.utils import get_sizes
 import warnings
 from reikna.cluda import functions, dtypes
 import platform
 import cpuinfo
 import re
 import math
-
-
-def get_sizes(size,BLOCK_SIZE=256):
-    '''
-    i need to check if this worls for 3d size and 3d block
-    '''
-    a = size % BLOCK_SIZE
-    if a == 0:
-      gs, ls = size, BLOCK_SIZE
-    elif size < BLOCK_SIZE:
-      gs, ls = size, 1
-    else:
-      a = np.ceil(size/BLOCK_SIZE)
-      gs, ls = a*BLOCK_SIZE, BLOCK_SIZE
-    return int(gs), int(ls)
-
-
 
 if __name__ == '__main__':
   PATH = '/home3/marcos.romero/phis-scq/badjanak'
@@ -36,7 +28,7 @@ if __name__ == '__main__':
 else:
   PATH = os.path.dirname(os.path.abspath(__file__))
 
-# Get builtins
+# Get builtins (ipanema initialization exposes them)
 BACKEND = builtins.BACKEND
 DEVICE = builtins.DEVICE
 CONTEXT = builtins.CONTEXT
@@ -94,24 +86,17 @@ def flagger(verbose=False):
 #     Compile kernel against given BACKEND
 
 def compile(verbose=False, pedantic=False):
-  kpath = os.path.join(PATH,'Kernel.cu')
-  kstrg = open(kpath,"r").read()
-  kstrg = kstrg.format(**{
-            **flagger(verbose),
-            "FKHELPERS_CU":open(PATH+'/FkHelpers.cu').read(),
-            "FUNCTIONS_CU":open(PATH+'/Functions.cu').read(),
-            "TIMEANGULARDISTRIBUTION_CU":open(PATH+'/TimeAngularDistribution.cu').read(),
-            "TAGGING_CU":open(PATH+'/Tagging.cu').read(),
-            "DECAYTIMEACCEPTANCE_CU":open(PATH+'/DecayTimeAcceptance.cu').read(),
-            "DIFFERENTIALCROSSRATE_CU":open(PATH+'/DifferentialCrossRate.cu').read(),
-            "TOY_CU":"//"#open(PATH+'/Toy.cu').read(),
-           })
+  kstrg = open(os.path.join(PATH, 'Kernel.cu'), "r").read()
   if config['precision'] == 'double':
-    prog = THREAD.compile(kstrg,render_kwds={"ftype":dtypes.ctype(np.float64),
-                 "ctype":dtypes.ctype(np.complex128)},keep=False)
+    prog = THREAD.compile(kstrg,
+              render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
+              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH}"],
+              keep=False)
   else:
-    prog = THREAD.compile(kstrg,render_kwds={"ftype":dtypes.ctype(np.float32),
-                 "ctype":dtypes.ctype(np.complex64)},keep=False)
+    prog = THREAD.compile(kstrg,
+              render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
+              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH}"],
+              keep=False)  
   if pedantic:
     print(prog.source)
   if verbose:
@@ -120,26 +105,20 @@ def compile(verbose=False, pedantic=False):
 
 
 
-
-
-
-
-
 # Get kernels ------------------------------------------------------------------
 #    Hey ja
 def get_kernels(verbose=False, pedantic=False):
   global __KERNELS__
   prog = compile(verbose, pedantic)
-  items = ['pyDiffRate',
+  items = ['pyrateBs',
            'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
            'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
-           #'dG5toy',
-           'integral_ijk_fx']
+           'dG5toy',
+           #'integral_ijk_fx'
+           ]
   for item in items:
     setattr(prog, item[2:], prog.__getattr__(item))
-    #print(item)
-    #setattr(prog, item[2:], prog.get_function(item))
   __KERNELS__ = prog
 
 
@@ -189,7 +168,7 @@ def delta_gamma5(input, output,
   The aim of this function is to be the fastest wrapper
   """
   g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
-  __KERNELS__.DiffRate(
+  __KERNELS__.rateBs(
     # Input and output arrays
     input, output,
     # Differential cross-rate parameters
@@ -223,7 +202,7 @@ def delta_gamma5(input, output,
 
 
 
-def cross_rate_parser_new(
+def parser_rateBs(
       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
       # Time-dependent angular distribution
       fSlon = 0.00, fPlon =  0.72,                 fPper = 0.50,
@@ -366,7 +345,7 @@ BLOCK_SIZE=256, **pars):
   Out:
          void
   """
-  p = cross_rate_parser_new(**pars)
+  p = parser_rateBs(**pars)
   delta_gamma5( input, output,
                          use_fk=use_fk, use_angacc = use_angacc, use_timeacc = use_timeacc,
                          use_timeoffset = use_timeoffset, set_tagging = set_tagging, use_timeres = use_timeres,
@@ -394,7 +373,7 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
   Out:
          void
   """
-  p = cross_rate_parser_new(**pars)
+  p = parser_rateBs(**pars)
   delta_gamma5( input, output,
                          use_fk=use_fk, use_angacc = 0, use_timeacc = 0,
                          use_timeoffset = 0, set_tagging = 0, use_timeres = 0,

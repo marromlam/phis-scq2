@@ -163,12 +163,12 @@ if __name__ == '__main__':
         cats[mode][t][f].params = Parameters()
         cats[mode][t][f].params.add(*[
                      {'name':f'{c}{f}{j}{t[0]}', 'value':1.0, 'latex':f'{c}_{f,j}^{t[0]}',
-                     'free':True if j>0 else False, 'min':0.10, 'max':15.0}
+                     'free':True if j>0 else False, 'min':0.10, 'max':5.0}
                      for j in range(len(knots[:-1])+2)
                    ])
         cats[mode][t][f].params.add({'name':f'gamma_{f}{c}',
                                'value':Gdvalue+resolutions[m]['DGsd'],
-                               'latex':f'\gamma_{f,c}', 'free':False})
+                               'latex':f'\Gamma_{f,c}', 'free':False})
         cats[mode][t][f].params.add({'name':f'mu_{f}{c}',
                                'value':resolutions[m]['mu'],
                                'latex':f'\mu_{f,c}', 'free':False})
@@ -204,11 +204,17 @@ if __name__ == '__main__':
                            params=fcn_pars,
                            fcn_kwgs=fcn_kwgs,
                            method=MINER,
-                           verbose=False, timeit=True, strategy=1, tol=0.1);
+                           verbose=True, timeit=True, strategy=1, tol=0.05);
     elif MINER.lower() in ('bfgs', 'lbfgsb'):
-      0 # fix me!
+      result[t] = optimize(fcn_call=saxsbxscxerf,
+                           params=fcn_pars,
+                           fcn_kwgs=fcn_kwgs,
+                           method=MINER,
+                           verbose=True, timeit=True)
 
-
+    print(result[t])
+    print(result[t]._minuit.latex_matrix())
+  
   # create ipanema.Parameters for lifetime fit (mu, sigma locked else free)
   #pars = cats['BdRD']['biased']['B'].params+cats['BdRD']['unbiased']['B'].params
   #pars.lock()
@@ -233,7 +239,7 @@ if __name__ == '__main__':
     print('\n',end='')
   #print(result['unbiased'].params.corr())
   #print(result['biased'].params.corr())
-
+  MINOS='minos'
 
   # lifetime fit
   if MINER.lower() in ("minuit","minos"):
@@ -244,7 +250,7 @@ if __name__ == '__main__':
                                  },
                                  'weight':True},
                        method=MINER,
-                       verbose=True, strategy=1, tol=0.1);
+                       verbose=True, strategy=1, tol=0.05);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     0 # fix me!
 

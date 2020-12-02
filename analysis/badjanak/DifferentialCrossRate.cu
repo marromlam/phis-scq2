@@ -19,6 +19,7 @@
 
 
 
+#include <ipanema/complex.hpp>
 
 
 
@@ -30,30 +31,30 @@
 
 
 WITHIN_KERNEL
-${ftype} getDiffRate( ${ftype} *data,
+ftype rateBs( const ftype *data,
                     // Time-dependent angular distribution
-                    ${ftype} G, ${ftype} DG, ${ftype} DM, ${ftype} CSP,
-                    ${ftype} ASlon, ${ftype} APlon, ${ftype} APpar, ${ftype} APper,
-                    ${ftype} pSlon, ${ftype} pPlon, ${ftype} pPpar, ${ftype} pPper,
-                    ${ftype} dSlon, ${ftype} dPlon, ${ftype} dPpar, ${ftype} dPper,
-                    ${ftype} lSlon, ${ftype} lPlon, ${ftype} lPpar, ${ftype} lPper,
+                    const ftype G, const ftype DG, const ftype DM, const ftype CSP,
+                    const ftype ASlon, const ftype APlon, const ftype APpar, const ftype APper,
+                    const ftype pSlon, const ftype pPlon, const ftype pPpar, const ftype pPper,
+                    const ftype dSlon, const ftype dPlon, const ftype dPpar, const ftype dPper,
+                    const ftype lSlon, const ftype lPlon, const ftype lPpar, const ftype lPper,
                     // Time limits
-                    ${ftype} tLL, ${ftype} tUL,
+                    const ftype tLL, const ftype tUL,
                     // Time resolution
-                    ${ftype} sigma_offset, ${ftype} sigma_slope, ${ftype} sigma_curvature,
-                    ${ftype} mu,
+                    const ftype sigma_offset, const ftype sigma_slope, const ftype sigma_curvature,
+                    const ftype mu,
                     // Flavor tagging
-                    ${ftype} eta_bar_os, ${ftype} eta_bar_ss,
-                    ${ftype} p0_os,  ${ftype} p1_os, ${ftype} p2_os,
-                    ${ftype} p0_ss,  ${ftype} p1_ss, ${ftype} p2_ss,
-                    ${ftype} dp0_os, ${ftype} dp1_os, ${ftype} dp2_os,
-                    ${ftype} dp0_ss, ${ftype} dp1_ss, ${ftype} dp2_ss,
+                    const ftype eta_bar_os, const ftype eta_bar_ss,
+                    const ftype p0_os,  const ftype p1_os, const ftype p2_os,
+                    const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
+                    const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
+                    const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
                     // Time acceptance
-                    GLOBAL_MEM ${ftype} *coeffs,
+                    GLOBAL_MEM const ftype *coeffs,
                     // Angular acceptance
-                    GLOBAL_MEM  ${ftype} *angular_weights,
-                    int USE_FK, int USE_ANGACC, int USE_TIMEACC,
-                    int USE_TIMEOFFSET, int SET_TAGGING, int USE_TIMERES
+                    GLOBAL_MEM  const ftype *angular_weights,
+                    const int USE_FK, const int USE_ANGACC, const int USE_TIMEACC,
+                    const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES
                   )
 {
   #if DEBUG
@@ -114,18 +115,18 @@ ${ftype} getDiffRate( ${ftype} *data,
   // Variables -----------------------------------------------------------------
   //     Make sure that the input it's in this order.
   //     lalala
-  ${ftype} cosK       = data[0];                      // Time-angular distribution
-  ${ftype} cosL       = data[1];
-  ${ftype} hphi       = data[2];
-  ${ftype} time       = data[3];
+  ftype cosK       = data[0];                      // Time-angular distribution
+  ftype cosL       = data[1];
+  ftype hphi       = data[2];
+  ftype time       = data[3];
 
-  //${ftype} sigma_t    = 0.04554;                            // Time resolution
-  ${ftype} sigma_t    = data[4];                              // Time resolution
+  //ftype sigma_t    = 0.04554;                            // Time resolution
+  ftype sigma_t    = data[4];                              // Time resolution
 
-  ${ftype} qOS        = data[5];                                      // Tagging
-  ${ftype} qSS        = data[6];
-  ${ftype} etaOS 	  	= data[7];
-  ${ftype} etaSS 	    = data[8];
+  ftype qOS        = data[5];                                      // Tagging
+  ftype qSS        = data[6];
+  ftype etaOS 	  	= data[7];
+  ftype etaSS 	    = data[8];
 
   #if DEBUG
   if ( DEBUG > 99 && ( (time>=tUL) || (time<=tLL) ) )
@@ -149,9 +150,9 @@ ${ftype} getDiffRate( ${ftype} *data,
   // Time resolution -----------------------------------------------------------
   //     In order to remove the effects of conv, set sigma_t=0, so in this way
   //     you are running the first branch of getExponentialConvolution.
-  ${ctype} exp_p, exp_m, exp_i;
-  ${ftype} t_offset = 0.0; ${ftype} delta_t = sigma_t;
-  ${ftype} sigma_t_mu_a = 0, sigma_t_mu_b = 0, sigma_t_mu_c = 0;
+  ctype exp_p, exp_m, exp_i;
+  ftype t_offset = 0.0; ftype delta_t = sigma_t;
+  ftype sigma_t_mu_a = 0, sigma_t_mu_b = 0, sigma_t_mu_c = 0;
 
   if (USE_TIMEOFFSET)
   {
@@ -185,14 +186,14 @@ ${ftype} getDiffRate( ${ftype} *data,
   }
   //printf("                   : exp_p=%+.8f%+.8fi   exp_m=%+.8f%+.8fi   exp_i=%+.8f%+.8fi\n", exp_p.x, exp_p.y, exp_m.x, exp_m.y, exp_i.x, exp_i.y);
 
-  // ${ftype} ta = pycuda::real(0.5*(exp_m + exp_p));     // cosh = (exp_m + exp_p)/2
-  // ${ftype} tb = pycuda::real(0.5*(exp_m - exp_p));     // sinh = (exp_m - exp_p)/2
-  // ${ftype} tc = pycuda::real(exp_i);                        // exp_i = cos + I*sin
-  // ${ftype} td = pycuda::imag(exp_i);                        // exp_i = cos + I*sin
-  ${ftype} ta = 0.5*(exp_m.x+exp_p.x);
-  ${ftype} tb = 0.5*(exp_m.x-exp_p.x);
-  ${ftype} tc = exp_i.x;
-  ${ftype} td = exp_i.y;
+  // ftype ta = pycuda::real(0.5*(exp_m + exp_p));     // cosh = (exp_m + exp_p)/2
+  // ftype tb = pycuda::real(0.5*(exp_m - exp_p));     // sinh = (exp_m - exp_p)/2
+  // ftype tc = pycuda::real(exp_i);                        // exp_i = cos + I*sin
+  // ftype td = pycuda::imag(exp_i);                        // exp_i = cos + I*sin
+  ftype ta = 0.5*(exp_m.x+exp_p.x);
+  ftype tb = 0.5*(exp_m.x-exp_p.x);
+  ftype tc = exp_i.x;
+  ftype td = exp_i.y;
   #if FAST_INTEGRAL
     ta *= sqrt(2*M_PI); tb *= sqrt(2*M_PI); tc *= sqrt(2*M_PI); td *= sqrt(2*M_PI);
   #endif
@@ -207,8 +208,8 @@ ${ftype} getDiffRate( ${ftype} *data,
   #endif
 
   // Flavor tagging ------------------------------------------------------------
-  ${ftype} omegaOSB = 0; ${ftype} omegaOSBbar = 0; ${ftype} tagOS = 0;
-  ${ftype} omegaSSB = 0; ${ftype} omegaSSBbar = 0; ${ftype} tagSS = 0;
+  ftype omegaOSB = 0; ftype omegaOSBbar = 0; ftype tagOS = 0;
+  ftype omegaSSB = 0; ftype omegaSSBbar = 0; ftype tagSS = 0;
 
 
   if (SET_TAGGING == 1) // DATA
@@ -256,24 +257,24 @@ ${ftype} getDiffRate( ${ftype} *data,
   //     To get rid of decay-time acceptance set USE_TIMEACC to False. If True
   //     then calcTimeAcceptance locates the time bin of the event and returns
   //     the value of the cubic spline.
-  ${ftype} dta = 1.0;
+  ftype dta = 1.0;
   if (USE_TIMEACC)
   {
     dta = calcTimeAcceptance(time, coeffs, tLL, tUL);
   }
 
   // Compute per event pdf -----------------------------------------------------
-  ${ftype} vnk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  ftype vnk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   #if DEBUG
-    ${ftype} vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+    ftype vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   #endif
-  ${ftype} vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  ${ftype} vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  ${ftype} vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  ${ftype} vdk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  ftype vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  ftype vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  ftype vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  ftype vdk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
 
-  ${ftype} nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
-  ${ftype} pdfB = 0.0; ${ftype} pdfBbar = 0.0;
+  ftype nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
+  ftype pdfB = 0.0; ftype pdfBbar = 0.0;
 
   for(int k = 1; k <= 10; k++)
   {
@@ -346,7 +347,7 @@ ${ftype} getDiffRate( ${ftype} *data,
 
 
   // Compute pdf integral ------------------------------------------------------
-  ${ftype} intBBar[2] = {0.,0.};
+  ftype intBBar[2] = {0.,0.};
   if ( (delta_t == 0) & (USE_TIMEACC == 0) )
   {
     // Here we can use the simplest 4xPi integral of the pdf since there are no
@@ -390,11 +391,11 @@ ${ftype} getDiffRate( ${ftype} *data,
                        coeffs);
      #endif
   }
-  ${ftype} intB = intBBar[0]; ${ftype} intBbar = intBBar[1];
+  ftype intB = intBBar[0]; ftype intBbar = intBBar[1];
 
 
   // Cooking the output --------------------------------------------------------
-  ${ftype} num = 1.0; ${ftype} den = 1.0;
+  ftype num = 1.0; ftype den = 1.0;
   num = dta*(
         (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
         (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar
