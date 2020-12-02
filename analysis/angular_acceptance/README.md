@@ -33,8 +33,8 @@ functions. As matter of fact, the normalization weights are computed as follows
 \sum_{i=1}^{\# \mathrm{events}} \omega_i
 f_k({\theta_K}_i^{\mathrm{reco}},{\theta_{\mu}}_i^{\mathrm{reco}},{\phi}_{i}^{\mathrm{reco}})
 \frac
-{ \frac{d\Gamma^4}{dtd\Omega}  (t_i^{\mathrm{true}},{\theta_K}_i^{\mathrm{true}},{\theta_{\mu}}_i^{\mathrm{true}},{\phi}_{i}^{\mathrm{true}})}
 { \frac{d\Gamma}{dt}(t_i^{\mathrm{true}})}
+{ \frac{d\Gamma^4}{dtd\Omega}  (t_i^{\mathrm{true}},{\theta_K}_i^{\mathrm{true}},{\theta_{\mu}}_i^{\mathrm{true}},{\phi}_{i}^{\mathrm{true}})}
 ```
 
 where $`\omega_i`$ stands for a per event weight, and finally the _normalization weights_ are

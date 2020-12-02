@@ -1,103 +1,81 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                       CUDA decay rate Bs -> mumuKK                         //
+//                        GENERATE TOY CROSS RATE                             //
 //                                                                            //
-//  Created: 2019-01-25                                                       //
+//   Created: 2019-01-25                                                      //
+//    Author: Marcos Romero Lamas (mromerol@cern.ch)                          //
 //                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
+//    This file is part of phis-scq packages, Santiago's framework for the    //
+//                     phi_s analysis in Bs -> Jpsi K+ K-                     //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Inlude headers //////////////////////////////////////////////////////////////
+#include <ipanema/random.hpp>
 
-
-#include <curand.h>
-#include <curand_kernel.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-WITHIN_KERNEL
-double tagOSgen(double x)
-{
-  return 3.8 - 134.6*x + 1341.*x*x;
-}
-
-WITHIN_KERNEL
-double tagSSgen(double x)
-{
-  if (x < 0.46) return exp(16*x -.77);
-  else return 10*(16326 - 68488*x + 72116*x*x);
-}
-
-
+// Generate toy ////////////////////////////////////////////////////////////////
 
 KERNEL
-void dG5toy(GLOBAL_MEM ${ftype} * out,
-            ${ftype} G, ${ftype} DG, ${ftype} DM,
-            GLOBAL_MEM ${ftype} * CSP,
-            //GLOBAL_MEM ${ftype} * CSD,
-            //GLOBAL_MEM ${ftype} * CPD,
-            GLOBAL_MEM ${ftype} * ASlon,
-            GLOBAL_MEM ${ftype} * APlon,
-            GLOBAL_MEM ${ftype} * APpar,
-            GLOBAL_MEM ${ftype} * APper,
-            //${ftype} ADlon, ${ftype} ADpar, ${ftype} ADper,
-            ${ftype} pSlon,
-            ${ftype} pPlon, ${ftype} pPpar, ${ftype} pPper,
-            //${ftype} pDlon, ${ftype} pDpar, ${ftype} pDper,
-            GLOBAL_MEM ${ftype} *dSlon,
-            ${ftype} dPlon, ${ftype} dPpar, ${ftype} dPper,
-            //${ftype} dDlon, ${ftype} dDpar, ${ftype} dDper,
-            ${ftype} lSlon,
-            ${ftype} lPlon, ${ftype} lPpar, ${ftype} lPper,
-            //${ftype} lDlon, ${ftype} lDpar, ${ftype} lDper,
+void dG5toy(GLOBAL_MEM ftype * out,
+            const ftype G, const ftype DG, const ftype DM,
+            GLOBAL_MEM const ftype * CSP,
+            //GLOBAL_MEM const ftype * CSD,
+            //GLOBAL_MEM const ftype * CPD,
+            GLOBAL_MEM const ftype * ASlon,
+            GLOBAL_MEM const ftype * APlon,
+            GLOBAL_MEM const ftype * APpar,
+            GLOBAL_MEM const ftype * APper,
+            //const ftype ADlon, const ftype ADpar, const ftype ADper,
+            const ftype pSlon,
+            const ftype pPlon, const ftype pPpar, const ftype pPper,
+            //const ftype pDlon, const ftype pDpar, const ftype pDper,
+            GLOBAL_MEM const ftype *dSlon,
+            const ftype dPlon, const ftype dPpar, const ftype dPper,
+            //const ftype dDlon, const ftype dDpar, const ftype dDper,
+            const ftype lSlon,
+            const ftype lPlon, const ftype lPpar, const ftype lPper,
+            //const ftype lDlon, const ftype lDpar, const ftype lDper,
             // Time limits
-            ${ftype} tLL, ${ftype} tUL,
+            const ftype tLL, const ftype tUL,
             // Time resolution
-            ${ftype} sigma_offset, ${ftype} sigma_slope, ${ftype} sigma_curvature,
-            ${ftype} mu,
+            const ftype sigma_offset, const ftype sigma_slope, const ftype sigma_curvature,
+            const ftype mu,
             // Flavor tagging
-            ${ftype} eta_bar_os, ${ftype} eta_bar_ss,
-            ${ftype} p0_os,  ${ftype} p1_os, ${ftype} p2_os,
-            ${ftype} p0_ss,  ${ftype} p1_ss, ${ftype} p2_ss,
-            ${ftype} dp0_os, ${ftype} dp1_os, ${ftype} dp2_os,
-            ${ftype} dp0_ss, ${ftype} dp1_ss, ${ftype} dp2_ss,
+            const ftype eta_bar_os, const ftype eta_bar_ss,
+            const ftype p0_os,  const ftype p1_os, const ftype p2_os,
+            const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
+            const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
+            const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
             // Time acceptance
-            GLOBAL_MEM ${ftype} *coeffs,
+            GLOBAL_MEM const ftype *coeffs,
             // Angular acceptance
-            GLOBAL_MEM  ${ftype} *angular_weights,
-            int USE_FK, int BINS, int USE_ANGACC, int USE_TIMEACC,
-            int USE_TIMEOFFSET, int SET_TAGGING, int USE_TIMERES,
-            ${ftype} PROB_MAX, int NEVT)
-
-
+            GLOBAL_MEM  const ftype *angular_weights,
+            const int USE_FK, const int BINS, const int USE_ANGACC, const int USE_TIMEACC,
+            const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES,
+            const ftype PROB_MAX, const int SEED, const int NEVT)
 {
   int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
 
   // Prepare curand
-  curandState state;
-  curand_init((unsigned long long)clock(), evt, 0, &state);
+  #ifdef CUDA
+    curandState state;
+    curand_init((unsigned long long)clock(), evt, 0, &state);
+  #else
+    int *state = &SEED;
+  #endif
 
-  ${ftype} iter = 0.0;
+  ftype iter = 0.0;
 
   // Decay time resolution HARDCODED!
-  ${ftype} sigmat = 0.0;
+  ftype sigmat = 0.0;
   if (USE_TIMERES)
   {
-    sigmat = curand_log_normal(&state,-3.22,0.309);
+    sigmat = rngLogNormal(-3.22,0.309, &state, 100);
   }
   else
   {
@@ -107,19 +85,19 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
 
 
   // Flavor tagging ------------------------------------------------------------
-  ${ftype} qOS = 0;
-  ${ftype} qSS = 0;
-  ${ftype} etaOS = 0;
-  ${ftype} etaSS = 0;
+  ftype qOS = 0;
+  ftype qSS = 0;
+  ftype etaOS = 0;
+  ftype etaSS = 0;
 
   if (SET_TAGGING == 1) // DATA
   {
-    ${ftype} tagOS = curand_uniform(&state);
-    ${ftype} tagSS = curand_uniform(&state);
-    ${ftype} OSmax = tagOSgen(0.5);
-    ${ftype} SSmax = tagSSgen(0.5);
-    ${ftype} tag = 0;
-    ${ftype} threshold;
+    ftype tagOS = rng_uniform(&state, 100);
+    ftype tagSS = rng_uniform(&state, 100);
+    ftype OSmax = tagOSgen(0.5);
+    ftype SSmax = tagSSgen(0.5);
+    ftype tag = 0;
+    ftype threshold;
 
     // generate qOS
     if (tagOS < 0.16) {
@@ -147,8 +125,8 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
     {
       while(1)
       {
-        tag = 0.49*curand_uniform(&state);
-        threshold = OSmax*curand_uniform(&state);
+        tag = 0.49*rng_uniform(&state, 100);
+        threshold = OSmax*rng_uniform(&state, 100);
         if (tagOSgen(tag) > threshold) break;
       }
       etaOS = tag;
@@ -158,8 +136,8 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
     {
       while(1)
       {
-        tag = 0.49*curand_uniform(&state);
-        threshold = SSmax*curand_uniform(&state);
+        tag = 0.49*rng_uniform(&state, 100);
+        threshold = SSmax*rng_uniform(&state, 100);
         if (tagSSgen(tag) > threshold) break;
       }
       etaSS = tag;
@@ -167,7 +145,7 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
   }
   else if (SET_TAGGING == 0) // PERFECT, MC
   {
-    ${ftype} tag = curand_uniform(&state);
+    ftype tag = rng_uniform(&state, 100);
     if (tag < 0.5){
       qOS = +1.0;
       qSS = +1.0;
@@ -193,19 +171,19 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
   while(1)
   {
     // Random numbers
-    ${ftype} cosK = - 1.0  +    2.0*curand_uniform(&state);
-    ${ftype} cosL = - 1.0  +    2.0*curand_uniform(&state);
-    ${ftype} hphi = - M_PI + 2*M_PI*curand_uniform(&state);
-    ${ftype} time = tLL - log(curand_uniform(&state))/(G-0.5*DG);
+    ftype cosK = - 1.0  +    2.0*rng_uniform(&state, 100);
+    ftype cosL = - 1.0  +    2.0*rng_uniform(&state, 100);
+    ftype hphi = - M_PI + 2*M_PI*rng_uniform(&state, 100);
+    ftype time = tLL - log(rng_uniform(&state, 100))/(G-0.5*DG);
 
     // PDF threshold
-    ${ftype} threshold = PROB_MAX*curand_uniform(&state);
+    ftype threshold = PROB_MAX*rng_uniform(&state, 100);
 
     // Prepare data and pdf variables to DiffRate CUDA function
-    ${ftype} mass = out[evt*10+4];
-    ${ftype} data[9] = {cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS};
+    ftype mass = out[evt*10+4];
+    ftype data[9] = {cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS};
     //printf("cosK=%lf cosL=%lf hphi=%lf time=%lf sigmat=%lf qOS=%lf qSS=%lf etaOS=%lf etaSS=%lf", cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS);
-    ${ftype} pdf = 0.0;
+    ftype pdf = 0.0;
 
     // Get pdf value from angular distribution
     // if time is larger than asked, put pdf to zero
@@ -216,23 +194,23 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
     else
     {
       unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
-      pdf = getDiffRate(data,
-                        G, DG, DM, CSP[bin],
-                        ASlon[bin], APlon[bin], APpar[bin], APper[bin],
-                        pSlon,      pPlon,      pPpar,      pPper,
-                        dSlon[bin], dPlon,      dPpar,      dPper,
-                        lSlon,      lPlon,      lPpar,      lPper,
-                        tLL, tUL,
-                        sigma_offset, sigma_slope, sigma_curvature, mu,
-                        eta_bar_os, eta_bar_ss,
-                        p0_os,  p1_os, p2_os,
-                        p0_ss,  p1_ss, p2_ss,
-                        dp0_os, dp1_os, dp2_os,
-                        dp0_ss, dp1_ss, dp2_ss,
-                        coeffs,
-                        angular_weights,
-                        USE_FK, USE_ANGACC, USE_TIMEACC,
-                        USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
+      pdf =  rateBs(data,
+                    G, DG, DM, CSP[bin],
+                    ASlon[bin], APlon[bin], APpar[bin], APper[bin],
+                    pSlon,      pPlon,      pPpar,      pPper,
+                    dSlon[bin], dPlon,      dPpar,      dPper,
+                    lSlon,      lPlon,      lPpar,      lPper,
+                    tLL, tUL,
+                    sigma_offset, sigma_slope, sigma_curvature, mu,
+                    eta_bar_os, eta_bar_ss,
+                    p0_os,  p1_os, p2_os,
+                    p0_ss,  p1_ss, p2_ss,
+                    dp0_os, dp1_os, dp2_os,
+                    dp0_ss, dp1_ss, dp2_ss,
+                    coeffs,
+                    angular_weights,
+                    USE_FK, USE_ANGACC, USE_TIMEACC,
+                    USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
 
       pdf *= exp((G-0.5*DG)*(time-tLL));
       pdf *= (G-0.5*DG)*(1- exp((G-0.5*DG)*(-tUL+tLL)));
@@ -241,12 +219,12 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
 
     // check if probability is greater than the PROB_MAX
     if (pdf > PROB_MAX) {
-      printf("WARNING: PDF [ = %lf] > PROB_MAX [ = %lf]\n", pdf, PROB_MAX);
+      printf("WARNING: PDF [=%f] > PROB_MAX [=%f]\n", pdf, PROB_MAX);
     }
 
     // stop if it's taking too much iterations ---------------------------------
     iter++;
-    if(iter > 1000000)
+    if(iter > 100000)
     {
       printf("ERROR: This p.d.f. is too hard...");
       return;
@@ -271,3 +249,5 @@ void dG5toy(GLOBAL_MEM ${ftype} * out,
   }
 
 }
+
+////////////////////////////////////////////////////////////////////////////////

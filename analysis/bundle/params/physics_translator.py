@@ -4,7 +4,7 @@ from ipanema import Parameters
 
 def physics_params_translator(pars, fp, flag="base"):
   # Load json as string
-  json_str = open('bundle/templates/physics_params.json').read()
+  json_str = open('analysis/bundle/templates/physics_params.json').read()
   json_template = Template(json_str)
 
   # Create dict to parse json-string
@@ -17,9 +17,12 @@ def physics_params_translator(pars, fp, flag="base"):
 
   # Dump
   if isinstance(fp,str):
-    json.dump(json.loads(json_parsed), open(fp,'w'), indent=4)
+    #json.dump(json.loads(json_parsed), open(fp,'w'), indent=4)
+    with open(fp,'w') as file:
+      file.write(json_parsed)
   else:
-    json.dump(json.loads(json_parsed), fp, indent=4)
+    #json.dump(json.loads(json_parsed), fp, indent=4)
+    fp.write(json_parsed)
 
 
 

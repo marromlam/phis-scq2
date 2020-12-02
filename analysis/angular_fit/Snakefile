@@ -2,6 +2,8 @@
 #     This rule runs the iterative procedure for FullRun2 years using RD.
 
 rule physics_params_data_run2:
+  wildcard_constraints:
+    fit = "run2(Poldep)?",
   input:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
     # Angular acceptance
@@ -52,10 +54,10 @@ rule physics_params_data_run2:
       f'output/params/flavor_tagging/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
   output:
-    params = 'output/params/physics_params/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.json',
-    tables = 'output/tables/angular_fit/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.tex'
+    params = 'output/params/physics_params/run2/Bs2JpsiPhi/{version}_{fit}_{angacc}_{timeacc}.json',
+    tables = 'output/tables/angular_fit/run2/Bs2JpsiPhi/{version}_{fit}_{angacc}_{timeacc}.tex'
   log:
-    'output/log/physics_params_data/run2/Bs2JpsiPhi/{version}_run2_{angacc}_{timeacc}.log'
+    'output/log/physics_params_data/run2/Bs2JpsiPhi/{version}_{fit}_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
     python analysis/angular_fit/fit_data.py\
@@ -70,10 +72,10 @@ rule physics_params_data_run2:
            --params                  {output.params}\
            --tables                  {output.tables}\
            --year                    {",".join(YEARS['Run2'])}\
-           --flag                    run2_{wildcards.angacc}_{wildcards.timeacc}\
+           --flag                    {wildcards.fit}_{wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
            --blind                   1\
-    ) &> {log}""")
+    ) #&> {log}""")
     send_mail(f"Physics Parameters RD Run2 :: {wildcards}", f"{log}")
 
 
@@ -135,6 +137,7 @@ rule physics_params_dll_data:
            --year                    {",".join(YEARS[f'{wildcards.dyear}'.title()])}\
            --flag                    run2_{wildcards.dangacc}_{wildcards.dtimeacc}\
            --version                 {wildcards.dversion}\
+           --blind                   1\
     ) &> {log}""")
 
 
@@ -184,10 +187,64 @@ rule physics_params_dll_compare:
 rule physics_params_dll_table:
   input:
     run2_vs_yearly = [
-      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__2015_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex',
-      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__2016_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex',
-      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__2017_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex',
-      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__2018_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex'
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}_yearly_{pangacc}_{ptimeacc}.tex'
+    ],
+    run2_vs_bins = [
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutpTB1_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutpTB2_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutpTB3_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutpTB4_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutetaB1_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutetaB2_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutetaB3_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutsigmat1_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutsigmat2_run2_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__run2_{pversion}@cutsigmat3_run2_{pangacc}_{ptimeacc}.tex',
+    ],
+    run2_vs_binedyears = [
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutpTB1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutpTB2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutpTB3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutpTB4_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutetaB1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutetaB2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutetaB3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutsigmat1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutsigmat2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}@cutsigmat3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutpTB1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutpTB2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutpTB3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutpTB4_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutetaB1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutetaB2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutetaB3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutsigmat1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutsigmat2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2016_{pversion}@cutsigmat3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutpTB1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutpTB2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutpTB3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutpTB4_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutetaB1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutetaB2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutetaB3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutsigmat1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutsigmat2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2017_{pversion}@cutsigmat3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutpTB1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutpTB2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutpTB3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutpTB4_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutetaB1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutetaB2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutetaB3_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutsigmat1_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutsigmat2_yearly_{pangacc}_{ptimeacc}.tex',
+      'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2018_{pversion}@cutsigmat3_yearly_{pangacc}_{ptimeacc}.tex',
     ],
     yearly_vs_yearly = [
       'tmp/dlls/Bs2JpsiPhi/2018_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2015_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
@@ -208,7 +265,7 @@ rule physics_params_dll_table:
       'tmp/dlls/Bs2JpsiPhi/2015_{dversion}_yearly_{pangacc}_{dtimeacc}__vs__2018_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
     ],
   output:
-    'output/tables/systematics/dlls/Bs2JpsiPhi/{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex'
+    'output/tables/systematics/dlls/Bs2JpsiPhi/{dversion}_{dangacc}_{dtimeacc}__vs__{pversion}_{pangacc}_{ptimeacc}.tex'
   run:
     import numpy as np
     from ipanema import Parameters
@@ -223,6 +280,14 @@ rule physics_params_dll_table:
       with open(i,'r') as fp:
         table.append(fp.read()+"\\\\")
     table.append('\\hline')
+    for i in input.run2_vs_bins:
+      with open(i,'r') as fp:
+        table.append(fp.read()+"\\\\")
+    table.append('\\hline')
+    for i in input.run2_vs_binedyears:
+      with open(i,'r') as fp:
+        table.append(fp.read()+"\\\\")
+    table.append('\\hline')
     for i in input.yearly_vs_yearly:
       with open(i,'r') as fp:
         table.append(fp.read()+"\\\\")
@@ -234,6 +299,7 @@ rule physics_params_dll_table:
     with open(f'{output}','w') as fp:
       fp.write( "\n".join(table) )
     fp.close()
+    0
 
 
 
@@ -301,7 +367,7 @@ rule physics_params_data_run2a:
            --year                    {",".join(YEARS['Run2a'])}\
            --flag                    run2a_{wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) &> {log}""")
+    ) #&> {log}""")
     send_mail(f"Physics Parameters RD Run2a", f"{log}")
 
 

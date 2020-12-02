@@ -15,9 +15,12 @@
 // Functions ///////////////////////////////////////////////////////////////////
 
 
+#include <ipanema/complex.hpp>
+#include <ipanema/special.hpp>
+
 
 WITHIN_KERNEL
-unsigned int getTimeBin(${ftype} const t)
+unsigned int getTimeBin(ftype const t)
 {
   int _i = 0;
   int _n = NKNOTS-1;
@@ -33,7 +36,7 @@ unsigned int getTimeBin(${ftype} const t)
 
 
 WITHIN_KERNEL
-unsigned int getMassBin(${ftype} const t)
+unsigned int getMassBin(ftype const t)
 {
   int _i = 0;
   int _n = MKNOTS-1;
@@ -49,7 +52,7 @@ unsigned int getMassBin(${ftype} const t)
 
 
 WITHIN_KERNEL
-${ftype} getKnot(int i)
+ftype getKnot(int i)
 {
   if (i<=0) {
     i = 0;
@@ -63,7 +66,7 @@ ${ftype} getKnot(int i)
 
 
 WITHIN_KERNEL
-${ftype} getCoeff(GLOBAL_MEM ${ftype} *mat, int r, int c)
+ftype getCoeff(GLOBAL_MEM const ftype *mat, int const r, int const c)
 {
   return mat[4*r+c];
 }
@@ -71,13 +74,13 @@ ${ftype} getCoeff(GLOBAL_MEM ${ftype} *mat, int r, int c)
 
 
 WITHIN_KERNEL
-${ftype} calcTimeAcceptance(${ftype} t, GLOBAL_MEM ${ftype} *coeffs, ${ftype} tLL, ${ftype} tUL)
+ftype calcTimeAcceptance(const ftype t, GLOBAL_MEM const ftype *coeffs, const ftype tLL, const ftype tUL)
 {
   int bin   = getTimeBin(t);
-  ${ftype} c0 = getCoeff(coeffs,bin,0);
-  ${ftype} c1 = getCoeff(coeffs,bin,1);
-  ${ftype} c2 = getCoeff(coeffs,bin,2);
-  ${ftype} c3 = getCoeff(coeffs,bin,3);
+  ftype c0 = getCoeff(coeffs,bin,0);
+  ftype c1 = getCoeff(coeffs,bin,1);
+  ftype c2 = getCoeff(coeffs,bin,2);
+  ftype c3 = getCoeff(coeffs,bin,3);
   #ifdef DEBUG
   if (DEBUG >= 3 && ( get_global_id(0) == DEBUG_EVT))
   {
@@ -90,72 +93,6 @@ ${ftype} calcTimeAcceptance(${ftype} t, GLOBAL_MEM ${ftype} *coeffs, ${ftype} tL
 }
 
 
-WITHIN_KERNEL
-${ctype} ipanema_erfc2(${ctype} z)
-{
-  ${ftype} re = -z.x * z.x + z.y * z.y;
-  ${ftype} im = -2. * z.x * z.y;
-  ${ctype} expmz = cexp( cnew(re,im) );
-
-  if (z.x >= 0.0) {
-    return                 cmul( expmz, faddeeva(cnew(-z.y,+z.x)) );
-  }
-  else{
-    ${ctype} ans = cmul( expmz, faddeeva(cnew(+z.y,-z.x)) );
-    return cnew(2.0-ans.x, ans.y);
-  }
-}
-
-
-
-WITHIN_KERNEL
-${ctype} ipanema_erfc(${ctype} z)
-{
-  if (z.y<0)
-  {
-    ${ctype} ans = ipanema_erfc2( cnew(-z.x, -z.y) );
-    return cnew( 2.0-ans.x, -ans.y);
-  }
-  else{
-    return ipanema_erfc2(z);
-  }
-}
-
-
-
-WITHIN_KERNEL
-${ctype} cErrF_2(${ctype} x)
-{
-  ${ctype} I = cnew(0.0,1.0);
-  ${ctype} z = cmul(I,x);
-  ${ctype} result = cmul( cexp(  cmul(cnew(-1,0),cmul(x,x))   ) , faddeeva(z) );
-
-  //printf("z = %+.16f %+.16fi\n", z.x, z.y);
-  //printf("fad = %+.16f %+.16fi\n", faddeeva(z).x, faddeeva(z).y);
-
-  if (x.x > 20.0){// && fabs(x.y < 20.0)
-    result = cnew(0.0,0);
-  }
-  if (x.x < -20.0){// && fabs(x.y < 20.0)
-    result = cnew(2.0,0);
-  }
-
-  return result;
-}
-
-
-WITHIN_KERNEL
-${ctype} cerfc(${ctype} z)
-{
-  if (z.y<0)
-  {
-    ${ctype} ans = cErrF_2( cnew(-z.x, -z.y) );
-    return cnew( 2.0-ans.x, -ans.y);
-  }
-  else{
-    return cErrF_2(z);
-  }
-}
 
 
 
@@ -165,18 +102,18 @@ ${ctype} cerfc(${ctype} z)
 
 
 WITHIN_KERNEL
-${ctype} expconv_simon(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
+ctype expconv_simon(ftype t, ftype G, ftype omega, ftype sigma)
 {
-  ${ctype} I  = cnew( 0, 1);
-  ${ctype} I2 = cnew(-1, 0);
-  ${ctype} I3 = cnew( 0,-1);
-  ${ftype} sigma2 = sigma*sigma;
+  ctype I  = cnew( 0, 1);
+  ctype I2 = cnew(-1, 0);
+  ctype I3 = cnew( 0,-1);
+  ftype sigma2 = sigma*sigma;
 
   if (omega == 0)
   {
     if( t > -6.0*sigma ){
-      ${ftype} exp_part = 0.5*exp(-t*G + 0.5*G*G*sigma2 -0.5*omega*omega*sigma2);
-      ${ctype} my_erfc = ipanema_erfc(cnew(sigma*G/sqrt(2.0) - t/sigma/sqrt(2.0),0));
+      ftype exp_part = 0.5*exp(-t*G + 0.5*G*G*sigma2 -0.5*omega*omega*sigma2);
+      ctype my_erfc = ipanema_erfc(cnew(sigma*G/sqrt(2.0) - t/sigma/sqrt(2.0),0));
       return cmul( cnew(exp_part,0) , my_erfc );
     }
     else{
@@ -185,16 +122,16 @@ ${ctype} expconv_simon(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
   }
   else //(omega != 0)
   {
-    //${ftype} c1 = 0.5;
+    //ftype c1 = 0.5;
 
-    ${ftype} exp1arg = 0.5*sigma2*(G*G - omega*omega) - t*G;
-    ${ctype} exp1 = cnew( 0.5*exp(exp1arg) ,0);
+    ftype exp1arg = 0.5*sigma2*(G*G - omega*omega) - t*G;
+    ctype exp1 = cnew( 0.5*exp(exp1arg) ,0);
 
-    ${ftype} exp2arg = -omega*(t - sigma2*G);
-    ${ctype} exp2 = cnew(cos(exp2arg), sin(exp2arg));
+    ftype exp2arg = -omega*(t - sigma2*G);
+    ctype exp2 = cnew(cos(exp2arg), sin(exp2arg));
 
-    ${ctype} cerfarg = cnew(sigma*G/sqrt(2.0) - t/(sigma*sqrt(2.0)) , +omega*sigma/sqrt(2.0));
-    ${ctype} cerf;
+    ctype cerfarg = cnew(sigma*G/sqrt(2.0) - t/(sigma*sqrt(2.0)) , +omega*sigma/sqrt(2.0));
+    ctype cerf;
 
     if  (cerfarg.x < -20.0)
     {
@@ -204,9 +141,9 @@ ${ctype} expconv_simon(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
     {
       cerf = cErrF_2(cerfarg);//best complex error function
     }
-    ${ctype} c2 = cmul(exp2, cerf);
-    //${ftype} im = -c2.x;//exp*sin
-    //${ftype} re = +c2.real();//exp*cos
+    ctype c2 = cmul(exp2, cerf);
+    //ftype im = -c2.x;//exp*sin
+    //ftype re = +c2.real();//exp*cos
 
     return cmul( exp1 , cadd( cnew(c2.x,0), cmul( I3, cnew(c2.y,0) ) ) );
   }
@@ -216,21 +153,21 @@ ${ctype} expconv_simon(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
 
 
 WITHIN_KERNEL
-${ctype} expconv(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
+ctype expconv(ftype t, ftype G, ftype omega, ftype sigma)
 {
   // OpenCL need beautiful code, doesn't it?
-  ${ftype} sigma2 = sigma*sigma;
+  ftype sigma2 = sigma*sigma;
 
   if( t > SIGMA_THRESHOLD*sigma )
   {
-    ${ftype} a = exp(-G*t+0.5*G*G*sigma2-0.5*omega*omega*sigma2);
-    ${ftype} b = omega*(t-G*sigma2);
+    ftype a = exp(-G*t+0.5*G*G*sigma2-0.5*omega*omega*sigma2);
+    ftype b = omega*(t-G*sigma2);
     return cnew(a*cos(b),a*sin(b));
   }
   else
   {
     //printf("dont like it\n");
-    ${ctype} z, fad;
+    ctype z, fad;
     z   = cnew(-omega*sigma2/(sigma*sqrt(2.)), -(t-sigma2*G)/(sigma*sqrt(2.)));
     fad = faddeeva(z);
 /*
@@ -249,14 +186,14 @@ ${ctype} expconv(${ftype} t, ${ftype} G, ${ftype} omega, ${ftype} sigma)
 
 
 WITHIN_KERNEL
-${ctype} getK(${ctype} z, int n)
+ctype getK(ctype z, int n)
 {
-  ${ctype} z2 = cmul(z,z);
-  ${ctype} z3 = cmul(z,z2);
-  ${ctype} z4 = cmul(z,z3);
-  ${ctype} z5 = cmul(z,z4);
-  ${ctype} z6 = cmul(z,z5);
-  ${ctype} w;
+  ctype z2 = cmul(z,z);
+  ctype z3 = cmul(z,z2);
+  ctype z4 = cmul(z,z3);
+  ctype z5 = cmul(z,z4);
+  ctype z6 = cmul(z,z5);
+  ctype w;
 
   if (n == 0)      {
     w = cmul( cnew(2.0,0.0), z);
@@ -292,16 +229,16 @@ ${ctype} getK(${ctype} z, int n)
 
 
 WITHIN_KERNEL
-${ctype} getM(${ftype} x, int n, ${ftype} t, ${ftype} sigma, ${ftype} gamma, ${ftype} omega)
+ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
 {
-  ${ctype} conv_term, z;
-  ${ctype} I  = cnew(0,+1);
-  ${ctype} I2 = cnew(-1,0);
-  ${ctype} I3 = cnew(0,-1);
+  ctype conv_term, z;
+  ctype I  = cnew(0,+1);
+  ctype I2 = cnew(-1,0);
+  ctype I3 = cnew(0,-1);
 
   z = cnew(gamma*sigma/sqrt(2.0),-omega*sigma/sqrt(2.0));
-  ${ctype} arg1 = csub( cmul(z,z), cmul(cnew(2*x,0),z) );
-  ${ctype} arg2 = csub(z,cnew(x,0));
+  ctype arg1 = csub( cmul(z,z), cmul(cnew(2*x,0),z) );
+  ctype arg2 = csub(z,cnew(x,0));
   //conv_term = 5.0*expconv(t,gamma,omega,sigma);///(sqrt(0.5*M_PI));
   // warning there are improvement to do here!!!
   if (omega == 0){
@@ -327,46 +264,46 @@ ${ctype} getM(${ftype} x, int n, ${ftype} t, ${ftype} sigma, ${ftype} gamma, ${f
 
   if (n == 0)
   {
-    ${ctype} a = cnew(erf(x),0.);
-    ${ctype} b = conv_term;
+    ctype a = cnew(erf(x),0.);
+    ctype b = conv_term;
     return csub(a,b);
   }
   else if (n == 1)
   {
     // return 2.*(-pycuda::complex<double>(sqrt(1./M_PI)*exp(-x*x),0.)-x*conv_term);
-    //${ctype} a = cnew(sqrt(1./M_PI)*exp(-x*x),0.);
-    ${ctype} a = cnew(sqrt(1.0/M_PI)*exp(-x*x),0.);
-    ${ctype} b = cnew(x,0);
+    //ctype a = cnew(sqrt(1./M_PI)*exp(-x*x),0.);
+    ctype a = cnew(sqrt(1.0/M_PI)*exp(-x*x),0.);
+    ctype b = cnew(x,0);
     b = cmul(b,conv_term);
     return cmul(cnew(-2.0,0.0),cadd(a,b));
   }
   else if (n == 2)
   {
-    // return 2.*(-2.*x*exp(-x*x)*${ctype}(sqrt(1./M_PI),0.)-(2.*x*x-1.)*conv_term);
-    ${ctype} a = cnew(-2.*x*exp(-x*x)*sqrt(1./M_PI),0.);
-    ${ctype} b = cnew(2*x*x-1,0);
+    // return 2.*(-2.*x*exp(-x*x)*ctype(sqrt(1./M_PI),0.)-(2.*x*x-1.)*conv_term);
+    ctype a = cnew(-2.*x*exp(-x*x)*sqrt(1./M_PI),0.);
+    ctype b = cnew(2*x*x-1,0);
     b = cmul(b,conv_term);
     return cmul(cnew(2,0),csub(a,b));
   }
   else if (n == 3)
   {
-    // return 4.*(-(2.*x*x-1.)*exp(-x*x)*${ctype}(sqrt(1./M_PI),0.)-x*(2.*x*x-3.)*conv_term);
-    ${ctype} a = cnew(-(2.*x*x-1.)*exp(-x*x)*sqrt(1./M_PI),0.);
-    ${ctype} b = cnew(x*(2*x*x-3),0);
+    // return 4.*(-(2.*x*x-1.)*exp(-x*x)*ctype(sqrt(1./M_PI),0.)-x*(2.*x*x-3.)*conv_term);
+    ctype a = cnew(-(2.*x*x-1.)*exp(-x*x)*sqrt(1./M_PI),0.);
+    ctype b = cnew(x*(2*x*x-3),0);
     b = cmul(b,conv_term);
     return cmul(cnew(4,0),csub(a,b));
   }
   // else if (n == 4)
   // {
-  //   return 4.*(exp(-x*x)*(6.*x+4.*x*x*x)*${ctype}(sqrt(1./M_PI),0.)-(3.-12.*x*x+4.*x*x*x*x)*conv_term);
+  //   return 4.*(exp(-x*x)*(6.*x+4.*x*x*x)*ctype(sqrt(1./M_PI),0.)-(3.-12.*x*x+4.*x*x*x*x)*conv_term);
   // }
   // else if (n == 5)
   // {
-  //   return 8.*(-(3.-12.*x*x+4.*x*x*x*x)*exp(-x*x)*${ctype}(sqrt(1./M_PI),0.)-x*(15.-20.*x*x+4.*x*x*x*x)*conv_term);
+  //   return 8.*(-(3.-12.*x*x+4.*x*x*x*x)*exp(-x*x)*ctype(sqrt(1./M_PI),0.)-x*(15.-20.*x*x+4.*x*x*x*x)*conv_term);
   // }
   // else if (n == 6)
   // {
-  //   return 8.*(-exp(-x*x)*(30.*x-40.*x*x*x+8.*x*x*x*x*x)*${ctype}(sqrt(1./M_PI),0.)-(-15.+90.*x*x-60.*x*x*x*x+8.*x*x*x*x*x*x)*conv_term);
+  //   return 8.*(-exp(-x*x)*(30.*x-40.*x*x*x+8.*x*x*x*x*x)*ctype(sqrt(1./M_PI),0.)-(-15.+90.*x*x-60.*x*x*x*x+8.*x*x*x*x*x*x)*conv_term);
   // }
   return cnew(0.,0.);
 }
@@ -374,21 +311,21 @@ ${ctype} getM(${ftype} x, int n, ${ftype} t, ${ftype} sigma, ${ftype} gamma, ${f
 
 
 WITHIN_KERNEL
-void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
-                        ${ftype} G, ${ftype} DG, ${ftype} DM,
-                        GLOBAL_MEM ${ftype} *coeffs, ${ftype} t0, ${ftype} tLL, ${ftype} tUL)
+void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
+                        const ftype G, const ftype DG, const ftype DM,
+                        GLOBAL_MEM const ftype *coeffs, const ftype t0, const ftype tLL, const ftype tUL)
 {
   // Some constants
-  ${ftype} cte1 = 1.0/(sqrt(2.0)*delta_t);
-  ${ctype} cte2 = cnew( delta_t/(sqrt(2.0)) , 0 );
+  ftype cte1 = 1.0/(sqrt(2.0)*delta_t);
+  ctype cte2 = cnew( delta_t/(sqrt(2.0)) , 0 );
   if (delta_t <= 0.0)
   {
     printf("WARNING            : delta_t = %.4f is not a valid value.\n", delta_t);
   }
 
   // Add tUL to knots list
-  ${ftype} x[NTIMEBINS] = {0.};
-  ${ftype} knots[NTIMEBINS] = {0.};
+  ftype x[NTIMEBINS] = {0.};
+  ftype knots[NTIMEBINS] = {0.};
   knots[0] = tLL; x[0] = (knots[0] - t0)*cte1;
   for(int i = 1; i < NKNOTS; i++)
   {
@@ -398,7 +335,7 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
   knots[NKNOTS] = tUL; x[NKNOTS] = (knots[NKNOTS] - t0)*cte1;
 
   // Fill S matrix                (TODO speed to be gained here - S is constant)
-  ${ftype} S[SPL_BINS][4][4];
+  ftype S[SPL_BINS][4][4];
   for (int bin=0; bin < SPL_BINS; ++bin)
   {
     for (int i=0; i<4; ++i)
@@ -418,9 +355,9 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
     }
   }
 
-  ${ctype} z_expm, K_expm[4], M_expm[SPL_BINS+1][4];
-  ${ctype} z_expp, K_expp[4], M_expp[SPL_BINS+1][4];
-  ${ctype} z_trig, K_trig[4], M_trig[SPL_BINS+1][4];
+  ctype z_expm, K_expm[4], M_expm[SPL_BINS+1][4];
+  ctype z_expp, K_expp[4], M_expp[SPL_BINS+1][4];
+  ctype z_trig, K_trig[4], M_trig[SPL_BINS+1][4];
 
   z_expm = cmul( cte2 , cnew(G-0.5*DG,  0) );
   z_expp = cmul( cte2 , cnew(G+0.5*DG,  0) );
@@ -454,9 +391,9 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
         #ifdef DEBUG
         if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
         {
-          ${ctype} aja = M_expp[bin][j];//-M_expp[bin-1][j];
-          ${ctype} eje = M_expm[bin][j];//-M_expm[bin-1][j];
-          ${ctype} iji = M_trig[bin][j];//-M_trig[bin-1][j];
+          ctype aja = M_expp[bin][j];//-M_expp[bin-1][j];
+          ctype eje = M_expm[bin][j];//-M_expm[bin-1][j];
+          ctype iji = M_trig[bin][j];//-M_trig[bin-1][j];
           printf("bin=%d M_expp[%d] = %+.14f%+.14f\n",  bin,j,aja.x,aja.y);
           printf("bin=%d M_expm[%d] = %+.14f%+.14f\n",  bin,j,eje.x,eje.y);
           printf("bin=%d M_trig[%d] = %+.14f%+.14f\n\n",bin,j,iji.x,iji.y);
@@ -467,17 +404,17 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
   }
 
   // Fill the delta factors to multiply by the integrals
-  ${ftype} delta_t_fact[4];
+  ftype delta_t_fact[4];
   for (int i=0; i<4; ++i)
   {
     delta_t_fact[i] = pow(delta_t*sqrt(2.), i+1)/sqrt(2.);
   }
 
   // Integral calculation for cosh, expm, cos, sin terms
-  ${ctype} int_expm = cnew(0.,0.);
-  ${ctype} int_expp = cnew(0.,0.);
-  ${ctype} int_trig = cnew(0.,0.);
-  ${ctype} aux, int_expm_aux, int_expp_aux, int_trig_aux;
+  ctype int_expm = cnew(0.,0.);
+  ctype int_expp = cnew(0.,0.);
+  ctype int_trig = cnew(0.,0.);
+  ctype aux, int_expm_aux, int_expp_aux, int_trig_aux;
 
   for (int bin=0; bin < SPL_BINS; ++bin)
   {
@@ -532,17 +469,17 @@ void intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
 
 
 
-WITHIN_KERNEL ${ftype} get_int_ta_spline(${ftype} delta_t,${ftype} G,${ftype} DM,${ftype} DG,${ftype} a,${ftype} b,${ftype} c,${ftype} d,${ftype} t_0,${ftype} t_1)
+WITHIN_KERNEL ftype get_int_ta_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ftype a,ftype b,ftype c,ftype d,ftype t_0,ftype t_1)
 {
-    ${ftype} G_sq = G*G;
-    ${ftype} G_cub = G_sq*G;
-    ${ftype} DG_sq = DG*DG;
-    ${ftype} DG_cub = DG_sq*DG;
-    ${ftype} delta_t_sq = delta_t*delta_t;
-    ${ftype} t_0_sq = t_0*t_0;
-    ${ftype} t_0_cub = t_0_sq*t_0;
-    ${ftype} t_1_sq = t_1*t_1;
-    ${ftype} t_1_cub = t_1_sq*t_1;
+    ftype G_sq = G*G;
+    ftype G_cub = G_sq*G;
+    ftype DG_sq = DG*DG;
+    ftype DG_cub = DG_sq*DG;
+    ftype delta_t_sq = delta_t*delta_t;
+    ftype t_0_sq = t_0*t_0;
+    ftype t_0_cub = t_0_sq*t_0;
+    ftype t_1_sq = t_1*t_1;
+    ftype t_1_cub = t_1_sq*t_1;
 
     return -0.5*sqrt(2.)*sqrt(delta_t)
     *(-2*a*pow(DG - 2*G, 4.)*pow(DG + 2*G, 3.)*(-exp(-0.5*t_1*(DG + 2*G)) + exp(-0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq)
@@ -556,17 +493,17 @@ WITHIN_KERNEL ${ftype} get_int_ta_spline(${ftype} delta_t,${ftype} G,${ftype} DM
     *exp(0.125*delta_t_sq*pow(DG - 2*G, 2.))/pow(DG_sq - 4*G_sq, 4.);
 }
 
-WITHIN_KERNEL ${ftype} get_int_tb_spline(${ftype} delta_t,${ftype} G,${ftype} DM,${ftype} DG,${ftype} a,${ftype} b,${ftype} c,${ftype} d,${ftype} t_0,${ftype} t_1)
+WITHIN_KERNEL ftype get_int_tb_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ftype a,ftype b,ftype c,ftype d,ftype t_0,ftype t_1)
 {
-    ${ftype} G_sq = G*G;
-    ${ftype} G_cub = G_sq*G;
-    ${ftype} DG_sq = DG*DG;
-    ${ftype} DG_cub = DG_sq*DG;
-    ${ftype} delta_t_sq = delta_t*delta_t;
-    ${ftype} t_0_sq = t_0*t_0;
-    ${ftype} t_0_cub = t_0_sq*t_0;
-    ${ftype} t_1_sq = t_1*t_1;
-    ${ftype} t_1_cub = t_1_sq*t_1;
+    ftype G_sq = G*G;
+    ftype G_cub = G_sq*G;
+    ftype DG_sq = DG*DG;
+    ftype DG_cub = DG_sq*DG;
+    ftype delta_t_sq = delta_t*delta_t;
+    ftype t_0_sq = t_0*t_0;
+    ftype t_0_cub = t_0_sq*t_0;
+    ftype t_1_sq = t_1*t_1;
+    ftype t_1_cub = t_1_sq*t_1;
 
     return 0.5*sqrt(2.)*sqrt(delta_t)
     *(-2*a*pow(DG - 2*G, 4.)*pow(DG + 2*G, 3.)*(-exp(-0.5*t_1*(DG + 2*G)) + exp(-0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq)
@@ -579,23 +516,23 @@ WITHIN_KERNEL ${ftype} get_int_tb_spline(${ftype} delta_t,${ftype} G,${ftype} DM
     *exp(0.125*delta_t_sq*pow(DG - 2*G, 2.))/pow(DG_sq - 4*G_sq, 4.);
 }
 
-WITHIN_KERNEL ${ftype} get_int_tc_spline(${ftype} delta_t,${ftype} G,${ftype} DM,${ftype} DG,${ftype} a,${ftype} b,${ftype} c,${ftype} d,${ftype} t_0,${ftype} t_1)
+WITHIN_KERNEL ftype get_int_tc_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ftype a,ftype b,ftype c,ftype d,ftype t_0,ftype t_1)
 {
-    ${ftype} G_sq = G*G;
-    ${ftype} G_cub = G_sq*G;
-    ${ftype} DM_sq = DM*DM;
-    ${ftype} DM_fr = DM_sq*DM_sq;
-    ${ftype} DM_sx = DM_fr*DM_sq;
-    ${ftype} G_fr = G_sq*G_sq;
-    ${ftype} delta_t_sq = delta_t*delta_t;
-    ${ftype} t_0_sq = t_0*t_0;
-    ${ftype} t_0_cub = t_0_sq*t_0;
-    ${ftype} t_1_sq = t_1*t_1;
-    ${ftype} t_1_cub = t_1_sq*t_1;
-    ${ftype} exp_0_sin_1_term = exp(G*t_0)*sin(DM*G*delta_t_sq - DM*t_1);
-    ${ftype} exp_1_sin_0_term = exp(G*t_1)*sin(DM*G*delta_t_sq - DM*t_0);
-    ${ftype} exp_0_cos_1_term = exp(G*t_0)*cos(DM*G*delta_t_sq - DM*t_1);
-    ${ftype} exp_1_cos_0_term = exp(G*t_1)*cos(DM*G*delta_t_sq - DM*t_0);
+    ftype G_sq = G*G;
+    ftype G_cub = G_sq*G;
+    ftype DM_sq = DM*DM;
+    ftype DM_fr = DM_sq*DM_sq;
+    ftype DM_sx = DM_fr*DM_sq;
+    ftype G_fr = G_sq*G_sq;
+    ftype delta_t_sq = delta_t*delta_t;
+    ftype t_0_sq = t_0*t_0;
+    ftype t_0_cub = t_0_sq*t_0;
+    ftype t_1_sq = t_1*t_1;
+    ftype t_1_cub = t_1_sq*t_1;
+    ftype exp_0_sin_1_term = exp(G*t_0)*sin(DM*G*delta_t_sq - DM*t_1);
+    ftype exp_1_sin_0_term = exp(G*t_1)*sin(DM*G*delta_t_sq - DM*t_0);
+    ftype exp_0_cos_1_term = exp(G*t_0)*cos(DM*G*delta_t_sq - DM*t_1);
+    ftype exp_1_cos_0_term = exp(G*t_1)*cos(DM*G*delta_t_sq - DM*t_0);
 
     return (a*pow(DM_sq + G_sq, 3.)*(-DM*exp_0_sin_1_term + DM*exp_1_sin_0_term - G*exp_0_cos_1_term + G*exp_1_cos_0_term)
     + b*pow(DM_sq + G_sq, 2.)*(DM*((DM_sq*t_0 + G_sq*t_0 + 2*G)*exp_1_sin_0_term - (DM_sq*t_1 + G_sq*t_1 + 2*G)*exp_0_sin_1_term) + (DM_sq*(G*t_0 - 1) + G_sq*(G*t_0 + 1))*exp_1_cos_0_term - (DM_sq*(G*t_1 - 1) + G_sq*(G*t_1 + 1))*exp_0_cos_1_term)
@@ -603,24 +540,24 @@ WITHIN_KERNEL ${ftype} get_int_tc_spline(${ftype} delta_t,${ftype} G,${ftype} DM
     + d*(DM*((DM_sx*t_0_cub + 3*DM_fr*t_0*(G_sq*t_0_sq + 2*G*t_0 - 2.) + 3*DM_sq*G*(G_cub*t_0_cub + 4*G_sq*t_0_sq + 4*G*t_0 - 8) + G_cub*(G_cub*t_0_cub + 6*G_sq*t_0_sq + 18*G*t_0 + 24.))*exp_1_sin_0_term - (DM_sx*t_1_cub + 3*DM_fr*t_1*(G_sq*t_1_sq + 2*G*t_1 - 2.) + 3*DM_sq*G*(G_cub*t_1_cub + 4*G_sq*t_1_sq + 4*G*t_1 - 8) + G_cub*(G_cub*t_1_cub + 6*G_sq*t_1_sq + 18*G*t_1 + 24.))*exp_0_sin_1_term) + (DM_sx*t_0_sq*(G*t_0 - 3.) + 3*DM_fr*(G_cub*t_0_cub - G_sq*t_0_sq - 6*G*t_0 + 2.) + 3*DM_sq*G_sq*(G_cub*t_0_cub + G_sq*t_0_sq - 4*G*t_0 - 12.) + G_fr*(G_cub*t_0_cub + 3*G_sq*t_0_sq + 6*G*t_0 + 6))*exp_1_cos_0_term - (DM_sx*t_1_sq*(G*t_1 - 3.) + 3*DM_fr*(G_cub*t_1_cub - G_sq*t_1_sq - 6*G*t_1 + 2.) + 3*DM_sq*G_sq*(G_cub*t_1_cub + G_sq*t_1_sq - 4*G*t_1 - 12.) + G_fr*(G_cub*t_1_cub + 3*G_sq*t_1_sq + 6*G*t_1 + 6))*exp_0_cos_1_term))*sqrt(2.)*sqrt(delta_t)*exp(-G*(t_0 + t_1) + 0.5*delta_t_sq*(-DM_sq + G_sq))/pow(DM_sq + G_sq, 4.);
 }
 
-WITHIN_KERNEL ${ftype} get_int_td_spline(${ftype} delta_t,${ftype} G,${ftype} DM,${ftype} DG,${ftype} a,${ftype} b,${ftype} c,${ftype} d,${ftype} t_0,${ftype} t_1)
+WITHIN_KERNEL ftype get_int_td_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ftype a,ftype b,ftype c,ftype d,ftype t_0,ftype t_1)
 {
-    ${ftype} G_sq = G*G;
-    ${ftype} G_cub = G_sq*G;
-    ${ftype} G_fr = G_sq*G_sq;
-    ${ftype} G_fv = G_cub*G_sq;
-    ${ftype} DM_sq = DM*DM;
-    ${ftype} DM_fr = DM_sq*DM_sq;
-    ${ftype} DM_sx = DM_fr*DM_sq;
-    ${ftype} delta_t_sq = delta_t*delta_t;
-    ${ftype} t_0_sq = t_0*t_0;
-    ${ftype} t_0_cub = t_0_sq*t_0;
-    ${ftype} t_1_sq = t_1*t_1;
-    ${ftype} t_1_cub = t_1_sq*t_1;
-    ${ftype} exp_0_sin_1_term = exp(G*t_0)*sin(DM*G*delta_t_sq - DM*t_1);
-    ${ftype} exp_1_sin_0_term = exp(G*t_1)*sin(DM*G*delta_t_sq - DM*t_0);
-    ${ftype} exp_0_cos_1_term = exp(G*t_0)*cos(DM*G*delta_t_sq - DM*t_1);
-    ${ftype} exp_1_cos_0_term = exp(G*t_1)*cos(DM*G*delta_t_sq - DM*t_0);
+    ftype G_sq = G*G;
+    ftype G_cub = G_sq*G;
+    ftype G_fr = G_sq*G_sq;
+    ftype G_fv = G_cub*G_sq;
+    ftype DM_sq = DM*DM;
+    ftype DM_fr = DM_sq*DM_sq;
+    ftype DM_sx = DM_fr*DM_sq;
+    ftype delta_t_sq = delta_t*delta_t;
+    ftype t_0_sq = t_0*t_0;
+    ftype t_0_cub = t_0_sq*t_0;
+    ftype t_1_sq = t_1*t_1;
+    ftype t_1_cub = t_1_sq*t_1;
+    ftype exp_0_sin_1_term = exp(G*t_0)*sin(DM*G*delta_t_sq - DM*t_1);
+    ftype exp_1_sin_0_term = exp(G*t_1)*sin(DM*G*delta_t_sq - DM*t_0);
+    ftype exp_0_cos_1_term = exp(G*t_0)*cos(DM*G*delta_t_sq - DM*t_1);
+    ftype exp_1_cos_0_term = exp(G*t_1)*cos(DM*G*delta_t_sq - DM*t_0);
 
 
     return -(a*pow(DM_sq + G_sq, 3.)*(DM*exp_0_cos_1_term - DM*exp_1_cos_0_term - G*exp_0_sin_1_term + G*exp_1_sin_0_term)
@@ -632,19 +569,19 @@ WITHIN_KERNEL ${ftype} get_int_td_spline(${ftype} delta_t,${ftype} G,${ftype} DM
 
 
 WITHIN_KERNEL
-void integralSpline( ${ftype} result[2],
-                     ${ftype} vn[10], ${ftype} va[10],${ftype} vb[10], ${ftype} vc[10],${ftype} vd[10],
-                     GLOBAL_MEM ${ftype} *norm, ${ftype} G, ${ftype} DG, ${ftype} DM,
-                     ${ftype} delta_t,
-                     ${ftype} tLL, ${ftype} tUL,
-                     ${ftype} t_offset,
-                     GLOBAL_MEM ${ftype} *coeffs)
+void integralSpline( ftype result[2],
+                     const ftype vn[10], const ftype va[10],const ftype vb[10], const ftype vc[10],const ftype vd[10],
+                     GLOBAL_MEM const ftype *norm, const ftype G, const ftype DG, const ftype DM,
+                     const ftype delta_t,
+                     const ftype tLL, const ftype tUL,
+                     const ftype t_offset,
+                     GLOBAL_MEM const ftype *coeffs)
 {
   //int bin0 = 0;
-  // ${ftype} tS = tLL-t_offset;
-  ${ftype} tS = 0;
-  // ${ftype} tE = KNOTS[bin0+1]-t_offset;
-  ${ftype} tE = 0;
+  // ftype tS = tLL-t_offset;
+  ftype tS = 0;
+  // ftype tE = KNOTS[bin0+1]-t_offset;
+  ftype tE = 0;
   for(int bin = 0; bin < NKNOTS; bin++)
   {
     if (bin == NKNOTS-1){
@@ -659,15 +596,15 @@ void integralSpline( ${ftype} result[2],
     // printf("integral: bin %d (%f,%f)\n", bin ,tS, tE);
     // }
 
-    ${ftype} c0 = getCoeff(coeffs,bin,0);
-    ${ftype} c1 = getCoeff(coeffs,bin,1);
-    ${ftype} c2 = getCoeff(coeffs,bin,2);
-    ${ftype} c3 = getCoeff(coeffs,bin,3);
+    ftype c0 = getCoeff(coeffs,bin,0);
+    ftype c1 = getCoeff(coeffs,bin,1);
+    ftype c2 = getCoeff(coeffs,bin,2);
+    ftype c3 = getCoeff(coeffs,bin,3);
 
-    ${ftype} ta = get_int_ta_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
-    ${ftype} tb = get_int_tb_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
-    ${ftype} tc = get_int_tc_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
-    ${ftype} td = get_int_td_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
+    ftype ta = get_int_ta_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
+    ftype tb = get_int_tb_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
+    ftype tc = get_int_tc_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
+    ftype td = get_int_td_spline( delta_t, G, DM, DG, c0, c1, c2, c3, tS, tE);
 
     for(int k=0; k<10; k++)
     {
@@ -696,21 +633,21 @@ void integralSpline( ${ftype} result[2],
 
 
 WITHIN_KERNEL
-void integralFullSpline( ${ftype} result[2],
-                         ${ftype} vn[10], ${ftype} va[10],${ftype} vb[10], ${ftype} vc[10],${ftype} vd[10],
-                         GLOBAL_MEM ${ftype} *norm, ${ftype} G, ${ftype} DG, ${ftype} DM,
-                         ${ftype} delta_t,
-                         ${ftype} tLL, ${ftype} tUL,
-                         ${ftype} t_offset,
-                         GLOBAL_MEM ${ftype} *coeffs)
+void integralFullSpline( ftype result[2],
+                         const ftype vn[10], const ftype va[10],const ftype vb[10], const ftype vc[10],const ftype vd[10],
+                         GLOBAL_MEM const ftype *norm, const ftype G, const ftype DG, const ftype DM,
+                         const ftype delta_t,
+                         const ftype tLL, const ftype tUL,
+                         const ftype t_offset,
+                         GLOBAL_MEM const ftype *coeffs)
 {
-  ${ftype} integrals[4] = {0., 0., 0., 0.};
+  ftype integrals[4] = {0., 0., 0., 0.};
   intgTimeAcceptance(integrals, delta_t, G, DG, DM, coeffs, t_offset, tLL, tUL);
 
-  ${ftype} ta = integrals[0];
-  ${ftype} tb = integrals[1];
-  ${ftype} tc = integrals[2];
-  ${ftype} td = integrals[3];
+  ftype ta = integrals[0];
+  ftype tb = integrals[1];
+  ftype tc = integrals[2];
+  ftype td = integrals[3];
 
   for(int k=0; k<10; k++)
   {
@@ -736,36 +673,24 @@ void integralFullSpline( ${ftype} result[2],
 // PDF = conv x sp1 ////////////////////////////////////////////////////////////
 
 WITHIN_KERNEL
-${ftype} getOneSplineTimeAcc(${ftype} t,
-                             GLOBAL_MEM ${ftype} *coeffs,
-                             ${ftype} sigma, ${ftype} gamma,
-                             ${ftype} tLL, ${ftype} tUL)
+ftype getOneSplineTimeAcc(const ftype t,
+                             GLOBAL_MEM const ftype *coeffs,
+                             const ftype sigma, const ftype gamma,
+                             const ftype tLL, const ftype tUL)
 {
-
-  ${ftype} c0 = 0;
-  ${ftype} c1 = 0;
-  ${ftype} c2 = 0;
-  ${ftype} c3 = 0;
-  
-  // ${ftype} ta = 0;
-  // ${ftype} tb = 0;
-  // ${ftype} tc = 0;
-  // ${ftype} td = 0;
-  
-
   // Compute pdf value
-  ${ftype} erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
-  ${ftype} fpdf = 1.0; ${ftype} ipdf = 0;
+  ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
+  ftype fpdf = 1.0; ftype ipdf = 0;
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
   fpdf *= calcTimeAcceptance(t, coeffs , tLL, tUL);
 
 
-  //${ftype} integrals[4] = {0., 0., 0., 0.};
+  //ftype integrals[4] = {0., 0., 0., 0.};
   //intgTimeAcceptance(integrals, sigma, gamma, 0, 0, coeffs, 0, tLL, tUL);
 
   // Compute per event normatization
   
-  ${ftype} ti  = 0.0;  ${ftype} tf  =  0.0;
+  ftype ti  = 0.0;  ftype tf  =  0.0;
   for (int k = 0; k < NKNOTS; k++) {
 
     if (k == NKNOTS-1) {
@@ -777,10 +702,10 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
       tf = KNOTS[k+1];
     }
 
-    c0 = getCoeff(coeffs,k,0);
-    c1 = getCoeff(coeffs,k,1);
-    c2 = getCoeff(coeffs,k,2);
-    c3 = getCoeff(coeffs,k,3);
+    ftype c0 = getCoeff(coeffs,k,0);
+    ftype c1 = getCoeff(coeffs,k,1);
+    ftype c2 = getCoeff(coeffs,k,2);
+    ftype c3 = getCoeff(coeffs,k,3);
 
     ipdf += (exp((pow(gamma,2)*pow(sigma,2))/2.)*((c1*(-exp(-(gamma*tf))
     + exp(-(gamma*ti)) -
@@ -866,9 +791,9 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
     // td += get_int_td_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
     
     /*
-    intgTimeAcceptance(${ftype} time_terms[4], ${ftype} delta_t,
-                        ${ftype} G, ${ftype} DG, ${ftype} DM,
-                        GLOBAL_MEM ${ftype} *coeffs, ${ftype} t0, ${ftype} tLL, ${ftype} tUL)
+    intgTimeAcceptance(ftype time_terms[4], ftype delta_t,
+                        ftype G, ftype DG, ftype DM,
+                        GLOBAL_MEM ftype *coeffs, ftype t0, ftype tLL, ftype tUL)
     */
 
     
@@ -891,23 +816,24 @@ ${ftype} getOneSplineTimeAcc(${ftype} t,
 // PDF = conv x sp1 x sp2 //////////////////////////////////////////////////////
 
 WITHIN_KERNEL
-${ftype} getTwoSplineTimeAcc(${ftype} t,
-                             GLOBAL_MEM ${ftype} *coeffs2, GLOBAL_MEM ${ftype} *coeffs1,
-                             ${ftype} sigma, ${ftype} gamma, ${ftype} tLL, ${ftype} tUL)
+ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2, 
+                          GLOBAL_MEM const ftype *coeffs1,
+                          const ftype sigma, const ftype gamma, const ftype tLL,
+                          const ftype tUL)
 {
   // Compute pdf
-  ${ftype} erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
-  ${ftype} fpdf = 1.0;
+  ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
+  ftype fpdf = 1.0;
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2*t) ) * (erf_value);
   fpdf *= calcTimeAcceptance(t, coeffs1, tLL, tUL);
   fpdf *= calcTimeAcceptance(t, coeffs2, tLL, tUL);
 
   // Compute per event normatization
-  ${ftype} ipdf = 0.0; ${ftype} ti  = 0.0;  ${ftype} tf  =  0.0;
-  ${ftype} term1i = 0.0; ${ftype} term2i = 0.0;
-  ${ftype} term1f = 0.0; ${ftype} term2f = 0.0;
+  ftype ipdf = 0.0; ftype ti  = 0.0;  ftype tf  =  0.0;
+  ftype term1i = 0.0; ftype term2i = 0.0;
+  ftype term1f = 0.0; ftype term2f = 0.0;
 
-  // ${ftype} integrals[4] = {0., 0., 0., 0.};
+  // ftype integrals[4] = {0., 0., 0., 0.};
   // intgTimeAcceptance(integrals, sigma, gamma, 0, 0, coeffs, 0, tLL, tUL);
 
   // a_0*b_0
@@ -930,14 +856,14 @@ ${ftype} getTwoSplineTimeAcc(${ftype} t,
       tf = KNOTS[k+1];
     }
 
-    ${ftype} r0 = getCoeff(coeffs1,k,0);
-    ${ftype} r1 = getCoeff(coeffs1,k,1);
-    ${ftype} r2 = getCoeff(coeffs1,k,2);
-    ${ftype} r3 = getCoeff(coeffs1,k,3);
-    ${ftype} b0 = getCoeff(coeffs2,k,0);
-    ${ftype} b1 = getCoeff(coeffs2,k,1);
-    ${ftype} b2 = getCoeff(coeffs2,k,2);
-    ${ftype} b3 = getCoeff(coeffs2,k,3);
+    ftype r0 = getCoeff(coeffs1,k,0);
+    ftype r1 = getCoeff(coeffs1,k,1);
+    ftype r2 = getCoeff(coeffs1,k,2);
+    ftype r3 = getCoeff(coeffs1,k,3);
+    ftype b0 = getCoeff(coeffs2,k,0);
+    ftype b1 = getCoeff(coeffs2,k,1);
+    ftype b2 = getCoeff(coeffs2,k,2);
+    ftype b3 = getCoeff(coeffs2,k,3);
 
     term1i = -((exp(gamma*ti - (ti*(2*gamma*pow(sigma,2) +
     ti))/(2.*pow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*ti)

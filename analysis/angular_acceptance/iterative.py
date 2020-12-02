@@ -335,7 +335,7 @@ if __name__ == '__main__':
       print(f' *  Associating {y}-{t} time acceptance[{i}] from\n    {coeffs[i]}')
       c = Parameters.load(coeffs[i])
       data[y][t].timeacc = Parameters.build(c,c.fetch('c.*'))
-      dtCUT = cuts_and(f"time>={c['tLL'].value} & time<={c['tUL'].value}", CUT)
+      dtCUT = cuts_and(f"time>={tLL} & time<={tUL}", CUT)
       #print(data[y][t])
       data[y][t].chop( trigger_scissors(t, dtCUT) )
       print(data[y][t])
@@ -696,7 +696,7 @@ if __name__ == '__main__':
     print("CHECK_DICT: ", CHECK_DICT)
     print("LIKELIHOODs: ", likelihoods)
 
-    if all(checker):
+    if all(checker) or i > 25:
       print(f"\nDone! Convergence was achieved within {i} iterations")
       for y, dy in data.items(): # loop over years
         for trigger in ['biased','unbiased']:

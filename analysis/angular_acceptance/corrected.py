@@ -10,7 +10,7 @@ __all__ = []
 
 
 ################################################################################
-# % Modules ####################################################################
+# Modules ######################################################################
 
 import argparse
 import os
@@ -109,9 +109,10 @@ if __name__ == '__main__':
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
   true = [f'gen{i}' for i in reco]
-  weight_rd = f'(sw_{VAR})' if VAR else '(sw)'
-  weight_mc = f'(polWeight*{weight_rd}/gb_weights)'
-  print(weight_mc,weight_rd)
+  weight_rd = f'sw_{VAR}' if VAR else 'sw'
+  weight_mc = f'polWeight*{weight_rd}'
+  if 'Bs2JpsiPhi' in MODE:
+    weight += '/gb_weights'
 
   # Allocate some arrays with the needed branches
   mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
@@ -133,7 +134,7 @@ if __name__ == '__main__':
                  target_weight   = rd.df.eval(weight_rd));
   angWeight = reweighter.predict_weights(mc.df[['mHH', 'pB', 'pTB']])
   kinWeight[list(mc.df.index)] = angWeight
-  
+
   print(f"{'idx':>3} | {'sw':>11} | {'polWeight':>11} | {'angWeight':>11} ")
   for i in range(0,100):
     if kinWeight[i] != 0:
@@ -148,7 +149,7 @@ if __name__ == '__main__':
   #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
 
-  angacc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, 
+  angacc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco,
                                      mc.weight*ristra.allocate(angWeight),
                                      **mc.params.valuesdict())
   w, uw, cov, corr = angacc
@@ -156,7 +157,7 @@ if __name__ == '__main__':
   for i in range(0,len(w)):
     correl = {f'w{j}{TRIGGER[0]}': corr[i][j]
               for j in range(0, len(w)) if i > 0 and j > 0}
-    pars.add({'name': f'w{i}{TRIGGER[0]}', 'value': w[i], 'stdev': uw[i], 
+    pars.add({'name': f'w{i}{TRIGGER[0]}', 'value': w[i], 'stdev': uw[i],
               'correl': correl, 'free': False, 'latex': f'w_{i}^{TRIGGER[0]}'})
   print(f" * Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
 
@@ -175,8 +176,7 @@ if __name__ == '__main__':
   with open(args['output_tables'], "w") as tex_file:
     tex_file.write(
       pars.dump_latex(caption=f"""Kinematically corrected angular weights for
-      {YEAR} {TRIGGER} {mode_tex(MODE)}  category."""
-      )
+      {YEAR} {TRIGGER} ${mode_tex(MODE)}$  category.""")
     )
   tex_file.close()
 

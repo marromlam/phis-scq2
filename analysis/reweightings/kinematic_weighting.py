@@ -1,17 +1,15 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+
+
+__author__ = ['Marcos Romero Lamas']
+__email__ = ['mromerol@cern.ch']
+__all__ = ['computekinWeight']
 
 # %% Modules -------------------------------------------------------------------
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 import uproot
-import os, sys
-
 import ast
 import math
-import yaml
 import hjson
 
 ROOT_PANDAS = True
@@ -24,27 +22,27 @@ simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 from hep_ml import reweight
 
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-binned_vars = {'eta':'B_ETA', 'pt':'B_PT', 'sigmat':'sigmat'}
+binned_vars = {'etaB':'B_ETA', 'pTB':'B_PT', 'sigmat':'sigmat'}
 
 def argument_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--original-file', help='File to correct')
-    parser.add_argument('--original-treename', default='DecayTree', help='Name of the original tree')
-    parser.add_argument('--original-vars', help='Names of the branches that will be used for the weighting')
-    parser.add_argument('--original-weight', help='File to store the ntuple with weights')
-    parser.add_argument('--target-file', help='File to reweight to')
-    parser.add_argument('--target-treename', default='DecayTree', help='Name of the target tree')
-    parser.add_argument('--target-vars', help='Names of the branches that will be used for the weighting')
-    parser.add_argument('--target-weight', help='Branches string expression to calc the weight.')
-    parser.add_argument('--output-file', help='Branches string expression to calc the weight.')
-    parser.add_argument('--output-name', default='kinWeight', help='Branches string expression to calc the weight.')
-    parser.add_argument('--n-estimators', default=20, help='Check hep_ml.reweight docs.')
-    parser.add_argument('--learning-rate', default=0.3, help='Check hep_ml.reweight docs.')
-    parser.add_argument('--max-depth', default=3,help='Check hep_ml.reweight docs.')
-    parser.add_argument('--min-samples-leaf', default=1000, help='Check hep_ml.reweight docs.')
-    parser.add_argument('--trunc', default=0, help='Cut value for kinWeight, all kinetic weights lower than trunc will be set to trunc.')
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--original-file', help='File to correct')
+  parser.add_argument('--original-treename', default='DecayTree', help='Name of the original tree')
+  parser.add_argument('--original-vars', help='Names of the branches that will be used for the weighting')
+  parser.add_argument('--original-weight', help='File to store the ntuple with weights')
+  parser.add_argument('--target-file', help='File to reweight to')
+  parser.add_argument('--target-treename', default='DecayTree', help='Name of the target tree')
+  parser.add_argument('--target-vars', help='Names of the branches that will be used for the weighting')
+  parser.add_argument('--target-weight', help='Branches string expression to calc the weight.')
+  parser.add_argument('--output-file', help='Branches string expression to calc the weight.')
+  parser.add_argument('--output-name', default='kinWeight', help='Branches string expression to calc the weight.')
+  parser.add_argument('--n-estimators', default=20, help='Check hep_ml.reweight docs.')
+  parser.add_argument('--learning-rate', default=0.3, help='Check hep_ml.reweight docs.')
+  parser.add_argument('--max-depth', default=3,help='Check hep_ml.reweight docs.')
+  parser.add_argument('--min-samples-leaf', default=1000, help='Check hep_ml.reweight docs.')
+  parser.add_argument('--trunc', default=0, help='Cut value for kinWeight, all kinetic weights lower than trunc will be set to trunc.')
 
-    return parser
+  return parser
 
 # %% Variable extractor class and function -------------------------------------
 
@@ -71,9 +69,10 @@ def computekinWeight(original, target, original_weight, target_weight,
                                      max_depth        = int(max_depth),
                                      min_samples_leaf = int(min_samples_leaf),
                                      gb_args          = {'subsample': 1})
-
-  reweighter.fit(original = original, target = target,
-                 original_weight = original_weight, target_weight = target_weight);
+  print(original_weight)
+  print(target_weight)
+  reweighter.fit(original=original, target=target,
+                 original_weight=original_weight, target_weight=target_weight);
 
   kinWeight = reweighter.predict_weights(original)
 
@@ -94,7 +93,7 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
                         output_file, output_name,
                         n_estimators, learning_rate, max_depth,
                         min_samples_leaf, trunc):
-  print(f"\n{80*'='}\n", "Kinematic weighting", f"\n{80*'='}\n")
+  print(f"\n{80*'='}\nKinematic weighting\n{80*'='}\n")
 
   # %% Build pandas dataframes -------------------------------------------------
   original_vars = original_vars.split()
@@ -115,44 +114,38 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
 
   sws = ['sw']+[f'sw_{var}' for var in binned_vars.keys()]
   kws = ['kinWeight']+[f'kinWeight_{var}' for var in binned_vars.keys()]
-  try:
-    print('Original sWeights')
-    print(ovars_df[sws])
-    print('Target sWeights')
-    print(tvars_df[sws])
-  except:
-    0
+  
+  print('Original sWeights')
+  print(ovars_df[sws])
+  print('Target sWeights')
+  print(tvars_df[sws])
+  
   # %% Reweighting -------------------------------------------------------------
   ovars_df['kinWeight'] = computekinWeight(
-                   ovars_df.get(original_vars),
-                   tvars_df.get(target_vars),
-                   ovars_df.eval(original_weight),
-                   tvars_df.eval(target_weight),
-                   n_estimators,learning_rate,max_depth,min_samples_leaf,
-                   trunc)
-  try:
-    for var,vvar in binned_vars.items():
-      kinWeight = np.zeros_like(ovars_df['kinWeight'].values)
-      for cut in bin_vars[var]:
-        original_weight_binned = original_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
-        target_weight_binned = target_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
-        print("ORIGINAL WEIGHT =", original_weight_binned)
-        print("  TARGET WEIGHT =", target_weight_binned)
-        kinWeight_ = computekinWeight(
-                ovars_df.get(original_vars),
-                tvars_df.get(target_vars),
-                ovars_df.eval(original_weight_binned),
-                tvars_df.eval(target_weight_binned),
-                n_estimators,learning_rate,max_depth,min_samples_leaf,
-                trunc)
-        kinWeight = np.where(ovars_df.eval(cut.replace(var,vvar)), kinWeight_, kinWeight)
-      ovars_df[f'kinWeight_{var}'] = kinWeight
-      print('Original kinWeights')
-      print(ovars_df[kws])
-  except:
-    print('There arent such branches')
-    print('Original kinWeights')
-    print(ovars_df[kws[0]])
+                          ovars_df.get(original_vars),
+                          tvars_df.get(target_vars),
+                          ovars_df.eval(original_weight),
+                          tvars_df.eval(target_weight),
+                          n_estimators,learning_rate,max_depth,min_samples_leaf,
+                          trunc)
+  for var,vvar in binned_vars.items():
+    kinWeight = np.zeros_like(ovars_df['kinWeight'].values)
+    for cut in bin_vars[var]:
+      original_weight_binned = original_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
+      target_weight_binned = target_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
+      print("ORIGINAL WEIGHT =", original_weight_binned)
+      print("  TARGET WEIGHT =", target_weight_binned)
+      kinWeight_ =  computekinWeight(
+                    ovars_df.get(original_vars),
+                    tvars_df.get(target_vars),
+                    ovars_df.eval(original_weight_binned),
+                    tvars_df.eval(target_weight_binned),
+                    n_estimators,learning_rate,max_depth,min_samples_leaf,
+                    trunc)
+      kinWeight = np.where(ovars_df.eval(cut.replace(var,vvar)), kinWeight_, kinWeight)
+    ovars_df[f'kinWeight_{var}'] = kinWeight
+  print('Original kinWeights')
+  print(ovars_df[kws])
 
   # %% Save weights to file ----------------------------------------------------
   print('Writing on %s' % output_file)

@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry}
+
+\usepackage{float}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{multicol}
+\usepackage{graphicx}
+
+\usepackage{readarray,pgffor}
+
+\begin{document}
+
+%\tiny
+
+\foreach \y in {2015,2016}{
+
+\centering v0r0 -- \y -- biased
+\begin{multicols}{3}
+  \input{output/tables/time_acceptance/\y/MC_Bs2JpsiPhi_dG0/v0r1_single_biased.tex}
+  \input{output/tables/time_acceptance/\y/MC_Bd2JpsiKstar/v0r1_single_biased.tex}
+  \input{output/tables/time_acceptance/\y/Bd2JpsiKstar/v0r1_single_biased.tex}
+\end{multicols}
+
+v0r5 - \y - biased
+\begin{multicols}{3}
+  \input{output/tables/time_acceptance/\y/MC_Bs2JpsiPhi_dG0/v0r5_single_biased.tex}
+  \input{output/tables/time_acceptance/\y/MC_Bd2JpsiKstar/v0r5_single_biased.tex}
+  \input{output/tables/time_acceptance/\y/Bd2JpsiKstar/v0r5_single_biased.tex}
+\end{multicols}
+
+\newpage
+
+v0r0 - \y - unbiased
+\begin{multicols}{3}
+  \input{output/tables/time_acceptance/\y/MC_Bs2JpsiPhi_dG0/v0r1_single_unbiased.tex}
+  \input{output/tables/time_acceptance/\y/MC_Bd2JpsiKstar/v0r1_single_unbiased.tex}
+  \input{output/tables/time_acceptance/\y/Bd2JpsiKstar/v0r1_single_unbiased.tex}
+\end{multicols}
+
+v0r5 - \y - unbiased
+\begin{multicols}{3}
+  \input{output/tables/time_acceptance/\y/MC_Bs2JpsiPhi_dG0/v0r5_single_unbiased.tex}
+  \input{output/tables/time_acceptance/\y/MC_Bd2JpsiKstar/v0r5_single_unbiased.tex}
+  \input{output/tables/time_acceptance/\y/Bd2JpsiKstar/v0r5_single_unbiased.tex}
+\end{multicols}
+\newpage
+}
+\end{document}

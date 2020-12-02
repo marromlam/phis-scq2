@@ -47,7 +47,7 @@ if __name__ == '__main__':
   print(parsu)
 
   # Load template
-  json_str = json.dumps(json.load(open(f'bundle/templates/{acceptance}.json')))
+  json_str = json.dumps(json.load(open(f'analysis/bundle/templates/{acceptance}.json')))
 
   # Convert to lists
   if acceptance == 'time_acceptance':
