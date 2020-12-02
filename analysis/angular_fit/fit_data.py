@@ -1,7 +1,8 @@
-#!/home3/marcos.romero/conda3/envs/ipanema3/bin/python
-# -*- coding: utf-8 -*-
+DESCRIPTION = """
+    fit data
+"""
 
-__author__ = ['Marcos Romero']
+__author__ = ['Marcos Romero Lamas']
 __email__  = ['mromerol@cern.ch']
 
 
@@ -50,48 +51,22 @@ tUL = hjson.load(open('config.json'))['tUL']
 def argument_parser():
   parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
   # Samples
-  parser.add_argument('--samples',
-    default = ['/scratch17/marcos.romero/phis_samples/2016/Bs2JpsiPhi/v0r1.root'],
-    help='Bs2JpsiPhi data sample')
+  parser.add_argument('--samples', help='Bs2JpsiPhi data sample')
   # Input parameters
-  parser.add_argument('--angacc-biased',
-    default = ['angular_acceptance/params/2016/Bs2JpsiPhi/v0r0_biased.json'],
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--angacc-unbiased',
-    default = ['angular_acceptance/params/2016/Bs2JpsiPhi/v0r0_unbiased.json'],
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--timeacc-biased',
-    default = ['time_acceptance/params/2016/Bd2JpsiKstar/v0r0_biased.json'],
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--timeacc-unbiased',
-    default = ['time_acceptance/params/2016/Bd2JpsiKstar/v0r0_unbiased.json'],
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--csp',
-    default = ['csp_factors/CSP.json'],
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--time-resolution',
-    default = ['time_resolution/time_resolution.json'],
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--flavor-tagging',
-    default = ['/scratch03/marcos.romero/test_phis_scq/phis-scq/flavor_tagging/flavor_tagging.json'],
-    help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--angacc-biased', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--angacc-unbiased', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--timeacc-biased', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--timeacc-unbiased', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--csp', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--time-resolution', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--flavor-tagging', help='Bs2JpsiPhi MC sample')
   # Output parameters
-  parser.add_argument('--params',
-    default = 'output/angular_fit/params/2016/Bs2JpsiPhi/v0r1_Yearly.json',
-    help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--tables',
-    default = 'output/angular_fit/tables/2016/Bs2JpsiPhi/v0r1_Yearly.tex',
-    help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--params', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--tables', help='Bs2JpsiPhi MC sample')
   # Configuration file ---------------------------------------------------------
-  parser.add_argument('--year',
-    default = '2016',
-    help='Year of data-taking')
-  parser.add_argument('--version',
-    default = 'v0r1',
-    help='Year of data-taking')
-  parser.add_argument('--flag',
-    default = 'v0r1',
-    help='Year of data-taking')
+  parser.add_argument('--year', help='Year of data-taking')
+  parser.add_argument('--version', help='Year of data-taking')
+  parser.add_argument('--flag',help='Year of data-taking')
   parser.add_argument('--blind', default=0, help='Year of data-taking')
   return parser
 
@@ -115,7 +90,8 @@ args = vars(argument_parser().parse_args())
 VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
 YEARS = args['year'].split(',')
 MODE = 'Bs2JpsiPhi'
-ANGACC = args['flag']
+FIT, ANGACC, TIMEACC = args['flag'].split('_')
+
 
 # Prepare the cuts -----------------------------------------------------------
 CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
@@ -125,7 +101,7 @@ for k,v in args.items():
   print(f'{k}: {v}\n')
 
 # %% Load samples --------------------------------------------------------------
-print(f"\n{80*'='}\n"Loading samples"\n{80*'='}\n")
+print(f"\n{80*'='}\nLoading samples\n{80*'='}\n")
 
 # Lists of data variables to load and build arrays
 real  = ['cosK','cosL','hphi','time','mHH','sigmat']
@@ -134,62 +110,72 @@ weight_rd='(sw)'
 
 
 data = {}
-mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   data[y] = {}
   csp = Parameters.load(args['csp'].split(',')[i])
+  mass = np.array(csp.build(csp, csp.find('mKK.*')))
   csp = csp.build(csp,csp.find('CSP.*'))
   flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
   resolution = Parameters.load(args['time_resolution'].split(',')[i])
-  for t, in ['biased','unbiased']:
-    print(f" *  Loading {y} sample in {t} category\n    {args['samples'].split(',')[i]}")
+  badjanak.config['x_m'] = mass.tolist()
+  for t in ['biased','unbiased']:
     tc = trigger_scissors(t, CUT)
-    data[y][f'{t}'] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
-    data[y][f'{t}'].csp = csp
-    data[y][f'{t}'].flavor = flavor
-    data[y][f'{t}'].resolution = resolution
+    data[y][t] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
+    data[y][t].name = f"Bs2JpsiPhi-{y}-{t}"
+    data[y][t].csp = csp
+    data[y][t].flavor = flavor
+    data[y][t].resolution = resolution
+    # Time acceptance
     c = Parameters.load(args[f'timeacc_{t}'].split(',')[i])
     knots = np.array(Parameters.build(c,c.fetch('k.*')))
+    print(knots)
     badjanak.config['knots'] = knots.tolist()
-    data[y][f'{t}'].timeacc = Parameters.build(c,c.fetch('c.*'))
+    # Angular acceptance
+    data[y][t].timeacc = Parameters.build(c,c.fetch('c.*'))
     w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
-    data[y][f'{t}'].angacc = Parameters.build(w,w.fetch('w.*'))
-    print(data[y][f'{t}'])
-  
-  for d in [data[y]['biased'],data[y]['unbiased']]:
-    sw = np.zeros_like(d.df['sw'])
+    data[y][t].angacc = Parameters.build(w,w.fetch('w.*'))
+    print(data[y][t])
+    # Normalize sWeights per bin
+    sw = np.zeros_like(data[y][t].df['sw'])
     for l,h in zip(mass[:-1],mass[1:]):
-      pos = d.df.eval(f'mHH>={l} & mHH<{h}')
-      this_sw = d.df.eval(f'sw*(mHH>={l} & mHH<{h})')
+      pos = data[y][t].df.eval(f'mHH>={l} & mHH<{h}')
+      this_sw = data[y][t].df.eval(f'sw*(mHH>={l} & mHH<{h})')
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
-    d.df['sWeight'] = sw
-    d.allocate(input=real,weight='sWeight',output='0*time')
+    data[y][t].df['sWeight'] = sw
+    print(sw)
+    data[y][t].allocate(input=real,weight='sWeight',output='0*time')
 
-# compile the kernel
+# Compile the kernel
 #    so if knots change when importing parameters, the kernel is compiled
 badjanak.get_kernels(True)
 
 # Prepare parameters
 SWAVE = True
+if 'Pwave' in FIT:
+  SWAVE = False
 DGZERO = False
+if 'DGzero' in FIT:
+  DGZERO = True
 POLDEP = False
+if 'Poldep' in FIT:
+  POLDEP = True
 BLIND = args['blind']
 
 pars = Parameters()
 list_of_parameters = [#
 # S wave fractions
-Parameter(name='fSlon1', value=SWAVE*0.2, min=0.00, max=0.80,
+Parameter(name='fSlon1', value=SWAVE*0.2, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{1}'),
-Parameter(name='fSlon2', value=SWAVE*0.2, min=0.00, max=0.80,
+Parameter(name='fSlon2', value=SWAVE*0.2, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{2}'),
-Parameter(name='fSlon3', value=SWAVE*0.2, min=0.00, max=0.80,
+Parameter(name='fSlon3', value=SWAVE*0.2, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{3}'),
-Parameter(name='fSlon4', value=SWAVE*0.2, min=0.00, max=0.80,
+Parameter(name='fSlon4', value=SWAVE*0.2, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{4}'),
-Parameter(name='fSlon5', value=SWAVE*0.2, min=0.00, max=0.80,
+Parameter(name='fSlon5', value=SWAVE*0.2, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{5}'),
-Parameter(name='fSlon6', value=SWAVE*0.2, min=0.00, max=0.80,
+Parameter(name='fSlon6', value=SWAVE*0.2, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{6}'),
 # P wave fractions
 Parameter(name="fPlon", value=0.5241, min=0.4, max=0.6,
@@ -197,20 +183,21 @@ Parameter(name="fPlon", value=0.5241, min=0.4, max=0.6,
 Parameter(name="fPper", value=0.25, min=0.1, max=0.3,
           free=True, latex=r'f_{\perp}'),
 # Weak phases
-Parameter(name="pSlon", value= 0.00, min=-1.0, max=1.0,
+Parameter(name="pSlon", value= 0.00, min=-3.0, max=3.0,
           free=POLDEP, latex=r"\phi_S - \phi_0",
           blindstr="BsPhisSDelFullRun2",
           blind=BLIND, blindscale=2.0, blindengine="root"),
-Parameter(name="pPlon", value=-0.03, min=-1.0, max=1.0,
+Parameter(name="pPlon", value=-0.03, min=-3.0, max=3.0,
           free=True, latex=r"\phi_0",
           blindstr="BsPhiszeroFullRun2" if POLDEP else "BsPhisFullRun2",
           blind=BLIND, blindscale=2.0 if POLDEP else 1.0, blindengine="root"),
-Parameter(name="pPpar", value= 0.00, min=-1.0, max=1.0,
+Parameter(name="pPpar", value= 0.00, min=-3.0, max=3.0,
           free=POLDEP, latex=r"\phi_{\parallel} - \phi_0",
           blindstr="BsPhisparaDelFullRun2",
           blind=BLIND, blindscale=2.0, blindengine="root"),
-Parameter(name="pPper", value= 0.00, min=-1.0, max=1.0,
-          free=POLDEP, blindstr="BsPhisperpDelFullRun2", blind=BLIND, blindscale=2.0, blindengine="root", latex=r"\phi_{\perp} - \phi_0"),
+Parameter(name="pPper", value= 0.00, min=-3.0, max=3.0,
+          free=POLDEP, blindstr="BsPhisperpDelFullRun2", blind=BLIND, 
+          blindscale=2.0, blindengine="root", latex=r"\phi_{\perp} - \phi_0"),
 # S wave strong phases
 Parameter(name='dSlon1', value=+np.pi/4*SWAVE, min=-0.0, max=+3.0,
           free=SWAVE, latex="\delta_S^{1} - \delta_{\perp}"),
@@ -232,21 +219,25 @@ Parameter(name="dPpar", value=3.26, min=-2*3.14, max=2*3.14,
 Parameter(name="dPper", value=3.1, min=-2*3.14, max=2*3.14,
           free=True, latex="\delta_{\perp} - \delta_0"),
 # lambdas
-Parameter(name="lSlon", value=1., min=0.7, max=1.6,
+Parameter(name="lSlon", value=1., min=0.4, max=1.6,
           free=POLDEP, latex="\lambda_S/\lambda_0"),
-Parameter(name="lPlon", value=1., min=0.7, max=1.6,
+Parameter(name="lPlon", value=1., min=0.4, max=1.6,
           free=True,  latex="\lambda_0"),
-Parameter(name="lPpar", value=1., min=0.7, max=1.6,
+Parameter(name="lPpar", value=1., min=0.4, max=1.6,
           free=POLDEP, latex="\lambda_{\parallel}/\lambda_0"),
-Parameter(name="lPper", value=1., min=0.7, max=1.6,
+Parameter(name="lPper", value=1., min=0.4, max=1.6,
           free=POLDEP, latex="\lambda_{\perp}/\lambda_0"),
 # lifetime parameters
 Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
           free=False, latex=r"\Gamma_d"),
 Parameter(name="DGs", value= (1-DGZERO)*0.1, min= 0.0, max= 1.7,
-          free=1-DGZERO, blindstr="BsDGsFullRun2", blind=BLIND, blindscale=1.0, blindengine="root", latex=r"\Delta\Gamma_s"),
-Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1, latex=r"\Gamma_s - \Gamma_d"),
-Parameter(name="DM", value=17.757,   min=15.0, max=20.0, latex=r"\Delta m"),
+          free=1-DGZERO,  latex=r"\Delta\Gamma_s",
+          blindstr="BsDGsFullRun2", 
+          blind=BLIND, blindscale=1.0, blindengine="root"),
+Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1, 
+          free=True, latex=r"\Gamma_s - \Gamma_d"),
+Parameter(name="DM", value=17.757,   min=15.0, max=20.0, 
+          free=True, latex=r"\Delta m"),
 Parameter("eta_os", value = data[str(YEARS[0])]['unbiased'].flavor['eta_os'].value,
           free = False),
 Parameter("eta_ss", value = data[str(YEARS[0])]['unbiased'].flavor['eta_ss'].value, free = False),
@@ -262,24 +253,6 @@ Parameter("dp1_ss", value = data[str(YEARS[0])]['unbiased'].flavor['dp1_ss'].val
 
 pars.add(*list_of_parameters);
 print(pars)
-'''
-tagging_pars = Parameters()
-list_tagging_parameters = [
-  # tagging parameters - currently set to the same values for all years!!!
-  Parameter("eta_os", value = data[str(YEARS[0])]['unbiased'].flavor['eta_os'].value, free = False),
-  Parameter("eta_ss", value = data[str(YEARS[0])]['unbiased'].flavor['eta_ss'].value, free = False),
-  Parameter("p0_os",  value = data[str(YEARS[0])]['unbiased'].flavor['p0_os'].value,  free = True, min =  0.0, max = 1.0, latex = "p^{\rm OS}_{0}"),
-  Parameter("p1_os",  value = data[str(YEARS[0])]['unbiased'].flavor['p1_os'].value,  free = True, min =  0.5, max = 1.5, latex = "p^{\rm OS}_{1}"),
-  Parameter("p0_ss",  value = data[str(YEARS[0])]['unbiased'].flavor['p0_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{0}"),
-  Parameter("p1_ss",  value = data[str(YEARS[0])]['unbiased'].flavor['p1_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{1}"),
-  Parameter("dp0_os", value = data[str(YEARS[0])]['unbiased'].flavor['dp0_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{0}"),
-  Parameter("dp1_os", value = data[str(YEARS[0])]['unbiased'].flavor['dp1_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{1}"),
-  Parameter("dp0_ss", value = data[str(YEARS[0])]['unbiased'].flavor['dp0_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{0}"),
-  Parameter("dp1_ss", value = data[str(YEARS[0])]['unbiased'].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"),
-]
-tagging_pars.add(*list_tagging_parameters)
-print(tagging_pars)
-'''
 
 
 
@@ -363,14 +336,17 @@ def fcn_data(parameters, data):
 
   chi2 = []
   for y, dy in data.items():
-    trigCats = [dy['biased'],dy['unbiased']]
-    for dt in trigCats:
-
-      wrapper_fcn(dt.input, dt.output, **pars_dict,
-                  **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
-                  **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  #**dt.flavor.valuesdict(),
-                  tLL=tLL, tUL=tUL)
+    for t, dt in dy.items():
+      badjanak.delta_gamma5_data(
+          dt.input, dt.output, **pars_dict,
+          **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
+          **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
+          #**dt.flavor.valuesdict(),
+          tLL=tLL, tUL=tUL,
+          use_fk=1, use_angacc=1, use_timeacc=1,
+          use_timeoffset=0, set_tagging=1, use_timeres=1,
+          BLOCK_SIZE=256
+      )
       chi2.append( -2.0 * (ristra.log(dt.output) * dt.weight).get() );
 
   chi2conc =  np.concatenate(chi2)
@@ -380,7 +356,8 @@ def fcn_data(parameters, data):
   #for i in range(len(chi2conc)): chi2conc[i] += chi2TagConstr
 
   #print(chi2TagConstr)
-  return chi2conc + chi2TagConstr#np.concatenate(chi2)
+  #print( np.nan_to_num(chi2conc + chi2TagConstr, 0, 100, 100).sum() )
+  return chi2conc + chi2TagConstr #np.concatenate(chi2)
 
 
 
@@ -452,8 +429,8 @@ print(f"\n")
 #%% Run and get the job done ###################################################
 
 print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
-result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
-                  verbose=True, timeit=True, tol=0.1, strategy=2)
+result = optimize(fcn_data, method='Nelder', params=pars, fcn_kwgs={'data':data},
+                  verbose=False, timeit=True, tol=0.1, strategy=2)
 
 
 
