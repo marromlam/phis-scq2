@@ -109,9 +109,8 @@ if __name__ == '__main__':
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
   true = [f'gen{i}' for i in reco]
-  weight_rd = f'(sw_{VAR})' if VAR else '(sw)'
-  weight_mc = f'(polWeight*{weight_rd}/gb_weights)'
-  print(weight_mc,weight_rd)
+  if 'Bs2JpsiPhi' in MODE:
+    weight += '/gb_weights'
 
   # Allocate some arrays with the needed branches
   mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])

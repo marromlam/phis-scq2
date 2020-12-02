@@ -84,17 +84,9 @@ if __name__ == '__main__':
 
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
-  true = ['true'+i+'_GenLvl' for i in reco]
-  weight='(polWeight*sw/gb_weights)'
-  #weight='(sw/gb_weights)'
-
-  # Select trigger
-  if TRIGGER == 'biased':
-    trigger = 'biased'; weight += '*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==0)'
-  elif TRIGGER == 'unbiased':
-    trigger = 'unbiased'; weight += '*(Jpsi_Hlt1DiMuonHighMassDecision_TOS==1)'
-  elif TRIGGER == 'combined':
-    trigger = 'combined';
+  if 'Bs2JpsiPhi' in MODE:
+    weight += '/gb_weights'
+  print(weight)
 
   # Allocate some arrays with the needed branches
   try:
