@@ -139,7 +139,10 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   a = params.build(params, params.find('a.*')) if params.find('a.*') else None
   b = params.build(params, params.find('b.*')) if params.find('b.*') else None
   c = params.build(params, params.find('c.*')) if params.find('c.*') else None
-  #
+  knots = np.array(params.build(params, params.find('k.*'))).tolist()
+  badjanak.config['knots'] = knots
+  badjanak.get_kernels(True)
+  
   # exit()
   if 'BsMC' in mode:
     list_coeffs = list(a.keys())
