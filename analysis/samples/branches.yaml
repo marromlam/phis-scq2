@@ -83,6 +83,10 @@ Bd2JpsiKstar: &Bd2JpsiKstar
   "kinWeight_etaB" : "kinWeight_etaB"
   "kinWeight_sigmat" : "kinWeight_sigmat"
   "kinWeight_pTB" : "kinWeight_pTB"
+  "tagOSdec" : "0*time"
+  "tagSSdec" : "0*time"
+  "tagOSeta" : "0*time"
+  "tagSSeta" : "0*time"
 
 Bu2JpsiKplus:
   <<: *common

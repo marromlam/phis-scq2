@@ -430,16 +430,16 @@ rule angular_acceptance_iterativeRun2Bd:
     sample_data = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar',year='Run2'),
     # Angular acceptance at corrected level
     angacc_biased = [
-      'output/params/angular_acceptance/2015/Bd2JpsiKstar/{version}_corrected_biased.json',
-      'output/params/angular_acceptance/2016/Bd2JpsiKstar/{version}_corrected_biased.json',
-      'output/params/angular_acceptance/2017/Bd2JpsiKstar/{version}_corrected_biased.json',
-      'output/params/angular_acceptance/2018/Bd2JpsiKstar/{version}_corrected_biased.json'
+      'output/params/angular_acceptance/2015/MC_Bd2JpsiKstar/{version}_corrected_biased.json',
+      'output/params/angular_acceptance/2016/MC_Bd2JpsiKstar/{version}_corrected_biased.json',
+      'output/params/angular_acceptance/2017/MC_Bd2JpsiKstar/{version}_corrected_biased.json',
+      'output/params/angular_acceptance/2018/MC_Bd2JpsiKstar/{version}_corrected_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bd2JpsiKstar/{version}_corrected_unbiased.json',
-      'output/params/angular_acceptance/2016/Bd2JpsiKstar/{version}_corrected_unbiased.json',
-      'output/params/angular_acceptance/2017/Bd2JpsiKstar/{version}_corrected_unbiased.json',
-      'output/params/angular_acceptance/2018/Bd2JpsiKstar/{version}_corrected_unbiased.json'
+      'output/params/angular_acceptance/2015/MC_Bd2JpsiKstar/{version}_corrected_unbiased.json',
+      'output/params/angular_acceptance/2016/MC_Bd2JpsiKstar/{version}_corrected_unbiased.json',
+      'output/params/angular_acceptance/2017/MC_Bd2JpsiKstar/{version}_corrected_unbiased.json',
+      'output/params/angular_acceptance/2018/MC_Bd2JpsiKstar/{version}_corrected_unbiased.json'
     ],
     # Time acceptance coefficients
     timeacc_biased = [
@@ -468,13 +468,13 @@ rule angular_acceptance_iterativeRun2Bd:
       f'output/params/time_resolution/2017/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
       f'output/params/time_resolution/2018/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json'
     ],
-    # Flavor tagging
+    #Flavour tagging
     flavor = lambda wcs: [
       f'output/params/flavor_tagging/2015/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
       f'output/params/flavor_tagging/2016/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
       f'output/params/flavor_tagging/2017/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
       f'output/params/flavor_tagging/2018/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json'
-    ]
+    ],
   params:
     params_std = [
       'analysis/params/generator/2015/MC_Bd2JpsiKstar.json',
@@ -514,10 +514,10 @@ rule angular_acceptance_iterativeRun2Bd:
       SAMPLES_PATH+'2018/MC_Bd2JpsiKstar/{version}_{angacc}_{timeacc}_kkpWeight.root',
     ],
   log:
-    'output/log/angular_acceptance_iterative/{angacc}/Bs2JpsiPhi/{version}_base_{timeacc}.log'
+    'output/log/angular_acceptance_iterative/run2/Bd2JpsiKstar/{version}_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
-    python analysis/angular_acceptance/iterative.py\
+    python analysis/angular_acceptance/iterative_Bd.py\
            --sample-mc-std           {",".join(input.sample_std)}\
            --sample-data             {",".join(input.sample_data)}\
            --params-mc-std           {",".join(params.params_std)}\
@@ -537,7 +537,7 @@ rule angular_acceptance_iterativeRun2Bd:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) &> {log}""")
+    ) #&> {log}""")
     send_mail(f"Angular Acceptance Run2 Bd :: {wildcards}", f"{log}")
 
 

@@ -106,6 +106,7 @@ print(f"\n{80*'='}\nLoading samples\n{80*'='}\n")
 # Lists of data variables to load and build arrays
 real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']      # tagging
+
 weight_rd='(sw)'
 
 

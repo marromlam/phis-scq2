@@ -1,4 +1,20 @@
+rule get_csp_from_gitBd:
+  params:
+    repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
+  output:
+    params = "output/params/csp_factors/{year}/Bd2JpsiKstar/{version}.json",
+  run:
+    import os
+    import hjson
+    from ipanema import Parameters
 
+    year = f"{wildcards.year}"
+    version = f"{wildcards.version}"
+
+    params = Parameters.load(f'analysis/params/v0r0/Bd2JpsiKstar/csp_factors/CSP.json')
+    #print(params)
+    params.dump(f"{output.params}")
+    #print(f'Dumping parameters to {output.params}')
 
 
 rule get_csp_from_git:
@@ -17,7 +33,7 @@ rule get_csp_from_git:
     version = f"{wildcards.version}"
 
     if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
-      params = Parameters.load(f'analysis/params/v0r0/csp_factors/CSP.json')
+      params = Parameters.load(f'analysis/params/v0r0/Bs2JpsiPhi/csp_factors/CSP.json')
       print(params)
       params.dump(f"{output.params}")
       print(f'Dumping parameters to {output.params}')

@@ -4,7 +4,6 @@ __author__ = ['Marcos Romero']
 __email__  = ['mromerol@cern.ch']
 
 
-
 ################################################################################
 # %% Modules ###################################################################
 
@@ -23,12 +22,10 @@ initialize(os.environ['IPANEMA_BACKEND'],1)
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
 from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
-
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
-
 # get badjanak and compile it with corresponding flags
 import badjanak
 badjanak.config['fast_integral'] = 0
@@ -42,6 +39,7 @@ simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 from hep_ml import reweight
 bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
 reweighter = reweight.GBReweighter(**bdconfig)
+
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
 # Parse arguments for this script
@@ -104,9 +102,12 @@ if __name__ == '__main__':
   mc.assoc_params(args['input_params'])
   kinWeight = np.zeros_like(list(mc.df.index)).astype(np.float64)
   mc.chop(trigger_scissors(TRIGGER, CUT))
+  print(mc.df[['X_M', 'B_P', 'B_PT']])
   # Load corresponding data sample
   rd = Sample.from_root(args['sample_data'], share=SHARE, name='data')
   rd.chop(trigger_scissors(TRIGGER, CUT))
+  print(rd.df[['X_M', 'B_P', 'B_PT']])
+  exit()
 
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
@@ -115,7 +116,6 @@ if __name__ == '__main__':
   weight_rd = f'(sw_{VAR})' if VAR else '(sw)'
   weight_mc = f'(polWeight*{weight_rd}/gb_weights)'
   print(weight_mc,weight_rd)
-
   # Allocate some arrays with the needed branches
   mc.allocate(reco=reco+['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time'])
   mc.allocate(true=true+['X_M', '0*sigmat', 'B_ID_GenLvl', 'B_ID_GenLvl', '0*time', '0*time'])
@@ -134,7 +134,7 @@ if __name__ == '__main__':
                  target_weight   = rd.df.eval(weight_rd));
   angWeight = reweighter.predict_weights(mc.df[['X_M', 'B_P', 'B_PT']])
   kinWeight[list(mc.df.index)] = angWeight
-  
+
   print(f"{'idx':>3} | {'sw':>11} | {'polWeight':>11} | {'angWeight':>11} ")
   for i in range(0,100):
     if kinWeight[i] != 0:
@@ -147,7 +147,7 @@ if __name__ == '__main__':
   #     variables
   print(" * Computing angular weights")
 
-  angacc = badjanak.get_angular_cov(mc.true, mc.reco, 
+  angacc = badjanak.get_angular_cov(mc.true, mc.reco,
                                      mc.weight*ristra.allocate(angWeight),
                                      **mc.params.valuesdict())
 

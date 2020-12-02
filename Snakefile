@@ -73,7 +73,7 @@ include: 'analysis/angular_acceptance/Snakefile'
 include: 'analysis/angular_fit/Snakefile'
 include: 'analysis/bundle/Snakefile'
 include: 'analysis/params/Snakefile'
-include: 'analysis/toys/Snakefile'
+#include: 'analysis/toys/Snakefile'
 
 
 # Final rule (compile slides) --------------------------------------------------

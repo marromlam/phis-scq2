@@ -1,0 +1,105 @@
+{
+  mKK0:
+  {
+    name: mKK0
+    value: 990
+    free: false
+    latex: m_{KK}^{0}
+  }
+  mKK1:
+  {
+    name: mKK1
+    value: 1008
+    free: false
+    latex: m_{KK}^{1}
+  }
+  mKK2:
+  {
+    name: mKK2
+    value: 1016
+    free: false
+    latex: m_{KK}^{2}
+  }
+  mKK3:
+  {
+    name: mKK3
+    value: 1020
+    free: false
+    latex: m_{KK}^{3}
+  }
+  mKK4:
+  {
+    name: mKK4
+    value: 1024
+    free: false
+    latex: m_{KK}^{4}
+  }
+  mKK5:
+  {
+    name: mKK5
+    value: 1032
+    free: false
+    latex: m_{KK}^{5}
+  }
+  mKK6:
+  {
+    name: mKK6
+    value: 1050
+    free: false
+    latex: m_{KK}^{6}
+  }
+  CSP1:
+  {
+    name: CSP1
+    value: 0.8463//0.867156706942
+    free: false
+    min: 0
+    max: 1
+    latex: C_{SP}^{1}
+  }
+  CSP2:
+  {
+    name: CSP2
+    value: 0.8756//0.928090569491
+    free: false
+    min: 0
+    max: 1
+    latex: C_{SP}^{2}
+  }
+  CSP3:
+  {
+    name: CSP3
+    value: 0.8478//0.905475343928
+    free: false
+    min: 0
+    max: 1
+    latex: C_{SP}^{3}
+  }
+  CSP4:
+  {
+    name: CSP4
+    value: 0.8833//0.948485509571
+    free: false
+    min: 0
+    max: 1
+    latex: C_{SP}^{4}
+  }
+  CSP5:
+  {
+    name: CSP5
+    value: 0.9415//0.973371863935
+    free: false
+    min: 0
+    max: 1
+    latex: C_{SP}^{5}
+  }
+  CSP6:
+  {
+    name: CSP6
+    value: 0.9756//0.983967674912
+    free: false
+    min: 0
+    max: 1
+    latex: C_{SP}^{6}
+  }
+}

@@ -141,7 +141,7 @@ if __name__ == '__main__':
     cats[mode].allocate(time='time', lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
-
+    print(cats[mode])
     # Add knots
     cats[mode].knots = Parameters()
     cats[mode].knots.add(*[
@@ -183,7 +183,6 @@ if __name__ == '__main__':
   # Configure kernel -----------------------------------------------------------
   fcns.badjanak.config['knots'] = knots[:-1]
   fcns.badjanak.get_kernels(True)
-
 
 
   # Time to fit ----------------------------------------------------------------

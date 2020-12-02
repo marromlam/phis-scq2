@@ -323,7 +323,9 @@ def parser_rateBs(
 ################################################################################
 # wrappers arround delta_gamma5 ################################################
 
-def delta_gamma5_data(input, output, **pars):
+def delta_gamma5_data(input, output, use_fk=1, use_angacc = 1, use_timeacc = 1,
+use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
+BLOCK_SIZE=256, **pars):
   """
   delta_gamma5_data(input, output, **pars)
   This function is intended to be used with RD input arrays. It does use
@@ -345,9 +347,9 @@ def delta_gamma5_data(input, output, **pars):
   """
   p = parser_rateBs(**pars)
   delta_gamma5( input, output,
-                         use_fk=1, use_angacc = 1, use_timeacc = 1,
-                         use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
-                         BLOCK_SIZE=256, **p)
+                         use_fk=use_fk, use_angacc = use_angacc, use_timeacc = use_timeacc,
+                         use_timeoffset = use_timeoffset, set_tagging = set_tagging, use_timeres = use_timeres,
+                         BLOCK_SIZE=BLOCK_SIZE, **p)
 
 
 
