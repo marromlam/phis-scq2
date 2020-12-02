@@ -20,12 +20,12 @@ common: &common
   "etaB" : "B_ETA"
   "evtN" : "eventNumber"
   "sw" : "sw"
-  "sw_etaB" : "sw_eta"
-  "sw_pTB" : "sw_pt"
+  "sw_etaB" : "sw_etaB"
+  "sw_pTB" : "sw_pTB"
   "sw_sigmat" : "sw_sigmat"
   "sWeight" : "sw"
-  "sWeight_etaB" : "sw_eta"
-  "sWeight_pTB" : "sw_pt"
+  "sWeight_etaB" : "sw_etaB"
+  "sWeight_pTB" : "sw_pTB"
   "sWeight_sigmat" : "sw_sigmat"
   "logIPChi2B" : "log_B_IPCHI2_mva"
 
@@ -41,9 +41,9 @@ MC_common: &MC_common
   "gencosL" : "truehelcosthetaL_GenLvl"
   "genhphi" : "truehelphi_GenLvl"
   "kinWeight" : "kinWeight"
-  "kinWeight_etaB" : "kinWeight_eta"
+  "kinWeight_etaB" : "kinWeight_etaB"
   "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pTB" : "kinWeight_pt"
+  "kinWeight_pTB" : "kinWeight_pTB"
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "bkgcatB" : "B_BKGCAT"
@@ -80,9 +80,9 @@ Bs2JpsiPhi: &Bs2JpsiPhi
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
   "kinWeight" : "kinWeight"
-  "kinWeight_etaB" : "kinWeight_eta"
+  "kinWeight_etaB" : "kinWeight_etaB"
   "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pTB" : "kinWeight_pt"
+  "kinWeight_pTB" : "kinWeight_pTB"
 
 Bu2JpsiKplus:
   <<: *common
