@@ -155,7 +155,7 @@ void pyrateBd(GLOBAL_MEM ftype *data, GLOBAL_MEM ftype *lkhd,
 
 
   ftype mass = data[evt*10+4];
-  ftype data4[9] = {{data[evt*10+0], // cosK
+  ftype data4[9] = {data[evt*10+0], // cosK
                           data[evt*10+1], // cosL
                           data[evt*10+2], // hphi
                           data[evt*10+3], // time
@@ -164,7 +164,7 @@ void pyrateBd(GLOBAL_MEM ftype *data, GLOBAL_MEM ftype *lkhd,
                           data[evt*10+7], // qSS
                           data[evt*10+8], // etaOS
                           data[evt*10+9]  // etaSS
-                        }};
+                        };
 
   unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
   lkhd[evt] = getDiffRateBd(data4,

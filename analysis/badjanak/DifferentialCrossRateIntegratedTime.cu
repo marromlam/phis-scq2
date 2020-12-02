@@ -71,8 +71,8 @@ ftype getDiffRateBd( ftype *data,
       fk = TRISTAN[k-1];
     }
     ak = getAbd(ASlon, APlon, APpar, APper, dSlon, dPpar, dPpar, dPper, CSP, k);
-    //norm += angular_weights[k-1]*ak;
-    norm += TRISTAN[k-1]*ak;
+    norm += angular_weights[k-1]*ak;
+    //norm += TRISTAN[k-1]*ak;
     if ( (k==4) || (k==6)  || (k==9) )
     {
       pdfB += id*fk*ak;

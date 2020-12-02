@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
   # Load samples ---------------------------------------------------------------
   printsec('Loading category')
-  
+
   mc = Sample.from_root(args['sample'], share=SHARE, name=MODE)
   mc.assoc_params(args['input_params'].replace('TOY','MC'))
   mc.chop(trigger_scissors(TRIGGER, CUT))
@@ -108,7 +108,6 @@ if __name__ == '__main__':
   weight = f'polWeight*sw_{VAR}' if VAR else 'polWeight*sw'
   if 'Bs2JpsiPhi' in MODE:
     weight += '/gb_weights'
-  print(weight)
 
   # Allocate some arrays with the needed branches
   try:
@@ -132,7 +131,7 @@ if __name__ == '__main__':
   badjanak.get_kernels(True)
 
   print('Computing angular weights')
-  w, uw, cov, corr = badjanak.get_angular_acceptance_weights(
+  w, uw, cov, corr = badjanak.get_angular_acceptance_weights_Bd(
               mc.true, mc.reco, mc.weight, **mc.params.valuesdict(), tLL=tLL, tUL=tUL
             )
   pars = Parameters()

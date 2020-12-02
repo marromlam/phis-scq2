@@ -253,7 +253,7 @@ def parser_rateBs(
       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
       # Time-dependent angular distribution
       #cambiado ramon
-      fSlon = 0.00, fPpar =  0.200,                 fPper = 0.50,
+      fSlon = 0.00, fPlon =  0.600,                 fPper = 0.50,
       dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
       pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
       lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
@@ -300,16 +300,15 @@ def parser_rateBs(
   # Compute fractions of S and P wave objects
   FP = abs(1-fSlon)
   r['ASlon'] = ipanema.ristra.sqrt( fSlon )
-  #r['APlon'] = ipanema.ristra.sqrt( FP*fPlon ) ramon
+  r['APlon'] = ipanema.ristra.sqrt( FP*fPlon )
   r['APper'] = ipanema.ristra.sqrt( FP*fPper )
-  r['APpar'] = ipanema.ristra.sqrt( FP*fPpar)
-  r['APlon'] = ipanema.ristra.sqrt( FP*abs(1-fPpar-fPper) )
+  r['APpar'] = ipanema.ristra.sqrt( FP*abs(1-fPlon-fPper))
 
   # Strong phases
   r['dPlon'] = dPlon
   r['dPper'] = dPper + r['dPlon']
   r['dPpar'] = dPpar + r['dPlon']
-  r['dSlon'] = dSlon #+ r['dPper']
+  r['dSlon'] = dSlon + r['dPper']
 
   # Weak phases
   r['pPlon'] = pPlon
@@ -423,7 +422,7 @@ BLOCK_SIZE=256, **pars):
   Out:
          void
   """
-  p = cross_rate_parser_new(**pars)
+  p = parser_rateBs(**pars)
   delta_gamma5Bd( input, output,
                          use_fk=use_fk, use_angacc = use_angacc, use_timeacc = use_timeacc,
                          use_timeoffset = use_timeoffset, set_tagging = set_tagging, use_timeres = use_timeres,
@@ -475,7 +474,7 @@ def delta_gamma5_mc_Bd(input, output, use_fk=1, **pars):
   Out:
          void
   """
-  p = cross_rate_parser_new(**pars)
+  p = parser_rateBs(**pars)
   delta_gamma5Bd( input, output,
                          use_fk=use_fk, use_angacc = 0, use_timeacc = 0,
                          use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
@@ -557,10 +556,10 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
   # Define the computation core function
   def get_weights_Bd(true, reco, weight):
     pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc_Bd(true, pdf, use_fk=0, **parameters); den = pdf.get()
+    delta_gamma5_mc_Bd(true, pdf, use_fk=0, **parameters); num = pdf.get()
     pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc_Bd(true, pdf, use_fk=1, **parameters); num = pdf.get()
-    fk = get_fk(true.get()[:,0:3])
+    delta_gamma5_mc_Bd(true, pdf, use_fk=1, **parameters); den = pdf.get()
+    fk = get_fk(reco.get()[:,0:3])
     ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
     return ang_acc
 
@@ -593,6 +592,7 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
     for j in range(0,cov.shape[1]):
       corr[i,j] = final_cov[i][j]/np.sqrt(final_cov[i][i]*final_cov[j][j])
   return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr
+
 
 
 
