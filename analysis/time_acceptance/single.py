@@ -41,6 +41,7 @@ def argument_parser():
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--trigger', help='Trigger to fit')
   p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--contour', help='Different flag to ... ')
   return p
 
 if __name__ != '__main__':
@@ -78,7 +79,7 @@ if __name__ == '__main__':
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'timeacc':>15}: {TIMEACC:50}")
-  print(f"{'minimizer':>15}: {MINER:50}\n")
+  print(f"{'contour':>15}: {args['contour']:50}\n")
 
   # List samples, params and tables
   samples = args['samples'].split(',')
@@ -198,6 +199,23 @@ if __name__ == '__main__':
     result = optimize(fcn_call=splinexerf, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                       method=MINER, verbose=False)
   print(result)
+
+
+
+  # Do contours or scans if asked ----------------------------------------------
+  if args['contour'] != "0":
+    if len(args['contour'].split('vs'))>1:
+      fig, ax = plot_conf2d(mini, result, args['contour'].split('vs'), size=(50,50))
+      fig.savefig(cats[mode].tabs_path.replace('tables','figures').replace('.tex', f"_contour{args['contour']}.pdf"))
+    else:
+      import matplotlib.pyplot as plt
+      # x, y = result._minuit.profile(args['contour'], bins=100, bound=5, subtract_min=True)
+      # fig, ax = plotting.axes_plot()
+      # ax.plot(x,y,'-')
+      # ax.set_xlabel(f"${result.params[ args['contour'] ].latex}$")
+      # ax.set_ylabel(r"$L-L_{\mathrm{opt}}$")
+      result._minuit.draw_mnprofile(args['contour'], bins=30, bound=1, subtract_min=True, band=True, text=True)
+      plt.savefig(cats[mode].tabs_path.replace('tables', 'figures').replace('.tex', f"_contour{args['contour']}.pdf"))
 
 
 
