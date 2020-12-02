@@ -110,7 +110,7 @@ def compile(verbose=False, pedantic=False):
 def get_kernels(verbose=False, pedantic=False):
   global __KERNELS__
   prog = compile(verbose, pedantic)
-  items = ['pyrateBs',
+  items = ['pyrateBs', 'pyrateBd',
            'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
            'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
@@ -232,7 +232,7 @@ def delta_gamma5Bd(input, output,
   The aim of this function is to be the fastest wrapper
   """
   g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
-  __KERNELS__.DiffRateBd(
+  __KERNELS__.rateBd(
     # Input and output arrays
     input, output,
     # Differential cross-rate parameters
