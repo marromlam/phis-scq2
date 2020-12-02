@@ -10,8 +10,10 @@ def find_flags(v):
   all_flags = list(dict.fromkeys(all_flags)) # remove duplicates
   return all_flags
 
+
 import os
 import datetime
+
 
 def modification_date(filename):
     t = os.path.getmtime(filename)
@@ -33,7 +35,7 @@ def fast_copy_commit(input, output, repo, verbose=False):
         if verbose:
           print( repo.git.commit('-m', f"<phis-scq auto-commit> add {file}") )
         else:
-          repo.git.commit('-m', f"<phis-scq auto-commit> add {file}")
+          repo.git.commit('-m', f"<phis-scq-auto> add {file}")
       except:
         0
 
@@ -41,7 +43,7 @@ def fast_copy_commit(input, output, repo, verbose=False):
 
 rule bundle_translate_physics:
   input:
-    'output/params/angular_fit/{year}/Bs2JpsiPhi/{version}_{phys}_{angacc}_{timeacc}.json'
+    'output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{phys}_{angacc}_{timeacc}.json'
   output:
     temp('output/bundle/params/{year}/Bs2JpsiPhi/{version}_{phys}_{angacc}_{timeacc}.json')
   run:
@@ -52,6 +54,10 @@ rule bundle_translate_physics:
       flag=f"{wildcards.version}_{wildcards.phys}_{wildcards.angacc}_{wildcards.timeacc}"
     )
 
+
+
+
+# translators ------------------------------------------------------------------
 
 rule bundle_translate_time_acceptance:
   input:
@@ -93,76 +99,121 @@ rule bundle_translate_angular_acceptance:
 
 
 
-
-rule bundle_share_physics:
+# commit time acceptance -------------------------------------------------------
+#    dfdf
+rule bundle_share_physics_nominal:
   input:
     repo = 'tmp/bs2jpsiphi',
-    file = 'output/bundle/params/{phys}/Bs2JpsiPhi/{version}_{phys}_run2_base.json'
+    file = 'output/bundle/params/run2/Bs2JpsiPhi/{version}_run2_run2_simul.json'
   output:
-    file = 'tmp/bs2jpsiphi/fit/results/{version}/phis-scq-{phys}.json'
+    file = 'tmp/bs2jpsiphi/fit/results/{version}/phisscq.json'
   run:
     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
 
+# rule bundle_share_physics_fitcheck:
+#   input:
+#     repo = 'tmp/bs2jpsiphi',
+#     file = 'output/bundle/params/{year}/Bs2JpsiPhi/{version}_{phys}_run2_base{var}.json'
+#   output:
+#     file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit/checks/{year}/phis-scq-{var}.json'
+#   run:
+#     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
 
 rule bundle_share_physics_fitcheck:
   input:
     repo = 'tmp/bs2jpsiphi',
-    file = 'output/bundle/params/{phys}/Bs2JpsiPhi/{version}_{phys}_run2_base{var}.json'
+    file = 'output/bundle/params/{year}/Bs2JpsiPhi/{version}_{phys}_{angacc}_simul.json'
   output:
-    file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/physics_params/{phys}/phis-scq-{var}.json'
+    file = 'tmp/bs2jpsiphi/fit/checks/{version}/{year}/phisscq_{phys}_{angacc}.json'
   run:
     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
 
-rule bundle_share_physics_fitcheck2:
+rule bundle_share_physics_binnedcuts:
   input:
     repo = 'tmp/bs2jpsiphi',
-    file = 'output/bundle/params/{year}/Bs2JpsiPhi/{version}_yearly_yearly_base.json'
+    file = 'output/bundle/params/{year}/Bs2JpsiPhi/{version}@{flag}_{phys}_{angacc}_simul.json'
   output:
-    file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/physics_params/{year}/phis-scq-yearly.json'
+    file = 'tmp/bs2jpsiphi/fit/checks/{version}/{year}/phisscq@{flag}_{phys}_{angacc}.json'
   run:
     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
 
 
-rule bundle_share_time_acceptance:
+
+
+
+
+# commit time acceptance -------------------------------------------------------
+#    dfdf
+rule bundle_share_time_acceptance_nominal:
   input:
     repo = 'tmp/bs2jpsiphi',
-    file = 'output/bundle/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_base.json'
+    file = 'output/bundle/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_simul.json'
   output:
-    file = 'tmp/bs2jpsiphi/fitinputs/{version}/time_acceptance/{year}/time_acceptance_{year}.json'
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/time_acceptance/{year}/Bs2JpsiPhi/phisscq.json'
   run:
     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
 
-
-rule bundle_share_time_acceptance_fitcheck:
+rule bundle_share_time_acceptance_binnedcuts:
   input:
     repo = 'tmp/bs2jpsiphi',
-    file = 'output/bundle/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_base{timeacc}.json'
+    file = 'output/bundle/params/time_acceptance/{year}/Bd2JpsiKstar/{version}@{flag}_simul.json'
   output:
-    file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/time_acceptance/{year}/{timeacc}.json'
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/time_acceptance/{year}/Bs2JpsiPhi/phisscq@{flag}.json'
   run:
     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
 
 
-rule bundle_share_angular_acceptance:
+
+# commit time acceptance -------------------------------------------------------
+#    dfdf
+rule bundle_share_angular_acceptance_nominal:
   input:
     repo = 'tmp/bs2jpsiphi',
-    file = 'output/bundle/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_run2_base.json'
+    file = 'output/bundle/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_simul.json'
   output:
-    file = 'tmp/bs2jpsiphi/fitinputs/{version}/angular_acceptance/{year}/angular_acceptance_{year}.json'
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/angular_acceptance/{year}/Bs2JpsiPhi/phisscq_{angacc}.json'
   run:
     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
 
-
-rule bundle_share_angular_acceptance_fitcheck:
+rule bundle_share_angular_acceptance_binnedcuts:
   input:
     repo = 'tmp/bs2jpsiphi',
-    file = 'output/bundle/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_run2_base{timeacc}.json'
+    file = 'output/bundle/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}@{flag}_{angacc}_simul.json'
   output:
-    file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/angular_acceptance/{year}/{timeacc}.json'
+    file = 'tmp/bs2jpsiphi/fitinputs/{version}/angular_acceptance/{year}/Bs2JpsiPhi/phisscq@{flag}_{angacc}.json'
   run:
     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
 
 
+
+
+
+
+
+
+
+
+# rule bundle_share_angular_acceptance_fitcheck:
+#   input:
+#     repo = 'tmp/bs2jpsiphi',
+#     file = 'output/bundle/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_run2_base{timeacc}.json'
+#   output:
+#     file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/angular_acceptance/{year}/{timeacc}.json'
+#   run:
+#     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+
+
+
+
+# rule bundle_share_time_acceptance_fitcheck:
+#   input:
+#     repo = 'tmp/bs2jpsiphi',
+#     file = 'output/bundle/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_base{timeacc}.json'
+#   output:
+#     file = 'tmp/bs2jpsiphi/fitinputs/{version}/fit_check/time_acceptance/{year}/{timeacc}.json'
+#   run:
+#     fast_copy_commit(f"{input.file}", f"{output.file}", f"{input.repo}")
+#
 
 
 
@@ -193,21 +244,25 @@ rule bundle_share_clone:
 
     git_url = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git"
     branche = "phis-scq-parameters"
+    branche = "standard_paths"
     repo_dir = os.path.dirname(f"{output.repo}")
 
     # Check if we need to clone the repository
-    if os.path.exists(repo_dir):
-      trepo = modification_date(repo_dir)
-      tnow = datetime.datetime.now()
-      tdiff = abs(int(str(trepo - tnow).split('day')[0]))
-      if tdiff > 1: # older than 1 day -> clone again!
-        print("The repository timestamp is greater than 1 day")
-        print("Bs2JpsiPhi-FullRun2.git will be cloned again")
-        CLONE = True
-      else:
-        CLONE = False
-    else:
-      CLONE = True
+    # if os.path.exists(repo_dir):
+    #   trepo = modification_date(repo_dir)
+    #   tnow = datetime.datetime.now()
+    #   print(trepo, tnow)
+    #   print(trepo - tnow)
+    #   print(str(trepo - tnow).split('day')[0])
+    #   tdiff = abs(int(str(trepo - tnow).split('day')[0]))
+    #   if tdiff > 1: # older than 1 day -> clone again!
+    #     print("The repository timestamp is greater than 1 day")
+    #     print("Bs2JpsiPhi-FullRun2.git will be cloned again")
+    #     CLONE = True
+    #   else:
+    #     CLONE = False
+    # else:
+    #   CLONE = True
     CLONE = True
     print(CLONE, repo_dir)
     # Clone if needed
@@ -323,8 +378,6 @@ rule parse_fulljson:
 
 
 rule figures_bundle:
-  wildcard_constraints:
-    version = "(v[1-9]r[0-9]|v0r[2-9])"  # v0r0 and v0r2 (2015&2016) not allowed
   input:
     # Reweightings figures
     rwp1 = expand(rules.reweightings_plot_time_acceptance.output,
@@ -332,17 +385,41 @@ rule figures_bundle:
                   mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
                   branch=['B_P','B_PT','X_M'],
                   year=['2015','2016','2017','2018']),
-    rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
-                  version='{version}',
-                  mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
-                  branch=['B_P','B_PT','X_M'],
-                  angacc=['yearly'],
-                  timeacc=['repo'],
-                  weight=['sWeight','kinWeight','kkpWeight'],
-                  year=['2015','2016','2017','2018']),
+    # rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
+    #               version='{version}',
+    #               mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
+    #               branch=['B_P','B_PT','X_M'],
+    #               angacc=['yearly'],
+    #               timeacc=['simul'],
+    #               weight=['sWeight','kinWeight','kkpWeight'],
+    #               year=['2015','2016','2017','2018']),
     # Time acceptance outputs
+    tac1 = expand(rules.time_acceptance_plot.output,
+                  version='{version}',
+                  mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+                  timeacc=['simul'],
+                  plot=['fitlog','splinelog'],
+                  trigger=['biased','unbiased'],
+                  year=['2015','2016','2017','2018']),
+    tac2 = expand(rules.time_acceptance_plot.output,
+                  version=['{version}+{version}@cutpTB1+{version}@cutpTB2+{version}@cutpTB3+{version}@cutpTB4',
+                           '{version}+{version}@cutsigmat1+{version}@cutsigmat2+{version}@cutsigmat3',
+                           '{version}+{version}@cutetaB1+{version}@cutetaB2+{version}@cutetaB3'],
+                  mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+                  timeacc=['simul'],
+                  plot=['fitlog','splinelog'],
+                  trigger=['biased','unbiased'],
+                  year=['2015','2016','2017','2018']),
+    # angular
+    aac3 = expand(rules.angular_acceptance_time_dependence.output,
+                  version='{version}',
+                  mode=['Bs2JpsiPhi'],
+                  timeacc=['simul'],
+                  angacc=['run2'],
+                  trigger=['biased','unbiased'],
+                  year=['2015','2016','2017','2018']),
   output:
-    "output/bundle/figures/{version}.zip"
+    directory("output/bundle/figures/{version}")
   run:
     import os
     import shutil
@@ -355,31 +432,70 @@ rule figures_bundle:
       else:
         all_files.append(this_input)
 
-    print(all_files)
-    print(output)
-    cpath = f'{output}'
-    cpath = os.path.abspath(os.path.dirname(cpath)) + f'/{wildcards.version}/'
-    print(cpath)
-
-    # Remove directory if it exists
-    if os.path.isdir(f"{output[:-4]}"): os.system(f"rm -rf {output[:-4]}")
-
     # Loop over all input files and make a copy of all pdfs
     for file in all_files:
       if file.endswith('.pdf'):
-        out_path = file.replace('output/figures/',cpath)
+        out_path = file.replace('output/figures/',f'{output}/')
       else:
         out_path = None # add other methods if needed
+
       if out_path:
         print(f"Copying {file} to {out_path}...")
         os.system(f"mkdir -p {os.path.dirname(out_path)}") # create dir
-        os.system(f"cp {file} {out_path}")                 # copy file
-        #shutil.copy2(f"{file}", f"{file.replace('output/',out_path)}")
-    try:
-      print(f'{cpath}')
-      shutil.make_archive(f'{cpath}','zip',f'{cpath}')
-    except:
-      print("Couldn't zip the contents")
+        #os.system(f"cp {file} {out_path}")                 # copy file
+        shutil.copy(file, out_path)
+        #shutil.copy(f"{file}", f"{file.replace('output/','output/bundle/')}")
+
+
+
+
+rule tables_bundle:
+  input:
+    # Time acceptance outputs
+    tac1 = expand(rules.time_acceptance_simultaneous.output,
+                  version='{version}',
+                  timeacc=['simul'],
+                  trigger=['biased','unbiased'],
+                  year=['2015','2016','2017','2018']),
+    # Time acceptance outputs
+    aac1 = expand(rules.angular_acceptance_corrected.output.tables,
+                  version='{version}',
+                  mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','Bs2JpsiPhi'],
+                  trigger=['biased','unbiased'],
+                  year=['2015','2016','2017','2018']),
+    aac2 = expand(rules.angular_acceptance_iterativeRun2.output,
+                  version='{version}',
+                  timeacc=['simul'],
+                  angacc=['run2'],
+                  trigger=['biased','unbiased'],
+                  year=['2015','2016','2017','2018']),
+  output:
+    directory("output/bundle/tables/{version}")
+  run:
+    import os
+    import shutil
+    all_files = []
+    for this_input in input:
+      if isinstance(this_input, list):
+        print('its a list')
+        for item in this_input:
+          all_files.append(item)
+      else:
+        all_files.append(this_input)
+
+    # Loop over all input files and make a copy of all pdfs
+    for file in all_files:
+      if file.endswith('.tex'):
+        out_path = file.replace('output/tables/',f'{output}/')
+      else:
+        out_path = None # add other methods if needed
+
+      if out_path:
+        print(f"Copying {file} to {out_path}...")
+        os.system(f"mkdir -p {os.path.dirname(out_path)}") # create dir
+        #os.system(f"cp {file} {out_path}")                 # copy file
+        shutil.copy(file, out_path)
+        #shutil.copy(f"{file}", f"{file.replace('output/','output/bundle/')}")
 
 
 
