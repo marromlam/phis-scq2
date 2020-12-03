@@ -333,6 +333,8 @@ if __name__ == '__main__':
     for t, coeffs in zip(['biased','unbiased'],[coeffs_biased,coeffs_unbiased]):
       print(f' *  Associating {y}-{t} time acceptance[{i}] from\n    {coeffs[i]}')
       c = Parameters.load(coeffs[i])
+      data[y][t].knots = Parameters.build(c,c.fetch('k.*'))
+      badjanak.config['knots'] = np.array( data[y][t].knots ).tolist()
       data[y][t].timeacc = Parameters.build(c,c.fetch('c.*'))
       dtCUT = cuts_and(f"time>={tLL} & time<={tUL}", CUT)
       #print(data[y][t])
@@ -360,7 +362,7 @@ if __name__ == '__main__':
         sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
       d.df['sWeight'] = sw
       d.allocate(data=real,weight='sWeight',lkhd='0*time')
-
+  badjanak.get_kernels(True)
 
   # %% Prepare dict of parameters ----------------------------------------------
   print(f"\n{80*'='}\nParameters and initial status\n{80*'='}\n")
@@ -525,13 +527,10 @@ if __name__ == '__main__':
       print(f"{'MC_Bs2JpsiPhi':<24} | {'MC_Bs2JpsiPhi_dG0':<24}")
       print(f"{'biased':<11}  {'unbiased':<11} | {'biased':<11}  {'unbiased':<11}")
       for evt in range(0, 10):
-        print(f"{dy['MC_BsJpsiPhi']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BdJpsiKstar']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
         print(f"  ", end='')
-        print(f"{dy['MC_BsJpsiPhi']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BdJpsiKstar']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
         print(f" | ", end='')
-        print(f"{dy['MC_BsJpsiPhi_dG0']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
-        print(f"  ", end='')
-        print(f"{dy['MC_BsJpsiPhi_dG0']['unbiased'].pdfWeight[i][evt]:>+.8f}")
 
     tf = timer()-t0
     print(f'PDF weighting took {tf:.3f} seconds.')
