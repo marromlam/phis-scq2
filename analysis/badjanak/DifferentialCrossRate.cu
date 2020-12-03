@@ -32,30 +32,30 @@
 
 WITHIN_KERNEL
 ftype rateBs( const ftype *data,
-                    // Time-dependent angular distribution
-                    const ftype G, const ftype DG, const ftype DM, const ftype CSP,
-                    const ftype ASlon, const ftype APlon, const ftype APpar, const ftype APper,
-                    const ftype pSlon, const ftype pPlon, const ftype pPpar, const ftype pPper,
-                    const ftype dSlon, const ftype dPlon, const ftype dPpar, const ftype dPper,
-                    const ftype lSlon, const ftype lPlon, const ftype lPpar, const ftype lPper,
-                    // Time limits
-                    const ftype tLL, const ftype tUL,
-                    // Time resolution
-                    const ftype sigma_offset, const ftype sigma_slope, const ftype sigma_curvature,
-                    const ftype mu,
-                    // Flavor tagging
-                    const ftype eta_bar_os, const ftype eta_bar_ss,
-                    const ftype p0_os,  const ftype p1_os, const ftype p2_os,
-                    const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
-                    const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
-                    const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
-                    // Time acceptance
-                    GLOBAL_MEM const ftype *coeffs,
-                    // Angular acceptance
-                    GLOBAL_MEM  const ftype *angular_weights,
-                    const int USE_FK, const int USE_ANGACC, const int USE_TIMEACC,
-                    const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES
-                  )
+              // Time-dependent angular distribution
+              const ftype G, const ftype DG, const ftype DM, const ftype CSP,
+              const ftype ASlon, const ftype APlon, const ftype APpar, const ftype APper,
+              const ftype pSlon, const ftype pPlon, const ftype pPpar, const ftype pPper,
+              const ftype dSlon, const ftype dPlon, const ftype dPpar, const ftype dPper,
+              const ftype lSlon, const ftype lPlon, const ftype lPpar, const ftype lPper,
+              // Time limits
+              const ftype tLL, const ftype tUL,
+              // Time resolution
+              const ftype sigma_offset, const ftype sigma_slope, const ftype sigma_curvature,
+              const ftype mu,
+              // Flavor tagging
+              const ftype eta_bar_os, const ftype eta_bar_ss,
+              const ftype p0_os,  const ftype p1_os, const ftype p2_os,
+              const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
+              const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
+              const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
+              // Time acceptance
+              GLOBAL_MEM const ftype *coeffs,
+              // Angular acceptance
+              GLOBAL_MEM  const ftype *angular_weights,
+              const int USE_FK, const int USE_ANGACC, const int USE_TIMEACC,
+              const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES
+            )
 {
   #if DEBUG
   //printf("EVT = %d (%d)\n", get_global_id(0), DEBUG_EVT);
@@ -67,39 +67,39 @@ ftype rateBs( const ftype *data,
     printf("*USE_TIMEOFFSET    : %d\n", USE_TIMEOFFSET);
     printf("*USE_TIMERES       : %d\n", USE_TIMERES);
     printf("*SET_TAGGING       : %d [0:perfect,1:real,2:true]\n", SET_TAGGING);
-    printf("G                  : %+.16f\n", G);
-    printf("DG                 : %+.16f\n", DG);
-    printf("DM                 : %+.16f\n", DM);
-    printf("CSP                : %+.16f\n", CSP);
-    printf("ASlon              : %+.16f\n", ASlon);
-    printf("APlon              : %+.16f\n", APlon);
-    printf("APpar              : %+.16f\n", APpar);
-    printf("APper              : %+.16f\n", APper);
-    printf("pSlon              : %+.16f\n", pSlon);
-    printf("pPlon              : %+.16f\n", pPlon);
-    printf("pPpar              : %+.16f\n", pPpar);
-    printf("pPper              : %+.16f\n", pPper);
-    printf("dSlon              : %+.16f\n", dSlon);
-    printf("dPlon              : %+.16f\n", dPlon);
-    printf("dPper              : %+.16f\n", dPper);
-    printf("dPpar              : %+.16f\n", dPpar);
-    printf("lSlon              : %+.16f\n", lSlon);
-    printf("lPlon              : %+.16f\n", lPlon);
-    printf("lPper              : %+.16f\n", lPper);
-    printf("lPpar              : %+.16f\n", lPpar);
-    printf("tLL                : %+.16f\n", tLL);
-    printf("tUL                : %+.16f\n", tUL);
-    printf("mu                 : %+.16f\n", mu);
-    printf("sigma_offset       : %+.16f\n", sigma_offset);
-    printf("sigma_slope        : %+.16f\n", sigma_slope);
-    printf("sigma_curvature    : %+.16f\n", sigma_curvature);
-    printf("COEFFS             : %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
+    printf("G                  : %+.8f\n", G);
+    printf("DG                 : %+.8f\n", DG);
+    printf("DM                 : %+.8f\n", DM);
+    printf("CSP                : %+.8f\n", CSP);
+    printf("ASlon              : %+.8f\n", ASlon);
+    printf("APlon              : %+.8f\n", APlon);
+    printf("APpar              : %+.8f\n", APpar);
+    printf("APper              : %+.8f\n", APper);
+    printf("pSlon              : %+.8f\n", pSlon);
+    printf("pPlon              : %+.8f\n", pPlon);
+    printf("pPpar              : %+.8f\n", pPpar);
+    printf("pPper              : %+.8f\n", pPper);
+    printf("dSlon              : %+.8f\n", dSlon);
+    printf("dPlon              : %+.8f\n", dPlon);
+    printf("dPper              : %+.8f\n", dPper);
+    printf("dPpar              : %+.8f\n", dPpar);
+    printf("lSlon              : %+.8f\n", lSlon);
+    printf("lPlon              : %+.8f\n", lPlon);
+    printf("lPper              : %+.8f\n", lPper);
+    printf("lPpar              : %+.8f\n", lPpar);
+    printf("tLL                : %+.8f\n", tLL);
+    printf("tUL                : %+.8f\n", tUL);
+    printf("mu                 : %+.8f\n", mu);
+    printf("sigma_offset       : %+.8f\n", sigma_offset);
+    printf("sigma_slope        : %+.8f\n", sigma_slope);
+    printf("sigma_curvature    : %+.8f\n", sigma_curvature);
+    printf("COEFFS             : %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
-    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
+    printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
-    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
+    printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
-    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
+    printf("                     %+.8f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
     printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
             coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
@@ -199,9 +199,9 @@ ftype rateBs( const ftype *data,
   #if DEBUG
   if (DEBUG >= 3 && get_global_id(0) == DEBUG_EVT)
   {
-    printf("\nTIME TERMS         : ta=%.16f  tb=%.16f  tc=%.16f  td=%.16f\n",
+    printf("\nTIME TERMS         : ta=%.8f  tb=%.8f  tc=%.8f  td=%.8f\n",
            ta,tb,tc,td);
-    printf("\nTIME TERMS         : exp_m=%.16f  exp_p=%.16f  exp_i=%.16f  exp_i=%.16f\n",
+    printf("\nTIME TERMS         : exp_m=%.8f  exp_p=%.8f  exp_i=%.8f  exp_i=%.8f\n",
            sqrt(2*M_PI)*exp_m.x,sqrt(2*M_PI)*exp_p.x,sqrt(2*M_PI)*exp_i.x,exp_i.y);
   }
   #endif
@@ -242,7 +242,7 @@ ftype rateBs( const ftype *data,
   #if DEBUG
   if ( DEBUG > 3  && get_global_id(0) == DEBUG_EVT )
   {
-    printf("\nFLAVOR TAGGING     : delta_t=%.16f\n", delta_t);
+    printf("\nFLAVOR TAGGING     : delta_t=%.8f\n", delta_t);
     printf("                   : tagOS=%.8f, tagSS=%.8f\n",
            tagOS, tagSS);
     printf("                   : omegaOSB=%.8f, omegaOSBbar=%.8f\n",
@@ -296,19 +296,13 @@ ftype rateBs( const ftype *data,
     ck = getC(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
     dk = getD(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
 
-    // WARNING: now I know if is Bs or Bd with DM, but I should change it asap (its clearly misleading)
-    //if (fabs(qOS) == 511) // Bd pdf
-    if (abs(int(qOS)) != 511) // Bs PDF
-    {
+    if (abs(int(qOS)) != 511) 
+    { // Bs2JpsiPhi p.d.f 
       hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);
       hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
-      if (get_global_id(0) <=1){
-        printf("%f", fabs(qOS));
-      }
     }
     else
-    {
-      // this is the Bd2JpsiKstar p.d.f
+    { // Bd2JpsiKstar p.d.f (time dependent)
       hk_B = ak*ta + ck*tc;
       if ( (k==4) || (k==6)  || (k==9) )
       {
@@ -338,7 +332,7 @@ ftype rateBs( const ftype *data,
     printf("\nANGULAR PART       :  n            a            b            c            d            f            ang_acc\n");
     for(int k = 0; k < 10; k++)
     {
-      printf("               (%d) : %+.16f  %+.16f  %+.16f  %+.16f  %+.16f  %+.16f  %+.16f\n",
+      printf("               (%d) : %+.8f  %+.8f  %+.8f  %+.8f  %+.8f  %+.8f  %+.8f\n",
              k,vnk[k], vak[k], vbk[k], vck[k], vdk[k], vfk[k], angular_weights[k]);
     }
   }
@@ -351,43 +345,22 @@ ftype rateBs( const ftype *data,
   {
     // Here we can use the simplest 4xPi integral of the pdf since there are no
     // resolution effects
-    integralSimple(intBBar,
-                   vnk, vak, vbk, vck, vdk, angular_weights, G, DG, DM, tLL, tUL);
+    integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG, 
+                   DM, tLL, tUL);
   }
   else
   {
     // This integral works for all decay times, remember delta_t != 0.
     #if FAST_INTEGRAL
-    // if ( get_global_id(0) == DEBUG_EVT)
-    // {
-    //   printf("fast integral");
-    // }
-      integralSpline( intBBar,
-                       vnk, vak, vbk, vck, vdk,
-                       angular_weights, G, DG, DM,
-                       delta_t,
-                       tLL, tUL, t_offset,
-                       coeffs);
+      integralSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG,
+                     DM, delta_t, tLL, tUL, t_offset, coeffs);
     #else
-    // if ( get_global_id(0) == DEBUG_EVT)
-    // {
-    //   printf("slow integral");
-    // }
-    int simon_j = sigma_t/(SIGMA_T/80);
-    // if (DEBUG >= 1)
-    // {
-    //   if ( get_global_id(0) == DEBUG_EVT){
-    // {
-    //   printf("simon_j = %+d = round(%+.8f)\n", simon_j, sigma_t/(SIGMA_T/80) );
-    // }
-      integralFullSpline(intBBar,
-                       vnk, vak, vbk, vck, vdk,
-                       angular_weights, G, DG, DM,
-                       delta_t,
-                       //sigma_t,
-                       //parabola(  (0.5+simon_j)*(SIGMA_T/80)  , sigma_offset, sigma_slope, sigma_curvature),
-                       tLL, tUL, t_offset,
-                       coeffs);
+      int simon_j = sigma_t/(SIGMA_T/80);
+      integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, 
+                         G, DG, DM, //delta_t, // what should be used
+                         parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
+                         tLL, tUL, t_offset,
+                         coeffs);
      #endif
   }
   ftype intB = intBBar[0]; ftype intBbar = intBBar[1];
@@ -408,13 +381,13 @@ ftype rateBs( const ftype *data,
   #if DEBUG
   if ( DEBUG >= 1  && get_global_id(0) == DEBUG_EVT)
   {
-    printf("\nRESULT             : <  pdf/ipdf = %+.16f  >\n",
+    printf("\nRESULT             : <  pdf/ipdf = %+.8f  >\n",
            num/den);
     if ( DEBUG >= 2 )
     {
-     printf("                   : pdf=%+.16f  ipdf=%+.16f\n",
+     printf("                   : pdf=%+.8f  ipdf=%+.8f\n",
             num,den);
-     printf("                   : pdfB=%+.16f  pdBbar=%+.16f  ipdfB=%+.16f  ipdfBbar=%+.16f\n",
+     printf("                   : pdfB=%+.8f  pdBbar=%+.8f  ipdfB=%+.8f  ipdfBbar=%+.8f\n",
             pdfB,pdfBbar,intB,intBbar);
     }
   }
