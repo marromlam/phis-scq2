@@ -1,3 +1,4 @@
+#!/home3/marcos.romero/conda3/envs/phisscq/bin/python
 DESCRIPTION = """
     fit data
 """
