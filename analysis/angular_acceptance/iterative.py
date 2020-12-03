@@ -525,10 +525,13 @@ if __name__ == '__main__':
       print(f"{'MC_Bs2JpsiPhi':<24} | {'MC_Bs2JpsiPhi_dG0':<24}")
       print(f"{'biased':<11}  {'unbiased':<11} | {'biased':<11}  {'unbiased':<11}")
       for evt in range(0, 10):
-        print(f"{dy['MC_BdJpsiKstar']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BsJpsiPhi']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
         print(f"  ", end='')
-        print(f"{dy['MC_BdJpsiKstar']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BsJpsiPhi']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
         print(f" | ", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"  ", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['unbiased'].pdfWeight[i][evt]:>+.8f}")
 
     tf = timer()-t0
     print(f'PDF weighting took {tf:.3f} seconds.')
