@@ -335,10 +335,10 @@ if __name__ == '__main__':
   pars.add(dict(name='fSlon4', value=0.009, min=0.00, max=0.90,
             free=True, latex=r'f_S^{4}'))
   # P wave fractions normalmente fPlon
-  #pars.add(dict(name="fPlon", value=0.5240, min=0.1, max=0.9,
-    #        free=True, latex=r'f_0'))
-  pars.add(dict(name="fPpar", value=0.240, min=0.1, max=0.9,
-            free=True, latex=r'f_{\parallel}'))
+  pars.add(dict(name="fPlon", value=0.600, min=0.1, max=0.9,
+            free=True, latex=r'f_0'))
+  #pars.add(dict(name="fPpar", value=0.240, min=0.1, max=0.9,
+            #free=True, latex=r'f_{\parallel}'))
   pars.add(dict(name="fPper", value=0.170, min=0.1, max=0.9,
             free=True, latex=r'f_{\perp}'))
 
@@ -403,7 +403,7 @@ if __name__ == '__main__':
     likelihoods.append(result.chi2)
 
     pars = Parameters.clone(result.params)
-    names = ['fPpar', 'fPper', 'dPpar', 'dPper',
+    names = ['fPlon', 'fPper', 'dPpar', 'dPper',
             'fSlon1', 'dSlon1', 'fSlon2', 'dSlon2',
             'fSlon3', 'dSlon3', 'fSlon4', 'dSlon4']
     corr_run1 = Parameters.build(result.params, names).corr()
@@ -515,13 +515,13 @@ if __name__ == '__main__':
     if all(checker):
       print(f"\nDone! Convergence was achieved within {i} iterations")
       print(f"Comparación Run1")
-      names = ['fPpar', 'fPper', 'dPpar', 'dPper',
+      names = ['fPlon', 'fPper', 'dPpar', 'dPper',
                'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4',
                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4']
       valores = []; std = []
       #hay que cambiarlos
-      old_values = [0.227, 0.201, -2.94, 2.94, 3.09, 2.66, 1.94, 1.53, 0.115, 0.049, 0.052, 0.105]
-      old_std = [0.012, 0.009, 0.04, 0.03, 0.13, 0.08, 0.09, 0.11, 0.021, 0.008, 0.011, 0.016]
+      old_values = [0.572, 0.201, -2.94, 2.94, 0.150, -0.280, -1.00, -1.41, 0.115, 0.049, 0.052, 0.105]
+      old_std = [0.015, 0.009, 0.04, 0.03, 0.13, 0.09, 0.09, 0.11, 0.021, 0.008, 0.011, 0.016]
       for p in names:
           valores.append(pars[p].value)
           std.append(pars[p].stdev)
