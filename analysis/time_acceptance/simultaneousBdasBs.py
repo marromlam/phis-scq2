@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
-  from time_acceptance.fcn_functions import saxsbxscxerf, fcn_test
+  from time_acceptance.fcn_functions import saxsbxscxerf
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
@@ -78,7 +78,7 @@ if __name__ == '__main__':
   elif LIFECUT == 'alpha':
     splitter = cuts_and(splitter, f"alpha<0.025")
   elif LIFECUT == 'deltat':
-    splitter = cuts_and(splitter, f"deltat<0.04")
+    splitter = cuts_and(splitter, f"sigmat<0.04")
 
   # Print settings
   print(f"\n{80*'='}\nSettings\n{80*'='}\n")
@@ -96,14 +96,12 @@ if __name__ == '__main__':
   # Check timeacc flag to set knots and weights and place the final cut
   knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  if TIMEACC == 'nonkin':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = ''
-  elif TIMEACC == '9knots':
+  if CORR == '9knots':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
     kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  elif TIMEACC == '12knots':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
+  elif CORR == '12knots':
+    knots = [0.30, 0.43, 0.58, 0.74, 0.91, 1.11, 1.35,
+             1.63, 1.96, 2.40, 3.01, 4.06, 9.00, 15.0]
     kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
 
 
@@ -117,14 +115,18 @@ if __name__ == '__main__':
   
   for i,m in enumerate(['MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     if m=='MC_Bd2JpsiKstar':
-      weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
-      weight = f'{sw}'
+      if CORR=='Noncorr':
+        weight = f'{sw}'
+      else:
+        weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      weight = f'{kinWeight}{sw}'
-      weight = f'{sw}'
+      if CORR=='Noncorr':
+        weight = f'{sw}'
+      else:
+        weight = f'{kinWeight}{sw}'
       mode = 'BdRD'; c = 'c'
-
+    print(weight)
 
     cats[mode] = {}
     for f, F in zip(['A', 'B'], [f'({splitter}) == 1', f'({splitter}) == 0']):

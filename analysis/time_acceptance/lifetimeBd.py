@@ -78,7 +78,7 @@ if __name__ == '__main__':
   elif LIFECUT == 'alpha':
     splitter = cuts_and(splitter, f"alpha<0.025")
   elif LIFECUT == 'deltat':
-    splitter = cuts_and(splitter, f"deltat<0.04")
+    splitter = cuts_and(splitter, f"sigmat<0.04")
   
   # Print settings
   print(f"\n{80*'='}\nSettings\n{80*'='}\n")
@@ -104,7 +104,6 @@ if __name__ == '__main__':
       weight = f'{sw}'
     else:
       weight = f'{kinWeight}{sw}'
-      weight = f'{sw}'
     
     cats[m] = {}
     for t in ['biased', 'unbiased']:
