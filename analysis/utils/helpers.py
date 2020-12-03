@@ -30,7 +30,7 @@ import numpy as np
 
 def timeacc_guesser(timeacc):
   # Check if the tuple will be modified
-  pattern = r'\A(single|simul|lifeBd|lifeBu)(Noncorr|9knots|12knots)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
+  pattern = r'\A(single|simul|lifeBd|lifeBu)(Noncorr|3knots|9knots|12knots)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
   try:
     timeacc, kind, lifecut, minimizer = p.search(timeacc).groups()

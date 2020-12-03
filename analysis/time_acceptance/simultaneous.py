@@ -93,13 +93,14 @@ if __name__ == '__main__':
   # Check timeacc flag to set knots and weights and place the final cut
   knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
+  sw = f'sw_{VAR}' if VAR else 'sw'
   if CORR == '9knots':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   elif CORR == '12knots':
     knots = [0.30, 0.43, 0.58, 0.74, 0.91, 1.11, 1.35,
              1.63, 1.96, 2.40, 3.01, 4.06, 9.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
+  elif CORR == '3knots':
+    knots = [0.30, 0.91, 1.96, 9.00, 15.0]
 
 
 
@@ -108,7 +109,6 @@ if __name__ == '__main__':
 
   # Select samples
   cats = {}
-  sw = f'sw_{VAR}' if VAR else 'sw'
   for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':

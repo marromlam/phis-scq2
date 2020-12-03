@@ -43,7 +43,7 @@ rule time_acceptance_simultaneous:
   resources:
     mem_mb=4096
   wildcard_constraints:
-    timeacc = "simul(Noncorr|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?",
+    timeacc = "simul(Noncorr|3knots|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?",
   input:
     sample = lambda wcs: [
       tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
@@ -174,6 +174,8 @@ rule time_acceptance_simultaneousBdasBs:
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 rule lifetime_fit:
+  resources:
+    mem_mb=4096
   wildcard_constraints:
     trigger = "(biased|unbiased|combined)",
   input:
@@ -205,6 +207,8 @@ rule lifetime_fit:
 
 
 rule lifetimeBd:
+  resources:
+    mem_mb=4096
   input:
     sample = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar',year=f'{wcs.year}'),
     biased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BdasBs_biased.json', y=YEARS[f'{wcs.year}']),
@@ -226,7 +230,7 @@ rule lifetimeBd:
            --year {",".join(YEARS[f'{wildcards.year}'])}\
            --version {wildcards.version}\
            --timeacc {wildcards.timeacc}\
-    ) #&> {log} 2>&1""")
+    ) &> {log} 2>&1""")
     send_mail(f"Lifetime Bd fit :: {wildcards}", f"{log}")
 
 
