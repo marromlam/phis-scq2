@@ -431,8 +431,28 @@ print(f"\n")
 #%% Run and get the job done ###################################################
 
 print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
-result = optimize(fcn_data, method='Nelder', params=pars, fcn_kwgs={'data':data},
-                  verbose=False, timeit=True, tol=0.1, strategy=2)
+
+MINER = 'minuit'
+
+if MINER in ('minuit', 'minos'):
+  result = optimize(fcn_data, method=MINER, params=pars, 
+                    fcn_kwgs={'data':data},
+                    verbose=False, timeit=True, tol=0.1, strategy=2,
+                    policy='filter')
+elif MINER in ('nelder'):
+  result = optimize(fcn_data, method=MINER, params=pars,
+                    fcn_kwgs={'data':data},
+                    verbose=False, timeit=True, tol=0.1, strategy=2,
+                    policy='omit')
+elif MINER in ('bfgs', 'lbfgsb'):
+  result = optimize(fcn_data, method='nelder', params=pars, 
+                    fcn_kwgs={'data':data},
+                    verbose=False, timeit=True, tol=0.1, strategy=2,
+                    policy='omit')
+  result = optimize(fcn_data, method=MINER, params=result.pars, 
+                    fcn_kwgs={'data':data},
+                    verbose=False, timeit=True, tol=0.1, strategy=2,
+                    policy='filter')
 
 
 
