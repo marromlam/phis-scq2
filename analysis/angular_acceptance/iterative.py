@@ -210,7 +210,7 @@ if __name__ == '__main__':
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
-  YEARS = args['year'].split(',')
+  YEARS = args['year'].split(',') 
   MODE = 'Bs2JpsiPhi'
   ANGACC = args['angacc']
 
@@ -268,10 +268,9 @@ if __name__ == '__main__':
   true  = [f'gen{i}' for i in reco]
   reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
   true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
-
+  
   real  = ['cosK','cosL','hphi','time']
-  real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
-
+  real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta'] 
   weight_rd = f'sw_{VAR}' if VAR else 'sw'
 
 
@@ -312,6 +311,8 @@ if __name__ == '__main__':
     for m, v in zip(mcmodes,[kkpWeight_std,kkpWeight_dg0]):
       mc[y][m]['biased'].path_to_weights = v[i]
       mc[y][m]['unbiased'].path_to_weights = v[i]
+
+
 
   # Load corresponding data sample ---------------------------------------------
   data = {}
@@ -527,14 +528,17 @@ if __name__ == '__main__':
       print(f"{'MC_Bs2JpsiPhi':<24} | {'MC_Bs2JpsiPhi_dG0':<24}")
       print(f"{'biased':<11}  {'unbiased':<11} | {'biased':<11}  {'unbiased':<11}")
       for evt in range(0, 10):
-        print(f"{dy['MC_BdJpsiKstar']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BsJpsiPhi']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
         print(f"  ", end='')
-        print(f"{dy['MC_BdJpsiKstar']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BsJpsiPhi']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
         print(f" | ", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"  ", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['unbiased'].pdfWeight[i][evt]:>+.8f}")
 
     tf = timer()-t0
     print(f'PDF weighting took {tf:.3f} seconds.')
-    exit()
+
 
 
     # 3rd step: kinematic weights ----------------------------------------------
