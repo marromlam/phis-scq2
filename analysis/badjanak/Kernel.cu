@@ -103,19 +103,19 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
   if (evt >= NEVT) { return; }
 
   ftype mass = data[evt*10+4];
-  ftype data4[9] = {data[evt*10+0], // cosK
-                    data[evt*10+1], // cosL
-                    data[evt*10+2], // hphi
-                    data[evt*10+3], // time
-                    data[evt*10+5], // sigma_t
-                    data[evt*10+6], // qOS
-                    data[evt*10+7], // qSS
-                    data[evt*10+8], // etaOS
-                    data[evt*10+9]  // etaSS
-                   };
+  ftype arr[9] = {data[evt*10+0], // cosK
+                  data[evt*10+1], // cosL
+                  data[evt*10+2], // hphi
+                  data[evt*10+3], // time
+                  data[evt*10+5], // sigma_t
+                  data[evt*10+6], // qOS
+                  data[evt*10+7], // qSS
+                  data[evt*10+8], // etaOS
+                  data[evt*10+9]  // etaSS
+                 };
 
   const int bin = BINS>1 ? getMassBin(mass) : 0;
-  lkhd[evt] = rateBs(data4,
+  lkhd[evt] = rateBs(arr,
                      G, DG, DM, CSP[bin],
                      ASlon[bin], APlon[bin], APpar[bin], APper[bin],
                      pSlon,      pPlon,      pPpar,      pPper,
@@ -138,36 +138,35 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
 
 
 KERNEL
-void pyrateBd(GLOBAL_MEM ftype *data, GLOBAL_MEM ftype *lkhd,
-                //inputs
-                GLOBAL_MEM ftype * CSP,
-                GLOBAL_MEM ftype *ASlon, GLOBAL_MEM ftype *APlon, GLOBAL_MEM ftype *APpar, GLOBAL_MEM ftype *APper,
-                GLOBAL_MEM ftype *dSlon, ftype  dPlon, ftype  dPpar, ftype  dPper,
-                // Angular acceptance
-                GLOBAL_MEM ftype *angular_weights,
-                // Flags
-                int USE_FK,
-                int BINS,
-                int NEVT)
+void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
+              //inputs
+              GLOBAL_MEM const ftype * CSP,
+              GLOBAL_MEM const ftype *ASlon, GLOBAL_MEM const ftype *APlon, 
+              GLOBAL_MEM const ftype *APpar, GLOBAL_MEM const ftype *APper,
+              GLOBAL_MEM const ftype *dSlon, const ftype dPlon, 
+              const ftype dPpar, const ftype dPper,
+              // Angular acceptance
+              GLOBAL_MEM const ftype *angular_weights,
+              // Flags
+              const int USE_FK, const int BINS, const int NEVT)
 {
   int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
 
-
   ftype mass = data[evt*10+4];
-  ftype data4[9] = {data[evt*10+0], // cosK
-                          data[evt*10+1], // cosL
-                          data[evt*10+2], // hphi
-                          data[evt*10+3], // time
-                          data[evt*10+5], // sigma_t
-                          data[evt*10+6], // qOS
-                          data[evt*10+7], // qSS
-                          data[evt*10+8], // etaOS
-                          data[evt*10+9]  // etaSS
-                        };
+  ftype arr[9] = {data[evt*10+0], // cosK
+                  data[evt*10+1], // cosL
+                  data[evt*10+2], // hphi
+                  data[evt*10+3], // time
+                  data[evt*10+5], // sigma_t
+                  data[evt*10+6], // qOS
+                  data[evt*10+7], // qSS
+                  data[evt*10+8], // etaOS
+                  data[evt*10+9]  // etaSS
+                 };
 
   unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
-  lkhd[evt] = getDiffRateBd(data4,
+  lkhd[evt] = getDiffRateBd(arr,
                           CSP[bin],
                           ASlon[bin], APlon[bin], APpar[bin], APper[bin],
                           dSlon[bin], dPlon,      dPpar,      dPper,
@@ -215,7 +214,6 @@ in time and returns
   if (row >= NEVT) { return; }
   ftype t = time[row] - mu;
   lkhd[row] = getOneSplineTimeAcc(t, coeffs, sigma, gamma, tLL, tUL);
-
 }
 
 
@@ -306,3 +304,6 @@ void pySpline(GLOBAL_MEM const ftype *time, GLOBAL_MEM ftype *f,
   ftype fpdf = (c0 + t*(c1 + t*(c2 + t*c3)));
   f[row] = fpdf;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// that's all folks
