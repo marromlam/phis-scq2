@@ -55,9 +55,9 @@ const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 #include "Tagging.cu"
 #include "TimeAngularDistribution.cu"
 #include "DecayTimeAcceptance.cu"
-#include "DifferentialCrossRate.cu"
+#include "CrossRateBs.cu"
 #include "AngularAcceptance.cu"
-#include "DifferentialCrossRateIntegratedTime.cu"
+#include "CrossRateBd.cu"
 #include "Toy.cu"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +114,7 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
                     data[evt*10+9]  // etaSS
                    };
 
-  unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
+  const int bin = BINS>1 ? getMassBin(mass) : 0;
   lkhd[evt] = rateBs(data4,
                      G, DG, DM, CSP[bin],
                      ASlon[bin], APlon[bin], APpar[bin], APper[bin],
