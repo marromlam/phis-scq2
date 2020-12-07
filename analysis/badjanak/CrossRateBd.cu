@@ -30,13 +30,14 @@
 //Ramon es mejor pasar el data igual para no confundirse en otras partes del codigo
 
 WITHIN_KERNEL
-ftype getDiffRateBd( ftype *data,
-                    ftype CSP,
-                    ftype ASlon, ftype APlon, ftype APpar, ftype APper,
-                    ftype dSlon, ftype dPlon, ftype dPpar, ftype dPper,
+ftype getDiffRateBd(const ftype *data,
+                    const ftype CSP,
+                    const ftype ASlon, const ftype APlon, const ftype APpar, 
+                    const ftype APper, const ftype dSlon, const ftype dPlon, 
+                    const ftype dPpar, const ftype dPper,
                     // Angular acceptance
-                    GLOBAL_MEM  ftype *angular_weights,
-                    int USE_FK
+                    GLOBAL_MEM  const ftype *angular_weights,
+                    const int USE_FK
                   )
 {
 
