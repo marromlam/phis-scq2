@@ -100,11 +100,6 @@ if __name__ == '__main__':
 
   cats = {}  
   for i, m in enumerate(YEAR.split(',')):
-    if CORR == 'Noncorr':
-      weight = f'{sw}'
-    else:
-      weight = f'{kinWeight}{sw}'
-    
     cats[m] = {}
     for t in ['biased', 'unbiased']:
       cats[m][t] = Sample.from_root(samples[i], share=SHARE)
@@ -113,7 +108,7 @@ if __name__ == '__main__':
 
       # allocate arrays
       cats[m][t].allocate(time='time', lkhd='0*time')
-      cats[m][t].allocate(weight=weight)
+      cats[m][t].allocate(weight=f'{sw}')
       cats[m][t].weight = swnorm(cats[m][t].weight)
       print(cats[m][t])
 
