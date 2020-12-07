@@ -7,8 +7,9 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
+
 ################################################################################
-# %% Modules ###################################################################
+# Modules ######################################################################
 
 import argparse
 import os
@@ -27,27 +28,28 @@ from utils.helpers import swnorm, trigger_scissors
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
+all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
 tLL = hjson.load(open('config.json'))['tLL']
 tUL = hjson.load(open('config.json'))['tUL']
 
 # Parse arguments for this script
 def argument_parser():
-  parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
-  parser.add_argument('--samples', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--output-params', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--output-tables', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--year', help='Year to fit')
-  parser.add_argument('--version', help='Version of the tuples to use')
-  parser.add_argument('--timeacc', help='Different flag to ... ')
-  parser.add_argument('--trigger', help='Different flag to ... ')
-  return parser
+  p = argparse.ArgumentParser(description='Compute decay-time acceptance.')
+  p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--output-params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--output-tables', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--year', help='Year to fit')
+  p.add_argument('--version', help='Version of the tuples to use')
+  p.add_argument('--trigger', help='Different flag to ... ')
+  p.add_argument('--timeacc', help='Different flag to ... ')
+  #p.add_argument('--contour', help='Different flag to ... ')
+  return p
 
 if __name__ != '__main__':
   import badjanak
 
 ################################################################################
-
 
 
 
@@ -62,7 +64,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bd2JpsiKstar'
-  TIMEACC, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
@@ -70,6 +72,7 @@ if __name__ == '__main__':
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
   
   splitter = '(evtN%2)==0' # this is Bd as Bs
@@ -83,36 +86,27 @@ if __name__ == '__main__':
   # Print settings
   print(f"\n{80*'='}\nSettings\n{80*'='}\n")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
+  print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'timeacc':>15}: {TIMEACC:50}")
-  print(f"{'trigger':>15}: {TRIGGER:50}")
-  print(f"{'splitter':>15}: {splitter:50}")
   print(f"{'minimizer':>15}: {MINER:50}\n")
+  print(f"{'splitter':>15}: {splitter:50}")
 
   # List samples, params and tables
   samples = args['samples'].split(',')
   oparams = args['output_params'].split(',')
   otables = args['output_tables'].split(',')
+  
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
+  knots = all_knots[str(NKNOTS)]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  if CORR == '9knots':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  elif CORR == '12knots':
-    knots = [0.30, 0.43, 0.58, 0.74, 0.91, 1.11, 1.35,
-             1.63, 1.96, 2.40, 3.01, 4.06, 9.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-
+  sw = f'sw_{VAR}' if VAR else 'sw'
 
 
   # Get data into categories ---------------------------------------------------
   print(f"\n{80*'='}\nLoading categories\n{80*'='}\n")
 
   cats = {}
-  sw = f'sw_{VAR}' if VAR else 'sw'
-  
-  
   for i,m in enumerate(['MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     if m=='MC_Bd2JpsiKstar':
       if CORR=='Noncorr':
@@ -121,10 +115,7 @@ if __name__ == '__main__':
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      if CORR=='Noncorr':
-        weight = f'{sw}'
-      else:
-        weight = f'{kinWeight}{sw}'
+      weight = f'{sw}'
       mode = 'BdRD'; c = 'c'
     print(weight)
 
@@ -132,7 +123,7 @@ if __name__ == '__main__':
     for f, F in zip(['A', 'B'], [f'({splitter}) == 1', f'({splitter}) == 0']):
       cats[mode][f] = Sample.from_root(samples[i], share=SHARE)
       cats[mode][f].name = f"{mode}-{f}"
-      cats[mode][f].chop( trigger_scissors(TRIGGER, cuts_and(CUT,F) ))
+      cats[mode][f].chop( cuts_and(CUT,F) )
 
       # allocate arrays
       cats[mode][f].allocate(time='time', lkhd='0*time')
@@ -155,11 +146,10 @@ if __name__ == '__main__':
       cats[mode][f].params = Parameters()
       cats[mode][f].params.add(*[
                     {'name':f'{c}{f}{j}{TRIGGER[0]}', 'value':1.0, 
+                     'latex': f'{c}_{{{f},{j}}}^{TRIGGER[0]}',
                      'free':True if j>0 else False, #'min':0.10, 'max':5.0,
-                     'latex': f'{c}_{{{f},{j}}}^{TRIGGER[0]}'
-                    }
-                    for j in range(len(knots[:-1])+2)
-                  ])
+                    } for j in range(len(knots[:-1])+2)
+      ])
       cats[mode][f].params.add({'name':f'gamma_{f}{c}',
                               'value':Gdvalue+resolutions[m]['DGsd'],
                               'latex':f'\Gamma_{{{f}{c}}}', 'free':False})
