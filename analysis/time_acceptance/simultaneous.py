@@ -9,11 +9,10 @@ __email__ = ['mromerol@cern.ch']
 
 
 ################################################################################
-# %% Modules ###################################################################
+# Modules ######################################################################
 
 import argparse
 import os
-import numpy as np
 import hjson
 
 # load ipanema
@@ -29,6 +28,7 @@ from utils.helpers import  swnorm, trigger_scissors
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
+all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
 tLL = hjson.load(open('config.json'))['tLL']
 tUL = hjson.load(open('config.json'))['tUL']
@@ -39,8 +39,7 @@ def argument_parser():
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
   p.add_argument('--params', help='Bs2JpsiPhi MC sample')
   p.add_argument('--tables', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--year', help='Year to fit')
-  p.add_argument('--mode', help='Year to fit', default='Bd2JpsiKstar')
+  p.add_argument('--year', help='Year to fit') 
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--trigger', help='Trigger to fit')
   p.add_argument('--timeacc', help='Different flag to ... ')
@@ -50,25 +49,24 @@ def argument_parser():
 if __name__ != '__main__':
   import badjanak
 
-
 ################################################################################
 
 
 
 ################################################################################
-#%% Run and get the job done ###################################################
+# Run and get the job done #####################################################
 if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
-  MODE = 'Bs2JpsiPhi'
   TRIGGER = args['trigger']
-  TIMEACC, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  MODE = 'Bs2JpsiPhi'
+  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else -1)
+  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
@@ -91,49 +89,41 @@ if __name__ == '__main__':
   otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
+  knots = all_knots[str(NKNOTS)]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   sw = f'sw_{VAR}' if VAR else 'sw'
-  if CORR == '9knots':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-  elif CORR == '12knots':
-    knots = [0.30, 0.43, 0.58, 0.74, 0.91, 1.11, 1.35,
-             1.63, 1.96, 2.40, 3.01, 4.06, 9.00, 15.0]
-  elif CORR == '3knots':
-    knots = [0.30, 0.91, 1.96, 9.00, 15.0]
 
 
 
   # Get data into categories ---------------------------------------------------
   print(f"\n{80*'='}\nLoading categories\n{80*'='}\n")
 
-  # Select samples
   cats = {}
   for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
-      if CORR=='Noncorr':
-        weight = f'dg0Weight*{sw}/gb_weights'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
+      else:
+        weight = f'dg0Weight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
-      if CORR=='Noncorr':
-        weight = f'{sw}/gb_weights'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
+      else:
+        weight = f'{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      if CORR=='Noncorr':
-        weight = f'{sw}'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+      else:
+        weight = f'{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      if CORR=='Noncorr':
-        weight = f'{sw}'
-      else:
+      if CORR:
         weight = f'{kinWeight}{sw}'
+      else:
+        weight = f'{sw}'
       mode = 'BdRD'; c = 'c'
     print(weight)
 
@@ -227,7 +217,7 @@ if __name__ == '__main__':
       # ax.set_ylabel(r"$L-L_{\mathrm{opt}}$")
       # fig.savefig(cats[mode].tabs_path.replace('tables', 'figures').replace('.tex', f"_contour{args['contour']}.pdf"))
       result._minuit.draw_mnprofile(
-          args['contour'], bins=20, bound=5, subtract_min=True, band=True, text=True)
+          args['contour'], bins=20, bound=3, subtract_min=True, band=True, text=True)
       plt.savefig(cats[mode].tabs_path.replace('tables', 'figures').replace('.tex', f"_contour{args['contour']}.pdf"))
 
 
