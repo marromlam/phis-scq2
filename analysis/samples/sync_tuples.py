@@ -20,6 +20,7 @@ if ROOT_PANDAS:
   import root_pandas
 
 binned_vars = {'etaB':'B_ETA', 'pTB':'B_PT', 'sigmat':'sigmat'}
+binned_files = {'etaB':'eta', 'pTB':'pt', 'sigmat':'sigmat'}
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 EOSPATH = hjson.load(open('config.json'))['eos']
 
@@ -57,7 +58,7 @@ if __name__ == "__main__":
   else:
     print(f"    File {m}_{y}_selected_bdt_sw_{v}.root does not exist on server.")
 
-  for var in binned_vars.keys():
+  for var in binned_files.values():
     print(f"Downloading {m}_{y}_selected_bdt_sw_{var}_{v}.root")
     eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_{var}_{v}.root'
     #status = os.system(f"""scp -r lxplus:{eos_path} {scq_path}""")
