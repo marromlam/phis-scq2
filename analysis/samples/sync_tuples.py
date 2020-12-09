@@ -58,14 +58,14 @@ if __name__ == "__main__":
   else:
     print(f"    File {m}_{y}_selected_bdt_sw_{v}.root does not exist on server.")
 
-  for var in binned_files.values():
+  for name, var in binned_files.items():
     print(f"Downloading {m}_{y}_selected_bdt_sw_{var}_{v}.root")
     eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_{var}_{v}.root'
     #status = os.system(f"""scp -r lxplus:{eos_path} {scq_path}""")
     status = os.system(f"""xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}""")
     print(status)
     if status==0:
-      all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root",f"{var}"])
+      all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root",f"{name}"])
     else:
       print(f"    File {m}_{y}_selected_bdt_sw_{var}_{v}.root does not exist",
              "on server.")
