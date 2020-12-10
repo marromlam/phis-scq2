@@ -8,16 +8,16 @@ ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype phi,
 {
   ftype eff = 0.;
 
-  eff += moments[0] * legendre_poly(0, 0, cosK) * sph_harm(0, 0, cosL, phi);
-  eff += moments[1] * legendre_poly(0, 0, cosK) * sph_harm(2, 0, cosL, phi);
-  eff += moments[2] * legendre_poly(0, 0, cosK) * sph_harm(2, 2, cosL, phi);
-  eff += moments[3] * legendre_poly(0, 0, cosK) * sph_harm(2, 1, cosL, phi);
-  eff += moments[4] * legendre_poly(0, 0, cosK) * sph_harm(2,-1, cosL, phi);
-  eff += moments[5] * legendre_poly(0, 0, cosK) * sph_harm(2,-2, cosL, phi);
-  eff += moments[6] * legendre_poly(1, 0, cosK) * sph_harm(0, 0, cosL, phi);
-  eff += moments[7] * legendre_poly(1, 0, cosK) * sph_harm(2, 1, cosL, phi);
-  eff += moments[8] * legendre_poly(1, 0, cosK) * sph_harm(2,-1, cosL, phi);
-  eff += moments[9] * legendre_poly(2, 0, cosK) * sph_harm(0, 0, cosL, phi);
+  eff += moments[0] * P_lm(0, 0, cosK) * Y_lm(0, 0, cosL, phi);
+  eff += moments[1] * P_lm(0, 0, cosK) * Y_lm(2, 0, cosL, phi);
+  eff += moments[2] * P_lm(0, 0, cosK) * Y_lm(2, 2, cosL, phi);
+  eff += moments[3] * P_lm(0, 0, cosK) * Y_lm(2, 1, cosL, phi);
+  eff += moments[4] * P_lm(0, 0, cosK) * Y_lm(2,-1, cosL, phi);
+  eff += moments[5] * P_lm(0, 0, cosK) * Y_lm(2,-2, cosL, phi);
+  eff += moments[6] * P_lm(1, 0, cosK) * Y_lm(0, 0, cosL, phi);
+  eff += moments[7] * P_lm(1, 0, cosK) * Y_lm(2, 1, cosL, phi);
+  eff += moments[8] * P_lm(1, 0, cosK) * Y_lm(2,-1, cosL, phi);
+  eff += moments[9] * P_lm(2, 0, cosK) * Y_lm(0, 0, cosL, phi);
 
   eff *= 2.*sqrt(M_PI);
   return eff;
