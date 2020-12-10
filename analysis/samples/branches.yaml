@@ -69,7 +69,7 @@ MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
 
 MC_Bu2JpsiKplus:
-  <<: *common
+  <<: *MC_common
 
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common

@@ -5,7 +5,7 @@ rule reweighting_polarity:
   resources:
     mem_mb=7168
   wildcard_constraints:
-    mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
+    mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
   input:
     original = lambda wcs: tuples(wcs,weight='sWeight'),
     target   = lambda wcs: tuples(wcs,mode='cdata',weight='sWeight'),
@@ -34,7 +34,7 @@ rule reweighting_pdf:
   resources:
     mem_mb=7168
   wildcard_constraints:
-    mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
+    mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
   input:
     sample = lambda wcs: tuples(wcs,weight='polWeight'),
   params:
@@ -66,7 +66,7 @@ rule reweighting_kinematic:
   resources:
     mem_mb=7168
   wildcard_constraints:
-    mode = "(MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0|_Swave)?|Bd2JpsiKstar)"
+    mode = "(MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0|_Swave)?|Bd2JpsiKstar)"
   input:
     original = lambda wcs: tuples(wcs,weight='pdfWeight'),
     target = lambda wcs: tuples(wcs,mode='cdata',weight='kinWeight'),

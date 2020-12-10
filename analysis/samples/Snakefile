@@ -34,7 +34,7 @@ rule samples_sync_tuple:
 
 rule samples_reduce_tuple:
   wildcard_constraints:
-    mode = "(Bs2JpsiPhi|MC_Bs2JpsiPhi_dG0|MC_Bs2JpsiPhi|Bd2JpsiKstar|MC_Bd2JpsiKstar)"
+    mode = "(MC_)?(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
   resources:
     mem_mb=2048
   input:
