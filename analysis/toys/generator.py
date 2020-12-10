@@ -149,12 +149,13 @@ for t, trigger in data.items():
           f"{YEAR}-{t:>8} at {b+1:>2} mass bin")
     pars  = bin['csp'] + bin['flavor'] + bin['resolution']
     pars += bin['timeacc'] + bin['angacc'] + bin['params']
-    p = badjanak.cross_rate_parser_new(**pars.valuesdict(), tLL=tLL, tUL=tUL)
+    p = badjanak.parser_rateBs(**pars.valuesdict(), tLL=tLL, tUL=tUL)
     # for k,v in p.items():
     #   print(f"{k:>20}: {v}")
     badjanak.dG5toys(bin['output'], **p,
                      use_angacc=0, use_timeacc=0, use_timeres=1,
-                     set_tagging=1, use_timeoffset=0)
+                     set_tagging=1, use_timeoffset=0, 
+                     seed=int(1e10*np.random.rand()) )
     genarr = ristra.get(bin['output'])
     hlt1b = np.ones_like(genarr[:,0])
     gendic = {
