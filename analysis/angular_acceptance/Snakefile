@@ -31,7 +31,7 @@ rule angular_acceptance_naive:
            --version {wildcards.version}\
            --angacc {wildcards.angacc}\
            --trigger {wildcards.trigger}
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
 
 
@@ -489,7 +489,7 @@ rule angular_acceptance_iterativeRun2Bd:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}\
            --version                 {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 Bd :: {wildcards}", f"{log}")
 ##Comparacion Simon Ramon
 rule angular_acceptance_iterativeRun2BdSimon:
