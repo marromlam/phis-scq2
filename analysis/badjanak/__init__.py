@@ -852,11 +852,13 @@ def dG5toys(output,
             use_fk=1, use_angacc = 0, use_timeacc = 0,
             use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
             prob_max = 2.7,
-            BLOCK_SIZE=256, **crap):
+            BLOCK_SIZE=256, seed=False, **crap):
   """
   Look at kernel definition to see help
   The aim of this function is to be the fastest wrapper
   """
+  if not seed:
+    seed = int(1e10*np.random.rand())
   g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
   __KERNELS__.dG5toy(
     # Input and output arrays
@@ -886,7 +888,7 @@ def dG5toys(output,
     # Flags
     np.int32(use_fk), np.int32(len(CSP)), np.int32(use_angacc), np.int32(use_timeacc),
     np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
-    np.float64(prob_max), np.int32(len(output)),
+    np.float64(prob_max), np.int32(seed),  np.int32(len(output)),
     global_size=g_size, local_size=l_size)
     #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
 
