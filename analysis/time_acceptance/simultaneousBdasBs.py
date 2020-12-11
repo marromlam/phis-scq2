@@ -16,8 +16,8 @@ import os
 import hjson
 
 # load ipanema
-from ipanema import initialize
-from ipanema import Parameters, optimize, Sample
+from ipanema import initialize, plotting
+from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 
 # import some phis-scq utils
 from utils.plot import mode_tex
@@ -35,10 +35,10 @@ tUL = hjson.load(open('config.json'))['tUL']
 
 # Parse arguments for this script
 def argument_parser():
-  p = argparse.ArgumentParser(description='Compute decay-time acceptance.')
+  p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--output-params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--output-tables', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--tables', help='Bs2JpsiPhi MC sample')
   p.add_argument('--year', help='Year to fit')
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--trigger', help='Different flag to ... ')
@@ -55,10 +55,9 @@ if __name__ != '__main__':
 
 ################################################################################
 # Run and get the job done #####################################################
-
 if __name__ == '__main__':
 
-  #%% Parse arguments ----------------------------------------------------------
+  # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
@@ -68,7 +67,7 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
-  from time_acceptance.fcn_functions import saxsbxscxerf
+  import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
@@ -89,18 +88,19 @@ if __name__ == '__main__':
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'timeacc':>15}: {TIMEACC:50}")
-  print(f"{'minimizer':>15}: {MINER:50}\n")
-  print(f"{'splitter':>15}: {splitter:50}")
+  print(f"{'minimizer':>15}: {MINER:50}")
+  print(f"{'splitter':>15}: {splitter:50}\n")
 
   # List samples, params and tables
   samples = args['samples'].split(',')
-  oparams = args['output_params'].split(',')
-  otables = args['output_tables'].split(',')
+  oparams = args['params'].split(',')
+  otables = args['tables'].split(',')
   
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(NKNOTS)]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   sw = f'sw_{VAR}' if VAR else 'sw'
+
 
 
   # Get data into categories ---------------------------------------------------
@@ -109,7 +109,7 @@ if __name__ == '__main__':
   cats = {}
   for i,m in enumerate(['MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     if m=='MC_Bd2JpsiKstar':
-      if CORR=='Noncorr':
+      if CORR:
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
@@ -187,13 +187,13 @@ if __name__ == '__main__':
   }
 
   if MINER.lower() in ("minuit","minos"):
-    result = optimize(fcn_call=saxsbxscxerf,
+    result = optimize(fcn_call=fcns.saxsbxscxerf,
                       params=fcn_pars,
                       fcn_kwgs=fcn_kwgs,
                       method=MINER,
                       verbose=False, timeit=True, strategy=1, tol=0.05);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
-    result = optimize(fcn_call=saxsbxscxerf,
+    result = optimize(fcn_call=fcns.saxsbxscxerf,
                       params=fcn_pars,
                       fcn_kwgs=fcn_kwgs,
                       method=MINER,
