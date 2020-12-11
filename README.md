@@ -81,7 +81,7 @@ This pipeline can run
   - [x] Angular weights method
   - [ ] Histogram method
   - [ ] Ylm method
-  - [ ] Plots
+  - [x] Plots
 - [x] *Time-dependent angular fit*: extract the physics parameters
   - [ ] Real Run1 data samples
   - [x] Real Run2 data samples
@@ -90,17 +90,17 @@ This pipeline can run
   - [ ] Plots
 - [ ] *Toy MC generator*: generate toys to estimate fit bias
   - [x] Generate pdf events
-  - [ongoing] Generate momenta
+  - [x] Generate angular efficiency from angular weights
 - [ ] *Cross-checks*: different studies for fit validation
-  - [ongoing] J/psiK* lifetime
-  - [ongoing] J/psiK+ lifetime
-  - [x] Binned studies: `sigmat`, `B_ETA`, `B_PT`, `time`
+  - [x] J/psiK* lifetime
+  - [x] J/psiK+ lifetime
+  - [x] Binned studies: `sigmat`, `etaB`, `pTB`, `time`
   - [x] Yearly studies: from 2015 to 2018
   - [ ] Time dependence of angular acceptance: check whether angles and time do factorize
   - [ ] Magnet studies: dependence on magnet polarity
-  - [ ] $`B_u`$ angular acceptance
-  - [ ] $`B_d`$ Other channels angular acceptance
-  - [ongoing ] Fit bias
+  - [ ] $`B_u^+`$ angular acceptance
+  - [ ] $`B_d^0`$ angular acceptance
+  - [ongoing] Fit bias
 
 
 
