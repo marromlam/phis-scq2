@@ -118,16 +118,15 @@ def splinexerfconstr(pars, cats, weight=False):
 
   for y, dy in cats.items():
     for t, dt in dy.items():
-      m = pars['mu_Ac'].value
-      s = pars['sigma_Ac'].value
+      m = pars['mu_Ac'].value if 'mu_Ac' in pars else pars['mu_c'].value
+      s = pars['sigma_Ac'].value if 'sigma_Ac' in pars else pars['sigma_c'].value
 
       # get coeffs - currently being fitted
-      lpars = pars.find(f'cA(\d{{1}})(\d{{1}})?({t[0]})_({y[2:]})')
-      #print(lpars)
+      lpars = pars.find(f'c(A)?(\d{{1}})(\d{{1}})?({t[0]})_({y[2:]})')
       c = pars.valuesarray(lpars)
 
       # compute gaussian constraint - from previous fits
-      lpars = dt.params.find(f'cB(\d{{1}})(\d{{1}})?({t[0]})')[1:]
+      lpars = dt.params.find(f'c(B)?(\d{{1}})(\d{{1}})?({t[0]})')[1:]
       c0 = np.matrix(c[1:] - dt.params.valuesarray(lpars))       # constraint mu
       cov = dt.params.cov(lpars)                  # constraint covariance matrix
       cnstr  = np.dot(np.dot(c0, np.linalg.inv(cov)), c0.T) 
