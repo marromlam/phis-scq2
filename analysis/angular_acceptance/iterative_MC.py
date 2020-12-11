@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__ = ['Marcos Romero']
+__author__ = ['Ramon Ruiz']
 __email__  = ['mromerol@cern.ch']
 
 
@@ -133,7 +133,7 @@ def get_angular_acceptance(mc, kkpWeight=False):
   weight = ristra.allocate(weight)
 
   # compute angular acceptance
-  ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
+  ans = badjanak.get_angular_acceptance_weights_Bd(mc.true, mc.reco, weight, **mc.params.valuesdict())
 
   # create ipanema.Parameters
   w, uw, cov, corr = ans
@@ -263,7 +263,6 @@ if __name__ == '__main__':
     for m, v in zip(mcmodes,[kkpWeight_std]):
       mc[y][m]['biased'].path_to_weights = v[i]
       mc[y][m]['unbiased'].path_to_weights = v[i]
-
   if MODE== 'Bd2JpsiKstar':
     badjanak.config['x_m'] =  [826, 861, 896, 931, 966]
   mass = badjanak.config['x_m']
@@ -276,13 +275,13 @@ if __name__ == '__main__':
                   'unbiased': Sample.from_root(v[i], share=SHARE)}
       data[y]['biased'].name = f"data {y}-biased"
       data[y]['unbiased'].name = f"data {y}-unbiased"
-      data[y]['biased'].chop(cuts_and(trigger_scissors('biased'),'(evtN % 2) != 0', CUT))
-      data[y]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(evtN % 2) != 0', CUT))
+      data[y]['biased'].chop(cuts_and(trigger_scissors('biased'),'(evtN % 2) != 0', CUT, 'logIPChi2B >= 0', 'log(BDTF) >=0'))
+      data[y]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(evtN % 2) != 0', CUT, 'logIPChi2B >= 0', 'log(BDTF) >=0'))
+
     for t, path in zip(['biased','unbiased'],[params_biased,params_unbiased]):
         data[y][t].params_path = path[i]
     for t, path in zip(['biased','unbiased'],[tables_biased,tables_unbiased]):
         data[y][t].tables_path = path[i]
-
   for i,y in enumerate (YEARS):
       for t in ['biased','unbiased']:
         print('Compute angWeights correcting MC sample in kinematics')
@@ -296,7 +295,7 @@ if __name__ == '__main__':
         angWeight = reweighter.predict_weights(mc[y][m][t].df[['mHH', 'pB', 'pTB']])
         mc[y][m][t].df['angWeight'] = angWeight
         mc[y][m][t].olen = len(angWeight)
-        angacc = badjanak.get_angular_acceptance_weights(mc[y][m][t].true, mc[y][m][t].reco,
+        angacc = badjanak.get_angular_acceptance_weights_Bd(mc[y][m][t].true, mc[y][m][t].reco,
                                      mc[y][m][t].weight*ristra.allocate(angWeight),
                                      **mc[y][m][t].params.valuesdict())
         w, uw, cov, corr = angacc
@@ -331,42 +330,42 @@ if __name__ == '__main__':
   # P wave fractions normalmente fPlon
   pars.add(dict(name="fPlon", value=0.5240, min=0.1, max=0.9,
             free=True, latex=r'f_0'))
-  pars.add(dict(name="fPper", value=0.170, min=0.1, max=0.9,
-            free=True, latex=r'f_{\perp}'))
+  pars.add(dict(name="fPper", value=0.220, min=0.1, max=0.9,
+            free=True, latex=r'f_{\perp}')) #0.170
   # Weak phases
-  pars.add(dict(name="pSlon", value= 0.00, min=-1.0, max=1.0,
-            free=False, latex=r"\phi_S - \phi_0"))
-  pars.add(dict(name="pPlon", value= 0.00, min=-1.0, max=1.0,
-            free=False , latex=r"\phi_0" ))
-  pars.add(dict(name="pPpar", value= 0.00, min=-1.0, max=1.0,
-            free=False, latex=r"\phi_{\parallel} - \phi_0"))
-  pars.add(dict(name="pPper", value= 0.00, min=-1.0, max=1.0,
-            free=False, latex=r"\phi_{\perp} - \phi_0"))
+  #pars.add(dict(name="pSlon", value= 0.00, min=-1.0, max=1.0,
+            #free=False, latex=r"\phi_S - \phi_0"))
+  #pars.add(dict(name="pPlon", value= 0.00, min=-1.0, max=1.0,
+            #free=False , latex=r"\phi_0" ))
+  #pars.add(dict(name="pPpar", value= 0.00, min=-1.0, max=1.0,
+            #free=False, latex=r"\phi_{\parallel} - \phi_0"))
+  #pars.add(dict(name="pPper", value= 0.00, min=-1.0, max=1.0,
+            #free=False, latex=r"\phi_{\perp} - \phi_0"))
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-3.14, max=3.14,
             free=False, latex=r"\delta_0"))
-  pars.add(dict(name="dPpar", value=2.501, min=-3.14, max=3.14,
-            free=True, latex=r"\delta_{\parallel} - \delta_0"))
-  pars.add(dict(name="dPper", value=-0.17, min=-3.14, max=3.14,
-            free=True, latex=r"\delta_{\perp} - \delta_0"))
-  # lambdas
-  pars.add(dict(name="lPlon", value=1.0, min=-1.5, max=1.5,
-            free=False,  latex="\lambda_0"))
-  pars.add(dict(name="lPpar", value=1.0, min=0.7, max=1.6,
-            free=False, latex="\lambda_{\parallel}/\lambda_0"))
-  pars.add(dict(name="lPper", value=1.0, min=0.7, max=1.6,
-            free=False, latex="\lambda_{\perp}/\lambda_0"))
+  pars.add(dict(name="dPpar", value=0.501, min=-3.14, max=3.14,
+            free=True, latex=r"\delta_{\parallel} - \delta_0")) #2.501
+  pars.add(dict(name="dPper", value=-1.17, min=-3.14, max=3.14,
+            free=True, latex=r"\delta_{\perp} - \delta_0")) #-0.17
+  # lambdas for Bd fix to 1
+  #pars.add(dict(name="lPlon", value=1.0, min=-1.5, max=1.5,
+            #free=False,  latex="\lambda_0"))
+  #pars.add(dict(name="lPpar", value=1.0, min=0.7, max=1.6,
+            #free=False, latex="\lambda_{\parallel}/\lambda_0"))
+  #pars.add(dict(name="lPper", value=1.0, min=0.7, max=1.6,
+            #free=False, latex="\lambda_{\perp}/\lambda_0"))
   # life parameters
-  pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
-            free=False, latex=r"\Gamma_d"))
+  #pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
+            #free=False, latex=r"\Gamma_d"))
   #pars.add(dict(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
             #free=True, latex=r"\Delta\Gamma_s"))
-  pars.add(dict(name="DGs", value= 0.0, min= 0.0, max= 0.15,
-            free=False, latex=r"\Delta\Gamma_s"))
-  pars.add(dict(name="DGsd", value= 0.0, min=-0.2, max= 0.2,
-            free=False, latex=r"\Gamma_s - \Gamma_d"))
-  pars.add(dict(name="DM", value=0.5, min=0.1, max=1.0,
-            free=False, latex=r"\Delta m"))
+  #pars.add(dict(name="DGs", value= 0.0, min= 0.0, max= 0.15,
+            #free=False, latex=r"\Delta\Gamma_s"))
+  #pars.add(dict(name="DGsd", value= 0.0, min=-0.2, max= 0.2,
+            #free=False, latex=r"\Gamma_s - \Gamma_d"))
+  #pars.add(dict(name="DM", value=0.5, min=0.1, max=1.0,
+            #free=False, latex=r"\Delta m"))
   print(pars)
 
   # print angular acceptance
@@ -408,14 +407,10 @@ if __name__ == '__main__':
     pars = Parameters.clone(result.params)
 
     if not '2018' in data.keys() and not '2017' in data.keys():
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs',
-                'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
-                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
+      for p in ['fPlon', 'fPper', 'dPpar', 'dPper']:
         print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
     else:
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'lPlon', 'DGsd',
-                'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4',
-                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4']:
+      for p in ['fPlon', 'fPper', 'dPpar', 'dPper']:
         try:
             print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
         except:
@@ -502,63 +497,15 @@ if __name__ == '__main__':
 
 
     # 5th step: merge MC std and dg0 results -----------------------------------
-    #Step 5 comentado todo por ramon
     print(f'\Parameters Angacc MC_BdJsiKstar {itstr}')
 
     for y, dy in mc.items(): # loop over years
       for trigger in ['biased','unbiased']:
         # Get angular weights for each MC
         std = dy['MC_Bd2JpsiKstar'][trigger].angaccs[i]
+        data[y][trigger].angacc = std
+        data[y][trigger].angaccs[i] = std
 
-        # Create w and cov arrays
-        std_w = np.array([std[f'w{i}'].value for i in range(1,len(std))])
-        std_cov = std.cov()[1:,1:];
-
-        # Some matrixes
-        std_covi = np.linalg.inv(std_cov)
-        cov_comb_inv = np.linalg.inv( std_cov )
-        cov_comb = np.linalg.inv( std_covi )
-        dof = len(std_w)
-
-        # Combine angular weights
-        w = np.ones((dof+1))
-        w[1:] = cov_comb.dot( std_covi.dot(std_w.T))
-
-        # Combine uncertainties
-        uw = np.zeros_like(w)
-        uw[1:] = np.sqrt(np.diagonal(cov_comb))
-
-        # Build correlation matrix
-        corr = np.zeros((dof+1,dof+1))
-        for k in range(1,cov_comb.shape[0]):
-          for j in range(1,cov_comb.shape[1]):
-            corr[k,j] = cov_comb[k][j]/np.sqrt(cov_comb[k][k]*cov_comb[j][j])
-
-        # Create parameters
-        merged_w = Parameters()
-        for k in range(0,len(w)):
-          correl = {f'w{j}{trigger[0]}': corr[k][j]
-                    for j in range(0, len(w)) if k > 0 and j > 0}
-          merged_w.add({'name': f'w{k}{trigger[0]}', 'value': w[k], 'stdev': uw[k],
-                        'free': False, 'latex': f'w_{k}^{trigger[0]}', 'correl': correl})
-        print(f"Current angular weights for BdJpsiKstar-{y}-{trigger} sample are:")
-        print(f"{'MC':>8}")
-        for _i in range(len(merged_w.keys())):
-          print(f"{np.array(merged_w)[_i]:+1.5f}")
-
-        if i>5:
-          for wk in merged_w.keys():
-            new = merged_w[wk].value
-            old = data[y][trigger].angaccs[i-1][wk].value
-            print(f"  = > {new}+{old} ")
-            merged_w[wk].set(value = 0.5*(new+old))
-          print(f"{'MC':>8}")
-          for _i in range(len(merged_w.keys())):
-            print(f"{np.array(merged_w)[_i]:+1.5f}")
-
-        # Save current set of angular weights
-        data[y][trigger].angacc = merged_w
-        data[y][trigger].angaccs[i] = merged_w
 
         # Check for all iterations if existed convergence
         for ci in range(0,i):
@@ -567,7 +514,7 @@ if __name__ == '__main__':
 
         qwe = check_for_convergence( data[y][trigger].angaccs[i-1], data[y][trigger].angaccs[i] )
         checker.append( qwe )
-        merged_w.dump(data[y][trigger].params_path.replace('.json',f'i{i}.json'))
+        std.dump(data[y][trigger].params_path.replace('.json',f'i{i}.json'))
         #print(f'Value of chi2/dof = {chi2_value:.4}/{dof} corresponds to a p-value of {prob:.4}\n')
 
     # Check if they are the same as previous iteration
@@ -587,7 +534,7 @@ if __name__ == '__main__':
 
     if all(checker):
       print(f"\nDone! Convergence was achieved within {i} iterations")
-      names = ['fPlon', 'fPper', 'dPpar', 'dPper','DGsd']
+      names = ['fPlon', 'fPper', 'dPpar', 'dPper']
       values, oldvalues, std = [], [], []
       for p in names:
         values.append(pars[p].value)
