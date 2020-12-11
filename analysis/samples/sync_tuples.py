@@ -65,7 +65,7 @@ if __name__ == "__main__":
     status = os.system(f"""xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}""")
     print(status)
     if status==0:
-      all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root",f"{name}"])
+      all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root",f"{var}"])
     else:
       print(f"    File {m}_{y}_selected_bdt_sw_{var}_{v}.root does not exist",
              "on server.")
