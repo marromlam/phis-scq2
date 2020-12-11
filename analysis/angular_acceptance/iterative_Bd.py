@@ -36,7 +36,7 @@ import multiprocessing
 # load ipanema
 from ipanema import initialize
 
-initialize(os.environ['IPANEMA_BACKEND'],1)
+initialize(os.environ['IPANEMA_BACKEND'],2)
 from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # get badjanak and compile it with corresponding flags
@@ -76,16 +76,16 @@ def check_for_convergence(a,b):
 
 
 def pdf_reweighting_Bd(mcsample, mcparams, rdparams):
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
+  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h = mcsample.pdf.get()
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
+  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h /= mcsample.pdf.get()
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
+  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
                            **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h = mcsample.pdf.get()
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
+  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
                            **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h /= mcsample.pdf.get()
   return np.nan_to_num(target_pdf_h/original_pdf_h)
@@ -129,7 +129,7 @@ def get_angular_acceptance(mc, kkpWeight=False):
   weight = ristra.allocate(weight)
 
   # compute angular acceptance
-  ans = badjanak.get_angular_acceptance_weights_Bd(mc.true, mc.reco, weight, **mc.params.valuesdict())
+  ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
 
   # create ipanema.Parameters
   w, uw, cov, corr = ans
@@ -150,7 +150,7 @@ def fcn_data(parameters, data):
   chi2 = []
   for y, dy in data.items():
     for dt in [dy['unbiased'],dy['biased']]:
-      badjanak.delta_gamma5_data_Bd(dt.data, dt.lkhd, **pars_dict,
+      badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                    **dt.angacc.valuesdict(),
                    **dt.csp.valuesdict(),  #use_fk no lo introduce marcos y no se pq
                    tLL=tLL, tUL=tUL, use_timeacc=0, set_tagging=1, use_timeres=0)
@@ -293,7 +293,7 @@ if __name__ == '__main__':
         #angacc = badjanak.get_angular_acceptance_weights(mc[y][m][t].true, mc[y][m][t].reco,
                                      #mc[y][m][t].weight*ristra.allocate(angWeight),
                                      #**mc[y][m][t].params.valuesdict())
-        angacc = badjanak.get_angular_acceptance_weights_Bd(mc[y][m][t].true, mc[y][m][t].reco,
+        angacc = badjanak.get_angular_acceptance_weights(mc[y][m][t].true, mc[y][m][t].reco,
                                      mc[y][m][t].weight*ristra.allocate(angWeight),
                                     **mc[y][m][t].params.valuesdict())
         w, uw, cov, corr = angacc
@@ -337,10 +337,10 @@ if __name__ == '__main__':
   # P wave fractions normalmente fPlon
   pars.add(dict(name="fPlon", value=0.600, min=0.1, max=0.9,
             free=True, latex=r'f_0'))
-  #pars.add(dict(name="fPpar", value=0.240, min=0.1, max=0.9,
-            #free=True, latex=r'f_{\parallel}'))
   pars.add(dict(name="fPper", value=0.170, min=0.1, max=0.9,
             free=True, latex=r'f_{\perp}'))
+  #pars.add(dict(name="fPpar", value=0.240, min=0.1, max=0.9,
+            #free=True, latex=r'f_{\parallel}', formula='abs(1-fPlon-fPper)'))
 
   # S wave strong phases
   pars.add(dict(name='dSlon1', value=+2.34, min=-4.0, max=+4.0,
@@ -351,6 +351,7 @@ if __name__ == '__main__':
             free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
   pars.add(dict(name='dSlon4', value=-1.41, min=-4.5, max=+4.5,
             free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
+
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-3.14, max=3.14,
             free=False, latex=r"\delta_0"))
@@ -358,6 +359,15 @@ if __name__ == '__main__':
             free=True, latex=r"\delta_{\parallel} - \delta_0"))
   pars.add(dict(name="dPper", value=2.94, min=-3.14, max=3.14,
             free=True, latex=r"\delta_{\perp} - \delta_0"))
+  #Deltas Comparar Run1
+  #pars.add(dict(name='dSlon1r1', value=+2.34, min=-4.0, max=+4.0,
+            #free=True, latex=r"\delta_S^{1}", formula = 'dSlon1+dPper'))
+  #pars.add(dict(name='dSlon2r1', value=+1.64, min=-4.0, max=+4.0,
+            #free=True, latex=r"\delta_S^{2}", formula = 'dSlon2+dPper'))
+  #pars.add(dict(name='dSlon3r1', value=-1.09, min=-4.0, max=+4.0,
+            #free=True, latex=r"\delta_S^{3}", formula = 'dSlon3+dPper'))
+  #pars.add(dict(name='dSlon4r1', value=-1.41, min=-4.5, max=+4.5,
+            #free=True, latex=r"\delta_S^{4}", formula = 'dSlon4+dPper'))
 
   # life parameters
   pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
@@ -401,8 +411,12 @@ if __name__ == '__main__':
                       method='minuit', params=pars, fcn_kwgs={'data':data},
                       verbose=True, timeit=True, tol=0.1, strategy=2)
     likelihoods.append(result.chi2)
-
+    print(result.params)
     pars = Parameters.clone(result.params)
+    print(pars)
+    #names = ['fPpar', 'fPper', 'dPpar', 'dPper',
+            #'fSlon1', 'dSlon1r1', 'fSlon2', 'dSlon2r1',
+            #'fSlon3', 'dSlon3r1', 'fSlon4', 'dSlon4r1']
     names = ['fPlon', 'fPper', 'dPpar', 'dPper',
             'fSlon1', 'dSlon1', 'fSlon2', 'dSlon2',
             'fSlon3', 'dSlon3', 'fSlon4', 'dSlon4']
@@ -483,7 +497,6 @@ if __name__ == '__main__':
     for y, dy in mc.items(): # loop over years
       for trigger in ['biased','unbiased']:
         std = dy['MC_Bd2JpsiKstar'][trigger].angaccs[i]
-        print(std)
         data[y][trigger].angacc = std
         data[y][trigger].angaccs[i] = std
 
@@ -515,12 +528,17 @@ if __name__ == '__main__':
     if all(checker):
       print(f"\nDone! Convergence was achieved within {i} iterations")
       print(f"Comparación Run1")
+      #names = ['fPpar', 'fPper', 'dPpar', 'dPper',
+               #'dSlon1r1', 'dSlon2r1', 'dSlon3r1', 'dSlon4r1',
+               #'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4']
       names = ['fPlon', 'fPper', 'dPpar', 'dPper',
                'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4',
                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4']
       valores = []; std = []
       #hay que cambiarlos
-      old_values = [0.572, 0.201, -2.94, 2.94, 0.150, -0.280, -1.00, -1.41, 0.115, 0.049, 0.052, 0.105]
+      #old_values = [0.227, 0.201, -2.94, 2.94, 3.09, 2.66, 1.94, 1.53, 0.115, 0.049, 0.052, 0.105]
+      #old_std = [0.012, 0.009, 0.04, 0.03, 0.13, 0.08, 0.09, 0.11, 0.021, 0.008, 0.011, 0.016]
+      old_values = [0.572, 0.201, -2.94, 2.94, 0.150, -0.280, -1.00, -1.410, 0.115, 0.049, 0.052, 0.105]
       old_std = [0.015, 0.009, 0.04, 0.03, 0.13, 0.09, 0.09, 0.11, 0.021, 0.008, 0.011, 0.016]
       for p in names:
           valores.append(pars[p].value)
