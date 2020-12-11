@@ -489,7 +489,7 @@ rule angular_acceptance_iterativeRun2Bd:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}\
            --version                 {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 Bd :: {wildcards}", f"{log}")
 ##Comparacion Simon Ramon
 rule angular_acceptance_iterativeRun2BdSimon:
@@ -562,7 +562,7 @@ rule angular_acceptance_iterativeRun2MC:
   input:
     # Samples and weights
     sample_std = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar',year='Run2'),
-    weights_std = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar',year='Run2',weight=f'angWeight'),
+    #weights_std = lambda wcs: tuples(wcs,mode='MC_Bd2JpsiKstar',year='Run2',weight=f'angWeight'),
   params:
     params_std = [
       'analysis/params/generator/2015/MC_Bd2JpsiKstar.json',
@@ -616,7 +616,7 @@ rule angular_acceptance_iterativeRun2MC:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}_single\
            --version                 {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 MC :: {wildcards}", f"{log}")
 
 
