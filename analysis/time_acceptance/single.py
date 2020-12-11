@@ -1,33 +1,34 @@
-# -*- coding: utf-8 -*-
+DESCRIPTION = """
+    This file contains 3 fcn functions to be minimized under ipanema3 framework
+    those functions are, actually functions of badjanak kernels.
+"""
 
 __author__ = ['Marcos Romero Lamas']
-__email__  = ['mromerol@cern.ch']
+__email__ = ['mromerol@cern.ch']
 
 
 
 ################################################################################
-# %% Modules ###################################################################
+# Modules ######################################################################
 
 import argparse
 import os
 import hjson
-import numpy as np
 
 # load ipanema
-from ipanema import initialize
+from ipanema import initialize, plotting
 from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
-from ipanema import plotting
 
 # import some phis-scq utils
 from utils.plot import mode_tex
-from utils.strings import cuts_and
+from utils.strings import cuts_and, printsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
-from utils.strings import printsec
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
+all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
 tLL = hjson.load(open('config.json'))['tLL']
 tUL = hjson.load(open('config.json'))['tUL']
@@ -64,7 +65,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
@@ -90,24 +91,16 @@ if __name__ == '__main__':
   otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
+  knots = all_knots[str(NKNOTS)]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  if TIMEACC == '9knots':
-    knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  elif TIMEACC == '12knots':
-    knots = [0.30, 0.43, 0.58, 0.74, 0.91, 1.11,
-             1.35, 1.63, 1.96, 2.40, 3.01, 4.06, 9.00, 15.0]
-    kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
+  sw = f'sw_{VAR}' if VAR else 'sw'
 
 
 
   # Get data into categories ---------------------------------------------------
   print(f"\n{80*'='}\nLoading category\n{80*'='}\n")
 
-  # Select samples
   cats = {}
-  sw = f'sw_{VAR}' if VAR else 'sw'
   for i, m in enumerate([MODE]):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
