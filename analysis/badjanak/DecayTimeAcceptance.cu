@@ -679,9 +679,9 @@ ftype getOneSplineTimeAcc(const ftype t,
                              const ftype tLL, const ftype tUL)
 {
   // Compute pdf value
-  //ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
+  ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
   ftype fpdf = 1.0; ftype ipdf = 0;
-  //fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
+  fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
   fpdf *= calcTimeAcceptance(t, coeffs , tLL, tUL);
 
   // Compute per event normatization
