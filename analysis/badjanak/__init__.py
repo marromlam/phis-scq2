@@ -57,7 +57,7 @@ precision =       'double',
 #    Bla bla bla
 def flagger(verbose=False):
   if verbose:
-    print(f"\n{80*'='}\n Badjanak kernel\n{80*'='}\n")
+    print(f"\n{80*'='}\nBadjanak kernel\n{80*'='}\n")
     print(f"{'Backend was set to':>20} : {BACKEND}")
     print(f"{' Using as host':>20} : {cpuinfo.get_cpu_info()['brand_raw']} with {platform.python_compiler()}")
     print(f"{' Using as device':>20} : {DEVICE.name} with CUDA 10.2")
