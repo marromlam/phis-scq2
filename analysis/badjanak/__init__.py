@@ -21,12 +21,7 @@ import cpuinfo
 import re
 import math
 
-if __name__ == '__main__':
-  PATH = '/home3/ramon.ruiz/phis-scq/badjanak'
-  import ipanema
-  ipanema.initialize('opencl',1,verbose=False)
-else:
-  PATH = os.path.dirname(os.path.abspath(__file__))
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Get builtins (ipanema initialization exposes them)
 BACKEND = builtins.BACKEND
