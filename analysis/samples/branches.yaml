@@ -28,6 +28,7 @@ common: &common
   "sWeight_pTB" : "sw_pTB"
   "sWeight_sigmat" : "sw_sigmat"
   "logIPChi2B" : "log_B_IPCHI2_mva"
+  "BDTF" : "B_DTF_CHI2NDOF"
 
 
 MC_common: &MC_common
