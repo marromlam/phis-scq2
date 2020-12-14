@@ -189,7 +189,7 @@ if __name__ == '__main__':
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
 
   if MINER.lower() in ("minuit","minos"):
-    result = mini.optimize(method='minuit', verbose=True, tol=0.1);
+    result = mini.optimize(method='minuit', verbose=False, tol=0.1);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     _res = optimize(method='nelder', verbose=False);
     result = mini.optimize(method=MINER, params=_res.params, verbose=False);
