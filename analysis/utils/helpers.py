@@ -33,6 +33,7 @@ import numpy as np
 
 def timeacc_guesser(timeacc):
   # Check if the tuple will be modified
+  print(timeacc)
   #pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9]knots)?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9])?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
@@ -116,26 +117,37 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
         m = 'Bd2JpsiKstar'
       elif m == 'Bd2JpsiKstar':
         m = 'Bs2JpsiPhi'
-    elif mode in ('Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bs2JpsiPhi',
-                  'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus'):
+    elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus'):
       m = mode
 
 
   # Model handler when asking for weights
-  if m == 'Bs2JpsiPhi':
-    if weight:
+  if weight:
+    if m == 'Bs2JpsiPhi':
       weight = 'sWeight'
-  elif m == 'Bu2JpsiKplus':
-    if weight:
+    elif m == 'Bu2JpsiKplus':
       weight = 'sWeight'
-  elif m == 'MC_Bu2JpsiKplus':
-    if weight:
-      weight = 'polWeight'
-  elif m == 'Bd2JpsiKstar':
-    if weight:
-      if weight != 'kinWeight':
+    elif m == 'Bd2JpsiKstar':
+      if weight not in ('kinWeight', 'kbuWeight'):
         weight = 'sWeight'
+    elif m == 'MC_Bu2JpsiKplus':
+      if weight not in ('sWeight', 'polWeight', 'kinWeight'):
+        weight = 'polWeight'
+    elif m == 'MC_Bd2JpsiKstar':
+      if weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kbuWeight', 'kinWeight'):
+        weight = 'polWeight'
+    elif m == 'MC_Bs2JpsiPhi':
+      if weight == 'kbuWeight':
+        weight = 'pdfWeight'
+      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight', 'kinWeight'):
+        weight = 'polWeight'
+    elif m == 'MC_Bs2JpsiPhi_dG0':
+      if weight == 'kbuWeight':
+        weight = 'pdfWeight'
+      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight'):
+        weight = 'polWeight'
 
+  
   # Year
   if year:
     years = YEARS[year]
