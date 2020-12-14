@@ -112,8 +112,12 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   file = uproot.open(target_file)[target_treename]
   tvars_df = file.pandas.df(flatten=None)
 
-  sws = ['sw']+[f'sw_{var}' for var in binned_vars.keys()]
-  kws = ['kinWeight']+[f'kinWeight_{var}' for var in binned_vars.keys()]
+  weight = 'kinWeight'
+  if 'kbuWeight' in output_file:
+    weight = 'kbuWeight'
+
+  sws = ['sw'] + [f'sw_{var}' for var in binned_vars.keys()]
+  kws = [f'{weight}'] + [f'{weight}_{var}' for var in binned_vars.keys()]
   
   print('Original sWeights')
   print(ovars_df[sws])
@@ -121,7 +125,7 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   print(tvars_df[sws])
   
   # %% Reweighting -------------------------------------------------------------
-  ovars_df['kinWeight'] = computekinWeight(
+  ovars_df[f'{weight}'] = computekinWeight(
                           ovars_df.get(original_vars),
                           tvars_df.get(target_vars),
                           ovars_df.eval(original_weight),
@@ -129,7 +133,7 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
                           n_estimators,learning_rate,max_depth,min_samples_leaf,
                           trunc)
   for var,vvar in binned_vars.items():
-    kinWeight = np.zeros_like(ovars_df['kinWeight'].values)
+    kinWeight = np.zeros_like(ovars_df[f'{weight}'].values)
     for cut in bin_vars[var]:
       original_weight_binned = original_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
       target_weight_binned = target_weight.replace("sw",f"sw_{var}"+f"*({cut})".replace(var,vvar))
@@ -143,7 +147,7 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
                     n_estimators,learning_rate,max_depth,min_samples_leaf,
                     trunc)
       kinWeight = np.where(ovars_df.eval(cut.replace(var,vvar)), kinWeight_, kinWeight)
-    ovars_df[f'kinWeight_{var}'] = kinWeight
+    ovars_df[f'{weight}_{var}'] = kinWeight
   print('Original kinWeights')
   print(ovars_df[kws])
 
