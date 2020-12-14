@@ -22,8 +22,8 @@ from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser
-from utils.helpers import  swnorm, trigger_scissors
+from utils.helpers import version_guesser, timeacc_guesser
+from utils.helpers import swnorm, trigger_scissors
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -189,7 +189,7 @@ if __name__ == '__main__':
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
 
   if MINER.lower() in ("minuit","minos"):
-    result = mini.optimize(method='minuit', verbose=False, tol=0.05);
+    result = mini.optimize(method='minuit', verbose=True, tol=0.1);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     _res = optimize(method='nelder', verbose=False);
     result = mini.optimize(method=MINER, params=_res.params, verbose=False);
