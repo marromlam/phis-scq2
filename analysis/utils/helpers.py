@@ -33,7 +33,6 @@ import numpy as np
 
 def timeacc_guesser(timeacc):
   # Check if the tuple will be modified
-  print(timeacc)
   #pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9]knots)?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9])?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
