@@ -1,78 +1,151 @@
 common: &common
-  "time" : r"t"
-  "cosK" : r"\mathrm{cos}\theta_{K}"
-  "cosL" : r"\mathrm{cos}\theta_{K}"
-  "hphi" : "helphi"
-  "idB" : "B_ID"
-  "mHH" : "X_M"
-  "idHH" : "X_ID"
-  "sigmat" : "sigmat"
-  "B_PT" : "B_PT"
-  "pTB" : "B_PT"
-  "pB" : "B_P"
-  "hlt1b" : "hlt1b"
-  "Jpsi_Hlt1DiMuonHighMassDecision_TOS" : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
-  "magnet" : "Polarity"
-  "etaB" : "B_ETA"
-  "evtN" : "eventNumber"
-  "sw" : "sw"
-  "sw_etaB" : "sw_etaB"
-  "sw_pTB" : "sw_pTB"
-  "sw_sigmat" : "sw_sigmat"
-  "sWeight" : "sw"
-  "sWeight_etaB" : "sw_etaB"
-  "sWeight_pTB" : "sw_pTB"
-  "sWeight_sigmat" : "sw_sigmat"
-  "logIPChi2B" : "log_B_IPCHI2_mva"
+  "time" :
+    latex_name: $t$
+    range : [0.0,10.0]
+  "sigmat" :
+    latex_name: $\sigma_t$
+    range: [0.0, 10.0]
+  "logMINmuPNNmu" :
+    latex_name: $\mathrm{log} PNN_{\mu,min}$
+    range: [-6.0, 0.0]
+  "MUmaxTRchi2" :
+    latex_name: $TR_{\chi^2, max} \mu$
+    range: [0.0, 5.0]
+  "logJpsiVXchi2" :
+    latex_name: $log \chi^2_{VX} J/\psi$
+    range: [-30.0, 1.0]
 
+Bs_common: &Bs_common
+  #cinematics
+  "pHp" :
+    latex_name : $p(K^+)$
+    range : [0.0, 1.5e+5]
+  "pTHp" :
+    latex_name : $p_T(K^+)$
+    range: [0.0, 1.0e+4]
+  "pHm" :
+    latex_name : $p(K^-)$
+    range: [0.0, 1.5e+5]
+  "pTHm" :
+    latex_name : $p_t(K^-)$
+    range: [0.0, 1.0e+4]
+  "mHH" :
+    latex_name : $m_{K^+K^-}$
+    range: [990, 1050]
+  "pTB" :
+    latex_name: $P_T(B_s)$
+    range: [0.0, 4.0e+4]
+  "pB" :
+    latex_name: $P(B_s)$
+    range: [0.0, 8.0e+5]
+  "etaB" :
+    latex_name: $\eta_{B_s}$
+    range: [2, 5]
+  #chinoca
+  "logIPchi2B" :
+    latex_name : $\mathrm{log} \chi^2 IP_{B_s}$
+    range: [-12.0, 12.0]
+  "BDTFchi2" :
+    latex_name: $\chi^2_{DTF} B_s$
+    range: [0.0, 2.0e+5]
+  "logMINkPNNk" :
+    latex_name: $\mathrm{log} PNN_{k,min}$
+    range: [-6.0, 0.0]
+  "BVXchi2" :
+    latex_name: $\chi^2 B_s VX$
+    range: [0.0,20.0]
+  "pTX" :
+    latex_name: $P_T (\phi)$
+    range: [0.0, 2.5e+4]
+  "KmaxTRchi2" :
+    latex_name: $TR_{\chi^2, max} K$
+    range: [0, 5]
+
+
+
+
+Bd_common: &Bd_common
+  #cinematics
+    "pHp" :
+      latex_name: $p(K)$
+      range: [0.0, 1.5e+5]
+    "pTHp" :
+      latex_name: $p_T(K)$
+      range: [0.0, 1.0e+4]
+    "pHm" :
+      latex_name: $p(\pi)$
+      range: [0.0, 1.5e+5]
+    "pTHm" :
+      latex_name: $p_t(\pi)$
+      range: [0.0, 1.0e+4]
+    "mHH" :
+      latex_name: $m_{K\pi}$
+      range: [840, 960]
+    "pTB" :
+      latex_name: $P_T(B_d)$
+      range: [0.0, 4.0e+4]
+    "pB" :
+      latex_name: $P(B_d)$
+      range: [0.0, 8.0e+5]
+    "etaB" :
+      latex_name: $\eta_{B_d}$
+      range:  [2, 5]
+  #chinoca
+    "logIPchi2B" :
+      latex_name : $\mathrm{log} \chi^2 IP_{B_d}$
+      range: [-12.0, 12.0]
+    "BDTFchi2" :
+      latex_name: $\chi^2_{DTF} B_d$
+      range: [0.0, 2.0e+5]
+    "logMINkPNNk" :
+      latex_name: $\mathrm{log} PNN_{k,min}$
+      range: [-6, 0]
+    "BVXchi2" :
+      latex_name: $\chi^2 B_d VX$
+      range: [0,20]
+    "pTX" :
+      latex_name: $P_T (K^*)$
+      range: [0, 2.5e+4]
+    "KmaxTRchi2" :
+      latex_name: $TR_{\chi^2, max} K$
+      range: [0, 5]
 
 MC_common: &MC_common
   <<: *common
-  "genidB" : "B_ID_GenLvl"
-  "truetime" : "1000*B_TRUETAU"
-  "truecosK" : "truehelcosthetaK"
-  "truecosL" : "truehelcosthetaL"
-  "truehphi" : "truehelphi"
-  "gentime" : "1000*B_TRUETAU_GenLvl"
-  "gencosK" : "truehelcosthetaK_GenLvl"
-  "gencosL" : "truehelcosthetaL_GenLvl"
-  "genhphi" : "truehelphi_GenLvl"
-  "kinWeight" : "kinWeight"
-  "kinWeight_etaB" : "kinWeight_etaB"
-  "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pTB" : "kinWeight_pTB"
-  "polWeight" : "polWeight"
-  "pdfWeight" : "pdfWeight"
-  "bkgcatB" : "B_BKGCAT"
-  "gb_weights" : "gb_weights"
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
-  "pHp" : r"p(K^+)"
-  "pTHp" : r"p_T(K^+)"
-  "pHm" : r"p(K^+)"
-  "pTHm" : r"p_t(K^+)"
+  <<: *Bs_common
+
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
+  <<: *Bs_common
+
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_common
+  <<: *Bs_common
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
   <<: *MC_common
+  <<: *Bs_common
 
 MC_Bs2JpsiPhi_Prompt:
   <<: *MC_Bs2JpsiPhi
+  <<: *Bs_common
 
 MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
+  <<: *Bd_common
+
 
 MC_Bu2JpsiKplus:
   <<: *MC_common
 
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
+  <<: *Bs_common
   "tagOSdec" : "OS_Combination_DEC"
   "tagSSdec" : "B_SSKaonLatest_TAGDEC"
   "tagOSeta" : "OS_Combination_ETA"
@@ -80,14 +153,7 @@ Bs2JpsiPhi: &Bs2JpsiPhi
 
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
-  "kinWeight" : "kinWeight"
-  "kinWeight_etaB" : "kinWeight_etaB"
-  "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pTB" : "kinWeight_pTB"
-  "tagOSdec" : "0*time"
-  "tagSSdec" : "0*time"
-  "tagOSeta" : "0*time"
-  "tagSSeta" : "0*time"
+  <<: *Bd_common
 
 Bu2JpsiKplus:
   <<: *common
