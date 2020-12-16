@@ -138,12 +138,12 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
     elif m == 'MC_Bs2JpsiPhi':
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
-      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight', 'kinWeight'):
+      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight', 'kinWeight', 'angWeight'):
         weight = 'polWeight'
     elif m == 'MC_Bs2JpsiPhi_dG0':
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
-      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight'):
+      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight', 'angWeight'):
         weight = 'polWeight'
 
   
@@ -203,6 +203,7 @@ def send_mail(subject, body, files=None):
       os.system(f"""ssh master '{cmd} | /usr/sbin/sendmail {mail}'""")
 
 
+
 def trigger_scissors(trigger, CUT=""):
   if trigger == 'biased':
     CUT = cuts_and("hlt1b==1",CUT)
@@ -211,8 +212,8 @@ def trigger_scissors(trigger, CUT=""):
   return CUT
 
 
+
 def swnorm(sw):
   sw_ = ristra.get(sw)
   return ristra.allocate(sw_*(np.sum(sw_)/np.sum(sw_**2)))
 
-# %%
