@@ -294,7 +294,7 @@ if __name__ == '__main__':
                                      #mc[y][m][t].weight*ristra.allocate(angWeight),
                                      #**mc[y][m][t].params.valuesdict())
         angacc = badjanak.get_angular_acceptance_weights_Bd(mc[y][m][t].true, mc[y][m][t].reco,
-                                     mc[y][m][t].weight*ristra.allocate(angWeight),
+                                     mc[y][m][t].weight,#*ristra.allocate(angWeight), comparar Peilian
                                     **mc[y][m][t].params.valuesdict())
         w, uw, cov, corr = angacc
         pars = Parameters()
@@ -401,7 +401,6 @@ if __name__ == '__main__':
                       method='minuit', params=pars, fcn_kwgs={'data':data},
                       verbose=True, timeit=True, tol=0.1, strategy=2)
     likelihoods.append(result.chi2)
-
     pars = Parameters.clone(result.params)
     names = ['fPpar', 'fPper', 'dPpar', 'dPper',
             'fSlon1', 'dSlon1', 'fSlon2', 'dSlon2',
