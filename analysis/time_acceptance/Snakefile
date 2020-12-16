@@ -1,5 +1,5 @@
-ruleorder: time_acceptance_simultaneousBuasBs > time_acceptance_simultaneous
-ruleorder: time_acceptance_simultaneousBdasBs > time_acceptance_simultaneous
+#ruleorder: time_acceptance_simultaneousBuasBs > time_acceptance_simultaneous
+#ruleorder: time_acceptance_simultaneousBdasBs > time_acceptance_simultaneous
 
 
 
@@ -47,7 +47,7 @@ rule time_acceptance_simultaneous:
   resources:
     mem_mb=4096
   wildcard_constraints:
-    timeacc = "simul.*",
+    timeacc = r"(simul)((?!.*?asBs).*)(.*)?",
   input:
     sample = lambda wcs: [
       tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
@@ -207,7 +207,7 @@ rule time_acceptance_simultaneousBuasBs:
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --timeacc {wildcards.timeacc}\
-    ) #&> {log} 2>&1""")
+    ) &> {log} 2>&1""")
     send_mail(f"Time Acceptance Bu as Bs :: {wildcards}", f"{log}")
 
 
@@ -245,7 +245,7 @@ rule lifetime_fit:
            --output-tables {output.tables}\
            --year {wildcards.year}\
            --version {wildcards.version}\
-    ) #&> {log} 2>&1""")
+    ) &> {log} 2>&1""")
     send_mail("Single Time Acceptance", f"{log}")
 
 
@@ -303,8 +303,8 @@ rule lifetimeBu:
            --year {",".join(YEARS[f'{wildcards.year}'])}\
            --version {wildcards.version}\
            --timeacc {wildcards.timeacc}\
-    ) #&> {log} 2>&1""")
-    send_mail(f"Lifetime Bd fit :: {wildcards}", f"{log}")
+    ) &> {log} 2>&1""")
+    send_mail(f"Lifetime Bu fit :: {wildcards}", f"{log}")
 
 
 
@@ -318,9 +318,7 @@ rule time_acceptance_plot:
   resources:
     mem_mb=16384
   wildcard_constraints:
-    #timeacc = "(single|simul|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
     plot = "(fit|fitlog|spline|splinelog)",
-    #trigger = "(biased|unbiased|biased+unbiased)",
   input:
     samples = lambda wcs: sum([[
       tuples(wcs,version=v, mode='MC_Bs2JpsiPhi_dG0'),
