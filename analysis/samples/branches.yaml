@@ -27,7 +27,15 @@ common: &common
   "sWeight_etaB" : "sw_etaB"
   "sWeight_pTB" : "sw_pTB"
   "sWeight_sigmat" : "sw_sigmat"
-  "logIPChi2B" : "log_B_IPCHI2_mva"
+  "logIPchi2B" : "log_B_IPCHI2_mva" #From this point, added by Ramon
+  "BDTFchi2" : "B_DTF_CHI2NDOF"
+  "logMINkPNNk" : "log_min_K_PNNk_mva"
+  "BVXchi2" : "B_VX_CHI2NDOF_mva"
+  "pTX" : "X_PT"
+  "KmaxTRchi2" : "max_K_TRCHI2_mva"
+  "MUmaxTRchi2" : "max_mu_TRCHI2_mva"
+  "logJpsiVXchi2" : "log_Jpsi_VX_CHI2NDOF_mva"
+  "logMINmuPNNmu" : "log_min_mu_PNNmu_mva"
 
 
 MC_common: &MC_common
