@@ -30,13 +30,16 @@
 //Ramon es mejor pasar el data igual para no confundirse en otras partes del codigo
 
 WITHIN_KERNEL
-ftype getDiffRateBd( ftype *data,
-                    ftype CSP,
-                    ftype ASlon, ftype APlon, ftype APpar, ftype APper,
-                    ftype dSlon, ftype dPlon, ftype dPpar, ftype dPper,
+ftype getDiffRateBd(const ftype *data,
+                    const ftype G, const ftype CSP,
+                    const ftype ASlon, const ftype APlon, const ftype APpar,
+                    const ftype APper, const ftype dSlon, const ftype dPlon,
+                    const ftype dPpar, const ftype dPper,
+                    // Time Limints
+                    const ftype tLL, const ftype tUL,
                     // Angular acceptance
-                    GLOBAL_MEM  ftype *angular_weights,
-                    int USE_FK
+                    GLOBAL_MEM  const ftype *angular_weights,
+                    const int USE_FK
                   )
 {
 
@@ -46,9 +49,9 @@ ftype getDiffRateBd( ftype *data,
   //     lalala
   ftype cosK       = data[0];                      // Time-angular distribution
   ftype cosL       = data[1];
-  ftype hphi       = data[2];                            // Time resolution
+  ftype hphi       = data[2];
+  ftype time       = data[3];                            // Time resolution
   ftype qOS        = data[5];                                      // Tagging
-
 
 
   // Flavor tagging ------------------------------------------------------------
@@ -59,6 +62,8 @@ ftype getDiffRateBd( ftype *data,
   ftype fk, ak;
   ftype pdfB = 0.0;
   ftype norm = 0.0;
+  ftype num_t = exp(-time*G);
+  ftype tnorm = (exp(-tLL*G)-exp(-tUL*G))/G;
 
   for(int k = 1; k <= 10; k++)
   {
@@ -71,17 +76,19 @@ ftype getDiffRateBd( ftype *data,
       fk = TRISTAN[k-1];
     }
     ak = getAbd(ASlon, APlon, APpar, APper, dSlon, dPpar, dPpar, dPper, CSP, k);
-    norm += angular_weights[k-1]*ak;
-    //norm += TRISTAN[k-1]*ak;
     if ( (k==4) || (k==6)  || (k==9) )
     {
       pdfB += id*fk*ak;
+      norm += id*angular_weights[k-1]*ak;
     }
     else
     {
       pdfB += fk*ak;
+      norm += angular_weights[k-1]*ak;
     }
   }
+  pdfB = num_t*pdfB;
+  norm = tnorm*norm;
 
 
   return pdfB/norm;

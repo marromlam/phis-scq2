@@ -34,7 +34,7 @@ rule samples_sync_tuple:
 
 rule samples_reduce_tuple:
   wildcard_constraints:
-    mode = "(Bs2JpsiPhi|MC_Bs2JpsiPhi_dG0|MC_Bs2JpsiPhi|Bd2JpsiKstar|MC_Bd2JpsiKstar)"
+    mode = "(MC_)?(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
   resources:
     mem_mb=2048
   input:
@@ -51,3 +51,36 @@ rule samples_reduce_tuple:
            --input-tree DecayTree\
            --output-tree DecayTree\
     ) &> {log}""")
+
+# samples plot------------------------------------------------------------------
+#   plot of differents branches of the ntuples. this rule get the plots for
+#   the years with no corrections, sw and kinematic corrections (MC vs data)
+
+rule plot_samples:
+  resources:
+    mem_mb=1024
+  wildcard_constraints:
+    mode = "(TOY_|MC_)?(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+    branch = "(pTB|pB|pTHp|pHp|pTHm|pHm|etaB|mHH|logIPchi2B|BDTFchi2|logMINkPNNk|BVXchi2|pTX|KmaxTRchi2|MUmaxTRchi2|logJpsiVXchi2|logMINmuPNNmu)",
+    year = 'run2'
+  input:
+    tuple = lambda wcs: tuples(wcs, mode='cdata', year='run2'),
+    control = lambda wcs: tuples(wcs, year='run2')
+  output:
+    'output/samples/figures/{year}/{mode}/{version}_{branch}.pdf',
+    'output/samples/figures/{year}/{mode}/{version}_{branch}_sw.pdf',
+    'output/samples/figures/{year}/{mode}/{version}_{branch}_rw.pdf'
+  log:
+    'output/log/samples/{year}/{mode}/{version}_{branch}.log',
+  run:
+    shell(f"""(time\
+    python analysis/samples/plot.py\
+           --tuple {",".join(input.tuple)}\
+           --control {",".join(input.control)}\
+           --year {",".join(YEARS['Run2'])}\
+           --version {wildcards.version}\
+           --mode {wildcards.mode}\
+           --branch {wildcards.branch}\
+           --output {",".join(output)}\
+    ) #&> {log}""")
+    send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))

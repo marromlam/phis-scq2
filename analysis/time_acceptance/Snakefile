@@ -1,3 +1,7 @@
+#ruleorder: time_acceptance_simultaneousBuasBs > time_acceptance_simultaneous
+#ruleorder: time_acceptance_simultaneousBdasBs > time_acceptance_simultaneous
+
+
 
 # decay_time_acceptance computations -------------------------------------------
 #    These are several rules related to decay-time acceptance. The main one is
@@ -33,7 +37,7 @@ rule time_acceptance_single:
            --trigger {wildcards.trigger}\
            --timeacc {wildcards.timeacc}\
            --contour {contour}\
-    ) &> {log}
+    ) #&> {log}
     """)
     send_mail(f"Time Acceptance :: {wildcards}", f"{log}")
 
@@ -43,7 +47,7 @@ rule time_acceptance_simultaneous:
   resources:
     mem_mb=4096
   wildcard_constraints:
-    timeacc = "simul(Noncorr|3knots|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?",
+    timeacc = r"(simul)((?!.*?asBs).*)(.*)?",
   input:
     sample = lambda wcs: [
       tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
@@ -86,8 +90,7 @@ rule time_acceptance_simultaneous:
 
 rule time_acceptance_simultaneousDGn0:
   wildcard_constraints:
-    timeacc = "simul(Noncorr|9knots|12knots)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?",
-    trigger = "(biased|unbiased|combined)",
+    timeacc = "simul.*",
   input:
     sample = lambda wcs: [
       tuples(wcs,mode='MC_Bs2JpsiPhi'),
@@ -134,7 +137,7 @@ rule time_acceptance_simultaneousBdasBs:
   resources:
     mem_mb=4096
   wildcard_constraints:
-    timeacc = "simul(Noncorr|9knots|12knots)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?",
+    timeacc = "simul.*",
   input:
     sample = lambda wcs: [
       tuples(wcs,mode='MC_Bd2JpsiKstar'),
@@ -158,14 +161,54 @@ rule time_acceptance_simultaneousBdasBs:
     (time\
     python analysis/time_acceptance/simultaneousBdasBs.py\
            --samples {",".join(input.sample)}\
-           --output-params {",".join(output.params)}\
-           --output-tables {",".join(output.tables)}\
-           --year {wildcards.year}\
+           --params  {",".join(output.params)}\
+           --tables  {",".join(output.tables)}\
+           --year    {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --timeacc {wildcards.timeacc}\
     ) &> {log} 2>&1""")
     send_mail(f"Time Acceptance Bd as Bs :: {wildcards}", f"{log}")
+
+
+
+rule time_acceptance_simultaneousBuasBs:
+  resources:
+    mem_mb=4096
+  wildcard_constraints:
+    timeacc = "simul.*",
+  input:
+    sample = lambda wcs: [
+      tuples(wcs,mode='MC_Bu2JpsiKplus'),
+      tuples(wcs,mode='MC_Bd2JpsiKstar'),
+      tuples(wcs,mode='Bd2JpsiKstar')
+    ]
+  output:
+    params = [
+      'output/params/time_acceptance/{year}/MC_Bu2JpsiKplus/{version}_{timeacc}BuasBs_{trigger}.json',
+      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}BuasBs_{trigger}.json',
+      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}BuasBs_{trigger}.json'
+    ],
+    tables = [
+      'output/tables/time_acceptance/{year}/MC_Bu2JpsiKplus/{version}_{timeacc}BuasBs_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}BuasBs_{trigger}.tex',
+      'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}BuasBs_{trigger}.tex'
+    ]
+  log:
+    'output/log/time_acceptance_simultaneousBuasBs/{year}/{version}_{timeacc}BuasBs_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python analysis/time_acceptance/simultaneousBuasBs.py\
+           --samples {",".join(input.sample)}\
+           --params  {",".join(output.params)}\
+           --tables  {",".join(output.tables)}\
+           --year    {wildcards.year}\
+           --version {wildcards.version}\
+           --trigger {wildcards.trigger}\
+           --timeacc {wildcards.timeacc}\
+    ) &> {log} 2>&1""")
+    send_mail(f"Time Acceptance Bu as Bs :: {wildcards}", f"{log}")
 
 
 
@@ -202,8 +245,9 @@ rule lifetime_fit:
            --output-tables {output.tables}\
            --year {wildcards.year}\
            --version {wildcards.version}\
-    ) #&> {log} 2>&1""")
+    ) &> {log} 2>&1""")
     send_mail("Single Time Acceptance", f"{log}")
+
 
 
 rule lifetimeBd:
@@ -214,10 +258,10 @@ rule lifetimeBd:
     biased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BdasBs_biased.json', y=YEARS[f'{wcs.year}']),
     unbiased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BdasBs_unbiased.json', y=YEARS[f'{wcs.year}']),
   output:
-    params = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimeBd{timeacc}.json',
-    tables = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifetimeBd{timeacc}.tex',
+    params = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifeBd{timeacc}.json',
+    tables = 'output/tables/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifeBd{timeacc}.tex',
   log:
-    'output/log/lifetimeBd/{year}/Bd2JpsiKstar/{version}_lifetimeBd{timeacc}.log'
+    'output/log/lifetimeBd/{year}/Bd2JpsiKstar/{version}_life{timeacc}.log'
   run:
     shell(f"""
     (time\
@@ -235,6 +279,35 @@ rule lifetimeBd:
 
 
 
+rule lifetimeBu:
+  resources:
+    mem_mb=4096
+  input:
+    sample = lambda wcs: tuples(wcs,mode='Bu2JpsiKplus',year=f'{wcs.year}'),
+    biased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BuasBs_biased.json', y=YEARS[f'{wcs.year}']),
+    unbiased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BuasBs_unbiased.json', y=YEARS[f'{wcs.year}']),
+  output:
+    params = 'output/params/time_acceptance/{year}/Bu2JpsiKplus/{version}_lifeBu{timeacc}.json',
+    tables = 'output/tables/time_acceptance/{year}/Bu2JpsiKplus/{version}_lifeBu{timeacc}.tex',
+  log:
+    'output/log/lifetimeBu/{year}/Bu2JpsiKplus/{version}_lifeBu{timeacc}.log'
+  run:
+    shell(f"""
+    (time\
+    python analysis/time_acceptance/lifetimeBu.py\
+           --sample {",".join(input.sample)}\
+           --biased-params {",".join(input.biased)}\
+           --unbiased-params {",".join(input.unbiased)}\
+           --output-params {output.params}\
+           --output-tables {output.tables}\
+           --year {",".join(YEARS[f'{wildcards.year}'])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+    ) &> {log} 2>&1""")
+    send_mail(f"Lifetime Bu fit :: {wildcards}", f"{log}")
+
+
+
 
 # decay_time_acceptance plots --------------------------------------------------
 #    These are several rules related to decay-time acceptance. The main one is
@@ -245,9 +318,7 @@ rule time_acceptance_plot:
   resources:
     mem_mb=16384
   wildcard_constraints:
-    #timeacc = "(single|simul|nonkin|9knots|12knots)(Minos|BFGS|LBFGSB|CG|Nelder)?",
     plot = "(fit|fitlog|spline|splinelog)",
-    #trigger = "(biased|unbiased|biased+unbiased)",
   input:
     samples = lambda wcs: sum([[
       tuples(wcs,version=v, mode='MC_Bs2JpsiPhi_dG0'),

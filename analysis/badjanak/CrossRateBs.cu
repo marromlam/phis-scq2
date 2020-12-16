@@ -12,53 +12,41 @@
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
 #include <ipanema/complex.hpp>
 
 
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Functions ///////////////////////////////////////////////////////////////////
-
-
-
 WITHIN_KERNEL
-ftype rateBs( const ftype *data,
-              // Time-dependent angular distribution
-              const ftype G, const ftype DG, const ftype DM, const ftype CSP,
-              const ftype ASlon, const ftype APlon, const ftype APpar, const ftype APper,
-              const ftype pSlon, const ftype pPlon, const ftype pPpar, const ftype pPper,
-              const ftype dSlon, const ftype dPlon, const ftype dPpar, const ftype dPper,
-              const ftype lSlon, const ftype lPlon, const ftype lPpar, const ftype lPper,
-              // Time limits
-              const ftype tLL, const ftype tUL,
-              // Time resolution
-              const ftype sigma_offset, const ftype sigma_slope, const ftype sigma_curvature,
-              const ftype mu,
-              // Flavor tagging
-              const ftype eta_bar_os, const ftype eta_bar_ss,
-              const ftype p0_os,  const ftype p1_os, const ftype p2_os,
-              const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
-              const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
-              const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
-              // Time acceptance
-              GLOBAL_MEM const ftype *coeffs,
-              // Angular acceptance
-              GLOBAL_MEM  const ftype *angular_weights,
-              const int USE_FK, const int USE_ANGACC, const int USE_TIMEACC,
-              const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES
-            )
+ftype rateBs(const ftype *data,
+             // Time-dependent angular distribution
+             const ftype G, const ftype DG, const ftype DM, const ftype CSP,
+             const ftype ASlon, const ftype APlon, const ftype APpar,
+             const ftype APper, const ftype pSlon, const ftype pPlon,
+             const ftype pPpar, const ftype pPper, const ftype dSlon,
+             const ftype dPlon, const ftype dPpar, const ftype dPper,
+             const ftype lSlon, const ftype lPlon, const ftype lPpar,
+             const ftype lPper,
+             // Time limits
+             const ftype tLL, const ftype tUL,
+             // Time resolution
+             const ftype sigma_offset, const ftype sigma_slope,
+             const ftype sigma_curvature, const ftype mu,
+             // Flavor tagging
+             const ftype eta_bar_os, const ftype eta_bar_ss,
+             const ftype p0_os,  const ftype p1_os, const ftype p2_os,
+             const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
+             const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
+             const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
+             // Time acceptance
+             GLOBAL_MEM const ftype *coeffs,
+             // Angular acceptance
+             GLOBAL_MEM  const ftype *angular_weights,
+             const int USE_FK, const int USE_ANGACC, const int USE_TIMEACC,
+             const int USE_TIMEOFFSET, const int SET_TAGGING,
+             const int USE_TIMERES
+             )
 {
   #if DEBUG
-  //printf("EVT = %d (%d)\n", get_global_id(0), DEBUG_EVT);
   if ( DEBUG > 4 && get_global_id(0) == DEBUG_EVT )
   {
     printf("*USE_FK            : %d\n", USE_FK);
@@ -114,18 +102,18 @@ ftype rateBs( const ftype *data,
   // Variables -----------------------------------------------------------------
   //     Make sure that the input it's in this order.
   //     lalala
-  ftype cosK       = data[0];                      // Time-angular distribution
+  ftype cosK       = data[0];                       // Time-angular distribution
   ftype cosL       = data[1];
   ftype hphi       = data[2];
   ftype time       = data[3];
 
-  //ftype sigma_t    = 0.04554;                            // Time resolution
-  ftype sigma_t    = data[4];                              // Time resolution
+  //ftype sigma_t    = 0.04554;                               // Time resolution
+  ftype sigma_t    = data[4];                                 // Time resolution
 
-  ftype qOS        = data[5];                                      // Tagging
+  ftype qOS        = data[5];                                         // Tagging
   ftype qSS        = data[6];
-  ftype etaOS 	  	= data[7];
-  ftype etaSS 	    = data[8];
+  ftype etaOS      = data[7];
+  ftype etaSS 	   = data[8];
 
   #if DEBUG
   if ( DEBUG > 99 && ( (time>=tUL) || (time<=tLL) ) )
@@ -170,32 +158,20 @@ ftype rateBs( const ftype *data,
   }
   #endif
 
+  exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
+  exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
+  exp_i = expconv(time-t_offset,          G, DM, delta_t);
 
-  if ( delta_t == 0 ) // MC samples need to solve some problems
-  {
-    exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
-    exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
-    exp_i = expconv(time-t_offset,          G, DM, delta_t);
-  }
-  else
-  {
-    exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
-    exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
-    exp_i = expconv(time-t_offset,          G, DM, delta_t);
-  }
-  //printf("                   : exp_p=%+.8f%+.8fi   exp_m=%+.8f%+.8fi   exp_i=%+.8f%+.8fi\n", exp_p.x, exp_p.y, exp_m.x, exp_m.y, exp_i.x, exp_i.y);
-
-  // ftype ta = pycuda::real(0.5*(exp_m + exp_p));     // cosh = (exp_m + exp_p)/2
-  // ftype tb = pycuda::real(0.5*(exp_m - exp_p));     // sinh = (exp_m - exp_p)/2
-  // ftype tc = pycuda::real(exp_i);                        // exp_i = cos + I*sin
-  // ftype td = pycuda::imag(exp_i);                        // exp_i = cos + I*sin
   ftype ta = 0.5*(exp_m.x+exp_p.x);
   ftype tb = 0.5*(exp_m.x-exp_p.x);
   ftype tc = exp_i.x;
   ftype td = exp_i.y;
+
   #if FAST_INTEGRAL
-    ta *= sqrt(2*M_PI); tb *= sqrt(2*M_PI); tc *= sqrt(2*M_PI); td *= sqrt(2*M_PI);
+    ta *= sqrt(2*M_PI); tb *= sqrt(2*M_PI);
+    tc *= sqrt(2*M_PI); td *= sqrt(2*M_PI);
   #endif
+
   #if DEBUG
   if (DEBUG >= 3 && get_global_id(0) == DEBUG_EVT)
   {
@@ -275,7 +251,7 @@ ftype rateBs( const ftype *data,
   ftype nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
   ftype pdfB = 0.0; ftype pdfBbar = 0.0;
 
-  for(int k = 1; k <= 10; k++)
+  for(int k = 1; k <= NTERMS; k++)
   {
     nk = getN(APlon,ASlon,APpar,APper,CSP,k);
     if (USE_FK)
@@ -296,8 +272,8 @@ ftype rateBs( const ftype *data,
     ck = getC(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
     dk = getD(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
 
-    if (abs(int(qOS)) != 511) 
-    { // Bs2JpsiPhi p.d.f 
+    if ((int)fabs(qOS) != 511)
+    { // Bs2JpsiPhi p.d.f
       hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);
       hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
     }
@@ -345,7 +321,7 @@ ftype rateBs( const ftype *data,
   {
     // Here we can use the simplest 4xPi integral of the pdf since there are no
     // resolution effects
-    integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG, 
+    integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG,
                    DM, tLL, tUL);
   }
   else
@@ -356,7 +332,7 @@ ftype rateBs( const ftype *data,
                      DM, delta_t, tLL, tUL, t_offset, coeffs);
     #else
       int simon_j = sigma_t/(SIGMA_T/80);
-      integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, 
+      integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights,
                          G, DG, DM, //delta_t, // what should be used
                          parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
                          tLL, tUL, t_offset,
@@ -392,10 +368,11 @@ ftype rateBs( const ftype *data,
     }
   }
   #endif
-  // That's all folks!
+
   return num/den;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// that's all folks!

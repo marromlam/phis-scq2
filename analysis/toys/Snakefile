@@ -1,28 +1,29 @@
 # Run2 physics_params ----------------------------------------------------------
 #     This rule runs the iterative procedure for FullRun2 years using RD.
 
-rule toys_generate_data_run2:
+rule toys_generate_data:
   input:
-    samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi'),
+    samples = lambda wcs: tuples(wcs, version=config['version'], year=f'{wcs.year}', mode='Bs2JpsiPhi'),
     # Angular acceptance
-    angacc_biased = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json',
-    angacc_unbiased = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json',
+    angacc_biased = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/Bs2JpsiPhi/{config['version']}_{config['angacc']}_{config['timeacc']}_biased.json",
+    angacc_unbiased = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/Bs2JpsiPhi/{config['version']}_{config['angacc']}_{config['timeacc']}_unbiased.json",
     # Time acceptance coefficients
-    timeacc_biased = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
-    timeacc_unbiased = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
+    timeacc_biased = lambda wcs: f"output/params/time_acceptance/{wcs.year}/Bd2JpsiKstar/{config['version']}_{config['timeacc']}_biased.json",
+    timeacc_unbiased = lambda wcs: f"output/params/time_acceptance/{wcs.year}/Bd2JpsiKstar/{config['version']}_{config['timeacc']}_unbiased.json",
     # CSP
-    csp_factors = lambda wcs: f'output/params/csp_factors/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+    csp_factors = lambda wcs: f"output/params/csp_factors/{wcs.year}/Bs2JpsiPhi/{config['version'].split('@')[0]}.json",
     # Time resolution
-    time_resolution = lambda wcs: f'output/params/time_resolution/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+    time_resolution = lambda wcs: f"output/params/time_resolution/{wcs.year}/Bs2JpsiPhi/{config['version'].split('@')[0]}.json",
     # Flavor tagging
-    flavor = lambda wcs: f'output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
+    flavor = lambda wcs: f"output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{config['version'].split('@')[0]}.json",
     # Previously fitted parameters
-    params = 'output/params/physics_params/run2/Bs2JpsiPhi/{version}_{fit}_{angacc}_{timeacc}.json',
+    params = lambda wcs: f"output/params/physics_params/{config['fit'] if config['fit']!='yearly' else f'{wcs.year}'}/Bs2JpsiPhi/{config['version']}_{config['fit']}_{config['angacc']}_{config['timeacc']}.json",
   output:
-    SAMPLES_PATH+'{year}/TOY_Bs2JpsiPhi/{version}w{fit}w{angacc}w{timeacc}gen{dateflag}.root',
+    SAMPLES_PATH+"{year}/TOY_Bs2JpsiPhi/{dateflag}.root",
   log:
-    'output/log/toys_generate_data/{year}/TOY_Bs2JpsiPhi/{version}w{fit}w{angacc}w{timeacc}gen{dateflag}.log'
+    "output/log/toys_generate_data/{year}/TOY_Bs2JpsiPhi/{dateflag}.log"
   run:
+    print(config)
     shell(f"""(time\
     python analysis/toys/generator.py\
            --sample                  {input.samples}\
@@ -36,57 +37,56 @@ rule toys_generate_data_run2:
            --fitted-params           {input.params}\
            --output                  {output}\
            --year                    {wildcards.year}\
-           --version                 {wildcards.version}\
+           --version                 {config['version']}\
     ) &> {log}""")
-    send_mail(f"Toy Generation RD :: {wildcards}", f"{log}")
+    send_mail(f"Toy Generation RD :: {wildcards} {config}", f"{log}")
 
 
-
+# VERSION = 'v0r5'
 rule toys_fit_run2a:
-  wildcard_constraints:
-    toyconf = ".*w.*w.*"
   input:
-    samples = [SAMPLES_PATH+'2015/TOY_Bs2JpsiPhi/{version}w{toyconf}gen{dateflag}.root',
-               SAMPLES_PATH+'2016/TOY_Bs2JpsiPhi/{version}w{toyconf}gen{dateflag}.root'],
+    samples = [SAMPLES_PATH+'2015/TOY_Bs2JpsiPhi/{dateflag}.root',
+               SAMPLES_PATH+'2016/TOY_Bs2JpsiPhi/{dateflag}.root'],
     # Angular acceptance
-    angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json'
+    angacc_biased = lambda wcs: [
+      f"output/params/angular_acceptance/2015/Bs2JpsiPhi/{config['version']}_{wcs.angacc}_{wcs.timeacc}_biased.json",
+      f"output/params/angular_acceptance/2016/Bs2JpsiPhi/{config['version']}_{wcs.angacc}_{wcs.timeacc}_biased.json"
     ],
-    angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json'
+    angacc_unbiased = lambda wcs: [
+      f"output/params/angular_acceptance/2015/Bs2JpsiPhi/{config['version']}_{wcs.angacc}_{wcs.timeacc}_unbiased.json",
+      f"output/params/angular_acceptance/2016/Bs2JpsiPhi/{config['version']}_{wcs.angacc}_{wcs.timeacc}_unbiased.json"
     ],
     # Time acceptance coefficients
-    timeacc_biased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
+    timeacc_biased = lambda wcs: [
+      f"output/params/time_acceptance/2015/Bd2JpsiKstar/{config['version']}_{wcs.timeacc}_biased.json",
+      f"output/params/time_acceptance/2016/Bd2JpsiKstar/{config['version']}_{wcs.timeacc}_biased.json"
     ],
-    timeacc_unbiased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
+    timeacc_unbiased = lambda wcs: [
+      f"output/params/time_acceptance/2015/Bd2JpsiKstar/{config['version']}_{wcs.timeacc}_unbiased.json",
+      f"output/params/time_acceptance/2016/Bd2JpsiKstar/{config['version']}_{wcs.timeacc}_unbiased.json"
     ],
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f"output/params/csp_factors/2015/Bs2JpsiPhi/{config['version'].split('@')[0]}.json",
+      f"output/params/csp_factors/2016/Bs2JpsiPhi/{config['version'].split('@')[0]}.json"
     ],
     # Time resolution
     time_resolution = lambda wcs: [
-      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f"output/params/time_resolution/2015/Bs2JpsiPhi/{config['version'].split('@')[0]}.json",
+      f"output/params/time_resolution/2016/Bs2JpsiPhi/{config['version'].split('@')[0]}.json"
     ],
     # Flavor tagging
     flavor = lambda wcs: [
-      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f"output/params/flavor_tagging/2015/Bs2JpsiPhi/{config['version'].split('@')[0]}.json",
+      f"output/params/flavor_tagging/2016/Bs2JpsiPhi/{config['version'].split('@')[0]}.json"
     ],
   output:
-    params = 'output/params/physics_params/run2a/TOY_Bs2JpsiPhi/{version}w{toyconf}gen{dateflag}_run2a_{angacc}_{timeacc}.json',
-    tables = 'output/tables/physics_params/run2a/TOY_Bs2JpsiPhi/{version}w{toyconf}gen{dateflag}_run2a_{angacc}_{timeacc}.tex'
+    params = 'output/params/physics_params/run2a/TOY_Bs2JpsiPhi/{dateflag}_run2a_{angacc}_{timeacc}.json',
+    tables = 'output/tables/physics_params/run2a/TOY_Bs2JpsiPhi/{dateflag}_run2a_{angacc}_{timeacc}.tex'
   log:
-    'output/log/physics_params_data/run2a/Bs2JpsiPhi/{version}_{toyconf}gen{dateflag}_run2a_{angacc}_{timeacc}.log'
+    'output/log/physics_params_data/run2a/Bs2JpsiPhi/{dateflag}_run2a_{angacc}_{timeacc}.log'
   run:
+    print(config)
     shell(f"""(time\
     python analysis/angular_fit/fit_data.py\
            --samples                 {",".join(input.samples)}\
@@ -99,9 +99,9 @@ rule toys_fit_run2a:
            --flavor-tagging          {",".join(input.flavor)}\
            --params                  {output.params}\
            --tables                  {output.tables}\
-           --year                    {",".join(YEARS['Run2a'])}\
+           --year                    {",".join(YEARS['run2a'])}\
            --flag                    run2a_{wildcards.angacc}_{wildcards.timeacc}\
-           --version                 {wildcards.version}\
+           --version                 {config['version']}\
     ) &> {log}""")
     send_mail(f"Physics Parameters TOY Run2a", f"{log}")
 

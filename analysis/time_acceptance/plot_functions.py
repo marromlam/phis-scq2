@@ -233,6 +233,10 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   # Actual ploting
   axplot.set_ylim(0.4, 1.5)
   #axplot.set_ylim(0.96, 1.05)#0.96, 1.05
+  #axplot.set_xlim(0.3, 3.05)#0.96, 1.05
+  #axpull.set_ylim(-2, 2)  # 0.96, 1.05
+  #axpull.set_yticks([-2, -1, 0, +1, +2])
+  
   # Plot pdf
   axplot.plot(X, y_nom_s(X), color=FMTCOLOR if FMTCOLOR!='k' else None)
   # Plot confidence bands
@@ -248,7 +252,6 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
                       histogram.pull_pdf(
                           x, y_nom/y_spl, ref.cmbins, y_norm*ref.counts/ref_norm, ref.errl, ref.errh),
                       0)
-
   # If log, then log both axes
   if log:
     axplot.set_xscale('log')
@@ -276,7 +279,7 @@ def plotter(args,axes):
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
   LOGSCALE = True if 'log' in args['plot'] else False
   PLOT = args['plot'][:-3] if LOGSCALE else args['plot']
   LABELED = args['labeled']

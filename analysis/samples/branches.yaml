@@ -27,8 +27,15 @@ common: &common
   "sWeight_etaB" : "sw_etaB"
   "sWeight_pTB" : "sw_pTB"
   "sWeight_sigmat" : "sw_sigmat"
-  "logIPChi2B" : "log_B_IPCHI2_mva"
-  "BDTF" : "B_DTF_CHI2NDOF"
+  "logIPchi2B" : "log_B_IPCHI2_mva" #From this point, added by Ramon
+  "BDTFchi2" : "B_DTF_CHI2NDOF"
+  "logMINkPNNk" : "log_min_K_PNNk_mva"
+  "BVXchi2" : "B_VX_CHI2NDOF_mva"
+  "pTX" : "X_PT"
+  "KmaxTRchi2" : "max_K_TRCHI2_mva"
+  "MUmaxTRchi2" : "max_mu_TRCHI2_mva"
+  "logJpsiVXchi2" : "log_Jpsi_VX_CHI2NDOF_mva"
+  "logMINmuPNNmu" : "log_min_mu_PNNmu_mva"
 
 
 MC_common: &MC_common
@@ -53,6 +60,8 @@ MC_common: &MC_common
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
+  "dg0Weight" : "dg0Weight"
+
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
@@ -68,9 +77,13 @@ MC_Bs2JpsiPhi_Prompt:
 
 MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
+  "kbuWeight" : "kbuWeight"
+  "kbuWeight_etaB" : "kbuWeight_etaB"
+  "kbuWeight_sigmat" : "kbuWeight_sigmat"
+  "kbuWeight_pTB" : "kbuWeight_pTB"
 
 MC_Bu2JpsiKplus:
-  <<: *common
+  <<: *MC_common
 
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
@@ -85,6 +98,10 @@ Bd2JpsiKstar: &Bd2JpsiKstar
   "kinWeight_etaB" : "kinWeight_etaB"
   "kinWeight_sigmat" : "kinWeight_sigmat"
   "kinWeight_pTB" : "kinWeight_pTB"
+  "kbuWeight" : "kbuWeight"
+  "kbuWeight_etaB" : "kbuWeight_etaB"
+  "kbuWeight_sigmat" : "kbuWeight_sigmat"
+  "kbuWeight_pTB" : "kbuWeight_pTB"
   "tagOSdec" : "0*time"
   "tagSSdec" : "0*time"
   "tagOSeta" : "0*time"

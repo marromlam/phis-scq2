@@ -15,6 +15,7 @@ import argparse
 import os
 import numpy as np
 import hjson
+import uncertainties as unc
 
 # load ipanema
 from ipanema import initialize
@@ -61,7 +62,7 @@ if __name__ == '__main__':
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
-  MODE = 'Bd2JpsiKstar'
+  MODE = 'Bu2JpsiKplus'
   TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
@@ -71,14 +72,6 @@ if __name__ == '__main__':
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
-
-  splitter = '(evtN%2)==0'  # this is Bd as Bs
-  if LIFECUT == 'mKstar':
-    splitter = cuts_and(splitter, f"mHH>890")
-  elif LIFECUT == 'alpha':
-    splitter = cuts_and(splitter, f"alpha<0.025")
-  elif LIFECUT == 'deltat':
-    splitter = cuts_and(splitter, f"sigmat<0.04")
   
   # Print settings
   print(f"\n{80*'='}\nSettings\n{80*'='}\n")
@@ -86,12 +79,10 @@ if __name__ == '__main__':
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'year(s)':>15}: {YEAR:50}")
   print(f"{'timeacc':>15}: {TIMEACC:50}")
-  print(f"{'splitter':>15}: {splitter:50}")
   print(f"{'minimizer':>15}: {MINER:50}\n")
   
   # final arrangemets
   samples = args['sample'].split(',')
-  kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   sw = f'sw_{VAR}' if VAR else 'sw'
 
 
@@ -104,7 +95,7 @@ if __name__ == '__main__':
     for t in ['biased', 'unbiased']:
       cats[m][t] = Sample.from_root(samples[i], share=SHARE)
       cats[m][t].name = f"BdRD-{m}-{t}"
-      cats[m][t].chop(trigger_scissors(t, cuts_and(CUT, f'({splitter}) == 1' )))
+      cats[m][t].chop(trigger_scissors(t, CUT))
 
       # allocate arrays
       cats[m][t].allocate(time='time', lkhd='0*time')
@@ -115,7 +106,7 @@ if __name__ == '__main__':
       # Add coeffs parameters
       c = Parameters.load(args[f'{t}_params'].split(',')[i])
       knots = Parameters.build(c, c.find('k.*'))
-      cats[m][t].params = Parameters.build(c,c.find('c.*')+['mu_Bc','sigma_Bc'])
+      cats[m][t].params = Parameters.build(c,c.find('c.*')+['mu_c','sigma_c'])
 
       # Update kernel with the corresponding knots
       fcns.badjanak.config['knots'] = np.array(knots).tolist()
@@ -130,7 +121,7 @@ if __name__ == '__main__':
   
   # create a common gamma parameter for biased and unbiased
   lfpars = Parameters()
-  lfpars.add(dict(name='gamma', value=0.5, min=0.0, max=1.0, latex="\Gamma_d"))
+  lfpars.add(dict(name='gamma', value=0.5, min=-1.0, max=1.0, latex="\Gamma_u-\Gamma_d"))
   
   # join and print parameters before the lifetime fit
   for y in cats:
@@ -158,7 +149,11 @@ if __name__ == '__main__':
 
   print(lifefit)
   print(f"\n{80*'='}\nLifetime estimation\n{80*'='}\n")
-  print(f"\\tau(B_d^0) = {1/lifefit.params['gamma'].uvalue:.2uL}")
+  tauBd = unc.ufloat(1.520,0.004)
+  tauBu = 1/lifefit.params['gamma'].uvalue
+  print(f"\\tau(B_u^+) = {tauBu:.2uL}")
+  print(f"\\tau(B_d^0) = {tauBd:.2uL} WA")
+  print(f"\\tau(B_u^+)/\\tau(B_d^0) = {tauBu/tauBd:.2uL}")
 
 
 

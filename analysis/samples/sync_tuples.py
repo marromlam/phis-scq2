@@ -8,24 +8,21 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 __all__ = []
 
-import uproot
-import argparse
-import os
-import pandas as pd
-import hjson
 import numpy as np
+import hjson
+import pandas as pd
+import os
+import argparse
+import uproot
 
 ROOT_PANDAS = True
 if ROOT_PANDAS:
   import root_pandas
 
-binned_vars = {'etaB':'B_ETA', 'pTB':'B_PT', 'sigmat':'sigmat'}
-binned_files = {'etaB':'eta', 'pTB':'pt', 'sigmat':'sigmat'}
+binned_vars = {'etaB': 'B_ETA', 'pTB': 'B_PT', 'sigmat': 'sigmat'}
+binned_files = {'etaB': 'eta', 'pTB': 'pt', 'sigmat': 'sigmat'}
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 EOSPATH = hjson.load(open('config.json'))['eos']
-
-
-
 
 
 if __name__ == "__main__":
@@ -50,33 +47,31 @@ if __name__ == "__main__":
   # Downloading everything xrdcp root://eoslhcb.cern.ch/
   print(f"Downloading {m}_{y}_selected_bdt_sw_{v}.root")
   eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
-  #status = os.system(f"""scp lxplus:{eos_path} {scq_path}""")
-  status = os.system(f"""xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}""")
+  status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}")
   print(status)
-  if status==0:
-    all_files.append([f"{m}_{y}_selected_bdt_sw_{v}.root",None])
+  if status == 0:
+    all_files.append([f"{m}_{y}_selected_bdt_sw_{v}.root", None])
   else:
-    print(f"    File {m}_{y}_selected_bdt_sw_{v}.root does not exist on server.")
+    print(f"- File {m}_{y}_selected_bdt_sw_{v}.root does not exist on server.")
 
   for name, var in binned_files.items():
     print(f"Downloading {m}_{y}_selected_bdt_sw_{var}_{v}.root")
-    eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_{var}_{v}.root'
-    #status = os.system(f"""scp -r lxplus:{eos_path} {scq_path}""")
-    status = os.system(f"""xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}""")
+    eos_path = eos_path.replace('selected_bdt_sw',f'selected_bdt_sw_{var}')
+    status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}")
     print(status)
-    if status==0:
-      all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root",f"{var}"])
+    if status == 0:
+      all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root", f"{var}"])
     else:
-      print(f"    File {m}_{y}_selected_bdt_sw_{var}_{v}.root does not exist",
-             "on server.")
-
+      print(f"- File {m}_{y}_selected_bdt_sw_{var}_{v}.root does not exist",
+            "on server.")
 
   # Load and convert to pandas dfs
   for f, b in all_files:
-    print(f,b)
+    print(f, b)
     fp = f"{scq_path}/{f}"
-    if b: b = f"sw_{b}"
-    all_dfs.append( uproot.open(fp)[tree].pandas.df(branches=b, flatten=None) )
+    if b:
+      b = f"sw_{b}"
+    all_dfs.append(uproot.open(fp)[tree].pandas.df(branches=b, flatten=None))
     print(uproot.open(fp)[tree].pandas.df(branches=b, flatten=None))
 
   # concatenate all columns
@@ -85,10 +80,10 @@ if __name__ == "__main__":
     if not f'sw_{var}' in list(result.keys()):
       sw = np.zeros_like(result[f'sw'])
       for cut in bin_vars[var]:
-        pos = result.eval(cut.replace(var,binned_vars[var]))
+        pos = result.eval(cut.replace(var, binned_vars[var]))
         this_sw = result.eval(f'sw*({cut.replace(var,binned_vars[var])})')
-        sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
-      result[f'sw_{var}'] = result[f'sw']#sw
+        sw = np.where(pos, this_sw * (sum(this_sw)/sum(this_sw*this_sw)), sw)
+      result[f'sw_{var}'] = result[f'sw']  # sw
 
   # write
   print(f"\nStarting to write {os.path.basename(args['output'])} file.")

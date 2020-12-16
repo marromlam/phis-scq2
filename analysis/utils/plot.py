@@ -47,7 +47,14 @@ def get_range(var, mode='Bs2JpsiPhi'):
   return ranges_dict[var][1:]
 
 
-def get_nbins(var, mode='Bs2JpsiPhi'):
+
+
+
+def get_nbins(var, mode='Bs'):
+  if mode in ('Bs', 'Bs2JpsiPhi'):
+    mode = 'Bs'
+  if mode in ('Bd', 'Bd2JpsiKstar'):
+    mode = 'Bd'
   ranges_dict = dict(
   B_PT = (70,0,4e4),
   B_P = (70,0,8e5),
@@ -60,19 +67,33 @@ def get_nbins(var, mode='Bs2JpsiPhi'):
   return ranges_dict[var][0]
 
 
-def get_var_in_latex(var, mode='Bs2JpsiPhi'):
+
+def get_var_in_latex(var, mode='Bs'):
+  if mode in ('Bs', 'Bs2JpsiPhi'):
+    mode = 'Bs'
+  if mode in ('Bd', 'Bd2JpsiKstar'):
+    mode = 'Bd'
   ranges_dict = dict(
   B_PT = r"p_T(B)",
   B_ETA = r"\eta(B)",
   pt = r"p_T(B)",
   eta = r"\eta(B)",
-  sigmat = r"\sigma_t(B)",
   B_P = r"p(B)",
-  X_M = r"m(K^+\pi^-)" if 'Bd2JpsiKstar' in mode else r"m(K^+K^-)",
-  hplus_P = r"m(K^+)" if 'Bd2JpsiKstar' in mode else r"p(K^+)",
-  hplus_PT = r"m(K^+)" if 'Bd2JpsiKstar' in mode else r"p_T(K^+)",
-  hminus_P = r"m(\pi^-)" if 'Bd2JpsiKstar' in mode else r"p(K^-)",
-  hminus_PT = r"m(\pi^-)" if 'Bd2JpsiKstar' in mode else r"p_T(K^-)",
+  X_M       = r"m(K^+\pi^-)"  if 'Bd' in mode else r"m(K^+K^-)",
+  hplus_P   = r"m(K^+)"       if 'Bd' in mode else r"p(K^+)",
+  hplus_PT  = r"m(K^+)"       if 'Bd' in mode else r"p_T(K^+)",
+  hminus_P  = r"m(\pi^-)"     if 'Bd' in mode else r"p(K^-)",
+  hminus_PT = r"m(\pi^-)"     if 'Bd' in mode else r"p_T(K^-)",
+  # new naming convention :)
+  pTB = r"p_T(B)",
+  etaB = r"\eta(B)",
+  pB = r"p(B)",
+  sigmat = r"\sigma_t(B)",
+  mHH       = r"m(K^+\pi^-)"  if 'Bd' in mode else r"m(K^+K^-)",
+  pHp       = r"p(K^+)"       if 'Bd' in mode else r"p(K^+)",
+  pTHp      = r"p_T(K^+)"     if 'Bd' in mode else r"p_T(K^+)",
+  pHm       = r"p(\pi^-)"     if 'Bd' in mode else r"p(K^-)",
+  pTHm      = r"p_T(\pi^-)"   if 'Bd' in mode else r"p_T(K^-)",
   )
   return ranges_dict[var]
 

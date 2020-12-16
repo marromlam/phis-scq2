@@ -28,13 +28,21 @@ YEARS = {#
 from utils.strings import cammel_case_split, cuts_and
 import numpy as np
 
+
+
+
 def timeacc_guesser(timeacc):
   # Check if the tuple will be modified
-  pattern = r'\A(single|simul|lifeBd|lifeBu)(Noncorr|3knots|9knots|12knots)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
+  #pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9]knots)?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
+  pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9])?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
   try:
-    timeacc, kind, lifecut, minimizer = p.search(timeacc).groups()
-    return timeacc, kind, lifecut, minimizer.lower() if minimizer else 'minuit'
+    acc, knots, corr, lifecut, mini = p.search(timeacc).groups()
+    corr = False if corr=='Noncorr' else True
+    mini = mini.lower() if mini else 'minuit'
+    knots = int(knots) if knots else 6
+    #knots = int(knots[0]) if knots else 6
+    return acc, knots, corr, lifecut, mini
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
 
@@ -45,8 +53,8 @@ def physpar_guesser(physics):
   pattern = r'\A(0)(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
   try:
-    timeacc, kind, lifecut, minimizer = p.search(timeacc).groups()
-    return timeacc, kind, lifecut, minimizer.lower() if minimizer else 'minuit'
+    timeacc, kind, lifecut, mini = p.search(timeacc).groups()
+    return timeacc, kind, lifecut, mini.lower() if mini else 'minuit'
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
 
@@ -108,20 +116,37 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
         m = 'Bd2JpsiKstar'
       elif m == 'Bd2JpsiKstar':
         m = 'Bs2JpsiPhi'
-    elif mode in ('Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bs2JpsiPhi',
-                  'Bd2JpsiKstar', 'MC_Bd2JpsiKstar'):
+    elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus'):
       m = mode
 
 
   # Model handler when asking for weights
-  if m == 'Bs2JpsiPhi':
-    if weight:
+  if weight:
+    if m == 'Bs2JpsiPhi':
       weight = 'sWeight'
-  elif m == 'Bd2JpsiKstar':
-    if weight:
-      if weight != 'kinWeight':
+    elif m == 'Bu2JpsiKplus':
+      weight = 'sWeight'
+    elif m == 'Bd2JpsiKstar':
+      if weight not in ('kinWeight', 'kbuWeight'):
         weight = 'sWeight'
+    elif m == 'MC_Bu2JpsiKplus':
+      if weight not in ('sWeight', 'polWeight', 'kinWeight'):
+        weight = 'polWeight'
+    elif m == 'MC_Bd2JpsiKstar':
+      if weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kbuWeight', 'kinWeight'):
+        weight = 'polWeight'
+    elif m == 'MC_Bs2JpsiPhi':
+      if weight == 'kbuWeight':
+        weight = 'pdfWeight'
+      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight', 'kinWeight', 'angWeight'):
+        weight = 'polWeight'
+    elif m == 'MC_Bs2JpsiPhi_dG0':
+      if weight == 'kbuWeight':
+        weight = 'pdfWeight'
+      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight', 'angWeight'):
+        weight = 'polWeight'
 
+  
   # Year
   if year:
     years = YEARS[year]
@@ -178,6 +203,7 @@ def send_mail(subject, body, files=None):
       os.system(f"""ssh master '{cmd} | /usr/sbin/sendmail {mail}'""")
 
 
+
 def trigger_scissors(trigger, CUT=""):
   if trigger == 'biased':
     CUT = cuts_and("hlt1b==1",CUT)
@@ -186,8 +212,8 @@ def trigger_scissors(trigger, CUT=""):
   return CUT
 
 
+
 def swnorm(sw):
   sw_ = ristra.get(sw)
   return ristra.allocate(sw_*(np.sum(sw_)/np.sum(sw_**2)))
 
-# %%

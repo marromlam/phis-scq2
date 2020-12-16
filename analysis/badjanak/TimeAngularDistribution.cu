@@ -3,7 +3,6 @@
 //                       CUDA decay rate Bs -> mumuKK                         //
 //                                                                            //
 //   Created: 2019-01-25                                                      //
-//  Modified: 2019-11-21                                                      //
 //    Author: Marcos Romero                                                   //
 //                                                                            //
 //    This file is part of p-scq packages, Santiago's framework for the       //
@@ -12,16 +11,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+
 #include <ipanema/complex.hpp>
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Functions ///////////////////////////////////////////////////////////////////
-
-
 WITHIN_KERNEL
-ftype getN(const ftype A10, const ftype A00, const ftype A1a, const ftype A1e, const ftype C01, const int k)
+ftype getN(const ftype A10, const ftype A00, const ftype A1a, const ftype A1e,
+           const ftype C01, const int k)
 {
   ftype nk;
   switch(k) {
@@ -68,7 +65,9 @@ ftype getF(const ftype cosK, const ftype cosL, const ftype hphi, const int k)
   }
   return fk;
 }
-//RAMON ANADIDO
+
+
+
 WITHIN_KERNEL
 ftype getAbd(ftype aslon, ftype aplon, ftype appar, ftype apper,
                 ftype dslon, ftype dplon, ftype dppar, ftype dpper,
@@ -93,10 +92,12 @@ ftype getAbd(ftype aslon, ftype aplon, ftype appar, ftype apper,
 }
 
 
+
 WITHIN_KERNEL
-ftype getA(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, const ftype d10,
-						const ftype d00, const ftype d1a, const ftype d1e, const ftype l10, const ftype l00,
-						const ftype l1a, const ftype l1e, const int k)
+ftype getA(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
+           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
+           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e, 
+           const int k)
 {
   ftype ak;
   switch(k) {
@@ -119,9 +120,10 @@ ftype getA(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, c
 
 
 WITHIN_KERNEL
-ftype getB(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, const ftype d10,
-						const ftype d00, const ftype d1a, const ftype d1e, const ftype l10, const ftype l00,
-						const ftype l1a, const ftype l1e, const int k)
+ftype getB(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
+           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e, 
+           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
+           const int k)
 {
   ftype bk;
   switch(k) {
@@ -144,9 +146,10 @@ ftype getB(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, c
 
 
 WITHIN_KERNEL
-ftype getC(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, const ftype d10,
-						const ftype d00, const ftype d1a, const ftype d1e, const ftype l10, const ftype l00,
-						const ftype l1a, const ftype l1e, const int k)
+ftype getC(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
+           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e, 
+           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
+           const int k)
 {
 
   ftype ck;
@@ -170,9 +173,10 @@ ftype getC(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, c
 
 
 WITHIN_KERNEL
-ftype getD(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, const ftype d10,
-						const ftype d00, const ftype d1a, const ftype d1e, const ftype l10, const ftype l00,
-						const ftype l1a, const ftype l1e, const int k)
+ftype getD(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
+           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e, 
+           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
+           const int k)
 {
 
   ftype dk;
@@ -197,17 +201,18 @@ ftype getD(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e, c
 
 WITHIN_KERNEL
 void integralSimple(ftype result[2],
-                    const ftype vn[10],
-                    const ftype va[10], const ftype vb[10], const ftype vc[10], const ftype vd[10],
-                    GLOBAL_MEM const ftype *norm,
-                    const ftype G, const ftype DG, const ftype DM, const ftype ti, const ftype tf)
+                    const ftype vn[10], const ftype va[10], const ftype vb[10],
+                    const ftype vc[10], const ftype vd[10], 
+                    GLOBAL_MEM const ftype *norm, const ftype G, const ftype DG,
+                    const ftype DM, const ftype ti, const ftype tf)
 {
+  // rewrite me! (please)
   ftype ita = (2*(DG*sinh(.5*DG*ti) + 2*G*cosh(.5*DG*ti))*exp(G*tf) - 2*(DG*sinh(.5*DG*tf) + 2*G*cosh(.5*DG*tf))*exp(G*ti))*exp(-G*(ti + tf))/(-pow(DG, 2) + 4 *pow(G, 2));
   ftype itb = (2*(DG*cosh(.5*DG*ti) + 2*G*sinh(.5*DG*ti))*exp(G*tf) - 2*(DG*cosh(.5*DG*tf) + 2*G*sinh(.5*DG*tf))*exp(G*ti))*exp(-G*(ti + tf))/(-pow(DG, 2) + 4*pow(G, 2));
   ftype itc = ((-DM*sin(DM*ti) + G*cos(DM*ti))*exp(G*tf) + (DM*sin(DM*tf) - G*cos(DM*tf))*exp(G*ti))*exp(-G*(ti + tf))/(pow(DM, 2) + pow(G, 2));
   ftype itd = ((DM*cos(DM*ti) + G*sin(DM*ti))*exp(G*tf) - (DM*cos(DM*tf) + G*sin(DM*tf))*exp(G*ti))*exp(-G*(ti + tf))/(pow(DM, 2) + pow(G, 2));;
 
-  for(int k=0; k<10 ; k++)
+  for(int k=0; k<NTERMS ; k++)
   {
     result[0] += vn[k]*norm[k]*(va[k]*ita + vb[k]*itb + vc[k]*itc + vd[k]*itd);
     result[1] += vn[k]*norm[k]*(va[k]*ita + vb[k]*itb - vc[k]*itc - vd[k]*itd);
@@ -225,3 +230,4 @@ void integralSimple(ftype result[2],
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// that's all folks

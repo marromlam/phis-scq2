@@ -684,13 +684,9 @@ ftype getOneSplineTimeAcc(const ftype t,
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
   fpdf *= calcTimeAcceptance(t, coeffs , tLL, tUL);
 
-
-  //ftype integrals[4] = {0., 0., 0., 0.};
-  //intgTimeAcceptance(integrals, sigma, gamma, 0, 0, coeffs, 0, tLL, tUL);
-
   // Compute per event normatization
-  
-  ftype ti  = 0.0;  ftype tf  =  0.0;
+  ftype ti  = 0.0; ftype tf  =  0.0;
+  ftype c0 = 0.0; ftype c1 = 0.0; ftype c2 = 0.0; ftype c3 = 0.0;
   for (int k = 0; k < NKNOTS; k++) {
 
     if (k == NKNOTS-1) {
@@ -702,11 +698,11 @@ ftype getOneSplineTimeAcc(const ftype t,
       tf = KNOTS[k+1];
     }
 
-    ftype c0 = getCoeff(coeffs,k,0);
-    ftype c1 = getCoeff(coeffs,k,1);
-    ftype c2 = getCoeff(coeffs,k,2);
-    ftype c3 = getCoeff(coeffs,k,3);
-
+    c0 = getCoeff(coeffs,k,0);
+    c1 = getCoeff(coeffs,k,1);
+    c2 = getCoeff(coeffs,k,2);
+    c3 = getCoeff(coeffs,k,3);
+    
     ipdf += (exp((pow(gamma,2)*pow(sigma,2))/2.)*((c1*(-exp(-(gamma*tf))
     + exp(-(gamma*ti)) -
     (gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
@@ -784,30 +780,10 @@ ftype getOneSplineTimeAcc(const ftype t,
     erfc((gamma*pow(sigma,2) - tf)/(sqrt(2.0)*sigma))/exp(gamma*tf) +
     erfc((gamma*pow(sigma,2) -
     ti)/(sqrt(2.0)*sigma))/exp(gamma*ti)))/gamma))/2.;
-
-    // ta += get_int_ta_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
-    // tb += get_int_tb_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
-    // tc += get_int_tc_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
-    // td += get_int_td_spline( sigma, gamma, 0, 0, c0, c1, c2, c3, tLL, tUL);
-
-    /*
-    intgTimeAcceptance(ftype time_terms[4], ftype delta_t,
-                        ftype G, ftype DG, ftype DM,
-                        GLOBAL_MEM ftype *coeffs, ftype t0, ftype tLL, ftype tUL)
-    */
-
-
-    // ipdf += term;
-    // if ( get_global_id(0) == 0)
-    // {
-    //   printf("TIME ACC           : integral=  %.14f  vs %.14f + %.14f + %.14f + %.14f vs %.14f + %.14f + %.14f + %.14f\n",
-    //         ipdf, ta, tb, tc, td, integrals[0], integrals[1], integrals[2], integrals[3]);
-    // }
-
   }
-
-
+  
   return fpdf/ipdf;
+
 }
 
 
@@ -823,28 +799,17 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
 {
   // Compute pdf
   ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
-  ftype fpdf = 1.0;
+  ftype fpdf = 1.0; ftype ipdf = 0.0; 
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2*t) ) * (erf_value);
   fpdf *= calcTimeAcceptance(t, coeffs1, tLL, tUL);
   fpdf *= calcTimeAcceptance(t, coeffs2, tLL, tUL);
 
   // Compute per event normatization
-  ftype ipdf = 0.0; ftype ti  = 0.0;  ftype tf  =  0.0;
+  ftype ti  = 0.0;  ftype tf  =  0.0;
+  ftype b0 = 0.0; ftype b1 = 0.0; ftype b2 = 0.0; ftype b3 = 0.0;
+  ftype r0 = 0.0; ftype r1 = 0.0; ftype r2 = 0.0; ftype r3 = 0.0;
   ftype term1i = 0.0; ftype term2i = 0.0;
   ftype term1f = 0.0; ftype term2f = 0.0;
-
-  // ftype integrals[4] = {0., 0., 0., 0.};
-  // intgTimeAcceptance(integrals, sigma, gamma, 0, 0, coeffs, 0, tLL, tUL);
-
-  // a_0*b_0
-  // a_0*b_1 + a_1*b_0
-  // a_0*b_2 + a_1*b_1 + a_2*b_0
-  // a_0*b_3 + a_1*b_2 + a_2*b_1 + a_3*b_0
-  // a_1*b_3 + a_2*b_2 + a_3*b_1
-  // a_2*b_3 + a_3*b_2
-  // a_3*b_3
-
-
   for (int k = 0; k < NKNOTS; k++) {
 
     if (k == NKNOTS-1) {
@@ -856,15 +821,15 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
       tf = KNOTS[k+1];
     }
 
-    ftype r0 = getCoeff(coeffs1,k,0);
-    ftype r1 = getCoeff(coeffs1,k,1);
-    ftype r2 = getCoeff(coeffs1,k,2);
-    ftype r3 = getCoeff(coeffs1,k,3);
-    ftype b0 = getCoeff(coeffs2,k,0);
-    ftype b1 = getCoeff(coeffs2,k,1);
-    ftype b2 = getCoeff(coeffs2,k,2);
-    ftype b3 = getCoeff(coeffs2,k,3);
-
+    r0 = getCoeff(coeffs1,k,0);
+    r1 = getCoeff(coeffs1,k,1);
+    r2 = getCoeff(coeffs1,k,2);
+    r3 = getCoeff(coeffs1,k,3);
+    b0 = getCoeff(coeffs2,k,0);
+    b1 = getCoeff(coeffs2,k,1);
+    b2 = getCoeff(coeffs2,k,2);
+    b3 = getCoeff(coeffs2,k,3);
+    
     term1i = -((exp(gamma*ti - (ti*(2*gamma*pow(sigma,2) +
     ti))/(2.*pow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*ti)
     + 12*pow(gamma,2)*(2*r1 + 5*r2*ti + 10*r3*(2*pow(sigma,2) +
@@ -973,13 +938,7 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
     ipdf += (term1f + term2f) - (term1i + term2i);
 
   }
-    // if ( get_global_id(0) == 0)
-    // {
-    //   printf("TIME ACC           : integral=  %.14f  vs %.14f + %.14f + %.14f + %.14fn",
-    //         ipdf, integrals[0], integrals[1], integrals[2], integrals[3]);
-    // }
 
-  //printf("%.16f\n",ipdf);
   return fpdf/ipdf;
 
 }

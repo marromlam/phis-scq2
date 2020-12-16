@@ -7,7 +7,7 @@ This repository contains the code for running different parts of $`B_s \rightar
 ## Fist steps
 
 ### 🛠 Set environment
-_phis-scq_ relyes on basic python libraries and _ipanema3_ (it is not in pypy yet),
+_phis-scq_ relies on basic python libraries and _ipanema3_ (it is not in pypy yet),
 and so requires to have a properly working environment to run. One can run
 this package on both __linux__ and __macos__ against cpu or gpu,
 but if you have a nVidia device it may worth it to install cuda binaries and
@@ -17,7 +17,7 @@ The instructions were wrapped under a bash script, so basically you clone this
 repository and then
 ```bash
 cd phis-scq
-bash utils/install.sh
+bash analysis/utils/install.sh
 ```
 which will guide the installation by prompting some questions.
 
@@ -25,7 +25,7 @@ After the bash script finishes, you simply need to activate your environment.
 The installer will ask you whether you want to write in you bash profile
 an `activatephisscq` function too.
 > Finally, under `config.json`, you should write a proper path under
-the homonym key where tuples will be placed. Make sure there is enough space
+the sidecar key where tuples will be placed. Make sure there is enough space
 there to allocate 20 GiB of files, at least.
 
 That's it! 🎉
@@ -36,7 +36,7 @@ That's it! 🎉
 All the pipeline can be run with `snakemake`
 bla bla bla
 
-The first rules snakemake will run are about dowloading locally the tuples that
+The first rules snakemake will run are about downloading locally the tuples that
 are placed in `/eos/lhcb/wg/B2CC`. In order to do that, you must be able to
 access that place with your CERN credentials which basically involves doing
 `scp`, and hence basically `ssh`ing.
@@ -81,7 +81,7 @@ This pipeline can run
   - [x] Angular weights method
   - [ ] Histogram method
   - [ ] Ylm method
-  - [ ] Plots
+  - [x] Plots
 - [x] *Time-dependent angular fit*: extract the physics parameters
   - [ ] Real Run1 data samples
   - [x] Real Run2 data samples
@@ -90,17 +90,17 @@ This pipeline can run
   - [ ] Plots
 - [ ] *Toy MC generator*: generate toys to estimate fit bias
   - [x] Generate pdf events
-  - [ongoing] Generate momenta
+  - [x] Generate angular efficiency from angular weights
 - [ ] *Cross-checks*: different studies for fit validation
-  - [ongoing] J/psiK* lifetime
-  - [ongoing] J/psiK+ lifetime
-  - [x] Binned studies: `sigmat`, `B_ETA`, `B_PT`, `time`
+  - [x] J/psiK* lifetime
+  - [x] J/psiK+ lifetime
+  - [x] Binned studies: `sigmat`, `etaB`, `pTB`, `time`
   - [x] Yearly studies: from 2015 to 2018
-  - [ ] Time dependence of angular acceptance: check whether angles and time do factorize
+  - [x] Time dependence of angular acceptance: check whether angles and time do factorize
   - [ ] Magnet studies: dependence on magnet polarity
-  - [ ] $`B_u`$ angular acceptance
-  - [ ] $`B_d`$ Other channels angular acceptance
-  - [ongoing ] Fit bias
+  - [ ] $`B_u^+`$ angular acceptance
+  - [x] $`B_d^0`$ angular acceptance
+  - [ongoing] Fit bias
 
 
 

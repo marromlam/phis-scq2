@@ -21,12 +21,7 @@ import cpuinfo
 import re
 import math
 
-if __name__ == '__main__':
-  PATH = '/home3/ramon.ruiz/phis-scq/badjanak'
-  import ipanema
-  ipanema.initialize('opencl',1,verbose=False)
-else:
-  PATH = os.path.dirname(os.path.abspath(__file__))
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Get builtins (ipanema initialization exposes them)
 BACKEND = builtins.BACKEND
@@ -57,7 +52,7 @@ precision =       'double',
 #    Bla bla bla
 def flagger(verbose=False):
   if verbose:
-    print(f"\n{80*'='}\n Badjanak kernel\n{80*'='}\n")
+    print(f"\n{80*'='}\nBadjanak kernel\n{80*'='}\n")
     print(f"{'Backend was set to':>20} : {BACKEND}")
     print(f"{' Using as host':>20} : {cpuinfo.get_cpu_info()['brand_raw']} with {platform.python_compiler()}")
     print(f"{' Using as device':>20} : {DEVICE.name} with CUDA 10.2")
@@ -236,9 +231,11 @@ def delta_gamma5Bd(input, output,
     # Input and output arrays
     input, output,
     # Differential cross-rate parameters
-    CSP.astype(np.float64),
+    np.float64(G), CSP.astype(np.float64),
     ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
     dSlon.astype(np.float64),          np.float64(dPlon),                 np.float64(dPpar),                 np.float64(dPper),
+    # Time range
+    np.float64(tLL), np.float64(tUL),
     # Angular acceptance
     angacc.astype(np.float64),
     # Flags
@@ -364,6 +361,118 @@ def parser_rateBs(
 
   return r
 
+def parser_rateBd(
+       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
+       # Time-dependent angular distribution
+       #cambiado ramon
+       fSlon = 0.00, fPlon =  0.600,                 fPper = 0.50,
+       dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
+       pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
+       lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
+       # Time limits
+       tLL = 0.0, tUL = 15.0,
+       # Time resolution
+       sigma_offset = 0.00, sigma_slope = 0.00, sigma_curvature = 0.00,
+       mu = 0.00,
+       # Flavor tagging
+       eta_os = 0.00, eta_ss = 0.00,
+       p0_os = 0.00,  p1_os = 0.00, p2_os = 0.00,
+       p0_ss = 0.00,  p1_ss = 0.00, p2_ss = 0.00,
+       dp0_os = 0.00, dp1_os = 0.00, dp2_os = 0.00,
+       dp0_ss = 0.00, dp1_ss = 0.00, dp2_ss = 0.00,
+       # Flags
+       use_fk=1, use_angacc = 0, use_timeacc = 0,
+       use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
+       verbose = False,
+       **p):
+
+   r = {}
+   r['mass_bins'] = len([ k for k in p.keys() if re.compile('CSP.*').match(k)])
+   # Get all binned parameters and put them in ristras
+   if r['mass_bins'] >= 1:
+     CSP = [ p[k] for k in p.keys() if re.compile('CSP.*').match(k) ]
+     r['CSP'] = THREAD.to_device(np.float64(CSP)).astype(np.float64)
+     fSlon = [ p[k] for k in p.keys() if re.compile('fSlon.*').match(k) ]
+     fSlon = THREAD.to_device(np.float64(fSlon)).astype(np.float64)
+     dSlon = [ p[k] for k in p.keys() if re.compile('dSlon.*').match(k) ]
+     dSlon = THREAD.to_device(np.float64(dSlon)).astype(np.float64)
+   else:
+     r['CSP'] = THREAD.to_device(np.float64([CSP])).astype(np.float64)
+     fSlon = THREAD.to_device(np.float64([fSlon])).astype(np.float64)
+     dSlon = THREAD.to_device(np.float64([dSlon])).astype(np.float64)
+
+   # Parameters and parse Gs value
+   r['DG'] = DGs
+   r['DM'] = DM
+   r['G'] = Gd#p['Gd']
+
+   # Compute fractions of S and P wave objects
+   FP = abs(1-fSlon)
+   r['ASlon'] = ipanema.ristra.sqrt( fSlon )
+   r['APlon'] = ipanema.ristra.sqrt( FP*fPlon )
+   r['APper'] = ipanema.ristra.sqrt( FP*fPper )
+   r['APpar'] = ipanema.ristra.sqrt( FP*abs(1-fPlon-fPper))
+
+   # Strong phases
+   r['dPlon'] = dPlon
+   r['dPper'] = dPper + r['dPlon']
+   r['dPpar'] = dPpar + r['dPlon']
+   r['dSlon'] = dSlon + r['dPper']
+
+   # Weak phases
+   r['pPlon'] = pPlon
+   r['pSlon'] = pSlon + pPlon
+   r['pPpar'] = pPpar + pPlon
+   r['pPper'] = pPper + pPlon
+
+   # Lambdas
+   r['lPlon'] = lPlon
+   r['lSlon'] = lSlon * lPlon
+   r['lPpar'] = lPpar * lPlon
+   r['lPper'] = lPper * lPlon
+
+   # Time range
+   r['tLL'] = tLL
+   r['tUL'] = tUL
+
+   # Time resolution
+   r['sigma_offset'] = sigma_offset
+   r['sigma_slope'] = sigma_slope
+   r['sigma_curvature'] = sigma_curvature
+   r['mu'] = mu
+
+   # # Tagging
+   r['eta_os'] = eta_os
+   r['eta_ss'] = eta_ss
+   r['p0_os'] = p0_os
+   r['p1_os'] = p1_os
+   r['p2_os'] = p2_os
+   r['p0_ss'] = p0_ss
+   r['p1_ss'] = p1_ss
+   r['p2_ss'] = p2_ss
+   r['dp0_os'] = dp0_os
+   r['dp1_os'] = dp1_os
+   r['dp2_os'] = dp2_os
+   r['dp0_ss'] = dp0_ss
+   r['dp1_ss'] = dp1_ss
+   r['dp2_ss'] = dp2_ss
+
+   # Time acceptance
+   timeacc = [ p[k] for k in p.keys() if re.compile('c([0-9])([0-9])?(u|b)?').match(k)]
+   if timeacc:
+     r['timeacc'] = THREAD.to_device(get_4cs(timeacc))
+   else:
+     r['timeacc'] = THREAD.to_device(np.float64([1]))
+
+   # Angular acceptance
+   angacc = [ p[k] for k in p.keys() if re.compile('w([0-9])([0-9])?(u|b)?').match(k)]
+   if angacc:
+     r['angacc'] = THREAD.to_device(np.float64(angacc))
+   else:
+     r['angacc'] = THREAD.to_device(np.float64(config['tristan']))
+
+   return r
+
 ################################################################################
 
 
@@ -422,7 +531,7 @@ BLOCK_SIZE=256, **pars):
   Out:
          void
   """
-  p = parser_rateBs(**pars)
+  p = parser_rateBd(**pars)
   delta_gamma5Bd( input, output,
                          use_fk=use_fk, use_angacc = use_angacc, use_timeacc = use_timeacc,
                          use_timeoffset = use_timeoffset, set_tagging = set_tagging, use_timeres = use_timeres,
@@ -560,6 +669,14 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
     pdf = THREAD.to_device(np.zeros(true.shape[0]))
     delta_gamma5_mc_Bd(true, pdf, use_fk=1, **parameters); den = pdf.get()
     fk = get_fk(reco.get()[:,0:3])
+    print('fk')
+    print(fk[0:10])
+    print('reco')
+    print(true.get()[8,:])
+    print('weight')
+    print(weight.get()[0])
+    print('ratio')
+    print(den[8]/num[8])
     ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
     return ang_acc
 
@@ -852,11 +969,13 @@ def dG5toys(output,
             use_fk=1, use_angacc = 0, use_timeacc = 0,
             use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
             prob_max = 2.7,
-            BLOCK_SIZE=256, **crap):
+            BLOCK_SIZE=256, seed=False, **crap):
   """
   Look at kernel definition to see help
   The aim of this function is to be the fastest wrapper
   """
+  if not seed:
+    seed = int(1e10*np.random.rand())
   g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
   __KERNELS__.dG5toy(
     # Input and output arrays
@@ -886,7 +1005,7 @@ def dG5toys(output,
     # Flags
     np.int32(use_fk), np.int32(len(CSP)), np.int32(use_angacc), np.int32(use_timeacc),
     np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
-    np.float64(prob_max), np.int32(len(output)),
+    np.float64(prob_max), np.int32(seed),  np.int32(len(output)),
     global_size=g_size, local_size=l_size)
     #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
 

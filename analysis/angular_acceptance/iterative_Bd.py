@@ -293,8 +293,8 @@ if __name__ == '__main__':
         #angacc = badjanak.get_angular_acceptance_weights(mc[y][m][t].true, mc[y][m][t].reco,
                                      #mc[y][m][t].weight*ristra.allocate(angWeight),
                                      #**mc[y][m][t].params.valuesdict())
-        angacc = badjanak.get_angular_acceptance_weights(mc[y][m][t].true, mc[y][m][t].reco,
-                                     mc[y][m][t].weight*ristra.allocate(angWeight),
+        angacc = badjanak.get_angular_acceptance_weights_Bd(mc[y][m][t].true, mc[y][m][t].reco,
+                                     mc[y][m][t].weight,#*ristra.allocate(angWeight), comparar Peilian
                                     **mc[y][m][t].params.valuesdict())
         w, uw, cov, corr = angacc
         pars = Parameters()

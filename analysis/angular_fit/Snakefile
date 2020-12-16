@@ -74,8 +74,8 @@ rule physics_params_data_run2:
            --year                    {",".join(YEARS['Run2'])}\
            --flag                    {wildcards.fit}_{wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-           --blind                   1\
-    ) #&> {log}""")
+           --blind                   CONFIG['blind']\
+    ) &> {log}""")
     send_mail(f"Physics Parameters RD Run2 :: {wildcards}", f"{log}")
 
 
@@ -367,7 +367,7 @@ rule physics_params_data_run2a:
            --year                    {",".join(YEARS['Run2a'])}\
            --flag                    run2a_{wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Physics Parameters RD Run2a", f"{log}")
 
 
@@ -467,7 +467,7 @@ rule physics_params_mc:
            --tables                  {output.tables}\
            --year                    {",".join([wildcards.year])}\
            --version                 {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Physics Parameters MC :: {wildcards}", f"{log}")
 
 

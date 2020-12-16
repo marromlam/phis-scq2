@@ -112,7 +112,7 @@ if __name__ == '__main__':
   weight_rd = f'sw_{VAR}' if VAR else 'sw'
   weight_mc = f'polWeight*{weight_rd}'
   if 'Bs2JpsiPhi' in MODE:
-    weight += '/gb_weights'
+    weight_mc += '/gb_weights'
 
   # Allocate some arrays with the needed branches
   mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
