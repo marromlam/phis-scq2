@@ -162,11 +162,11 @@ rule angular_acceptance_iterativeRun2a:
     angacc = "run2a(shit)?"
   input:
     # Samples and weights
-    sample_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',year='Run2a'),
-    sample_dG0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',year='Run2a'),
-    weights_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',year='Run2a',weight=f'angWeight'),
-    weights_dG0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',year='Run2a',weight=f'angWeight'),
-    sample_data = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2a'),
+    sample_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2a'),
+    sample_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2a'),
+    weights_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi',year='run2a', weight=f'angWeight'),
+    weights_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2a', weight=f'angWeight'),
+    sample_data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', year='run2a'),
     # Angular acceptance at corrected level
     angacc_biased = [
       'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_corrected_biased.json',
