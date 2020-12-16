@@ -17,19 +17,19 @@
 
 
 WITHIN_KERNEL
-ftype rateBs( const ftype *data,
+ftype rateBs(const ftype *data,
              // Time-dependent angular distribution
              const ftype G, const ftype DG, const ftype DM, const ftype CSP,
-             const ftype ASlon, const ftype APlon, const ftype APpar, 
-             const ftype APper, const ftype pSlon, const ftype pPlon, 
-             const ftype pPpar, const ftype pPper, const ftype dSlon, 
-             const ftype dPlon, const ftype dPpar, const ftype dPper, 
-             const ftype lSlon, const ftype lPlon, const ftype lPpar, 
+             const ftype ASlon, const ftype APlon, const ftype APpar,
+             const ftype APper, const ftype pSlon, const ftype pPlon,
+             const ftype pPpar, const ftype pPper, const ftype dSlon,
+             const ftype dPlon, const ftype dPpar, const ftype dPper,
+             const ftype lSlon, const ftype lPlon, const ftype lPpar,
              const ftype lPper,
              // Time limits
              const ftype tLL, const ftype tUL,
              // Time resolution
-             const ftype sigma_offset, const ftype sigma_slope, 
+             const ftype sigma_offset, const ftype sigma_slope,
              const ftype sigma_curvature, const ftype mu,
              // Flavor tagging
              const ftype eta_bar_os, const ftype eta_bar_ss,
@@ -42,7 +42,7 @@ ftype rateBs( const ftype *data,
              // Angular acceptance
              GLOBAL_MEM  const ftype *angular_weights,
              const int USE_FK, const int USE_ANGACC, const int USE_TIMEACC,
-             const int USE_TIMEOFFSET, const int SET_TAGGING, 
+             const int USE_TIMEOFFSET, const int SET_TAGGING,
              const int USE_TIMERES
              )
 {
@@ -166,12 +166,12 @@ ftype rateBs( const ftype *data,
   ftype tb = 0.5*(exp_m.x-exp_p.x);
   ftype tc = exp_i.x;
   ftype td = exp_i.y;
-  
+
   #if FAST_INTEGRAL
-    ta *= sqrt(2*M_PI); tb *= sqrt(2*M_PI); 
+    ta *= sqrt(2*M_PI); tb *= sqrt(2*M_PI);
     tc *= sqrt(2*M_PI); td *= sqrt(2*M_PI);
   #endif
-  
+
   #if DEBUG
   if (DEBUG >= 3 && get_global_id(0) == DEBUG_EVT)
   {
@@ -272,8 +272,8 @@ ftype rateBs( const ftype *data,
     ck = getC(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
     dk = getD(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
 
-    if ((int)fabs(qOS) != 511) 
-    { // Bs2JpsiPhi p.d.f 
+    if ((int)fabs(qOS) != 511)
+    { // Bs2JpsiPhi p.d.f
       hk_B    = (ak*ta + bk*tb + ck*tc + dk*td);
       hk_Bbar = (ak*ta + bk*tb - ck*tc - dk*td);
     }
@@ -321,7 +321,7 @@ ftype rateBs( const ftype *data,
   {
     // Here we can use the simplest 4xPi integral of the pdf since there are no
     // resolution effects
-    integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG, 
+    integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG,
                    DM, tLL, tUL);
   }
   else
@@ -332,7 +332,7 @@ ftype rateBs( const ftype *data,
                      DM, delta_t, tLL, tUL, t_offset, coeffs);
     #else
       int simon_j = sigma_t/(SIGMA_T/80);
-      integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, 
+      integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights,
                          G, DG, DM, //delta_t, // what should be used
                          parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
                          tLL, tUL, t_offset,
@@ -368,7 +368,7 @@ ftype rateBs( const ftype *data,
     }
   }
   #endif
-  
+
   return num/den;
 }
 
