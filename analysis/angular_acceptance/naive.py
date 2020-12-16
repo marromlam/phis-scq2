@@ -30,6 +30,7 @@ from utils.plot import mode_tex
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
+all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
 tLL = hjson.load(open('config.json'))['tLL']
 tUL = hjson.load(open('config.json'))['tUL']
@@ -75,11 +76,10 @@ if __name__ == '__main__':
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
 
-  knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
   if ANGACC != 'naive':
-    timebin = int(ANGACC.split('Time')[1])
-    tLL = knots[timebin-1]
-    tUL = knots[timebin]
+    nknots, timebin = ANGACC.split('knots')
+    tLL = all_knots[nknots[5:]][int(timebin)-1]
+    tUL = all_knots[nknots[5:]][int(timebin)]
     CUT = cuts_and(CUT,f'time>={tLL} & time<{tUL}')
 
   # Print settings
@@ -108,11 +108,11 @@ if __name__ == '__main__':
   weight = f'polWeight*sw_{VAR}' if VAR else 'polWeight*sw'
   if 'Bs2JpsiPhi' in MODE:
     weight += '/gb_weights'
-
+  print(weight)
   # Allocate some arrays with the needed branches
   try:
-    mc.allocate(reco=reco+['mHH', '0*mHH', 'idHH', 'idHH', '0*mHH', '0*mHH'])
-    mc.allocate(true=true+['mHH', '0*mHH', 'idHH', 'idHH', '0*mHH', '0*mHH'])
+    mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
+    mc.allocate(true=true+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
   except:
     print('Guessing you are working with TOY files. No X_M provided')
     mc.allocate(reco=reco+['0*time', '0*time', 'B_ID', 'B_ID', '0*B_ID', '0*B_ID'])
@@ -131,7 +131,7 @@ if __name__ == '__main__':
   badjanak.get_kernels(True)
 
   print('Computing angular weights')
-  w, uw, cov, corr = badjanak.get_angular_acceptance_weights_Bd(
+  w, uw, cov, corr = badjanak.get_angular_acceptance_weights(
               mc.true, mc.reco, mc.weight, **mc.params.valuesdict(), tLL=tLL, tUL=tUL
             )
   pars = Parameters()
