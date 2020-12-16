@@ -140,11 +140,13 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
 KERNEL
 void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
               //inputs
-              GLOBAL_MEM const ftype * CSP,
-              GLOBAL_MEM const ftype *ASlon, GLOBAL_MEM const ftype *APlon, 
+              const ftype G, GLOBAL_MEM const ftype * CSP,
+              GLOBAL_MEM const ftype *ASlon, GLOBAL_MEM const ftype *APlon,
               GLOBAL_MEM const ftype *APpar, GLOBAL_MEM const ftype *APper,
-              GLOBAL_MEM const ftype *dSlon, const ftype dPlon, 
+              GLOBAL_MEM const ftype *dSlon, const ftype dPlon,
               const ftype dPpar, const ftype dPper,
+              // Time limits
+              const ftype tLL, const ftype tUL,
               // Angular acceptance
               GLOBAL_MEM const ftype *angular_weights,
               // Flags
@@ -167,9 +169,10 @@ void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
 
   unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
   lkhd[evt] = getDiffRateBd(arr,
-                          CSP[bin],
+                          G, CSP[bin],
                           ASlon[bin], APlon[bin], APpar[bin], APper[bin],
                           dSlon[bin], dPlon,      dPpar,      dPper,
+                          tLL, tUL,
                           angular_weights,USE_FK);
 
 }
