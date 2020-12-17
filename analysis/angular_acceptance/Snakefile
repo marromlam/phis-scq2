@@ -627,6 +627,7 @@ rule angular_acceptance_iterativeYearly:
   wildcard_constraints:
     year = "\d{4}",
     angacc = "yearly(shit)?"
+  threads: 8
   input:
     sample_std = lambda wcs: [tuples(wcs,mode='MC_Bs2JpsiPhi')],
     sample_dG0 = lambda wcs: [tuples(wcs,mode='MC_Bs2JpsiPhi_dG0')],
