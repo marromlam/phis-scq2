@@ -54,6 +54,15 @@ ftype getDiffRateBd(const ftype *data,
   ftype qOS        = data[5];                                      // Tagging
 
 
+  #if DEBUG
+  if (DEBUG >= 1 && get_global_id(0) == DEBUG_EVT )
+  {
+    printf("\nINPUT              : cosK=%+.16f  cosL=%+.16f  hphi=%+.16f  time=%+.16f\n",
+           cosK,cosL,hphi,time);
+    printf("                   : qOS=%+.16f\n",qOS);
+  }
+  #endif
+
   // Flavor tagging ------------------------------------------------------------
   ftype id;
   id = qOS/fabs(qOS);
@@ -90,6 +99,18 @@ ftype getDiffRateBd(const ftype *data,
   pdfB = num_t*pdfB;
   norm = tnorm*norm;
 
+  #if DEBUG
+  if ( DEBUG >= 1  && get_global_id(0) == DEBUG_EVT)
+  {
+    printf("\nRESULT             : <  pdf/ipdf = %+.16f  >\n",
+           pdfB/norm);
+    if ( DEBUG >= 2 )
+    {
+     printf("                   : pdf=%+.16f  ipdf=%+.16f\n",
+            pdfB,norm);
+    }
+  }
+  #endif
 
   return pdfB/norm;
 }
