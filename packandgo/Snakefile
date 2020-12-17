@@ -1,0 +1,55 @@
+# decay_time_acceptance tables -------------------------------------------------
+#    ----
+
+rule pack_time_acceptance:
+  resources:
+    mem_mb=1048
+  input:
+    biased = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_{{timeacc}}_biased.json', year=YEARS[f'{wcs.year}']),
+    unbiased = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_{{timeacc}}_unbiased.json', year=YEARS[f'{wcs.year}'])
+  output:
+    'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_{timeacc}.tex',
+  log:
+    'output/log/pack_time_acceptance/{year}/{mode}/{version}_{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python packandgo/acceptance_tables.py\
+           --biased {",".join(input.biased)}\
+           --unbiased {",".join(input.unbiased)}\
+           --output {output}\
+           --mode {wildcards.mode}\
+           --year {",".join(YEARS[f"{wildcards.year}"])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+    ) &> {log}""")
+
+
+# angular_acceptance tables ----------------------------------------------------
+#    ----
+
+rule pack_angular_acceptance:
+  resources:
+    mem_mb=1048
+  input:
+    biased = lambda wcs: expand('output/params/angular_acceptance/{year}/{{mode}}/{{version}}_{{angacc}}_{{timeacc}}_biased.json', year=YEARS[f'{wcs.year}']),
+    unbiased = lambda wcs: expand('output/params/angular_acceptance/{year}/{{mode}}/{{version}}_{{angacc}}_{{timeacc}}_unbiased.json', year=YEARS[f'{wcs.year}'])
+  output:
+    'output/packandgo/tables/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}.tex',
+  log:
+    'output/log/pack_angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python packandgo/acceptance_tables.py\
+           --biased {",".join(input.biased)}\
+           --unbiased {",".join(input.unbiased)}\
+           --output {output}\
+           --mode {wildcards.mode}\
+           --year {",".join(YEARS[f"{wildcards.year}"])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+           --angacc {wildcards.angacc}\
+    ) &> {log}""")
+
+
+# lifetime tables --------------------------------------------------------------
+#    ----

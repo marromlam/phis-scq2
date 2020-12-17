@@ -74,6 +74,7 @@ include: 'analysis/angular_fit/Snakefile'
 include: 'analysis/bundle/Snakefile'
 include: 'analysis/params/Snakefile'
 include: 'analysis/toys/Snakefile'
+include: 'packandgo/Snakefile'
 
 
 # Final rule (compile slides) --------------------------------------------------
