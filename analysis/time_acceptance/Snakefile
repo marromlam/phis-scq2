@@ -37,7 +37,7 @@ rule time_acceptance_single:
            --trigger {wildcards.trigger}\
            --timeacc {wildcards.timeacc}\
            --contour {contour}\
-    ) #&> {log}
+    ) &> {log}
     """)
     send_mail(f"Time Acceptance :: {wildcards}", f"{log}")
 
@@ -47,7 +47,7 @@ rule time_acceptance_simultaneous:
   resources:
     mem_mb=4096
   wildcard_constraints:
-    timeacc = r"(simul)((?!.*?asBs).*)(.*)?",
+    timeacc = r"(simul)((?!.*?(BdasBs|BuasBs|DGn0)).*)(.*)?",
   input:
     sample = lambda wcs: [
       tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
@@ -97,12 +97,6 @@ rule time_acceptance_simultaneousDGn0:
       tuples(wcs,mode='MC_Bd2JpsiKstar'),
       tuples(wcs,mode='Bd2JpsiKstar')
     ]
-  params:
-    params = [
-      'time_acceptance/params/{year}/MC_Bs2JpsiPhi/baseline.json',
-      'time_acceptance/params/{year}/MC_Bd2JpsiKstar/baseline.json',
-      'time_acceptance/params/{year}/Bd2JpsiKstar/baseline.json'
-    ]
   output:
     params = [
       'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{timeacc}DGn0_{trigger}.json',
@@ -117,19 +111,23 @@ rule time_acceptance_simultaneousDGn0:
   log:
     'output/log/time_acceptance_simultaneous/{year}/{version}_{timeacc}DGn0_{trigger}.log'
   run:
+    try:
+      contour = config['contour'] 
+    except:
+      contour = 0
     shell(f"""
     (time\
     python analysis/time_acceptance/simultaneous.py\
            --samples {",".join(input.sample)}\
-           --input-params {",".join(params.params)}\
-           --output-params {",".join(output.params)}\
-           --output-tables {",".join(output.tables)}\
+           --params {",".join(output.params)}\
+           --tables {",".join(output.tables)}\
            --year {wildcards.year}\
            --version {wildcards.version}\
            --trigger {wildcards.trigger}\
            --timeacc {wildcards.timeacc}\
+           --contour {contour}\
     ) &> {log} 2>&1""")
-    send_mail(f"Simultaneous Time Acceptance dGn0 :: {wildcards}", f"{log}")
+    send_mail(f"Simultaneous Time Acceptance DGn0 :: {wildcards}", f"{log}")
 
 
 
