@@ -39,7 +39,7 @@ ftype getDiffRateBd(const ftype *data,
                     const ftype tLL, const ftype tUL,
                     // Angular acceptance
                     GLOBAL_MEM  const ftype *angular_weights,
-                    const int USE_FK
+                    const int USE_FK, const int USE_ANGACC
                   )
 {
 
@@ -60,35 +60,44 @@ ftype getDiffRateBd(const ftype *data,
 
   // Compute per event pdf -----------------------------------------------------
   ftype fk, ak;
+  ftype num_t, tnorm;
   ftype pdfB = 0.0;
   ftype norm = 0.0;
-  ftype num_t = exp(-time*G);
-  ftype tnorm = (exp(-tLL*G)-exp(-tUL*G))/G;
+
+  if (USE_ANGACC)
+  {
+    num_t = exp(-time*G);
+    tnorm = (exp(-tLL*G)-exp(-tUL*G))/G;
+  }
+  else
+  {
+    num_t = 1.0;
+    tnorm = 1.0;
+  }
 
   for(int k = 1; k <= 10; k++)
   {
     if (USE_FK)
     {
-      fk = ( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);
+      fk = num_t*( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);
     }
     else
     {
-      fk = TRISTAN[k-1];
+      fk = tnorm*TRISTAN[k-1];
     }
     ak = getAbd(ASlon, APlon, APpar, APper, dSlon, dPpar, dPpar, dPper, CSP, k);
     if ( (k==4) || (k==6)  || (k==9) )
     {
       pdfB += id*fk*ak;
-      norm += id*angular_weights[k-1]*ak;
+      norm += tnorm*id*angular_weights[k-1]*ak;
     }
     else
     {
       pdfB += fk*ak;
-      norm += angular_weights[k-1]*ak;
+      norm += tnorm*angular_weights[k-1]*ak;
     }
   }
-  pdfB = num_t*pdfB;
-  norm = tnorm*norm;
+
 
 
   return pdfB/norm;
