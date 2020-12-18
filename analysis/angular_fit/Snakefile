@@ -4,6 +4,7 @@
 rule physics_params_data_run2:
   wildcard_constraints:
     fit = "run2(Poldep)?",
+  threads: 8
   input:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
     # Angular acceptance
@@ -86,6 +87,7 @@ rule physics_params_data_run2:
 
 
 rule physics_params_dll_data:
+  threads: 8
   input:
     samples = lambda wcs: tuples(wcs,version=f'{wcs.dversion}',mode='Bs2JpsiPhi',year=f'{wcs.dyear}'.title()),
     # Angular acceptance
@@ -144,6 +146,7 @@ rule physics_params_dll_data:
 
 
 rule physics_params_dll_compare:
+  threads: 8
   input:
     pars_d = 'output/params/physics_params/{dyear}/Bs2JpsiPhi/{dversion}_{dfit}_{dangacc}_{dtimeacc}.json',
     pars_p = 'output/params/physics_params/{pyear}/Bs2JpsiPhi/{pversion}_{pfit}_{pangacc}_{ptimeacc}.json',
@@ -185,6 +188,7 @@ rule physics_params_dll_compare:
 
 
 rule physics_params_dll_table:
+  threads: 8
   input:
     run2_vs_yearly = [
       'tmp/dlls/Bs2JpsiPhi/run2_{dversion}_run2_{dangacc}_{dtimeacc}__vs__2015_{pversion}_yearly_{pangacc}_{ptimeacc}.tex',
@@ -311,6 +315,7 @@ rule physics_params_dll_table:
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
 rule physics_params_data_run2a:
+  threads: 8
   input:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2a'),
     # Angular acceptance
@@ -377,6 +382,7 @@ rule physics_params_data_run2a:
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
 rule physics_params_dataYearly:
+  threads: 8
   input:
     samples = lambda wcs: [tuples(wcs,mode='Bs2JpsiPhi')],
     # Angular acceptance
@@ -445,6 +451,7 @@ rule physics_params_dataYearly:
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
 rule physics_params_mc:
+  threads: 8
   wildcard_constraints:
     mode = "(TOY|MC)_(Bs2JpsiPhi(_dG0)?|Bs2JpsiKK_Swave)"
   input:
@@ -472,6 +479,7 @@ rule physics_params_mc:
 
 
 rule physics_params_mcfit_vs_mcgen:
+  threads: 8
   wildcard_constraints:
     mode = "(TOY|MC)_(Bs2JpsiPhi(_dG0)?|Bs2JpsiKK_Swave)"
   input:
