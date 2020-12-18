@@ -7,7 +7,7 @@ import matplotlib
 from ipanema import plotting, Sample, Parameter, Parameters
 import numpy as np
 import argparse
-from utils.plot import watermark
+from utils.plot import watermark, mode_tex
 
 with open(r"analysis/samples/branches_latex.yaml") as file:
     BRANCHES = yaml.load(file, Loader=yaml.FullLoader)
@@ -37,7 +37,7 @@ if __name__ == '__main__':
   if (mode=='MC_Bs2JpsiPhi') or (mode=='MC_Bs2JpsiPhi_dG0'):
       wc = ['time/time', 'sw/gb_weights', 'sw*polWeight*pdfWeight*kinWeight/gb_weights'] #Control MC Bs (both)
   elif (mode=='Bd2JpsiKstar') or (mode=='Bs2JpsiPhi'):
-      wc = ['time/time', 'sw/gb_weights', 'sw*kinWeight'] #control Bd RD
+      wc = ['time/time', 'sw', 'sw*kinWeight'] #control Bd RD
   else:
       wc = ['time/time', 'sw', 'sw*polWeight*pdfWeight*kinWeight'] #Control MC Bd
 
@@ -54,9 +54,9 @@ if __name__ == '__main__':
       hc = ipanema.hist(control.df[branch], bins=ht.edges,
                     weights=control.df.eval(wc[j]), density=True)
       if (mode=='Bd2JpsiKstar') or (mode=='Bs2JpsiPhi'):
-        axplot.step(ht.bins, ht.counts, where='mid', label=f'{year} data Bs',
+        axplot.step(ht.bins, ht.counts, where='mid', label=f'{year} ${mode_tex("Bs2JpsiPhi")}$',
                   linestyle='-', color=f'C{i}')
-        axplot.step(hc.bins, hc.counts, where='mid', label=f'{year} data Bd',
+        axplot.step(hc.bins, hc.counts, where='mid', label=f'{year} ${mode_tex("Bd2JpsiKstar")}$',
                 linestyle='-.', color=f'C{i}')
       else:
         axplot.step(ht.bins, ht.counts, where='mid', label=f'{year} data',
@@ -68,9 +68,9 @@ if __name__ == '__main__':
     axplot.set_ylabel(f"Candidates")
     axpull.set_xlabel(BRANCHES[mode][branch].get('latex_name'))
     if (mode=='Bd2JpsiKstar') or (mode=='Bs2JpsiPhi'):
-        axpull.set_ylabel(f"$\\frac{{N(data Bs)}}{{N(data Bd)}}$")
+        axpull.set_ylabel(f"$\\frac{{N({mode_tex('Bd2JpsiKstar')})}}{{N({mode_tex('Bs2JpsiPhi')}}}$")
     else:
-        axpull.set_ylabel(f"$\\frac{{N(data)}}{{N(MC)}}$")
+        axpull.set_ylabel(f"$\\frac{{N(MC)}}{{N(data)}}$")
     axpull.set_ylim(0.0,2.0)
     axpull.set_xlim(range[0], range[1])
     axpull.set_yticks([0.5, 1, 1.5])
