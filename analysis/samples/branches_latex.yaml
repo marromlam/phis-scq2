@@ -10,7 +10,7 @@ common: &common
     range: [-6.0, 0.0]
   "MUmaxTRchi2" :
     latex_name: $TR_{\chi^2, max} \mu$
-    range: [0.0, 5.0]
+    range: [0.3, 3.5]
   "logJpsiVXchi2" :
     latex_name: $log \chi^2_{VX} J/\psi$
     range: [-30.0, 1.0]
@@ -47,7 +47,7 @@ Bs_common: &Bs_common
     range: [-12.0, 12.0]
   "BDTFchi2" :
     latex_name: $\chi^2_{DTF} B_s$
-    range: [0.0, 2.0e+5]
+    range: [0.0, 8.0]
   "logMINkPNNk" :
     latex_name: $\mathrm{log} PNN_{k,min}$
     range: [-6.0, 0.0]
@@ -59,7 +59,7 @@ Bs_common: &Bs_common
     range: [0.0, 2.5e+4]
   "KmaxTRchi2" :
     latex_name: $TR_{\chi^2, max} K$
-    range: [0, 5]
+    range: [0.3, 3.5]
 
 
 
@@ -96,7 +96,7 @@ Bd_common: &Bd_common
       range: [-12.0, 12.0]
     "BDTFchi2" :
       latex_name: $\chi^2_{DTF} B_d$
-      range: [0.0, 2.0e+5]
+      range: [0.0, 8.0]
     "logMINkPNNk" :
       latex_name: $\mathrm{log} PNN_{k,min}$
       range: [-6, 0]
@@ -108,7 +108,7 @@ Bd_common: &Bd_common
       range: [0, 2.5e+4]
     "KmaxTRchi2" :
       latex_name: $TR_{\chi^2, max} K$
-      range: [0, 5]
+      range: [0.3, 3.5]
 
 MC_common: &MC_common
   <<: *common
