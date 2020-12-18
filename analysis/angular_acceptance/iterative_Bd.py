@@ -79,19 +79,25 @@ def pdf_reweighting_Bd(mcsample, mcparams, rdparams):
   badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h = mcsample.pdf.get()
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0, 
+  num_original = mcsample.pdf.get()[0:5]
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h /= mcsample.pdf.get()
-  print(original_pdf_h)
-  print(original_pdf_h[0:20])
+  den_original = mcsample.pdf.get()[0:5]
   badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
                            **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h = mcsample.pdf.get()
+  num_target = mcsample.pdf.get()[0:5]
   badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
                            **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h /= mcsample.pdf.get()
-  print(target_pdf_h)
-  print(target_pdf_h[0:20])
+  den_target = mcsample.pdf.get()[0:5]
+  print('num total=', )
+  for i in range(5):
+      print(f"evt=",i,"MC num=", num_original[i], " MC den=", den_original[i],"RD num=",num_target[i],"RD den=", den_target[i])
+  print('mc params', mcparams.valuesdict())
+  print('fit params', rdparams.valuesdict())
+  print(mcsample.true[0:4])
   return np.nan_to_num(target_pdf_h/original_pdf_h)
 
 
@@ -411,11 +417,8 @@ if __name__ == '__main__':
                       method='minuit', params=pars, fcn_kwgs={'data':data},
                       verbose=True, timeit=True, tol=0.001, strategy=1)
     likelihoods.append(result.chi2)
-    print(result.params)
-    print(result.chi2)
-    #names = ['fPpar', 'fPper', 'dPpar', 'dPper',
-            #'fSlon1', 'dSlon1r1', 'fSlon2', 'dSlon2r1',
-            #'fSlon3', 'dSlon3r1', 'fSlon4', 'dSlon4r1']
+
+    pars = Parameters.clone(result.params)
     names = ['fPlon', 'fPper', 'dPpar', 'dPper',
             'fSlon1', 'dSlon1', 'fSlon2', 'dSlon2',
             'fSlon3', 'dSlon3', 'fSlon4', 'dSlon4']
@@ -434,8 +437,6 @@ if __name__ == '__main__':
       for m, dm in dy.items(): # loop over mc_std and mc_dg0
         for t, v in dm.items(): # loop over mc_std and mc_dg0
           print(f' * Calculating pdfWeight for {m}-{y}-{t} sample')
-          print(pars)
-          print(data[y][t].csp)
           v.pdfWeight[i] = pdf_reweighting_Bd(v,v.params,pars+data[y][t].csp)
           print(v.pdfWeight[i])
       print(f'Show 10 fist pdfWeight[{i}] for {y}')
