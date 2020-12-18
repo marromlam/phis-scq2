@@ -150,7 +150,7 @@ void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
               // Angular acceptance
               GLOBAL_MEM const ftype *angular_weights,
               // Flags
-              const int USE_FK, const int BINS, const int NEVT)
+              const int USE_FK, const int BINS, const int USE_ANGACC, const int NEVT)
 {
   int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
@@ -173,7 +173,7 @@ void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
                           ASlon[bin], APlon[bin], APpar[bin], APper[bin],
                           dSlon[bin], dPlon,      dPpar,      dPper,
                           tLL, tUL,
-                          angular_weights,USE_FK);
+                          angular_weights,USE_FK, USE_ANGACC);
 
 }
 //////////////////////////////////////////////////////////////////////////////
