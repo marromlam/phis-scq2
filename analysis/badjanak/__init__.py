@@ -241,11 +241,11 @@ def delta_gamma5Bd(input, output,
     # Flags
     np.int32(use_fk),
     # BINS
-    np.int32(len(CSP)),
+    np.int32(len(CSP)), np.int32(use_angacc),
     # events
     np.int32(len(output)),
     global_size=g_size, local_size=l_size)
-
+    #np.int32(use_angacc)
 def parser_rateBs(
       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
       # Time-dependent angular distribution
@@ -563,7 +563,7 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
                          use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
                          BLOCK_SIZE=256, **p)
 
-def delta_gamma5_mc_Bd(input, output, use_fk=1, **pars):
+def delta_gamma5_mc_Bd(input, output, use_fk=1, use_angacc=1, **pars): #use_angacc = 1
   """
   delta_gamma5_mc_Bd(input, output, **pars)
   This function is intended to be used with MC input arrays. It doesn't use
@@ -583,9 +583,9 @@ def delta_gamma5_mc_Bd(input, output, use_fk=1, **pars):
   Out:
          void
   """
-  p = parser_rateBs(**pars)
+  p = parser_rateBd(**pars)
   delta_gamma5Bd( input, output,
-                         use_fk=use_fk, use_angacc = 0, use_timeacc = 0,
+                         use_fk=use_fk, use_angacc = use_angacc, use_timeacc = 0,
                          use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
                          BLOCK_SIZE=256, **p)
 ################################################################################
@@ -665,18 +665,10 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
   # Define the computation core function
   def get_weights_Bd(true, reco, weight):
     pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc_Bd(true, pdf, use_fk=0, **parameters); num = pdf.get()
+    delta_gamma5_mc_Bd(true, pdf, use_fk=0, use_angacc=0, **parameters); num = pdf.get()
     pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc_Bd(true, pdf, use_fk=1, **parameters); den = pdf.get()
+    delta_gamma5_mc_Bd(true, pdf, use_fk=1, use_angacc=0, **parameters); den = pdf.get()
     fk = get_fk(reco.get()[:,0:3])
-    print('fk')
-    print(fk[0:10])
-    print('reco')
-    print(true.get()[8,:])
-    print('weight')
-    print(weight.get()[0])
-    print('ratio')
-    print(den[8]/num[8])
     ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
     return ang_acc
 
