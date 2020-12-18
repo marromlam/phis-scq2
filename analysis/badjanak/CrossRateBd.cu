@@ -73,40 +73,33 @@ ftype getDiffRateBd(const ftype *data,
   ftype pdfB = 0.0;
   ftype norm = 0.0;
 
-  if (USE_ANGACC)
-  {
-    num_t = exp(-time*G);
-    tnorm = (exp(-tLL*G)-exp(-tUL*G))/G;
-  }
-  else
-  {
-    num_t = 1.0;
-    tnorm = 1.0;
-  }
+  num_t = exp(-time*G);
+  tnorm = (exp(-tLL*G)-exp(-tUL*G))/G;
 
   for(int k = 1; k <= 10; k++)
   {
     if (USE_FK)
     {
-      fk = num_t*( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);
+      fk = ( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);
     }
     else
     {
-      fk = tnorm*TRISTAN[k-1];
+      fk = TRISTAN[k-1];
     }
     ak = getAbd(ASlon, APlon, APpar, APper, dSlon, dPpar, dPpar, dPper, CSP, k);
     if ( (k==4) || (k==6)  || (k==9) )
     {
       pdfB += id*fk*ak;
-      norm += tnorm*id*angular_weights[k-1]*ak;
+      norm += id*angular_weights[k-1]*ak;
     }
     else
     {
       pdfB += fk*ak;
-      norm += tnorm*angular_weights[k-1]*ak;
+      norm += angular_weights[k-1]*ak;
     }
   }
-
+  pdfB = num_t*pdfB;
+  norm = tnorm*norm;
 
   #if DEBUG
   if ( DEBUG >= 1  && get_global_id(0) == DEBUG_EVT)
