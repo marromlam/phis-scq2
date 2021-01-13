@@ -1,69 +1,46 @@
 DESCRIPTION = """
-    This file runs different bdtconfigs to test how this configuration affect 
+    This file runs different bdtconfigs to test how this configuration affect
     the final fit result. This is a very expensive job, so be aware it will take
     a lot to run.
 """
 
-from hep_ml import reweight
-from utils.helpers import version_guesser, timeacc_guesser, trigger_scissors
-from utils.strings import cammel_case_split, cuts_and
-from utils.plot import mode_tex
-import badjanak
-from ipanema import ristra, Sample, Parameters, Parameter, optimize
-from ipanema import initialize
-import multiprocessing
-import time
-import threading
-import logging
-from hep_ml.metrics_utils import ks_2samp_weighted
-from warnings import simplefilter
-from timeit import default_timer as timer
-from scipy.stats import chi2
-from uncertainties import unumpy as unp
-import uncertainties as unc
-import hjson
-import sys
-import os
-import uproot
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import argparse
-__author__ = ['Marcos Romero']
+__author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
+import numpy as np
+from ipanema import ristra, initialize
+initialize('python')
 
-################################################################################
-# %% Modules ###################################################################
 
 
-# reweighting config
-# ignore all future warnings
-simplefilter(action='ignore', category=FutureWarning)
+def bdtmesh(conf, bdt_tests=100, verbose=True):
+  c = int(np.round(bdt_tests**0.25))
+  r = 0 if abs(bdt_tests-c**4)<abs(bdt_tests-c**3*(c+1)) else 1
 
-# threading
+  n_estimators = np.round(np.linspace(10,200, (r+c) if (r+c)<30 else 30)/10)*10
+  learning_rate = np.round(100*np.linspace(0.05,0.4, c if c<10 else 10))/100
+  max_depth = np.round(np.linspace(1,10, c if c<10 else 10))
+  min_samples_leaf = np.round(np.linspace(1e2,5e3, c if c<50 else 50)/1e2)*1e2
 
-# load ipanema
-initialize(os.environ['IPANEMA_BACKEND'], 1)
+  # mesh them
+  aja = ristra.ndmesh(n_estimators,learning_rate,max_depth,min_samples_leaf)
+  bdt_configs = np.vstack([aja[i].ravel() for i in range(len(aja))]).T
+  # -> np.vstack(map(np.ravel, aja)) ?
 
-# get badjanak and compile it with corresponding flags
-badjanak.config['fast_integral'] = 0
-badjanak.config['debug'] = 0
-badjanak.config['debug_evt'] = 0
-badjanak.get_kernels(True)
+  # select conf
+  ans = bdt_configs[conf-1]
 
-# import some phis-scq utils
+  if verbose:
+    print(f"Effective number of bdt_tests = {bdt_configs.shape[0]}")
+    print(f"different n_estimators = {len(n_estimators)}")
+    print(f"different learning_rate = {len(learning_rate)}")
+    print(f"different max_depth = {len(max_depth)}")
+    print(f"different min_samples_leaf = {len(min_samples_leaf)}")
+    print(f"Selected bdt-config = ", end='')
+    print(f"{int(ans[0])}:{ans[1]:.2f}:{int(ans[2])}:{int(ans[3])}")
+    
+  return ans
 
-# binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
 
-# reweighting config
-# ignore future warnings
-simplefilter(action='ignore', category=FutureWarning)
-bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
-reweighter = reweight.GBReweighter(**bdconfig)
-#40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
+
+#bdtmesh(5, bdt_tests=200)
