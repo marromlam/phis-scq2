@@ -190,9 +190,9 @@ void pyFcoeffs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *fk,
   const int i = get_global_id(0);
   //const int k = get_global_id(1);
   if (i >= NEVT) { return; }
-  for(int k=0; k<10; k++)
+  for(int k=0; k< NTERMS; k++)
   {
-    fk[i*10+k]= 9./(16.*M_PI)*getF(data[i*3+0],data[i*3+1],data[i*3+2],k+1);
+    fk[i*NTERMS+k]= 9./(16.*M_PI)*getF(data[i*3+0],data[i*3+1],data[i*3+2],k+1);
   }
 }
 
