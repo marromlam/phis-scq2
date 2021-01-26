@@ -42,7 +42,7 @@ import badjanak
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 774
 badjanak.get_kernels(True)
-mass = badjanak.config['x_m']
+mass = badjanak.config['mHH']
 
 ################################################################################
 

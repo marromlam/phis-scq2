@@ -68,7 +68,7 @@ def argument_parser():
   parser.add_argument('--year', help='Year of data-taking')
   parser.add_argument('--version', help='Year of data-taking')
   parser.add_argument('--flag', help='Year of data-taking')
-  parser.add_argument('--blind', default=0, help='Year of data-taking')
+  parser.add_argument('--blind', default=1, help='Year of data-taking')
   return parser
 
 
@@ -91,14 +91,15 @@ args = vars(argument_parser().parse_args())
 VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
 YEARS = args['year'].split(',')
 MODE = 'Bs2JpsiPhi'
-ANGACC = args['flag']
+FIT, ANGACC, TIMEACC = args['flag'].split('_')
+print(FIT)
 
 # Prepare the cuts -----------------------------------------------------------
 CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
 CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
 
 for k,v in args.items():
-  print(f'{k}: {v}')
+  print(f'{k}: {v}\n')
 
 # %% Load samples --------------------------------------------------------------
 print(f"\n{80*'='}\nLoading samples\n{80*'='}\n")
@@ -108,9 +109,12 @@ real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']      # tagging
 weight_rd='(sw)'
 
-
+if 'magUp' in FIT:
+  CUT = cuts_and("magnet>0", CUT)
+if 'magDown' in FIT:
+  CUT = cuts_and("magnet<0", CUT)
+  
 data = {}
-mass = badjanak.config['x_m']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   data[y] = {}
@@ -119,7 +123,7 @@ for i, y in enumerate(YEARS):
   csp = csp.build(csp,csp.find('CSP.*'))
   flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
   resolution = Parameters.load(args['time_resolution'].split(',')[i])
-  badjanak.config['x_m'] = mass.tolist()
+  badjanak.config['mHH'] = mass.tolist()
   for t in ['biased','unbiased']:
     tc = trigger_scissors(t, CUT)
     data[y][t] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
@@ -153,8 +157,14 @@ badjanak.get_kernels(True)
 
 # Prepare parameters
 SWAVE = True
+if 'Pwave' in FIT:
+  SWAVE = False
 DGZERO = False
+if 'DGzero' in FIT:
+  DGZERO = True
 POLDEP = False
+if 'Poldep' in FIT:
+  POLDEP = True
 BLIND = args['blind']
 
 pars = Parameters.load(args['params'])
@@ -181,10 +191,6 @@ list_tagging_parameters = [
 tagging_pars.add(*list_tagging_parameters)
 print(tagging_pars)
 '''
-# compile the kernel
-#    so if knots change when importing parameters, the kernel is compiled
-badjanak.get_kernels(True)
-
 
 #@profile
 def wrapper_fcn(input, output, **pars):

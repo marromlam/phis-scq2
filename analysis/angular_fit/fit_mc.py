@@ -77,28 +77,31 @@ VERSION = args['version']
 print(f"\n{80*'='}\n", "Loading samples", f"\n{80*'='}\n")
 
 # Lists of data variables to load and build arrays
-real  = ['cosK','cosL','hphi','time']                        # angular variables
 real  = ['helcosthetaK','helcosthetaL','helphi','time']                        # angular variables
 real += ['X_M','0*B_ID']                                     # mass and sigmat
-#real += ['tagOS_dec','tagSS_dec', 'tagOS_eta', 'tagSS_eta']  # tagging
 real += ['B_ID','B_ID', '0*B_ID', '0*B_ID']  # tagging
+
+real  = ['gencosK','gencosL','genhphi','gentime']                        # angular variables
+real += ['mHH','0*genidB']                                     # mass and sigmat
+real += ['genidB','genidB', '0*genidB', '0*genidB']  # tagging
 weight_rd='(time/time)'
+#real += ['tagOS_dec','tagSS_dec', 'tagOS_eta', 'tagSS_eta']  # tagging
 
 
 data = {}
-mass = badjanak.config['x_m']
+mass = badjanak.config['mHH']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   tree = uproot.open(args['samples'].split(',')[i]).keys()[0]
-  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename=tree, cuts="time>=0.0 & time<=15 & X_M>=990 & X_M<=1050")
+  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename=tree, cuts="time>=0.0 & time<=15 & mHH>=990 & mHH<=1050")
   csp = Parameters.load(args['csp'].split(',')[i])
   print(csp)
   data[f'{y}'].csp = csp.build(csp,csp.find('CSP.*'))
   print(f" *  Allocating {y} arrays in device ")
   sw = np.ones_like(data[f'{y}'].df.eval(weight_rd))
   for l,h in zip(mass[:-1],mass[1:]):
-      pos = data[f'{y}'].df.eval(f'X_M>={l} & X_M<{h}')
-      this_sw = data[f'{y}'].df.eval(f'{weight_rd}*(X_M>={l} & X_M<{h})')
+      pos = data[f'{y}'].df.eval(f'mHH>={l} & mHH<{h}')
+      this_sw = data[f'{y}'].df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
   data[f'{y}'].df['sWeight'] = sw
   data[f'{y}'].allocate(input=real,weight='sWeight',output='0*time')
