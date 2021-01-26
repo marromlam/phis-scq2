@@ -418,7 +418,6 @@ def parser_rateBd(
    r['DG'] = DGs
    r['DM'] = DM
    r['G'] = Gd#p['Gd']
-
    # Compute fractions of S and P wave objects
    FP = abs(1-fSlon)
    r['ASlon'] = ipanema.ristra.sqrt( fSlon )
@@ -674,7 +673,6 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
   # Compute weights scale and number of weights to compute
   scale = np.sum(ipanema.ristra.get(weight))
   terms = len(config['tristan'])
-
   # Define the computation core function
   def get_weights_Bd(true, reco, weight):
     pdf = THREAD.to_device(np.zeros(true.shape[0]))
