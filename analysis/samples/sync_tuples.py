@@ -13,7 +13,8 @@ import hjson
 import pandas as pd
 import os
 import argparse
-import uproot
+import uproot3 as uproot
+import shutil
 
 ROOT_PANDAS = True
 if ROOT_PANDAS:
@@ -37,27 +38,35 @@ if __name__ == "__main__":
   args = vars(p.parse_args())
 
   # Get the flags and that stuff
-  v = args['version']
+  v = args['version'].split("bdt")[0]
+  V = args['version']
   y = args['year']
   m = args['mode']
   tree = args['tree']
-  scq_path = os.path.dirname(os.path.abspath(args['output']))
+  
+  path = os.path.dirname(os.path.abspath(args['output']))
+  path = os.path.join(path, f"{abs(hash(f'{m}_{y}_selected_bdt_sw_{V}.root'))}")
+  print(f"{m}_{y}_selected_bdt_sw_{V}.root", path)
+  os.makedirs(path, exist_ok=False)
   all_files = []; all_dfs = []
 
   # Downloading everything xrdcp root://eoslhcb.cern.ch/
   print(f"Downloading {m}_{y}_selected_bdt_sw_{v}.root")
   eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
-  status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}")
+  status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {path}")
   print(status)
+  
+  # download main file
   if status == 0:
     all_files.append([f"{m}_{y}_selected_bdt_sw_{v}.root", None])
   else:
     print(f"- File {m}_{y}_selected_bdt_sw_{v}.root does not exist on server.")
-
+  
+  # donwload binned variable files
   for name, var in binned_files.items():
     print(f"Downloading {m}_{y}_selected_bdt_sw_{var}_{v}.root")
     eos_path = eos_path.replace('selected_bdt_sw',f'selected_bdt_sw_{var}')
-    status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {scq_path}")
+    status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {path}")
     print(status)
     if status == 0:
       all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root", f"{var}"])
@@ -68,7 +77,7 @@ if __name__ == "__main__":
   # Load and convert to pandas dfs
   for f, b in all_files:
     print(f, b)
-    fp = f"{scq_path}/{f}"
+    fp = f"{path}/{f}"
     if b:
       b = f"sw_{b}"
     all_dfs.append(uproot.open(fp)[tree].pandas.df(branches=b, flatten=None))
@@ -76,6 +85,8 @@ if __name__ == "__main__":
 
   # concatenate all columns
   result = pd.concat(all_dfs, axis=1)
+  if "nsig_sw" in result.keys():
+    result.eval("sw=nsig_sw", inplace=True)
   for var in binned_vars.keys():
     if not f'sw_{var}' in list(result.keys()):
       sw = np.zeros_like(result[f'sw'])
@@ -97,5 +108,4 @@ if __name__ == "__main__":
   print(f'    Succesfully writen.')
 
   # delete donwloaded files
-  for file in all_files:
-    os.remove(f"{scq_path}/{file[0]}")
+  shutil.rmtree(path, ignore_errors=True)
