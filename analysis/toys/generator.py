@@ -114,7 +114,7 @@ for t, T in zip(['biased','unbiased'],[0,1]):
 
 # Just recompile the kernel attenting to the gathered information
 badjanak.config['knots'] = knots.tolist()
-badjanak.config['x_m'] = mKK.tolist()
+badjanak.config['mHH'] = mKK.tolist()
 badjanak.get_kernels(True)
 
 

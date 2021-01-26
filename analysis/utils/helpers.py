@@ -36,7 +36,6 @@ def timeacc_guesser(timeacc):
   #pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9]knots)?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9])?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?(BDT.*)?\Z'
   p = re.compile(pattern)
-  print(p.search(timeacc).groups())
   try:
     acc, knots, corr, lifecut, mini, bdt = p.search(timeacc).groups()
     corr = False if corr=='Noncorr' else True
