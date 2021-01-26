@@ -2,6 +2,8 @@
 #    ----
 
 rule pack_time_acceptance:
+  wildcard_constraints:
+    timeacc = 'simul.*'
   resources:
     mem_mb=1048
   input:
@@ -51,5 +53,238 @@ rule pack_angular_acceptance:
     ) &> {log}""")
 
 
+
+# angular_acceptance tables ----------------------------------------------------
+#    ----
+ruleorder: pack_physics_params_1on1 > pack_physics_params_yearly
+
+rule pack_physics_params_1on1:
+  wildcard_constraints:
+    timeacc = 'simul.*'
+  resources:
+    mem_mb=1048
+  input:
+    lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{timeacc}.json', 
+    				    year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
+    lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json'),
+    lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
+                        dyear=config['year'], dfit=config['fit'], dangacc=config['angacc'], dtimeacc=config['timeacc'])
+  output:
+    'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.tex',
+  log:
+    'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.log'
+  run:
+    import hjson
+    import numpy as np
+    import os
+    
+    print(input)
+    dlls = {}
+    dlls[1] = {}
+    dlls[1][0] = np.load(input[-1]).tolist()[:-1]
+
+    with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
+      hjson.dump(dlls, fp)
+    print(dlls)
+    shell(f"""(time\
+    python packandgo/physics_tables.py\
+           --params {",".join(input[:-1])}\
+           --output {output}\
+           --mode {wildcards.mode}\
+           --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+           --angacc {wildcards.angacc}\
+    ) &> {log}""")
+    os.remove( f'{output}'.replace('.tex','.json') )
+
+
+rule pack_physics_params_magnet:
+  wildcard_constraints:
+    timeacc = 'simul.*'
+  resources:
+    mem_mb=1048
+  input:
+    lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{fit}_{{angacc}}_{{timeacc}}.json', 
+    				            fit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown']),
+    lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}_{dfit}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}_{pfit}_{{angacc}}_{{timeacc}}.npy",
+                        dfit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown'],
+                        pfit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown'])
+  output:
+    'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}magnet_{angacc}_{timeacc}.tex',
+  log:
+    'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}magnet_{angacc}_{timeacc}.log'
+  run:
+    import numpy as np
+    import hjson
+    import os
+    dlls = {}; n = 2
+
+    a = f"{','.join(input.l1)}".split(',')
+    b = f"{','.join(input.l2)}".split(',')
+    b = [b[i::n] for i in range(n)]
+
+    print(input)
+    dlls = {}
+    dlls[1] = {}
+    dlls[1][0] = np.load(input[-1]).tolist()[:-1]
+
+    with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
+      hjson.dump(dlls, fp)
+    print(dlls)
+    shell(f"""(time\
+    python packandgo/physics_tables.py\
+           --params {",".join(input[:-1])}\
+           --output {output}\
+           --mode {wildcards.mode}\
+           --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+           --angacc {wildcards.angacc}\
+    ) &> {log}""")
+    os.remove( f'{output}'.replace('.tex','.json') )
+
+
+
+rule pack_physics_params_yearly:
+  wildcard_constraints:
+    fit = 'yearly.*',
+    angacc = 'yearly.*',
+    timeacc = 'simul.*'
+  resources:
+    mem_mb=1048,
+    cores=50
+  input:
+    p1 = lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{timeacc}.json', year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
+    p2 = lambda wcs: expand('output/params/physics_params/2015/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
+    p3 = lambda wcs: expand('output/params/physics_params/2016/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
+    p4 = lambda wcs: expand('output/params/physics_params/2017/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
+    p5 = lambda wcs: expand('output/params/physics_params/2018/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
+    l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{{version}}_{pfit}_{pangacc}_{ptimeacc}.npy",
+                        pyear=config['year'], pfit=config['fit'], pangacc=config['angacc'], ptimeacc=config['timeacc'],
+                        dyear=YEARS['run2'], dfit=f'{wcs.fit}', dangacc=f'{wcs.angacc}', dtimeacc=f'{wcs.timeacc}'),
+    l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{{version}}_{pfit}_{pangacc}_{ptimeacc}.npy",
+                        pyear=YEARS['run2'], pfit=f'{wcs.fit}', pangacc=f'{wcs.angacc}', ptimeacc=f'{wcs.timeacc}',
+                        dyear=YEARS['run2'], dfit=f'{wcs.fit}', dangacc=f'{wcs.angacc}', dtimeacc=f'{wcs.timeacc}')
+  output:
+    'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.tex',
+  log:
+    'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.log'
+  run:
+    import numpy as np
+    import hjson
+    import os
+    dlls = {}; n = 4
+
+    # convert them to lists
+    a = f"{','.join(input.l1)}".split(',')
+    b = f"{','.join(input.l2)}".split(',')
+    b = [b[i::n] for i in range(n)]
+
+    for i in range(0,4):
+      dlls[i+1] = {}
+      dlls[i+1]["0"] = np.load(a[i]).tolist()[:-1]
+      for j in range(0,i):
+        dlls[i+1][j+1] = np.load(b[i][j]).tolist()[:-1]
+    for k1,v1 in dlls.items():
+      for k2,v2 in v1.items():
+        print(k1,k2,v2)
+
+    print(dlls)
+    print(f'{output}'.replace('.tex','.json'))
+    with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
+      hjson.dump(dlls, fp)
+
+    shell(f"""(time\
+    python packandgo/physics_tables.py\
+           --params {",".join([f"{input.p1}",f"{input.p2}",f"{input.p3}",f"{input.p4}",f"{input.p5}"])}\
+           --output {output}\
+           --mode {wildcards.mode}\
+           --year {",".join(YEARS[f"{wildcards.year}"])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+           --angacc {wildcards.angacc}\
+    ) &> {log}""")
+    os.remove( f'{output}'.replace('.tex','.json') )
+
+
+
+rule pack_physics_params_binned:
+  resources:
+    mem_mb=1048
+  wildcard_constraints:
+    var = "(pTB|sigmat|etaB)"
+  input:
+    p1 = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.json',
+    p2 = lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}@cut{{var}}{bin}_{{fit}}_{{angacc}}_{{timeacc}}.json',
+    						bin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4]),
+    l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}@cut{{var}}{bin}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
+                        	bin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4]),
+    l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}@cut{{var}}{dbin}_{{fit}}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}@cut{{var}}{pbin}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
+                        	pbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4],
+                        	dbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4])
+  output:
+    'output/packandgo/tables/physics_params/{year}/{mode}/{version}@cut{var}_{fit}_{angacc}_{timeacc}.tex',
+  log:
+    'output/log/pack_physics_params/{year}/{mode}/{version}@cut{var}_{fit}_{angacc}_{timeacc}.log'
+  run:
+    import numpy as np
+    import hjson
+    import os
+    dlls = {}; n = len(input.p2); print(n)
+
+    # convert them to lists
+    a = f"{','.join(input.l1)}".split(',')
+    b = f"{','.join(input.l2)}".split(',')
+    b = [b[i::n] for i in range(n)]
+    print(a)
+    for i in range(0,n):
+      dlls[i+1] = {}
+      dlls[i+1]["0"] = np.load(a[i]).tolist()[:-1]
+      for j in range(0,i):
+        dlls[i+1][j+1] = np.load(b[i][j]).tolist()[:-1]
+    for k1,v1 in dlls.items():
+      for k2,v2 in v1.items():
+        print(k1,k2,v2)
+
+    print(dlls)
+    print(f'{output}'.replace('.tex','.json'))
+    with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
+      hjson.dump(dlls, fp)
+     
+    shell(f"""(time\
+    python packandgo/physics_tables.py\
+           --params {",".join( [f"{input.p1}"]+f"{','.join(input.p2)}".split(",")  )}\
+           --output {output}\
+           --mode {wildcards.mode}\
+           --year {",".join((n+1)*[f"{wildcards.year}"])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+           --angacc {wildcards.angacc}\
+    ) &> {log}""")
+    os.remove( f'{output}'.replace('.tex','.json') )
+
+
 # lifetime tables --------------------------------------------------------------
 #    ----
+rule pack_lifetimeBu:
+  resources:
+    mem_mb=1048
+  input:
+    corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
+    noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}Noncorr.json', year=YEARS[f'{wcs.year}']),
+  output:
+    'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_life{timeacc}.tex',
+  log:
+    'output/log/pack_time_acceptance/{year}/{mode}/{version}_life{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python packandgo/lifetime_tables.py\
+           --corr {",".join(input.corr)}\
+           --noncorr {",".join(input.noncorr)}\
+           --output {output}\
+           --mode {wildcards.mode}\
+           --year {",".join(YEARS[f"{wildcards.year}"])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+    ) &> {log}""")
