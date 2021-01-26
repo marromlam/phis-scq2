@@ -143,7 +143,7 @@ if __name__ == '__main__':
   if MINER.lower() in ("minuit","minos"):
     lifefit = optimize(fcn_call=fcns.splinexerfconstr, params=lfpars,
                        fcn_kwgs={'cats':cats, 'weight':True},
-                       method=MINER, verbose=True, strategy=1, tol=0.05);
+                       method=MINER, verbose=False, strategy=1, tol=0.05);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     0 # fix me!
 

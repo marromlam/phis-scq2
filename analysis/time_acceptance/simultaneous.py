@@ -17,11 +17,11 @@ import hjson
 
 # load ipanema
 from ipanema import initialize, plotting
-from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
+from ipanema import ristra, Parameters, Sample, plot_conf2d, Optimizer
 
 # import some phis-scq utils
 from utils.plot import mode_tex
-from utils.strings import cuts_and
+from utils.strings import cuts_and, printsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
 
@@ -33,7 +33,7 @@ Gdvalue = hjson.load(open('config.json'))['Gd_value']
 tLL = hjson.load(open('config.json'))['tLL']
 tUL = hjson.load(open('config.json'))['tUL']
 
-# Parse arguments for this script
+# Parse arguments for this script
 def argument_parser():
   p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
@@ -63,7 +63,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bs2JpsiPhi'
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, LIFECUT, MINER, BDT = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
@@ -75,7 +75,7 @@ if __name__ == '__main__':
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   # Print settings
-  print(f"\n{80*'='}\nSettings\n{80*'='}\n")
+  printsec("Settings")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
 
   # Get data into categories ---------------------------------------------------
-  print(f"\n{80*'='}\nLoading categories\n{80*'='}\n")
+  printsec(f"Loading categories")
 
   cats = {}
   for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
 
   # Time to fit ----------------------------------------------------------------
-  print(f"\n{80*'='}\nSimultaneous minimization procedure\n{80*'='}\n")
+  printsec(f"Simultaneous minimization procedure")
   fcn_call = fcns.saxsbxscxerf
   fcn_pars = cats['BsMC'].params+cats['BdMC'].params+cats['BdRD'].params
   fcn_kwgs={
@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
 
   # Writing results ------------------------------------------------------------
-  print(f"\n{80*'='}\nDumping parameters\n{80*'='}\n")
+  printsec(f"Dumping parameters")
 
   for name, cat in zip(cats.keys(),cats.values()):
     list_params = cat.params.find('(a|b|c)(\d{1})(u|b)')
