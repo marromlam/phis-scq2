@@ -75,29 +75,20 @@ def check_for_convergence(a,b):
   return False
 
 
-def pdf_reweighting_Bd(mcsample, mcparams, rdparams):
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
+def pdf_reweighting_Bd(mcsample, mcparams, rdparams): #cambie true por reco
+  print('empiezo pdf_reweighhting')
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1, use_angacc=0,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h = mcsample.pdf.get()
-  num_original = mcsample.pdf.get()[0:5]
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0, use_angacc=0,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h /= mcsample.pdf.get()
-  den_original = mcsample.pdf.get()[0:5]
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1, use_angacc=0,
                            **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h = mcsample.pdf.get()
-  num_target = mcsample.pdf.get()[0:5]
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0, use_angacc=0,
                            **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h /= mcsample.pdf.get()
-  den_target = mcsample.pdf.get()[0:5]
-  print('num total=', )
-  for i in range(5):
-      print(f"evt=",i,"MC num=", num_original[i], " MC den=", den_original[i],"RD num=",num_target[i],"RD den=", den_target[i])
-  print('mc params', mcparams.valuesdict())
-  print('fit params', rdparams.valuesdict())
-  print(mcsample.true[0:4])
   return np.nan_to_num(target_pdf_h/original_pdf_h)
 
 
@@ -149,7 +140,6 @@ def get_angular_acceptance(mc, kkpWeight=False):
               for j in range(0, len(w)) if k > 0 and j > 0}
     mc.angaccs[i].add({'name': f'w{k}', 'value': w[k], 'stdev': uw[k],
                        'free': False, 'latex': f'w_{k}', 'correl': correl})
-  #print(f"{  np.array(mc.angular_weights[t])}")
 
 
 def fcn_data(parameters, data):
@@ -186,16 +176,13 @@ def argument_parser():
   p.add_argument('--version', help='Year of data-taking')
   return p
 
-###First we do the corrected MC, and we obtain de angaccs for this MC, after that
-##the iterative procedure begins.
+
 if __name__ == '__main__':
-  ##ALGO PASA PORQUE NO ENTIENDO PQ TAMBIEN ME DESCARGA LAS DE Bs igual los primeros REWEIGHTINGS
-  ### que hace con -F los hace tambien con Bs -> WARNING MARCOS
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
-  #YEARS = args['year'].split(',')
-  YEARS = ['2016']
+  YEARS = args['year'].split(',')
+  #YEARS = ['2016']
   MODE = 'Bd2JpsiKstar'
   ANGACC = args['angacc']
   # Prepare the cuts -----------------------------------------------------------
@@ -205,31 +192,22 @@ if __name__ == '__main__':
   #Paths with samples, params and output tables
   #samples
   samples_std = args['sample_mc_std'].split(',')
-  samples_std = [str(samples_std[1])]
 
   samples_data = args['sample_data'].split(',')
-  samples_data = [str(samples_data[1])]
 
   #params MC
   input_std_params = args['params_mc_std'].split(',')
-  input_std_params = [str(input_std_params[1])]
-  print(input_std_params)
+
   ##csp_factors
   csp_factors    = args['input_csp'].split(',')
-  csp_factors = [str(csp_factors[1])]
-  print(csp_factors)
   ##outputs
   params_biased      = args['output_weights_biased'].split(',')
-  params_biased = [str(params_biased[1])]
   params_unbiased    = args['output_weights_unbiased'].split(',')
-  params_unbiased = [str(params_unbiased[1])]
+
   tables_biased      = args['output_tables_biased'].split(',')
-  tables_biased = [str(tables_biased[1])]
   tables_unbiased    = args['output_tables_unbiased'].split(',')
-  tables_unbiased = [str(tables_unbiased)]
 
   kkpWeight_std = args['output_angular_weights_mc_std'].split(',')
-  kkpWeight_std = [str(kkpWeight_std[1])]
 
 
   # Print settings
@@ -243,7 +221,7 @@ if __name__ == '__main__':
 
   ##Variables for the PDF
   print(f"\n{80*'='}\nLoading samples\n{80*'='}\n")
-  #posible problema creo que la función no va a leer bien idB (5 en kernel 6 aqui)
+
   reco  = ['cosK', 'cosL', 'hphi', 'time']
   true  = [f'gen{i}' for i in reco]
   reco += ['mHH', '0*sigmat', 'idB', 'idB', '0*time', '0*time']
@@ -318,6 +296,7 @@ if __name__ == '__main__':
         print(angWeight[0:20])
         mc[y][m][t].df['angWeight'] = angWeight
         mc[y][m][t].olen = len(angWeight)
+        print(mc[y][m][t].params)
         angacc = badjanak.get_angular_acceptance_weights_Bd(mc[y][m][t].true, mc[y][m][t].reco,
                                      mc[y][m][t].weight*ristra.allocate(angWeight),
                                     **mc[y][m][t].params.valuesdict())
@@ -332,7 +311,6 @@ if __name__ == '__main__':
         print(f"{pars}")
         data[y][t].angacc = pars
         data[y][t].angaccs = {0:pars}
-
   for i,y in enumerate (YEARS):
     print(f' *  Allocating {y} arrays in device ')
     for d in [data[y]['biased'],data[y]['unbiased']]:
@@ -425,7 +403,7 @@ if __name__ == '__main__':
     corr_run1 = Parameters.build(result.params, names).corr()
     for p in ['fPlon', 'fPper', 'dPpar', 'dPper',
               'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4',
-              'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4']:
+              'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'Gd']:
       try:
         print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
       except:
@@ -434,11 +412,13 @@ if __name__ == '__main__':
     print(f'\nPDF weighting MC samples to match Bd2JpsiKstar data {itstr}')
     t0 = timer()
     for y, dy in mc.items(): # loop over years
+      print(y,dy)
       for m, dm in dy.items(): # loop over mc_std and mc_dg0
         for t, v in dm.items(): # loop over mc_std and mc_dg0
           print(f' * Calculating pdfWeight for {m}-{y}-{t} sample')
+          print(t,v)
+          print(v.df[['gencosK', 'gencosL', 'genhphi','gentime','genidB']])
           v.pdfWeight[i] = pdf_reweighting_Bd(v,v.params,pars+data[y][t].csp)
-          print(v.pdfWeight[i])
       print(f'Show 10 fist pdfWeight[{i}] for {y}')
       print(f"{'MC_Bd2JpsiKstar':<24}")
       print(f"{'biased':<11}  {'unbiased':<11}")
@@ -447,7 +427,6 @@ if __name__ == '__main__':
         print(f"  ", end='')
         print(f"{dy['MC_Bd2JpsiKstar']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
         print(f" | ", end='')
-    exit()
     tf = timer()-t0
     print(f'PDF weighting took {tf:.3f} seconds.')
       #3rd step: kinematic weights
@@ -456,9 +435,11 @@ if __name__ == '__main__':
     t0 = timer()
 
     for y, dy in mc.items(): # loop over years
+      print(y,dy)
       for m, dm in dy.items(): # loop over mc_std and mc_dg0
         for t, v in dm.items():
-            # original variables + weight (mc)
+          print(t,v)
+          # original variables + weight (mc)
           ov  = v.df[['pTHm','pTHp','pHm','pHp']]
           ow  = v.df.eval(f'angWeight*polWeight*{weight_rd}')
           ow *= v.pdfWeight[i]
@@ -507,11 +488,11 @@ if __name__ == '__main__':
             CHECK_DICT[ci].append(check_for_convergence(
             data[y][trigger].angaccs[ci], data[y][trigger].angaccs[i]))
 
+
         qwe = check_for_convergence( data[y][trigger].angaccs[i-1], data[y][trigger].angaccs[i] )
         checker.append( qwe )
         std.dump(data[y][trigger].params_path.replace('.json',f'i{i}.json'))
         #print(f'Value of chi2/dof = {chi2_value:.4}/{dof} corresponds to a p-value of {prob:.4}\n')
-
     # Check if they are the same as previous iteration
     lb = [ data[y]['biased'].angaccs[i].__str__(['value']).splitlines() for i__,y in enumerate( YEARS ) ]
     lu = [ data[y]['unbiased'].angaccs[i].__str__(['value']).splitlines() for i__,y in enumerate( YEARS ) ]
@@ -522,11 +503,9 @@ if __name__ == '__main__':
     for l in zip(*lu):
       print(*l, sep="| ")
     print(f"\n{80*'-'}\n")
-
     print("CHECK: ", checker)
     print("CHECK_DICT: ", CHECK_DICT)
     print("LIKELIHOODs: ", likelihoods)
-
     if all(checker):
       print(f"\nDone! Convergence was achieved within {i} iterations")
       print(f"Comparación Run1")
@@ -535,11 +514,9 @@ if __name__ == '__main__':
                #'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4']
       names = ['fPlon', 'fPper', 'dPpar', 'dPper',
                'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4',
-               'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4']
+               'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'Gd']
       valores = []; std = []
-      #hay que cambiarlos
-      #old_values = [0.227, 0.201, -2.94, 2.94, 3.09, 2.66, 1.94, 1.53, 0.115, 0.049, 0.052, 0.105]
-      #old_std = [0.012, 0.009, 0.04, 0.03, 0.13, 0.08, 0.09, 0.11, 0.021, 0.008, 0.011, 0.016]
+      #Comparation with Run1 results
       old_values = [0.572, 0.201, -2.94, 2.94, 0.150, -0.280, -1.00, -1.410, 0.115, 0.049, 0.052, 0.105]
       old_std = [0.015, 0.009, 0.04, 0.03, 0.13, 0.09, 0.09, 0.11, 0.021, 0.008, 0.011, 0.016]
       for p in names:
