@@ -1,7 +1,7 @@
 common: &common
   "time" :
     latex_name: $t$
-    range : [0.0,10.0]
+    range : [0.3,15.0]
   "sigmat" :
     latex_name: $\sigma_t$
     range: [0.0, 10.0]
@@ -14,6 +14,16 @@ common: &common
   "logJpsiVXchi2" :
     latex_name: $log \chi^2_{VX} J/\psi$
     range: [-30.0, 1.0]
+  "cosK" :
+    latex_name: $\cos \theta_K$
+    range: [-1.0, 1.0]
+  "cosL" :
+    latex_name: $\cos \theta_{\mu}$
+    range: [-1.0, 1.0]
+  "hphi" :
+    latex_name: $\phi$
+    range: [-3.142, 3.142]
+
 
 Bs_common: &Bs_common
   #cinematics
