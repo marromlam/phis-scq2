@@ -29,7 +29,9 @@ unsigned int getTimeBin(ftype const t)
     if( t < KNOTS[_i] ) {break;}
     _i++;
   }
-  if (0 == _i) {printf("WARNING: t=%.16f below first knot!\n",t);}
+  if ((0 == _i) && (DEBUG > 3)) {
+    printf("WARNING: t=%.16f below first knot!\n",t);
+  }
   return _i - 1;
 
 }
@@ -42,10 +44,12 @@ unsigned int getMassBin(ftype const t)
   int _n = MKNOTS-1;
   while(_i <= _n )
   {
-    if( t < X_M[_i] ) {break;}
+    if( t < MHH[_i] ) {break;}
     _i++;
   }
-  if (0 == _i) {printf("WARNING: t=%.16f below first knot!\n",t);}
+  if ((0 == _i) && (DEBUG > 3)) {
+    printf("WARNING: t=%.16f below first knot!\n",t);
+  }
   return _i - 1;
 }
 
@@ -318,7 +322,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
   // Some constants
   ftype cte1 = 1.0/(sqrt(2.0)*delta_t);
   ctype cte2 = cnew( delta_t/(sqrt(2.0)) , 0 );
-  if (delta_t <= 0.0)
+  if (DEBUG > 3 && delta_t <= 0.0)
   {
     printf("WARNING            : delta_t = %.4f is not a valid value.\n", delta_t);
   }

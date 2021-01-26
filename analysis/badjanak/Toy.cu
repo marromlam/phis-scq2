@@ -218,13 +218,13 @@ void dG5toy(GLOBAL_MEM ftype * out,
     // final checks ------------------------------------------------------------
 
     // check if probability is greater than the PROB_MAX
-    if (pdf > PROB_MAX) {
+    if ( (pdf > PROB_MAX) && (get_global_id(0)<100) ) {
       printf("WARNING: PDF [=%f] > PROB_MAX [=%f]\n", pdf, PROB_MAX);
     }
 
     // stop if it's taking too much iterations ---------------------------------
     iter++;
-    if(iter > 100000)
+    if( (iter > 100000) && (get_global_id(0)<100) )
     {
       printf("ERROR: This p.d.f. is too hard...");
       return;

@@ -16,7 +16,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#define ftype double
 ////////////////////////////////////////////////////////////////////////////////
 // Include headers /////////////////////////////////////////////////////////////
 
@@ -27,7 +26,7 @@
 #define DEBUG ${DEBUG}
 #define DEBUG_EVT ${DEBUG_EVT}               // the event that is being debugged
 
-#define FAST_INTEGRAL ${FAST_INTEGRAL}        // fast integral, means no faddeva
+#define FAST_INTEGRAL ${FAST_INTEGRAL} // fast integral, means avoinding faddeva
 
 // Time resolution parameters
 #define SIGMA_T ${SIGMA_T}
@@ -42,7 +41,7 @@ const CONSTANT_MEM ftype KNOTS[NKNOTS] = ${KNOTS};
 // PDF parameters
 #define NTERMS ${NTERMS}
 #define MKNOTS ${NMASSKNOTS}
-const CONSTANT_MEM ftype X_M[MKNOTS] = ${X_M};
+const CONSTANT_MEM ftype MHH[MKNOTS] = ${MHH};
 const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 
 // Include ipanema

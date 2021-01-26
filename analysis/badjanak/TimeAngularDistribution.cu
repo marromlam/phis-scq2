@@ -5,7 +5,7 @@
 //   Created: 2019-01-25                                                      //
 //    Author: Marcos Romero                                                   //
 //                                                                            //
-//    This file is part of p-scq packages, Santiago's framework for the       //
+//    This file is part of phis-scq packages, Santiago's framework for the    //
 //                     phi_s analysis in Bs -> Jpsi K+ K-                     //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////

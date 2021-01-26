@@ -331,7 +331,6 @@ ftype ang_eff(const ftype cosK, const ftype cosL, const ftype phi, ftype *moment
     eff += moments[9] * legendre_poly(2, 0, cosK) * sph_harm(0, 0, cosL, phi);
 
     eff *= 2.*sqrt(M_PI);
-//     printf("Ang. eff = %lf \n", eff);
     return eff;
 }
 
