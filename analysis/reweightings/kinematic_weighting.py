@@ -7,7 +7,7 @@ __all__ = ['computekinWeight']
 # %% Modules -------------------------------------------------------------------
 import argparse
 import numpy as np
-import uproot
+import uproot3 as uproot
 import ast
 import math
 import hjson

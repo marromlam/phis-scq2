@@ -13,7 +13,7 @@ __all__ = ['pdf_weighting']
 import argparse
 import numpy as np
 import pandas as pd
-import uproot
+import uproot3 as uproot
 import os
 
 ROOT_PANDAS = True
@@ -48,19 +48,20 @@ def argument_parser():
 
 def pdf_weighting(data, target_params, original_params, mode):
   # Modify flags, compile model and get kernels
-  badjanak.config['debug_evt'] = 2930619
-  badjanak.config['debug'] = 0
+  badjanak.config['debug_evt'] = 0#2930619
+  badjanak.config['debug'] = 5
   badjanak.config['fast_integral'] = 0
 
   if mode == "MC_Bd2JpsiKstar":
-    badjanak.config["x_m"] = [826, 861, 896, 931, 966]
+    badjanak.config["mHH"] = [826, 861, 896, 931, 966]
     tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
-                'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
-                'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
-  elif mode.startswith("MC_Bs2JpsiPhi"):
-    badjanak.config["x_m"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+                'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M','sigmat',
+                'B_ID', 'B_ID', 'B_ID', 'B_ID']
+                #'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
+  elif mode.startswith("MC_Bs2Jpsi"):
+    badjanak.config["mHH"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
     tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
-                'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
+                'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M','sigmat',
                 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
 
   badjanak.get_kernels(True)
@@ -108,7 +109,7 @@ def dg0_weighting(data, target_params, original_params, mode):
   badjanak.config['debug'] = 0
   badjanak.config['fast_integral'] = 0
 
-  badjanak.config["x_m"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  badjanak.config["mHH"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
   tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
               'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
               'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']

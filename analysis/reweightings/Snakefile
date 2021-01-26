@@ -5,7 +5,7 @@ rule reweighting_polarity:
   resources:
     mem_mb=7168
   wildcard_constraints:
-    mode = "MC_(Bs2JpsiPhi(_dG0|_Swave)?|Bd2JpsiKstar|Bu2JpsiKplus)"
+    mode = "MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)"
   input:
     original = lambda wcs: tuples(wcs,weight='sWeight'),
     target   = lambda wcs: tuples(wcs,mode='cdata',weight='sWeight'),
@@ -34,11 +34,11 @@ rule reweighting_pdf:
   resources:
     mem_mb=7168
   wildcard_constraints:
-    mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0|_Swave)?"
+    mode = "MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bs2JpsiKK_Swave)"
   input:
     sample = lambda wcs: tuples(wcs,weight='dg0Weight'),
   params:
-    original = lambda wcs: f"{wcs.year}/{wcs.mode[3:].split('_')[0]}.json",
+    original = lambda wcs: f"{wcs.year}/{'Bs2JpsiPhi' if 'Bs' in f'{wcs.mode}' else 'Bd2JpsiKstar'}.json",
     target = lambda wcs: f"{wcs.year}/{wcs.mode}.json",
   output:
     sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_pdfWeight.root')
@@ -62,12 +62,12 @@ rule reweighting_dg0:
   resources:
     mem_mb=7168
   wildcard_constraints:
-    mode = "MC_Bs2JpsiPhi"
+    mode = "(MC_Bs2JpsiPhi|MC_Bs2JpsiKK_Swave)"
   input:
     sample = lambda wcs: tuples(wcs,weight='polWeight'),
   params:
     original = lambda wcs: f"{wcs.year}/MC_Bs2JpsiPhi_dG0.json",
-    target = lambda wcs: f"{wcs.year}/MC_Bs2JpsiPhi.json",
+    target = lambda wcs: f"{wcs.year}/{wcs.mode}.json", #WARNING!
   output:
     sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_dg0Weight.root')
   log:
@@ -94,7 +94,7 @@ rule reweighting_kinematic:
   resources:
     mem_mb=7168
   wildcard_constraints:
-    mode = "(MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0|_Swave)?|Bd2JpsiKstar)"
+    mode = "(MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)|Bd2JpsiKstar|Bu2JpsiKplus)"
   input:
     original = lambda wcs: tuples(wcs,weight='kbuWeight'),
     target = lambda wcs: tuples(wcs,mode='cdata',weight='kinWeight'),
@@ -103,14 +103,19 @@ rule reweighting_kinematic:
   log:
     'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
   run:
-    import os
-    import hjson
-    bdconfig = hjson.load(open('config.json'))['time_acceptance_bdtconfig']
+    from angular_acceptance.bdtconf_tester import bdtmesh
+    bdconfig = CONFIG['time_acceptance_bdtconfig']
+      
     year = f'{wildcards.year}'
     mode = f'{wildcards.mode}'
     version = f'{wildcards.version}'
-    end  = 'selected_bdt_sw'
-    if mode.startswith('MC_Bs2JpsiPhi'):
+
+    # change bdt according to filename, if applies
+    if 'bdt' in version:
+      bdtconfig = int(version.split('bdt')[1])
+      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], True)
+    
+    if mode.startswith('MC_Bs2Jpsi'):
       shell(f"""(time\
         python analysis/reweightings/kinematic_weighting.py\
           --original-file {input.original}\
@@ -178,6 +183,23 @@ rule reweighting_kinematic:
           --max-depth {bdconfig['max_depth']}\
           --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log}""")
+    elif mode.startswith('Bu2JpsiKplus'):
+      shell(f"""(time\
+        python analysis/reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "B_PT B_P" \
+          --original-weight "sw"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "B_PT B_P"\
+          --target-weight "sw"\
+          --output-file {output.sample}\
+          --n-estimators {bdconfig['n_estimators']}\
+          --learning-rate {bdconfig['learning_rate']}\
+          --max-depth {bdconfig['max_depth']}\
+          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      ) &> {log}""")
     else:
       shell(f"""(time\
         cp {input.original} {output.sample}
@@ -201,13 +223,17 @@ rule reweighting_kinematicBu:
   log:
     'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
   run:
-    import os
-    import hjson
-    bdconfig = hjson.load(open('config.json'))['time_acceptance_bdtconfig']
+    from angular_acceptance.bdtconf_tester import bdtmesh
+    bdconfig = CONFIG['time_acceptance_bdtconfig']    
     year = f'{wildcards.year}'
     mode = f'{wildcards.mode}'
     version = f'{wildcards.version}'
-    end  = 'selected_bdt_sw'
+    
+    # change bdt according to filename, if applies
+    if 'bdt' in version:
+      bdtconfig = int(version.split('bdt')[1])
+      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], True)
+    
     if mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
         python analysis/reweightings/kinematic_weighting.py\
