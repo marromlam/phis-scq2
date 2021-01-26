@@ -83,12 +83,12 @@ rule angular_acceptance_joinWeights:
   output:
     SAMPLES_PATH+'{year}/{mode}/{version}_{wflag}.root'
   run:
-    import uproot
+    import uproot3 # uproot4 recreate method not yet avaliable
     import numpy as np
     b = np.load(f"{input.b}")
     u = np.load(f"{input.u}")
-    with uproot.recreate(f"{output}") as rfile:
-      rfile['DecayTree'] = uproot.newtree({'angWeight':np.float64})
+    with uproot3.recreate(f"{output}") as rfile:
+      rfile['DecayTree'] = uproot3.newtree({'angWeight':np.float64})
       rfile['DecayTree'].extend({'angWeight':b+u})
     rfile.close()
 
@@ -102,13 +102,13 @@ rule angular_acceptance_veronikaWeights:
   output:
     SAMPLES_PATH+'{year}/{mode}/{version}_veronikaWeight.root'
   run:
-    import uproot
+    import uproot3
     import numpy as np
-    a = uproot.open(f"{input.a}")['DecayTree'].arrays()
-    b = uproot.open(f"{input.b}")['DecayTree'].arrays()
+    a = uproot3.open(f"{input.a}")['DecayTree'].arrays()
+    b = uproot3.open(f"{input.b}")['DecayTree'].arrays()
     c = {**a,**b}
-    with uproot.recreate(f"{output}") as rfile:
-      rfile['DecayTree'] = uproot.newtree( {k:np.float64 for k in c.keys()} )
+    with uproot3.recreate(f"{output}") as rfile:
+      rfile['DecayTree'] = uproot3.newtree( {k:np.float64 for k in c.keys()} )
       rfile['DecayTree'].extend( {k:v for k,v in c.items()} )
     rfile.close()
 
@@ -187,18 +187,18 @@ rule angular_acceptance_iterativeRun2a:
     ],
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
     # Time resolution
     time_resolution = lambda wcs: [
-      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
     # Flavor tagging
     flavor = lambda wcs: [
-      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ]
   params:
     params_std = [
@@ -315,24 +315,24 @@ rule angular_acceptance_iterativeRun2:
     ],
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
     # Time resolution
     time_resolution = lambda wcs: [
-      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/time_resolution/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/time_resolution/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/time_resolution/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/time_resolution/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
     # Flavor tagging
     flavor = lambda wcs: [
-      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/flavor_tagging/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/flavor_tagging/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/flavor_tagging/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/flavor_tagging/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ]
   params:
     params_std = [
@@ -429,10 +429,10 @@ rule angular_acceptance_iterativeRun2Bd:
     sample_data = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar',year='Run2'),
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2016/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2017/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2018/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json'
+      f'output/params/csp_factors/2015/Bd2JpsiKstar/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2016/Bd2JpsiKstar/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2017/Bd2JpsiKstar/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2018/Bd2JpsiKstar/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
   params:
     params_std = [
@@ -504,8 +504,8 @@ rule angular_acceptance_iterativeRun2BdSimon:
     sample_data = lambda wcs: tuples(wcs,mode='Bd2JpsiKstar',year='Run2a'),
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2016/Bd2JpsiKstar/{wcs.version.split("@")[0]}.json',
+      f'output/params/csp_factors/2015/Bd2JpsiKstar/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2016/Bd2JpsiKstar/{wcs.version.split("@")[0].split("bdt")[0]}.json',
     ],
   params:
     params_std = [
@@ -650,15 +650,15 @@ rule angular_acceptance_iterativeYearly:
     ],
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/csp_factors/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
     # Time resolution
     time_resolution = lambda wcs: [
-      f'output/params/time_resolution/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/time_resolution/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
     # Flavor tagging
     flavor = lambda wcs: [
-      f'output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ]
   params:
     params_std = [
@@ -714,7 +714,7 @@ rule angular_acceptance_iterativeYearly:
            --year                           {",".join([wildcards.year])}\
            --angacc                         {wildcards.angacc}_{wildcards.timeacc}\
            --version                        {wildcards.version}\
-    ) &> {log}""")
+    ) #&> {log}""")
     send_mail(f"Angular Acceptance Yearly :: {wildcards}", f"{log}")
 
 
@@ -747,7 +747,7 @@ rule angular_acceptance_compareCuts:
 
 
 
-rule angular_acceptance_time_dependence:
+rule angular_weights_time_dependence:
   resources:
     mem_mb = 8192
   input:
@@ -763,7 +763,7 @@ rule angular_acceptance_time_dependence:
   output:
     figure = 'output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}Timedep_{timeacc}_{trigger}.pdf',
   log:
-    'output/log/angular_acceptance_time_dependence/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}.log'
+    'output/log/angular_weights_time_dependence/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/time_dependence.py\
@@ -781,5 +781,40 @@ rule angular_acceptance_time_dependence:
            --trigger                {wildcards.trigger}\
            --year                   {wildcards.year}\
            --shit                   {wildcards.angacc}_{wildcards.timeacc}\
+    ) &> {log}""")
+    send_mail(f"Angular Acceptance Time Dependence :: {wildcards}", f"{log}", [f"{output}"])
+
+
+
+rule angular_efficiency_time_dependence:
+  resources:
+    mem_mb = 8192
+  input:
+    samples = lambda wcs: tuples(wcs),
+    #weights = lambda wcs: tuples(wcs,weight=f'kkpWeight'),
+    angacc0 = ['output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}.json'],
+    angacci = lambda wcs: expand('output/params/angular_acceptance/{{year}}/{{mode}}/{{version}}_{{angacc}}{{nknots}}knots{bin}_{{timeacc}}.json', bin=range(1,int(f'{wcs.nknots}')+2)),
+  params:
+    'analysis/params/generator/{year}/{mode}.json',
+  output:
+    'output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}{nknots}knots_{timeacc}_cosK.pdf',
+    'output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}{nknots}knots_{timeacc}_cosL.pdf',
+    'output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}{nknots}knots_{timeacc}_hphi.pdf',
+  log:
+    'output/log/angular_efficiency_time_dependence/{year}/{mode}/{version}_{angacc}{nknots}knots_{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python analysis/angular_acceptance/angular_acceptance_plot_veronika.py\
+           --samples                {input.samples}\
+           --angular_acceptance     {",".join(input.angacc0+input.angacci)}\
+           --params                 {params}\
+           --output                 {",".join(output)}\
+           --angacc                 {wildcards.angacc}\
+           --timeacc                {wildcards.timeacc.split('_')[0] if len(wildcards.angacc.split('_'))>1 else 'none'}\
+           --mode                   {wildcards.mode}\
+           --version                {wildcards.version}\
+           --trigger                {wildcards.timeacc.split('_')[-1]}\
+           --year                   {wildcards.year}\
+           --nknots                 {wildcards.nknots}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Time Dependence :: {wildcards}", f"{log}", [f"{output}"])
