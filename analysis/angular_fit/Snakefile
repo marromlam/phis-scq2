@@ -3,7 +3,7 @@
 
 rule physics_params_data_run2:
   wildcard_constraints:
-    fit = "run2(Poldep)?",
+    fit = "run2(Poldep|magUp|magDown)?",
   threads: 8
   input:
     samples = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
@@ -35,24 +35,24 @@ rule physics_params_data_run2:
     ],
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/csp_factors/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/csp_factors/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
     # Time resolution
     time_resolution = lambda wcs: [
-      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/time_resolution/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/time_resolution/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/time_resolution/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/time_resolution/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
     # Flavor tagging
     flavor = lambda wcs: [
-      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/flavor_tagging/2017/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json',
-      f'output/params/flavor_tagging/2018/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
+      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/flavor_tagging/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
+      f'output/params/flavor_tagging/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
     ],
   output:
     params = 'output/params/physics_params/run2/Bs2JpsiPhi/{version}_{fit}_{angacc}_{timeacc}.json',
@@ -137,7 +137,7 @@ rule physics_params_dll_data:
            --params                  {input.params}\
            --dll                     {output}\
            --year                    {",".join(YEARS[f'{wildcards.dyear}'.title()])}\
-           --flag                    run2_{wildcards.dangacc}_{wildcards.dtimeacc}\
+           --flag                    {wildcards.dfit}_{wildcards.dangacc}_{wildcards.dtimeacc}\
            --version                 {wildcards.dversion}\
            --blind                   1\
     ) &> {log}""")
@@ -155,12 +155,12 @@ rule physics_params_dll_compare:
     logl_pd = 'tmp/dlls/Bs2JpsiPhi/{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}__vs__{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}.npy',
     logl_pp = 'tmp/dlls/Bs2JpsiPhi/{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}.npy'
   output:
-    temp('tmp/dlls/Bs2JpsiPhi/{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}.tex')
+    temp('tmp/pvalues/Bs2JpsiPhi/{dyear}_{dversion}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{ptimeacc}.npy')
   run:
     import numpy as np
     from ipanema import Parameters
     from utils.stats import check_DLL_agreement
-
+    
     # load likelihoods
     logls = np.zeros((2,2))
     logls[0,0] = np.load(f"{input.logl_dd}")
@@ -176,14 +176,15 @@ rule physics_params_dll_compare:
 
     # check agreement
     s, p, d = check_DLL_agreement(logls, pars, sigmas=True, pvalue=True, ndof=True, mdof=8)
-    ans = f"{wildcards.pyear:>10} & {wildcards.pversion:>10} & {wildcards.pfit:>10} & {wildcards.pangacc:>10} & {wildcards.ptimeacc:>10} & {wildcards.dyear:>10} & {wildcards.dversion:>10} & {wildcards.dfit:>10} & {wildcards.dangacc:>10} & {wildcards.dtimeacc:>10} & ${s:+.2f}\sigma$ & ${p:.4f}$ & ${d:.0f}$"
-
-    #print(ans)
+    #ans = f"{wildcards.pyear:>10} & {wildcards.pversion:>10} & {wildcards.pfit:>10} & {wildcards.pangacc:>10} & {wildcards.ptimeacc:>10} & {wildcards.dyear:>10} & {wildcards.dversion:>10} & {wildcards.dfit:>10} & {wildcards.dangacc:>10} & {wildcards.dtimeacc:>10} & ${s:+.2f}\sigma$ & ${p:.4f}$ & ${d:.0f}$"
+    ans = np.float64([s, p, d])
+    print(ans)
 
     # write
-    with open(f'{output}','w') as fp:
-      fp.write(ans)
-    fp.close()
+    # with open(f'{output}','w') as fp:
+    #   fp.write(ans)
+    # fp.close()
+    np.save(f"{output}", ans)
 
 
 
@@ -464,7 +465,7 @@ rule physics_params_mc:
     params = 'output/params/physics_params/{year}/{mode}/{version}_base.json',
     tables = 'output/tables/angular_fit/{year}/{mode}/{version}_base.tex'
   log:
-    'output/log/angular_acceptance/physics_params_mc/{year}/{mode}/{version}.log'
+    'output/log/physics_params_mc/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
     python analysis/angular_fit/fit_mc.py\
@@ -486,9 +487,9 @@ rule physics_params_mcfit_vs_mcgen:
     fit = 'output/params/physics_params/{year}/{mode}/{version}_base.json',
     gen = 'analysis/params/generator/2018/{mode}.json'
   output:
-    tables = 'output/tables/angular_fit/{year}/{mode}/{version}_base_comparisonFitGen.tex'
+    tables = 'output/tables/physics_params/{year}/{mode}/{version}_base_comparisonFitGen.tex'
   log:
-    'output/log/angular_fit/physics_params_mcfit_vs_mcgen/{year}/{mode}/{version}_base.log'
+    'output/log/physics_params_mcfit_vs_mcgen/{year}/{mode}/{version}_base.log'
   run:
     from ipanema import Parameters
     fit = Parameters.load(f'{input.fit}')

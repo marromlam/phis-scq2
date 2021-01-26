@@ -68,7 +68,7 @@ def argument_parser():
   parser.add_argument('--year', help='Year of data-taking')
   parser.add_argument('--version', help='Year of data-taking')
   parser.add_argument('--flag',help='Year of data-taking')
-  parser.add_argument('--blind', default=0, help='Year of data-taking')
+  parser.add_argument('--blind', default=1, help='Year of data-taking')
   return parser
 
 
@@ -93,7 +93,6 @@ YEARS = args['year'].split(',')
 MODE = 'Bs2JpsiPhi'
 FIT, ANGACC, TIMEACC = args['flag'].split('_')
 
-
 # Prepare the cuts -----------------------------------------------------------
 CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
 CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
@@ -107,8 +106,12 @@ print(f"\n{80*'='}\nLoading samples\n{80*'='}\n")
 # Lists of data variables to load and build arrays
 real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']      # tagging
-
 weight_rd='(sw)'
+
+if 'magUp' in FIT:
+  CUT = cuts_and("magnet>0", CUT)
+if 'magDown' in FIT:
+  CUT = cuts_and("magnet<0", CUT)
 
 
 data = {}
@@ -120,7 +123,7 @@ for i, y in enumerate(YEARS):
   csp = csp.build(csp,csp.find('CSP.*'))
   flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
   resolution = Parameters.load(args['time_resolution'].split(',')[i])
-  badjanak.config['x_m'] = mass.tolist()
+  badjanak.config['mHH'] = mass.tolist()
   for t in ['biased','unbiased']:
     tc = trigger_scissors(t, CUT)
     data[y][t] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
@@ -150,7 +153,8 @@ for i, y in enumerate(YEARS):
 
 # Compile the kernel
 #    so if knots change when importing parameters, the kernel is compiled
-badjanak.get_kernels(True)
+#badjanak.config["precision"]='single'
+badjanak.get_kernels(True, True)
 
 # Prepare parameters
 SWAVE = True
@@ -163,42 +167,44 @@ POLDEP = False
 if 'Poldep' in FIT:
   POLDEP = True
 BLIND = args['blind']
+#BLIND = False
+
 
 pars = Parameters()
 list_of_parameters = [#
 # S wave fractions
-Parameter(name='fSlon1', value=SWAVE*0.2, min=0.00, max=0.90,
+Parameter(name='fSlon1', value=SWAVE*0.5, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{1}'),
-Parameter(name='fSlon2', value=SWAVE*0.2, min=0.00, max=0.90,
+Parameter(name='fSlon2', value=SWAVE*0.0, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{2}'),
-Parameter(name='fSlon3', value=SWAVE*0.2, min=0.00, max=0.90,
+Parameter(name='fSlon3', value=SWAVE*0.0, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{3}'),
-Parameter(name='fSlon4', value=SWAVE*0.2, min=0.00, max=0.90,
+Parameter(name='fSlon4', value=SWAVE*0.0, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{4}'),
-Parameter(name='fSlon5', value=SWAVE*0.2, min=0.00, max=0.90,
+Parameter(name='fSlon5', value=SWAVE*0.0, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{5}'),
-Parameter(name='fSlon6', value=SWAVE*0.2, min=0.00, max=0.90,
+Parameter(name='fSlon6', value=SWAVE*0.0, min=0.00, max=0.90,
           free=SWAVE, latex=r'f_S^{6}'),
 # P wave fractions
 Parameter(name="fPlon", value=0.5241, min=0.4, max=0.6,
-          free=True, latex=r'f_0'),
+          free=True, latex=r'|A_0|^2'),
 Parameter(name="fPper", value=0.25, min=0.1, max=0.3,
-          free=True, latex=r'f_{\perp}'),
+          free=True, latex=r'|A_{\perp}|^2'),
 # Weak phases
-Parameter(name="pSlon", value= 0.00, min=-3.0, max=3.0,
+Parameter(name="pSlon", value= 0.00, min=-5.0, max=5.0,
           free=POLDEP, latex=r"\phi_S - \phi_0",
           blindstr="BsPhisSDelFullRun2",
           blind=BLIND, blindscale=2.0, blindengine="root"),
-Parameter(name="pPlon", value=-0.03, min=-3.0, max=3.0,
+Parameter(name="pPlon", value=0.3, min=-5.0, max=5.0,
           free=True, latex=r"\phi_0",
           blindstr="BsPhiszeroFullRun2" if POLDEP else "BsPhisFullRun2",
           blind=BLIND, blindscale=2.0 if POLDEP else 1.0, blindengine="root"),
-Parameter(name="pPpar", value= 0.00, min=-3.0, max=3.0,
+Parameter(name="pPpar", value= 0.00, min=-5.0, max=5.0,
           free=POLDEP, latex=r"\phi_{\parallel} - \phi_0",
           blindstr="BsPhisparaDelFullRun2",
           blind=BLIND, blindscale=2.0, blindengine="root"),
-Parameter(name="pPper", value= 0.00, min=-3.0, max=3.0,
-          free=POLDEP, blindstr="BsPhisperpDelFullRun2", blind=BLIND, 
+Parameter(name="pPper", value= 0.00, min=-5.0, max=5.0,
+          free=POLDEP, blindstr="BsPhisperpDelFullRun2", blind=BLIND,
           blindscale=2.0, blindengine="root", latex=r"\phi_{\perp} - \phi_0"),
 # S wave strong phases
 Parameter(name='dSlon1', value=+np.pi/4*SWAVE, min=-0.0, max=+3.0,
@@ -214,32 +220,32 @@ Parameter(name='dSlon5', value=-np.pi/4*SWAVE, min=-3.0, max=+0.0,
 Parameter(name='dSlon6', value=-np.pi/4*SWAVE, min=-3.0, max=+0.0,
           free=SWAVE, latex="\delta_S^{6} - \delta_{\perp}"),
 # P wave strong phases
-Parameter(name="dPlon", value=0.00, min=-2*3.14, max=2*3.14,
+Parameter(name="dPlon", value=0.00, min=-2*3.14*0, max=2*3.14,
           free=False, latex="\delta_0"),
-Parameter(name="dPpar", value=3.26, min=-2*3.14, max=2*3.14,
+Parameter(name="dPpar", value=3.26, min=-2*3.14*0, max=2*3.14,
           free=True, latex="\delta_{\parallel} - \delta_0"),
-Parameter(name="dPper", value=3.1, min=-2*3.14, max=2*3.14,
+Parameter(name="dPper", value=3.1, min=-2*3.14*0, max=2*3.14,
           free=True, latex="\delta_{\perp} - \delta_0"),
 # lambdas
 Parameter(name="lSlon", value=1., min=0.4, max=1.6,
-          free=POLDEP, latex="\lambda_S/\lambda_0"),
+          free=POLDEP, latex="|\lambda_S|/|\lambda_0|"),
 Parameter(name="lPlon", value=1., min=0.4, max=1.6,
-          free=True,  latex="\lambda_0"),
+          free=True,  latex="|\lambda_0|"),
 Parameter(name="lPpar", value=1., min=0.4, max=1.6,
-          free=POLDEP, latex="\lambda_{\parallel}/\lambda_0"),
+          free=POLDEP, latex="|\lambda_{\parallel}|/|\lambda_0|"),
 Parameter(name="lPper", value=1., min=0.4, max=1.6,
-          free=POLDEP, latex="\lambda_{\perp}/\lambda_0"),
+          free=POLDEP, latex="|\lambda_{\perp}|/|\lambda_0|"),
 # lifetime parameters
 Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
           free=False, latex=r"\Gamma_d"),
-Parameter(name="DGs", value= (1-DGZERO)*0.1, min= 0.0, max= 1.7,
+Parameter(name="DGs", value= (1-DGZERO)*0.3, min= 0.0, max= 1.7,
           free=1-DGZERO,  latex=r"\Delta\Gamma_s",
-          blindstr="BsDGsFullRun2", 
+          blindstr="BsDGsFullRun2",
           blind=BLIND, blindscale=1.0, blindengine="root"),
-Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1, 
+Parameter(name="DGsd", value= 0.03*0,   min=-0.1, max= 0.1,
           free=True, latex=r"\Gamma_s - \Gamma_d"),
-Parameter(name="DM", value=17.757,   min=15.0, max=20.0, 
-          free=True, latex=r"\Delta m"),
+Parameter(name="DM", value=17.757,   min=15.0, max=20.0,
+          free=True, latex=r"\Delta m_s"),
 Parameter("eta_os", value = data[str(YEARS[0])]['unbiased'].flavor['eta_os'].value,
           free = False),
 Parameter("eta_ss", value = data[str(YEARS[0])]['unbiased'].flavor['eta_ss'].value, free = False),
@@ -435,7 +441,7 @@ print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
 MINER = 'minuit'
 
 if MINER in ('minuit', 'minos'):
-  result = optimize(fcn_data, method=MINER, params=pars, 
+  result = optimize(fcn_data, method=MINER, params=pars,
                     fcn_kwgs={'data':data},
                     verbose=False, timeit=True, tol=0.1, strategy=2,
                     policy='filter')
@@ -445,15 +451,23 @@ elif MINER in ('nelder'):
                     verbose=False, timeit=True, tol=0.1, strategy=2,
                     policy='omit')
 elif MINER in ('bfgs', 'lbfgsb'):
-  result = optimize(fcn_data, method='nelder', params=pars, 
+  result = optimize(fcn_data, method='minuit', params=pars,
                     fcn_kwgs={'data':data},
                     verbose=False, timeit=True, tol=0.1, strategy=2,
                     policy='omit')
-  result = optimize(fcn_data, method=MINER, params=result.pars, 
+  result = optimize(fcn_data, method=MINER, params=result.pars,
                     fcn_kwgs={'data':data},
                     verbose=False, timeit=True, tol=0.1, strategy=2,
                     policy='filter')
-
+elif MINER in ('emcee'):
+  result = optimize(fcn_data, method='nelder', params=pars,
+                    fcn_kwgs={'data':data},
+                    verbose=False, timeit=True, tol=0.1, strategy=2,
+                    policy='omit')
+  result = optimize(fcn_data, method='emcee', params=result.params,
+                    fcn_kwgs={'data':data},
+                    verbose=False, timeit=True,
+                    policy='omit', steps=5000, nwalkers=1000, burn=2, workers=8)
 
 
 for p in  ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs',

@@ -264,8 +264,8 @@ if __name__ == '__main__':
       mc[y][m]['biased'].path_to_weights = v[i]
       mc[y][m]['unbiased'].path_to_weights = v[i]
   if MODE== 'Bd2JpsiKstar':
-    badjanak.config['x_m'] =  [826, 861, 896, 931, 966]
-  mass = badjanak.config['x_m']
+    badjanak.config['mHH'] =  [826, 861, 896, 931, 966]
+  mass = badjanak.config['mHH']
 
   for i, y in enumerate( YEARS ):
     print(f'\nLoading {y} MC as data samples')
