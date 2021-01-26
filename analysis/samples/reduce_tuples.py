@@ -1,6 +1,6 @@
 DESCRIPTION = """
     This script reduces original tuples from eos acording to branches.yaml.
-    It plays the role of a transaling layer between the selection pipeline
+    It plays the role of a translating-layer between the selection pipeline
     and the phis-scq pipeline.
 """
 
@@ -12,7 +12,7 @@ __all__ = ['reduce']
 
 # Libraries needed -------------------------------------------------------------
 import argparse
-import uproot
+import uproot3 as uproot      # just while uproot4 does not have writing methods
 import yaml
 import os
 import hjson
@@ -29,11 +29,26 @@ with open(r'analysis/samples/branches.yaml') as file:
 ################################################################################
 # Reduce function ##############################################################
 
-def reduce(input_file, output_file,
-           input_tree='DecayTree', output_tree='DecayTree',
-           uproot_kwargs=None):
+def reduce(input_file, output_file, input_tree='DecayTree', 
+           output_tree='DecayTree', uproot_kwargs=None):
   """
-  This function reduces a root file
+  This function reduces the branches of an input_file root file to output_file.
+  uproot library is uses both for loading and writing the input and output
+  files.
+
+  Parameters
+  ----------
+  input_file : str
+    Path to input file.
+  output_file : str
+    Path to output file.
+  input_tree : str, default='DecayTree'
+    Name of tree to be reduced.
+  output_tree : str, default='DecayTree'
+    Name of tree to be reduced.
+  uproot_kwargs : dict, default=None
+    Arguments to uproot loader. Read uproot docs.
+
   """
   # load file
   y,m,f = input_file.split('/')[-3:]

@@ -37,10 +37,8 @@ common: &common
   "logJpsiVXchi2" : "log_Jpsi_VX_CHI2NDOF_mva"
   "logMINmuPNNmu" : "log_min_mu_PNNmu_mva"
 
-
 MC_common: &MC_common
   <<: *common
-  "genidB" : "B_ID_GenLvl"
   "truetime" : "1000*B_TRUETAU"
   "truecosK" : "truehelcosthetaK"
   "truecosL" : "truehelcosthetaL"
@@ -60,23 +58,28 @@ MC_common: &MC_common
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
+  "genidB" : "B_ID_GenLvl"
   "dg0Weight" : "dg0Weight"
-
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
+  "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_common
+  "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
   <<: *MC_common
+  "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiPhi_Prompt:
   <<: *MC_Bs2JpsiPhi
+  "genidB" : "B_ID_GenLvl"
 
 MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
+  "genidB" : "B_ID"
   "kbuWeight" : "kbuWeight"
   "kbuWeight_etaB" : "kbuWeight_etaB"
   "kbuWeight_sigmat" : "kbuWeight_sigmat"
@@ -84,6 +87,7 @@ MC_Bd2JpsiKstar:
 
 MC_Bu2JpsiKplus:
   <<: *MC_common
+  "genidB" : "B_ID_GenLvl"
 
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
