@@ -54,7 +54,7 @@ debug_evt =       0, # number of events to debug
 fast_integral   = 1, # run integrals with approximation
 sigma_t =         0.15,
 knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
-x_m =             [990, 1008, 1016, 1020, 1024, 1032, 1050],
+mHH =             [990, 1008, 1016, 1020, 1024, 1032, 1050],
 tristan =         [1,1,1,0,0,0,1,0,0,0],
 precision =       'double',
 )
@@ -72,7 +72,7 @@ def flagger(verbose=False):
     print(f" ")
   dict_flags = {}
   for key, value in config.items():
-    if key == 'x_m':
+    if key == 'mHH':
       dict_flags['nmassbins'.upper()] = len(value)-1
       dict_flags['nmassknots'.upper()] = len(value)
     if key == 'knots':
@@ -550,6 +550,8 @@ BLOCK_SIZE=256, **pars):
                          use_timeoffset = use_timeoffset, set_tagging = set_tagging, use_timeres = use_timeres,
                          BLOCK_SIZE=BLOCK_SIZE, **p)
 
+
+
 def delta_gamma5_mc(input, output, use_fk=1, **pars):
   """
   delta_gamma5_mc(input, output, **pars)
@@ -571,10 +573,9 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
          void
   """
   p = parser_rateBs(**pars)
-  delta_gamma5( input, output,
-                         use_fk=use_fk, use_angacc = 0, use_timeacc = 0,
-                         use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-                         BLOCK_SIZE=256, **p)
+  delta_gamma5(input, output, use_fk=use_fk, use_angacc=0, use_timeacc=0,
+               use_timeoffset=0, set_tagging=0, use_timeres=0, BLOCK_SIZE=256, 
+               **p)
 
 def delta_gamma5_mc_Bd(input, output, use_fk=1, **pars):
   """

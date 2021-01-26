@@ -411,7 +411,7 @@ rule figures_bundle:
                   trigger=['biased','unbiased'],
                   year=['2015','2016','2017','2018']),
     # angular
-    aac3 = expand(rules.angular_acceptance_time_dependence.output,
+    aac3 = expand(rules.angular_weights_time_dependence.output,
                   version='{version}',
                   mode=['Bs2JpsiPhi'],
                   timeacc=['simul'],

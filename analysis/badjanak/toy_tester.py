@@ -530,7 +530,7 @@ wNorm = np.array([
 
 
 bin=0
-for ml,mh in zip(badjanak.config['x_m'][:-1],badjanak.config['x_m'][1:]):
+for ml,mh in zip(badjanak.config['mHH'][:-1],badjanak.config['mHH'][1:]):
   print(f'fill bin {np.int32(sum(wNorm[:,bin]))} events')
   out += np.int32((100*sum(wNorm[:,bin]))+1)*[10*[0.5*(ml+mh)]]
   bin +=1
