@@ -7,6 +7,7 @@
 
 import hjson
 CONFIG = hjson.load(open('config.json'))
+configfile: "standard.json"
 
 from utils.helpers import tuples, version_guesser, send_mail
 
@@ -27,7 +28,7 @@ MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
 
 # Some wildcards options ( this is not actually used )
-modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus'];
+modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bs2JpsiPhi', 'MC_Bs2JpsiKK_Swave', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus'];
 #{Bs2JpsiPhi,MC_Bs2JpsiPhi_dG0,MC_Bs2JpsiPhi,Bd2JpsiKstar,MC_Bd2JpsiKstar,Bu2JpsiKplus,MC_Bu2JpsiKplus}
 YEARS = {#
   '2011'  : ['2011'],
@@ -85,19 +86,51 @@ rule all:
 
 rule compile_slides:
   input:
-    rwp1 = expand(rules.reweightings_plot_time_acceptance.output,
-                  version='v0r5',
-                  mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-                  branch=['B_P','B_PT','X_M'],
-                  year=['2015','2016','2017','2018']),
-    tap1 = expand(rules.time_acceptance_plot.output,
-                  #version=['v0r5@cutpt1','v0r5@cutpt2','v0r5@cutpt3','v0r5@cutpt4'],
-                  version=['v0r5','v0r5@cutpt1','v0r5@cutpt2','v0r5@cutpt3','v0r5@cutpt4','v0r5+v0r5@cutpt1+v0r5@cutpt2+v0r5@cutpt3+v0r5@cutpt4','v0r5@cutsigmat1','v0r5@cutsigmat2','v0r5@cutsigmat3','v0r5+v0r5@cutsigmat1+v0r5@cutsigmat2+v0r5@cutsigmat3','v0r5@cuteta1','v0r5@cuteta2','v0r5@cuteta3','v0r5+v0r5@cuteta1+v0r5@cuteta2+v0r5@cuteta3'],
-                  mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-                  timeacc=['simul'],
-                  year=['2015','2016','2017','2018'],
-                  plot=['fitlog','spline'],
-                  trigger=['biased','unbiased']),
+    # time acceptance table:
+    f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul6.tex",
+    # angular acceptance table:
+    f"output/packandgo/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_run2_simul6.tex",
+    #
+    # physics parameters
+    #
+    # physics parameters cross-checks :: time acceptance
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul6Noncorr.tex",
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3.tex",
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3DGn0.tex",
+    ##
+    #
+    # reweighting plots
+    expand( rules.reweightings_plot_time_acceptance.output,
+            version='v0r5',
+            mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+            branch=['B_P','B_PT','X_M'],
+            year=['2015','2016','2017','2018']),
+    # time acceptance plot - nominal case only
+    expand( rules.time_acceptance_plot.output,
+            version=config['version'],
+            mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+            timeacc=['simul6'],
+            year=['2015','2016','2017','2018'],
+            plot=['fitlog', 'splinelog'],
+            trigger=['biased','unbiased']),
+    # time acceptance plots - binned variables
+    expand( rules.time_acceptance_plot.output,
+            version=['v0r5+v0r5@cutpTB1+v0r5@cutpTB2+v0r5@cutpTB3+v0r5@cutpTB4',
+                     'v0r5+v0r5@cutsigmat1+v0r5@cutsigmat2+v0r5@cutsigmat3',
+                     'v0r5+v0r5@cutetaB1+v0r5@cutetaB2+v0r5@cutetaB3'],
+            mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+            timeacc=['simul6'],
+            year=['2015','2016','2017','2018'],
+            plot=['splinelog'],
+            trigger=['biased','unbiased']),
+    # time acceptance plot - different knots + w/o kinWeight
+    expand( rules.time_acceptance_plot.output,
+            version=config['version'],
+            mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
+            timeacc=['simul6+simul3','simul6+simul6Noncorr'],
+            year=['2015','2016','2017','2018'],
+            plot=['splinelog'],
+            trigger=['biased','unbiased']),
     # rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
     #               version=['v0r5'],
     #               mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
