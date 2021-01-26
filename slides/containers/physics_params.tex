@@ -1,0 +1,107 @@
+\subsection{Time acceptance checks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{frame} % ----------------------------------------------------------------
+\frametitle{3 vs. 6 knots}
+
+\tiny
+\input{\OUTPUT packandgo/tables/physics_params/run2/Bs2JpsiPhi/\TupleVersion_run2_run2_simul3.tex}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame} % ----------------------------------------------------------------
+\frametitle{With/out kinematic weights}
+
+\tiny
+\input{\OUTPUT packandgo/tables/physics_params/run2/Bs2JpsiPhi/\TupleVersion_run2_run2_simul6Noncorr.tex}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame} % ----------------------------------------------------------------
+\frametitle{Using $\Bs$ $\Delta\Gamma \neq 0$ MC}
+
+\tiny
+\input{\OUTPUT packandgo/tables/physics_params/run2/Bs2JpsiPhi/\TupleVersion_run2_run2_simul3DGn0.tex}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\subsection{Checks in binned variables} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{frame} % ----------------------------------------------------------------
+\frametitle{Bins of $p_T(B)$}
+
+\tiny
+\input{\OUTPUT packandgo/tables/physics_params/run2/Bs2JpsiPhi/\TupleVersion@cutpTB_run2_run2_simul6.tex}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame} % ----------------------------------------------------------------
+\frametitle{Bins of $\eta(B)$}
+
+\tiny
+\input{\OUTPUT packandgo/tables/physics_params/run2/Bs2JpsiPhi/\TupleVersion@cutetaB_run2_run2_simul6.tex}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame} % ----------------------------------------------------------------
+\frametitle{Bins of $\sigma_t$}
+
+\tiny
+\input{\OUTPUT packandgo/tables/physics_params/run2/Bs2JpsiPhi/\TupleVersion@cutsigmat_run2_run2_simul6.tex}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\subsection{Checks fitting years independently} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{frame} % ----------------------------------------------------------------
+\frametitle{Year independent results}
+
+\tiny
+\input{\OUTPUT packandgo/tables/physics_params/run2/Bs2JpsiPhi/\TupleVersion_yearly_yearly_simul6.tex}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\foreach \year in {2015,2016,2017,2018}{
+  \begin{frame} % --------------------------------------------------------------
+  \frametitle{Binned in $p_T(B)$ with \year\, sample}
+
+  \tiny
+  \input{\OUTPUT packandgo/tables/physics_params/\year/Bs2JpsiPhi/\TupleVersion@cutpTB_yearly_yearly_simul6.tex}
+
+  \end{frame} % ----------------------------------------------------------------
+
+  \begin{frame} % --------------------------------------------------------------
+  \frametitle{Binned in $\eta(B)$ with \year\, sample}
+
+  \tiny
+  \input{\OUTPUT packandgo/tables/physics_params/\year/Bs2JpsiPhi/\TupleVersion@cutetaB_yearly_yearly_simul6.tex}
+
+  \end{frame} % ----------------------------------------------------------------
+
+  \begin{frame} % --------------------------------------------------------------
+  \frametitle{Binned in $\sigma_t$ with \year\, sample}
+
+  \tiny
+  \input{\OUTPUT packandgo/tables/physics_params/\year/Bs2JpsiPhi/\TupleVersion@cutsigmat_yearly_yearly_simul6.tex}
+
+  \end{frame} % ----------------------------------------------------------------
+}
