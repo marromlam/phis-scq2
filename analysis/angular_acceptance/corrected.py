@@ -150,7 +150,7 @@ if __name__ == '__main__':
   #     variables
 
   angacc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco,
-                                     mc.weight*ristra.allocate(angWeight),
+                                     mc.weight*ristra.allocate(angWeight), kind='legendre',
                                      **mc.params.valuesdict())
   w, uw, cov, corr = angacc
   pars = Parameters()
