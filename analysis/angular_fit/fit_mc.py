@@ -84,7 +84,7 @@ real += ['B_ID','B_ID', '0*B_ID', '0*B_ID']  # tagging
 real  = ['gencosK','gencosL','genhphi','gentime']                        # angular variables
 real += ['mHH','0*genidB']                                     # mass and sigmat
 real += ['genidB','genidB', '0*genidB', '0*genidB']  # tagging
-weight_rd='(time/time)'
+weight_rd='(gentime/gentime)'
 #real += ['tagOS_dec','tagSS_dec', 'tagOS_eta', 'tagSS_eta']  # tagging
 
 
@@ -93,7 +93,7 @@ mass = badjanak.config['mHH']
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   tree = uproot.open(args['samples'].split(',')[i]).keys()[0]
-  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename=tree, cuts="time>=0.0 & time<=15 & mHH>=990 & mHH<=1050")
+  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename=tree, cuts="gentime>=0.0 & gentime<=15 & mHH>=990 & mHH<=1050")
   csp = Parameters.load(args['csp'].split(',')[i])
   print(csp)
   data[f'{y}'].csp = csp.build(csp,csp.find('CSP.*'))
@@ -104,7 +104,7 @@ for i, y in enumerate(YEARS):
       this_sw = data[f'{y}'].df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
   data[f'{y}'].df['sWeight'] = sw
-  data[f'{y}'].allocate(input=real,weight='sWeight',output='0*time')
+  data[f'{y}'].allocate(input=real,weight='sWeight',output='0*gentime')
 
 # Prepare parameters
 SWAVE = True
