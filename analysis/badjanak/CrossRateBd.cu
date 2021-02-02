@@ -39,7 +39,7 @@ ftype getDiffRateBd(const ftype *data,
                     const ftype tLL, const ftype tUL,
                     // Angular acceptance
                     GLOBAL_MEM  const ftype *angular_weights,
-                    const int USE_FK
+                    const int USE_FK, const int USE_ANGACC
                   )
 {
 
@@ -62,20 +62,35 @@ ftype getDiffRateBd(const ftype *data,
     printf("                   : qOS=%+.16f\n",qOS);
   }
   #endif
-
+  #if DEBUG
+  if (DEBUG >= 1 && get_global_id(0) == DEBUG_EVT )
+  {
+    printf("\n Amplitudes : AsLon=%+.5f APLon=%+.5f APpar=%+.5f APper=%+.5f CSP=%+.2f\n",
+            ASlon, APlon, APpar, APper, CSP);
+  }
+  #endif
   // Flavor tagging ------------------------------------------------------------
   ftype id;
   id = qOS/fabs(qOS);
 
   // Compute per event pdf -----------------------------------------------------
   ftype fk, ak;
+  ftype num_t, tnorm;
   ftype pdfB = 0.0;
   ftype norm = 0.0;
-  ftype num_t = exp(-time*G);
-  ftype tnorm = (exp(-tLL*G)-exp(-tUL*G))/G;
+  num_t = exp(-time*G);
+  tnorm = (exp(-tLL*G)-exp(-tUL*G))/G;
 
+  //for(int k = 1; k <= 10; k++)
   for(int k = 1; k <= 10; k++)
   {
+    #if DEBUG
+    if (DEBUG >= 1 && get_global_id(0) == DEBUG_EVT )
+    {
+      printf("\nANGACC              : ang_weight=%+.4f \n",
+             angular_weights[k-1]);
+    }
+    #endif
     if (USE_FK)
     {
       fk = ( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);

@@ -59,7 +59,6 @@ resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
 Gdvalue = hjson.load(open('config.json'))['Gd_value']
 tLL = hjson.load(open('config.json'))['tLL']
 tUL = hjson.load(open('config.json'))['tUL']
-
 # reweighting config
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
@@ -78,16 +77,16 @@ def check_for_convergence(a,b):
 
 
 def pdf_reweighting(mcsample, mcparams, rdparams):
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1, use_angacc=0,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h = mcsample.pdf.get()
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0, use_angacc=0,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h /= mcsample.pdf.get()
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1, use_angacc=0,
                            **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h = mcsample.pdf.get()
-  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
+  badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0, use_angacc=0,
                            **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
   target_pdf_h /= mcsample.pdf.get()
   #print(f"   pdfWeight[{i}]: { np.nan_to_num(target_pdf_h/original_pdf_h) }")
@@ -125,7 +124,7 @@ def kkp_weighting_bins(original_v, original_w, target_v, target_w, path, y,m,t,i
 
 def get_angular_acceptance(mc, kkpWeight=False):
   # cook weight for angular acceptance
-  weight  = mc.df.eval(f'angWeight*polWeight*{weight_rd}').values
+  weight  = mc.df.eval(f'angWeight*{weight_rd}').values
   i = len(mc.kkpWeight.keys())
 
   if kkpWeight:
@@ -160,7 +159,7 @@ def fcn_data(parameters, data):
                    tLL=tLL, tUL=tUL, use_timeacc=0, set_tagging=1, use_timeres=0)
                    #set_tagging =2
 
-      chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
+      chi2.append( -2.0 * np.log(ristra.get(dt.lkhd)) * dt.weight.get() );
       #exit()
 
   return np.concatenate(chi2)
@@ -190,7 +189,9 @@ if __name__ == '__main__':
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
-  YEARS = args['year'].split(',')
+  #YEARS = args['year'].split(',')
+  #YEARS = ['2015', '2016']
+  YEARS = ['2016']
   MODE = 'Bd2JpsiKstar'
   ANGACC = args['angacc']
   # Prepare the cuts -----------------------------------------------------------
@@ -202,15 +203,28 @@ if __name__ == '__main__':
   # List samples, params and tables --------------------------------------------
   #samples
   samples_std   = args['sample_mc_std'].split(',')
+  #samples_std = [samples_std[1]]
+  samples_std = ['/scratch28/ramon.ruiz/sidecar/2016/MC_Bd2JpsiKstar/v0r0.root']
+  #samples_std = ['/scratch28/ramon.ruiz/sidecar/2015/MC_Bd2JpsiKstar/v0r5.root','/scratch28/ramon.ruiz/sidecar/2016/MC_Bd2JpsiKstar/v0r5.root']
+  #samples_std = ['/scratch28/ramon.ruiz/sidecar/2015/MC_Bd2JpsiKstar/v0r5.root','/scratch28/ramon.ruiz/sidecar/2016/MC_Bd2JpsiKstar/v0r5.root', '/scratch28/ramon.ruiz/sidecar/2017/MC_Bd2JpsiKstar/v0r5.root','/scratch28/ramon.ruiz/sidecar/2018/MC_Bd2JpsiKstar/v0r5.root']
+
   #params
   input_std_params = args['params_mc_std'].split(',')
+  input_std_params = [input_std_params[1]]
+  #print(input_std_params)
+  #exit()
+  #print(input_std_params)
+  #input_std_params = input_std_params[:2]
   params_biased      = args['output_weights_biased'].split(',')
+  params_biased = [params_biased[1]]
+  #params_biased = params_biased[:2]
   params_unbiased    = args['output_weights_unbiased'].split(',')
-
+  params_unbiased = [params_unbiased[1]]
+  #params_unbiased = params_unbiased[:2]
   tables_biased      = args['output_tables_biased'].split(',')
   tables_unbiased    = args['output_tables_unbiased'].split(',')
-
   kkpWeight_std = args['output_angular_weights_mc_std'].split(',')
+
 
 
   # Print settings
@@ -229,22 +243,25 @@ if __name__ == '__main__':
 
   reco  = ['cosK', 'cosL', 'hphi', 'time']
   true  = [f'gen{i}' for i in reco]
-  reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
-  true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
-
+  #reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
+  reco += ['mHH', '0*sigmat', 'idB', 'idB', '0*time', '0*time']
+  #true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
+  true += ['mHH', '0*sigmat', 'idB', 'idB', '0*time', '0*time']
   real  = ['cosK','cosL','hphi','time']
   real += ['mHH','0*sigmat', 'idB','idB', '0*time', '0*time']
-  weight_rd = f'sw_{VAR}' if VAR else 'sw'
-  weight_mc = f'(polWeight*{weight_rd})'
-
+  #weight_rd = f'sw_{VAR}' if VAR else 'sw'
+  weight_rd = f'sw'
+  weight_mc = f'({weight_rd})'
   # Load Monte Carlo samples ---------------------------------------------------
   mc = {}; data = {};
   mcmodes = ['MC_Bd2JpsiKstar']
   params_init = Parameters.load(input_std_params[0])
+  print(params_init)
   for i, y in enumerate( YEARS ):
     print(f'\nLoading {y} MC samples')
     mc[y] = {}
     for m, v in zip(mcmodes, [samples_std]):
+      print(v[i])
       mc[y][m] = {'biased':   Sample.from_root(v[i], share=SHARE),
                   'unbiased': Sample.from_root(v[i], share=SHARE)}
       mc[y][m]['biased'].name = f"{y}-biased"
@@ -252,8 +269,18 @@ if __name__ == '__main__':
     for m,v in zip(mcmodes, [input_std_params]):
       mc[y][m]['biased'].assoc_params(v[i])
       mc[y][m]['unbiased'].assoc_params(v[i])
+      #print(v[i])
+      #print(mc[y][m]['unbiased'].params)
       mc[y][m]['biased'].chop(cuts_and(trigger_scissors('biased'),'(evtN % 2) == 0', CUT))
       mc[y][m]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(evtN % 2) == 0', CUT))
+      print(mc[y][m]['biased'].df[['evtN', 'sw']])
+      print(mc[y][m]['unbiased'].df[['evtN', 'sw']])
+      #mc[y][m]['biased'].chop(cuts_and(trigger_scissors('biased'),'(__index__entry % 2) == 0', CUT))
+      #mc[y][m]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(__index__entry % 2) == 0', CUT))
+      #print(mc[y][m]['biased'].df)
+      #print(mc[y][m]['unbiased'].df)
+      #mc[y][m]['biased'].chop(cuts_and(trigger_scissors('biased'), CUT))
+      #mc[y][m]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), CUT))
       for t in ['biased', 'unbiased']:
         mc[y][m][t].allocate(reco=reco, true=true, pdf='0*time', weight=weight_mc)
         mc[y][m][t].df['angWeight'] = 0.0
@@ -264,8 +291,10 @@ if __name__ == '__main__':
       mc[y][m]['biased'].path_to_weights = v[i]
       mc[y][m]['unbiased'].path_to_weights = v[i]
   if MODE== 'Bd2JpsiKstar':
-    badjanak.config['mHH'] =  [826, 861, 896, 931, 966]
-  mass = badjanak.config['mHH']
+    badjanak.config['x_m'] =  [826, 861, 896, 931, 966]
+  mass = badjanak.config['x_m']
+  #badjanak.config['tristan'] = [1,1,1,0,0,0]
+  badjanak.get_kernels(True)
 
   for i, y in enumerate( YEARS ):
     print(f'\nLoading {y} MC as data samples')
@@ -275,9 +304,12 @@ if __name__ == '__main__':
                   'unbiased': Sample.from_root(v[i], share=SHARE)}
       data[y]['biased'].name = f"data {y}-biased"
       data[y]['unbiased'].name = f"data {y}-unbiased"
-      data[y]['biased'].chop(cuts_and(trigger_scissors('biased'),'(evtN % 2) != 0', CUT, 'logIPChi2B >= 0', 'log(BDTF) >=0'))
-      data[y]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(evtN % 2) != 0', CUT, 'logIPChi2B >= 0', 'log(BDTF) >=0'))
-
+      data[y]['biased'].chop(cuts_and(trigger_scissors('biased'),'(evtN % 2) != 0', CUT))#, 'logIPchi2B <= 0'))#, 'log(BDTF) >=0'))
+      data[y]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(evtN % 2) != 0', CUT))#, 'logIPchi2B <= 0'))#, 'log(BDTF) >=0'))
+      print(data[y]['biased'].df[['evtN', 'sw']])
+      print(data[y]['unbiased'].df[['evtN', 'sw']])
+      #data[y]['biased'].chop(cuts_and(trigger_scissors('biased')))
+      #data[y]['unbiased'].chop(cuts_and(trigger_scissors('unbiased')))
     for t, path in zip(['biased','unbiased'],[params_biased,params_unbiased]):
         data[y][t].params_path = path[i]
     for t, path in zip(['biased','unbiased'],[tables_biased,tables_unbiased]):
@@ -286,18 +318,21 @@ if __name__ == '__main__':
       for t in ['biased','unbiased']:
         print('Compute angWeights correcting MC sample in kinematics')
         print(f" * Computing kinematic GB-weighting in pTB, pB and mHH")
-        print(mc[y][m][t].df.eval(weight_mc))
-        print(data[y][t].df.eval(weight_rd))
         reweighter.fit(original        = mc[y][m][t].df[['mHH','pB','pTB']],
                        target          = data[y][t].df[['mHH','pB','pTB']],
                        original_weight = mc[y][m][t].df.eval(weight_mc),
                        target_weight   = data[y][t].df.eval(weight_rd));
         angWeight = reweighter.predict_weights(mc[y][m][t].df[['mHH', 'pB', 'pTB']])
+        #print(f'angWeight {t}')
+        #print(angWeight[0:20])
+        #angWeight =  np.ones_like(mc[y][m][t].df['angWeight'])
         mc[y][m][t].df['angWeight'] = angWeight
+        print(mc[y][m][t].df['angWeight'])
         mc[y][m][t].olen = len(angWeight)
+        print(mc[y][m][t].params)
         angacc = badjanak.get_angular_acceptance_weights_Bd(mc[y][m][t].true, mc[y][m][t].reco,
                                      mc[y][m][t].weight*ristra.allocate(angWeight),
-                                     **mc[y][m][t].params.valuesdict())
+                             **mc[y][m][t].params.valuesdict())
         w, uw, cov, corr = angacc
         pars = Parameters()
         for i in range(0,len(w)):
@@ -310,13 +345,26 @@ if __name__ == '__main__':
         data[y][t].angacc = pars
         data[y][t].angaccs = {0:pars}
 
+  #for i,y in enumerate (YEARS):
+    #for d in [mc[y][m]['biased'],mc[y][m]['unbiased']]:
+      #sw = np.zeros_like(d.df[f'sw'])
+      #print(f'mc{y}{m}{d}')
+      #for l,h in zip(mass[:-1],mass[1:]):
+        #pos = d.df.eval(f'mHH>={l} & mHH<{h}')
+        #this_sw = d.df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
+        #print(f'l=',l, 'h=',h, 'N=',np.sum(pos),'Neff=',np.sum(this_sw)*np.sum(this_sw)/(np.sum(this_sw*this_sw)))
+        #sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
+
   for i,y in enumerate (YEARS):
     print(f' *  Allocating {y} arrays in device ')
     for d in [data[y]['biased'],data[y]['unbiased']]:
       sw = np.zeros_like(d.df[f'{weight_rd}'])
+      print(f'data{y}{d}')
+      #sw = np.zeros_like(d.df[f'sw'])
       for l,h in zip(mass[:-1],mass[1:]):
         pos = d.df.eval(f'mHH>={l} & mHH<{h}')
         this_sw = d.df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
+        print(f'l=',l, 'h=',h, 'N=',np.sum(pos),'Neff=',np.sum(this_sw)*np.sum(this_sw)/(np.sum(this_sw*this_sw)))
         sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
       d.df['sWeight'] = sw
       d.allocate(data=real,weight='sWeight',lkhd='0*time')
@@ -328,9 +376,9 @@ if __name__ == '__main__':
   pars = Parameters()
 
   # P wave fractions normalmente fPlon
-  pars.add(dict(name="fPlon", value=0.5240, min=0.1, max=0.9,
+  pars.add(dict(name="fPlon", value=0.5001, min=0.1, max=0.9,
             free=True, latex=r'f_0'))
-  pars.add(dict(name="fPper", value=0.220, min=0.1, max=0.9,
+  pars.add(dict(name="fPper", value=0.1601, min=0.1, max=0.9,
             free=True, latex=r'f_{\perp}')) #0.170
   # Weak phases
   #pars.add(dict(name="pSlon", value= 0.00, min=-1.0, max=1.0,
@@ -344,9 +392,9 @@ if __name__ == '__main__':
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-3.14, max=3.14,
             free=False, latex=r"\delta_0"))
-  pars.add(dict(name="dPpar", value=0.501, min=-3.14, max=3.14,
+  pars.add(dict(name="dPpar", value=2.501, min=-2*3.14, max=2*3.14,
             free=True, latex=r"\delta_{\parallel} - \delta_0")) #2.501
-  pars.add(dict(name="dPper", value=-1.17, min=-3.14, max=3.14,
+  pars.add(dict(name="dPper", value=-0.17, min=-2*3.14, max=2*3.14,
             free=True, latex=r"\delta_{\perp} - \delta_0")) #-0.17
   # lambdas for Bd fix to 1
   #pars.add(dict(name="lPlon", value=1.0, min=-1.5, max=1.5,
@@ -356,8 +404,8 @@ if __name__ == '__main__':
   #pars.add(dict(name="lPper", value=1.0, min=0.7, max=1.6,
             #free=False, latex="\lambda_{\perp}/\lambda_0"))
   # life parameters
-  #pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
-            #free=False, latex=r"\Gamma_d"))
+  pars.add(dict(name="Gd", value= 0.65833, min= 0.0, max= 1.0,
+                free=False, latex=r"\Gamma_d"))
   #pars.add(dict(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
             #free=True, latex=r"\Delta\Gamma_s"))
   #pars.add(dict(name="DGs", value= 0.0, min= 0.0, max= 0.15,
@@ -396,25 +444,27 @@ if __name__ == '__main__':
     for v in pars.values():
       v.init = v.value # start where we left
     print(f'Simultaneous fit Bd2JpsiKstar {"&".join(list(mc.keys()))} {itstr}')
-    print(pars)
-    print(data.__str__())
     result = optimize(fcn_data,
                       method='minuit', params=pars, fcn_kwgs={'data':data},
-                      verbose=True, timeit=True, tol=0.5, strategy=1)
-    print(result)
+                      verbose=True, timeit=True, tol=0.001, strategy=2)
     likelihoods.append(result.chi2)
+    print(result.chi2)
 
     pars = Parameters.clone(result.params)
+    print(pars)
+    names = ['fPlon', 'fPper', 'dPpar', 'dPper', 'Gd']
+    corr_run1 = Parameters.build(result.params, names).corr()
 
     if not '2018' in data.keys() and not '2017' in data.keys():
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper']:
+      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'Gd']:
         print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
     else:
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper']:
+      for p in ['fPlon', 'fPper', 'dPpar', 'dPper','Gd']:
         try:
             print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
         except:
             0
+    #exit()
     # 2nd step: pdf weights ----------------------------------------------------
     #   We need to change badjanak to handle MC samples and then we compute the
     #   desired pdf weights for a given set of fitted pars in step 1. This
@@ -457,7 +507,8 @@ if __name__ == '__main__':
         for t, v in dm.items():
           # original variables + weight (mc)
           ov  = v.df[['pTHm','pTHp','pHm','pHp']]
-          ow  = v.df.eval(f'angWeight*polWeight*{weight_rd}/gb_weights')
+          #ow  = v.df.eval(f'angWeight*polWeight*{weight_rd}')
+          ow  = v.df.eval(f'angWeight*{weight_rd}')
           ow *= v.pdfWeight[i]
           # target variables + weight (real data)
           tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
@@ -534,7 +585,7 @@ if __name__ == '__main__':
 
     if all(checker):
       print(f"\nDone! Convergence was achieved within {i} iterations")
-      names = ['fPlon', 'fPper', 'dPpar', 'dPper']
+      names = ['fPlon', 'fPper', 'dPpar', 'dPper', 'Gd']
       values, oldvalues, std = [], [], []
       for p in names:
         values.append(pars[p].value)
@@ -542,8 +593,10 @@ if __name__ == '__main__':
         std.append(pars[p].stdev)
       df = pd.DataFrame({"names": names, "values": values, "std": std, "oldvalues": oldvalues})
       df['PULL'] = df.eval('(values-oldvalues)/sqrt(std**2)')
-      print('PULL con los valores generados en el MC')
+      print('PULL with gen values of MC')
       print(df)
+      print('Correlaciones parametros')
+      print(corr_run1)
 #Comentado checkeo w's con primera interacción
 #      for y, dy in data.items(): # loop over years
 #        for trigger in ['biased','unbiased']:

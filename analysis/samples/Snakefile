@@ -84,3 +84,33 @@ rule plot_samples:
            --output {",".join(output)}\
     ) #&> {log}""")
     send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
+
+rule plot_samples_yearly_v0r5_vs_v0r0:
+  resources:
+    mem_mb=1024
+  wildcard_constraints:
+    mode = "(TOY_|MC_)?(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+    branch = "(time|cosK|cosL|hphi|pTB|pB|pTHp|pHp|pTHm|pHm|etaB|mHH|logIPchi2B|BDTFchi2|logMINkPNNk|BVXchi2|pTX|KmaxTRchi2|MUmaxTRchi2|logJpsiVXchi2|logMINmuPNNmu)",
+    year = '\d{4}',
+    version = 'v0r5'
+  input:
+    tuple = lambda wcs: [tuples(wcs, version='v0r5')],
+    control = lambda wcs: [tuples(wcs, version='v0r0')]
+  output:
+    'output/samples/figures/{year}/{mode}/{version}VSv0r1/{branch}.pdf',
+    'output/samples/figures/{year}/{mode}/{version}VSv0r1/{branch}_sw.pdf',
+    'output/samples/figures/{year}/{mode}/{version}VSv0r1/{branch}_rw.pdf'
+  log:
+    'output/log/samples/{year}/{mode}/{version}VSv0r0/{branch}.log',
+  run:
+    shell(f"""(time\
+    python analysis/samples/plot.py\
+           --tuple {",".join(input.tuple)}\
+           --control {",".join(input.control)}\
+           --year {wildcards.year}\
+           --version {wildcards.version}\
+           --mode {wildcards.mode}\
+           --branch {wildcards.branch}\
+           --output {",".join(output)}\
+    ) #&> {log}""")
+    send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
