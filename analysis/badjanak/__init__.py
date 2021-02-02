@@ -122,7 +122,7 @@ def get_kernels(verbose=False, pedantic=False):
            'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
            'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
-           'dG5toy',
+           'dG5toy', 'pyCjlms', 'pyCs2Ws'
            #'integral_ijk_fx'
            ]
   for item in items:
@@ -618,14 +618,11 @@ def delta_gamma5_mc_Bd(input, output, use_fk=1, use_angacc=1, **pars): #use_anga
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-def get_angular_acceptance_weights(true, reco, weight, BLOCK_SIZE=256, **parameters):
+def get_angular_acceptance_weights(true, reco, weight, kind='norm_weights', BLOCK_SIZE=256, **parameters):
   # Filter some warnings
   warnings.filterwarnings('ignore')
-
   # Compute weights scale and number of weights to compute
   scale = np.sum(ipanema.ristra.get(weight))
-  terms = len(config['tristan'])
-
   # Define the computation core function
   def get_weights(true, reco, weight):
     pdf = THREAD.to_device(np.zeros(true.shape[0]))
@@ -636,35 +633,63 @@ def get_angular_acceptance_weights(true, reco, weight, BLOCK_SIZE=256, **paramet
     ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
     return ang_acc
 
-  # Get angular weights with weight applied and sum all events
-  w = get_weights(true, reco, weight).sum(axis=0)
-  # Get angular weights without weight
-  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
-  w10 = get_weights(true, reco, ones)
+  # Define the computation core function
+  def get_cs(true, reco, weight):
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
+    #get_cjlm needs also m as argument (highest order of the polynomial)
+    ck = get_cjlm(reco.get()[:,0:3],4)
+    ang_acc = ck*(weight.get()*num/den).T[::,np.newaxis]
+    #print('previous', ang_acc.sum(axis=0))
+    #ang_acc = ang_acc.sum(axis=0)
+    ang_acc = Cs2Ws(ang_acc)
+    print(ang_acc.shape)
+    #print('post', ang_acc[0]/ang_acc[0,0])
+    print(ang_acc.sum(axis=0))
+    print('post', ang_acc.sum(axis=0)/ang_acc.sum(axis=0)[0])
+    return ang_acc
 
+  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
+  #kind = 'norm_weights'
+  if kind=='norm_weights':
+      w = get_weights(true, reco, weight).sum(axis=0)
+      w10 = get_weights(true, reco, ones)
+      terms = len(config['tristan'])
+  else:
+      #w = get_cs(true, reco, weight).sum(axis=0)
+      w = get_cs(true, reco, weight).sum(axis=0)
+      w10 = get_cs(true, reco, ones)
+      #m = 2
+      #terms = (m+1)**3 #-> problems memory first build ws
+  #kind = 'norm_weights'
+  terms = 10
   # Get covariance matrix
   cov = np.zeros((terms,terms,weight.shape[0]))
   for i in range(0,terms):
     for j in range(i,terms):
       cov[i,j,:] = (w10[:,i]-w[i]/scale)*(w10[:,j]-w[j]/scale)*weight.get()**2
   cov = cov.sum(axis=2) # sum all per event cov
-
   # Handling cov matrix, and transform it to correlation matrix
   cov = cov + cov.T - np.eye(cov.shape[0])*cov         # fill the lower-triangle
-  final_cov = np.zeros_like(cov); corr = np.zeros_like(cov)
+  corr = np.zeros_like(cov)
   # Cov relative to f0
-  for i in range(0,cov.shape[0]):
-    for j in range(0,cov.shape[1]):
-      final_cov[i,j] = 1.0/(w[0]*w[0])*(
+  if (kind=='norm_weights') or (kind=='legendre'):
+    final_cov = np.zeros_like(cov)
+    for i in range(0,cov.shape[0]):
+      for j in range(0,cov.shape[1]):
+        final_cov[i,j] = 1.0/(w[0]*w[0])*(
                                 w[i]*w[j]/(w[0]*w[0])*cov[0][0]+cov[i][j]-
                                 w[i]/w[0]*cov[0][j]-w[j]/w[0]*cov[0][i]);
-  final_cov[np.isnan(final_cov)] = 0
-  final_cov = np.where(np.abs(final_cov)<1e-12,0,final_cov)
+    final_cov[np.isnan(final_cov)] = 0
+    cov = np.where(np.abs(final_cov)<1e-12,0,final_cov)
+    w = w/w[0]
   # Correlation matrix
   for i in range(0,cov.shape[0]):
     for j in range(0,cov.shape[1]):
-      corr[i,j] = final_cov[i][j]/np.sqrt(final_cov[i][i]*final_cov[j][j])
-  return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr
+      corr[i,j] = cov[i][j]/np.sqrt(cov[i][i]*cov[j][j])
+  return w, np.sqrt(np.diagonal(cov)), cov, corr
 
 def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **parameters):
   # Filter some warnings
@@ -712,11 +737,6 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
     for j in range(0,cov.shape[1]):
       corr[i,j] = final_cov[i][j]/np.sqrt(final_cov[i][i]*final_cov[j][j])
   return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr
-
-
-
-
-
 
 
 
@@ -1063,3 +1083,19 @@ def get_fk(z):
   w_dev = THREAD.to_device(np.ascontiguousarray(w, dtype=np.float64))
   __KERNELS__.Fcoeffs(z_dev, w_dev, np.int32(len(z)), global_size=(len(z)))
   return ristra.get(w_dev)
+
+def get_cjlm(z,m):
+  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
+  c = np.zeros((z.shape[0], (m+1)**3))
+  c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
+  __KERNELS__.Cjlms(z_dev, c_dev, np.int32(len(z)),np.int32(m), global_size=(len(z)))
+  return ristra.get(c_dev)
+
+def Cs2Ws(z):
+  m = 4 #for the moment is not used, it will be neccessary when we do the translations for others orders
+  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
+  c = np.zeros((np.atleast_2d(z).shape[0], len(config['tristan'])))
+  print('c.shape', c.shape)
+  c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
+  __KERNELS__.Cs2Ws(z_dev, c_dev, np.int32(len(c)),np.int32(m), global_size=(len(c)))
+  return ristra.get(c_dev)
