@@ -11,6 +11,8 @@ __all__ = []
 ################################################################################
 # Modules ######################################################################
 
+from warnings import simplefilter
+simplefilter(action='ignore', category=FutureWarning)
 import argparse
 import os
 from ipanema.samples import cuts_and
@@ -131,9 +133,8 @@ if __name__ == '__main__':
   badjanak.get_kernels(True)
 
   print('Computing angular weights')
-  w, uw, cov, corr = badjanak.get_angular_acceptance_weights(
-              mc.true, mc.reco, mc.weight, **mc.params.valuesdict(), tLL=tLL, tUL=tUL
-            )
+  w, uw, cov, corr = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, mc.weight,
+                                                            kind='legendre', **mc.params.valuesdict())
   pars = Parameters()
   for i in range(0,len(w)):
     correl = {f'w{j}{TRIGGER[0]}': corr[i][j]

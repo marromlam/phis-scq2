@@ -149,7 +149,7 @@ void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
               // Angular acceptance
               GLOBAL_MEM const ftype *angular_weights,
               // Flags
-              const int USE_FK, const int BINS, const int NEVT)
+              const int USE_FK, const int BINS, const int USE_ANGACC, const int NEVT)
 {
   int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
@@ -172,7 +172,7 @@ void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
                           ASlon[bin], APlon[bin], APpar[bin], APper[bin],
                           dSlon[bin], dPlon,      dPpar,      dPper,
                           tLL, tUL,
-                          angular_weights,USE_FK);
+                          angular_weights,USE_FK, USE_ANGACC);
 
 }
 //////////////////////////////////////////////////////////////////////////////
@@ -189,16 +189,71 @@ void pyFcoeffs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *fk,
   const int i = get_global_id(0);
   //const int k = get_global_id(1);
   if (i >= NEVT) { return; }
-  for(int k=0; k<10; k++)
+  for(int k=0; k< NTERMS; k++)
   {
-    fk[i*10+k]= 9./(16.*M_PI)*getF(data[i*3+0],data[i*3+1],data[i*3+2],k+1);
+    fk[i*NTERMS+k]= 9./(16.*M_PI)*getF(data[i*3+0],data[i*3+1],data[i*3+2],k+1);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//CJLM//////////////////////////////////////////////////////////////////////////
+KERNEL
+void pyCjlms(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *out,
+              const int NEVT, const int m)
+{
+  const int evt = get_global_id(0);
+  ftype cosK = data[evt*3+0];
+  ftype cosL = data[evt*3+1];
+  ftype hphi = data[evt*3+2];
+  int index = 0;
+  if (evt >= NEVT) { return; }
+  for (int i=0; i<=m; i++)
+  {
+    for (int j=0; j<=m; j++)
+    {
+      for (int k=-j; k<=j; k++)
+      {
+        out[int(pow(m+1,3))*evt+index] = lpmv(i,0,cosK)*sph_harm(j,k,cosL,hphi);
+        index += 1;
+      }
+    }
+  }
+}
 
-
-
+////////////////////////////////////////////////////////////////////////////////
+//CJLM_w_ws//////////////////////////////////////////////////////////////////////////
+//for the moment only valid for m=4, WARNING.
+KERNEL
+void pyCs2Ws(GLOBAL_MEM ftype *Cs, GLOBAL_MEM ftype *out,
+              const int NEVT, const int m)
+{
+  const int evt = get_global_id(0);
+  const int IDX = evt*pow(m+1,3);
+  if ((evt==0) or (evt==1))
+  {
+    printf("\nfirst 4 Cs: Cs0=%+.8f Cs1=%+.8f Cs2=%+.8f Cs3=%+.8f Cs4=%+.8f\n",
+           Cs[0], Cs[1], Cs[2], Cs[3]);
+    printf("Cs50=%+.8f Cs6=%+.8f Cs56=%+.8f Cs8=%+.8f Cs58=%+.8f\n",
+                  Cs[50], Cs[6], Cs[56], Cs[8], Cs[58]);
+  }
+  if (evt >= NEVT) { return; }
+  out[evt*NTERMS+0] = Cs[IDX+0] + 2./5.*Cs[IDX+50] + 1./sqrt(20.)*(Cs[IDX+6] + 2./5.*Cs[IDX+56]) - sqrt(3./20.)*(Cs[IDX+8]+2./5.*Cs[IDX+58]);
+  out[evt*NTERMS+1] = Cs[IDX+0] - 1./5.*Cs[IDX+50] + 1./sqrt(20.)*(Cs[IDX+6] - 1./5.*Cs[IDX+56]) + sqrt(3./20.)*(Cs[IDX+8]-1./5.*Cs[IDX+58]);
+  out[evt*NTERMS+2] = Cs[IDX+0] - 1./5.*Cs[IDX+50] - sqrt(1./5.)*(Cs[IDX+6] - 1./5.*Cs[IDX+56]);
+  out[evt*NTERMS+3] = sqrt(3./5.)*(Cs[IDX+5] - 1./5.*Cs[IDX+55]);
+  out[evt*NTERMS+4] = sqrt(6./5.)*3.*M_PI/32.*(Cs[IDX+29] - 1./4.*Cs[IDX+79]);
+  out[evt*NTERMS+5] = sqrt(6./5.)*3.*M_PI/32.*(Cs[IDX+32] - 1./4.*Cs[IDX+82]);
+  out[evt*NTERMS+6] = 1./2.*(2.*Cs[IDX+0] + sqrt(1./5.)*Cs[IDX+6] - sqrt(3./5.)*Cs[IDX+8]);
+  out[evt*NTERMS+7] = 3.*sqrt(2./5.)*M_PI/8.*(Cs[IDX+4] - 1./8.*Cs[IDX+54] - 1./64.*Cs[IDX+104]);
+  out[evt*NTERMS+8] = 3.*sqrt(2./5.)*M_PI/8.*(Cs[IDX+7] - 1./8.*Cs[IDX+57] - 1./64.*Cs[IDX+107]);
+  out[evt*NTERMS+9] = 1./6.*(4.*sqrt(3.)*Cs[IDX+25] + 2*sqrt(3./5.)*Cs[IDX+31] - 6.*sqrt(1./5.)*Cs[IDX+33]);
+  if ((evt==0) or (evt==1))
+  {
+    printf("\nfirst 10 ws: w0=%+.8f w1=%+.8f w2=%+.8f w3=%+.8f w4=%+.8f w5=%+.8f, w6=%+.8f, w7=%+.8f w8=%+.8f w9=%+.8f\n",
+           out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], out[8], out[9]);
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Acceptance //////////////////////////////////////////////////////////////////
 

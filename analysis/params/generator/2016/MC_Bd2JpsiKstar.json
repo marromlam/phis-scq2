@@ -266,7 +266,7 @@
     free: false
     min: null
     max: null
-    init: 0.8
+    init: 0.0
     latex: dSlon
     blind: false
     blindengine: python

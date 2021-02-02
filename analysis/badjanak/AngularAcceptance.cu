@@ -3,7 +3,7 @@
 
 
 WITHIN_KERNEL
-ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype phi, 
+ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype phi,
                          ftype *moments)
 {
   ftype eff = 0.;
@@ -30,31 +30,31 @@ void angular_weights2moments(GLOBAL_MEM const ftype* nw, ftype* moments)
 {
   //c0000
   moments[0] =  1./3.                    * ( nw[0] + nw[1] + nw[2] );
-  
+
   //c0020
   moments[1] =  1./3. * sqrt(5.)         * ( nw[0] + nw[1] + nw[2] - 3.*nw[6] );
-  
+
   //c0022
   moments[2] =         -sqrt(5./3.)      * ( nw[1] - nw[2] );
-  
+
   //c0021
   moments[3] = -8./3. * sqrt(5./2.)/M_PI * ( nw[7] );
-  
+
   //c002-1  -> -nw should be +nw?
   moments[4] = -8./3. * sqrt(5./2.)/M_PI * ( nw[8] );
-  
+
   //c002-2  -> -nw should be +nw?
   moments[5] =          sqrt(5./3.)      * ( nw[3] );
-  
+
   //c1000
   moments[6] =  1./2. * sqrt(3.)         * ( nw[9] );
-  
+
   //c1021
   moments[7] =-32./3. * sqrt(5./6.)/M_PI * ( nw[4] );
-  
+
   //c102-1  -> -nw should be +nw?
   moments[8] =+32./3. * sqrt(5./6.)/M_PI * ( nw[5] );
-  
+
   //c2000
   moments[9] =  5./2.                    * ( nw[0] - nw[6] );
 }
@@ -63,11 +63,14 @@ void angular_weights2moments(GLOBAL_MEM const ftype* nw, ftype* moments)
 
 KERNEL
 void plot_moments(GLOBAL_MEM const ftype *nw, GLOBAL_MEM ftype *out,
-                  GLOBAL_MEM const ftype *cosK, GLOBAL_MEM const ftype *cosL, 
+                  GLOBAL_MEM const ftype *cosK, GLOBAL_MEM const ftype *cosL,
                   GLOBAL_MEM const ftype *hphi)
 {
   const int evt = get_global_id(0);
-  ftype moments[NTERMS] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  //ramon MODIFICACION
+  //ftype moments[NTERMS] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  ftype moments[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+
   angular_weights2moments(nw, moments);
   out[evt] = angular_efficiency(cosK[evt], cosL[evt], hphi[evt], moments);
 }

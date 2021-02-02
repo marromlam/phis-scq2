@@ -616,7 +616,7 @@ rule angular_acceptance_iterativeRun2MC:
            --year                    {",".join(YEARS['Run2'])}\
            --angacc                  {wildcards.angacc}_single\
            --version                 {wildcards.version}\
-    ) &> {log}""")
+    ) #&> {log}""")
     send_mail(f"Angular Acceptance Run2 MC :: {wildcards}", f"{log}")
 
 
