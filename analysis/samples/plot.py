@@ -42,7 +42,7 @@ if __name__ == '__main__':
       wc = ['time/time', 'sw', 'sw*kinWeight'] #control Bd RD
   else:
       wc = ['time/time', 'sw', 'sw*polWeight*pdfWeight*kinWeight'] #Control MC Bd
-  if input_control[0].endswith('v0r1.root'): #comparacion v0r5 vs v0r0
+  if input_control[0].endswith('v0r0.root'): #comparacion v0r5 vs v0r0
       w = wc
       comp_version = True
   for j in range(len(output)):
