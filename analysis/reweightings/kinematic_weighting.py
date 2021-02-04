@@ -9,6 +9,7 @@ import argparse
 import numpy as np
 import uproot3 as uproot
 import ast
+from shutil import copyfile
 import math
 import hjson
 
@@ -154,7 +155,8 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   # %% Save weights to file ----------------------------------------------------
   print('Writing on %s' % output_file)
   if ROOT_PANDAS:
-    root_pandas.to_root(ovars_df, output_file, key=original_treename)
+    copyfile(original_file, output_file)
+    root_pandas.to_root(ovars_df, output_file, key=original_treename, mode='a')
   else:
     f = uproot.recreate(output_file)
     f[original_treename] = uproot.newtree({var:'float64' for var in ovars_df})

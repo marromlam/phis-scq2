@@ -5,6 +5,7 @@
 import argparse
 import numpy as np
 import uproot3 as uproot
+from shutil import copyfile
 import os
 
 ROOT_PANDAS = True
@@ -79,7 +80,8 @@ def polarity_weighting(original_file, original_treename,
   #    This produces some problems with large files, so we are using root_pandas
   #    to store files whilst uproot can't
   if ROOT_PANDAS:
-    root_pandas.to_root(odf, output_file, key=original_treename)
+    copyfile(original_file, output_file)
+    root_pandas.to_root(odf, output_file, key=original_treename, mode='a')
   else:
     f = uproot.recreate(output_file)
     f[original_treename] = uproot.newtree({var:'float64' for var in odf})
