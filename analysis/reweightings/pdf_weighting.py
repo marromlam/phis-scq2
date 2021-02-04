@@ -14,6 +14,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import uproot3 as uproot
+from shutil import copyfile
 import os
 
 ROOT_PANDAS = True
@@ -183,7 +184,8 @@ if __name__ == '__main__':
     os.remove(output_file)                               # delete file if exists
   print(f'Writing on {output_file}')
   if ROOT_PANDAS:
-    root_pandas.to_root(df, output_file, key=tree_name)
+    copyfile(original_file, output_file)
+    root_pandas.to_root(df, output_file, key=tree_name, mode='a')
   else:
     f = uproot.recreate(output_file)
     f[tree_name] = uproot.newtree({var:'float64' for var in df})
