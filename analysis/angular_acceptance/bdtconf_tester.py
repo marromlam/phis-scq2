@@ -13,7 +13,7 @@ initialize('python')
 
 
 
-def bdtmesh(conf, bdt_tests=100, verbose=True):
+def bdtmesh(conf, bdt_tests=100, verbose=False):
   c = int(np.round(bdt_tests**0.25))
   r = 0 if abs(bdt_tests-c**4)<abs(bdt_tests-c**3*(c+1)) else 1
 
