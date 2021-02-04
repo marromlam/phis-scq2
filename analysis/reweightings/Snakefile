@@ -113,7 +113,7 @@ rule reweighting_kinematic:
     # change bdt according to filename, if applies
     if 'bdt' in version:
       bdtconfig = int(version.split('bdt')[1])
-      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], True)
+      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], False)
     
     if mode.startswith('MC_Bs2Jpsi'):
       shell(f"""(time\
@@ -232,7 +232,7 @@ rule reweighting_kinematicBu:
     # change bdt according to filename, if applies
     if 'bdt' in version:
       bdtconfig = int(version.split('bdt')[1])
-      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], True)
+      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], False)
     
     if mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\

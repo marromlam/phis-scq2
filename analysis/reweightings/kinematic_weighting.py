@@ -16,6 +16,7 @@ import hjson
 ROOT_PANDAS = True
 if ROOT_PANDAS:
   import root_pandas
+  import root_numpy
 
 # reweighting config
 from warnings import simplefilter
@@ -99,6 +100,7 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   # %% Build pandas dataframes -------------------------------------------------
   original_vars = original_vars.split()
   target_vars = target_vars.split()
+  new_vars = []
 
   # find all needed branches
   all_original_vars = original_vars + getStringVars(original_weight)
@@ -133,6 +135,7 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
                           tvars_df.eval(target_weight),
                           n_estimators,learning_rate,max_depth,min_samples_leaf,
                           trunc)
+  new_vars.append(np.array(ovars_df[f'{weight}'],dtype=[(f'{weight}',np.float64)]))
   for var,vvar in binned_vars.items():
     kinWeight = np.zeros_like(ovars_df[f'{weight}'].values)
     for cut in bin_vars[var]:
@@ -148,7 +151,8 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
                     n_estimators,learning_rate,max_depth,min_samples_leaf,
                     trunc)
       kinWeight = np.where(ovars_df.eval(cut.replace(var,vvar)), kinWeight_, kinWeight)
-    ovars_df[f'{weight}_{var}'] = kinWeight
+    new_vars.append( np.array(kinWeight,dtype=[(f'{weight}_{var}',np.float64)]) )
+    ovars_df[f'{weight}_{var}'] = kinWeight 
   print('Original kinWeights')
   print(ovars_df[kws])
 
@@ -156,13 +160,14 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   print('Writing on %s' % output_file)
   if ROOT_PANDAS:
     copyfile(original_file, output_file)
-    root_pandas.to_root(ovars_df, output_file, key=original_treename, mode='a')
+    #root_pandas.to_root(ovars_df, output_file, key=original_treename, mode='a')
+    for var in new_vars:
+      root_numpy.array2root(var, output_file, original_treename, mode='update')
   else:
     f = uproot.recreate(output_file)
     f[original_treename] = uproot.newtree({var:'float64' for var in ovars_df})
     f[original_treename].extend(ovars_df.to_dict(orient='list'))
     f.close()
-    
   return kinWeight
 
 if __name__ == '__main__':

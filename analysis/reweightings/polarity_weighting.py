@@ -11,6 +11,7 @@ import os
 ROOT_PANDAS = True
 if ROOT_PANDAS:
   import root_pandas
+  import root_numpy
 
 
 # %% polarity_weighting --------------------------------------------------------
@@ -81,7 +82,8 @@ def polarity_weighting(original_file, original_treename,
   #    to store files whilst uproot can't
   if ROOT_PANDAS:
     copyfile(original_file, output_file)
-    root_pandas.to_root(odf, output_file, key=original_treename, mode='a')
+    var = np.array(polWeight, dtype=[('polWeight', np.float64)])
+    root_numpy.array2root(var, output_file, original_treename, mode='update')
   else:
     f = uproot.recreate(output_file)
     f[original_treename] = uproot.newtree({var:'float64' for var in odf})

@@ -20,6 +20,7 @@ import os
 ROOT_PANDAS = True
 if ROOT_PANDAS:
   import root_pandas
+  import root_numpy
 
 
 from ipanema import initialize
@@ -184,8 +185,9 @@ if __name__ == '__main__':
     os.remove(output_file)                               # delete file if exists
   print(f'Writing on {output_file}')
   if ROOT_PANDAS:
-    copyfile(original_file, output_file)
-    root_pandas.to_root(df, output_file, key=tree_name, mode='a')
+    copyfile(input_file, output_file)
+    var = np.array(df[weight].values, dtype=[(weight, np.float64)])
+    root_numpy.array2root(var, output_file, tree_name, mode='update')
   else:
     f = uproot.recreate(output_file)
     f[tree_name] = uproot.newtree({var:'float64' for var in df})

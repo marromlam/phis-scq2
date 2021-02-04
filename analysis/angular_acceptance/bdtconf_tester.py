@@ -47,7 +47,3 @@ def bdtmesh(conf, bdt_tests=100, verbose=False):
       "gb_args": {"subsample": 1}
   }
   return ans
-
-
-
-#bdtmesh(5, bdt_tests=200)
