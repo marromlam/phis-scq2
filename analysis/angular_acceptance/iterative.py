@@ -153,7 +153,7 @@ def get_angular_acceptance(mc, kkpWeight=False):
   weight = ristra.allocate(weight)
 
   # compute angular acceptance
-  ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
+  ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, kind='legendre', **mc.params.valuesdict())
 
   # create ipanema.Parameters
   w, uw, cov, corr = ans
@@ -254,7 +254,7 @@ def merge_std_dg0(std, dg0, verbose=True, label=''):
 
 
 
-# Multiple categories functions 
+# Multiple categories functions
 #     They run over multiple categories
 
 def do_fit(verbose=False):
@@ -263,36 +263,36 @@ def do_fit(verbose=False):
   """
   # Get'em from the global scope
   global pars, data
-  
+
   # start where we left
   for v in pars.values():
-    v.init = v.value 
-  
+    v.init = v.value
+
   # do the fit
-  result = optimize(fcn_data, method='minuit', params=pars, 
-                    fcn_kwgs={'data':data}, verbose=False, timeit=True, 
+  result = optimize(fcn_data, method='minuit', params=pars,
+                    fcn_kwgs={'data':data}, verbose=False, timeit=True,
                     tol=0.05, strategy=2)
-  
+
   #print fit results
   #print(result) # parameters are not blinded, so we dont print the result
   if verbose:
     if not '2018' in data.keys() and not '2017' in data.keys():
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 
+      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd',
                 'DGs', 'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5',
-                'dSlon6', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 
+                'dSlon6', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5',
                 'fSlon6']:
         try:
           print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
         except:
           0
     else:
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'lPlon', 'DGsd', 'DM', 
+      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'lPlon', 'DGsd', 'DM',
                 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
                 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
         try:
           print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
         except:
-          0    
+          0
   # store parameters + add likelihood to list
   pars = Parameters.clone(result.params)
   return result.chi2
@@ -305,7 +305,7 @@ def do_pdf_weighting(verbose):
   implies looping over years and MC samples (std and dg0)
   """
   global pars, data, mc
-  
+
   for y, dy in mc.items(): # loop over years
     for m, dm in dy.items(): # loop over mc_std and mc_dg0
       for t, v in dm.items(): # loop over triggers
@@ -337,7 +337,7 @@ def do_kkp_weighting(verbose):
   #    the GBweighter gives different results when having those 0s or having
   #    nothing after cutting the sample.
   global mc, data, weight_rd
-  
+
   threads = list()
   for y, dy in mc.items(): # loop over years
     for m, dm in dy.items(): # loop over mc_std and mc_dg0
@@ -351,7 +351,7 @@ def do_kkp_weighting(verbose):
         tw = data[y][t].df.eval(f'{weight_rd}')
         # Run multicore (about 15 minutes per iteration)
         job = multiprocessing.Process(
-          target=kkp_weighting, 
+          target=kkp_weighting,
           args=(ov.values, ow.values, tv.values, tw.values, v.path_to_weights,
                 y, m, t, len(threads), verbose)
         )
@@ -395,7 +395,7 @@ def do_angular_weights(verbose):
 
 def do_mc_combination(verbose):
   """
-  Combine 
+  Combine
   """
   global mc, data
   checker = []
@@ -409,36 +409,36 @@ def do_mc_combination(verbose):
       data[y][trigger].angaccs[i] = merged_w
       qwe = check_for_convergence(data[y][trigger].angaccs[i-1], data[y][trigger].angaccs[i])
       checker.append( qwe )
-  
+
   check_dict = {}
-  for ci in range(0,i):    
+  for ci in range(0,i):
     check_dict[ci] = []
     for y, dy in data.items(): # loop over years
       for t in ['biased','unbiased']:
         qwe = check_for_convergence(dy[t].angaccs[ci], dy[t].angaccs[i])
         check_dict[ci].append( qwe )
-  
+
   return checker, check_dict
 
 
 
 def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
   global pars
-  
+
   itstr = f"[iteration #{iteration}]"
 
 
   #1 fit RD sample obtaining pars
   print(f'{itstr} Simultaneous fit Bs2JpsiPhi {"&".join(list(mc.keys()))}')
   likelihood = do_fit(verbose=verbose)
-  
+
   #2 pdfWeight MC to RD using pars
   print(f'\n{itstr} PDF weighting MC samples to match Bs2JpsiPhi RD')
   t0 = timer()
   do_pdf_weighting(verbose=verbose)
   tf = timer()-t0
   print(f'PDF weighting took {tf:.3f} seconds.')
-  
+
   #3 kkpWeight MC to RD to match K+ and K- kinematic distributions
   print(f'\n{itstr} Kinematic reweighting MC samples in K momenta')
   t0 = timer()
@@ -452,7 +452,7 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
   do_angular_weights(verbose)
   tf = timer()-t0
   print(f'Extract angular normalisation weights took {tf:.3f} seconds.')
-  
+
   # 5th step: merge MC std and dg0 results
   print(f'\n{itstr} Combining MC_BsJpsiPhi and MC_BsJpsiPhi_dG0')
   t0 = timer()
@@ -469,13 +469,13 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
 def lipschitz_iteration(max_iter=30, verbose=True):
   global pars
   likelihoods = []
-  
+
   for i in range(1,max_iter):
 
     ans = angular_acceptance_iterative_procedure(verbose, i)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
-    
+
     # Check if they are the same as previous iteration
     if 1:
       lb = [ data[y]['biased'].angaccs[i].__str__(['value']).splitlines() for i__,y in enumerate( YEARS ) ]
@@ -518,20 +518,20 @@ def lipschitz_iteration(max_iter=30, verbose=True):
 def aitken_iteration(max_iter=30, verbose=True):
   global pars
   likelihoods = []
-  
+
   for i in range(1,max_iter):
-    
+
     # x1 = angular_acceptance_iterative_procedure <- x0
     ans = angular_acceptance_iterative_procedure(verbose, 2*i-1)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
-    
+
     # x2 = angular_acceptance_iterative_procedure <- x1
     ans = angular_acceptance_iterative_procedure(verbose, 2*i)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
-    
-    
+
+
     # x2 <- aitken solution
     checker = []
     print(f"[aitken #{i}] Update solution")
@@ -654,9 +654,9 @@ if __name__ == '__main__':
   p.add_argument('--angacc', help='Year of data-taking')
   p.add_argument('--version', help='Year of data-taking')
   args = vars(p.parse_args())
-  
+
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
-  YEARS = args['year'].split(',') 
+  YEARS = args['year'].split(',')
   MODE = 'Bs2JpsiPhi'
   ANGACC = args['angacc']
 
@@ -709,19 +709,19 @@ if __name__ == '__main__':
 
   # Load samples ---------------------------------------------------------------
   printsec('Loading samples')
-  
+
   global mc, data, weight_rd
-  
+
   # MC reconstructed and generator level variable names
   reco  = ['cosK', 'cosL', 'hphi', 'time']
   true  = [f'gen{i}' for i in reco]
   reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
   true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
-  
+
   # RD variable names
   real  = ['cosK','cosL','hphi','time']
-  real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta'] 
-  
+  real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
+
   # sWeight variable
   weight_rd = f'sw_{VAR}' if VAR else 'sw'
 
@@ -764,7 +764,7 @@ if __name__ == '__main__':
 
   # Load corresponding data sample
   data = {}
-  
+
   printsubsec('Loading RD samples')
   for i, y in enumerate(YEARS):
     data[y] = {}
@@ -807,7 +807,7 @@ if __name__ == '__main__':
         sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
       d.df['sWeight'] = sw
       d.allocate(data=real,weight='sWeight',lkhd='0*time')
-  
+
 
 
   # Prepare dict of parameters -------------------------------------------------
@@ -829,13 +829,13 @@ if __name__ == '__main__':
             free=True, latex=r'f_S^{5}'))
   pars.add(dict(name='fSlon6', value=0.130, min=0.00, max=0.90,
             free=True, latex=r'f_S^{6}'))
-  
+
   # P wave fractions
   pars.add(dict(name="fPlon", value=0.5240, min=0.4, max=0.6,
             free=True, latex=r'f_0'))
   pars.add(dict(name="fPper", value=0.2500, min=0.1, max=0.3,
             free=True, latex=r'f_{\perp}'))
-  
+
   # Weak phases
   pars.add(dict(name="pSlon", value= 0.00, min=-1.0, max=1.0,
             free=False, latex=r"\phi_S - \phi_0"))
@@ -845,7 +845,7 @@ if __name__ == '__main__':
             free=False, latex=r"\phi_{\parallel} - \phi_0"))
   pars.add(dict(name="pPper", value= 0.00, min=-1.0, max=1.0,
             free=False, latex=r"\phi_{\perp} - \phi_0"))
-  
+
   # S wave strong phases
   pars.add(dict(name='dSlon1', value=+2.34, min=-0.0, max=+4.0,
             free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
@@ -859,7 +859,7 @@ if __name__ == '__main__':
             free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
   pars.add(dict(name='dSlon6', value=-1.18, min=-4.0, max=+0.0,
             free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
-  
+
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-2*3.14, max=2*3.14,
             free=False, latex=r"\delta_0"))
@@ -867,7 +867,7 @@ if __name__ == '__main__':
             free=True, latex=r"\delta_{\parallel} - \delta_0"))
   pars.add(dict(name="dPper", value=3.026, min=-2*3.14, max=2*3.14,
             free=True, latex=r"\delta_{\perp} - \delta_0"))
-  
+
   # lambdas
   pars.add(dict(name="lSlon", value=1.0, min=0.7, max=1.6,
             free=False, latex="\lambda_S/\lambda_0"))
@@ -877,7 +877,7 @@ if __name__ == '__main__':
             free=False, latex="\lambda_{\parallel}/\lambda_0"))
   pars.add(dict(name="lPper", value=1.0, min=0.7, max=1.6,
             free=False, latex="\lambda_{\perp}/\lambda_0"))
-  
+
   # life parameters
   pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
             free=False, latex=r"\Gamma_d"))
@@ -929,24 +929,24 @@ if __name__ == '__main__':
     print(*l, sep="| ")
   print(f"\n")
 
-  
- 
+
+
   # The iterative procedure starts ---------------------------------------------
-  
+
   # update kernels with the given modifications
   badjanak.get_kernels(True)
 
   # run the procedure!
-  
-  
+
+
   ok, likelihoods = lipschitz_iteration(max_iter=5, verbose=False)
-  
+
   if not ok:
     ok, likelihoods = aitken_iteration(max_iter=30, verbose=True)
-  
+
   if not ok:
     print('WARNING: Convergence was not achieved!')
-  
+
   # plot likelihood evolution
   ld_x = [i+1 for i, j in enumerate(likelihoods)]
   ld_y = [j+0 for i, j in enumerate(likelihoods)]
