@@ -34,15 +34,15 @@ import numpy as np
 def timeacc_guesser(timeacc):
   # Check if the tuple will be modified
   #pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9]knots)?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
-  pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9])?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?(BDT.*)?\Z'
+  pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[2-9])?(Noncorr)?(Flatend)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
   try:
-    acc, knots, corr, lifecut, mini, bdt = p.search(timeacc).groups()
+    acc, knots, corr, flat, lifecut, mini = p.search(timeacc).groups()
     corr = False if corr=='Noncorr' else True
     mini = mini.lower() if mini else 'minuit'
     knots = int(knots) if knots else 3
-    bdt = int(bdt[3:]) if bdt else False
-    return acc, knots, corr, lifecut, mini, bdt
+    flat = True if flat=='Flatend' else False
+    return acc, knots, corr, flat, lifecut, mini
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
 
