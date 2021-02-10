@@ -63,7 +63,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bs2JpsiPhi'
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER, BDT = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
@@ -184,7 +184,8 @@ if __name__ == '__main__':
   fcn_kwgs={
     'data': [cats['BsMC'].time, cats['BdMC'].time, cats['BdRD'].time],
     'prob': [cats['BsMC'].lkhd, cats['BdMC'].lkhd, cats['BdRD'].lkhd],
-    'weight': [cats['BsMC'].weight, cats['BdMC'].weight, cats['BdRD'].weight]
+    'weight': [cats['BsMC'].weight, cats['BdMC'].weight, cats['BdRD'].weight],
+    'flatend': FLAT
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
 
