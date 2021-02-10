@@ -91,7 +91,7 @@ if __name__ == '__main__':
   print(f"{'cuts':>15}: {trigger_scissors(TRIGGER, CUT):50}")
   print(f"{'angacc':>15}: {ANGACC:50}")
 
-  if VERSION == 'v0r1':
+  if VERSION == 'v0r0':
     args['input_params'] = args['input_params'].replace('generator','generator_old')
 
 
@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
   print('Computing angular weights')
   w, uw, cov, corr = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, mc.weight,
-                                                            kind='legendre', **mc.params.valuesdict())
+                                                            kind='norm_weights', **mc.params.valuesdict())
   pars = Parameters()
   for i in range(0,len(w)):
     correl = {f'w{j}{TRIGGER[0]}': corr[i][j]
