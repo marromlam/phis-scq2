@@ -11,10 +11,13 @@ __all__ = []
 ################################################################################
 # %% Modules ###################################################################
 
+from warnings import simplefilter
+simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
+
 import argparse
 import numpy as np
 import pandas as pd
-import uproot
+import uproot3 as uproot
 import os
 import hjson
 
@@ -24,13 +27,15 @@ from ipanema import Sample, Parameters, ristra
 
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
-badjanak.config['debug'] = 0
+badjanak.config['debug'] = 5
 badjanak.config['fast_integral'] = 1
 badjanak.config['debug_evt'] = 774
 
 # import some phis-scq utils
 from utils.strings import cuts_and
 from utils.helpers import  version_guesser, trigger_scissors
+from analysis.toys.timeacc_generator import randomize_timeacc   
+from analysis.toys.angacc_generator import randomize_angacc   
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -62,6 +67,8 @@ def argument_parser():
   # Configuration file ---------------------------------------------------------
   parser.add_argument('--year', help='Year of data-taking')
   parser.add_argument('--version', help='Year of data-taking')
+  parser.add_argument('--randomize-timeacc', help='Year of data-taking')
+  parser.add_argument('--randomize-angacc', help='Year of data-taking')
   return parser
 
 
@@ -80,8 +87,9 @@ MODE = 'TOY_Bs2JpsiPhi'
 CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
 CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
 
-
-
+RANDOMIZE_TIMEACC = bool(args['randomize_timeacc'])
+RANDOMIZE_ANGACC = bool(args['randomize_angacc'])
+print(RANDOMIZE_TIMEACC, RANDOMIZE_ANGACC)
 
 # % Load sample and parameters -------------------------------------------------
 print(f"\n{80*'='}\nLoading samples and gather information\n{80*'='}\n")
@@ -100,6 +108,12 @@ for t, T in zip(['biased','unbiased'],[0,1]):
   tacc = Parameters.load(args[f'timeacc_{t}'])
   aacc = Parameters.load(args[f'angacc_{t}'])
   knots = np.array(Parameters.build(tacc,tacc.fetch('k.*')))
+  if RANDOMIZE_TIMEACC:
+      print(tacc)
+      tacc = randomize_timeacc(tacc) 
+      print(tacc)
+  if RANDOMIZE_ANGACC:
+      aacc = randomize_timeacc(aacc) 
   for bin in range(0,len(mKK)-1):
     data[t][bin] = {}
     ml = mKK[bin]; mh = mKK[bin+1]
@@ -111,7 +125,6 @@ for t, T in zip(['biased','unbiased'],[0,1]):
     data[t][bin]['timeacc'] = Parameters.build(tacc,tacc.fetch('c.*'))
     data[t][bin]['angacc'] = Parameters.build(aacc,aacc.fetch('w.*'))
     data[t][bin]['params'] = Parameters.load(args['fitted_params'])
-
 # Just recompile the kernel attenting to the gathered information
 badjanak.config['knots'] = knots.tolist()
 badjanak.config['mHH'] = mKK.tolist()
@@ -149,11 +162,11 @@ for t, trigger in data.items():
           f"{YEAR}-{t:>8} at {b+1:>2} mass bin")
     pars  = bin['csp'] + bin['flavor'] + bin['resolution']
     pars += bin['timeacc'] + bin['angacc'] + bin['params']
-    p = badjanak.parser_rateBs(**pars.valuesdict(), tLL=tLL, tUL=tUL)
+    p = badjanak.parser_rateBs(**pars.valuesdict(True), tLL=tLL, tUL=tUL)
     # for k,v in p.items():
     #   print(f"{k:>20}: {v}")
     badjanak.dG5toys(bin['output'], **p,
-                     use_angacc=0, use_timeacc=0, use_timeres=1,
+                     use_angacc=1, use_timeacc=1, use_timeres=1,
                      set_tagging=1, use_timeoffset=0, 
                      seed=int(1e10*np.random.rand()) )
     genarr = ristra.get(bin['output'])
