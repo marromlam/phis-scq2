@@ -53,7 +53,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
             // Time acceptance
             GLOBAL_MEM const ftype *coeffs,
             // Angular acceptance
-            GLOBAL_MEM  const ftype *angular_weights,
+            GLOBAL_MEM const ftype *angular_weights,
             const int USE_FK, const int BINS, const int USE_ANGACC, const int USE_TIMEACC,
             const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES,
             const ftype PROB_MAX, const int SEED, const int NEVT)
@@ -194,7 +194,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
     else
     {
       unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
-      pdf =  rateBs(data,
+      pdf = rateBs(data,
                     G, DG, DM, CSP[bin],
                     ASlon[bin], APlon[bin], APpar[bin], APper[bin],
                     pSlon,      pPlon,      pPpar,      pPper,
@@ -212,7 +212,20 @@ void dG5toy(GLOBAL_MEM ftype * out,
                     USE_FK, USE_ANGACC, USE_TIMEACC,
                     USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
 
-      pdf *= exp((G-0.5*DG)*(time-tLL));
+      ftype timeacc = 1.0;
+      ftype angacc = 1.0;
+      if (USE_TIMEACC)
+      {
+        timeacc = calcTimeAcceptance(time, coeffs, tLL, tUL);
+      }
+      if (USE_ANGACC)
+      {
+        // when the full procedure is avaliable, change there threee lines
+        ftype cijk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+        angular_weights2moments(angular_weights, cijk);
+        angacc = angular_efficiency(data[0], data[1], data[2], cijk);
+      }
+      pdf *= angacc*timeacc*exp((G-0.5*DG)*(time-tLL));
       pdf *= (G-0.5*DG)*(1- exp((G-0.5*DG)*(-tUL+tLL)));
     }
     // final checks ------------------------------------------------------------
@@ -242,7 +255,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
       out[evt*10+6] = data[5]; // qOS
       out[evt*10+7] = data[6]; // qSS
       out[evt*10+8] = data[7]; // etaOS
-      out[evt*10+9] = data[8];  // etaSS
+      out[evt*10+9] = data[8]; // etaSS
       return;
     }
 
