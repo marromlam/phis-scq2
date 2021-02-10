@@ -70,7 +70,7 @@ def argument_parser():
 
 
 def plot_timeacc_fit(params, data, weight,
-                     mode, axes=None, log=False, label=None, nob=100, nop=200):
+                     mode, axes=None, log=False, label=None, nob=100, nop=200, flatend=False):
   # Look for axes
   if not axes:
     fig,axplot,axpull = plotting.axes_plotpull()
@@ -88,10 +88,10 @@ def plot_timeacc_fit(params, data, weight,
   elif mode == 'BdRD': i = 2
   if len(params.fetch('gamma.*')) > 1: # then is the simultaneous fit or similar
     y = saxsbxscxerf(params, [x, x, x] )[i]
-    y_norm = saxsbxscxerf(params, [ref.bins, ref.bins, ref.bins] )[i]
+    y_norm = saxsbxscxerf(params, [ref.bins, ref.bins, ref.bins], flatend=flatend )[i]
   else: # the single fit
     y = splinexerf(params, x )
-    y_norm = saxsbxscxerf(params, [ref.bins] )
+    y_norm = saxsbxscxerf(params, [ref.bins] , flatend=flatend)
 
   # normalize y to histogram counts     [[[I don't understand it completely...
   y *= np.trapz( ref.counts,ref.bins ) / np.trapz(y_norm,ref.bins)
@@ -113,7 +113,7 @@ def plot_timeacc_fit(params, data, weight,
 
 
 
-def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24, log=False, axes=False, modelabel=None, label=None):
+def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24, log=False, axes=False, modelabel=None, label=None, flatend=False):
   """
   Hi Marcos,
 
@@ -143,6 +143,9 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   badjanak.config['knots'] = knots
   badjanak.get_kernels(True)
   
+  def splinef(time, *coeffs, BLOCK_SIZE=256):
+     return badjanak.bspline(time, *coeffs, flatend=flatend, BLOCK_SIZE=BLOCK_SIZE)
+
   # exit()
   if 'BsMC' in mode:
     list_coeffs = list(a.keys())
@@ -191,7 +194,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   x = ref.cmbins#np.linspace(0.3,15,200)
   print(x)
   X = np.linspace(0.3,15,200)
-  y = wrap_unc(badjanak.bspline, x, *coeffs)
+  y = wrap_unc(splinef, x, *coeffs)
   y_nom = unp.nominal_values(y)
   y_spl = interp1d(x, y_nom, kind='cubic', fill_value='extrapolate')(5)
   y_norm = np.trapz(y_nom/y_spl, x)
@@ -199,15 +202,15 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   ylabel_str = r'$\varepsilon_{%s}$ [a.u.]' % modelabel
   if kind == 'ratio':
     coeffs_a = [params[key].value for key in params if key[0]=='a']
-    spline_a = badjanak.bspline(ref.cmbins,*coeffs_a)
+    spline_a = splinef(ref.cmbins,*coeffs_a)
     ref.counts /= spline_a; ref.errl /= spline_a; ref.errh /= spline_a
     ylabel_str = r'$\varepsilon_{MC}^{B_d^0/B_s^0}$ [a.u.]'
 
   if kind == 'full':
     coeffs_a = [params[key].value for key in params if key[0]=='a']
     coeffs_b = [params[key].value for key in params if key[0]=='b']
-    spline_a = badjanak.bspline(ref.cmbins, *coeffs_a)
-    spline_b = badjanak.bspline(ref.cmbins, *coeffs_b)
+    spline_a = splinef(ref.cmbins, *coeffs_a)
+    spline_b = splinef(ref.cmbins, *coeffs_b)
     ref.counts /= spline_b; ref.errl /= spline_b; ref.errh /= spline_b
     ylabel_str = r'$\varepsilon_{RD}^{B_d^0}$ [a.u.]'
 
@@ -279,7 +282,7 @@ def plotter(args,axes):
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
   LOGSCALE = True if 'log' in args['plot'] else False
   PLOT = args['plot'][:-3] if LOGSCALE else args['plot']
   LABELED = args['labeled']
@@ -383,14 +386,14 @@ def plotter(args,axes):
     axes = plot_timeacc_fit(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           MMODE, log=LOGSCALE, axes=axes,
-                                          label=thelabel)
+                                          label=thelabel, flatend=FLAT)
   elif PLOT=='spline':
     axes = plot_timeacc_spline(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           mode=MMODE, log=LOGSCALE, axes=axes,
                                           conf_level=1,
                                           modelabel=mode_tex(MODE),
-                                          label=thelabel)
+                                          label=thelabel, flatend=FLAT)
   return axes
 
 
