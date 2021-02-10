@@ -213,7 +213,7 @@ void pyBjlms(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *out,
     {
       for (int k=-j; k<=j; k++)
       {
-        out[int(pow(m+1,3))*evt+index] =(i+1./2.)* lpmv(i,0,cosK)*sph_harm(j,k,cosL,hphi);
+        out[int(pow(m+1.,3.))*evt+index] =(i+1./2.)* lpmv(i,0,cosK)*sph_harm(j,k,cosL,hphi);
         index += 1;
       }
     }
@@ -228,7 +228,7 @@ void pyCs2Ws(GLOBAL_MEM ftype *Cs, GLOBAL_MEM ftype *out,
               const int NEVT, const int m)
 {
   const int evt = get_global_id(0);
-  const int IDX = evt*pow(m+1,3);
+  const int IDX = evt*pow(m+1.,3);
 
   if (evt >= NEVT) { return; }
   out[evt*NTERMS+0] = Cs[IDX+0] + 2./5.*Cs[IDX+50] + 1./sqrt(20.)*(Cs[IDX+6] + 2./5.*Cs[IDX+56]) - sqrt(3./20.)*(Cs[IDX+8]+2./5.*Cs[IDX+58]);
