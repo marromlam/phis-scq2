@@ -12,7 +12,7 @@ from ipanema import ristra, Parameters
 import numpy as np
 import badjanak
 
-def splinexerf(params, data, weight = None, prob = None):
+def splinexerf(params, data, weight = None, prob = None, flatend=False):
   # do lists of coeffs
   c = [k.value for k in params.fetch('(a|c|b)([1-9])?([0-9])(u|b)').values()]
 
@@ -23,10 +23,10 @@ def splinexerf(params, data, weight = None, prob = None):
   if prob is None: # for ploting, mainly
     data = ristra.allocate(data)
     prob = ristra.allocate(np.zeros_like(data.get()))
-    badjanak.splinexerf(data, prob, coeffs=c, mu=mu, sigma=sigma, gamma=gamma)
+    badjanak.splinexerf(data, prob, coeffs=c, mu=mu, sigma=sigma, gamma=gamma, flatend=flatend)
     return prob.get()
   else:
-    badjanak.splinexerf(data, prob, coeffs=c, mu=mu, sigma=sigma, gamma=gamma)
+    badjanak.splinexerf(data, prob, coeffs=c, mu=mu, sigma=sigma, gamma=gamma, flatend=flatend)
     if weight is not None:
       result = (ristra.log(prob)*weight).get()
     else:
@@ -34,7 +34,7 @@ def splinexerf(params, data, weight = None, prob = None):
     return -2*result
 
 
-def saxsbxscxerf(params, data, weight=False, prob=None):
+def saxsbxscxerf(params, data, weight=False, prob=None, flatend=False):
   # do lists of coeffs
   a = [k.value for k in params.fetch('(a|aA|bA)([1-9])?([0-9])(u|b)').values()]
   b = [k.value for k in params.fetch('(b|aB|bB)([1-9])?([0-9])(u|b)').values()]
@@ -57,13 +57,13 @@ def saxsbxscxerf(params, data, weight=False, prob=None):
     badjanak.saxsbxscxerf(*data, *prob, coeffs_a=a, coeffs_b=b, coeffs_c=c,
                           mu_a=mu_a, mu_b=mu_b, mu_c=mu_c,
                           sigma_a=sigma_a, sigma_b=sigma_b, sigma_c=sigma_c,
-                          gamma_a=gamma_a, gamma_b=gamma_b, gamma_c=gamma_c)
+                          gamma_a=gamma_a, gamma_b=gamma_b, gamma_c=gamma_c, flatend=flatend)
     return [ p.get() for p in prob ]
   else:
     badjanak.saxsbxscxerf(*data, *prob, coeffs_a=a, coeffs_b=b, coeffs_c=c,
                           mu_a=mu_a, mu_b=mu_b, mu_c=mu_c,
                           sigma_a=sigma_a, sigma_b=sigma_b, sigma_c=sigma_c,
-                          gamma_a=gamma_a, gamma_b=gamma_b, gamma_c=gamma_c)
+                          gamma_a=gamma_a, gamma_b=gamma_b, gamma_c=gamma_c, flatend=flatend)
     if weight:
       result  = np.concatenate(( (ristra.log(prob[0])*weight[0]).get(),
                                  (ristra.log(prob[1])*weight[1]).get(),
@@ -76,7 +76,7 @@ def saxsbxscxerf(params, data, weight=False, prob=None):
 
 
 
-def saxsbxerf(params, data, weight=False, prob=None):
+def saxsbxerf(params, data, weight=False, prob=None, flatend=False):
   # do lists of coeffs
   a = [k.value for k in params.fetch('(a|aA|bA)([1-9])?([0-9])(u|b)').values()]
   b = [k.value for k in params.fetch('(b|aB|bB)([1-9])?([0-9])(u|b)').values()]
@@ -95,13 +95,13 @@ def saxsbxerf(params, data, weight=False, prob=None):
     badjanak.sbxscxerf(*data, *prob, coeffs_a=a, coeffs_b=b, coeffs_c=c,
                         mu_a=mu_a, mu_b=mu_b, mu_c=mu_c,
                         sigma_a=sigma_a, sigma_b=sigma_b, sigma_c=sigma_c,
-                        gamma_a=gamma_a, gamma_b=gamma_b, gamma_c=gamma_c)
+                        gamma_a=gamma_a, gamma_b=gamma_b, gamma_c=gamma_c, flatend=flatend)
     return [ p.get() for p in prob ]
   else:
     badjanak.sbxscxerf(*data, *prob, coeffs_a=a, coeffs_b=b,
                         mu_a=mu_a, mu_b=mu_b,
                         sigma_a=sigma_a, sigma_b=sigma_b,
-                        gamma_a=gamma_a, gamma_b=gamma_b)
+                        gamma_a=gamma_a, gamma_b=gamma_b, flatend=flatend)
     if weight:
       result  = np.concatenate(( (ristra.log(prob[0])*weight[0]).get(),
                                  (ristra.log(prob[1])*weight[1]).get() ))
@@ -111,7 +111,7 @@ def saxsbxerf(params, data, weight=False, prob=None):
     return -2*result
 
 
-def splinexerfconstr(pars, cats, weight=False):
+def splinexerfconstr(pars, cats, weight=False, flatend=False):
 
   chi2 = []
   g = pars['gamma'].value
@@ -134,7 +134,7 @@ def splinexerfconstr(pars, cats, weight=False):
       cnstr  = np.float64(cnstr[0][0])/len(dt.lkhd)       # per event constraint
       
       # call device function and compute
-      badjanak.splinexerf(dt.time, dt.lkhd, coeffs=c, mu=m, sigma=s, gamma=g)
+      badjanak.splinexerf(dt.time, dt.lkhd, coeffs=c, mu=m, sigma=s, gamma=g, flatend=flatend)
       
       # append to chi2 for each subsample - weight switcher
       if weight:
