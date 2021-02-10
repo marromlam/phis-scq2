@@ -317,7 +317,7 @@ ftype rateBs(const ftype *data,
 
   // Compute pdf integral ------------------------------------------------------
   ftype intBBar[2] = {0.,0.};
-  if ( (delta_t == 0) & (USE_TIMEACC == 0) )
+  if (USE_TIMEACC == 0)
   {
     // Here we can use the simplest 4xPi integral of the pdf since there are no
     // resolution effects
