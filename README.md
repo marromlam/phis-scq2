@@ -2,6 +2,10 @@
 
 This repository contains the code for running different parts of $`B_s \rightarrow J/\psi K^+K^-`$ analysis. Each folder contains a part that is needed to attain the $`\phi_s`$ value.
 
+<p align="center">
+  <img src="logo/pelegrin_phis.png" width="500" title="Pelegrin and the phis vs DG plot">
+</p>
+
 
 
 ## Fist steps
@@ -80,7 +84,7 @@ This pipeline can run
 - [x] *Angular acceptance*: compute the dependence of the reconstruction and selection efficiency on the three helicity angles
   - [x] Angular weights method
   - [ ] Histogram method
-  - [ ] Ylm method
+  - [ ] Legendre method
   - [x] Plots
 - [x] *Time-dependent angular fit*: extract the physics parameters
   - [ ] Real Run1 data samples
@@ -97,9 +101,10 @@ This pipeline can run
   - [x] Binned studies: `sigmat`, `etaB`, `pTB`, `time`
   - [x] Yearly studies: from 2015 to 2018
   - [x] Time dependence of angular acceptance: check whether angles and time do factorize
-  - [ ] Magnet studies: dependence on magnet polarity
+  - [x] Magnet studies: dependence on magnet polarity
   - [ ] $`B_u^+`$ angular acceptance
   - [x] $`B_d^0`$ angular acceptance
+  - [x] $`B_d^0`$ MC angular acceptance test
   - [ongoing] Fit bias
 
 
