@@ -1,0 +1,4 @@
+root_pandas
+snakemake
+hep_ml
+py-cpuinfo
