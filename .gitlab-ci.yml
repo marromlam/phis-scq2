@@ -50,14 +50,11 @@ Setup Environment:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O .ccache/miniconda.sh
     - bash .ccache/miniconda.sh -b -s -f -p .ccache/conda3
     - source .ccache/conda3/bin/activate
-    - conda update -n base -c defaults conda
-    - conda create --name phisscq
+    - conda env create -f .ci/environment.yml
     - conda activate phisscq
-    - conda config --add channels conda-forge
-    - conda install pip pocl pyopencl ROOT
     - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3
     - pip install -e .ccache/ipanema3
-    - pip install snakemake==5.22.0 hep_ml py-cpuinfo
+    - pip install -r .ci/requirements.txt
   cache:
     key: build_cache_${CI_COMMIT_REF_SLUG}
     paths:
