@@ -12,7 +12,7 @@ stages:
 
 before_script:
     # Copy original utils/default.json as will be done by utils/install.sh
-    - cp analysis/utils/default.json config.json
+    - cp .ci/default.json config.json
     # Activate conda phisscq environment
     - source .ccache/conda3/bin/activate
     - conda activate phisscq
