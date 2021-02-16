@@ -383,6 +383,8 @@ rule physics_params_data_run2a:
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
 rule physics_params_dataYearly:
+  wildcard_constraints:
+    fit = "yearly.*"
   threads: 8
   input:
     samples = lambda wcs: [tuples(wcs,mode='Bs2JpsiPhi')],
@@ -413,10 +415,10 @@ rule physics_params_dataYearly:
       f'output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
     ],
   output:
-    params = 'output/params/physics_params/{year}/Bs2JpsiPhi/{version}_yearly_{angacc}_{timeacc}.json',
-    tables = 'output/tables/angular_fit/{year}/Bs2JpsiPhi/{version}_yearly_{angacc}_{timeacc}.tex'
+    params = 'output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{timeacc}.json',
+    tables = 'output/tables/angular_fit/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{timeacc}.tex'
   log:
-    'output/log/physics_params_data/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
+    'output/log/physics_params_data/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{timeacc}.log'
   run:
     shell(f"""(time\
     python analysis/angular_fit/fit_data.py\
@@ -433,6 +435,7 @@ rule physics_params_dataYearly:
            --year                    {",".join([wildcards.year])}\
            --version                 {wildcards.version}\
            --flag                    yearly_{wildcards.angacc}_{wildcards.timeacc}\
+           --blind                   0\
     ) &> {log}""")
     send_mail(f"Physics Parameters RD Yearly :: {wildcards}", f"{log}")
 

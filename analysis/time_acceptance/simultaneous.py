@@ -101,7 +101,7 @@ if __name__ == '__main__':
   cats = {}
   for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
-    if m=='MC_Bs2JpsiPhi':
+    if (m=='MC_Bs2JpsiPhi_dG0') and not ('MC_Bs2JpsiPhi_dG0' in samples[i]):
       if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
       else:

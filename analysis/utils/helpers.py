@@ -145,7 +145,7 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
       elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight', 'kinWeight', 'angWeight'):
-        weight = 'polWeight'
+        weight = 'dg0Weight'
     elif m == 'MC_Bs2JpsiKK_Swave':
       if weight == 'kbuWeight':
         weight = 'polWeight'

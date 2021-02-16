@@ -281,7 +281,7 @@ def parser_rateBs(
       # Flags
       use_fk=1, use_angacc = 0, use_timeacc = 0,
       use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-      verbose = False,
+      verbose = False, flatend=False,
       **p):
 
   r = {}
@@ -361,7 +361,7 @@ def parser_rateBs(
   # Time acceptance
   timeacc = [ p[k] for k in p.keys() if re.compile('c([0-9])([0-9])?(u|b)?').match(k)]
   if timeacc:
-    r['timeacc'] = THREAD.to_device(get_4cs(timeacc))
+    r['timeacc'] = THREAD.to_device(get_4cs(timeacc, flatend))
   else:
     r['timeacc'] = THREAD.to_device(np.float64([1]))
 
@@ -808,7 +808,7 @@ def splinexerf(
       coeffs,
       mu=0.0, sigma=0.04, gamma=0.6,
       tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256
+      BLOCK_SIZE=256, flatend=False 
     ):
   """
     In:
@@ -827,7 +827,7 @@ def splinexerf(
 
   __KERNELS__.SingleTimeAcc(
       time, lkhd, # input, output
-      THREAD.to_device(get_4cs(coeffs)).astype(np.float64),
+      THREAD.to_device(get_4cs(coeffs, flatend)).astype(np.float64),
       np.float64(mu), np.float64(sigma), np.float64(gamma),
       np.float64(tLL),np.float64(tUL),
       np.int32(lkhd.shape[0]),
@@ -842,7 +842,7 @@ def sbxscxerf(
       mu_a=0.0, sigma_a=0.04, gamma_a=0.6,
       mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
       tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256, **crap):
+      BLOCK_SIZE=256,  flatend=False, **crap):
   """
   In:
           time: 2D list of 1D gpuarray with time to be fitted, the expected
@@ -861,8 +861,8 @@ def sbxscxerf(
   size_max = max(size_a,size_b)
   __KERNELS__.RatioTimeAcc(
     time_a, time_b, lkhd_a, lkhd_b,
-    THREAD.to_device(get_4cs(coeffs_a)).astype(np.float64),
-    THREAD.to_device(get_4cs(coeffs_b)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_a, flatend)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_b, flatend)).astype(np.float64),
     np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
     np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(tLL),np.float64(tUL),
@@ -879,7 +879,7 @@ def saxsbxscxerf(
       mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
       mu_c=0.0, sigma_c=0.04, gamma_c=0.6,
       tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256, **crap):
+      BLOCK_SIZE=256, flatend=False, **crap):
   """
   In:
           time: 3D list of 1D gpuarray with time to be fitted, the expected
@@ -900,9 +900,9 @@ def saxsbxscxerf(
   g_size, l_size = get_sizes(size_max,BLOCK_SIZE)
   __KERNELS__.FullTimeAcc(
     time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-    THREAD.to_device(get_4cs(coeffs_a)).astype(np.float64),
-    THREAD.to_device(get_4cs(coeffs_b)).astype(np.float64),
-    THREAD.to_device(get_4cs(coeffs_c)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_a, flatend)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_b, flatend)).astype(np.float64),
+    THREAD.to_device(get_4cs(coeffs_c, flatend)).astype(np.float64),
     np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
     np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(mu_c), np.float64(sigma_c), np.float64(gamma_c),
@@ -913,7 +913,7 @@ def saxsbxscxerf(
 
 
 
-def bspline(time, *coeffs, BLOCK_SIZE=32):
+def bspline(time, *coeffs, flatend=False, BLOCK_SIZE=32):
   if isinstance(time, np.ndarray):
     time_d = THREAD.to_device(time).astype(np.float64)
     spline_d = THREAD.to_device(0*time).astype(np.float64)
@@ -922,7 +922,7 @@ def bspline(time, *coeffs, BLOCK_SIZE=32):
     time_d = time
     spline_d = THREAD.to_device(0*time).astype(np.float64)
     deallocate = False
-  coeffs_d = THREAD.to_device(get_4cs(coeffs)).astype(np.float64)
+  coeffs_d = THREAD.to_device(get_4cs(coeffs,flatend)).astype(np.float64)
   __KERNELS__.Spline(
     time_d, spline_d, coeffs_d, np.int32(len(time)),
     global_size=(len(time),)
@@ -939,8 +939,9 @@ def get_knot(i, knots, n):
 
 
 
-def get_4cs(listcoeffs):
+def get_4cs(listcoeffs, flatend=False):
   n = len(config['knots'])
+  flatend = True
   result = []                                           # list of bin coeffs C
   def u(j): return get_knot(j,config['knots'],len(config['knots'])-1)
   for i in range(0,len(config['knots'])-1):
@@ -1020,7 +1021,11 @@ def get_4cs(listcoeffs):
         c/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
         d/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
     result.append(C)
+  # linear extrapolation in the last bin till tUL
   m = C[1] + 2*C[2]*u(n) + 3*C[3]*u(n)**2
+  if flatend:
+    # *flat* acceptance since last bin 
+    m = 0 
   C = [C[0] + C[1]*u(n) + C[2]*u(n)**2 + C[3]*u(n)**3 - m*u(n),m,0,0]
   result.append(C)
   return np.array(result)
