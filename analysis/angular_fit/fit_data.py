@@ -166,7 +166,8 @@ if 'DGzero' in FIT:
 POLDEP = False
 if 'Poldep' in FIT:
   POLDEP = True
-BLIND = args['blind']
+BLIND = bool(int(args['blind']))
+print(BLIND)
 #BLIND = False
 
 
@@ -207,17 +208,17 @@ Parameter(name="pPper", value= 0.00, min=-5.0, max=5.0,
           free=POLDEP, blindstr="BsPhisperpDelFullRun2", blind=BLIND,
           blindscale=2.0, blindengine="root", latex=r"\phi_{\perp} - \phi_0 \, \mathrm{[rad]}"),
 # S wave strong phases
-Parameter(name='dSlon1', value=+np.pi/4*SWAVE, min=-0.0, max=+3.0,
+Parameter(name='dSlon1', value=+2.5*SWAVE, min=-0.0, max=+3.0,
           free=SWAVE, latex="\delta_S^{1} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon2', value=+np.pi/4*SWAVE, min=-0.0, max=+3.0,
+Parameter(name='dSlon2', value=+1.5*SWAVE, min=-0.0, max=+3.0,
           free=SWAVE, latex="\delta_S^{2} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon3', value=+np.pi/4*SWAVE, min=-0.0, max=+3.0,
+Parameter(name='dSlon3', value=+0.0*SWAVE, min=-0.0, max=+3.0,
           free=SWAVE, latex="\delta_S^{3} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon4', value=-np.pi/4*SWAVE, min=-3.0, max=+0.0,
+Parameter(name='dSlon4', value=-0.0*SWAVE, min=-3.0, max=+0.0,
           free=SWAVE, latex="\delta_S^{4} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon5', value=-np.pi/4*SWAVE, min=-3.0, max=+0.0,
+Parameter(name='dSlon5', value=-1.2*SWAVE, min=-3.0, max=+0.0,
           free=SWAVE, latex="\delta_S^{5} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon6', value=-np.pi/4*SWAVE, min=-3.0, max=+0.0,
+Parameter(name='dSlon6', value=-2.5*SWAVE, min=-3.0, max=+0.0,
           free=SWAVE, latex="\delta_S^{6} - \delta_{\perp} \, \mathrm{[rad]}"),
 # P wave strong phases
 Parameter(name="dPlon", value=0.00, min=-2*3.14*0, max=2*3.14,

@@ -180,7 +180,7 @@ def fcn_data(parameters, data):
       badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL)
+                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc = 0)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)
@@ -548,9 +548,9 @@ def aitken_iteration(max_iter=30, verbose=True):
               aitken = x2
           else:
               #checker.append(False)
-              #aitken = x2 - ( (x2-x1)**2 ) / den # aitken
+              aitken = x2 - ( (x2-x1)**2 ) / den # aitken
               #aitken = x0 - ( (x1-x0)**2 ) / den # steffensen
-              aitken = x1 - ( (x2-x1)**2 ) / den # romero
+              #aitken = x1 - ( (x2-x1)**2 ) / den # romero
 
           # update angacc
           dt.angacc[p].set(value=aitken.n)

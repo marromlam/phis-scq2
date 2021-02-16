@@ -59,10 +59,10 @@ MC_common: &MC_common
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
   "genidB" : "B_ID_GenLvl"
-  "dg0Weight" : "dg0Weight"
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
+  "dg0Weight" : "dg0Weight"
   "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave

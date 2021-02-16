@@ -13,6 +13,8 @@ import uproot
 import os
 import platform
 
+
+
 # %% Some functions ------------------------------------------------------------
 MAX_SPIN = 1
 POSIBLE_STATES = sp.Sum(2*m+1,(m,0,MAX_SPIN)).doit()
@@ -212,7 +214,7 @@ def getAngularPart():
 
 for item in getAngularPart()-getOmega():
   print(item.simplify())
-getAngularPart()
+display(getAngularPart())
 
 
 #%% Coeffs a, b, c and d -------------------------------------------------------
@@ -294,10 +296,10 @@ sp.integrate(numB,(t,tLL,tUL))
 numB
 subs_dict
 
- denB.subs(subs_dict).simplify()
+(numB/denB).subs(subs_dict).simplify()
 
 
-*#%% Prepare substitution dict --------------------------------------------------
+#%% Prepare substitution dict --------------------------------------------------
 pars_values     = {"DG": 0*0.08543, "DM": 0.5, "G": 0.66137,
                    "CSP": 1, "CSD": 1, "CPD": 1}
 amps_values     = {"Plon": np.sqrt(0.520935),

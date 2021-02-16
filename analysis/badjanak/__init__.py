@@ -122,7 +122,7 @@ def get_kernels(verbose=False, pedantic=False):
            'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
            'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
-           'dG5toy', 'pyBjlms', 'pyCs2Ws'
+           'dG5toy', 'pyBjlms', 'pyLegendre3d', 'pyCs2Ws', 'pyShitSimon'
            #'integral_ijk_fx'
            ]
   for item in items:
@@ -650,13 +650,48 @@ def get_angular_acceptance_weights(true, reco, weight, kind='norm_weights', BLOC
     ang_acc = Cs2Ws(cjlm)
     return ang_acc
 
+  def get_cs_l3d(true, reco, weight):
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
+    #get_bjlm needs also m as argument (highest order of the polynomial)
+    l3djlm = get_l3djlm(reco.get()[:,0:3],4)
+    ###getting coefficients of the polynomials
+    cjlm = l3djlm*(weight.get()*num/den).T[::,np.newaxis]
+    cjlm_media = cjlm.sum(axis=0)/scale
+    #print('cjlm_media')
+    #print(cjlm_media)
+    m=4
+    count=0
+    for i in range(m+1):
+        for j in range(m+1):
+            for k in range(m+1):
+              #print([i,j,k], cjlm_media[count])
+              count += 1
+    cjlm_media_simon = cjlm_media/np.pi
+    count = 0
+    #print('cjlm_media_simon')
+    #print(cjlm_media_simon)
+    for i in range(m+1):
+        for j in range(m+1):
+            for k in range(m+1):
+              print([i,j,k], cjlm_media_simon[count])
+              count += 1
+    exit()
+    ###Building w's from c's per event
+    ang_acc = Cs2Ws(cjlm)
+    return ang_acc
+
   ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
   if kind=='norm_weights':
       w = get_weights(true, reco, weight).sum(axis=0)
       w10 = get_weights(true, reco, ones)
   else:
       #w = get_cs(true, reco, weight).sum(axis=0)
-      w = get_cs(true, reco, weight).sum(axis=0)
+      print('voy por donde tengo que ir')
+      w = get_cs_l3d(true, reco, weight).sum(axis=0)
+      exit()
       w10 = get_cs(true, reco, ones)
   # Get covariance matrix
   cov = np.zeros((terms,terms,weight.shape[0]))
@@ -683,6 +718,39 @@ def get_angular_acceptance_weights(true, reco, weight, kind='norm_weights', BLOC
   return w/w[0], np.sqrt(np.diagonal(cov)), cov, corr
 
 
+#####PRUEBAS Con Legendre 3d.
+def get_angular_acceptance_L3D(true, reco, weight, BLOCK_SIZE=256, **parameters):
+  # Filter some warnings
+  warnings.filterwarnings('ignore')
+  # Compute weights scale and number of weights to compute
+  scale = np.sum(ipanema.ristra.get(weight))
+  terms = len(config['tristan'])
+  def get_cs_l3d(true, reco, weight):
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
+    pdf = THREAD.to_device(np.zeros(true.shape[0]))
+    delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
+    l3djlm = get_l3djlm(reco.get()[:,0:3],4)
+    cjlm = l3djlm*(weight.get()*num/den).T[::,np.newaxis]
+    cjlm_media = np.array(cjlm.sum(axis=0)/scale)
+    print(cjlm_media)
+    #exit()
+    matrix = L3DSIMON(cjlm_media)
+    matrix = np.array(matrix.T)
+    print(matrix.shape[0], matrix.shape[1])
+    ang_acc = np.matmul(matrix,cjlm_media)
+    for i in range(len(ang_acc)):
+        print(f"ang_acc{i}:%.15f", ang_acc[i]/ang_acc[0])
+    print(ang_acc/ang_acc[0])
+    exit()
+    return ang_acc
+
+  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
+  w = get_cs_l3d(true, reco, weight).sum(axis=0)
+  # Get covariance matrix
+  return w/w[0], np.sqrt(np.diagonal(cov)), cov, corr
+
+###ANGULAR ACC Bd
 def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **parameters):
   # Filter some warnings
   warnings.filterwarnings('ignore')
@@ -1088,10 +1156,30 @@ def get_bjlm(z,m):
   __KERNELS__.Bjlms(z_dev, c_dev, np.int32(len(z)),np.int32(m), global_size=(len(z)))
   return ristra.get(c_dev)
 
+def get_l3djlm(z,m):
+  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
+  c = np.zeros((z.shape[0], (m+1)**3))
+  c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
+  __KERNELS__.Legendre3d(z_dev, c_dev, np.int32(len(z)),np.int32(m), global_size=(len(z)))
+  return ristra.get(c_dev)
+
 def Cs2Ws(z):
   m = 4 #for the moment is not used, it will be neccessary when we do the translations for others orders
   z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
   c = np.zeros((np.atleast_2d(z).shape[0], len(config['tristan'])))
   c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
   __KERNELS__.Cs2Ws(z_dev, c_dev, np.int32(len(c)),np.int32(m), global_size=(len(c)))
+  return ristra.get(c_dev)
+
+def L3DSIMON(z):
+  #z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
+  m = 4
+  c = np.zeros((np.atleast_2d(z).shape[1], len(config['tristan'])))
+  #print(np.atleast_2d(z).shape[0], np.atleast_2d(z).shape[1])
+  c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
+  __KERNELS__.ShitSimon(np.float64(-1.0), np.float64(1.0), #cosK
+                        np.float64(-1.0), np.float64(1.0), #cosL
+                        -np.float64(np.pi), np.float64(np.pi), #phi
+                        np.int32(m), #orden polynomial
+                        c_dev, global_size=(np.atleast_2d(z).shape[0]))
   return ristra.get(c_dev)

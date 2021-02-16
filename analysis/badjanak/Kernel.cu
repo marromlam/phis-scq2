@@ -58,6 +58,7 @@ const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 #include "AngularAcceptance.cu"
 #include "CrossRateBd.cu"
 #include "Toy.cu"
+#include "SimonShit.cu"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,6 +207,19 @@ void pyBjlms(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *out,
   ftype cosL = data[evt*3+1];
   ftype hphi = data[evt*3+2];
   int index = 0;
+  #ifdef CUDA
+    const int IDX = evt*pow(m+1,3);
+  #else
+    #if USE_DOUBLE
+      const double order = convert_double(m);
+      const int number = convert_int(pow(order+1,3));
+      const int IDX = evt*number;
+    #else
+      const float order = convert_float(m);
+      const int number = convert_int(pow(order+1,3));
+      const int IDX = evt*number;
+    #endif
+  #endif
   if (evt >= NEVT) { return; }
   for (int i=0; i<=m; i++)
   {
@@ -213,7 +227,54 @@ void pyBjlms(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *out,
     {
       for (int k=-j; k<=j; k++)
       {
-        out[int(pow(m+1.,3.))*evt+index] =(i+1./2.)* lpmv(i,0,cosK)*sph_harm(j,k,cosL,hphi);
+        out[IDX+index] =(i+1./2.)* lpmv(i,0,cosK)*sph_harm(j,k,cosL,hphi);
+        index += 1;
+      }
+    }
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
+//LEGENDRE3d////////////////////////////////////////////////////////////////////
+KERNEL
+void pyLegendre3d(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *out,
+              const int NEVT, const int m)
+{
+  const int evt = get_global_id(0);
+  ftype cosK = data[evt*3+0];
+  ftype cosL = data[evt*3+1];
+  ftype hphi = data[evt*3+2];
+  hphi = hphi/M_PI; //this is used for having a good definition of Legendre
+  int index = 0;
+  #ifdef CUDA
+    const int IDX = evt*pow(m+1,3);
+  #else
+    #if USE_DOUBLE
+      const double order = convert_double(m);
+      const int number = convert_int(pow(order+1,3));
+      const int IDX = evt*number;
+    #else
+      const float order = convert_float(m);
+      const int number = convert_int(pow(order+1,3));
+      const int IDX = evt*number;
+    #endif
+  #endif
+  if (evt >= NEVT) { return; }
+  if (evt == 0)
+  {
+    printf("\nComprobacion polinomios legendre\n");
+    printf("\ncosK=%.4f, cosL=%.4f, hphi=%.4f\n", cosK, cosL, hphi);
+    for (int i=0; i<=m; i++)
+    {
+      printf("\norder=%d, P_0K=%.4f, P_0L=%.4f, P_0Phi=%.4f\n", i, lpmv(i,0,cosK), lpmv(i,0,cosL), lpmv(i,0,hphi));
+    }
+  }
+  for (int i=0; i<=m; i++)
+  {
+    for (int j=0; j<=m; j++)
+    {
+      for (int k=0; k<=m; k++)
+      {
+        out[IDX+index] =(i+0.5)*(j+0.5)*(k+0.5)* lpmv(i,0,cosK)*lpmv(j,0,cosL)*lpmv(k,0,hphi);///pow(M_PI,k);
         index += 1;
       }
     }
@@ -228,7 +289,19 @@ void pyCs2Ws(GLOBAL_MEM ftype *Cs, GLOBAL_MEM ftype *out,
               const int NEVT, const int m)
 {
   const int evt = get_global_id(0);
-  const int IDX = evt*pow(m+1.,3);
+  #ifdef CUDA
+    const int IDX = evt*pow(m+1,3);
+  #else
+    #if USE_DOUBLE
+      const double order = convert_double(m);
+      const int number = convert_int(pow(order+1,3));
+      const int IDX = evt*number;
+    #else
+      const float order = convert_float(m);
+      const int number = convert_int(pow(order+1,3));
+      const int IDX = evt*number;
+    #endif
+  #endif
 
   if (evt >= NEVT) { return; }
   out[evt*NTERMS+0] = Cs[IDX+0] + 2./5.*Cs[IDX+50] + 1./sqrt(20.)*(Cs[IDX+6] + 2./5.*Cs[IDX+56]) - sqrt(3./20.)*(Cs[IDX+8]+2./5.*Cs[IDX+58]);
@@ -242,6 +315,56 @@ void pyCs2Ws(GLOBAL_MEM ftype *Cs, GLOBAL_MEM ftype *out,
   out[evt*NTERMS+8] = 3.*sqrt(2./5.)*M_PI/8.*(Cs[IDX+7] - 1./8.*Cs[IDX+57] - 1./64.*Cs[IDX+107]);
   out[evt*NTERMS+9] = 1./6.*(4.*sqrt(3.)*Cs[IDX+25] + 2*sqrt(3./5.)*Cs[IDX+31] - 6.*sqrt(1./5.)*Cs[IDX+33]);
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//CJLM_2_ws shit simon//////////////////////////////////////////////////////////////////////////
+//for the moment only valid for m=4, WARNING.
+KERNEL
+void pyShitSimon(GLOBAL_MEM ftype cosKa, GLOBAL_MEM ftype cosKb,
+                 GLOBAL_MEM ftype cosLa, GLOBAL_MEM ftype cosLb,
+                 GLOBAL_MEM ftype phia, GLOBAL_MEM ftype phib,
+                 //orden del polinomio
+                 const int m,
+                 //output 10 \times (m+1)**3
+                 GLOBAL_MEM ftype *out, const int NEVT
+                 )
+{
+  printf("cosKa=%.4f, cosKb=%.4f, cosLa=%.4f, cosLb=%.4f, phia=%.4f, phib=%.4f",
+          cosKa, cosKb, cosLa, cosLb, phia, phib);
+  int index=0;
+  for (int i=0; i<=m; i++)
+  {
+    for (int j=0; j<=m; j++)
+    {
+      for (int k=0; k<=m; k++)
+      {
+        #ifndef CUDA
+          #if USE_DOUBLE
+            const double i = convert_double(i);
+            const double j = convert_double(j);
+            const double k = convert_double(k);
+          #else
+            const float i = convert_float(i);
+            const float j = convert_float(j);
+            const float k = convert_float(k);
+          #endif
+        #endif
+        //construction of a matrix 10 \times (m+1)**3
+        out[index*NTERMS+0] = integral_ijk_f1(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+1] = integral_ijk_f2(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+2] = integral_ijk_f3(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+3] = integral_ijk_f4(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+4] = integral_ijk_f5(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+5] = integral_ijk_f6(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+6] = integral_ijk_f7(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+7] = integral_ijk_f8(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+8] = integral_ijk_f9(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        out[index*NTERMS+9] = integral_ijk_f10(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
+        index += 1;
+      }
+    }
+  }
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

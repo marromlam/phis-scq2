@@ -1,0 +1,9 @@
+name: phisscq
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pip
+  - pocl
+  - pyopencl
+  - ROOT
