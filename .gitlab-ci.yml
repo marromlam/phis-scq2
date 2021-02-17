@@ -16,7 +16,7 @@ before_script:
     # Activate conda phisscq environment
     - source .ccache/conda3/bin/activate
     - conda activate phisscq
-    - export PYTHONPATH=$PWD:$PYTHONPATH # add phi-scq folder to $PYTHONPATH
+    - export PYTHONPATH=$PWD/analysis:$PYTHONPATH # add phi-scq folder to $PYTHONPATH
     # Use opencl as default (it's slower than cuda, but it runs on more devices)
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
