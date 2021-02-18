@@ -13,73 +13,94 @@
   //    If a rule runs succesfully, its log will be forwarded to all the emails
   //    in the following list (by default it is empty).
   "mail" : ["mromerol@cern.ch"],
+    //
   // Gd value ------------------------------------------------------------------
   //    This value is shared by all steps of this analysis, so a change here
   //    would imply a change in the whole set of results. By default this value
   //    is set to the World Average
-  "Gd_value" :  0.65789, //1/ps
+  "Gd_value" : 0.65789, //1/ps
+  //
+  // Toys ----------------------------------------------------------------------
+  //    Number of toys to generate
+  "ntoys" : 100,
   //
   // Cuts in decay-time --------------------------------------------------------
   //    When doing computations, some cuts for decay-time are applied, both to
   //    low decay-times (removing prompt background) and to higher decay-times
   //    (since there there is no statistics)
-  "tLL" :  0.30, // ps
-  "tUL" :  15.0, // ps
+  "tLL" : 0.30, // ps
+  "tUL" : 15.0, // ps
   //
   // Time acceptance parameters ------------------------------------------------
   "time_acceptance_resolutions" : {
-    "MC_Bs2JpsiPhi" : {
-      "mu" : 0,
-      "sigma" : 0.0417,
-      "DGsd" : 0.003486
-    },
-    "MC_Bs2JpsiPhi_dG0" : {
-      "mu" : 0,
-      "sigma" : 0.0417,
-      "DGsd" : 0.003486
-    },
-    "MC_Bd2JpsiKstar" : {
-      "mu" : 0,
-      "sigma" : 0.03864,
-      "DGsd" : 0.00044
-    },
-    "Bd2JpsiKstar" : {
-      "mu" : 0,
-      "sigma" : 0.04244,
-      "DGsd" : 0.0
-    },
-  }
+    "MC_Bs2JpsiPhi"     : {"mu" : 0, "sigma" : 0.0417, "DGsd" : 0.003486},
+    "MC_Bs2JpsiPhi_dG0" : {"mu" : 0, "sigma" : 0.0417, "DGsd" : 0.003486},
+    "MC_Bd2JpsiKstar"   : {"mu" : 0, "sigma" : 0.03864, "DGsd" : 0.00044},
+    "Bd2JpsiKstar"      : {"mu" : 0, "sigma" : 0.04244, "DGsd" : 0.0},
+    "MC_Bu2JpsiKplus"   : {"mu" : 0, "sigma" : 0.03864, "DGsd" : -0.04739},
+    "Bu2JpsiKplus"      : {"mu" : 0, "sigma" : 0.04244, "DGsd" : -0.04739}
+  },
   "time_acceptance_bdtconfig" : {
     "n_estimators" : 20,
-    "learning_rate" : 0.3,
+    "learning_rate" : 0.1,
     "max_depth" : 3,
     "min_samples_leaf" : 1000,
     "gb_args" : {"subsample" :  1}
   },
+  "time_acceptance_knots" : {
+    "2"  : [0.3, 0.91, 2.0, 15.0],
+    "3"  : [0.3, 0.91, 1.96, 9.0, 15.0],
+    "4"  : [0.3, 0.74, 1.35, 2.4, 9.0, 15.0],
+    "5"  : [0.3, 0.64, 1.07, 1.69, 2.74, 9.0, 15.0],
+    "6"  : [0.3, 0.58, 0.91, 1.35, 1.96, 3.01, 7.0, 15.0],
+    "7"  : [0.3, 0.53, 0.81, 1.15, 1.58, 2.2, 3.25, 9.0, 15.0],
+    "8"  : [0.3, 0.5, 0.74, 1.01, 1.35, 1.79, 2.4, 3.45, 9.0, 15.0],
+    "9"  : [0.3, 0.48, 0.68, 0.91, 1.19, 1.53, 1.96, 2.58, 3.63, 9.0, 15.0],
+    "10" : [0.3, 0.46, 0.64, 0.84, 1.07, 1.35, 1.69, 2.12, 2.74, 3.79, 7.0, 15.0],
+    "11" : [0.3, 0.44, 0.6, 0.78, 0.98, 1.22, 1.49, 1.83, 2.27, 2.88, 3.93, 7.0, 15.0],
+    "12" : [0.3, 0.43, 0.58, 0.74, 0.91, 1.12, 1.35, 1.63, 1.96, 2.4, 3.01, 4.06, 7.0, 15.0]
+  },
   //
-  // Angular acceptance parameters ----------------------------------------------
+  // Angular acceptance parameters ---------------------------------------------
   //    The bdtconfig that is going to correct MC variables to RD during the
-  //    iterative procedure is defined here.
+  //    iterative procedure is defined here. 
+  //    50:0.1:3:1000 - 20:0.1:3:1000 
   "angular_acceptance_bdtconfig": {
-    "n_estimators": 20
-    "learning_rate": 0.1 //0.5
-    "max_depth": 3 //25
-    "min_samples_leaf": 1000 //5000
+    "n_estimators": 20,
+    "learning_rate": 0.1,
+    "max_depth": 3,
+    "min_samples_leaf": 1000,
     "gb_args": {"subsample": 1}
   },
   //
-  // Fit-check in bins ----------------------------------------------------------
-  //    As systematic checks, some fits in bins of variables are done. These ones
-  //    must be defined here in order to phis-scq properly handle them. 
+  // Fit-check in bins ---------------------------------------------------------
+  //    As systematic checks, some fits in bins of variables are done. These
+  //    ones must be defined here in order to phis-scq properly handle them.
+  //    * binned_variables: flags in the filename to indicate the binned sw
+  //      variable
   "binned_variables" :  ["pt", "sigmat", "eta"],
   "binned_variables_cuts" : {
-    "pt" :  ["pt >= 0 & pt < 3.8e3", "pt >= 3.8e3 & pt < 6e3", "pt >= 6e3 & pt <= 9e3", "pt >= 9e3"],
-    "eta" :  ["eta >= 0 & eta <= 3.3", "eta >= 3.3 & eta <= 3.9", "eta >= 3.9 & eta <= 6"],
-    "sigmat" :  ["sigmat >= 0 & sigmat <= 0.031", "sigmat >= 0.031 & sigmat <= 0.042", "sigmat >= 0.042 & sigmat <= 0.15"]
+    "pTB" : ["pTB >= 0 & pTB < 3.8e3", "pTB >= 3.8e3 & pTB < 6e3", "pTB >= 6e3 & pTB <= 9e3", "pTB >= 9e3"],
+    "etaB" : ["etaB >= 0 & etaB <= 3.3", "etaB >= 3.3 & etaB <= 3.9", "etaB >= 3.9 & etaB <= 6"],
+    "sigmat" : ["sigmat >= 0 & sigmat <= 0.031", "sigmat >= 0.031 & sigmat <= 0.042", "sigmat >= 0.042 & sigmat <= 0.15"]
   },
   "binned_variables_ranges" : {
-    "pt" :  [0, 3.8e3, 6e3, 9e3, 40e3],
-    "eta" :  [0, 3.3, 3.9, 6],
-    "sigmat" :  [0, 0.031, 0.042, 0.150]
-  }
+    "pTB" : [0, 3.8e3, 6e3, 9e3, 40e3],
+    "etaB" : [0, 3.3, 3.9, 6],
+    "sigmat" : [0, 0.031, 0.042, 0.150]
+  },
+  //
+  // Blinded analysis ----------------------------------------------------------
+  //    As systematic checks, some fits in bins of variables are done. These ones
+  //    must be defined here in order to phis-scq properly handle them.
+  //    * blind: 1 (True) or 0 (False)
+  "blind" : 1,
+  "blind_strings" : {
+    "pPlon" : [0, 3.8e3, 6e3, 9e3, 40e3],
+    "DGs" : [0, 3.3, 3.9, 6],
+  },
+  //
+  // BDT testing
+  //
+  "bdt_tests" : 100
 }
