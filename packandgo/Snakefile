@@ -65,7 +65,7 @@ rule pack_physics_params_1on1:
     mem_mb=1048
   input:
     lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{timeacc}.json', 
-    				    year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
+    			year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
     lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json'),
     lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
                         dyear=config['year'], dfit=config['fit'], dangacc=config['angacc'], dtimeacc=config['timeacc'])
@@ -200,7 +200,7 @@ rule pack_physics_params_yearly:
            --params {",".join([f"{input.p1}",f"{input.p2}",f"{input.p3}",f"{input.p4}",f"{input.p5}"])}\
            --output {output}\
            --mode {wildcards.mode}\
-           --year {",".join(YEARS[f"{wildcards.year}"])}\
+           --year run2,{",".join(YEARS[f"{wildcards.year}"])}\
            --version {wildcards.version}\
            --timeacc {wildcards.timeacc}\
            --angacc {wildcards.angacc}\
@@ -268,11 +268,39 @@ rule pack_physics_params_binned:
 # lifetime tables --------------------------------------------------------------
 #    ----
 rule pack_lifetimeBu:
+  wildcard_constraints:
+    mode = 'Bu2JpsiKplus'
   resources:
     mem_mb=1048
   input:
     corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
     noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}Noncorr.json', year=YEARS[f'{wcs.year}']),
+  output:
+    'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_life{timeacc}.tex',
+  log:
+    'output/log/pack_time_acceptance/{year}/{mode}/{version}_life{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python packandgo/lifetime_tables.py\
+           --corr {",".join(input.corr)}\
+           --noncorr {",".join(input.noncorr)}\
+           --output {output}\
+           --mode {wildcards.mode}\
+           --year {",".join(YEARS[f"{wildcards.year}"])}\
+           --version {wildcards.version}\
+           --timeacc {wildcards.timeacc}\
+    ) &> {log}""")
+
+
+
+rule pack_lifetimeBd:
+  wildcard_constraints:
+    mode = 'Bd2JpsiKstar'
+  resources:
+    mem_mb=1048
+  input:
+    corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}{mod}.json', year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
+    noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}Noncorr{mod}.json', year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
   output:
     'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_life{timeacc}.tex',
   log:
