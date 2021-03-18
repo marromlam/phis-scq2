@@ -20,7 +20,7 @@
 // Include headers /////////////////////////////////////////////////////////////
 
 #define USE_DOUBLE ${USE_DOUBLE}
-#include <ipanema/core.hpp>
+#include <ipanema/core.c>
 
 // Debugging 0 [0,1,2,3,>3]
 #define DEBUG ${DEBUG}
@@ -45,12 +45,12 @@ const CONSTANT_MEM ftype MHH[MKNOTS] = ${MHH};
 const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 
 // Include ipanema
-#include <ipanema/complex.cpp>
-#include <ipanema/special.cpp>
-#include <ipanema/random.cpp>
+#include <ipanema/complex.c>
+#include <ipanema/special.c>
+#include <ipanema/random.c>
 
 // Include analysis parts
-//#include "FkHelpers.cu"
+#include "FkHelpers.cu"
 #include "Tagging.cu"
 #include "TimeAngularDistribution.cu"
 #include "DecayTimeAcceptance.cu"
@@ -58,7 +58,6 @@ const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 #include "AngularAcceptance.cu"
 #include "CrossRateBd.cu"
 #include "Toy.cu"
-#include "SimonShit.cu"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -81,6 +80,9 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
               const ftype lPper,
               // Time limits
               const ftype tLL, const ftype tUL,
+              const ftype cosKLL, const ftype cosKUL,
+              const ftype cosLLL, const ftype cosLUL,
+              const ftype hphiLL, const ftype hphiUL,
               // Time resolution
               const ftype sigma_offset, const ftype sigma_slope,
               const ftype sigma_curvature, const ftype mu,
@@ -102,8 +104,8 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
   const int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
 
-  ftype mass = data[evt*10+4];
-  ftype arr[9] = {data[evt*10+0], // cosK
+  const ftype mass = data[evt*10+4];
+  const ftype arr[9] = {data[evt*10+0], // cosK
                   data[evt*10+1], // cosL
                   data[evt*10+2], // hphi
                   data[evt*10+3], // time
@@ -113,15 +115,15 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
                   data[evt*10+8], // etaOS
                   data[evt*10+9]  // etaSS
                  };
-
   const int bin = BINS>1 ? getMassBin(mass) : 0;
+
   lkhd[evt] = rateBs(arr,
                      G, DG, DM, CSP[bin],
                      ASlon[bin], APlon[bin], APpar[bin], APper[bin],
                      pSlon,      pPlon,      pPpar,      pPper,
                      dSlon[bin], dPlon,      dPpar,      dPper,
                      lSlon,      lPlon,      lPpar,      lPper,
-                     tLL, tUL,
+                     tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL, hphiLL, hphiUL,
                      sigma_offset, sigma_slope, sigma_curvature, mu,
                      eta_bar_os, eta_bar_ss,
                      p0_os,  p1_os, p2_os,
@@ -134,23 +136,21 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
                      USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 
 
 KERNEL
 void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
-              //inputs
               const ftype G, GLOBAL_MEM const ftype * CSP,
               GLOBAL_MEM const ftype *ASlon, GLOBAL_MEM const ftype *APlon,
               GLOBAL_MEM const ftype *APpar, GLOBAL_MEM const ftype *APper,
               GLOBAL_MEM const ftype *dSlon, const ftype dPlon,
               const ftype dPpar, const ftype dPper,
-              // Time limits
               const ftype tLL, const ftype tUL,
-              // Angular acceptance
               GLOBAL_MEM const ftype *angular_weights,
-              // Flags
-              const int USE_FK, const int BINS, const int USE_ANGACC, const int NEVT)
+              const int USE_FK, const int BINS, const int USE_ANGACC,
+              const int NEVT)
 {
   int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
@@ -168,12 +168,10 @@ void pyrateBd(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
                  };
 
   unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
-  lkhd[evt] = getDiffRateBd(arr,
-                          G, CSP[bin],
-                          ASlon[bin], APlon[bin], APpar[bin], APper[bin],
-                          dSlon[bin], dPlon,      dPpar,      dPper,
-                          tLL, tUL,
-                          angular_weights,USE_FK, USE_ANGACC);
+  lkhd[evt] = getDiffRateBd(arr, G, CSP[bin], ASlon[bin], APlon[bin],
+                            APpar[bin], APper[bin], dSlon[bin], dPlon, dPpar,
+                            dPper, tLL, tUL, angular_weights,
+                            USE_FK, USE_ANGACC);
 
 }
 //////////////////////////////////////////////////////////////////////////////
@@ -197,176 +195,9 @@ void pyFcoeffs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *fk,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//CJLM//////////////////////////////////////////////////////////////////////////
-KERNEL
-void pyBjlms(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *out,
-              const int NEVT, const int m)
-{
-  const int evt = get_global_id(0);
-  ftype cosK = data[evt*3+0];
-  ftype cosL = data[evt*3+1];
-  ftype hphi = data[evt*3+2];
-  int index = 0;
-  #ifdef CUDA
-    const int IDX = evt*pow(m+1,3);
-  #else
-    #if USE_DOUBLE
-      const double order = convert_double(m);
-      const int number = convert_int(pow(order+1,3));
-      const int IDX = evt*number;
-    #else
-      const float order = convert_float(m);
-      const int number = convert_int(pow(order+1,3));
-      const int IDX = evt*number;
-    #endif
-  #endif
-  if (evt >= NEVT) { return; }
-  for (int i=0; i<=m; i++)
-  {
-    for (int j=0; j<=m; j++)
-    {
-      for (int k=-j; k<=j; k++)
-      {
-        out[IDX+index] =(i+1./2.)* lpmv(i,0,cosK)*sph_harm(j,k,cosL,hphi);
-        index += 1;
-      }
-    }
-  }
-}
-////////////////////////////////////////////////////////////////////////////////
-//LEGENDRE3d////////////////////////////////////////////////////////////////////
-KERNEL
-void pyLegendre3d(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *out,
-              const int NEVT, const int m)
-{
-  const int evt = get_global_id(0);
-  ftype cosK = data[evt*3+0];
-  ftype cosL = data[evt*3+1];
-  ftype hphi = data[evt*3+2];
-  hphi = hphi/M_PI; //this is used for having a good definition of Legendre
-  int index = 0;
-  #ifdef CUDA
-    const int IDX = evt*pow(m+1,3);
-  #else
-    #if USE_DOUBLE
-      const double order = convert_double(m);
-      const int number = convert_int(pow(order+1,3));
-      const int IDX = evt*number;
-    #else
-      const float order = convert_float(m);
-      const int number = convert_int(pow(order+1,3));
-      const int IDX = evt*number;
-    #endif
-  #endif
-  if (evt >= NEVT) { return; }
-  if (evt == 0)
-  {
-    printf("\nComprobacion polinomios legendre\n");
-    printf("\ncosK=%.4f, cosL=%.4f, hphi=%.4f\n", cosK, cosL, hphi);
-    for (int i=0; i<=m; i++)
-    {
-      printf("\norder=%d, P_0K=%.4f, P_0L=%.4f, P_0Phi=%.4f\n", i, lpmv(i,0,cosK), lpmv(i,0,cosL), lpmv(i,0,hphi));
-    }
-  }
-  for (int i=0; i<=m; i++)
-  {
-    for (int j=0; j<=m; j++)
-    {
-      for (int k=0; k<=m; k++)
-      {
-        out[IDX+index] =(i+0.5)*(j+0.5)*(k+0.5)* lpmv(i,0,cosK)*lpmv(j,0,cosL)*lpmv(k,0,hphi);///pow(M_PI,k);
-        index += 1;
-      }
-    }
-  }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-//CJLM_2_ws//////////////////////////////////////////////////////////////////////////
-//for the moment only valid for m=4, WARNING.
-KERNEL
-void pyCs2Ws(GLOBAL_MEM ftype *Cs, GLOBAL_MEM ftype *out,
-              const int NEVT, const int m)
-{
-  const int evt = get_global_id(0);
-  #ifdef CUDA
-    const int IDX = evt*pow(m+1,3);
-  #else
-    #if USE_DOUBLE
-      const double order = convert_double(m);
-      const int number = convert_int(pow(order+1,3));
-      const int IDX = evt*number;
-    #else
-      const float order = convert_float(m);
-      const int number = convert_int(pow(order+1,3));
-      const int IDX = evt*number;
-    #endif
-  #endif
 
-  if (evt >= NEVT) { return; }
-  out[evt*NTERMS+0] = Cs[IDX+0] + 2./5.*Cs[IDX+50] + 1./sqrt(20.)*(Cs[IDX+6] + 2./5.*Cs[IDX+56]) - sqrt(3./20.)*(Cs[IDX+8]+2./5.*Cs[IDX+58]);
-  out[evt*NTERMS+1] = Cs[IDX+0] - 1./5.*Cs[IDX+50] + 1./sqrt(20.)*(Cs[IDX+6] - 1./5.*Cs[IDX+56]) + sqrt(3./20.)*(Cs[IDX+8]-1./5.*Cs[IDX+58]);
-  out[evt*NTERMS+2] = Cs[IDX+0] - 1./5.*Cs[IDX+50] - sqrt(1./5.)*(Cs[IDX+6] - 1./5.*Cs[IDX+56]);
-  out[evt*NTERMS+3] = sqrt(3./5.)*(Cs[IDX+5] - 1./5.*Cs[IDX+55]);
-  out[evt*NTERMS+4] = sqrt(6./5.)*3.*M_PI/32.*(Cs[IDX+29] - 1./4.*Cs[IDX+79]);
-  out[evt*NTERMS+5] = sqrt(6./5.)*3.*M_PI/32.*(Cs[IDX+32] - 1./4.*Cs[IDX+82]);
-  out[evt*NTERMS+6] = 1./2.*(2.*Cs[IDX+0] + sqrt(1./5.)*Cs[IDX+6] - sqrt(3./5.)*Cs[IDX+8]);
-  out[evt*NTERMS+7] = 3.*sqrt(2./5.)*M_PI/8.*(Cs[IDX+4] - 1./8.*Cs[IDX+54] - 1./64.*Cs[IDX+104]);
-  out[evt*NTERMS+8] = 3.*sqrt(2./5.)*M_PI/8.*(Cs[IDX+7] - 1./8.*Cs[IDX+57] - 1./64.*Cs[IDX+107]);
-  out[evt*NTERMS+9] = 1./6.*(4.*sqrt(3.)*Cs[IDX+25] + 2*sqrt(3./5.)*Cs[IDX+31] - 6.*sqrt(1./5.)*Cs[IDX+33]);
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//CJLM_2_ws shit simon//////////////////////////////////////////////////////////////////////////
-//for the moment only valid for m=4, WARNING.
-KERNEL
-void pyShitSimon(GLOBAL_MEM ftype cosKa, GLOBAL_MEM ftype cosKb,
-                 GLOBAL_MEM ftype cosLa, GLOBAL_MEM ftype cosLb,
-                 GLOBAL_MEM ftype phia, GLOBAL_MEM ftype phib,
-                 //orden del polinomio
-                 const int m,
-                 //output 10 \times (m+1)**3
-                 GLOBAL_MEM ftype *out, const int NEVT
-                 )
-{
-  printf("cosKa=%.4f, cosKb=%.4f, cosLa=%.4f, cosLb=%.4f, phia=%.4f, phib=%.4f",
-          cosKa, cosKb, cosLa, cosLb, phia, phib);
-  int index=0;
-  for (int i=0; i<=m; i++)
-  {
-    for (int j=0; j<=m; j++)
-    {
-      for (int k=0; k<=m; k++)
-      {
-        #ifndef CUDA
-          #if USE_DOUBLE
-            const double i = convert_double(i);
-            const double j = convert_double(j);
-            const double k = convert_double(k);
-          #else
-            const float i = convert_float(i);
-            const float j = convert_float(j);
-            const float k = convert_float(k);
-          #endif
-        #endif
-        //construction of a matrix 10 \times (m+1)**3
-        out[index*NTERMS+0] = integral_ijk_f1(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+1] = integral_ijk_f2(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+2] = integral_ijk_f3(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+3] = integral_ijk_f4(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+4] = integral_ijk_f5(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+5] = integral_ijk_f6(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+6] = integral_ijk_f7(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+7] = integral_ijk_f8(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+8] = integral_ijk_f9(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        out[index*NTERMS+9] = integral_ijk_f10(cosKa, cosKb, cosLa, cosLb, phia, phib, i,j,k);
-        index += 1;
-      }
-    }
-  }
-}
-////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Acceptance //////////////////////////////////////////////////////////////////
 
@@ -375,10 +206,6 @@ void pySingleTimeAcc(GLOBAL_MEM ftype *time, GLOBAL_MEM ftype *lkhd,
                      GLOBAL_MEM ftype *coeffs, ftype mu,
                      const ftype sigma, const ftype gamma,
                      const ftype tLL, const ftype tUL, const int NEVT)
-/*
-This is a pycuda iterating function. It calls getAcceptanceSingle for each event
-in time and returns
-*/
 {
   const int row = get_global_id(0);
   if (row >= NEVT) { return; }
@@ -396,10 +223,6 @@ void pyRatioTimeAcc(GLOBAL_MEM const ftype *time1, GLOBAL_MEM const ftype *time2
                     const ftype mu2, const ftype sigma2, const ftype gamma2,
                     const ftype tLL, const ftype tUL,
                     const int NEVT1, const int NEVT2)
-/*
-This is a pycuda iterating function. It calls getAcceptanceSingle for each event
-in time and returns
-*/
 {
   const int row = get_global_id(0);
   if (row < NEVT1)
@@ -428,10 +251,6 @@ void pyFullTimeAcc(GLOBAL_MEM ftype const *time1, GLOBAL_MEM ftype const *time2,
                    ftype mu3, ftype sigma3, ftype gamma3,
                    ftype tLL, ftype tUL,
                    const int NEVT1, const int NEVT2, const int NEVT3)
-/*
-This is a pycuda iterating function. It calls getAcceptanceSingle for each event
-in time and returns
-*/
 {
   const int row = get_global_id(0);
   if (row < NEVT1)
