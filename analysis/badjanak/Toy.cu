@@ -11,8 +11,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
-#include <ipanema/random.hpp>
+#include <ipanema/core.h>
+#include <ipanema/random.h>
 
 
 
@@ -41,6 +41,9 @@ void dG5toy(GLOBAL_MEM ftype * out,
             //const ftype lDlon, const ftype lDpar, const ftype lDper,
             // Time limits
             const ftype tLL, const ftype tUL,
+            const ftype cosKLL, const ftype cosKUL,
+            const ftype cosLLL, const ftype cosLUL,
+            const ftype hphiLL, const ftype hphiUL,
             // Time resolution
             const ftype sigma_offset, const ftype sigma_slope, const ftype sigma_curvature,
             const ftype mu,
@@ -66,7 +69,8 @@ void dG5toy(GLOBAL_MEM ftype * out,
     curandState state;
     curand_init((unsigned long long)clock(), evt, 0, &state);
   #else
-    int *state = &SEED;
+    int _seed = SEED;
+    int *state = &_seed;
   #endif
 
   ftype iter = 0.0;
@@ -200,7 +204,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
                     pSlon,      pPlon,      pPpar,      pPper,
                     dSlon[bin], dPlon,      dPpar,      dPper,
                     lSlon,      lPlon,      lPpar,      lPper,
-                    tLL, tUL,
+                    tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL, hphiLL, hphiUL,
                     sigma_offset, sigma_slope, sigma_curvature, mu,
                     eta_bar_os, eta_bar_ss,
                     p0_os,  p1_os, p2_os,
@@ -221,9 +225,9 @@ void dG5toy(GLOBAL_MEM ftype * out,
       if (USE_ANGACC)
       {
         // when the full procedure is avaliable, change there threee lines
-        ftype cijk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-        angular_weights2moments(angular_weights, cijk);
-        angacc = angular_efficiency(data[0], data[1], data[2], cijk);
+        //ftype cijk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+        //angular_weights2moments(angular_weights, cijk);
+        angacc = 1;//angular_efficiency(data[0], data[1], data[2], 4, 4, 4, cijk);
       }
       pdf *= angacc*timeacc*exp((G-0.5*DG)*(time-tLL));
       pdf *= (G-0.5*DG)*(1- exp((G-0.5*DG)*(-tUL+tLL)));
