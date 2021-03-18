@@ -63,7 +63,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bd2JpsiKstar'
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
   cats = {}
   for i,m in enumerate(['MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     if m=='MC_Bd2JpsiKstar':
-      if CORR:
+      if not CORR:
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
@@ -173,6 +173,12 @@ if __name__ == '__main__':
         print('\t\tThis sample is NOT being used, only for check purposes!')
 
   del cats['BdRD']['A'] # remove this one
+
+
+  # Configure kernel -----------------------------------------------------------
+  fcns.badjanak.config['knots'] = knots[:-1]
+  fcns.badjanak.get_kernels(True)
+
 
 
 

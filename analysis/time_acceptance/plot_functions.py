@@ -81,6 +81,10 @@ def plot_timeacc_fit(params, data, weight,
   ref = histogram.hist(ristra.get(data), weights=ristra.get(weight), bins=nob,
                        range=(params['tLL'].value, params['tUL'].value))
 
+  knots = np.array(params.build(params, params.find('k.*'))).tolist()
+  badjanak.config['knots'] = knots
+  badjanak.get_kernels(True)
+
   # Get x and y for pdf plot
   x = np.linspace(params['tLL'].value, params['tUL'].value, nop)
   if   mode == 'BsMC': i = 0

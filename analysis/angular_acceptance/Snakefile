@@ -22,17 +22,50 @@ rule angular_acceptance_naive:
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/naive.py\
-           --sample {input.sample}\
-           --input-params {params.params}\
-           --output-params {output.params}\
-           --output-tables {output.tables}\
-           --year {wildcards.year}\
-           --mode {wildcards.mode}\
-           --version {wildcards.version}\
-           --angacc {wildcards.angacc}\
-           --trigger {wildcards.trigger}
+            --sample        {input.sample}\
+            --input-params  {params.params}\
+            --output-params {output.params}\
+            --output-tables {output.tables}\
+            --year          {wildcards.year}\
+            --mode          {wildcards.mode}\
+            --version       {wildcards.version}\
+            --angacc        {wildcards.angacc}\
+            --trigger       {wildcards.trigger}
     ) &> {log}""")
     send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
+
+
+
+rule angular_acceptance_naive_analytical:
+  resources:
+    mem_mb = 4096
+  wildcard_constraints:
+    mode = "(TOY|MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+    angacc = "(analytic).*"
+  input:
+    sample = lambda wcs: tuples(wcs),
+  params:
+    params = 'analysis/params/generator/{year}/{mode}.json'
+  output:
+    tijk = 'output/params/angular_acceptance/{year}/{mode}/{version}_tijk{angacc}_{trigger}.json',
+    angacc = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}.json'
+  log:
+    'output/log/angular_acceptance_naive_analytical/{year}/{mode}/{version}_{angacc}_{trigger}.log'
+  run:
+    shell(f"""(time\
+    python analysis/angular_acceptance/analytical_corrected.py\
+             --sample        {input.sample}\
+             --input-params  {params.params}\
+             --output-tijk   {output.tijk}\
+             --output-angacc {output.angacc}\
+             --year          {wildcards.year}\
+             --mode          {wildcards.mode}\
+             --version       {wildcards.version}\
+             --angacc        {wildcards.angacc}\
+             --trigger       {wildcards.trigger}
+    ) &> {log}""")
+    send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
+
 
 
 # blend angular acceptance - no correction (only sWeight and polWeight) --------
@@ -804,17 +837,17 @@ rule angular_efficiency_time_dependence:
     'output/log/angular_efficiency_time_dependence/{year}/{mode}/{version}_{angacc}{nknots}knots_{timeacc}.log'
   run:
     shell(f"""(time\
-    python analysis/angular_acceptance/angular_acceptance_plot_veronika.py\
-           --samples                {input.samples}\
-           --angular_acceptance     {",".join(input.angacc0+input.angacci)}\
-           --params                 {params}\
-           --output                 {",".join(output)}\
-           --angacc                 {wildcards.angacc}\
-           --timeacc                {wildcards.timeacc.split('_')[0] if len(wildcards.angacc.split('_'))>1 else 'none'}\
-           --mode                   {wildcards.mode}\
-           --version                {wildcards.version}\
-           --trigger                {wildcards.timeacc.split('_')[-1]}\
-           --year                   {wildcards.year}\
-           --nknots                 {wildcards.nknots}\
+    python analysis/angular_acceptance/analytical_plot.py\
+           --samples            {input.samples}\
+           --angular-acceptance {",".join(input.angacc0+input.angacci)}\
+           --params             {params}\
+           --output             {",".join(output)}\
+           --angacc             {wildcards.angacc}\
+           --timeacc            {wildcards.timeacc.split('_')[0] if len(wildcards.angacc.split('_'))>1 else 'none'}\
+           --mode               {wildcards.mode}\
+           --version            {wildcards.version}\
+           --trigger            {wildcards.timeacc.split('_')[-1]}\
+           --year               {wildcards.year}\
+           --nknots             {wildcards.nknots}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Time Dependence :: {wildcards}", f"{log}", [f"{output}"])

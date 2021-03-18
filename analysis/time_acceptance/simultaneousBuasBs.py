@@ -65,10 +65,10 @@ if __name__ == '__main__':
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bu2JpsiKplus'
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], -1 if YEAR in (2015,2017) else -1)
+  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts

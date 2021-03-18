@@ -65,7 +65,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
@@ -104,28 +104,28 @@ if __name__ == '__main__':
   for i, m in enumerate([MODE]):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
-      if CORR=='Noncorr':
-        weight = f'dg0Weight*{sw}/gb_weights'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
+      else:
+        weight = f'dg0Weight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
-      if CORR=='Noncorr':
-        weight = f'{sw}/gb_weights'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
+      else:
+        weight = f'{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      if CORR=='Noncorr':
-        weight = f'{sw}'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+      else:
+        weight = f'{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      if CORR=='Noncorr':
-        weight = f'{sw}'
-      else:
+      if CORR:
         weight = f'{kinWeight}{sw}'
+      else:
+        weight = f'{sw}'
       mode = 'BdRD'; c = 'c'
     print(weight)
 
@@ -196,6 +196,8 @@ if __name__ == '__main__':
     result = mini.optimize(method='minuit', verbose=False)
     result = mini.optimize(method='emcee', verbose=False, steps=1000,
                            nwalkers=100, is_weighted=False)
+  else:
+    exit()
   print(result)
 
 

@@ -103,7 +103,7 @@ if __name__ == '__main__':
     # Correctly apply weight and name for diffent samples
     if (m=='MC_Bs2JpsiPhi_dG0') and not ('MC_Bs2JpsiPhi_dG0' in samples[i]):
       if CORR:
-        weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
+        weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
       else:
         weight = f'dg0Weight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
@@ -192,7 +192,7 @@ if __name__ == '__main__':
   if MINER.lower() in ("minuit","minos"):
     result = mini.optimize(method='minuit', verbose=False, tol=0.1);
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
-    _res = optimize(method='nelder', verbose=False);
+    _res = mini.optimize(method='nelder', verbose=False);
     result = mini.optimize(method=MINER, params=_res.params, verbose=False);
   elif MINER.lower() in ('nelder'):
     result = mini.optimize(method='nelder', verbose=False)
