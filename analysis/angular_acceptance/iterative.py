@@ -548,9 +548,9 @@ def aitken_iteration(max_iter=30, verbose=True):
               aitken = x2
           else:
               #checker.append(False)
-              aitken = x2 - ( (x2-x1)**2 ) / den # aitken
+              #aitken = x2 - ( (x2-x1)**2 ) / den # aitken
               #aitken = x0 - ( (x1-x0)**2 ) / den # steffensen
-              #aitken = x1 - ( (x2-x1)**2 ) / den # romero
+              aitken = x1 - ( (x2-x1)**2 ) / den # romero
 
           # update angacc
           dt.angacc[p].set(value=aitken.n)
@@ -939,7 +939,7 @@ if __name__ == '__main__':
   # run the procedure!
   
   
-  ok, likelihoods = lipschitz_iteration(max_iter=5, verbose=False)
+  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=False)
   
   if not ok:
     ok, likelihoods = aitken_iteration(max_iter=30, verbose=True)
