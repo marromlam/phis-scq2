@@ -15,11 +15,9 @@ import ipanema
 from ipanema import ristra
 #from ipanema.core.utils import get_sizes
 import warnings
-from reikna.cluda import functions, dtypes
 import platform
 import cpuinfo
 import re
-import math
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -28,6 +26,12 @@ BACKEND = builtins.BACKEND
 DEVICE = builtins.DEVICE
 CONTEXT = builtins.CONTEXT
 QUEUE = builtins.THREAD
+
+
+
+global __KERNELS__
+
+
 
 def get_sizes(size, BLOCK_SIZE=256):
     '''
@@ -102,7 +106,7 @@ def compile(verbose=False, pedantic=False):
               keep=False)
   else:
     prog = THREAD.compile(kstrg,
-              render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
+              render_kwds={**{"USE_DOUBLE":"0"},**flagger(verbose)},
               compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH}"],
               keep=False)
   if pedantic:
@@ -116,13 +120,21 @@ def compile(verbose=False, pedantic=False):
 # Get kernels ------------------------------------------------------------------
 #    Hey ja
 def get_kernels(verbose=False, pedantic=False):
+  """get_kernels.
+
+  Parameters
+  ----------
+  verbose :
+      verbose
+  pedantic :
+      pedantic
+  """
   global __KERNELS__
   prog = compile(verbose, pedantic)
   items = ['pyrateBs', 'pyrateBd',
            'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
-           'pyfaddeeva', 'pycerfc', 'pycexp', 'pyipacerfc',
-           'dG5toy', 'pyBjlms', 'pyLegendre3d', 'pyCs2Ws', 'pyShitSimon'
+           'dG5toy', 
            #'integral_ijk_fx'
            ]
   for item in items:
@@ -153,7 +165,7 @@ def delta_gamma5(input, output,
                   dSlon, dPlon, dPpar, dPper,
                   lSlon, lPlon, lPpar, lPper,
                   # Time limits
-                  tLL, tUL,
+                  tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL, hphiLL, hphiUL,
                   # Time resolution
                   sigma_offset, sigma_slope, sigma_curvature,
                   mu,
@@ -171,10 +183,6 @@ def delta_gamma5(input, output,
                   use_fk=1, use_angacc = 0, use_timeacc = 0,
                   use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
                   BLOCK_SIZE=256, **crap):
-  """
-  Look at kernel definition to see help
-  The aim of this function is to be the fastest wrapper
-  """
   g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
   __KERNELS__.rateBs(
     # Input and output arrays
@@ -188,6 +196,9 @@ def delta_gamma5(input, output,
     np.float64(lSlon),                 np.float64(lPlon),                 np.float64(lPpar),                 np.float64(lPper),
     # Time range
     np.float64(tLL), np.float64(tUL),
+    np.float64(cosKLL), np.float64(cosKUL),
+    np.float64(cosLLL), np.float64(cosLUL),
+    np.float64(hphiLL), np.float64(hphiUL),
     # Time resolution
     np.float64(sigma_offset), np.float64(sigma_slope), np.float64(sigma_curvature),
     np.float64(mu),
@@ -269,6 +280,9 @@ def parser_rateBs(
       lSlon = 1.00, lPlon =  1.00,   lPpar = 1.00, lPper = 1.00,
       # Time limits
       tLL = 0.0, tUL = 15.0,
+      cosKLL = -1.0, cosKUL = 1.0,
+      cosLLL = -1.0, cosLUL = 1.0,
+      hphiLL = -np.pi, hphiUL = +np.pi,
       # Time resolution
       sigma_offset = 0.00, sigma_slope = 0.00, sigma_curvature = 0.00,
       mu = 0.00,
@@ -335,6 +349,12 @@ def parser_rateBs(
   # Time range
   r['tLL'] = tLL
   r['tUL'] = tUL
+  r['cosKLL'] = cosKLL
+  r['cosKUL'] = cosKUL
+  r['cosLLL'] = cosLLL
+  r['cosLUL'] = cosLUL
+  r['hphiLL'] = hphiLL
+  r['hphiUL'] = hphiUL
 
   # Time resolution
   r['sigma_offset'] = sigma_offset
@@ -619,90 +639,38 @@ def delta_gamma5_mc_Bd(input, output, use_fk=1, use_angacc=1, **pars): #use_anga
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-def get_angular_acceptance_weights(true, reco, weight, kind='norm_weights', BLOCK_SIZE=256, **parameters):
+def get_angular_acceptance_weights(true, reco, weight, kind='norm',
+                                   BLOCK_SIZE=256, **parameters):
   # Filter some warnings
   warnings.filterwarnings('ignore')
   # Compute weights scale and number of weights to compute
   scale = np.sum(ipanema.ristra.get(weight))
   terms = len(config['tristan'])
+
   # Define the computation core function
-  ##Both of the functions return w's
   def get_weights(true, reco, weight):
-    pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
-    pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
-    fk = get_fk(reco.get()[:,0:3])
-    ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
-    return ang_acc
+      pdf = THREAD.to_device(np.zeros(true.shape[0]))
+      delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
+      pdf = THREAD.to_device(np.zeros(true.shape[0]))
+      delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
+      fk = get_fk(reco.get()[:,0:3])
+      ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
+      return ang_acc
 
-  # Define the computation core function
-  def get_cs(true, reco, weight):
-    pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
-    pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
-    #get_bjlm needs also m as argument (highest order of the polynomial)
-    bjlm = get_bjlm(reco.get()[:,0:3],4)
-    ###getting coefficients of the polynomials
-    cjlm = bjlm*(weight.get()*num/den).T[::,np.newaxis]
-    ###Building w's from c's per event
-    ang_acc = Cs2Ws(cjlm)
-    return ang_acc
+  ones = THREAD.to_device(np.ones(weight.shape[0]).astype(np.float64))
+  w = get_weights(true, reco, weight).sum(axis=0)
+  w10 = get_weights(true, reco, ones)
 
-  def get_cs_l3d(true, reco, weight):
-    pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
-    pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
-    #get_bjlm needs also m as argument (highest order of the polynomial)
-    l3djlm = get_l3djlm(reco.get()[:,0:3],4)
-    ###getting coefficients of the polynomials
-    cjlm = l3djlm*(weight.get()*num/den).T[::,np.newaxis]
-    cjlm_media = cjlm.sum(axis=0)/scale
-    #print('cjlm_media')
-    #print(cjlm_media)
-    m=4
-    count=0
-    for i in range(m+1):
-        for j in range(m+1):
-            for k in range(m+1):
-              #print([i,j,k], cjlm_media[count])
-              count += 1
-    cjlm_media_simon = cjlm_media/np.pi
-    count = 0
-    #print('cjlm_media_simon')
-    #print(cjlm_media_simon)
-    for i in range(m+1):
-        for j in range(m+1):
-            for k in range(m+1):
-              print([i,j,k], cjlm_media_simon[count])
-              count += 1
-    exit()
-    ###Building w's from c's per event
-    ang_acc = Cs2Ws(cjlm)
-    return ang_acc
-
-  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
-  if kind=='norm_weights':
-      w = get_weights(true, reco, weight).sum(axis=0)
-      w10 = get_weights(true, reco, ones)
-  else:
-      #w = get_cs(true, reco, weight).sum(axis=0)
-      print('voy por donde tengo que ir')
-      w = get_cs_l3d(true, reco, weight).sum(axis=0)
-      exit()
-      w10 = get_cs(true, reco, ones)
   # Get covariance matrix
   cov = np.zeros((terms,terms,weight.shape[0]))
   for i in range(0,terms):
     for j in range(i,terms):
       cov[i,j,:] = (w10[:,i]-w[i]/scale)*(w10[:,j]-w[j]/scale)*weight.get()**2
   cov = cov.sum(axis=2) # sum all per event cov
-  # Handling cov matrix, and transform it to correlation matrix
   cov = cov + cov.T - np.eye(cov.shape[0])*cov         # fill the lower-triangle
+  
+  # Handling cov matrix, and transform it to correlation matrix
   corr = np.zeros_like(cov)
-  # Cov relative to f0
   final_cov = np.zeros_like(cov)
   for i in range(0,cov.shape[0]):
     for j in range(0,cov.shape[1]):
@@ -711,6 +679,7 @@ def get_angular_acceptance_weights(true, reco, weight, kind='norm_weights', BLOC
                             w[i]/w[0]*cov[0][j]-w[j]/w[0]*cov[0][i]);
   final_cov[np.isnan(final_cov)] = 0
   cov = np.where(np.abs(final_cov)<1e-12,0,final_cov)
+
   # Correlation matrix
   for i in range(0,cov.shape[0]):
     for j in range(0,cov.shape[1]):
@@ -718,39 +687,41 @@ def get_angular_acceptance_weights(true, reco, weight, kind='norm_weights', BLOC
   return w/w[0], np.sqrt(np.diagonal(cov)), cov, corr
 
 
-#####PRUEBAS Con Legendre 3d.
-def get_angular_acceptance_L3D(true, reco, weight, BLOCK_SIZE=256, **parameters):
-  # Filter some warnings
-  warnings.filterwarnings('ignore')
-  # Compute weights scale and number of weights to compute
-  scale = np.sum(ipanema.ristra.get(weight))
-  terms = len(config['tristan'])
-  def get_cs_l3d(true, reco, weight):
-    pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
-    pdf = THREAD.to_device(np.zeros(true.shape[0]))
-    delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
-    l3djlm = get_l3djlm(reco.get()[:,0:3],4)
-    cjlm = l3djlm*(weight.get()*num/den).T[::,np.newaxis]
-    cjlm_media = np.array(cjlm.sum(axis=0)/scale)
-    print(cjlm_media)
-    #exit()
-    matrix = L3DSIMON(cjlm_media)
-    matrix = np.array(matrix.T)
-    print(matrix.shape[0], matrix.shape[1])
-    ang_acc = np.matmul(matrix,cjlm_media)
-    for i in range(len(ang_acc)):
-        print(f"ang_acc{i}:%.15f", ang_acc[i]/ang_acc[0])
-    print(ang_acc/ang_acc[0])
-    exit()
-    return ang_acc
 
-  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
-  w = get_cs_l3d(true, reco, weight).sum(axis=0)
-  # Get covariance matrix
-  return w/w[0], np.sqrt(np.diagonal(cov)), cov, corr
+def analytical_angular_efficiency(angacc, cosK, cosL, hphi, project=None, order_cosK=4, order_cosL=4, order_hphi=4):
+  """
+  3d outputs by default
+  ----
+  """
+  cosK_l = len(cosK)
+  cosL_l = len(cosL)
+  hphi_l = len(hphi)
+  eff =  ristra.zeros(cosK_l*cosL_l*hphi_l)
+  try:
+    _angacc = ristra.allocate(np.array(angacc))
+  except:
+    _angacc = ristra.allocate(np.array([a.n for a in angacc]))
+  __KERNELS__.pyangular_efficiency(eff, _angacc.astype(np.float64),
+                            cosK.astype(np.float64), cosL.astype(np.float64), hphi.astype(np.float64),
+                            np.int32(cosK_l), np.int32(cosL_l), np.int32(hphi_l),
+                            np.int32(order_cosK), np.int32(order_cosL), np.int32(order_hphi),
+                            global_size=(cosL_l, hphi_l, cosK_l))
+                            #global_size=(1,))
+  res = ristra.get(eff).reshape(cosL_l,hphi_l,cosK_l)
+  if project==1:
+    #return np.trapz(res.T, cosKd.get())[:,5]
+    return np.sum(res, (0,1))
+    #return np.trapz(np.trapz(angeff_plot_crap(peff, cosKd, cosLd, hphid, None, 4, 4, 4).T, cosLd.get()), np.pi*hphid.get())
+  if project==2:
+    #return np.trapz(np.trapz(angeff_plot_crap(peff, cosKd, cosLd, hphid, None, 4, 4, 4), cosKd.get()), np.pi*hphid.get())
+    return np.sum(res, (2,1))
+  if project==3:
+    #return np.trapz(np.trapz(angeff_plot_crap(peff, cosKd, cosLd, hphid, None, 4, 4, 4).T, cosLd.get()).T, cosKd.get())
+    return np.sum(res, (2,0))
+  return res
 
-###ANGULAR ACC Bd
+
+
 def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **parameters):
   # Filter some warnings
   warnings.filterwarnings('ignore')
@@ -823,7 +794,6 @@ def splinexerf(
   Look at pySingleTimeAcc kernel definition to see more help.
   """
   g_size, l_size = get_sizes(lkhd.shape[0],BLOCK_SIZE)
-  #print(coeffs,mu,sigma,gamma)
 
   __KERNELS__.SingleTimeAcc(
       time, lkhd, # input, output
@@ -871,7 +841,7 @@ def sbxscxerf(
   )
 
 
-# --- #
+
 def saxsbxscxerf(
       time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
       coeffs_a, coeffs_b, coeffs_c,
@@ -893,7 +863,7 @@ def saxsbxscxerf(
 
   Look at kernel definition to see more help
   """
-  size_a  = np.int32(lkhd_a.shape[0]);
+  size_a  = np.int32(lkhd_a.shape[0])
   size_b  = np.int32(lkhd_b.shape[0])
   size_c  = np.int32(lkhd_c.shape[0])
   size_max = max(size_a,size_b,size_c)
@@ -931,255 +901,12 @@ def bspline(time, *coeffs, flatend=False, BLOCK_SIZE=32):
 
 
 
-
 def get_knot(i, knots, n):
-  if (i<=0):        i = 0
-  elif (i>=n):      i = n
+  if (i<=0):
+    i = 0
+  elif (i>=n):
+    i = n
   return knots[i]
 
 
 
-def get_4cs(listcoeffs, flatend=False):
-  n = len(config['knots'])
-  flatend = False
-  result = []                                           # list of bin coeffs C
-  def u(j): return get_knot(j,config['knots'],len(config['knots'])-1)
-  for i in range(0,len(config['knots'])-1):
-    a, b, c, d = listcoeffs[i:i+4]                    # bspline coeffs b_i
-    C = []                                   # each bin 4 coeffs c_{bin,i}
-    C.append(-((b*u(-2+i)*pow(u(1+i),2))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))))+
-        (a*pow(u(1+i),3))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
-        (c*pow(u(-1+i),2)*u(1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (b*u(-1+i)*u(1+i)*u(2+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (c*u(-1+i)*u(i)*u(2+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (b*u(i)*pow(u(2+i),2))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (d*pow(u(i),3))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
-        (c*pow(u(i),2)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-    C.append((2*b*u(-2+i)*u(1+i))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
-        (3*a*pow(u(1+i),2))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
-        (b*pow(u(1+i),2))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
-        (c*pow(u(-1+i),2))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (b*u(-1+i)*u(1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (2*c*u(-1+i)*u(1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (b*u(-1+i)*u(2+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (b*u(1+i)*u(2+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (c*u(-1+i)*u(i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (c*u(-1+i)*u(2+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (2*b*u(i)*u(2+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (c*u(i)*u(2+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (b*pow(u(2+i),2))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (c*pow(u(i),2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
-        (3*d*pow(u(i),2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))-
-        (2*c*u(i)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-    C.append(-((b*u(-2+i))/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*
-        (-u(i)+u(1+i))))+(3*a*u(1+i))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
-        (2*b*u(1+i))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
-        (b*u(-1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (2*c*u(-1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (b*u(1+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*
-        (-u(-1+i)+u(2+i)))+(c*u(1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (b*u(2+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*
-        (-u(-1+i)+u(2+i)))+(c*u(-1+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (b*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (c*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (2*b*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (c*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (2*c*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))-
-        (3*d*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
-        (c*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-    C.append(-(a/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))))+
-        b/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
-        b/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        c/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        b/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        c/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        c/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
-        d/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-    result.append(C)
-  # linear extrapolation in the last bin till tUL
-  m = C[1] + 2*C[2]*u(n) + 3*C[3]*u(n)**2
-  if flatend:
-    # *flat* acceptance since last bin 
-    m = 0 
-  C = [C[0] + C[1]*u(n) + C[2]*u(n)**2 + C[3]*u(n)**3 - m*u(n),m,0,0]
-  result.append(C)
-  return np.array(result)
-
-
-def dG5toys(output,
-            G, DG, DM,
-            CSP,
-            ASlon, APlon, APpar, APper,
-            pSlon, pPlon, pPpar, pPper,
-            dSlon, dPlon, dPpar, dPper,
-            lSlon, lPlon, lPpar, lPper,
-            # Time limits
-            tLL, tUL,
-            # Time resolution
-            sigma_offset, sigma_slope, sigma_curvature,
-            mu,
-            # Flavor tagging
-            eta_os, eta_ss,
-            p0_os,  p1_os, p2_os,
-            p0_ss,  p1_ss, p2_ss,
-            dp0_os, dp1_os, dp2_os,
-            dp0_ss, dp1_ss, dp2_ss,
-            # Time acceptance
-            timeacc,
-            # Angular acceptance
-            angacc,
-            # Flags
-            use_fk=1, use_angacc = 0, use_timeacc = 0,
-            use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-            prob_max = 2.7,
-            BLOCK_SIZE=256, seed=False, **crap):
-  """
-  Look at kernel definition to see help
-  The aim of this function is to be the fastest wrapper
-  """
-  if not seed:
-    seed = int(1e10*np.random.rand())
-  g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
-  __KERNELS__.dG5toy(
-    # Input and output arrays
-    output,
-    # Differential cross-rate parameters
-    np.float64(G), np.float64(DG), np.float64(DM),
-    CSP.astype(np.float64),
-    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
-    np.float64(pSlon), np.float64(pPlon), np.float64(pPpar), np.float64(pPper),
-    dSlon.astype(np.float64), np.float64(dPlon), np.float64(dPpar), np.float64(dPper),
-    np.float64(lSlon), np.float64(lPlon), np.float64(lPpar), np.float64(lPper),
-    # Time range
-    np.float64(tLL), np.float64(tUL),
-    # Time resolution
-    np.float64(sigma_offset), np.float64(sigma_slope), np.float64(sigma_curvature),
-    np.float64(mu),
-    # Flavor tagging
-    np.float64(eta_os), np.float64(eta_ss),
-    np.float64(p0_os), np.float64(p1_os), np.float64(p2_os),
-    np.float64(p0_ss), np.float64(p1_ss), np.float64(p2_ss),
-    np.float64(dp0_os), np.float64(dp1_os), np.float64(dp2_os),
-    np.float64(dp0_ss), np.float64(dp1_ss), np.float64(dp2_ss),
-    # Decay-time acceptance
-    timeacc.astype(np.float64),
-    # Angular acceptance
-    angacc.astype(np.float64),
-    # Flags
-    np.int32(use_fk), np.int32(len(CSP)), np.int32(use_angacc), np.int32(use_timeacc),
-    np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
-    np.float64(prob_max), np.int32(seed),  np.int32(len(output)),
-    global_size=g_size, local_size=l_size)
-    #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
-
-
-
-
-# Other Functions -------------------------------------------------------------
-#     Complex kernels running in device
-
-def cexp(z):
-  if isinstance(z, np.ndarray):
-    z_dev = THREAD.to_device(np.complex128(z))
-    deallocate = True
-  else:
-    z_dev = z
-    deallocate = False
-  w_dev = THREAD.to_device(np.complex128(0*z))
-  __KERNELS__.cexp(z_dev, w_dev, global_size=(len(z),))
-  return ristra.get(w_dev) if deallocate else w_dev
-
-
-
-def cerfc(z):
-  if isinstance(z, np.ndarray):
-    z_dev = THREAD.to_device(np.complex128(z))
-    deallocate = True
-  else:
-    z_dev = z
-    deallocate = False
-  w_dev = THREAD.to_device(np.complex128(0*z))
-  __KERNELS__.cerfc(z_dev, w_dev, global_size=(len(z),))
-  return ristra.get(w_dev) if deallocate else w_dev
-
-
-
-def wofz(z):
-  if isinstance(z, np.ndarray):
-    z_dev = THREAD.to_device(np.complex128(z))
-    deallocate = True
-  else:
-    z_dev = z
-    deallocate = False
-  w_dev = THREAD.to_device(np.complex128(0*z))
-  __KERNELS__.wofz(z_dev, w_dev, global_size=(len(z),))
-  return ristra.get(w_dev) if deallocate else w_dev
-
-
-
-def get_fk(z):
-  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
-  w = np.zeros((z.shape[0],len(config['tristan'])))
-  w_dev = THREAD.to_device(np.ascontiguousarray(w, dtype=np.float64))
-  __KERNELS__.Fcoeffs(z_dev, w_dev, np.int32(len(z)), global_size=(len(z)))
-  return ristra.get(w_dev)
-
-def get_bjlm(z,m):
-  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
-  c = np.zeros((z.shape[0], (m+1)**3))
-  c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
-  __KERNELS__.Bjlms(z_dev, c_dev, np.int32(len(z)),np.int32(m), global_size=(len(z)))
-  return ristra.get(c_dev)
-
-def get_l3djlm(z,m):
-  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
-  c = np.zeros((z.shape[0], (m+1)**3))
-  c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
-  __KERNELS__.Legendre3d(z_dev, c_dev, np.int32(len(z)),np.int32(m), global_size=(len(z)))
-  return ristra.get(c_dev)
-
-def Cs2Ws(z):
-  m = 4 #for the moment is not used, it will be neccessary when we do the translations for others orders
-  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
-  c = np.zeros((np.atleast_2d(z).shape[0], len(config['tristan'])))
-  c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
-  __KERNELS__.Cs2Ws(z_dev, c_dev, np.int32(len(c)),np.int32(m), global_size=(len(c)))
-  return ristra.get(c_dev)
-
-def L3DSIMON(z):
-  #z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
-  m = 4
-  c = np.zeros((np.atleast_2d(z).shape[1], len(config['tristan'])))
-  #print(np.atleast_2d(z).shape[0], np.atleast_2d(z).shape[1])
-  c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
-  __KERNELS__.ShitSimon(np.float64(-1.0), np.float64(1.0), #cosK
-                        np.float64(-1.0), np.float64(1.0), #cosL
-                        -np.float64(np.pi), np.float64(np.pi), #phi
-                        np.int32(m), #orden polynomial
-                        c_dev, global_size=(np.atleast_2d(z).shape[0]))
-  return ristra.get(c_dev)
