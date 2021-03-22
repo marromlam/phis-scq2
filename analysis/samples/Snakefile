@@ -28,7 +28,7 @@ rule samples_sync_tuple:
 
 
 
-# reduce_ntuples ---------------------------------------------------------------
+# reduce_ntuples --------------------------------------------------------------
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package.
 
@@ -52,7 +52,9 @@ rule samples_reduce_tuple:
            --output-tree DecayTree\
     ) &> {log}""")
 
-# samples plot------------------------------------------------------------------
+
+
+# samples plot-----------------------------------------------------------------
 #   plot of differents branches of the ntuples. this rule get the plots for
 #   the years with no corrections, sw and kinematic corrections (MC vs data)
 
@@ -61,17 +63,16 @@ rule plot_samples:
     mem_mb=1024
   wildcard_constraints:
     mode = "(TOY_|MC_)?(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
-    branch = "(pTB|pB|pTHp|pHp|pTHm|pHm|etaB|mHH|logIPchi2B|BDTFchi2|logMINkPNNk|BVXchi2|pTX|KmaxTRchi2|MUmaxTRchi2|logJpsiVXchi2|logMINmuPNNmu)",
-    year = 'run2'
+    #branch = "(pTB|pB|pTHp|pHp|pTHm|pHm|etaB|mHH|logIPchi2B|BDTFchi2|logMINkPNNk|BVXchi2|pTX|KmaxTRchi2|MUmaxTRchi2|logJpsiVXchi2|logMINmuPNNmu)",
   input:
-    tuple = lambda wcs: tuples(wcs, mode='cdata', year='run2'),
-    control = lambda wcs: tuples(wcs, year='run2')
+    tuple = lambda wcs: tuples(wcs, mode='cdata', year=f'{wcs.year}'),
+    control = lambda wcs: tuples(wcs, year=f'{wcs.year}')
   output:
-    'output/samples/figures/{year}/{mode}/{version}_{branch}.pdf',
-    'output/samples/figures/{year}/{mode}/{version}_{branch}_sw.pdf',
-    'output/samples/figures/{year}/{mode}/{version}_{branch}_rw.pdf'
+    'output/figures/plot_samples/{year}/{mode}/{version}_{branch}.pdf',
+    'output/figures/plot_samples/{year}/{mode}/{version}_{branch}_sw.pdf',
+    'output/figures/plot_samples/{year}/{mode}/{version}_{branch}_rw.pdf'
   log:
-    'output/log/samples/{year}/{mode}/{version}_{branch}.log',
+    'output/log/plot_samples/{year}/{mode}/{version}_{branch}.log',
   run:
     shell(f"""(time\
     python analysis/samples/plot.py\
@@ -82,26 +83,27 @@ rule plot_samples:
            --mode {wildcards.mode}\
            --branch {wildcards.branch}\
            --output {",".join(output)}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
+
+
 
 rule plot_samples_yearly_v0r5_vs_v0r0:
   resources:
     mem_mb=1024
   wildcard_constraints:
     mode = "(TOY_|MC_)?(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
-    branch = "(time|cosK|cosL|hphi|pTB|pB|pTHp|pHp|pTHm|pHm|etaB|mHH|logIPchi2B|BDTFchi2|logMINkPNNk|BVXchi2|pTX|KmaxTRchi2|MUmaxTRchi2|logJpsiVXchi2|logMINmuPNNmu)",
-    year = '\d{4}',
-    version = 'v0r5'
+    #branch = "(time|cosK|cosL|hphi|pTB|pB|pTHp|pHp|pTHm|pHm|etaB|mHH|logIPchi2B|BDTFchi2|logMINkPNNk|BVXchi2|pTX|KmaxTRchi2|MUmaxTRchi2|logJpsiVXchi2|logMINmuPNNmu)",
+    year = '\d{4}'
   input:
     tuple = lambda wcs: [tuples(wcs, version='v0r5')],
     control = lambda wcs: [tuples(wcs, version='v0r0')]
   output:
-    'output/samples/figures/{year}/{mode}/{version}VSv0r1/{branch}.pdf',
-    'output/samples/figures/{year}/{mode}/{version}VSv0r1/{branch}_sw.pdf',
-    'output/samples/figures/{year}/{mode}/{version}VSv0r1/{branch}_rw.pdf'
+    'output/figures/oldcomparison/{year}/{mode}/{version}_{branch}.pdf',
+    'output/figures/oldcomparison/{year}/{mode}/{version}_{branch}_sw.pdf',
+    'output/figures/oldcomparison/{year}/{mode}/{version}_{branch}_rw.pdf'
   log:
-    'output/log/samples/{year}/{mode}/{version}VSv0r0/{branch}.log',
+    'output/log/plot_samples_yearly_v0r5_vs_v0r0/{year}/{mode}/{version}_{branch}.log',
   run:
     shell(f"""(time\
     python analysis/samples/plot.py\
@@ -112,5 +114,5 @@ rule plot_samples_yearly_v0r5_vs_v0r0:
            --mode {wildcards.mode}\
            --branch {wildcards.branch}\
            --output {",".join(output)}\
-    ) #&> {log}""")
-    send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
+    ) &> {log}""")
+    send_mail(f"Samples old comparison plot :: {wildcards}", f"{log}", f"{output}".split(' '))

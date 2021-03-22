@@ -1,5 +1,3 @@
-# ---
-
 # naive angular acceptance - no correction (only sWeight and polWeight) --------
 #     Here we have 2 rules to compute angular acceptance without correcting
 #     MC samples. First rule computes angular acceptance for MC, and second one
@@ -34,6 +32,35 @@ rule angular_acceptance_naive:
     ) &> {log}""")
     send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
 
+rule angular_acceptance_naive_analytical:
+  resources:
+    mem_mb = 4096
+  wildcard_constraints:
+    mode = "(TOY|MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+    angacc = "(analytic).*"
+  input:
+    sample = lambda wcs: tuples(wcs),
+  params:
+    params = 'analysis/params/generator/{year}/{mode}.json'
+  output:
+    tijk = 'output/params/angular_acceptance/{year}/{mode}/{version}_tijk{angacc}_{trigger}.json',
+    angacc = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}.json'
+  log:
+    'output/log/angular_acceptance_naive_analytical/{year}/{mode}/{version}_{angacc}_{trigger}.log'
+  run:
+    shell(f"""(time\
+    python analysis/angular_acceptance/analytical_corrected.py\
+             --sample {input.sample}\
+             --input-params {params.params}\
+             --output-tijk {output.tijk}\
+             --output-angacc {output.angacc}\
+             --year {wildcards.year}\
+             --mode {wildcards.mode}\
+             --version {wildcards.version}\
+             --angacc {wildcards.angacc}\
+             --trigger {wildcards.trigger}
+    ) &> {log}""")
+    send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
 
 
 rule angular_acceptance_naive_analytical:
@@ -76,7 +103,7 @@ rule angular_acceptance_blend:
   resources:
     mem_mb = 512
   wildcard_constraints:
-    step = "(naive|corrected).*",
+    step = "(naive|corrected|analytic).*",
     #version = "^((?!v0r1).)*$",
   input:
     weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{trigger}.json',
@@ -99,6 +126,7 @@ rule angular_acceptance_blend:
            --step {wildcards.step}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Blend :: {wildcards}", f"{log}")
+
 
 
 # naive angular acceptance - no correction (only sWeight and polWeight) --------
@@ -124,6 +152,7 @@ rule angular_acceptance_joinWeights:
       rfile['DecayTree'] = uproot3.newtree({'angWeight':np.float64})
       rfile['DecayTree'].extend({'angWeight':b+u})
     rfile.close()
+
 
 
 rule angular_acceptance_veronikaWeights:
@@ -181,7 +210,6 @@ rule angular_acceptance_corrected:
            --trigger {wildcards.trigger}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Corrected :: {wildcards}", f"{log}")
-
 
 
 
@@ -295,12 +323,6 @@ rule angular_acceptance_iterativeRun2a:
            --version                 {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2a :: {wildcards}", f"{log}")
-
-
-
-
-
-
 
 
 
@@ -585,8 +607,10 @@ rule angular_acceptance_iterativeRun2BdSimon:
            --version                 {wildcards.version}\
     ) #&> {log}""")
     send_mail(f"Angular Acceptance Run2 Bd :: {wildcards}", f"{log}")
-### Angular acceptance iterative Diego's idea
-rule angular_acceptance_iterativeRun2MC:
+
+
+
+rule angular_acceptance_iterative_run2_mc:
   resources:
     mem_mb=8192
   threads: 16
@@ -656,7 +680,7 @@ rule angular_acceptance_iterativeRun2MC:
 # Yearly angular acceptance ------------------------------------------------------
 #     This rule runs the iterative procedure for only one year using both
 #     MC and MC_dG0 files.
-rule angular_acceptance_iterativeYearly:
+rule angular_acceptance_iterative_yearly:
   wildcard_constraints:
     year = "\d{4}",
     angacc = "yearly(shit)?"
@@ -747,7 +771,7 @@ rule angular_acceptance_iterativeYearly:
            --year                           {",".join([wildcards.year])}\
            --angacc                         {wildcards.angacc}_{wildcards.timeacc}\
            --version                        {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Yearly :: {wildcards}", f"{log}")
 
 
@@ -755,7 +779,7 @@ rule angular_acceptance_iterativeYearly:
 # Yearly angular acceptance ------------------------------------------------------
 #     This rule runs the iterative procedure for only one year using both
 #     MC and MC_dG0 files.
-rule angular_acceptance_compareCuts:
+rule angular_acceptance_compare_cuts:
   input:
     params = lambda wcs: [
                 f'output/params/angular_acceptance/{wcs.year}/{wcs.mode}/{wcs.version}_{wcs.angacc}_{wcs.timeacc}_{wcs.trigger}.json'] +
@@ -807,7 +831,7 @@ rule angular_weights_time_dependence:
            --kkpweight-std          {input.weights_std}\
            --kkpweight-dg0          {input.weights_dg0}\
            --angacc                 {input.angacc}\
-           --timeacc                 {input.timeacc}\
+           --timeacc                {input.timeacc}\
            --figure                 {output.figure}\
            --mode                   {wildcards.mode}\
            --version                {wildcards.version}\
@@ -821,12 +845,14 @@ rule angular_weights_time_dependence:
 
 rule angular_efficiency_time_dependence:
   resources:
-    mem_mb = 8192
+    mem_mb = 8192,
+  wildcard_constraints:
+    angacc = 'analytic.*'
   input:
     samples = lambda wcs: tuples(wcs),
     #weights = lambda wcs: tuples(wcs,weight=f'kkpWeight'),
-    angacc0 = ['output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}.json'],
-    angacci = lambda wcs: expand('output/params/angular_acceptance/{{year}}/{{mode}}/{{version}}_{{angacc}}{{nknots}}knots{bin}_{{timeacc}}.json', bin=range(1,int(f'{wcs.nknots}')+2)),
+    angacc0 = ['output/params/angular_acceptance/{year}/{mode}/{version}_tijk{angacc}_{timeacc}.json'],
+    angacci = lambda wcs: expand('output/params/angular_acceptance/{{year}}/{{mode}}/{{version}}_tijk{{angacc}}{{nknots}}knots{bin}_{{timeacc}}.json', bin=range(1,int(f'{wcs.nknots}')+2)),
   params:
     'analysis/params/generator/{year}/{mode}.json',
   output:
@@ -850,4 +876,4 @@ rule angular_efficiency_time_dependence:
            --year               {wildcards.year}\
            --nknots             {wildcards.nknots}\
     ) &> {log}""")
-    send_mail(f"Angular Acceptance Time Dependence :: {wildcards}", f"{log}", [f"{output}"])
+    send_mail(f"Angular Acceptance Time Dependence ::{wildcards}", f"{log}", [f"{output}"])

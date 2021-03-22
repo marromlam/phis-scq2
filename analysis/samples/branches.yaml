@@ -79,7 +79,7 @@ MC_Bs2JpsiPhi_Prompt:
 
 MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
-  "genidB" : "B_ID"
+  "genidB" : "511*X_ID_GenLvl/311"
   "kbuWeight" : "kbuWeight"
   "kbuWeight_etaB" : "kbuWeight_etaB"
   "kbuWeight_sigmat" : "kbuWeight_sigmat"

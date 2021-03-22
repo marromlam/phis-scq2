@@ -12,7 +12,7 @@
 
 
 
-#include <ipanema/complex.hpp>
+#include <ipanema/complex.h>
 
 
 
@@ -28,6 +28,9 @@ ftype rateBs(const ftype *data,
              const ftype lPper,
              // Time limits
              const ftype tLL, const ftype tUL,
+             const ftype cosKLL, const ftype cosKUL,
+             const ftype cosLLL, const ftype cosLUL,
+             const ftype hphiLL, const ftype hphiUL,
              // Time resolution
              const ftype sigma_offset, const ftype sigma_slope,
              const ftype sigma_curvature, const ftype mu,
@@ -76,7 +79,13 @@ ftype rateBs(const ftype *data,
     printf("lPper              : %+.8f\n", lPper);
     printf("lPpar              : %+.8f\n", lPpar);
     printf("tLL                : %+.8f\n", tLL);
+    printf("cosKLL             : %+.8f\n", cosKLL);
+    printf("cosLLL             : %+.8f\n", cosLLL);
+    printf("hphiLL             : %+.8f\n", hphiLL);
     printf("tUL                : %+.8f\n", tUL);
+    printf("cosKUL             : %+.8f\n", cosKUL);
+    printf("cosLUL             : %+.8f\n", cosLUL);
+    printf("hphiUL             : %+.8f\n", hphiUL);
     printf("mu                 : %+.8f\n", mu);
     printf("sigma_offset       : %+.8f\n", sigma_offset);
     printf("sigma_slope        : %+.8f\n", sigma_slope);
@@ -122,7 +131,7 @@ ftype rateBs(const ftype *data,
            tLL, tUL);
   }
   #endif
-
+  
   #if DEBUG
   if (DEBUG >= 1 && get_global_id(0) == DEBUG_EVT )
   {
@@ -132,7 +141,10 @@ ftype rateBs(const ftype *data,
            sigma_t,qOS,qSS,etaOS,etaSS);
   }
   #endif
-
+  
+  const bool FULL_RANGE = (cosKLL==-1)&&(cosKUL==1) &&
+                          (cosLLL==-1)&&(cosLUL==1) &&
+                          (hphiLL==-M_PI)&&(hphiUL==M_PI);
 
   // Time resolution -----------------------------------------------------------
   //     In order to remove the effects of conv, set sigma_t=0, so in this way
@@ -247,6 +259,7 @@ ftype rateBs(const ftype *data,
   ftype vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   ftype vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   ftype vdk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  ftype angnorm[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
 
   ftype nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
   ftype pdfB = 0.0; ftype pdfBbar = 0.0;
@@ -264,7 +277,10 @@ ftype rateBs(const ftype *data,
     }
     else
     {
-      fk = TRISTAN[k-1]; // these are 0s or 1s
+      if (FULL_RANGE)  
+        fk = TRISTAN[k-1]; // these are 0s or 1s
+      else
+        fk = FULL_RANGE ? TRISTAN[k-1] : getFintegral(cosKLL,cosKUL,cosLLL,cosLUL,hphiLL,hphiUL,0,0,0,k);
     }
 
     ak = getA(pPlon,pSlon,pPpar,pPper,dPlon,dSlon,dPpar,dPper,lPlon,lSlon,lPpar,lPper,k);
@@ -297,6 +313,11 @@ ftype rateBs(const ftype *data,
     vnk[k-1] = 1.*nk;
     vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
 
+    if ( FULL_RANGE || USE_ANGACC )  
+      angnorm[k-1] = angular_weights[k-1];
+    else
+      angnorm[k-1] = getFintegral(cosKLL,cosKUL,cosLLL,cosLUL,hphiLL,hphiUL,0,0,0,k);
+
     #if DEBUG
       vfk[k-1] = 1.*fk;
     #endif
@@ -305,11 +326,11 @@ ftype rateBs(const ftype *data,
   #if DEBUG
   if ( DEBUG > 3  && get_global_id(0) == DEBUG_EVT )
   {
-    printf("\nANGULAR PART       :  n            a            b            c            d            f            ang_acc\n");
+    printf("\nANGULAR PART       :  n            a            b            c            d            f            angnorm\n");
     for(int k = 0; k < 10; k++)
     {
       printf("               (%d) : %+.8f  %+.8f  %+.8f  %+.8f  %+.8f  %+.8f  %+.8f\n",
-             k,vnk[k], vak[k], vbk[k], vck[k], vdk[k], vfk[k], angular_weights[k]);
+             k,vnk[k], vak[k], vbk[k], vck[k], vdk[k], vfk[k], angnorm[k]);
     }
   }
   #endif
@@ -321,20 +342,21 @@ ftype rateBs(const ftype *data,
   {
     // Here we can use the simplest 4xPi integral of the pdf since there are no
     // resolution effects
-    integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG,
+    integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angnorm, G, DG,
                    DM, tLL, tUL);
   }
   else
   {
     // This integral works for all decay times, remember delta_t != 0.
     #if FAST_INTEGRAL
-      integralSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG,
+      integralSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm, G, DG,
                      DM, delta_t, tLL, tUL, t_offset, coeffs);
     #else
-      int simon_j = sigma_t/(SIGMA_T/80);
-      integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights,
-                         G, DG, DM, //delta_t, // what should be used
-                         parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
+      const int simon_j = sigma_t/(SIGMA_T/80);
+      integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm,
+                         G, DG, DM, 
+                         /* what should beused */ delta_t,
+                         /* HD-fitter used */ //parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
                          tLL, tUL, t_offset,
                          coeffs);
      #endif
