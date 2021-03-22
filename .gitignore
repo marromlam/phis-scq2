@@ -92,4 +92,5 @@ slides/main_*.tex
 slides/AandS*
 slides/*/*.aux
 slides/*latexmk
+slides/*vrb
 slides/*fls
