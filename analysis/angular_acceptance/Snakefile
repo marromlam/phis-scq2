@@ -32,35 +32,35 @@ rule angular_acceptance_naive:
     ) &> {log}""")
     send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
 
-rule angular_acceptance_naive_analytical:
-  resources:
-    mem_mb = 4096
-  wildcard_constraints:
-    mode = "(TOY|MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
-    angacc = "(analytic).*"
-  input:
-    sample = lambda wcs: tuples(wcs),
-  params:
-    params = 'analysis/params/generator/{year}/{mode}.json'
-  output:
-    tijk = 'output/params/angular_acceptance/{year}/{mode}/{version}_tijk{angacc}_{trigger}.json',
-    angacc = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}.json'
-  log:
-    'output/log/angular_acceptance_naive_analytical/{year}/{mode}/{version}_{angacc}_{trigger}.log'
-  run:
-    shell(f"""(time\
-    python analysis/angular_acceptance/analytical_corrected.py\
-             --sample {input.sample}\
-             --input-params {params.params}\
-             --output-tijk {output.tijk}\
-             --output-angacc {output.angacc}\
-             --year {wildcards.year}\
-             --mode {wildcards.mode}\
-             --version {wildcards.version}\
-             --angacc {wildcards.angacc}\
-             --trigger {wildcards.trigger}
-    ) &> {log}""")
-    send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
+#rule angular_acceptance_naive_analytical:
+#  resources:
+#    mem_mb = 4096
+#  wildcard_constraints:
+#    mode = "(TOY|MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+#    angacc = "(analytic).*"
+#  input:
+#    sample = lambda wcs: tuples(wcs),
+#  params:
+#    params = 'analysis/params/generator/{year}/{mode}.json'
+#  output:
+#    tijk = 'output/params/angular_acceptance/{year}/{mode}/{version}_tijk{angacc}_{trigger}.json',
+#    angacc = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}.json'
+#  log:
+#    'output/log/angular_acceptance_naive_analytical/{year}/{mode}/{version}_{angacc}_{trigger}.log'
+#  run:
+#    shell(f"""(time\
+#    python analysis/angular_acceptance/analytical_corrected.py\
+#             --sample {input.sample}\
+#             --input-params {params.params}\
+#             --output-tijk {output.tijk}\
+#             --output-angacc {output.angacc}\
+#             --year {wildcards.year}\
+#             --mode {wildcards.mode}\
+#             --version {wildcards.version}\
+#             --angacc {wildcards.angacc}\
+#             --trigger {wildcards.trigger}
+#    ) &> {log}""")
+#    send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
 
 
 rule angular_acceptance_naive_analytical:
