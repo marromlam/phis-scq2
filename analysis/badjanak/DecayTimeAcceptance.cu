@@ -78,7 +78,7 @@ ftype getCoeff(GLOBAL_MEM const ftype *mat, int const r, int const c)
 
 
 WITHIN_KERNEL
-ftype calcTimeAcceptance(const ftype t, GLOBAL_MEM const ftype *coeffs, const ftype tLL, const ftype tUL)
+ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs, const ftype tLL, const ftype tUL)
 {
   int bin   = getTimeBin(t);
   ftype c0 = getCoeff(coeffs,bin,0);
@@ -691,7 +691,7 @@ ftype getOneSplineTimeAcc(const ftype t,
   ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
   ftype fpdf = 1.0; ftype ipdf = 0;
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
-  fpdf *= calcTimeAcceptance(t, coeffs , tLL, tUL);
+  fpdf *= time_efficiency(t, coeffs , tLL, tUL);
 
   // Compute per event normatization
   ftype ti  = 0.0; ftype tf  =  0.0;
@@ -810,8 +810,8 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
   ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
   ftype fpdf = 1.0; ftype ipdf = 0.0;
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2*t) ) * (erf_value);
-  fpdf *= calcTimeAcceptance(t, coeffs1, tLL, tUL);
-  fpdf *= calcTimeAcceptance(t, coeffs2, tLL, tUL);
+  fpdf *= time_efficiency(t, coeffs1, tLL, tUL);
+  fpdf *= time_efficiency(t, coeffs2, tLL, tUL);
 
   // Compute per event normatization
   ftype ti  = 0.0;  ftype tf  =  0.0;
