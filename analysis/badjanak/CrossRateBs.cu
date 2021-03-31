@@ -242,12 +242,12 @@ ftype rateBs(const ftype *data,
 
   // Decay-time acceptance -----------------------------------------------------
   //     To get rid of decay-time acceptance set USE_TIMEACC to False. If True
-  //     then calcTimeAcceptance locates the time bin of the event and returns
+  //     then time_efficiency locates the time bin of the event and returns
   //     the value of the cubic spline.
   ftype dta = 1.0;
   if (USE_TIMEACC)
   {
-    dta = calcTimeAcceptance(time, coeffs, tLL, tUL);
+    dta = time_efficiency(time, coeffs, tLL, tUL);
   }
 
   // Compute per event pdf -----------------------------------------------------
