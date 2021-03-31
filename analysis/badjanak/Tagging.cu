@@ -13,8 +13,8 @@
 
 
 WITHIN_KERNEL
-ftype parabola(ftype sigma, ftype sigma_offset, ftype sigma_slope,
-                ftype sigma_curvature)
+ftype parabola(const ftype sigma, const ftype sigma_offset, 
+               const ftype sigma_slope, const ftype sigma_curvature)
 {
   return sigma_curvature*sigma*sigma + sigma_slope*sigma + sigma_offset;
 }
@@ -22,29 +22,31 @@ ftype parabola(ftype sigma, ftype sigma_offset, ftype sigma_slope,
 
 
 WITHIN_KERNEL
-ftype get_omega(ftype eta, ftype tag,
-                 ftype p0,  ftype p1, ftype p2,
-                 ftype dp0, ftype dp1, ftype dp2,
-                 ftype eta_bar)
+ftype get_omega(const ftype eta, const ftype tag,
+                const ftype p0,  const ftype p1, const ftype p2,
+                const ftype dp0, const ftype dp1, const ftype dp2,
+                const ftype eta_bar)
 {
-    ftype result = 0;
-    result += (p0 + tag*0.5*dp0);
-    result += (p1 + tag*0.5*dp1)*(eta - eta_bar);
-    result += (p2 + tag*0.5*dp2)*(eta - eta_bar)*(eta - eta_bar);
+  ftype result = 0;
+  result += (p0 + tag*0.5*dp0);
+  result += (p1 + tag*0.5*dp1)*(eta - eta_bar);
+  result += (p2 + tag*0.5*dp2)*(eta - eta_bar)*(eta - eta_bar);
 
-    if(result < 0.0)
-    {
-      return 0;
-    }
-    return result;
+  if(result < 0.0)
+  {
+    return 0;
+  }
+  return result;
 }
 
 
-
+/**
+ * Generates tagOS 
+ */
 WITHIN_KERNEL
 ftype tagOSgen(const ftype x)
 {
-  return 3.8 - 134.6*x + 1341.*x*x;
+  return 3.8 - 134.6*x + 1341.0*x*x;
 }
 
 
@@ -52,11 +54,9 @@ ftype tagOSgen(const ftype x)
 WITHIN_KERNEL
 ftype tagSSgen(const ftype x)
 {
-  if (x < 0.46) {
-    return exp(16*x -.77);
-  }
-  else 
+  if (x < 0.46)
   {
-    return 10*(16326 - 68488*x + 72116*x*x);
+    return exp(16.0*x - 0.77);
   }
+  return 10.0*(16326.0 - 68488.0*x + 72116.0*x*x);
 }
