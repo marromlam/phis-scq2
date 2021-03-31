@@ -56,13 +56,16 @@ void dG5toy(GLOBAL_MEM ftype * out,
             // Time acceptance
             GLOBAL_MEM const ftype *coeffs,
             // Angular acceptance
-            GLOBAL_MEM const ftype *angular_weights,
+            GLOBAL_MEM const ftype *tijk,
+            const int order_cosK, const int order_cosL, const int order_hphi,
             const int USE_FK, const int BINS, const int USE_ANGACC, const int USE_TIMEACC,
             const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES,
             const ftype PROB_MAX, const int SEED, const int NEVT)
 {
   int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
+
+  ftype threshold;
 
   // Prepare curand
   #ifdef CUDA
@@ -91,8 +94,8 @@ void dG5toy(GLOBAL_MEM ftype * out,
   // Flavor tagging ------------------------------------------------------------
   ftype qOS = 0;
   ftype qSS = 0;
-  ftype etaOS = 0;
-  ftype etaSS = 0;
+  ftype etaOS = 0.5;
+  ftype etaSS = 0.5;
 
   if (SET_TAGGING == 1) // DATA
   {
@@ -101,26 +104,32 @@ void dG5toy(GLOBAL_MEM ftype * out,
     ftype OSmax = tagOSgen(0.5);
     ftype SSmax = tagSSgen(0.5);
     ftype tag = 0;
-    ftype threshold;
+    
 
     // generate qOS
-    if (tagOS < 0.16) {
+    if (tagOS < 0.175)
+    {
       qOS = 1.;
     }
-    else if (tagOS<0.32){
+    else if (tagOS<0.35)
+    {
       qOS = -1.;
     }
-    else {
+    else
+    {
       qOS = 0.;
     }
     // generate qSS
-    if (tagSS < 0.31) {
+    if (tagSS < 0.33)
+    {
       qSS = 1.;
     }
-    else if (tagSS<0.62){
+    else if (tagSS<0.66)
+    {
       qSS = -1.;
     }
-    else {
+    else
+    {
       qSS = 0.;
     }
 
@@ -141,7 +150,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
       while(1)
       {
         tag = 0.49*rng_uniform(&state, 100);
-        threshold = SSmax*rng_uniform(&state, 100);
+        threshold = OSmax*rng_uniform(&state, 100);
         if (tagSSgen(tag) > threshold) break;
       }
       etaSS = tag;
@@ -150,7 +159,8 @@ void dG5toy(GLOBAL_MEM ftype * out,
   else if (SET_TAGGING == 0) // PERFECT, MC
   {
     ftype tag = rng_uniform(&state, 100);
-    if (tag < 0.5){
+    if (tag < 0.5)
+    {
       qOS = +1.0;
       qSS = +1.0;
     }
@@ -169,35 +179,51 @@ void dG5toy(GLOBAL_MEM ftype * out,
     etaOS = 0.5;
     etaSS = 0.5;
   }
-
+  //qOS = -1; qSS = -1;  etaOS=+0.24959514;  etaSS=+0.46155431;
+  qOS *= 531; // put same number used in EvtGen 
+  qSS *= 531; // put same number used in EvtGen
 
   // Loop and generate ---------------------------------------------------------
+  ftype cosK, cosL, hphi, time, mass, pdf, timeacc, angacc;
+  //ftype data[9];
+  unsigned int bin = 0; 
+  
   while(1)
   {
+    pdf = 0;
     // Random numbers
-    ftype cosK = - 1.0  +    2.0*rng_uniform(&state, 100);
-    ftype cosL = - 1.0  +    2.0*rng_uniform(&state, 100);
-    ftype hphi = - M_PI + 2*M_PI*rng_uniform(&state, 100);
-    ftype time = tLL - log(rng_uniform(&state, 100))/(G-0.5*DG);
+    cosK = - 1.0  +    2.0*rng_uniform(&state, 100);
+    cosL = - 1.0  +    2.0*rng_uniform(&state, 100);
+    hphi = - M_PI + 2*M_PI*rng_uniform(&state, 100);
+    time =   tLL  -    log(rng_uniform(&state, 100)) / (G-0.5*DG);
 
+  //cosK=+0.45774651; cosL=-0.20873141; hphi=-0.00354153; time=+3.2032610199999998;
     // PDF threshold
-    ftype threshold = PROB_MAX*rng_uniform(&state, 100);
+    threshold = PROB_MAX*rng_uniform(&state, 100);
 
     // Prepare data and pdf variables to DiffRate CUDA function
-    ftype mass = out[evt*10+4];
+    mass = out[evt*10+4];
     ftype data[9] = {cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS};
     //printf("cosK=%lf cosL=%lf hphi=%lf time=%lf sigmat=%lf qOS=%lf qSS=%lf etaOS=%lf etaSS=%lf", cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS);
-    ftype pdf = 0.0;
+    pdf = 0.0;
 
     // Get pdf value from angular distribution
     // if time is larger than asked, put pdf to zero
-    if ((time < tLL) || (time > tUL))
+    if ((time >= tLL) & (time <= tUL))
     {
-      pdf = 0.0;
-    }
-    else
-    {
-      unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
+      timeacc = 1.0;
+      angacc = 1.0;
+      if (USE_TIMEACC)
+      {
+        timeacc = time_efficiency(time, coeffs, tLL, tUL);
+      }
+      if (USE_ANGACC)
+      {
+        angacc = angular_wefficiency(data[0], data[1], data[2], tijk);
+      }
+      if (evt  == 0){
+      printf("angacc = %f", angacc);}
+      bin = BINS>1 ? getMassBin(mass) : 0;
       pdf = rateBs(data,
                     G, DG, DM, CSP[bin],
                     ASlon[bin], APlon[bin], APpar[bin], APper[bin],
@@ -212,30 +238,17 @@ void dG5toy(GLOBAL_MEM ftype * out,
                     dp0_os, dp1_os, dp2_os,
                     dp0_ss, dp1_ss, dp2_ss,
                     coeffs,
-                    angular_weights,
+                    tijk,
                     USE_FK, USE_ANGACC, USE_TIMEACC,
                     USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
-
-      ftype timeacc = 1.0;
-      ftype angacc = 1.0;
-      if (USE_TIMEACC)
-      {
-        timeacc = calcTimeAcceptance(time, coeffs, tLL, tUL);
-      }
-      if (USE_ANGACC)
-      {
-        // when the full procedure is avaliable, change there threee lines
-        //ftype cijk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-        //angular_weights2moments(angular_weights, cijk);
-        angacc = 1;//angular_efficiency(data[0], data[1], data[2], 4, 4, 4, cijk);
-      }
-      pdf *= angacc*timeacc*exp((G-0.5*DG)*(time-tLL));
-      pdf *= (G-0.5*DG)*(1- exp((G-0.5*DG)*(-tUL+tLL)));
+      pdf *= angacc * timeacc * exp((G-0.5*DG)*(time-tLL));
+      pdf *= (G-0.5*DG) * (1 - exp((G-0.5*DG)*(-tUL+tLL)));
     }
     // final checks ------------------------------------------------------------
 
     // check if probability is greater than the PROB_MAX
-    if ( (pdf > PROB_MAX) && (get_global_id(0)<100) ) {
+    if ( (pdf > PROB_MAX) && (get_global_id(0)<100) ) 
+    {
       printf("WARNING: PDF [=%f] > PROB_MAX [=%f]\n", pdf, PROB_MAX);
     }
 

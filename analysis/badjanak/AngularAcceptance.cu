@@ -1,28 +1,58 @@
 #include <ipanema/special.h>
 
 
-/*
+
 WITHIN_KERNEL
-ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype phi,
-                         ftype *moments)
+void angWeightsToMoments(ftype *tijk, GLOBAL_MEM const ftype *nw)
+{
+    //c0000
+    tijk[0]  =   1./3.                  * (nw[0] + nw[1] + nw[2]);
+    //c0020
+    tijk[1]  =   1./3.*sqrt(5.)         * (nw[0] + nw[1] + nw[2] - 3. * nw[6]);
+    //c0022
+    tijk[2]  =        -sqrt(5./3.)      * (nw[1] - nw[2]);
+    //c0021
+    tijk[3]  = - 8./3.*sqrt(5./2.)/M_PI *  nw[7];
+    //c002-1
+    tijk[4]  = - 8./3.*sqrt(5./2.)/M_PI *  nw[8];//-normweights should be +nw?
+    //c002-2
+    tijk[5]  =         sqrt(5./3.)      *  nw[3];//-normweights should be +nw?
+    //c1000
+    tijk[6]  =   1./2.*sqrt(3.)         *  nw[9];
+    //c1021
+    tijk[7]  = -32./3.*sqrt(5./6.)/M_PI *  nw[4];
+    //c102-1
+    tijk[8]  = +32./3.*sqrt(5./6.)/M_PI *  nw[5];//-normweights should be +nw?
+    //c2000
+    tijk[9]  =  5./2.                   * (nw[0] - nw[6]);
+}
+
+
+
+WITHIN_KERNEL
+ftype angular_wefficiency(const ftype cosK, const ftype cosL, const ftype phi,
+                          const ftype *nw)
 {
   ftype eff = 0.;
+  ftype tijk[10];
+ 
+  angWeightsToMoments(tijk, nw);
 
-  eff += moments[0] * lpmv(0, 0, cosK) * sph_harm(0, 0, cosL, phi);
-  eff += moments[1] * lpmv(0, 0, cosK) * sph_harm(2, 0, cosL, phi);
-  eff += moments[2] * lpmv(0, 0, cosK) * sph_harm(2, 2, cosL, phi);
-  eff += moments[3] * lpmv(0, 0, cosK) * sph_harm(2, 1, cosL, phi);
-  eff += moments[4] * lpmv(0, 0, cosK) * sph_harm(2,-1, cosL, phi);
-  eff += moments[5] * lpmv(0, 0, cosK) * sph_harm(2,-2, cosL, phi);
-  eff += moments[6] * lpmv(1, 0, cosK) * sph_harm(0, 0, cosL, phi);
-  eff += moments[7] * lpmv(1, 0, cosK) * sph_harm(2, 1, cosL, phi);
-  eff += moments[8] * lpmv(1, 0, cosK) * sph_harm(2,-1, cosL, phi);
-  eff += moments[9] * lpmv(2, 0, cosK) * sph_harm(0, 0, cosL, phi);
+  eff += tijk[0] * lpmv(0, 0, cosK) * sph_harm(0, 0, cosL, phi);
+  eff += tijk[1] * lpmv(0, 0, cosK) * sph_harm(0, 2, cosL, phi);
+  eff += tijk[2] * lpmv(0, 0, cosK) * sph_harm(2, 2, cosL, phi);
+  eff += tijk[3] * lpmv(0, 0, cosK) * sph_harm(1, 2, cosL, phi);
+  eff += tijk[4] * lpmv(0, 0, cosK) * sph_harm(-1,2, cosL, phi);
+  eff += tijk[5] * lpmv(0, 0, cosK) * sph_harm(-2,2, cosL, phi);
+  eff += tijk[6] * lpmv(0, 1, cosK) * sph_harm(0, 0, cosL, phi);
+  eff += tijk[7] * lpmv(0, 1, cosK) * sph_harm(1, 2, cosL, phi);
+  eff += tijk[8] * lpmv(0, 1, cosK) * sph_harm(-1,2, cosL, phi);
+  eff += tijk[9] * lpmv(0, 2, cosK) * sph_harm(0, 0, cosL, phi);
 
   eff *= 2.*sqrt(M_PI);
   return eff;
 }
-*/
+
 
 
 
