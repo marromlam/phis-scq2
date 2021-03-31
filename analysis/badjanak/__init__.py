@@ -219,6 +219,8 @@ def delta_gamma5(input, output,
     global_size=g_size, local_size=l_size)
     #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
 
+
+
 def delta_gamma5Bd(input, output,
                   # Time-dependent angular distribution
                   G, DG, DM,
@@ -246,10 +248,6 @@ def delta_gamma5Bd(input, output,
                   use_fk=1, use_angacc = 0, use_timeacc = 0,
                   use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
                   BLOCK_SIZE=256, **crap):
-  """
-  Look at kernel definition to see help
-  The aim of this function is to be the fastest wrapper
-  """
   g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
   __KERNELS__.rateBd(
     # Input and output arrays
@@ -270,6 +268,9 @@ def delta_gamma5Bd(input, output,
     np.int32(len(output)),
     global_size=g_size, local_size=l_size)
     #np.int32(use_angacc)
+
+
+
 def parser_rateBs(
       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
       # Time-dependent angular distribution
@@ -907,6 +908,178 @@ def get_knot(i, knots, n):
   elif (i>=n):
     i = n
   return knots[i]
+
+
+def get_4cs(listcoeffs, flatend=False):
+  n = len(config['knots'])
+  flatend = False
+  result = []                                           # list of bin coeffs C
+  def u(j): return get_knot(j,config['knots'],len(config['knots'])-1)
+  for i in range(0,len(config['knots'])-1):
+    a, b, c, d = listcoeffs[i:i+4]                    # bspline coeffs b_i
+    C = []                                   # each bin 4 coeffs c_{bin,i}
+    C.append(-((b*u(-2+i)*pow(u(1+i),2))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))))+
+        (a*pow(u(1+i),3))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
+        (c*pow(u(-1+i),2)*u(1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (b*u(-1+i)*u(1+i)*u(2+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (c*u(-1+i)*u(i)*u(2+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (b*u(i)*pow(u(2+i),2))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (d*pow(u(i),3))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
+        (c*pow(u(i),2)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
+    C.append((2*b*u(-2+i)*u(1+i))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
+        (3*a*pow(u(1+i),2))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
+        (b*pow(u(1+i),2))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
+        (c*pow(u(-1+i),2))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (b*u(-1+i)*u(1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (2*c*u(-1+i)*u(1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (b*u(-1+i)*u(2+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (b*u(1+i)*u(2+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (c*u(-1+i)*u(i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (c*u(-1+i)*u(2+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (2*b*u(i)*u(2+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (c*u(i)*u(2+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (b*pow(u(2+i),2))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (c*pow(u(i),2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
+        (3*d*pow(u(i),2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))-
+        (2*c*u(i)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
+    C.append(-((b*u(-2+i))/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*
+        (-u(i)+u(1+i))))+(3*a*u(1+i))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
+        (2*b*u(1+i))/
+        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
+        (b*u(-1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        (2*c*u(-1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (b*u(1+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*
+        (-u(-1+i)+u(2+i)))+(c*u(1+i))/
+        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        (b*u(2+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*
+        (-u(-1+i)+u(2+i)))+(c*u(-1+i))/
+        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (b*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (c*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        (2*b*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (c*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
+        (2*c*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))-
+        (3*d*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
+        (c*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
+    C.append(-(a/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))))+
+        b/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
+        b/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
+        c/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
+        b/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        c/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
+        c/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
+        d/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
+    result.append(C)
+  # linear extrapolation in the last bin till tUL
+  m = C[1] + 2*C[2]*u(n) + 3*C[3]*u(n)**2
+  if flatend:
+    # *flat* acceptance since last bin 
+    m = 0 
+  C = [C[0] + C[1]*u(n) + C[2]*u(n)**2 + C[3]*u(n)**3 - m*u(n),m,0,0]
+  result.append(C)
+  return np.array(result)
+
+
+
+def dG5toys(output,
+            G, DG, DM,
+            CSP,
+            ASlon, APlon, APpar, APper,
+            pSlon, pPlon, pPpar, pPper,
+            dSlon, dPlon, dPpar, dPper,
+            lSlon, lPlon, lPpar, lPper,
+            # Time limits
+            tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL, hphiLL, hphiUL,
+            # Time resolution
+            sigma_offset, sigma_slope, sigma_curvature, mu,
+            # Flavor tagging
+            eta_os, eta_ss,
+            p0_os,  p1_os, p2_os,
+            p0_ss,  p1_ss, p2_ss,
+            dp0_os, dp1_os, dp2_os,
+            dp0_ss, dp1_ss, dp2_ss,
+            # Time acceptance
+            timeacc,
+            # Angular acceptance
+            angacc, order_cosK=2, order_cosL=4, order_hphi=0,
+            # Flags
+            use_fk=1, use_angacc = 0, use_timeacc = 0,
+            use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
+            prob_max = 2.7,
+            BLOCK_SIZE=256, seed=False, **crap):
+  """
+  Generate toy Bs MC sample from given parameters.
+  """
+  if not seed:
+    seed = int(1e10*np.random.rand())
+  g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
+  __KERNELS__.dG5toy(
+    # Input and output arrays
+    output,
+    # Differential cross-rate parameters
+    np.float64(G), np.float64(DG), np.float64(DM),
+    CSP.astype(np.float64),
+    ASlon.astype(np.float64),
+    APlon.astype(np.float64),
+    APpar.astype(np.float64),
+    APper.astype(np.float64),
+    np.float64(pSlon),
+    np.float64(pPlon), np.float64(pPpar), np.float64(pPper),
+    dSlon.astype(np.float64),
+    np.float64(dPlon), np.float64(dPpar), np.float64(dPper),
+    np.float64(lSlon),
+    np.float64(lPlon), np.float64(lPpar), np.float64(lPper),
+    # Time range
+    np.float64(tLL), np.float64(tUL),
+    np.float64(cosKLL), np.float64(cosKUL),
+    np.float64(cosLLL), np.float64(cosLUL),
+    np.float64(hphiLL), np.float64(hphiUL),
+    # Time resolution
+    np.float64(sigma_offset),
+    np.float64(sigma_slope),
+    np.float64(sigma_curvature),
+    np.float64(mu),
+    # Flavor tagging
+    np.float64(eta_os), np.float64(eta_ss),
+    np.float64(p0_os), np.float64(p1_os), np.float64(p2_os),
+    np.float64(p0_ss), np.float64(p1_ss), np.float64(p2_ss),
+    np.float64(dp0_os), np.float64(dp1_os), np.float64(dp2_os),
+    np.float64(dp0_ss), np.float64(dp1_ss), np.float64(dp2_ss),
+    # Decay-time acceptance
+    timeacc.astype(np.float64),
+    # Angular acceptance
+    angacc.astype(np.float64),
+    np.int32(order_cosK), np.int32(order_cosL), np.int32(order_hphi),
+    # Flags
+    np.int32(use_fk), np.int32(len(CSP)),
+    np.int32(use_angacc), np.int32(use_timeacc),
+    np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
+    np.float64(prob_max), np.int32(seed),  np.int32(len(output)),
+    global_size=g_size, local_size=l_size)
+
+
 
 
 
