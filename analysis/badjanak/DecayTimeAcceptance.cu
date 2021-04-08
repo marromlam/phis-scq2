@@ -88,7 +88,7 @@ ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs, const ftype
   #ifdef DEBUG
   if (DEBUG >= 3 && ( get_global_id(0) == DEBUG_EVT))
   {
-    printf("\nTIME ACC           : t=%.16f\tbin=%d\tc=[%+f\t%+f\t%+f\t%+f]\tdta=%+.16f\n",
+    printf("\nTIME ACC           : t=%.8f\tbin=%d\tc=[%+f\t%+f\t%+f\t%+f]\tdta=%+.8f\n",
            t,bin,c0,c1,c2,c3, (c0 + t*(c1 + t*(c2 + t*c3))) );
   }
   #endif
