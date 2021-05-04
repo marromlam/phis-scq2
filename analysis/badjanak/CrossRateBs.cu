@@ -90,19 +90,26 @@ ftype rateBs(const ftype *data,
     printf("sigma_offset       : %+.8f\n", sigma_offset);
     printf("sigma_slope        : %+.8f\n", sigma_slope);
     printf("sigma_curvature    : %+.8f\n", sigma_curvature);
+    printf("etaOS, etaSS       : %+.8f, %+.8f\n", eta_bar_os, eta_bar_ss);
+    printf("p0OS, p0SS         : %+.8f, %+.8f\n", p0_os, p0_ss);
+    printf("p1OS, p1SS         : %+.8f, %+.8f\n", p1_os, p1_ss);
+    printf("p2OS, p2SS         : %+.8f, %+.8f\n", p2_os, p2_ss);
+    printf("dp0OS, dp0SS       : %+.8f, %+.8f\n", dp0_os, dp0_ss);
+    printf("dp1OS, dp1SS       : %+.8f, %+.8f\n", dp1_os, dp1_ss);
+    printf("dp2OS, dp2SS       : %+.8f, %+.8f\n", dp2_os, dp2_ss);
     printf("COEFFS             : %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
     printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
     printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
-    printf("                     %+.8f\t%+.16f\t%+.16f\t%+.16f\n",
+    printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
-    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
+    printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
-    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
+    printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
-    printf("                     %+.16f\t%+.16f\t%+.16f\t%+.16f\n",
+    printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
             coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
   }
   #endif
@@ -111,18 +118,16 @@ ftype rateBs(const ftype *data,
   // Variables -----------------------------------------------------------------
   //     Make sure that the input it's in this order.
   //     lalala
-  ftype cosK       = data[0];                       // Time-angular distribution
-  ftype cosL       = data[1];
-  ftype hphi       = data[2];
-  ftype time       = data[3];
-
-  //ftype sigma_t    = 0.04554;                               // Time resolution
-  ftype sigma_t    = data[4];                                 // Time resolution
-
-  ftype qOS        = data[5];                                         // Tagging
-  ftype qSS        = data[6];
-  ftype etaOS      = data[7];
-  ftype etaSS 	   = data[8];
+  const ftype cosK       = data[0];                // Time-angular distribution
+  const ftype cosL       = data[1];
+  const ftype hphi       = data[2];
+  const ftype time       = data[3];
+  //ftype sigma_t        = 0.04554;                          // Time resolution
+  const ftype sigma_t    = data[4];                          // Time resolution
+  const ftype qOS        = data[5];                                  // Tagging
+  const ftype qSS        = data[6];
+  const ftype etaOS      = data[7];
+  const ftype etaSS 	   = data[8];
 
   #if DEBUG
   if ( DEBUG > 99 && ( (time>=tUL) || (time<=tLL) ) )
@@ -149,8 +154,9 @@ ftype rateBs(const ftype *data,
   // Time resolution -----------------------------------------------------------
   //     In order to remove the effects of conv, set sigma_t=0, so in this way
   //     you are running the first branch of getExponentialConvolution.
-  ctype exp_p, exp_m, exp_i;
-  ftype t_offset = 0.0; ftype delta_t = sigma_t;
+  ftype delta_t = sigma_t;
+  // WARNING: These should be arguments for the cross rate
+  ftype t_offset = 0.0; 
   ftype sigma_t_mu_a = 0, sigma_t_mu_b = 0, sigma_t_mu_c = 0;
 
   if (USE_TIMEOFFSET)
@@ -167,12 +173,13 @@ ftype rateBs(const ftype *data,
   if (DEBUG > 3 && get_global_id(0) == DEBUG_EVT )
   {
     printf("\nTIME RESOLUTION    : delta_t=%.8f\n", delta_t);
+    printf("                   : time-t_offset=%.8f\n", delta_t);
   }
   #endif
 
-  exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
-  exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
-  exp_i = expconv(time-t_offset,          G, DM, delta_t);
+  const ctype exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
+  const ctype exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
+  const ctype exp_i = expconv(time-t_offset, G         , DM, delta_t);
 
   ftype ta = 0.5*(exp_m.x+exp_p.x);
   ftype tb = 0.5*(exp_m.x-exp_p.x);
@@ -180,6 +187,7 @@ ftype rateBs(const ftype *data,
   ftype td = exp_i.y;
 
   #if FAST_INTEGRAL
+    // Veronika has these factors wrt HD-fitter
     ta *= sqrt(2*M_PI); tb *= sqrt(2*M_PI);
     tc *= sqrt(2*M_PI); td *= sqrt(2*M_PI);
   #endif
@@ -189,7 +197,7 @@ ftype rateBs(const ftype *data,
   {
     printf("\nTIME TERMS         : ta=%.8f  tb=%.8f  tc=%.8f  td=%.8f\n",
            ta,tb,tc,td);
-    printf("\nTIME TERMS         : exp_m=%.8f  exp_p=%.8f  exp_i=%.8f  exp_i=%.8f\n",
+    printf("                   : exp_m=%.8f  exp_p=%.8f  exp_i=%.8f  exp_i=%.8f\n",
            sqrt(2*M_PI)*exp_m.x,sqrt(2*M_PI)*exp_p.x,sqrt(2*M_PI)*exp_i.x,exp_i.y);
   }
   #endif
@@ -201,8 +209,8 @@ ftype rateBs(const ftype *data,
 
   if (SET_TAGGING == 1) // DATA
   {
-    if (qOS != 0) { tagOS = qOS/fabs(qOS);}
-    if (qSS != 0) { tagSS = qSS/fabs(qSS);}
+    if (qOS != 0) {tagOS = qOS/fabs(qOS);}
+    if (qSS != 0) {tagSS = qSS/fabs(qSS);}
     omegaOSB    = get_omega(etaOS, +1, p0_os, p1_os, p2_os, dp0_os, dp1_os, dp2_os, eta_bar_os);
     omegaOSBbar = get_omega(etaOS, -1, p0_os, p1_os, p2_os, dp0_os, dp1_os, dp2_os, eta_bar_os);
     omegaSSB    = get_omega(etaSS, +1, p0_ss, p1_ss, p2_ss, dp0_ss, dp1_ss, dp2_ss, eta_bar_ss);
@@ -352,7 +360,7 @@ ftype rateBs(const ftype *data,
       integralSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm, G, DG,
                      DM, delta_t, tLL, tUL, t_offset, coeffs);
     #else
-      const int simon_j = sigma_t/(SIGMA_T/80);
+      // const int simon_j = sigma_t/(SIGMA_T/80);
       integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm,
                          G, DG, DM, 
                          /* what should beused */ delta_t,
@@ -361,20 +369,22 @@ ftype rateBs(const ftype *data,
                          coeffs);
      #endif
   }
-  ftype intB = intBBar[0]; ftype intBbar = intBBar[1];
+  const ftype intB = intBBar[0];
+  const ftype intBbar = intBBar[1];
 
 
-  // Cooking the output --------------------------------------------------------
+  // Cooking the output -------------------------------------------------------
   ftype num = 1.0; ftype den = 1.0;
-  num = dta*(
-        (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
-        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar
-        );
-  den = 1.0*(
-        (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * intB +
-        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar
-        );
-  num = num/4; den = den/4; // this is only to agree with Peilian
+  num = (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
+        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar;
+  den = (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * intB +
+        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar;
+
+  #if FAST_INTEGRAL 
+    num = dta*num;
+  #else
+    num = dta*num/4; den = den/4; // this is only to agree with Peilian
+  #endif
 
   #if DEBUG
   if ( DEBUG >= 1  && get_global_id(0) == DEBUG_EVT)
