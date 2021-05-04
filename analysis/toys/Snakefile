@@ -111,8 +111,9 @@ rule toys_compute_pulls:
     shell(f"""(time\
     python analysis/toys/mans.py\
            --data-parameters      {",".join(input.data_params)}\
-           --toy-parameters       {",".join(input.toy_params)}\
+           --toy-parameters       output/params/physics_params/{wildcards.year}/TOY_Bs2JpsiPhi/{wildcards.dateflag}ntoy_{wildcards.fitconf}.json\
            --figures              {output.figures}\
+           --ntoys                {CONFIG['ntoys']}
     ) #&> {log}""")
     shell(f"""touch {output.tables}""")
     #send_mail(f"Physics Parameters TOY Run2a", f"{log}")
