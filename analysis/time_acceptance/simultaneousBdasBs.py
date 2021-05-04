@@ -73,7 +73,7 @@ if __name__ == '__main__':
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
-  
+
   splitter = '(evtN%2)==0' # this is Bd as Bs
   if LIFECUT == 'mKstar':
     splitter = cuts_and(splitter, f"mHH>890")
@@ -95,7 +95,7 @@ if __name__ == '__main__':
   samples = args['samples'].split(',')
   oparams = args['params'].split(',')
   otables = args['tables'].split(',')
-  
+
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(NKNOTS)]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
@@ -109,10 +109,10 @@ if __name__ == '__main__':
   cats = {}
   for i,m in enumerate(['MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     if m=='MC_Bd2JpsiKstar':
-      if not CORR:
-        weight = f'{sw}'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+      else:
+        weight = f'{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
       weight = f'{sw}'
@@ -145,7 +145,7 @@ if __name__ == '__main__':
       # Add coeffs parameters
       cats[mode][f].params = Parameters()
       cats[mode][f].params.add(*[
-                    {'name':f'{c}{f}{j}{TRIGGER[0]}', 'value':1.0, 
+                    {'name':f'{c}{f}{j}{TRIGGER[0]}', 'value':1.0,
                      'latex': f'{c}_{{{f},{j}}}^{TRIGGER[0]}',
                      'free':True if j>0 else False, #'min':0.10, 'max':5.0,
                     } for j in range(len(knots[:-1])+2)
@@ -206,7 +206,7 @@ if __name__ == '__main__':
                       verbose=False, timeit=True)
 
   print(result)
- 
+
   # Writing results ------------------------------------------------------------
   print(f"\n{80*'='}\nDumping parameters\n{80*'='}\n")
 
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     list_params = cat.params.find('(bA|bB|cB)(\d{1})(u|b)')
     print(list_params)
     cat.params.add(*[result.params.get(par) for par in list_params])
-    
+
     print(f"Dumping tex table to {cat.tabs_path}")
     with open(cat.tabs_path, "w") as text:
       text.write(cat.params.dump_latex(caption=f"Time acceptance for the $\
