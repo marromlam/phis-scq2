@@ -1,0 +1,52 @@
+rule eff_from_bu_mass_fit:
+  resources:
+    mem_mb = 8192
+  wildcard_constraints:
+    bin = "(1|2|3|4|5|6|7|8|9|10)"
+  input:
+    sample = "/scratch46/marcos.romero/Bu2JpsiKplus5r3.root",
+  output:
+    pars = temp("output/params/velo_weights/{year}/Bu2JpsiKplus/v0r5_{model}_docaz{bin}.json"),
+    pars_match = temp("output/params/velo_weights/{year}/Bu2JpsiKplus/v0r5_{model}_docaz{bin}_match.json"),
+    fit = "output/figures/velo_weights/{year}/Bu2JpsiKplus/v0r5_massfit_{model}_docaz{bin}.pdf",
+    logfit = "output/figures/velo_weights/{year}/Bu2JpsiKplus/v0r5_logmassfit_{model}_docaz{bin}.pdf",
+    fit_match = "output/figures/velo_weights/{year}/Bu2JpsiKplus/v0r5_massfit_{model}_docaz{bin}_match.pdf",
+    logfit_match = "output/figures/velo_weights/{year}/Bu2JpsiKplus/v0r5_logmassfit_{model}_docaz{bin}_match.pdf",
+  log:
+    "output/log/eff_from_bu_mass_fit/{year}/Bu2JpsiKplus/v0r5_{model}_docaz{bin}.log"
+  run:
+    shell(f"""(time\
+    python analysis/velo_weights/mass_fit.py\
+    --sample {input.sample}\
+    --params {output.pars}\
+    --params-match {output.pars_match}\
+    --plot-mass {output.fit}\
+    --plot-logmass {output.logfit}\
+    --plot-mass-match {output.fit_match}\
+    --plot-logmass-match {output.logfit_match}\
+    --trigger "combined"\
+    --year {wildcards.year}\
+    --docaz-bin {wildcards.bin}\
+    --mass-model {wildcards.model}\
+    ) &> {log}""")
+
+
+
+rule eff_from_bu_fit:
+  input:
+    pars = expand("output/params/velo_weights/{{year}}/Bu2JpsiKplus/v0r5_{{model}}_docaz{bin}.json", bin=range(1,9)),
+    pars_match = expand("output/params/velo_weights/{{year}}/Bu2JpsiKplus/v0r5_{{model}}_docaz{bin}_match.json", bin=range(1,9)),
+  output:
+    plot = "output/figures/velo_weights/{year}/Bu2JpsiKplus/v0r5_efffit_{model}_docaz.pdf",
+    logplot = "output/figures/velo_weights/{year}/Bu2JpsiKplus/v0r5_logefffit_{model}_docaz.pdf",
+  run:
+    shell(f"""
+    python analysis/velo_weights/efficiency_fitter.py\
+    --params {",".join(input.pars)}\
+    --params-match {",".join(input.pars_match)}\
+    --plot {output.plot}\
+    --plot-log {output.logplot}\
+    --trigger "combined"\
+    --year {wildcards.year}\
+    --mass-model {wildcards.model}\
+    """)
