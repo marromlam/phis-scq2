@@ -87,6 +87,7 @@ slides/*.pdf
 slides/*.xdv
 slides/*.snm
 slides/*.aux
+slides/*.upa
 slides/*.nav
 slides/main_*.tex
 slides/AandS*
