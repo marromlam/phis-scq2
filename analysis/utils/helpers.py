@@ -9,20 +9,20 @@ SAMPLES_PATH = CONFIG['path']
 MAILS = CONFIG['mail']
 
 YEARS = {#
-  '2011'  : ['2011'],
-  '2012'  : ['2012'],
-  'Run1'  : ['2011','2012'],
-  'run1'  : ['2011','2012'],
-  '2015'  : ['2015'],
-  '2016'  : ['2016'],
-  'Run2a' : ['2015','2016'],
-  'run2a' : ['2015','2016'],
-  '2017'  : ['2017'],
-  '2018'  : ['2018'],
-  'Run2b' : ['2017','2018'],
-  'run2b' : ['2017','2018'],
-  'Run2'  : ['2015','2016','2017','2018'],
-  'run2'  : ['2015','2016','2017','2018']
+  '2011': ['2011'],
+  '2012': ['2012'],
+  'Run1': ['2011','2012'],
+  'run1': ['2011','2012'],
+  '2015': ['2015'],
+  '2016': ['2016'],
+  'Run2a': ['2015','2016'],
+  'run2a': ['2015','2016'],
+  '2017': ['2017'],
+  '2018': ['2018'],
+  'Run2b': ['2017','2018'],
+  'run2b': ['2017','2018'],
+  'Run2': ['2015','2016','2017','2018'],
+  'run2': ['2015','2016','2017','2018']
 };
 
 from utils.strings import cammel_case_split, cuts_and
@@ -62,6 +62,9 @@ def physpar_guesser(physics):
 
 
 def version_guesser(version):
+  """
+  From a version string, return the configuration of the tuple
+  """
   # Check if the tuple will be modified
   # print(version)
   version = version.split('@')
@@ -69,17 +72,55 @@ def version_guesser(version):
   # Dig in mod
   if mod:
     #pattern = r'\A(\d+)?(magUp|magDown)?(cut(B_PT|B_ETA|sigmat)(\d{1}))?\Z'
-    pattern = r'\A(\d+)?(magUp|magDown)?(cut(pTB|etaB|sigmat)(\d{1}))?\Z'
+    pattern = [
+        # percentage of tuple to be loaded
+        r"(\d+)?",
+        # split tuple by event number: useful for MC tests and crosschecks
+        # odd is plays data role and MC is even
+        r"(evtOdd|evtEven)?",
+        # split by magnet Up or Down: useful for crosschecks
+        r"(magUp|magDown)?",
+        # split in pTB, etaB and sigmat bins: for systematics
+        r"((pTB|etaB|sigmat)(\d{1}))?"
+        ]
+    pattern = rf"\A{''.join(pattern)}\Z"
     p = re.compile(pattern)
     try:
-      share, mag, fullcut, var, bin = p.search(mod).groups()
-      return v, int(share) if share else None, mag, fullcut, var, int(bin)-1 if bin else None
+      share, evt, mag, fullcut, var, nbin = p.search(mod).groups()
+      share = int(share) if share else None
+      evt = evt if evt else None
+      nbin = int(nbin)-1 if nbin else None
+      return v, share, evt, mag, fullcut, var, nbin 
     except:
       raise ValueError(f'Cannot interpret {mod} as a version modifier')
   else:
-    return v, int(100), None, None, None, None
+    return v, int(100), None, None, None, None, None
 
 
+
+def cut_translate(version_substring):
+  vsub_dict = {
+    "evtOdd": "( (evt % 2) != 0 ) & logIPchi2B>=0 & log(BDTFchi2)>=0",
+    "evtEven": "(evt % 2) == 0",
+    "magUp": "magnet == 1",
+    "magDown": "magnet == 0",
+    "bkgcat050": "bkgcat != 60",
+    "pTB1": "pTB >= 0 & pTB < 3.8e3",
+    "pTB2": "pTB >= 3.8e3 & pTB < 6e3",
+    "pTB3": "pTB >= 6e3 & pTB <= 9e3",
+    "pTB4": "pTB >= 9e3",
+    "etaB1": "etaB >= 0 & etaB <= 3.3",
+    "etaB2": "etaB >= 3.3 & etaB <= 3.9",
+    "etaB3": "etaB >= 3.9 & etaB <= 6",
+    "sigmat1": "sigmat >= 0 & sigmat <= 0.031",
+    "sigmat2": "sigmat >= 0.031 & sigmat <= 0.042",
+    "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15"
+  }
+  list_of_cuts = []
+  for k,v in vsub_dict.items():
+    if k in version_substring:
+      list_of_cuts.append(v)
+  return f"( {' ) & ( '.join(list_of_cuts)} )"
 #version_guesser('v0r5@10')
 
 
