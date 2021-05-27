@@ -8,7 +8,7 @@ from ipanema import (ristra, plotting, Sample)
 import matplotlib.pyplot as plt
 from utils.strings import printsec, printsubsec
 
-DOCAz_BINS = 8
+DOCAz_BINS = 15
 
 ##############################################################################
 # selection
@@ -37,7 +37,7 @@ prog = THREAD.compile("""
 
 # CB + ARGUS + EXP {{{
 def cb_argus(mass, signal, nsig, nbkg, nexp, mu, sigma, aL, nL, aR, nR, b, m0, c, p,
-        norm=1):
+             norm=1):
   # compute backgrounds
   pexpo = ristra.get(ristra.exp(mass*b))
   prog.py_Argus(signal, mass, np.float64(m0), np.float64(c), np.float64(p),
@@ -415,14 +415,15 @@ elif selection == 'francesca':
   if(Bu_Hlt2DiMuonDetachedJPsiDecision_TOS!=1) continue;                  DONE
   """
   # fiducial cuts
-  cuts = ['Jpsi_LOKI_ETA>2 & Jpsi_LOKI_ETA<4',
-          'muplus_LOKI_ETA>2 & muplus_LOKI_ETA<4',
-          'muminus_LOKI_ETA>2 & muminus_LOKI_ETA<4',
-          'Kplus_LOKI_ETA>2 & Kplus_LOKI_ETA<4', 'abs(Bu_PVConst_PV_Z)<100'
+  cuts = ['Jpsi_LOKI_ETA>2 & Jpsi_LOKI_ETA<4.5',
+          'muplus_LOKI_ETA>2 & muplus_LOKI_ETA<4.5',
+          'muminus_LOKI_ETA>2 & muminus_LOKI_ETA<4.5',
+          'Kplus_LOKI_ETA>2 & Kplus_LOKI_ETA<4.5', 'abs(Bu_PVConst_PV_Z)<100'
           ]
   # Bu2JpsiKplus cuts
   cuts += [# 'Bu_PVConstPVReReco_chi2/Bu_PVConstPVReReco_nDOF)<5',
-           'Bu_IPCHI2_OWNPV<25', 'Bu_MINIPCHI2<25',
+           'Bu_IPCHI2_OWNPV<25',
+           'Bu_MINIPCHI2<25',
            '(Bu_PVConst_chi2/Bu_PVConst_nDOF)<5',
            'Bu_MINIPCHI2NEXTBEST>50 | Bu_MINIPCHI2NEXTBEST==-1',
            'Bu_LOKI_DTF_CHI2NDOF<4',
@@ -432,12 +433,12 @@ elif selection == 'francesca':
            #'Bu_LOKI_MASS_JpsiConstr_NoPVConstr<5400'
   ]
   # Kplus cuts
-  cuts += ['Kplus_TRACK_CHI2NDOF<4', 'Kplus_PT>1000', 'Kplus_P>10000',
+  cuts += ['Kplus_TRACK_CHI2NDOF<4', 'Kplus_PT>500', #'Kplus_P>10000',
            'Kplus_PIDK>0'
            ]
   # muons
   cuts += ['muplus_TRACK_CHI2NDOF<4', 'muminus_TRACK_CHI2NDOF<4',
-           'muplus_PT>550', 'muminus_PT>550', 'muplus_PIDmu>0',
+           'muplus_PT>500', 'muminus_PT>500', 'muplus_PIDmu>0',
            'muminus_PIDmu>0'
            ]
   # Jpsi cuts
@@ -485,7 +486,7 @@ if __name__ == '__main__':
   sample = Sample.from_root(SAMPLE)
   print(f"Original sample has {sample.shape}")
   #sample.chop(cut)
-  sample.chop("Bu_PVConst_J_psi_1S_muminus_0_DOCAz<=5")
+  #sample.chop("Bu_PVConst_J_psi_1S_muminus_0_DOCAz<=5")
   # if MODEL == "dgauss":
   #   cut = f"({cut}) & ({mass}>5200)"
   print(f"Selection cut: {cut}")
@@ -497,21 +498,21 @@ if __name__ == '__main__':
   #    paramters
   pars = ipanema.Parameters()
   # Create common set of parameters (all models must have and use)
-  pars.add(dict(name='nsig', value=0.20, min=0, max=1, free=True,
+  pars.add(dict(name='nsig', value=0.90, min=0, max=1, free=True,
                 latex=r'N_{signal}'))
   pars.add(dict(name='mu', value=5280, min=5200, max=5400,
                 latex=r'\mu'))
-  pars.add(dict(name='sigma', value=18, min=10, max=100, free=True,
+  pars.add(dict(name='sigma', value=18, min=5, max=100, free=True,
                 latex=r'\sigma'))
   if "cb" in MODEL.split('_'):  # {{{
     # crystal ball tails
     pars.add(dict(name='aL', value=1, latex=r'a_l',min=-50, max=50,
                   free=True))
-    pars.add(dict(name='nL', value=1, latex=r'n_l',min=-50, max=50,
+    pars.add(dict(name='nL', value=2, latex=r'n_l',min=-500, max=500,
                   free=True))
     pars.add(dict(name='aR', value=1, latex=r'a_r',min=-50, max=500,
                   free=True))
-    pars.add(dict(name='nR', value=1, latex=r'n_r',min=-50, max=50,
+    pars.add(dict(name='nR', value=2, latex=r'n_r',min=-500, max=500,
                   free=True))
     if "argus" in MODEL.split('_'):
       pars.add(dict(name='nbkg', value=0.02, min=0, max=1, free=True,
@@ -619,9 +620,18 @@ if __name__ == '__main__':
   # sample = ipanema.Sample.from_root(args["sample"])
 
   # Get DOCAz bins
-  docaz = np.round(equibins1d(sample.df['Bu_PVConst_J_psi_1S_muminus_0_DOCAz'],
+  docaz = np.round(equibins1d(sample.df['Bu_PVConst_Kplus_DOCAz'],
                               DOCAz_BINS)*1e4)/1e4
   # docaz = [0., 0.0119, 0.0247, 0.0394, 0.0584, 0.0875, 0.1427, 0.2767, 5.]
+  docaz = [0.0, 0.3, 0.58, 0.91, 1.35, 1.96, 3.01, 7.0]
+  docaz = [0.01909757, 0.02995095, 0.04697244, 0.07366745, 0.11553356,
+           0.1811927 , 0.28416671, 0.44566212, 0.69893733, 1.09615194,
+           1.71910844, 2.69609871, 4.22832446, 6.63133278]
+
+  # these ones are somehow expoenly distributed and work just fine
+  docaz = [0, 0.01652674, 0.02591909, 0.04064923, 0.06375068, 0.09998097,
+           0.15680137, 0.2459135 , 0.38566914, 0.60484961, 0.94859302,
+           1.48768999, 2.33316235, 3.65912694, 6, 10]
   print(docaz)
   docaz = docaz[DOCAZ_BIN-1:DOCAZ_BIN+1]
   print(docaz)
@@ -632,54 +642,50 @@ if __name__ == '__main__':
   # %% Start Bu mass to get efficiency shape ----------------------------------
   printsec(f"Fitting Bu mass in DOCAz range = [{docaz[0]}, {docaz[1]})")
 
-  doca_cut = [f"(Bu_PVConst_J_psi_1S_muminus_0_DOCAz>={docaz[0]})",
-              f"(Bu_PVConst_J_psi_1S_muminus_0_DOCAz<{docaz[1]})"]
+  doca_cut = [f"(Bu_PVConst_Kplus_DOCAz>={docaz[0]})",
+              f"(Bu_PVConst_Kplus_DOCAz<{docaz[1]})"]
   doca_cut = f"({' & '.join(doca_cut)})"
-
   # do both fits
-  for match in [False, True]:
+  for match in [True, False]:
+    _pars = ipanema.Parameters.clone(pars)
     if match:
       rd = Sample.from_root(SAMPLE)
-      rd.chop(f'{cut} & {doca_cut} & (Bu_PVConst_veloMatch==1)')
+      rd.chop(f'{cut} & {doca_cut} & (Bu_PVConst_veloMatch>0)')
       rd.allocate(mass=f'{BuM}', pdf=f'0*{BuM}', weight=f'{BuM}/{BuM}')
       printsubsec(f"Fitting {len(rd.mass)} VELO-matched events.")
     else:
       rd = Sample.from_root(SAMPLE)
-      print(rd.df['Bu_PVConst_veloMatch'].values)
-      rd.chop(f'{cut} & {doca_cut} & (Bu_PVConst_veloMatch==0)')
-      print(rd.df)
+      rd.chop(f'{cut} & {doca_cut} & ~(Bu_PVConst_veloMatch>0)')
       rd.allocate(mass=f'{BuM}', pdf=f'0*{BuM}', weight=f'{BuM}/{BuM}')
+      _pars.lock()
+      _pars.unlock("nsig", "b")
       printsubsec(f"Fitting {len(rd.mass)} events.")
-      #if "m0" in pars: pars['m0'].set(value=5175)
     print(rd)
 
     # fit
     fit_valid = 0; tries = 0; max_tries = 2
-    _pars = ipanema.Parameters.clone(pars)
     while not fit_valid and tries < max_tries:
-      print(f"Try #{tries}")
-      print(_pars)
-      # exit()
+      res = None
       try:
         res = ipanema.optimize(fcn, _pars, fcn_kwgs={'data':rd},
                                method='minuit', verbose=False)
         fit_valid = True
       except:
+        print(f"Try #{tries} failed...")
         tries += 1
         fit_valid = False
-        _pars.lock()
-        _pars["nsig"].set(value=0, init=0)
-        _pars["nexp"].set(free=True)
-        # set randomizer for parameters here 
-        #if "m0" in pars: pars['m0'].set(value=5125)
-  
-    try:
+        #_pars.lock()
+        _pars["nsig"].set(value=1, init=1)
+
+    # errors suck 
+    if res:
       print(res)
       fpars = ipanema.Parameters.clone(res.params)
-    except:
+    else:
       print("could not fit it!. Cloning pars to res")
       fpars = ipanema.Parameters.clone(pars)
-  
+
+
     # plot --------------------------------------------------------------------
     fig, axplot, axpull = plotting.axes_plotpull()
     hdata = ipanema.histogram.hist(ristra.get(rd.mass), weights=None,
@@ -687,11 +693,11 @@ if __name__ == '__main__':
     axplot.errorbar(hdata.bins, hdata.counts,
                     yerr=[hdata.errh, hdata.errl],
                     xerr=2*[hdata.edges[1:]-hdata.bins], fmt='.k')
-  
+
     norm = hdata.norm*(hdata.bins[1]-hdata.bins[0])
     mass = ristra.linspace(ristra.min(rd.mass), ristra.max(rd.mass), 1000)
     signal = 0*mass
-  
+
     # plot signal: nbkg -> 0 and nexp -> 0
     _p = ipanema.Parameters.clone(fpars)
     if 'nbkg' in _p:
@@ -699,14 +705,14 @@ if __name__ == '__main__':
     _p['nexp'].set(value=0)
     _x, _y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
     axplot.plot(_x, _y, color="C1", label='signal')
-  
+
     # plot backgrounds: nsig -> 0
     _p = ipanema.Parameters.clone(fpars)
     _p['nexp'].set(value=_p['nexp'].value)
     _p['nsig'].set(value=0)
     _x, _y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
     axplot.plot(_x, _y, '-.', color="C2", label='background')
-  
+
     # plot fit with all components and data
     _p = ipanema.Parameters.clone(fpars)
     x, y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(),
@@ -728,8 +734,12 @@ if __name__ == '__main__':
     fig.savefig(args[f"plot_logmass{'_match' if match else ''}"])
     fig.savefig(f"logmass{DOCAZ_BIN}{'_match' if match else ''}.pdf")
     plt.close()
-  
-  
+
+    # If we want to use the VELO-matched params for the peak as 
+    if res:
+      pars = ipanema.Parameters.clone(res.params)
+
+
     # Dumping fit parameters --------------------------------------------------
     print(len(rd.mass) * fpars['nsig'].uvalue)
     if fpars['nsig'].stdev:
@@ -749,4 +759,4 @@ if __name__ == '__main__':
 
   # Print result 
   print(nevt)
-  print(f"Efficiency in this doca bin is {nevt[1]/(nevt[0]+1*nevt[1])}")
+  print(f"Efficiency in this doca bin is {nevt[0]/(nevt[1]+1*nevt[0])}")
