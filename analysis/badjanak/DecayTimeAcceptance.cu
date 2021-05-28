@@ -187,7 +187,14 @@ ctype expconv(ftype t, ftype G, ftype omega, ftype sigma)
   }
 }
 
+WITHIN_KERNEL
+ctype expconv_wores(ftype t, ftype G, ftype omega)
+{
+  //The name of course is stupid is only an exponential the plan is to do this 
+  //with an if in the function above. (something like if sigma==0)
+  return cexp(cmul(cnew(-G, +omega), cnew(t, 0.)));
 
+}
 
 WITHIN_KERNEL
 ctype getK(ctype z, int n)
@@ -665,11 +672,137 @@ void integralFullSpline( ftype result[2],
   }
   #endif
 }
+WITHIN_KERNEL
+ctype getI(ctype z, int n, const ftype xmin, const ftype xmax)
+{
+//This function calculates the integral of the time acceptance (wo time resolution)
+//int n is the order of the polynomial accompanying the exponential (until order 3, cubic splines)
+//z is the typical constant G-i \Delta M
+//x_min x_max are the limits of the bin
+  ctype z2 = cmul(z,z);
+  ctype z3 = cmul(z,z2);
+  ctype z4 = cmul(z, z3);
+  ctype expp = cexp((cmul(cnew(-xmax,0.), z)));
+  ctype expm =  cexp((cmul(cnew(-xmin,0.), z)));
+  ftype xmin2 = xmin*xmin;
+  ftype xmax2 = xmax*xmax;
+  ftype xmin3 = xmin*xmin2;
+  ftype xmax3 = xmax*xmax2;
+  if (z.x != 0. || z.y != 0.)
+  {
+    if (n==0){
+      ctype frac = cdiv(cnew(-1.0, 0.0), z);
+      return cmul(frac, csub(expp, expm));
+    }
+    else if (n==1){
+      ctype frac = cdiv(cnew(-1.0, 0.0), z2);
+      ctype polp = cadd(cmul(z, cnew(xmax, 0.)), cnew(1., 0.0));
+      ctype polm = cadd(cmul(z, cnew(xmin, 0.)), cnew(1., 0.0));
+      return cmul(frac, csub(cmul(expp, polp), cmul(expm, polm)));
+    }
+    else if (n==2){
+      ctype frac = cdiv(cnew(-1.0, 0.0), z3);
+      ctype polm = cadd(cadd(cmul(cnew(xmin2,0.), z2), cmul(cnew(2*xmin, 0.),z)), cnew(2.0, 0.0));
+      ctype polp = cadd(cadd(cmul(cnew(xmax2,0.), z2), cmul(cnew(2*xmax, 0.),z)), cnew(2.0, 0.0));
+      return cmul(frac, csub(cmul(expp, polp), cmul(expm, polm)));
+    }
+    else if (n==3){
+      ctype frac = cdiv(cnew(-1.0, 0.0), z4);
+      ctype polpaux = cadd(cmul(cnew(xmax3,0.), z3), cmul(cnew(3.*xmax2, 0.), z2));
+      ctype polp = cadd(cadd(cmul(cnew(6.*xmax, 0.), z), cnew(6.,0.)), polpaux);
+      ctype polmaux = cadd(cmul(cnew(xmin3,0.), z3), cmul(cnew(3.*xmin2, 0.), z2));
+      ctype polm = cadd(cadd(cmul(cnew(6.*xmin, 0.), z), cnew(6.,0.)), polmaux);
+      return cmul(frac, csub(cmul(expp, polp), cmul(expm, polm))); 
+    }
+  }
+  else{
+    return cnew(0., 0.);
+  }
+  return cnew(0.,0.);
+}
 
+WITHIN_KERNEL
+void intgTimeAcceptance_wores(ftype time_terms[4], const ftype G,
+                              const ftype DG, const ftype DM,
+                              GLOBAL_MEM const ftype *coeffs, 
+                              const ftype tLL, const ftype tUL)
+{  
+  //Create an array with the knots (including tUL)
+  ftype knots[NTIMEBINS] = {0.};
+  knots[0] = tLL;
+  for(int i = 1; i < NKNOTS; i++)
+  {
+    knots[i] = KNOTS[i];
+  }
+  knots[NKNOTS] = tUL;
+  //constant complex numbers for the integrals 
+  ctype z_expm = cnew((G-0.5*DG), 0.);
+  ctype z_expp = cnew((G+0.5*DG), 0.);
+  ctype z_trig = cnew(G, -DM);
+  #ifdef DEBUG
+  if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
+  {
+    printf("                   : z_expm_x=%+16f\n  z_expp_x=%+.16f\n z_trig_x=%+.16f\n", z_expm.x, z_expp.x, z_trig.x);
+    printf("                   : z_expm_y=%+16f\n  z_expp_y=%+.16f\n z_trig_y=%+.16f\n", z_expm.y, z_expp.y, z_trig.y);
 
+  }
+  #endif 
+  //Declaration of the differents Integrals (one for each z) that we want to calculate
+  ctype I_expm = cnew(0., 0.);
+  ctype I_expp = cnew(0.,0.);
+  ctype I_trig = cnew(0.,0.);
 
+  //We fill the integrals basis of projections for ak (0), bk(1), ck(2), dk(3)
+  for (int bin = 0; bin< SPL_BINS; ++bin)
+  {
+    for (int i=0; i<4; ++i)
+    {
+    I_expm = cadd(cmul(cnew(getCoeff(coeffs, bin, i),0.),getI(z_expm, i, knots[bin], knots[bin+1])), I_expm);
+    I_expp = cadd(cmul(cnew(getCoeff(coeffs, bin, i),0.),getI(z_expp, i, knots[bin], knots[bin+1])), I_expp);
+    I_trig = cadd(cmul(cnew(getCoeff(coeffs, bin, i),0.),getI(z_trig, i, knots[bin], knots[bin+1])), I_trig);
+  }
+  #ifdef DEBUG
+  if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
+  {
+    printf("                   : I_expm_x=%+16f\n  I_expp_x=%+.16f\n I_trig_x=%+.16f\n", I_expm.x, I_expp.x, I_trig.x);
+    printf("                   : I_expm_y=%+16f\n  I_expp_y=%+.16f\n I_trig_y=%+.16f\n", I_expm.y, I_expp.y, I_trig.y);
 
+  }
+  #endif 
+  //Fill integral terms- 0: cosh, 1:sinh, 2:cos, 3:sin
+  time_terms[0] = sqrt(0.5)*0.5*(I_expm.x+I_expp.x);
+  time_terms[1] = sqrt(0.5)*0.5*(I_expm.x-I_expp.x);
+  time_terms[2] = sqrt(0.5)*I_trig.x;
+  time_terms[3] = sqrt(0.5)*I_trig.y;
+  }
+}
+WITHIN_KERNEL
+void integralFullSpline_wores( ftype result[2],
+                         const ftype vn[10], const ftype va[10],const ftype vb[10], const ftype vc[10],const ftype vd[10],
+                         GLOBAL_MEM const ftype *norm, const ftype G, const ftype DG, const ftype DM,
+                         const ftype tLL, const ftype tUL,
+                         GLOBAL_MEM const ftype *coeffs)
+{
+  ftype integrals[4] = {0., 0., 0., 0.};
+  intgTimeAcceptance_wores(integrals, G, DG, DM, coeffs, tLL, tUL);
 
+  ftype ta = integrals[0];
+  ftype tb = integrals[1];
+  ftype tc = integrals[2];
+  ftype td = integrals[3];
+
+  for(int k=0; k<10; k++)
+  {
+    result[0] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb + vc[k]*tc + vd[k]*td);
+    result[1] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb - vc[k]*tc - vd[k]*td);
+  }
+  #ifdef DEBUG
+  if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
+  {
+    printf("                   : result_0=%+.16f  result_1=%+.16f\n", result[0], result[1]);
+  }
+  #endif
+}
 
 
 
