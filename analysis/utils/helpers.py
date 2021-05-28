@@ -3,6 +3,8 @@ import os
 import hjson
 import numpy as np
 from ipanema import ristra
+
+
 # %%
 CONFIG = hjson.load(open('config.json'))
 SAMPLES_PATH = CONFIG['path']
@@ -47,7 +49,6 @@ def timeacc_guesser(timeacc):
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
 
 
-
 def physpar_guesser(physics):
   # Check if the tuple will be modified
   pattern = r'\A(0)(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
@@ -57,8 +58,6 @@ def physpar_guesser(physics):
     return timeacc, kind, lifecut, mini.lower() if mini else 'minuit'
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
-
-
 
 
 def version_guesser(version):
@@ -84,10 +83,11 @@ def version_guesser(version):
         r"((pTB|etaB|sigmat)(\d{1}))?"
         ]
     pattern = rf"\A{''.join(pattern)}\Z"
+    # print(pattern)
     p = re.compile(pattern)
     try:
       share, evt, mag, fullcut, var, nbin = p.search(mod).groups()
-      share = int(share) if share else None
+      share = int(share) if share else 100
       evt = evt if evt else None
       nbin = int(nbin)-1 if nbin else None
       return v, share, evt, mag, fullcut, var, nbin 
@@ -100,7 +100,8 @@ def version_guesser(version):
 
 def cut_translate(version_substring):
   vsub_dict = {
-    "evtOdd": "( (evt % 2) != 0 ) & logIPchi2B>=0 & log(BDTFchi2)>=0",
+    # "evtOdd": "( (evt % 2) != 0 ) & logIPchi2B>=0 & log(BDTFchi2)>=0",
+    "evtOdd": "(evt % 2) != 0",
     "evtEven": "(evt % 2) == 0",
     "magUp": "magnet == 1",
     "magDown": "magnet == 0",
@@ -132,9 +133,12 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
   # Get version withoud modifier
   if not version:
     version = f"{wcs.version}"
-  #print(f'{version}')
-  v, share, mag, fullcut, var, bin = version_guesser(f'{version}')
-  #print(wcs)
+
+  # print(f'{version}')
+  v, share, evt, mag, fullcut, var, bin = version_guesser(f'{version}')
+  v = f'{version}'
+  # print(v, share, evt, mag, fullcut, var, bin)
+
   # Try to extract mode from wcs then from mode arg
   try:
     m = f'{wcs.mode}'
@@ -166,7 +170,7 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
     elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
       m = mode
 
-  # Model handler when asking for weights
+  # Model handler when asking for weises
   if weight:
     if m == 'Bs2JpsiPhi':
       weight = 'sWeight'
@@ -180,25 +184,28 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
       if weight not in ('sWeight', 'polWeight', 'kinWeight'):
         weight = 'polWeight'
     elif m == 'MC_Bd2JpsiKstar':
-      if weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kbuWeight', 'kinWeight'):
+      if weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kbuWeight',
+                        'kinWeight', 'oddWeight'):
         weight = 'polWeight'
     elif m == 'MC_Bs2JpsiPhi':
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
-      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight', 'kinWeight', 'angWeight'):
+      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight',
+                          'kinWeight', 'angWeight', 'oddWeight'):
         weight = 'dg0Weight'
     elif m == 'MC_Bs2JpsiKK_Swave':
       if weight == 'kbuWeight':
         weight = 'polWeight'
-      elif weight not in ('sWeight', 'polWeight', 'angWeight'):
+      elif weight not in ('sWeight', 'polWeight', 'angWeight', 'kinWeight', 'oddWeight'):
         weight = 'polWeight'
     elif m == 'MC_Bs2JpsiPhi_dG0':
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
-      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight', 'angWeight'):
+      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight',
+                          'angWeight', 'oddWeight'):
         weight = 'polWeight'
 
-  
+
   # Year
   if year:
     years = YEARS[year]
@@ -230,7 +237,6 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
   return path
 
 
-
 def send_mail(subject, body, files=None):
   import os
   body = os.path.abspath(body)
@@ -255,7 +261,6 @@ def send_mail(subject, body, files=None):
       os.system(f"""ssh master '{cmd} | /usr/sbin/sendmail {mail}'""")
 
 
-
 def trigger_scissors(trigger, CUT=""):
   if trigger == 'biased':
     CUT = cuts_and("hlt1b==1",CUT)
@@ -264,8 +269,9 @@ def trigger_scissors(trigger, CUT=""):
   return CUT
 
 
-
 def swnorm(sw):
   sw_ = ristra.get(sw)
   return ristra.allocate(sw_*(np.sum(sw_)/np.sum(sw_**2)))
 
+
+# vim: foldmethod=marker
