@@ -3,5 +3,9 @@
   "angacc": "run2",
   "timeacc": "simul3",
   "fit": "run2",
-  "year": "run2"
+  "year": "run2",
+  "randomize_variables": true,
+  "randomize_timeacc": false,
+  "randomize_angacc": false,
+  "randomize_flavor": false
 }

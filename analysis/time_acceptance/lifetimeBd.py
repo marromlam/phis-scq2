@@ -32,18 +32,6 @@ Gdvalue = hjson.load(open('config.json'))['Gd_value']
 tLL = hjson.load(open('config.json'))['tLL']
 tUL = hjson.load(open('config.json'))['tUL']
 
-# Parse arguments for this script
-def argument_parser():
-  parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
-  parser.add_argument('--sample', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--biased-params', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--unbiased-params', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--output-params', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--output-tables', help='Bs2JpsiPhi MC sample')
-  parser.add_argument('--year', help='Year to fit')
-  parser.add_argument('--version', help='Version of the tuples to use')
-  parser.add_argument('--timeacc', help='Different flag to ... ')
-  return parser
 
 if __name__ != '__main__':
   import badjanak
@@ -52,24 +40,34 @@ if __name__ != '__main__':
 
 
 
-################################################################################
-#%% Run and get the job done ###################################################
+###############################################################################
+#%% Run and get the job done ##################################################
 
 if __name__ == '__main__':
 
-  #%% Parse arguments ----------------------------------------------------------
-  args = vars(argument_parser().parse_args())
+  #%% Parse arguments ---------------------------------------------------------
+  p = argparse.ArgumentParser(description='Compute decay-time acceptance.')
+  p.add_argument('--sample', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--biased-params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--unbiased-params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--output-params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--output-tables', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--year', help='Year to fit')
+  p.add_argument('--version', help='Version of the tuples to use')
+  p.add_argument('--timeacc', help='Different flag to ... ')
+  args = vars(p.parse_args())
+
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = 'Bd2JpsiKstar'
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = bin_vars[VAR][BIN] if FULLCUT else ''  # place cut attending to version
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   splitter = '(evtN%2)==0'  # this is Bd as Bs
@@ -79,7 +77,7 @@ if __name__ == '__main__':
     splitter = cuts_and(splitter, f"alpha<0.025")
   elif LIFECUT == 'deltat':
     splitter = cuts_and(splitter, f"sigmat<0.04")
-  
+
   # Print settings
   print(f"\n{80*'='}\nSettings\n{80*'='}\n")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
@@ -88,7 +86,7 @@ if __name__ == '__main__':
   print(f"{'timeacc':>15}: {TIMEACC:50}")
   print(f"{'splitter':>15}: {splitter:50}")
   print(f"{'minimizer':>15}: {MINER:50}\n")
-  
+
   # final arrangemets
   samples = args['sample'].split(',')
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
@@ -98,7 +96,7 @@ if __name__ == '__main__':
   # Get data into categories ---------------------------------------------------
   print(f"\n{80*'='}\nLoading categories\n{80*'='}\n")
 
-  cats = {}  
+  cats = {}
   for i, m in enumerate(YEAR.split(',')):
     cats[m] = {}
     for t in ['biased', 'unbiased']:
@@ -119,19 +117,19 @@ if __name__ == '__main__':
 
       # Update kernel with the corresponding knots
       fcns.badjanak.config['knots'] = np.array(knots).tolist()
-  
+
   # recompile kernel (just in case)
   fcns.badjanak.get_kernels(True)
 
-  
+
 
   # Time to fit lifetime -------------------------------------------------------
   print(f"\n{80*'='}\nMinimization procedure\n{80*'='}\n")
-  
+
   # create a common gamma parameter for biased and unbiased
   lfpars = Parameters()
   lfpars.add(dict(name='gamma', value=0.5, min=0.0, max=1.0, latex="\Gamma_d"))
-  
+
   # join and print parameters before the lifetime fit
   for y in cats:
     for t in cats[y]:
@@ -170,7 +168,7 @@ if __name__ == '__main__':
 
   print(f"Dumping tex table to {args['output_tables']}")
   with open(args['output_tables'], "w") as text:
-    text.write(lifefit.params.dump_latex(caption=f"""Trigger-combinned fit 
+    text.write(lifefit.params.dump_latex(caption=f"""Trigger-combinned fit
     parameters for $B_d^0$ lifetime check using {YEAR}."""))
 
 ################################################################################

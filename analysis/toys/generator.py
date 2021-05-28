@@ -22,14 +22,15 @@ import os
 import hjson
 
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],1)
+#initialize(os.environ['IPANEMA_BACKEND'],1)
+initialize('cuda',1)
 from ipanema import Sample, Parameters, ristra
 
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
-badjanak.config['debug'] = 5
+badjanak.config['debug'] = 0
 badjanak.config['fast_integral'] = 1
-badjanak.config['debug_evt'] = 774
+badjanak.config['debug_evt'] = 0
 
 # import some phis-scq utils
 from utils.strings import cuts_and
@@ -87,8 +88,9 @@ MODE = 'TOY_Bs2JpsiPhi'
 CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
 CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
 
-RANDOMIZE_TIMEACC = bool(args['randomize_timeacc'])
-RANDOMIZE_ANGACC = bool(args['randomize_angacc'])
+print(args['randomize_timeacc'], args['randomize_angacc'])
+RANDOMIZE_TIMEACC = True if args['randomize_timeacc']=='True' else False
+RANDOMIZE_ANGACC = True if args['randomize_angacc']=='True' else False
 print(RANDOMIZE_TIMEACC, RANDOMIZE_ANGACC)
 
 # % Load sample and parameters -------------------------------------------------
@@ -96,7 +98,7 @@ print(f"\n{80*'='}\nLoading samples and gather information\n{80*'='}\n")
 
 data = {}
 sample = Sample.from_root(args['sample'], cuts=CUT)
-print(sample)
+#print(sample)
 csp = Parameters.load(args['csp_factors'])
 mKK = np.array(csp.build(csp,csp.find('mKK.*')))
 csp = csp.build(csp,csp.find('CSP.*'))
@@ -109,21 +111,26 @@ for t, T in zip(['biased','unbiased'],[0,1]):
   aacc = Parameters.load(args[f'angacc_{t}'])
   knots = np.array(Parameters.build(tacc,tacc.fetch('k.*')))
   if RANDOMIZE_TIMEACC:
-      print(tacc)
-      tacc = randomize_timeacc(tacc) 
-      print(tacc)
+      _arr = np.array(Parameters.build(tacc,tacc.fetch('c.*')))
+      print(f"Time acc. randomizer from {_arr}")
+      tacc = randomize_timeacc(tacc)
+      _arr = np.array(Parameters.build(tacc,tacc.fetch('c.*')))
+      print(f"                     to   {_arr}")
   if RANDOMIZE_ANGACC:
-      aacc = randomize_timeacc(aacc) 
+      aacc = randomize_timeacc(aacc)
   for bin in range(0,len(mKK)-1):
     data[t][bin] = {}
     ml = mKK[bin]; mh = mKK[bin+1]
-    noe = sample.cut( cuts_and(ccut,f'mHH>={ml} & mHH<{mh}') ).shape[0]
+    noe = sample.cut( cuts_and(ccut,f'mHH>={ml} & mHH<{mh}') ).eval('sw')
+    noe = noe * np.sum(noe) / np.sum(noe*noe)
+    noe = int(np.sum(noe.values))
+    #print(noe)
     data[t][bin]['output'] = ristra.allocate(np.float64(noe*[10*[0.5*(ml+mh)]]))
     data[t][bin]['csp'] = csp
     data[t][bin]['flavor'] = flavor
     data[t][bin]['resolution'] = resolution
     data[t][bin]['timeacc'] = Parameters.build(tacc,tacc.fetch('c.*'))
-    data[t][bin]['angacc'] = Parameters.build(aacc,aacc.fetch('w.*'))
+    data[t][bin]['angacc'] = Parameters.build(aacc,aacc)
     data[t][bin]['params'] = Parameters.load(args['fitted_params'])
 # Just recompile the kernel attenting to the gathered information
 badjanak.config['knots'] = knots.tolist()
@@ -153,21 +160,24 @@ print('Physics parameters')
 print(data['unbiased'][0]['params'])
 
 
-
-# Printout information ---------------------------------------------------------
+# Printout information --------------------------------------------------------
 print(f"\n{80*'='}\nGeneration\n{80*'='}\n")
 for t, trigger in data.items():
   for b, bin in trigger.items():
     print(f"Generating {bin['output'].shape[0]:>6} events for",
           f"{YEAR}-{t:>8} at {b+1:>2} mass bin")
     pars  = bin['csp'] + bin['flavor'] + bin['resolution']
+    #pars += bin['timeacc'] + bin['params']
     pars += bin['timeacc'] + bin['angacc'] + bin['params']
-    p = badjanak.parser_rateBs(**pars.valuesdict(True), tLL=tLL, tUL=tUL)
+    p = badjanak.parser_rateBs(**pars.valuesdict(False), tLL=tLL, tUL=tUL)
+    print(p)
+    #p['angacc'] = ristra.allocate(np.array(bin['angacc']))
     # for k,v in p.items():
     #   print(f"{k:>20}: {v}")
+    #print(p['angacc'])
     badjanak.dG5toys(bin['output'], **p,
                      use_angacc=1, use_timeacc=1, use_timeres=1,
-                     set_tagging=1, use_timeoffset=0, 
+                     set_tagging=1, use_timeoffset=0,
                      seed=int(1e10*np.random.rand()) )
     genarr = ristra.get(bin['output'])
     hlt1b = np.ones_like(genarr[:,0])
@@ -193,8 +203,8 @@ for t, trigger in data.items():
       'gb_weights'  :  np.ones_like(genarr[:,0]),
       'hlt1b'       :  hlt1b if t=='biased' else 0*hlt1b
     }
+    #exit()
     bin['df'] = pd.DataFrame.from_dict(gendic)
-
 
 # Printout information ---------------------------------------------------------
 print(f"\n{80*'='}\nSave tuple\n{80*'='}\n")

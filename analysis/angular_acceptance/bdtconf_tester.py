@@ -38,7 +38,7 @@ def bdtmesh(conf, bdt_tests=100, verbose=False):
     print(f"different min_samples_leaf = {len(min_samples_leaf)}")
     print(f"Selected bdt-config = ", end='')
     print(f"{int(ans[0])}:{ans[1]:.2f}:{int(ans[2])}:{int(ans[3])}")
-  
+
   ans = {
       "n_estimators": ans[0],
       "learning_rate": ans[1],

@@ -10,6 +10,9 @@ __email__  = ['mromerol@cern.ch']
 
 ################################################################################
 # %% Modules ###################################################################
+# ignore all future warnings
+from warnings import simplefilter
+simplefilter(action='ignore', category=FutureWarning)
 
 import argparse
 import numpy as np
@@ -68,7 +71,6 @@ def check_for_convergence(a,b):
   a_f = np.array( [float(a[p].unc_round[0]) for p in a] )
   b_f = np.array( [float(b[p].unc_round[0]) for p in b] )
   checker = np.abs(a_f-b_f).sum()
-  #if checker <= 1.0:
   if checker == 0:
     return True
   return False
@@ -101,16 +103,18 @@ def KS_test(original, target, original_weight, target_weight):
                             weights1=original_weight, weights2=target_weight))
 
 
-def kkp_weighting(original_v, original_w, target_v, target_w, path, y,m,t,i, verbose=False):
+def kkp_weighting(original_v, original_w, target_v, target_w, path, year, mode,
+                  trigger, iter, verbose=False):
+
   reweighter.fit(original = original_v, target = target_v,
                  original_weight = original_w, target_weight = target_w );
   kkpWeight = reweighter.predict_weights(original_v)
-  np.save(path.replace('.root',f'_{t}.npy'),kkpWeight)
+  np.save(path.replace('.root',f'_{trigger}.npy'),kkpWeight)
   if verbose:
-    print(f" * GB-weighting {m}-{y}-{t} sample is done")
+    print(f" * GB-weighting {mode}-{year}-{trigger} sample is done")
     KS_test(original_v, target_v, original_w*kkpWeight, target_w)
 
-
+"""
 def kkp_weighting_bins(original_v, original_w, target_v, target_w, path, y,m,t,i):
   reweighter_bin.fit(original = original_v, target = target_v,
                      original_weight = original_w, target_weight = target_w );
@@ -119,7 +123,7 @@ def kkp_weighting_bins(original_v, original_w, target_v, target_w, path, y,m,t,i
   np.save(os.path.dirname(path)+f'/kkpWeight_{t}.npy',kkpWeight)
   #print(f" * GB-weighting {m}-{y}-{t} sample is done")
   print(f" * GB-weighting {m}-{y}-{t} sample\n  {kkpWeight[:10]}")
-
+"""
 
 def get_angular_acceptance(mc, kkpWeight=False):
   # cook weight for angular acceptance
@@ -167,7 +171,7 @@ def fcn_data(parameters, data):
 # Multiple categories functions
 #     They run over multiple categories
 
-def do_fit(verbose=False):
+def do_fit(verbose=True):
   """
   Fit
   """
@@ -179,28 +183,38 @@ def do_fit(verbose=False):
     v.init = v.value
 
     result = optimize(fcn_data, method='minuit', params=pars,
-                      fcn_kwgs={'data':data}, verbose=False, timeit=True,
-                      tol=0.05, strategy=2)
+                      fcn_kwgs={'data':data}, verbose=True, timeit=True,
+                      tol=0.1, strategy=1)
     #likelihoods.append(result.chi2)
     #print(result.chi2)
 
     #names = ['fPlon', 'fPper', 'dPpar', 'dPper', 'Gd']
     #corr_run1 = Parameters.build(result.params, names).corr()
-
-    if not '2018' in data.keys() and not '2017' in data.keys():
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'Gd']:
-        try:
-          print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
-        except:
-          0
-    else:
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper','Gd']:
-        try:
+    if verbose:
+      if not '2018' in data.keys() and not '2017' in data.keys():
+        for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'Gd']:
+          try:
             print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
-        except:
+          except:
+            0
+      else:
+        for p in ['fPlon', 'fPper', 'dPpar', 'dPper','Gd']:
+          try:
+            print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
+          except:
             0
   # store parameters + add likelihood to list
+  names = ['fPlon', 'fPper', 'dPpar', 'dPper']
   pars = Parameters.clone(result.params)
+  values, oldvalues, std = [], [], []
+  for p in names:
+    values.append(pars[p].value)
+    oldvalues.append(params_init[p].value)
+    std.append(pars[p].stdev)
+  df = pd.DataFrame({"names": names, "values": values, "std": std, "oldvalues": oldvalues})
+  df['PULL'] = df.eval('(values-oldvalues)/sqrt(std**2)')
+  print(df)
+  #exit()
   return result.chi2
 
 def do_pdf_weighting(verbose):
@@ -387,7 +401,6 @@ def lipschitz_iteration(max_iter=30, verbose=True):
     print("checker_dict: ", checker_dict)
     print("LIKELIHOODs: ", likelihoods)
 
-
     if all(checker) or i > 25:
       print(f"\nDone! Convergence was achieved within {i} iterations")
       for y, dy in data.items(): # loop over years
@@ -535,18 +548,23 @@ if __name__ == '__main__':
   #exit()
   #print(input_std_params)
   #input_std_params = input_std_params[:2]
+  print('tables params')
   params_biased      = args['output_weights_biased'].split(',')
   print(params_biased)
-  exit()
   #params_biased = [params_biased[1]]
   #params_biased = params_biased[:2]
   params_unbiased    = args['output_weights_unbiased'].split(',')
+  print(params_unbiased)
   #params_unbiased = [params_unbiased[1]]
   #params_unbiased = params_unbiased[:2]
+  print('paths tables')
   tables_biased      = args['output_tables_biased'].split(',')
   tables_unbiased    = args['output_tables_unbiased'].split(',')
+  print(tables_biased)
+  print(tables_unbiased)
   kkpWeight_std = args['output_angular_weights_mc_std'].split(',')
-
+  print('path to weights')
+  print(kkpWeight_std)
 
 
   # Print settings
@@ -559,7 +577,7 @@ if __name__ == '__main__':
   print(f"{'bdtconfig':>15}: {':'.join(str(x) for x in bdconfig.values()):50}\n")
 
 
-
+  global mc, data, weight_rd
   # %% Load samples ------------------------------------------------------------
   print(f"\n{80*'='}\nLoading samples\n{80*'='}\n")
 
@@ -595,8 +613,6 @@ if __name__ == '__main__':
       mc[y][m]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(evtN % 2) == 0', CUT))
       print(mc[y][m]['biased'])
       print(mc[y][m]['unbiased'])
-      #print(mc[y][m]['biased'].df[['evtN', 'sw']])
-      #print(mc[y][m]['unbiased'].df[['evtN', 'sw']])
       for t in ['biased', 'unbiased']:
         mc[y][m][t].allocate(reco=reco, true=true, pdf='0*time', weight=weight_mc)
         mc[y][m][t].df['angWeight'] = 0.0
@@ -607,8 +623,8 @@ if __name__ == '__main__':
       mc[y][m]['biased'].path_to_weights = v[i]
       mc[y][m]['unbiased'].path_to_weights = v[i]
   if MODE== 'Bd2JpsiKstar':
-    badjanak.config['x_m'] =  [826, 861, 896, 931, 966]
-  mass = badjanak.config['x_m']
+    badjanak.config['mHH'] =  [826, 861, 896, 931, 966]
+  mass = badjanak.config['mHH']
   badjanak.get_kernels(True)
 
   for i, y in enumerate( YEARS ):
@@ -619,8 +635,8 @@ if __name__ == '__main__':
                   'unbiased': Sample.from_root(v[i], share=SHARE)}
       data[y]['biased'].name = f"data {y}-biased"
       data[y]['unbiased'].name = f"data {y}-unbiased"
-      data[y]['biased'].chop(cuts_and(trigger_scissors('biased'),'(evtN % 2) != 0', CUT, 'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
-      data[y]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(evtN % 2) != 0', CUT, 'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
+      data[y]['biased'].chop(cuts_and(trigger_scissors('biased'),'(evtN % 2) != 0', CUT))#, 'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
+      data[y]['unbiased'].chop(cuts_and(trigger_scissors('unbiased'), '(evtN % 2) != 0', CUT))#, 'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
       print(data[y]['biased'])
       print(data[y]['unbiased'])
       #exit()
@@ -633,7 +649,7 @@ if __name__ == '__main__':
         print('Compute angWeights correcting MC sample in kinematics')
         print(f" * Computing kinematic GB-weighting in pTB, pB and mHH")
         reweighter.fit(original        = mc[y][m][t].df[['mHH','pB','pTB']],
-                       target          = data[y][t].df[['mHH','pB','pTB']],
+                        target          = data[y][t].df[['mHH','pB','pTB']],
                        original_weight = mc[y][m][t].df.eval(weight_mc),
                        target_weight   = data[y][t].df.eval(weight_rd));
         angWeight = reweighter.predict_weights(mc[y][m][t].df[['mHH', 'pB', 'pTB']])
@@ -648,16 +664,16 @@ if __name__ == '__main__':
                                      mc[y][m][t].weight*ristra.allocate(angWeight),
                              **mc[y][m][t].params.valuesdict())
         w, uw, cov, corr = angacc
-        pars_w = Parameters()
+        pars_ws = Parameters()
         for i in range(0,len(w)):
           correl = {f'w{j}': corr[i][j]
                     for j in range(0, len(w)) if i > 0 and j > 0}
-          pars_w.add({'name': f'w{i}', 'value': w[i], 'stdev': uw[i],
+          pars_ws.add({'name': f'w{i}', 'value': w[i], 'stdev': uw[i],
                     'correl': correl, 'free': False, 'latex': f'w_{i}'})
         print(f" * Corrected angular weights for {MODE}{y}-{t} sample are:")
-        print(f"{pars_w}")
-        data[y][t].angacc = pars_w
-        data[y][t].angaccs = {0:pars_w}
+        print(f"{pars_ws}")
+        data[y][t].angacc = pars_ws
+        data[y][t].angaccs = {0:pars_ws}
 
   #for i,y in enumerate (YEARS):
     #for d in [mc[y][m]['biased'],mc[y][m]['unbiased']]:
@@ -704,7 +720,6 @@ if __name__ == '__main__':
   pars.add(dict(name="Gd", value= 0.65833, min= 0.0, max= 1.0,
                 free=False, latex=r"\Gamma_d"))
   print(pars)
-
   # print angular acceptance
   lb = [ data[y]['biased'].angaccs[0].__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
   lu = [ data[y]['unbiased'].angaccs[0].__str__(['value']).splitlines() for i,y in enumerate( YEARS ) ]
@@ -721,9 +736,10 @@ if __name__ == '__main__':
   # run the procedure!
 
 
-  #ok, likelihoods = lipschitz_iteration(max_iter=5, verbose=False)
-  #if not ok:
-  ok, likelihoods = aitken_iteration(max_iter=40, verbose=True)
+  ok, likelihoods = lipschitz_iteration(max_iter=5, verbose=False)
+
+  if not ok:
+    ok, likelihoods = aitken_iteration(max_iter=30, verbose=True)
 
   if not ok:
     print('WARNING: Convergence was not achieved!')
@@ -732,7 +748,6 @@ if __name__ == '__main__':
     names = ['fPlon', 'fPper', 'dPpar', 'dPper']
     values, oldvalues, std = [], [], []
     for p in names:
-      print(pars)
       values.append(pars[p].value)
       oldvalues.append(params_init[p].value)
       std.append(pars[p].stdev)
@@ -761,26 +776,22 @@ if __name__ == '__main__':
       pool = {}
       for i in v['biased'].pdfWeight.keys(): # loop over iterations
         wb = np.zeros((v['biased'].olen))
-        wu = np.zeros((v['unbiased'].olen))
-        print(len(wb), len(wu))
-        print(len(v['biased'].pdfWeight.keys()))
-        wb[list(v['biased'].df.index)] = v['biased'].pdfWeight[i]
-        wu[list(v['unbiased'].df.index)] = v['unbiased'].pdfWeight[i]
+        wu = np.zeros((v['biased'].olen))
+        #wb[list(v['biased'].df.index)] = v['biased'].pdfWeight[i]
+        #wu[list(v['unbiased'].df.index)] = v['unbiased'].pdfWeight[i]
         pool.update({f'pdfWeight{i}': wb + wu})
       for i in v['biased'].kkpWeight.keys():  # loop over iterations
         wb = np.zeros((v['biased'].olen))
-        wu = np.zeros((v['unbiased'].olen))
-        wb[list(v['biased'].df.index)] = v['biased'].kkpWeight[i]
-        wu[list(v['unbiased'].df.index)] = v['unbiased'].kkpWeight[i]
+        wu = np.zeros((v['biased'].olen))
+        #wb[list(v['biased'].df.index)] = v['biased'].kkpWeight[i]
+        #wu[list(v['unbiased'].df.index)] = v['unbiased'].kkpWeight[i]
         pool.update({f'kkpWeight{i}': wb + wu})
       wb = np.zeros((v['biased'].olen))
-      wu = np.zeros((v['unbiased'].olen))
-      wb[list(v['biased'].df.index)] = v['biased'].df['angWeight'].values
-      wu[list(v['unbiased'].df.index)] = v['unbiased'].df['angWeight'].values
+      wu = np.zeros((v['biased'].olen))
+      #wb[list(v['biased'].df.index)] = v['biased'].df['angWeight'].values
+      #wu[list(v['unbiased'].df.index)] = v['unbiased'].df['angWeight'].values
       pool.update({f'angWeight': wb + wu})
       with uproot.recreate(v['biased'].path_to_weights) as f:
         f['DecayTree'] = uproot.newtree({var:np.float64 for var in pool.keys()})
         f['DecayTree'].extend(pool)
   print(f' * Succesfully writen')
-
-  ###aqui acaba Marcos implementation

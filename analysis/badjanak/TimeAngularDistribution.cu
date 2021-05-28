@@ -12,7 +12,7 @@
 
 
 
-#include <ipanema/complex.hpp>
+#include <ipanema/complex.h>
 
 
 
@@ -43,10 +43,10 @@ ftype getN(const ftype A10, const ftype A00, const ftype A1a, const ftype A1e,
 WITHIN_KERNEL
 ftype getF(const ftype cosK, const ftype cosL, const ftype hphi, const int k)
 {
-  ftype sinK   = sqrt(1. - cosK*cosK);
-  ftype sinL   = sqrt(1. - cosL*cosL);
-  ftype sinphi = sin(hphi);
-  ftype cosphi = cos(hphi);
+  const ftype sinK   = sqrt(1. - cosK*cosK);
+  const ftype sinL   = sqrt(1. - cosL*cosL);
+  const ftype sinphi = sin(hphi);
+  const ftype cosphi = cos(hphi);
 
   ftype fk;
   switch(k) {
@@ -96,7 +96,7 @@ ftype getAbd(ftype aslon, ftype aplon, ftype appar, ftype apper,
 WITHIN_KERNEL
 ftype getA(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
            const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
-           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e, 
+           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
            const int k)
 {
   ftype ak;
@@ -121,7 +121,7 @@ ftype getA(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
 
 WITHIN_KERNEL
 ftype getB(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
-           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e, 
+           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
            const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
            const int k)
 {
@@ -147,7 +147,7 @@ ftype getB(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
 
 WITHIN_KERNEL
 ftype getC(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
-           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e, 
+           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
            const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
            const int k)
 {
@@ -174,7 +174,7 @@ ftype getC(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
 
 WITHIN_KERNEL
 ftype getD(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
-           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e, 
+           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
            const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
            const int k)
 {
@@ -202,8 +202,8 @@ ftype getD(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
 WITHIN_KERNEL
 void integralSimple(ftype result[2],
                     const ftype vn[10], const ftype va[10], const ftype vb[10],
-                    const ftype vc[10], const ftype vd[10], 
-                    GLOBAL_MEM const ftype *norm, const ftype G, const ftype DG,
+                    const ftype vc[10], const ftype vd[10],
+                    const ftype *norm, const ftype G, const ftype DG,
                     const ftype DM, const ftype ti, const ftype tf)
 {
   // rewrite me! (please)

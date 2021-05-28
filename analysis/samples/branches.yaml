@@ -11,6 +11,10 @@ common: &common
   "pTHp" : "hplus_PT"
   "pHm" : "hminus_P"
   "pTHm" : "hminus_PT"
+  "pLp" : "muplus_P"
+  "pTLp" : "muplus_PT"
+  "pLm" : "muminus_P"
+  "pTLm" : "muminus_PT"
   "B_PT" : "B_PT"
   "pTB" : "B_PT"
   "pB" : "B_P"
@@ -79,7 +83,7 @@ MC_Bs2JpsiPhi_Prompt:
 
 MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
-  "genidB" : "B_ID"
+  "genidB" : "511*X_ID_GenLvl/311"
   "kbuWeight" : "kbuWeight"
   "kbuWeight_etaB" : "kbuWeight_etaB"
   "kbuWeight_sigmat" : "kbuWeight_sigmat"

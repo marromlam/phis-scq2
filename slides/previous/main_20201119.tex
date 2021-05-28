@@ -1,0 +1,108 @@
+% !TEX program = xelatex
+\documentclass[aspectratio=43,9pt]{beamer}
+\usetheme{Compostela}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{$\phi_s$ meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}
+}
+\newcommand{\TalkAuthorShort}{Veronika Chobanova, Diego Martínez, Marcos Romero}
+\newcommand{\TalkTitle}{\textit{phis SCQ} status}
+\newcommand{\TalkTitleShort}{\textit{phis SCQ} status}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{November 19th}
+\newcommand{\TalkDateNumber}{2020/11/19}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{adjustbox,booktabs,float}
+
+\usepackage{array}
+\newcommand{\TupleVersion}{v0r5}
+\newcommand{\FIGS}{/home3/marcos.romero/phis-scq/output/figures}
+\newcommand{\PARS}{/home3/marcos.romero/phis-scq/output/tables}
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE PAGE & CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[plain,overlaytitlepage=0.9]
+  \begin{minipage}[b][\textheight][b]{5cm}
+    \includegraphics[height=0.5cm]{logos/igfae_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/usc_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/xunta_bw}\hspace{1mm}\\[2mm]
+    \includegraphics[height=0.5cm]{logos/maeztu_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/lhcb_bw}\\[-1mm]
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain,overlaytoc=0.9]
+  \addtocounter{framenumber}{-1}
+  \hspace*{5.3cm}\begin{minipage}{8cm}
+    \tableofcontents
+  \end{minipage}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{News}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsection{Decay--time acceptance}
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{noframetitle}
+
+-----
+
+\end{frame} % ------------------------------------------------------------------
+
+
+\subsection{Angular acceptance}
+
+\foreach \year in {2015,...,2018}{
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{Time dependence}
+
+\begin{tabular}{cc}
+  \year\, biased & \year\, unbiased \\
+  \includegraphics[width=0.47\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_run2Timedep_simul_biased.pdf} & 
+  \includegraphics[width=0.47\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_run2Timedep_simul_unbiased.pdf}
+\end{tabular}
+
+\end{frame}} % -----------------------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+\end{document}
