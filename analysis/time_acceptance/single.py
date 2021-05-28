@@ -58,14 +58,15 @@ if __name__ != '__main__':
 ################################################################################
 #%% Run and get the job done ###################################################
 if __name__ == '__main__':
-
+  bkgcat = True
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  print(CORR)
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
@@ -104,37 +105,50 @@ if __name__ == '__main__':
   for i, m in enumerate([MODE]):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
-      if CORR=='Noncorr':
-        weight = f'dg0Weight*{sw}/gb_weights'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
+      else:
+        weight = f'dg0Weight*{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
-      if CORR=='Noncorr':
-        weight = f'{sw}/gb_weights'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
+      else:
+        if bkgcat==True:
+            weight = f'time/time'
+        else:
+          weight = f'{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      if CORR=='Noncorr':
-        weight = f'{sw}'
-      else:
+      if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+      else:
+        weight = f'{sw}'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      if CORR=='Noncorr':
-        weight = f'{sw}'
-      else:
+      if CORR:
         weight = f'{kinWeight}{sw}'
+      else:
+        weight = f'{sw}'
       mode = 'BdRD'; c = 'c'
     print(weight)
-
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    cats[mode].allocate(time='time', lkhd='0*time')
+    if bkgcat==True:
+      cats[mode].chop(cuts_and('(evtN %2)==0', 'bkgcatB != 60.0', 'logIPchi2B >= -1',  'logIPchi2B <= 1',  'log(BDTFchi2) <= 1', 'log(BDTFchi2) >= -1')) #check Peilia n'(evtN % 2) == 0',
+    else:
+      cats[mode].chop(cuts_and('(evtN % 2)==0'))#,'logIPchi2B >= 0', 'log(BDTFchi2) >=0')) 
+    print(cats[mode])
+    #if YEAR == '2015':
+        #cats[mode].chop(cuts_and('index>600000', 'index<700000'))
+    #if YEAR =='2016':
+        #cats[mode].chop(cuts_and('index>3000000', 'index<3500000'))
+    #print(cats[mode])
+    #exit()
+    #,'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
+    cats[mode].allocate(time='gentime', lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
-    print(cats[mode])
     # Add knots
     cats[mode].knots = Parameters()
     cats[mode].knots.add(*[
