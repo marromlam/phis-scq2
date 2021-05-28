@@ -2,6 +2,7 @@
 #    This rule downloads all files corresponding to a given VERSION from EOS
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
 #    and then it worka automatically.
+#    {{{
 
 rule samples_sync_tuple:
   resources:
@@ -11,26 +12,23 @@ rule samples_sync_tuple:
   log:
     'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
   run:
-    try:
-      shell(f"""
-        (time\
-        python analysis/samples/sync_tuples.py\
-               --year {wildcards.year}\
-               --mode {wildcards.mode}\
-               --version {wildcards.version}\
-               --tree DecayTree\
-               --output {output}\
-        ) &> {log}""")
-    except:
-      print("These tuples are not yet avaliable at root://eoslhcb.cern.ch/*.",
-      'You may need to create those tuples yourself or ask B2CC people to'
-      'produce them')
+    shell(f"""
+      (time\
+      python analysis/samples/sync_tuples.py\
+             --year {wildcards.year}\
+             --mode {wildcards.mode}\
+             --version {wildcards.version}\
+             --tree DecayTree\
+             --output {output}\
+      ) &> {log}""")
 
+# }}}
 
 
 # reduce_ntuples --------------------------------------------------------------
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package.
+#    {{{
 
 rule samples_reduce_tuple:
   wildcard_constraints:
@@ -40,7 +38,7 @@ rule samples_reduce_tuple:
   input:
     sample = lambda wcs: tuples(wcs, weight='kinWeight')
   output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{version,[A-Za-z0-9]+}.root'
+    sample = SAMPLES_PATH+'{year}/{mode}/{version,[A-Za-z0-9@]+}.root'
   log:
     'output/log/samples_reduce_tuple/{year}/{mode}/{version}.log'
   run:
@@ -52,11 +50,13 @@ rule samples_reduce_tuple:
            --output-tree DecayTree\
     ) &> {log}""")
 
+# }}}
 
 
 # samples plot-----------------------------------------------------------------
 #   plot of differents branches of the ntuples. this rule get the plots for
 #   the years with no corrections, sw and kinematic corrections (MC vs data)
+#   {{{
 
 rule plot_samples:
   resources:
@@ -87,7 +87,6 @@ rule plot_samples:
     send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
 
 
-
 rule plot_samples_yearly_v0r5_vs_v0r0:
   resources:
     mem_mb=1024
@@ -116,3 +115,8 @@ rule plot_samples_yearly_v0r5_vs_v0r0:
            --output {",".join(output)}\
     ) &> {log}""")
     send_mail(f"Samples old comparison plot :: {wildcards}", f"{log}", f"{output}".split(' '))
+
+# }}}
+
+
+# vim: foldmethod=marker
