@@ -25,11 +25,19 @@ rule get_resolution_from_git:
             f"\n{80*'='}\n")
 
       print(f'Downloading Bs2JpsiPhi-FullRun2:{csp_path}CspFactors{year}.json')
-      os.system(f"git archive --remote={params.repo} --prefix=./tmp/ HEAD:{csp_path} binned_fit_{year}.json | tar -x")     # YEARLY
+      if f"{wildcards.mode}" == "MC_Bs2JpsiPhi":
+        file = f"mc_signal_calibration.json"
+        #os.system(f"git archive --remote={params.repo} --prefix=./tmp/ HEAD:{csp_path} mc_signal_calibration.json | tar -x")
+        #raw_json = hjson.load( open(f'./tmp/mc_signal_calibration.json','r') )
+      if f"{wildcards.mode}" == "MC_Bs2JpsiPhi_dG0":
+        file = f"dG0_calibration.json"
+      else:
+        file = f"binned_fit_{year}.json"
+      os.system(f"git archive --remote={params.repo} --prefix=./tmp/ HEAD:{csp_path} {file} | tar -x")     # YEARLY
       #os.system(f"git archive --remote={params.repo} --prefix=./tmp/{year}/ HEAD:{csp_path} CspFactorsAll.json | tar -x")     # SHARED
 
-      print(f"Loading CspFactors{year}.json")
-      raw_json = hjson.load( open(f'./tmp/binned_fit_{year}.json','r') )     # YEARLY
+      print(f"Loading Time Resolution {year}")
+      raw_json = hjson.load( open(f'./tmp/{file}','r') )     # YEARLY
       raw_json = raw_json['TimeResParameters']
       #exit()
       #raw_json = hjson.load( open(f'./tmp/{year}/CspFactorsAll.json','r') )     # SHARED
@@ -62,5 +70,5 @@ rule get_resolution_from_git:
       print(params)
       params.dump(f"{output.params}")
       print(f'Dumping parameters to {output.params}')
-      print(f'Clean up ./tmp/binned_fit_{year}.json\n')
-      os.remove(f"./tmp/binned_fit_{year}.json")
+      print(f'Clean up ./tmp/{file}.json\n')
+      os.remove(f"./tmp/{file}")
