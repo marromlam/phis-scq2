@@ -131,10 +131,10 @@ if __name__ == '__main__':
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    cats[mode].allocate(time='time', lkhd='0*time')
+    cats[mode].allocate(time='gentime', lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
-    print(cats[mode])
+
     # Add knots
     cats[mode].knots = Parameters()
     cats[mode].knots.add(*[

@@ -177,10 +177,18 @@ ftype rateBs(const ftype *data,
   }
   #endif
 
-  const ctype exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
-  const ctype exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
-  const ctype exp_i = expconv(time-t_offset, G         , DM, delta_t);
-
+  if (USE_TIMEACC & !USE_TIMERES)
+  {
+    exp_p = expconv_wores(time-t_offset, G + 0.5*DG, 0.);
+    exp_m = expconv_wores(time-t_offset, G - 0.5*DG, 0.);
+    exp_i = expconv_wores(time-t_offset,          G, DM);   
+  }
+  else
+  {
+    exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
+    exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
+    exp_i = expconv(time-t_offset, G         , DM, delta_t);
+  }
   ftype ta = 0.5*(exp_m.x+exp_p.x);
   ftype tb = 0.5*(exp_m.x-exp_p.x);
   ftype tc = exp_i.x;
@@ -353,7 +361,7 @@ ftype rateBs(const ftype *data,
     integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angnorm, G, DG,
                    DM, tLL, tUL);
   }
-  else
+  else if (USE_TIMERES)
   {
     // This integral works for all decay times, remember delta_t != 0.
     #if FAST_INTEGRAL
@@ -369,8 +377,15 @@ ftype rateBs(const ftype *data,
                          coeffs);
      #endif
   }
+  else
+  {
+      integralFullSpline_wores(intBBar, vnk, vak, vbk, vck, vdk, angnorm,
+                               G, DG, DM, tLL, tUL, coeffs);
+
+  }
   const ftype intB = intBBar[0];
   const ftype intBbar = intBBar[1];
+
 
 
   // Cooking the output -------------------------------------------------------
