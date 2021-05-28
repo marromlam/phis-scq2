@@ -69,11 +69,6 @@ rule physics_params_data_run2:
 
 
 
-
-
-
-
-
 rule physics_params_dll_data:
   threads: 8
   input:
@@ -129,7 +124,6 @@ rule physics_params_dll_data:
            --version                 {wildcards.dversion}\
            --blind                   1\
     ) &> {log}""")
-
 
 
 
@@ -296,10 +290,6 @@ rule physics_params_dll_table:
 
 
 
-
-
-
-
 # Run2a angular acceptance -----------------------------------------------------
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
@@ -367,7 +357,6 @@ rule physics_params_data_run2a:
 
 
 
-
 # Yearly time-dependent angular fit --------------------------------------------
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
@@ -430,16 +419,6 @@ rule physics_params_dataYearly:
 
 
 
-
-
-
-
-
-
-
-
-
-
 # Run2a angular acceptance -----------------------------------------------------
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
@@ -469,6 +448,7 @@ rule physics_params_mc:
            --version                 {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Physics Parameters MC :: {wildcards}", f"{log}")
+
 
 
 rule physics_params_mcfit_vs_mcgen:

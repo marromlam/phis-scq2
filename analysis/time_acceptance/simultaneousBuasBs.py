@@ -59,23 +59,23 @@ if __name__ != '__main__':
 # Run and get the job done #####################################################
 if __name__ == '__main__':
 
-  # Parse arguments ------------------------------------------------------------
+  # Parse arguments -----------------------------------------------------------
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bu2JpsiKplus'
-  TIMEACC, NKNOTS, CORR, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], -1 if YEAR in (2015,2017) else -1)
+  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
-  
+
   # splitter = '(evtN%2)==0' # this is Bd as Bs
   # if LIFECUT == 'mKstar':
   #   splitter = cuts_and(splitter, f"mHH>890")
@@ -97,7 +97,7 @@ if __name__ == '__main__':
   samples = args['samples'].split(',')
   oparams = args['params'].split(',')
   otables = args['tables'].split(',')
-  
+
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(NKNOTS)]
   kinWeight = f'Weight_{VAR}' if VAR else 'Weight'
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
 
 
-  # Get data into categories ---------------------------------------------------
+  # Get data into categories --------------------------------------------------
   print(f"\n{80*'='}\nLoading categories\n{80*'='}\n")
 
   cats = {}
@@ -176,13 +176,13 @@ if __name__ == '__main__':
 
 
 
-  # Configure kernel -----------------------------------------------------------
+  # Configure kernel ----------------------------------------------------------
   fcns.badjanak.config['knots'] = knots[:-1]
   fcns.badjanak.get_kernels(True)
 
 
 
-  # Time to fit acceptance -----------------------------------------------------
+  # Time to fit acceptance ----------------------------------------------------
   print(f"\n{80*'='}\nSimultaneous minimization procedure\n{80*'='}\n")
   fcn_call = fcns.saxsbxscxerf
   fcn_pars = cats['BuMC'].params+cats['BdMC'].params+cats['BdRD'].params
@@ -205,10 +205,10 @@ if __name__ == '__main__':
     result = mini.optimize(method='emcee', verbose=False, params=_res.params,
                            steps=1000, nwalkers=100, behavior='chi2')
   print(result)
- 
 
- 
-  # Writing results ------------------------------------------------------------
+
+
+  # Writing results -----------------------------------------------------------
   print(f"\n{80*'='}\nDumping parameters\n{80*'='}\n")
 
   for name, cat in zip(cats.keys(), cats.values()):

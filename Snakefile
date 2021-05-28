@@ -66,6 +66,7 @@ wildcard_constraints:
 
 include: 'analysis/samples/Snakefile'
 include: 'analysis/reweightings/Snakefile'
+include: 'analysis/velo_weights/Snakefile'
 include: 'analysis/time_acceptance/Snakefile'
 include: 'analysis/flavor_tagging/Snakefile'
 include: 'analysis/csp_factors/Snakefile'

@@ -1,6 +1,8 @@
 # polarity weighting -----------------------------------------------------------
 #    Adds polWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
+#    {{{
+
 rule reweighting_polarity:
   resources:
     mem_mb=7168
@@ -24,12 +26,12 @@ rule reweighting_polarity:
     ) &> {log}""")
     send_mail(f"Polarity weighting :: {wildcards}", f"{log}")
 
-
+# }}}
 
 # p.d.f. weighting -------------------------------------------------------------
 #    Adds pdfWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
-
+#    {{{
 rule reweighting_pdf:
   resources:
     mem_mb=7168
@@ -55,7 +57,6 @@ rule reweighting_pdf:
              --mode {wildcards.mode}\
     ) &> {log}""")
     send_mail(f"PDF weighting :: {wildcards}", f"{log}")
-
 
 
 rule reweighting_dg0:
@@ -84,19 +85,22 @@ rule reweighting_dg0:
     ) &> {log}""")
     send_mail(f"dG0 weighting :: {wildcards}", f"{log}")
 
+# }}}
 
 
 # kinematic weighting ----------------------------------------------------------
 #    Adds kinWeight to MC_BsJpsiPhi*, MC_BdJpsiKstar and Bd2JpsiKstar tuples
 #    gb-weighting them to match kinematic distributions of their complementary
 #    sample.
+#    {{{
+
 rule reweighting_kinematic:
   resources:
     mem_mb=7168
   wildcard_constraints:
     mode = "(MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)|Bd2JpsiKstar|Bu2JpsiKplus)"
   input:
-    original = lambda wcs: tuples(wcs,weight='kbuWeight'),
+    original = lambda wcs: tuples(wcs,weight='oddWeight'),
     target = lambda wcs: tuples(wcs,mode='cdata',weight='kinWeight'),
   output:
     sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_kinWeight.root')
@@ -206,6 +210,71 @@ rule reweighting_kinematic:
       ) &> {log}""")
     send_mail(f"Kinematic weighting :: {wildcards}", f"{log}")
 
+
+rule reweighting_wisely:
+  resources:
+    mem_mb=7168
+  wildcard_constraints:
+    mode = "MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)"
+  input:
+    original = lambda wcs: tuples(wcs,weight='kbuWeight'),
+    target = lambda wcs: tuples(wcs,mode='cdata',weight='kinWeight'),
+  output:
+    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_oddWeight.root')
+  log:
+    'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
+  run:
+    from angular_acceptance.bdtconf_tester import bdtmesh
+    bdconfig = CONFIG['time_acceptance_bdtconfig']
+
+    year = f'{wildcards.year}'
+    mode = f'{wildcards.mode}'
+    version = f'{wildcards.version}'
+
+    # change bdt according to filename, if applies
+    if 'bdt' in version:
+      bdtconfig = int(version.split('bdt')[1])
+      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], False)
+
+    if mode.startswith('MC_Bs2Jpsi'):
+      shell(f"""(time\
+        python analysis/reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF" \
+          --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF"\
+          --target-weight "sw"\
+          --output-file {output.sample}\
+          --n-estimators {bdconfig['n_estimators']}\
+          --learning-rate {bdconfig['learning_rate']}\
+          --max-depth {bdconfig['max_depth']}\
+          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      ) &> {log}""")
+    elif mode.startswith('MC_Bd2JpsiKstar'):
+      shell(f"""(time\
+        python analysis/reweightings/kinematic_weighting.py\
+          --original-file {input.original}\
+          --original-treename DecayTree\
+          --original-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF" \
+          --original-weight "sw*polWeight*pdfWeight"\
+          --target-file {input.target}\
+          --target-treename DecayTree\
+          --target-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF"\
+          --target-weight "sw*kinWeight"\
+          --output-file {output.sample}\
+          --n-estimators {bdconfig['n_estimators']}\
+          --learning-rate {bdconfig['learning_rate']}\
+          --max-depth {bdconfig['max_depth']}\
+          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      ) &> {log}""")
+    else:
+      shell(f"""(time\
+        cp {input.original} {output.sample}
+      ) &> {log}""")
+    send_mail(f"Kinematic weighting :: {wildcards}", f"{log}")
 
 
 rule reweighting_kinematicBu:
@@ -361,3 +430,7 @@ rule reweightings_simon_comparisons:
            --sweighted {output.sweighted}\
            --kinweighted {output.kinweighted}\
     ) &> {log}""")
+
+# }}}
+
+# vim: foldmethod=marker

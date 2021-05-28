@@ -1,0 +1,710 @@
+\documentclass[aspectratio=43]{beamer}
+\usetheme{Compostela}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{$\phi_s$ meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}
+}
+\newcommand{\TalkAuthorShort}{Veronika Chobanova, Diego Martínez, Marcos Romero}
+\newcommand{\TalkTitle}{\textit{phis SCQ} status}
+\newcommand{\TalkTitleShort}{\textit{phis SCQ} status}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{October 12th}
+\newcommand{\TalkDateNumber}{2020/10/22}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{adjustbox,booktabs,float}
+
+\usepackage{array}
+\newcommand{\TupleVersion}{v0r5}
+\newcommand{\FIGS}{/home3/marcos.romero/phis-scq/output/figures}
+\newcommand{\PARS}{/home3/marcos.romero/phis-scq/output/tables}
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE PAGE & CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[plain,overlaytitlepage=0.9]
+  \begin{minipage}[b][\textheight][b]{5cm}
+    \includegraphics[height=0.5cm]{logos/igfae_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/usc_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/xunta_bw}\hspace{1mm}\\[2mm]
+    \includegraphics[height=0.5cm]{logos/maeztu_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/lhcb_bw}\\[-1mm]
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain,overlaytoc=0.9]
+  \addtocounter{framenumber}{-1}
+  \hspace*{5.3cm}\begin{minipage}{8cm}
+    \tableofcontents
+  \end{minipage}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{News}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Decay--time acceptance}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+% \begin{frame}[default] % -------------------------------------------------------
+% \frametitle{Procedure}
+%
+% \begin{center}
+%   \centering \includegraphics[width=\textwidth]{gpx/angular_pipeline.pdf}
+% \end{center}
+%
+% \begin{enumerate}
+%   \item Uncorrected angular weights.
+%   \item Polarity and kinematic weigtings to correct MC to match data shape
+%   \item Corrected angular weights
+%   \item Perform a time--angular fit to data and use fitted parameters to weight the MC
+%   \item Weight $K^+$ and $K^-$ momentum and transverse momentum distributions
+%   \item Corrected angular weights
+% \end{enumerate}
+%
+% \end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{noframetitle}
+
+\begin{enumerate}
+  \item Baseline simultaneous fit is working:
+  \begin{itemize}
+    \item Current BDT configuration is $20:0.3:3:1000$
+    \item \texttt{kinWeight} is not splitted by trigger
+    \item The split in trigger categories is done with a \textbf{cut}
+  \end{itemize}
+  \item Time acceptance in bins of $p_T(B)$, $\sigma_t(B)$ and $\eta(B)$ is ready
+  \begin{itemize}
+    \item The split in variables is done with a \textbf{cut}
+  \end{itemize}
+  \item Angular acceptance in bins of $p_T(B)$, $\sigma_t(B)$ and $\eta(B)$ and per year doesn't need further developments
+  \item Lifetime fit for $B_d$ and $B_u$ needs one more week
+
+\end{enumerate}
+
+\end{frame} % ------------------------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Angular acceptance}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{noframetitle}
+
+\begin{center}
+  \centering \includegraphics[width=\textwidth]{gpx/angular_pipeline.pdf}
+\end{center}
+
+\begin{enumerate}
+  \item Naive angular weights.
+  \item Polarity and kinematic weigtings to correct MC to match data shape
+  \item Corrected angular weights
+  \item Perform a time--angular fit to data and use fitted parameters to weight the MC
+  \item Weight $K^+$ and $K^-$ momentum and transverse momentum distributions
+  \item Corrected angular weights
+\end{enumerate}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{noframetitle}
+
+\begin{enumerate}
+  \item Baseline iterative procedure is working:
+  \begin{itemize}
+    \item Current BDT configuration is $20:0.1:3:1000$
+    \item The split in trigger categories is done with a \textbf{cut}
+  \end{itemize}
+  \item Angular acceptance in bins of $p_T(B)$, $\sigma_t(B)$ and $\eta(B)$ is ready
+  \begin{itemize}
+    \item Current BDT configuration is $20:0.1:3:1000$
+    \item The split in trigger categories is done with a \textbf{cut}
+    \item The split in bins is done with a \textbf{cut}
+  \end{itemize}
+  \item Angular acceptance in bins of $p_T(B)$, $\sigma_t(B)$ and $\eta(B)$ and per year is ready
+
+\end{enumerate}
+
+\end{frame} % ------------------------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Time--dependent angular fit}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{noframetitle}
+
+\begin{center}
+\resizebox{!}{0.4\textheight}{%
+\begin{tabular}{ccc}
+\toprule
+                                 &  \textit{phis-SCQ} weights  & \textit{phis-SCQ} cuts \\ 
+\midrule
+$\phi_0                         $&$  0.293\pm0.022   $&$  0.293 \pm 0.022 $ \\
+$\lambda_0                      $&$  1.0064\pm0.0096 $&$  1.0066 \pm 0.0096 $ \\
+$\Gamma_s - \Gamma_d            $&$ -0.0086\pm0.0013 $&$ -0.0086 \pm 0.0013 $ \\
+$\Delta\Gamma_s                 $&$  0.2672\pm0.0044 $&$  0.2671 \pm 0.0044 $ \\
+$\Delta m                       $&$  17.739\pm0.032  $&$  17.739 \pm 0.032 $ \\
+$f_{\perp}                      $&$  0.2458\pm0.0023 $&$  0.2462 \pm 0.0023 $ \\
+$ f_0                           $&$  0.5189\pm0.0017 $&$  0.5180 \pm 0.0017  $ \\
+$f_S^{1}                        $&$  0.467\pm0.024   $&$  0.4666 \pm 0.0240 $ \\
+$f_S^{2}                        $&$  0.0421\pm0.0049 $&$  0.0417 \pm 0.0049  $ \\
+$f_S^{3}                        $&$  0.0035\pm0.0015 $&$  0.0033 \pm 0.0014  $ \\
+$f_S^{4}                        $&$  0.0045\pm0.0026 $&$  0.0042 \pm 0.0025 $ \\
+$f_S^{5}                        $&$  0.0560\pm0.0071 $&$  0.055 \pm 0.007 $ \\
+$f_S^{6}                        $&$  0.152\pm0.011   $&$  0.151 \pm 0.011 $ \\
+$\delta_{\parallel} - \delta_0  $&$  3.130\pm0.062   $&$  3.131 \pm 0.061 $ \\
+$\delta_{\perp} - \delta_0      $&$  2.767\pm0.073   $&$  2.768 \pm 0.073  $ \\
+$\delta_S^{1} - \delta_{\perp}  $&$  2.03\pm0.13     $&$  2.03 \pm 0.13 $ \\
+$\delta_S^{2} - \delta_{\perp}  $&$  1.71\pm0.18     $&$  1.71 \pm 0.18 $ \\
+$\delta_S^{3} - \delta_{\perp}  $&$  0.98\pm0.31     $&$  1.00 \pm 0.31 $ \\
+$\delta_S^{4} - \delta_{\perp}  $&$ -0.16\pm0.12     $&$ -0.16 \pm 0.12 $ \\
+$\delta_S^{5} - \delta_{\perp}  $&$ -0.596\pm0.066   $&$ -0.600 \pm 0.066 $ \\
+$\delta_S^{6} - \delta_{\perp}  $&$ -0.987\pm0.076   $&$  -0.990 \pm 0.077 $ \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default,allowframebreaks] % -------------------------------------------------------
+\frametitle{Some checks in bins}
+
+\begin{table}[H]
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l|ccccc}
+$                              $ & $             nominal$ & $            pt-bin 1$ & $            pt-bin 2$ & $            pt-bin 3$ & $            pt-bin 4$ \\
+\hline
+$                        \phi_0$ & $     0.293 \pm 0.022$ & $     0.352 \pm 0.058$ & $     0.242 \pm 0.046$ & $     0.340 \pm 0.041$ & $     0.278 \pm 0.035$ \\
+$                     \lambda_0$ & $   1.0064 \pm 0.0096$ & $     1.005 \pm 0.021$ & $     0.981 \pm 0.023$ & $     1.000 \pm 0.019$ & $     1.019 \pm 0.016$ \\
+$                \Delta\Gamma_s$ & $   0.2672 \pm 0.0044$ & $   0.2648 \pm 0.0089$ & $   0.2684 \pm 0.0089$ & $   0.2637 \pm 0.0088$ & $   0.2708 \pm 0.0089$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0086 \pm 0.0013$ & $  -0.0053 \pm 0.0028$ & $  -0.0103 \pm 0.0027$ & $  -0.0142 \pm 0.0027$ & $  -0.0028 \pm 0.0027$ \\
+$                      \Delta m$ & $    17.739 \pm 0.032$ & $      17.79 \pm 0.10$ & $    17.764 \pm 0.083$ & $    17.821 \pm 0.050$ & $    17.691 \pm 0.046$ \\
+$     \delta_{\perp} - \delta_0$ & $     2.767 \pm 0.073$ & $       2.70 \pm 0.21$ & $       2.78 \pm 0.17$ & $       2.87 \pm 0.13$ & $       2.85 \pm 0.11$ \\
+$                           f_0$ & $   0.5189 \pm 0.0017$ & $   0.5225 \pm 0.0035$ & $   0.5192 \pm 0.0034$ & $   0.5189 \pm 0.0033$ & $   0.5147 \pm 0.0032$ \\
+$                     f_{\perp}$ & $   0.2458 \pm 0.0023$ & $   0.2495 \pm 0.0048$ & $   0.2440 \pm 0.0046$ & $   0.2453 \pm 0.0048$ & $   0.2424 \pm 0.0046$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.130 \pm 0.062$ & $       3.18 \pm 0.15$ & $     3.115 \pm 0.079$ & $     2.965 \pm 0.087$ & $     3.260 \pm 0.085$ \\
+\end{tabular}}
+\caption{
+p-value of 0.3371
+}\end{table}
+
+\begin{table}[H]
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $             nominal$ & $        sigmat-bin 1$ & $        sigmat-bin 2$ & $        sigmat-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.293 \pm 0.022$ & $     0.297 \pm 0.032$ & $     0.321 \pm 0.035$ & $     0.281 \pm 0.054$ \\
+$                     \lambda_0$ & $   1.0064 \pm 0.0096$ & $     1.000 \pm 0.017$ & $     1.014 \pm 0.012$ & $     0.968 \pm 0.022$ \\
+$                \Delta\Gamma_s$ & $   0.2672 \pm 0.0044$ & $   0.2843 \pm 0.0090$ & $   0.2619 \pm 0.0074$ & $   0.2499 \pm 0.0072$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0086 \pm 0.0013$ & $  -0.0037 \pm 0.0027$ & $   0.0054 \pm 0.0023$ & $   0.0002 \pm 0.0022$ \\
+$                      \Delta m$ & $    17.739 \pm 0.032$ & $    17.699 \pm 0.052$ & $    17.699 \pm 0.039$ & $    17.889 \pm 0.066$ \\
+$     \delta_{\perp} - \delta_0$ & $     2.767 \pm 0.073$ & $       2.80 \pm 0.12$ & $       2.53 \pm 0.10$ & $       3.12 \pm 0.16$ \\
+$                           f_0$ & $   0.5189 \pm 0.0017$ & $   0.5104 \pm 0.0030$ & $   0.5165 \pm 0.0027$ & $   0.5153 \pm 0.0031$ \\
+$                     f_{\perp}$ & $   0.2458 \pm 0.0023$ & $   0.2484 \pm 0.0043$ & $   0.2487 \pm 0.0038$ & $   0.2489 \pm 0.0043$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.130 \pm 0.062$ & $       3.05 \pm 0.12$ & $     3.147 \pm 0.069$ & $       3.19 \pm 0.15$ \\
+\end{tabular}}
+\caption{
+p-value of 0.0026
+}\end{table}
+\begin{table}[H]
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $             nominal$ & $           eta-bin 1$ & $           eta-bin 2$ & $           eta-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.293 \pm 0.022$ & $     0.286 \pm 0.031$ & $     0.311 \pm 0.037$ & $     0.277 \pm 0.045$ \\
+$                     \lambda_0$ & $   1.0064 \pm 0.0096$ & $     1.016 \pm 0.015$ & $     1.008 \pm 0.015$ & $     0.992 \pm 0.041$ \\
+$                \Delta\Gamma_s$ & $   0.2672 \pm 0.0044$ & $   0.2766 \pm 0.0071$ & $   0.2582 \pm 0.0077$ & $   0.2688 \pm 0.0083$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0086 \pm 0.0013$ & $  -0.0091 \pm 0.0021$ & $  -0.0070 \pm 0.0024$ & $  -0.0094 \pm 0.0026$ \\
+$                      \Delta m$ & $    17.739 \pm 0.032$ & $    17.750 \pm 0.044$ & $    17.717 \pm 0.055$ & $    17.760 \pm 0.076$ \\
+$     \delta_{\perp} - \delta_0$ & $     2.767 \pm 0.073$ & $       2.83 \pm 0.11$ & $       2.66 \pm 0.12$ & $       3.09 \pm 0.19$ \\
+$                           f_0$ & $   0.5189 \pm 0.0017$ & $   0.5173 \pm 0.0026$ & $   0.5152 \pm 0.0029$ & $   0.5240 \pm 0.0032$ \\
+$                     f_{\perp}$ & $   0.2458 \pm 0.0023$ & $   0.2426 \pm 0.0037$ & $   0.2510 \pm 0.0040$ & $   0.2441 \pm 0.0045$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.130 \pm 0.062$ & $       3.12 \pm 0.10$ & $     3.174 \pm 0.077$ & $       3.19 \pm 0.24$ \\
+\end{tabular}}
+\caption{
+p-value of 0.6276
+}\end{table}
+
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default,allowframebreaks] % -------------------------------------------------------
+\frametitle{Checks in years}
+
+Fitted each year separately using the nominal angular acceptance, this is, the one computed with all years plugged in
+
+Fit check: Run2 AngAcc + Yearly Fit
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|ccccc}
+$                              $ & $             nominal$ & $                2015$ & $                2016$ & $                2017$ & $                2018$ \\
+\hline
+$                        \phi_0$ & $     0.293 \pm 0.022$ & $     0.345 \pm 0.098$ & $     0.224 \pm 0.043$ & $     0.360 \pm 0.040$ & $     0.293 \pm 0.033$ \\
+$                     \lambda_0$ & $   1.0064 \pm 0.0096$ & $     0.972 \pm 0.040$ & $     1.015 \pm 0.016$ & $     0.961 \pm 0.025$ & $     1.023 \pm 0.016$ \\
+$                \Delta\Gamma_s$ & $   0.2672 \pm 0.0044$ & $     0.251 \pm 0.022$ & $   0.2639 \pm 0.0081$ & $   0.2726 \pm 0.0080$ & $   0.2676 \pm 0.0074$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0086 \pm 0.0013$ & $  -0.0041 \pm 0.0066$ & $  -0.0061 \pm 0.0025$ & $  -0.0078 \pm 0.0025$ & $  -0.0121 \pm 0.0023$ \\
+$                      \Delta m$ & $    17.739 \pm 0.032$ & $      17.54 \pm 0.11$ & $    17.696 \pm 0.056$ & $    17.860 \pm 0.074$ & $    17.754 \pm 0.045$ \\
+$     \delta_{\perp} - \delta_0$ & $     2.767 \pm 0.073$ & $       2.68 \pm 0.28$ & $       2.60 \pm 0.13$ & $       3.09 \pm 0.15$ & $       2.84 \pm 0.11$ \\
+$                           f_0$ & $   0.5189 \pm 0.0017$ & $   0.5209 \pm 0.0080$ & $   0.5164 \pm 0.0031$ & $   0.5186 \pm 0.0030$ & $   0.5185 \pm 0.0028$ \\
+$                     f_{\perp}$ & $   0.2458 \pm 0.0023$ & $     0.243 \pm 0.012$ & $   0.2454 \pm 0.0042$ & $   0.2461 \pm 0.0042$ & $   0.2460 \pm 0.0039$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.130 \pm 0.062$ & $       2.78 \pm 0.13$ & $     3.078 \pm 0.076$ & $     3.226 \pm 0.093$ & $     3.207 \pm 0.099$ \\
+\end{tabular}}
+\caption{
+p-value of 0.1750
+}\end{table}
+
+
+Recompute all angular acceptances with only one year plugged and fitted each one separately
+
+Fit check: Yearly AngAcc + Yearly Fit
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|ccccc}
+$                              $ & $             nominal$ & $                2015$ & $                2016$ & $                2017$ & $                2018$ \\
+\hline
+$                        \phi_0$ & $     0.293 \pm 0.022$ & $     0.372 \pm 0.098$ & $     0.224 \pm 0.043$ & $     0.360 \pm 0.040$ & $     0.294 \pm 0.033$ \\
+$                     \lambda_0$ & $   1.0064 \pm 0.0096$ & $     1.028 \pm 0.067$ & $     1.016 \pm 0.016$ & $     0.959 \pm 0.024$ & $     1.024 \pm 0.016$ \\
+$                \Delta\Gamma_s$ & $   0.2672 \pm 0.0044$ & $     0.253 \pm 0.022$ & $   0.2639 \pm 0.0081$ & $   0.2726 \pm 0.0080$ & $   0.2676 \pm 0.0074$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0086 \pm 0.0013$ & $  -0.0044 \pm 0.0066$ & $  -0.0061 \pm 0.0025$ & $  -0.0078 \pm 0.0025$ & $  -0.0121 \pm 0.0023$ \\
+$                      \Delta m$ & $    17.739 \pm 0.032$ & $      17.60 \pm 0.12$ & $    17.696 \pm 0.056$ & $    17.861 \pm 0.073$ & $    17.754 \pm 0.045$ \\
+$     \delta_{\perp} - \delta_0$ & $     2.767 \pm 0.073$ & $       3.12 \pm 0.42$ & $       2.60 \pm 0.13$ & $       3.09 \pm 0.15$ & $       2.84 \pm 0.11$ \\
+$                           f_0$ & $   0.5189 \pm 0.0017$ & $   0.5215 \pm 0.0080$ & $   0.5164 \pm 0.0031$ & $   0.5186 \pm 0.0030$ & $   0.5184 \pm 0.0028$ \\
+$                     f_{\perp}$ & $   0.2458 \pm 0.0023$ & $     0.240 \pm 0.012$ & $   0.2454 \pm 0.0042$ & $   0.2461 \pm 0.0042$ & $   0.2460 \pm 0.0039$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.130 \pm 0.062$ & $       3.55 \pm 0.11$ & $     3.077 \pm 0.076$ & $     3.225 \pm 0.093$ & $     3.206 \pm 0.099$ \\
+\end{tabular}}
+\caption{
+p-value of 0.1471
+}\end{table}
+
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default,allowframebreaks] % -------------------------------------------------------
+  \frametitle{Check in years DLL}
+  
+  
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{ccccc|ccccc|ccc}
+    \multicolumn{5}{c|}{Parameter set} & \multicolumn{5}{c|}{Sample set} \\
+          year &    version &        fit &     angacc &    timeacc &       year &    version &        fit &     angacc &    timeacc &       Prob  &  p-value & dof \\
+    \hline
+          2015 &       v0r5 &     yearly &     yearly &      simul &       run2 &       v0r5 &       run2 &       run2 &      simul & $+1.79\sigma$ & $0.0736$ & $21$\\
+          2016 &       v0r5 &     yearly &     yearly &      simul &       run2 &       v0r5 &       run2 &       run2 &      simul & $+0.12\sigma$ & $0.9049$ & $21$\\
+          2017 &       v0r5 &     yearly &     yearly &      simul &       run2 &       v0r5 &       run2 &       run2 &      simul & $+0.44\sigma$ & $0.6615$ & $21$\\
+          2018 &       v0r5 &     yearly &     yearly &      simul &       run2 &       v0r5 &       run2 &       run2 &      simul & $+0.15\sigma$ & $0.8830$ & $21$\\
+    \hline
+          2015 &       v0r5 &     yearly &     yearly &      simul &       2018 &       v0r5 &     yearly &     yearly &      simul & $+1.31\sigma$ & $0.1909$ & $21$\\
+          2016 &       v0r5 &     yearly &     yearly &      simul &       2018 &       v0r5 &     yearly &     yearly &      simul & $+1.08\sigma$ & $0.2821$ & $21$\\
+          2017 &       v0r5 &     yearly &     yearly &      simul &       2018 &       v0r5 &     yearly &     yearly &      simul & $+1.59\sigma$ & $0.1130$ & $21$\\
+          2018 &       v0r5 &     yearly &     yearly &      simul &       2018 &       v0r5 &     yearly &     yearly &      simul & $-0.00\sigma$ & $1.0000$ & $21$\\
+          2015 &       v0r5 &     yearly &     yearly &      simul &       2017 &       v0r5 &     yearly &     yearly &      simul & $+1.61\sigma$ & $0.1081$ & $21$\\
+          2016 &       v0r5 &     yearly &     yearly &      simul &       2017 &       v0r5 &     yearly &     yearly &      simul & $+1.67\sigma$ & $0.0954$ & $21$\\
+          2017 &       v0r5 &     yearly &     yearly &      simul &       2017 &       v0r5 &     yearly &     yearly &      simul & $-0.00\sigma$ & $1.0000$ & $21$\\
+          2018 &       v0r5 &     yearly &     yearly &      simul &       2017 &       v0r5 &     yearly &     yearly &      simul & $+1.59\sigma$ & $0.1130$ & $21$\\
+          2015 &       v0r5 &     yearly &     yearly &      simul &       2016 &       v0r5 &     yearly &     yearly &      simul & $+2.08\sigma$ & $0.0374$ & $21$\\
+          2016 &       v0r5 &     yearly &     yearly &      simul &       2016 &       v0r5 &     yearly &     yearly &      simul & $-0.00\sigma$ & $1.0000$ & $21$\\
+          2017 &       v0r5 &     yearly &     yearly &      simul &       2016 &       v0r5 &     yearly &     yearly &      simul & $+1.67\sigma$ & $0.0954$ & $21$\\
+          2018 &       v0r5 &     yearly &     yearly &      simul &       2016 &       v0r5 &     yearly &     yearly &      simul & $+1.08\sigma$ & $0.2821$ & $21$\\
+          2015 &       v0r5 &     yearly &     yearly &      simul &       2015 &       v0r5 &     yearly &     yearly &      simul & $-0.00\sigma$ & $1.0000$ & $21$\\
+          2016 &       v0r5 &     yearly &     yearly &      simul &       2015 &       v0r5 &     yearly &     yearly &      simul & $+2.08\sigma$ & $0.0374$ & $21$\\
+          2017 &       v0r5 &     yearly &     yearly &      simul &       2015 &       v0r5 &     yearly &     yearly &      simul & $+1.61\sigma$ & $0.1081$ & $21$\\
+          2018 &       v0r5 &     yearly &     yearly &      simul &       2015 &       v0r5 &     yearly &     yearly &      simul & $+1.31\sigma$ & $0.1909$ & $21$\\
+    \end{tabular}
+  }
+  
+  
+  \end{frame} % ------------------------------------------------------------------
+  
+
+
+
+\begin{frame}[default,allowframebreaks] % -------------------------------------------------------
+\frametitle{Check in years and in bins}
+
+\framesubtitle{ 2015 }
+\newpage \textbf{ pt }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2015 only$ & $            pt-bin 1$ & $            pt-bin 2$ & $            pt-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.372 \pm 0.098$ & $       0.68 \pm 0.26$ & $   0.0132 \pm 0.0058$ & $       0.65 \pm 0.21$ \\
+$                     \lambda_0$ & $     1.028 \pm 0.067$ & $       0.74 \pm 0.12$ & $   1.1085 \pm 0.0026$ & $     1.039 \pm 0.051$ \\
+$                \Delta\Gamma_s$ & $     0.253 \pm 0.022$ & $     0.286 \pm 0.045$ & $ 0.28086 \pm 0.00080$ & $     0.195 \pm 0.050$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0044 \pm 0.0066$ & $     0.001 \pm 0.013$ & $-0.01256 \pm 0.00031$ & $    -0.004 \pm 0.014$ \\
+$                      \Delta m$ & $      17.60 \pm 0.12$ & $      17.98 \pm 0.13$ & $  17.6357 \pm 0.0033$ & $      18.09 \pm 0.15$ \\
+$     \delta_{\perp} - \delta_0$ & $       3.12 \pm 0.42$ & $       3.19 \pm 0.25$ & $   3.4317 \pm 0.0072$ & $       3.96 \pm 0.55$ \\
+$                           f_0$ & $   0.5215 \pm 0.0080$ & $     0.522 \pm 0.016$ & $ 0.52697 \pm 0.00033$ & $     0.513 \pm 0.016$ \\
+$                     f_{\perp}$ & $     0.240 \pm 0.012$ & $     0.225 \pm 0.023$ & $ 0.24407 \pm 0.00041$ & $     0.247 \pm 0.024$ \\
+$ \delta_{\parallel} - \delta_0$ & $       3.55 \pm 0.11$ & $       2.73 \pm 0.20$ & $   3.5675 \pm 0.0044$ & $       2.78 \pm 0.24$ \\
+\end{tabular}}
+\caption{
+p-value of 0.0000
+}\end{table}
+\newpage \textbf{ sigmat }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2015 only$ & $        sigmat-bin 1$ & $        sigmat-bin 2$ & $        sigmat-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.372 \pm 0.098$ & $     0.451 \pm 0.071$ & $       0.27 \pm 0.18$ & $       0.33 \pm 0.24$ \\
+$                     \lambda_0$ & $     1.028 \pm 0.067$ & $     0.932 \pm 0.024$ & $     0.969 \pm 0.051$ & $     1.078 \pm 0.072$ \\
+$                \Delta\Gamma_s$ & $     0.253 \pm 0.022$ & $     0.328 \pm 0.015$ & $     0.223 \pm 0.037$ & $     0.224 \pm 0.042$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0044 \pm 0.0066$ & $   0.0081 \pm 0.0065$ & $    -0.005 \pm 0.011$ & $     0.002 \pm 0.012$ \\
+$                      \Delta m$ & $      17.60 \pm 0.12$ & $    17.315 \pm 0.049$ & $      17.53 \pm 0.12$ & $      17.48 \pm 0.20$ \\
+$     \delta_{\perp} - \delta_0$ & $       3.12 \pm 0.42$ & $       1.97 \pm 0.14$ & $       2.61 \pm 0.41$ & $       2.86 \pm 0.41$ \\
+$                           f_0$ & $   0.5215 \pm 0.0080$ & $   0.5492 \pm 0.0060$ & $     0.509 \pm 0.013$ & $     0.510 \pm 0.015$ \\
+$                     f_{\perp}$ & $     0.240 \pm 0.012$ & $   0.2274 \pm 0.0073$ & $     0.255 \pm 0.020$ & $     0.234 \pm 0.022$ \\
+$ \delta_{\parallel} - \delta_0$ & $       3.55 \pm 0.11$ & $     2.586 \pm 0.068$ & $       3.32 \pm 0.36$ & $       3.71 \pm 0.12$ \\
+\end{tabular}}
+\caption{
+p-value of 0.0407
+}\end{table}
+\newpage \textbf{ eta }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2015 only$ & $           eta-bin 1$ & $           eta-bin 2$ & $           eta-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.372 \pm 0.098$ & $0.330776 \pm 0.000023$ & $       0.47 \pm 0.18$ & $       0.43 \pm 0.10$ \\
+$                     \lambda_0$ & $     1.028 \pm 0.067$ & $0.945824 \pm 0.000032$ & $     1.105 \pm 0.083$ & $     0.894 \pm 0.048$ \\
+$                \Delta\Gamma_s$ & $     0.253 \pm 0.022$ & $0.272038 \pm 0.000033$ & $     0.253 \pm 0.042$ & $     0.235 \pm 0.013$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0044 \pm 0.0066$ & $-0.0188321 \pm 0.0000025$ & $    -0.007 \pm 0.012$ & $   0.0182 \pm 0.0052$ \\
+$                      \Delta m$ & $      17.60 \pm 0.12$ & $17.204554 \pm 0.000061$ & $      17.73 \pm 0.12$ & $    17.744 \pm 0.053$ \\
+$     \delta_{\perp} - \delta_0$ & $       3.12 \pm 0.42$ & $ 2.12153 \pm 0.00014$ & $       3.33 \pm 0.36$ & $       3.45 \pm 0.13$ \\
+$                           f_0$ & $   0.5215 \pm 0.0080$ & $0.5306386 \pm 0.0000090$ & $     0.516 \pm 0.014$ & $   0.5207 \pm 0.0053$ \\
+$                     f_{\perp}$ & $     0.240 \pm 0.012$ & $0.2322390 \pm 0.0000023$ & $     0.232 \pm 0.021$ & $   0.2650 \pm 0.0071$ \\
+$ \delta_{\parallel} - \delta_0$ & $       3.55 \pm 0.11$ & $ 2.76713 \pm 0.00046$ & $       3.56 \pm 0.17$ & $     3.554 \pm 0.088$ \\
+\end{tabular}}
+\caption{
+p-value of 0.0000
+}\end{table}
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default,allowframebreaks] % -------------------------------------------------------
+\frametitle{Check in years and in bins}
+
+\framesubtitle{ 2016 }
+\newpage \textbf{ pt }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2016 only$ & $            pt-bin 1$ & $            pt-bin 2$ & $            pt-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.224 \pm 0.043$ & $       0.21 \pm 0.11$ & $     0.198 \pm 0.090$ & $     0.285 \pm 0.076$ \\
+$                     \lambda_0$ & $     1.016 \pm 0.016$ & $     0.996 \pm 0.022$ & $     1.033 \pm 0.026$ & $     1.006 \pm 0.028$ \\
+$                \Delta\Gamma_s$ & $   0.2639 \pm 0.0081$ & $     0.266 \pm 0.016$ & $     0.271 \pm 0.016$ & $     0.267 \pm 0.017$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0061 \pm 0.0025$ & $  -0.0022 \pm 0.0049$ & $  -0.0069 \pm 0.0049$ & $  -0.0164 \pm 0.0050$ \\
+$                      \Delta m$ & $    17.696 \pm 0.056$ & $      17.24 \pm 0.12$ & $    17.609 \pm 0.099$ & $    17.702 \pm 0.077$ \\
+$     \delta_{\perp} - \delta_0$ & $       2.60 \pm 0.13$ & $       2.23 \pm 0.34$ & $       2.53 \pm 0.24$ & $       2.51 \pm 0.21$ \\
+$                           f_0$ & $   0.5164 \pm 0.0031$ & $   0.5264 \pm 0.0063$ & $   0.5175 \pm 0.0061$ & $   0.5182 \pm 0.0062$ \\
+$                     f_{\perp}$ & $   0.2454 \pm 0.0042$ & $   0.2480 \pm 0.0086$ & $   0.2470 \pm 0.0083$ & $   0.2361 \pm 0.0087$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.077 \pm 0.076$ & $       3.06 \pm 0.13$ & $       3.14 \pm 0.14$ & $       3.03 \pm 0.15$ \\
+\end{tabular}}
+\caption{
+p-value of 0.3220
+}\end{table}
+\newpage \textbf{ sigmat }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2016 only$ & $        sigmat-bin 1$ & $        sigmat-bin 2$ & $        sigmat-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.224 \pm 0.043$ & $     0.319 \pm 0.068$ & $     0.187 \pm 0.066$ & $     0.132 \pm 0.097$ \\
+$                     \lambda_0$ & $     1.016 \pm 0.016$ & $     1.005 \pm 0.027$ & $     0.999 \pm 0.023$ & $     1.028 \pm 0.020$ \\
+$                \Delta\Gamma_s$ & $   0.2639 \pm 0.0081$ & $     0.270 \pm 0.019$ & $     0.271 \pm 0.014$ & $     0.247 \pm 0.013$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0061 \pm 0.0025$ & $  -0.0067 \pm 0.0056$ & $  -0.0005 \pm 0.0042$ & $   0.0012 \pm 0.0037$ \\
+$                      \Delta m$ & $    17.696 \pm 0.056$ & $    17.693 \pm 0.085$ & $    17.671 \pm 0.077$ & $      17.48 \pm 0.14$ \\
+$     \delta_{\perp} - \delta_0$ & $       2.60 \pm 0.13$ & $       2.61 \pm 0.19$ & $       2.38 \pm 0.19$ & $       2.35 \pm 0.27$ \\
+$                           f_0$ & $   0.5164 \pm 0.0031$ & $   0.5082 \pm 0.0060$ & $   0.5258 \pm 0.0050$ & $   0.5136 \pm 0.0053$ \\
+$                     f_{\perp}$ & $   0.2454 \pm 0.0042$ & $   0.2438 \pm 0.0086$ & $   0.2407 \pm 0.0069$ & $   0.2507 \pm 0.0074$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.077 \pm 0.076$ & $       2.93 \pm 0.11$ & $     3.120 \pm 0.097$ & $       3.09 \pm 0.13$ \\
+\end{tabular}}
+\caption{
+p-value of 0.5633
+}\end{table}
+\newpage \textbf{ eta }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2016 only$ & $           eta-bin 1$ & $           eta-bin 2$ & $           eta-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.224 \pm 0.043$ & $     0.252 \pm 0.063$ & $     0.261 \pm 0.079$ & $     0.119 \pm 0.090$ \\
+$                     \lambda_0$ & $     1.016 \pm 0.016$ & $     1.019 \pm 0.021$ & $     1.027 \pm 0.024$ & $     0.960 \pm 0.036$ \\
+$                \Delta\Gamma_s$ & $   0.2639 \pm 0.0081$ & $     0.266 \pm 0.013$ & $     0.263 \pm 0.014$ & $     0.266 \pm 0.015$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0061 \pm 0.0025$ & $  -0.0048 \pm 0.0040$ & $  -0.0042 \pm 0.0044$ & $  -0.0075 \pm 0.0046$ \\
+$                      \Delta m$ & $    17.696 \pm 0.056$ & $    17.678 \pm 0.068$ & $      17.63 \pm 0.21$ & $      17.71 \pm 0.16$ \\
+$     \delta_{\perp} - \delta_0$ & $       2.60 \pm 0.13$ & $       2.52 \pm 0.17$ & $       2.47 \pm 0.34$ & $      -3.22 \pm 0.24$ \\
+$                           f_0$ & $   0.5164 \pm 0.0031$ & $   0.5097 \pm 0.0049$ & $   0.5185 \pm 0.0054$ & $   0.5261 \pm 0.0059$ \\
+$                     f_{\perp}$ & $   0.2454 \pm 0.0042$ & $   0.2429 \pm 0.0069$ & $   0.2463 \pm 0.0074$ & $   0.2450 \pm 0.0081$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.077 \pm 0.076$ & $       3.13 \pm 0.11$ & $       3.06 \pm 0.13$ & $       3.03 \pm 0.15$ \\
+\end{tabular}}
+\caption{
+p-value of 0.0000
+}\end{table}
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default,allowframebreaks] % -------------------------------------------------------
+\frametitle{Check in years and in bins}
+
+\framesubtitle{ 2017 }
+\newpage \textbf{ pt }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2017 only$ & $            pt-bin 1$ & $            pt-bin 2$ & $            pt-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.360 \pm 0.040$ & $       0.35 \pm 0.11$ & $     0.387 \pm 0.097$ & $     0.424 \pm 0.078$ \\
+$                     \lambda_0$ & $     0.959 \pm 0.024$ & $     0.983 \pm 0.026$ & $     0.922 \pm 0.031$ & $     0.947 \pm 0.048$ \\
+$                \Delta\Gamma_s$ & $   0.2726 \pm 0.0080$ & $     0.278 \pm 0.016$ & $     0.259 \pm 0.017$ & $     0.266 \pm 0.016$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0078 \pm 0.0025$ & $  -0.0043 \pm 0.0050$ & $  -0.0093 \pm 0.0049$ & $  -0.0078 \pm 0.0048$ \\
+$                      \Delta m$ & $    17.861 \pm 0.073$ & $      17.69 \pm 0.11$ & $    17.901 \pm 0.098$ & $    17.953 \pm 0.093$ \\
+$     \delta_{\perp} - \delta_0$ & $       3.09 \pm 0.15$ & $       2.45 \pm 0.31$ & $       3.26 \pm 0.19$ & $       3.19 \pm 0.20$ \\
+$                           f_0$ & $   0.5186 \pm 0.0030$ & $   0.5226 \pm 0.0063$ & $   0.5117 \pm 0.0063$ & $   0.5223 \pm 0.0061$ \\
+$                     f_{\perp}$ & $   0.2461 \pm 0.0042$ & $   0.2448 \pm 0.0093$ & $   0.2493 \pm 0.0086$ & $   0.2501 \pm 0.0085$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.225 \pm 0.093$ & $       3.40 \pm 0.12$ & $       3.16 \pm 0.13$ & $       3.00 \pm 0.15$ \\
+\end{tabular}}
+\caption{
+p-value of 0.6345
+}\end{table}
+\newpage \textbf{ sigmat }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2017 only$ & $        sigmat-bin 1$ & $        sigmat-bin 2$ & $        sigmat-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.360 \pm 0.040$ & $     0.344 \pm 0.052$ & $     0.378 \pm 0.068$ & $     0.409 \pm 0.097$ \\
+$                     \lambda_0$ & $     0.959 \pm 0.024$ & $     0.985 \pm 0.036$ & $     1.013 \pm 0.024$ & $     0.877 \pm 0.043$ \\
+$                \Delta\Gamma_s$ & $   0.2726 \pm 0.0080$ & $     0.292 \pm 0.016$ & $     0.259 \pm 0.013$ & $     0.262 \pm 0.014$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0078 \pm 0.0025$ & $  -0.0031 \pm 0.0048$ & $   0.0095 \pm 0.0041$ & $   0.0038 \pm 0.0041$ \\
+$                      \Delta m$ & $    17.861 \pm 0.073$ & $      17.93 \pm 0.10$ & $    17.698 \pm 0.079$ & $    17.840 \pm 0.092$ \\
+$     \delta_{\perp} - \delta_0$ & $       3.09 \pm 0.15$ & $       3.21 \pm 0.21$ & $       2.67 \pm 0.20$ & $       3.28 \pm 0.14$ \\
+$                           f_0$ & $   0.5186 \pm 0.0030$ & $   0.5131 \pm 0.0053$ & $   0.5124 \pm 0.0050$ & $   0.5143 \pm 0.0057$ \\
+$                     f_{\perp}$ & $   0.2461 \pm 0.0042$ & $   0.2483 \pm 0.0072$ & $   0.2567 \pm 0.0071$ & $   0.2381 \pm 0.0085$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.225 \pm 0.093$ & $       3.15 \pm 0.12$ & $       3.23 \pm 0.13$ & $     3.467 \pm 0.080$ \\
+\end{tabular}}
+\caption{
+p-value of 0.1402
+}\end{table}
+\newpage \textbf{ eta }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2017 only$ & $           eta-bin 1$ & $           eta-bin 2$ & $           eta-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.360 \pm 0.040$ & $     0.285 \pm 0.058$ & $     0.510 \pm 0.065$ & $     0.289 \pm 0.080$ \\
+$                     \lambda_0$ & $     0.959 \pm 0.024$ & $     0.953 \pm 0.032$ & $     0.977 \pm 0.034$ & $     0.958 \pm 0.041$ \\
+$                \Delta\Gamma_s$ & $   0.2726 \pm 0.0080$ & $     0.291 \pm 0.013$ & $     0.262 \pm 0.014$ & $     0.271 \pm 0.015$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0078 \pm 0.0025$ & $  -0.0103 \pm 0.0039$ & $  -0.0085 \pm 0.0041$ & $  -0.0034 \pm 0.0047$ \\
+$                      \Delta m$ & $    17.861 \pm 0.073$ & $    17.827 \pm 0.094$ & $    18.013 \pm 0.084$ & $      17.76 \pm 0.12$ \\
+$     \delta_{\perp} - \delta_0$ & $       3.09 \pm 0.15$ & $       3.11 \pm 0.20$ & $       3.25 \pm 0.17$ & $       2.78 \pm 0.32$ \\
+$                           f_0$ & $   0.5186 \pm 0.0030$ & $   0.5235 \pm 0.0048$ & $   0.5123 \pm 0.0054$ & $   0.5232 \pm 0.0058$ \\
+$                     f_{\perp}$ & $   0.2461 \pm 0.0042$ & $   0.2360 \pm 0.0069$ & $   0.2586 \pm 0.0075$ & $   0.2396 \pm 0.0081$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.225 \pm 0.093$ & $       3.00 \pm 0.13$ & $       3.25 \pm 0.12$ & $       3.28 \pm 0.13$ \\
+\end{tabular}}
+\caption{
+p-value of 0.5132
+}\end{table}
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default,allowframebreaks] % -------------------------------------------------------
+\frametitle{Check in years and in bins}
+
+\framesubtitle{ 2018 }
+\textbf{ pt }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2018 only$ & $            pt-bin 1$ & $            pt-bin 2$ & $            pt-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.294 \pm 0.033$ & $     0.391 \pm 0.092$ & $     0.263 \pm 0.077$ & $     0.292 \pm 0.064$ \\
+$                     \lambda_0$ & $     1.024 \pm 0.016$ & $     1.014 \pm 0.036$ & $     1.003 \pm 0.033$ & $     1.027 \pm 0.036$ \\
+$                \Delta\Gamma_s$ & $   0.2676 \pm 0.0074$ & $     0.256 \pm 0.016$ & $     0.269 \pm 0.015$ & $     0.267 \pm 0.014$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0121 \pm 0.0023$ & $  -0.0096 \pm 0.0048$ & $  -0.0125 \pm 0.0046$ & $  -0.0179 \pm 0.0044$ \\
+$                      \Delta m$ & $    17.754 \pm 0.045$ & $      17.78 \pm 0.13$ & $      17.75 \pm 0.16$ & $    17.825 \pm 0.068$ \\
+$     \delta_{\perp} - \delta_0$ & $       2.84 \pm 0.11$ & $       2.65 \pm 0.30$ & $       2.75 \pm 0.27$ & $       2.74 \pm 0.19$ \\
+$                           f_0$ & $   0.5184 \pm 0.0028$ & $   0.5198 \pm 0.0060$ & $   0.5258 \pm 0.0057$ & $   0.5173 \pm 0.0055$ \\
+$                     f_{\perp}$ & $   0.2460 \pm 0.0039$ & $   0.2519 \pm 0.0085$ & $   0.2375 \pm 0.0078$ & $   0.2474 \pm 0.0081$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.206 \pm 0.099$ & $       3.07 \pm 0.23$ & $       3.10 \pm 0.12$ & $       2.86 \pm 0.10$ \\
+\end{tabular}}
+\caption{
+p-value of 0.9277
+}\end{table}
+\newpage \textbf{ sigmat }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2018 only$ & $        sigmat-bin 1$ & $        sigmat-bin 2$ & $        sigmat-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.294 \pm 0.033$ & $     0.258 \pm 0.049$ & $     0.376 \pm 0.054$ & $     0.252 \pm 0.084$ \\
+$                     \lambda_0$ & $     1.024 \pm 0.016$ & $     1.025 \pm 0.024$ & $     1.031 \pm 0.023$ & $     0.988 \pm 0.031$ \\
+$                \Delta\Gamma_s$ & $   0.2676 \pm 0.0074$ & $     0.286 \pm 0.015$ & $     0.264 \pm 0.012$ & $     0.249 \pm 0.012$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0121 \pm 0.0023$ & $  -0.0043 \pm 0.0044$ & $   0.0083 \pm 0.0038$ & $  -0.0039 \pm 0.0037$ \\
+$                      \Delta m$ & $    17.754 \pm 0.045$ & $    17.661 \pm 0.066$ & $    17.740 \pm 0.051$ & $      17.90 \pm 0.11$ \\
+$     \delta_{\perp} - \delta_0$ & $       2.84 \pm 0.11$ & $       2.95 \pm 0.15$ & $       2.59 \pm 0.14$ & $       2.91 \pm 0.26$ \\
+$                           f_0$ & $   0.5184 \pm 0.0028$ & $   0.5065 \pm 0.0049$ & $   0.5136 \pm 0.0045$ & $   0.5190 \pm 0.0054$ \\
+$                     f_{\perp}$ & $   0.2460 \pm 0.0039$ & $   0.2463 \pm 0.0072$ & $   0.2468 \pm 0.0063$ & $   0.2509 \pm 0.0076$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.206 \pm 0.099$ & $     3.447 \pm 0.079$ & $       3.12 \pm 0.12$ & $       3.05 \pm 0.12$ \\
+\end{tabular}}
+\caption{
+p-value of 0.0254
+}\end{table}
+\newpage \textbf{ eta }
+\begin{table}[H]
+  \resizebox{\textwidth}{!}{%
+\begin{tabular}{l|cccc}
+$                              $ & $           2018 only$ & $           eta-bin 1$ & $           eta-bin 2$ & $           eta-bin 3$ \\
+\hline
+$                        \phi_0$ & $     0.294 \pm 0.033$ & $     0.318 \pm 0.051$ & $     0.219 \pm 0.059$ & $     0.341 \pm 0.071$ \\
+$                     \lambda_0$ & $     1.024 \pm 0.016$ & $     1.049 \pm 0.026$ & $     1.014 \pm 0.021$ & $     1.058 \pm 0.033$ \\
+$                \Delta\Gamma_s$ & $   0.2676 \pm 0.0074$ & $     0.276 \pm 0.012$ & $     0.253 \pm 0.013$ & $     0.278 \pm 0.014$ \\
+$           \Gamma_s - \Gamma_d$ & $  -0.0121 \pm 0.0023$ & $  -0.0105 \pm 0.0036$ & $  -0.0076 \pm 0.0040$ & $  -0.0187 \pm 0.0043$ \\
+$                      \Delta m$ & $    17.754 \pm 0.045$ & $    17.791 \pm 0.064$ & $    17.661 \pm 0.076$ & $      17.72 \pm 0.10$ \\
+$     \delta_{\perp} - \delta_0$ & $       2.84 \pm 0.11$ & $       3.06 \pm 0.15$ & $       2.55 \pm 0.16$ & $       2.87 \pm 0.21$ \\
+$                           f_0$ & $   0.5184 \pm 0.0028$ & $   0.5172 \pm 0.0044$ & $   0.5149 \pm 0.0049$ & $   0.5250 \pm 0.0054$ \\
+$                     f_{\perp}$ & $   0.2460 \pm 0.0039$ & $   0.2445 \pm 0.0065$ & $   0.2498 \pm 0.0068$ & $   0.2375 \pm 0.0078$ \\
+$ \delta_{\parallel} - \delta_0$ & $     3.206 \pm 0.099$ & $       3.32 \pm 0.11$ & $     3.226 \pm 0.096$ & $       2.89 \pm 0.10$ \\
+\end{tabular}}
+\caption{
+p-value of 0.4209
+}\end{table}
+
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Plots}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Pipeline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{noframetitle}
+
+\begin{center}
+  \centering \includegraphics[scale=0.35]{gpx/rulegraph.pdf}
+\end{center}
+
+\end{frame} % ------------------------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%\input{figures_reweightings}
+\input{containers/figures_time_acceptance}
+\input{containers/figures_angular_acceptance}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Tables}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\input{containers/figures_reweightings}
+\input{containers/tables_time_acceptance}
+%\input{containers/angacc_figures}
+%\input{containers/tables}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

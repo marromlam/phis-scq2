@@ -3,3 +3,17 @@ snakemake
 hep_ml
 py-cpuinfo
 uproot3
+numpy
+scipy
+six
+uncertainties
+pandas
+numdifftools
+emcee
+uproot3
+hjson
+reikna
+iminuit==1.5.2
+matplotlib
+tqdm
+corner
