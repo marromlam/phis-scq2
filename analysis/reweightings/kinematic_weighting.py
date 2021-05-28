@@ -26,9 +26,6 @@ from hep_ml import reweight
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 binned_vars = {'etaB':'B_ETA', 'pTB':'B_PT', 'sigmat':'sigmat'}
 
-def argument_parser():
-
-  return parser
 
 # %% Variable extractor class and function -------------------------------------
 
@@ -140,41 +137,56 @@ def kinematic_weighting(original_file, original_treename, original_vars, origina
   #   new_vars.append( np.array(kinWeight,dtype=[(f'{weight}_{var}',np.float64)]) )
   #   ovars_df[f'{weight}_{var}'] = kinWeight 
   print('Original kinWeights')
-  print(ovars_df[kws])
+  print(odf)
 
   # Save weights to file ------------------------------------------------------
   print('Writing on %s' % output_file)
   if ROOT_PANDAS:
-    root_pandas.to_root(ovars_df, output_file, key=original_treename, mode='a')
+    root_pandas.to_root(odf, output_file, key=original_treename, mode='a')
     # copyfile(original_file, output_file)
     # for var in new_vars:
     #   root_numpy.array2root(var, output_file, original_treename, mode='update')
   else:
     f = uproot.recreate(output_file)
-    f[original_treename] = uproot.newtree({var:'float64' for var in ovars_df})
-    f[original_treename].extend(ovars_df.to_dict(orient='list'))
+    f[original_treename] = uproot.newtree({var:'float64' for var in odf})
+    f[original_treename].extend(odf.to_dict(orient='list'))
     f.close()
-  return kinWeight
+  return odf[weight].values
 
 if __name__ == '__main__':
   # Parse comandline arguments
   p = argparse.ArgumentParser()
-  p.add_argument('--original-file', help='File to correct')
-  p.add_argument('--original-treename', default='DecayTree', help='Name of the original tree')
-  p.add_argument('--original-vars', help='Names of the branches that will be used for the weighting')
-  p.add_argument('--original-weight', help='File to store the ntuple with weights')
-  p.add_argument('--target-file', help='File to reweight to')
-  p.add_argument('--target-treename', default='DecayTree', help='Name of the target tree')
-  p.add_argument('--target-vars', help='Names of the branches that will be used for the weighting')
-  p.add_argument('--target-weight', help='Branches string expression to calc the weight.')
-  p.add_argument('--output-file', help='Branches string expression to calc the weight.')
-  p.add_argument('--output-name', default='kinWeight', help='Branches string expression to calc the weight.')
-  p.add_argument('--n-estimators', default=20, help='Check hep_ml.reweight docs.')
-  p.add_argument('--learning-rate', default=0.3, help='Check hep_ml.reweight docs.')
-  p.add_argument('--max-depth', default=3,help='Check hep_ml.reweight docs.')
-  p.add_argument('--min-samples-leaf', default=1000, help='Check hep_ml.reweight docs.')
-  p.add_argument('--trunc', default=0, help='Cut value for kinWeight, all kinetic weights lower than trunc will be set to trunc.')
-  p = argument_parser()
+  p.add_argument('--original-file',
+                 help='File to correct')
+  p.add_argument('--original-treename', default='DecayTree',
+                 help='Name of the original tree')
+  p.add_argument('--original-vars',
+                 help='Branch names that will be used for the weighting')
+  p.add_argument('--original-weight',
+                 help='File to store the ntuple with weights')
+  p.add_argument('--target-file',
+                 help='File to reweight to')
+  p.add_argument('--target-treename', default='DecayTree',
+                 help='Name of the target tree')
+  p.add_argument('--target-vars',
+                 help='Branch names that will be used for the weighting')
+  p.add_argument('--target-weight',
+                 help='Branches string expression to calc the weight.')
+  p.add_argument('--output-file',
+                 help='Branches string expression to calc the weight.')
+  p.add_argument('--output-name', default='kinWeight',
+                 help='Branches string expression to calc the weight.')
+  p.add_argument('--n-estimators', default=20,
+                 help='Check hep_ml.reweight docs.')
+  p.add_argument('--learning-rate', default=0.3,
+                 help='Check hep_ml.reweight docs.')
+  p.add_argument('--max-depth', default=3,
+                 help='Check hep_ml.reweight docs.')
+  p.add_argument('--min-samples-leaf', default=1000,
+                 help='Check hep_ml.reweight docs.')
+  p.add_argument('--trunc', default=0,
+                 help='Cut value for kinWeight by flush-to-zero approach')
   args = vars(p.parse_args())
+
   # run the kinematic weight
   kinematic_weighting(**args)
