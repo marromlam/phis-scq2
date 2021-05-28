@@ -87,14 +87,35 @@ rule all:
 rule compile_slides:
   input:
     # time acceptance table:
-    f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul6.tex",
+    f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul3.tex",
+    # lifetimes
+    f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_lifeBdsimul3.tex",
+    f"output/packandgo/tables/time_acceptance/run2/Bu2JpsiKplus/{config['version']}_lifeBusimul3.tex",
     # angular acceptance table:
-    f"output/packandgo/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_run2_simul6.tex",
+    f"output/packandgo/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_run2_simul3.tex",
     #
     # physics parameters
     #
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_simul3.tex",
+    #f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_run2_simul3.tex",
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@cutpTB_run2_run2_simul3.tex",
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@cutetaB_run2_run2_simul3.tex",
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@cutsigmat_run2_run2_simul3.tex",
+    # --
+    f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@cutpTB_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@cutetaB_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@cutsigmat_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@cutpTB_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@cutetaB_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@cutsigmat_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@cutpTB_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@cutetaB_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@cutsigmat_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@cutpTB_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@cutetaB_yearly_yearly_simul3.tex",
+    f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@cutsigmat_yearly_yearly_simul3.tex",
     # physics parameters cross-checks :: time acceptance
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul6Noncorr.tex",
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3Noncorr.tex",
     f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3.tex",
     f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3DGn0.tex",
     ##
@@ -109,7 +130,7 @@ rule compile_slides:
     expand( rules.time_acceptance_plot.output,
             version=config['version'],
             mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-            timeacc=['simul6'],
+            timeacc=['simul3'],
             year=['2015','2016','2017','2018'],
             plot=['fitlog', 'splinelog'],
             trigger=['biased','unbiased']),
@@ -119,7 +140,7 @@ rule compile_slides:
                      'v0r5+v0r5@cutsigmat1+v0r5@cutsigmat2+v0r5@cutsigmat3',
                      'v0r5+v0r5@cutetaB1+v0r5@cutetaB2+v0r5@cutetaB3'],
             mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-            timeacc=['simul6'],
+            timeacc=['simul3'],
             year=['2015','2016','2017','2018'],
             plot=['splinelog'],
             trigger=['biased','unbiased']),
@@ -127,7 +148,7 @@ rule compile_slides:
     expand( rules.time_acceptance_plot.output,
             version=config['version'],
             mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-            timeacc=['simul6+simul3','simul6+simul6Noncorr'],
+            timeacc=['simul3+simul6','simul3+simul3Noncorr'],
             year=['2015','2016','2017','2018'],
             plot=['splinelog'],
             trigger=['biased','unbiased']),

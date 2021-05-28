@@ -43,7 +43,7 @@ if __name__ == "__main__":
   y = args['year']
   m = args['mode']
   tree = args['tree']
-  
+
   path = os.path.dirname(os.path.abspath(args['output']))
   path = os.path.join(path, f"{abs(hash(f'{m}_{y}_selected_bdt_sw_{V}.root'))}")
   print(f"{m}_{y}_selected_bdt_sw_{V}.root", path)
@@ -55,18 +55,18 @@ if __name__ == "__main__":
   eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
   status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {path}")
   print(status)
-  
+
   # download main file
   if status == 0:
     all_files.append([f"{m}_{y}_selected_bdt_sw_{v}.root", None])
   else:
     print(f"- File {m}_{y}_selected_bdt_sw_{v}.root does not exist on server.")
-  
+
   # donwload binned variable files
   for name, var in binned_files.items():
     print(f"Downloading {m}_{y}_selected_bdt_sw_{var}_{v}.root")
-    eos_path = eos_path.replace('selected_bdt_sw',f'selected_bdt_sw_{var}')
-    status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {path}")
+    _eos_path = eos_path.replace('selected_bdt_sw',f'selected_bdt_sw_{var}')
+    status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{_eos_path} {path}")
     print(status)
     if status == 0:
       all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root", f"{var}"])

@@ -14,9 +14,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Functions ///////////////////////////////////////////////////////////////////
 
-
-#include <ipanema/complex.hpp>
-#include <ipanema/special.hpp>
+#include <ipanema/core.h>
+#include <ipanema/complex.h>
+#include <ipanema/special.h>
 
 
 WITHIN_KERNEL
@@ -29,7 +29,7 @@ unsigned int getTimeBin(ftype const t)
     if( t < KNOTS[_i] ) {break;}
     _i++;
   }
-  if ((0 == _i) && (DEBUG > 3)) {
+  if ((0 == _i) & (DEBUG > 3)) {
     printf("WARNING: t=%.16f below first knot!\n",t);
   }
   return _i - 1;
@@ -47,7 +47,7 @@ unsigned int getMassBin(ftype const t)
     if( t < MHH[_i] ) {break;}
     _i++;
   }
-  if ((0 == _i) && (DEBUG > 3)) {
+  if ((0 == _i) & (DEBUG > 3)) {
     printf("WARNING: t=%.16f below first knot!\n",t);
   }
   return _i - 1;
@@ -106,22 +106,25 @@ ftype calcTimeAcceptance(const ftype t, GLOBAL_MEM const ftype *coeffs, const ft
 
 
 WITHIN_KERNEL
-ctype expconv_simon(ftype t, ftype G, ftype omega, ftype sigma)
+ctype expconv_simon(const ftype t, const ftype G, const ftype omega, const ftype sigma)
 {
-  ctype I  = cnew( 0, 1);
-  ctype I2 = cnew(-1, 0);
-  ctype I3 = cnew( 0,-1);
-  ftype sigma2 = sigma*sigma;
+  ctype I2 = C(-1, 0);
+  ctype I3 = C( 0,-1);
+
+  const ftype sigma2 = sigma*sigma;
+  const ftype omega2 = omega*omega;
 
   if (omega == 0)
   {
-    if( t > -6.0*sigma ){
-      ftype exp_part = 0.5*exp(-t*G + 0.5*G*G*sigma2 -0.5*omega*omega*sigma2);
-      ctype my_erfc = ipanema_erfc(cnew(sigma*G/sqrt(2.0) - t/sigma/sqrt(2.0),0));
-      return cmul( cnew(exp_part,0) , my_erfc );
+    if( t > -6.0*sigma )
+    {
+      const ftype t_exp = 0.5*exp(-t*G + 0.5*G*G*sigma2 -0.5*omega2*sigma2);
+      const ctype t_cerfc = cerfc(C(sigma*G/sqrt(2.0) - t/sigma/sqrt(2.0),0));
+      return cmul( C(t_exp,0) , t_cerfc );
     }
-    else{
-      return cnew(0,0);
+    else
+    {
+      return C(0,0);
     }
   }
   else //(omega != 0)
@@ -129,27 +132,27 @@ ctype expconv_simon(ftype t, ftype G, ftype omega, ftype sigma)
     //ftype c1 = 0.5;
 
     ftype exp1arg = 0.5*sigma2*(G*G - omega*omega) - t*G;
-    ctype exp1 = cnew( 0.5*exp(exp1arg) ,0);
+    ctype exp1 = C( 0.5*exp(exp1arg) ,0);
 
     ftype exp2arg = -omega*(t - sigma2*G);
-    ctype exp2 = cnew(cos(exp2arg), sin(exp2arg));
+    ctype exp2 = C(cos(exp2arg), sin(exp2arg));
 
-    ctype cerfarg = cnew(sigma*G/sqrt(2.0) - t/(sigma*sqrt(2.0)) , +omega*sigma/sqrt(2.0));
+    ctype cerfarg = C(sigma*G/sqrt(2.0) - t/(sigma*sqrt(2.0)) , +omega*sigma/sqrt(2.0));
     ctype cerf;
 
     if  (cerfarg.x < -20.0)
     {
-      cerf = cnew(2.0,0.0);
+      cerf = C(2.0,0.0);
     }
     else
     {
-      cerf = cErrF_2(cerfarg);//best complex error function
+      cerf = cerfc(cerfarg);//best complex error function
     }
     ctype c2 = cmul(exp2, cerf);
     //ftype im = -c2.x;//exp*sin
     //ftype re = +c2.real();//exp*cos
 
-    return cmul( exp1 , cadd( cnew(c2.x,0), cmul( I3, cnew(c2.y,0) ) ) );
+    return cmul( exp1 , cadd( C(c2.x,0), cmul( I3, C(c2.y,0) ) ) );
   }
 
 }
@@ -159,31 +162,30 @@ ctype expconv_simon(ftype t, ftype G, ftype omega, ftype sigma)
 WITHIN_KERNEL
 ctype expconv(ftype t, ftype G, ftype omega, ftype sigma)
 {
-  // OpenCL need beautiful code, doesn't it?
-  ftype sigma2 = sigma*sigma;
+  const ftype sigma2 = sigma*sigma;
+  const ftype omega2 = omega*omega;
 
   if( t > SIGMA_THRESHOLD*sigma )
   {
-    ftype a = exp(-G*t+0.5*G*G*sigma2-0.5*omega*omega*sigma2);
+    ftype a = exp(-G*t+0.5*G*G*sigma2-0.5*omega2*sigma2);
     ftype b = omega*(t-G*sigma2);
-    return cnew(a*cos(b),a*sin(b));
+    return C(a*cos(b),a*sin(b));
   }
   else
   {
-    //printf("dont like it\n");
     ctype z, fad;
-    z   = cnew(-omega*sigma2/(sigma*sqrt(2.)), -(t-sigma2*G)/(sigma*sqrt(2.)));
-    fad = faddeeva(z);
+    z   = C(-omega*sigma2/(sigma*sqrt(2.)), -(t-sigma2*G)/(sigma*sqrt(2.)));
+    fad = cwofz(z);
 /*
  if ( (t>0.3006790) && (t<0.3006792) ){
            printf("z   = %+.16f%+.16f\n",z.x,z.y );
            printf("fad = %+.16f%+.16f\n",fad.x,fad.y );
            //printf("shit = %+.16f%+.16f\n",shit.x,shit.y );
-           double2 res = cnew(0.5*exp(-0.5*t*t/sigma2),0.0);
+           double2 res = C(0.5*exp(-0.5*t*t/sigma2),0.0);
            printf("res   = %+.16f\n",res.x,res.y );
      }
  */
-    return cmul( cnew(fad.x,-fad.y), cnew(0.5*exp(-0.5*t*t/sigma2),0) );
+    return cmul( C(fad.x,-fad.y), C(0.5*exp(-0.5*t*t/sigma2),0) );
   }
 }
 
@@ -197,7 +199,7 @@ ctype expconv_wores(ftype t, ftype G, ftype omega)
 }
 
 WITHIN_KERNEL
-ctype getK(ctype z, int n)
+ctype getK(const ctype z, const int n)
 {
   ctype z2 = cmul(z,z);
   ctype z3 = cmul(z,z2);
@@ -206,35 +208,39 @@ ctype getK(ctype z, int n)
   ctype z6 = cmul(z,z5);
   ctype w;
 
-  if (n == 0)      {
-    w = cmul( cnew(2.0,0.0), z);
-    return cdiv(cnew( 1.0,0.0), w );
+  if (n == 0)
+  {
+    w = cmul( C(2.0,0.0), z);
+    return cdiv(C( 1.0,0.0), w );
   }
-  else if (n == 1) {
-    w = cmul( cnew(2.0,0.0), z2);
-    return cdiv(cnew(1.0,0.0), w );
+  else if (n == 1)
+  {
+    w = cmul( C(2.0,0.0), z2);
+    return cdiv(C(1.0,0.0), w );
   }
-  else if (n == 2) {
-    w = cdiv( cnew(1.0,0.0), z2 );
-    w = cadd( cnew(1.0,0.0), w );
-    return cmul( cdiv(cnew(1.0,0.0),z) , w );
+  else if (n == 2)
+  {
+    w = cdiv( C(1.0,0.0), z2 );
+    w = cadd( C(1.0,0.0), w );
+    return cmul( cdiv(C(1.0,0.0),z) , w );
   }
-  else if (n == 3) {
-    w = cdiv( cnew(1.0,0.0), z2 );
-    w = cadd( cnew(1.0,0.0), w );
-    return cmul( cdiv(cnew(3.0,0.0),z2) , w );
+  else if (n == 3)
+  {
+    w = cdiv( C(1.0,0.0), z2 );
+    w = cadd( C(1.0,0.0), w );
+    return cmul( cdiv(C(3.0,0.0),z2) , w );
   }
   // else if (n == 4) {
-  //   return cdiv(cnew( 6.,0), z*(1.+2./(z*z)+2./(z*z*z*z))  );
+  //   return cdiv(C( 6.,0), z*(1.+2./(z*z)+2./(z*z*z*z))  );
   // }
   // else if (n == 5) {
-  //   return cdiv(cnew(30.,0), (z*z)*(1.+2./(z*z)+2./(z*z*z*z))  );
+  //   return cdiv(C(30.,0), (z*z)*(1.+2./(z*z)+2./(z*z*z*z))  );
   // }
   // else if (n == 6) {
-  //   return cdiv(cnew(60.,0), z*(1.+3./(z*z)+6./(z*z*z*z)+6./(z*z*z*z*z*z))  );
+  //   return cdiv(C(60.,0), z*(1.+3./(z*z)+6./(z*z*z*z)+6./(z*z*z*z*z*z))  );
   // }
 
-  return cnew(0.,0.);
+  return C(0.,0.);
 }
 
 
@@ -243,21 +249,20 @@ WITHIN_KERNEL
 ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
 {
   ctype conv_term, z;
-  ctype I  = cnew(0,+1);
-  ctype I2 = cnew(-1,0);
-  ctype I3 = cnew(0,-1);
+  ctype I2 = C(-1,0);
+  ctype I3 = C(0,-1);
 
-  z = cnew(gamma*sigma/sqrt(2.0),-omega*sigma/sqrt(2.0));
-  ctype arg1 = csub( cmul(z,z), cmul(cnew(2*x,0),z) );
-  ctype arg2 = csub(z,cnew(x,0));
+  z = C(gamma*sigma/sqrt(2.0),-omega*sigma/sqrt(2.0));
+  ctype arg1 = csub( cmul(z,z), cmul(C(2*x,0),z) );
+  ctype arg2 = csub(z,C(x,0));
   //conv_term = 5.0*expconv(t,gamma,omega,sigma);///(sqrt(0.5*M_PI));
   // warning there are improvement to do here!!!
   if (omega == 0){
     //conv_term = cmul( cexp(arg1), ipanema_erfc(arg2) );
-    conv_term = cmul( cexp(arg1), cErrF_2(arg2) );
+    conv_term = cmul( cexp(arg1), cerfc(arg2) );
   }
   else{
-    conv_term = cmul( cexp(arg1), cErrF_2(arg2) );
+    conv_term = cmul( cexp(arg1), cerfc(arg2) );
     //conv_term = 2.0*expconv_simon(t,gamma,omega,sigma);
     //conv_term = 2.0*exp(-gamma*t+0.5*gamma*gamma*sigma*sigma-0.5*omega*omega*sigma*sigma)*(cos(omega*(t-gamma*sigma*sigma)) + I*sin(omega*(t-gamma*sigma*sigma)));
   }
@@ -275,34 +280,34 @@ ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
 
   if (n == 0)
   {
-    ctype a = cnew(erf(x),0.);
+    ctype a = C(erf(x),0.);
     ctype b = conv_term;
     return csub(a,b);
   }
   else if (n == 1)
   {
     // return 2.*(-pycuda::complex<double>(sqrt(1./M_PI)*exp(-x*x),0.)-x*conv_term);
-    //ctype a = cnew(sqrt(1./M_PI)*exp(-x*x),0.);
-    ctype a = cnew(sqrt(1.0/M_PI)*exp(-x*x),0.);
-    ctype b = cnew(x,0);
+    //ctype a = C(sqrt(1./M_PI)*exp(-x*x),0.);
+    ctype a = C(sqrt(1.0/M_PI)*exp(-x*x),0.);
+    ctype b = C(x,0);
     b = cmul(b,conv_term);
-    return cmul(cnew(-2.0,0.0),cadd(a,b));
+    return cmul(C(-2.0,0.0),cadd(a,b));
   }
   else if (n == 2)
   {
     // return 2.*(-2.*x*exp(-x*x)*ctype(sqrt(1./M_PI),0.)-(2.*x*x-1.)*conv_term);
-    ctype a = cnew(-2.*x*exp(-x*x)*sqrt(1./M_PI),0.);
-    ctype b = cnew(2*x*x-1,0);
+    ctype a = C(-2.*x*exp(-x*x)*sqrt(1./M_PI),0.);
+    ctype b = C(2*x*x-1,0);
     b = cmul(b,conv_term);
-    return cmul(cnew(2,0),csub(a,b));
+    return cmul(C(2,0),csub(a,b));
   }
   else if (n == 3)
   {
     // return 4.*(-(2.*x*x-1.)*exp(-x*x)*ctype(sqrt(1./M_PI),0.)-x*(2.*x*x-3.)*conv_term);
-    ctype a = cnew(-(2.*x*x-1.)*exp(-x*x)*sqrt(1./M_PI),0.);
-    ctype b = cnew(x*(2*x*x-3),0);
+    ctype a = C(-(2.*x*x-1.)*exp(-x*x)*sqrt(1./M_PI),0.);
+    ctype b = C(x*(2*x*x-3),0);
     b = cmul(b,conv_term);
-    return cmul(cnew(4,0),csub(a,b));
+    return cmul(C(4,0),csub(a,b));
   }
   // else if (n == 4)
   // {
@@ -316,7 +321,7 @@ ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
   // {
   //   return 8.*(-exp(-x*x)*(30.*x-40.*x*x*x+8.*x*x*x*x*x)*ctype(sqrt(1./M_PI),0.)-(-15.+90.*x*x-60.*x*x*x*x+8.*x*x*x*x*x*x)*conv_term);
   // }
-  return cnew(0.,0.);
+  return C(0.,0.);
 }
 
 
@@ -328,7 +333,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
 {
   // Some constants
   ftype cte1 = 1.0/(sqrt(2.0)*delta_t);
-  ctype cte2 = cnew( delta_t/(sqrt(2.0)) , 0 );
+  ctype cte2 = C( delta_t/(sqrt(2.0)) , 0 );
   if (DEBUG > 3 && delta_t <= 0.0)
   {
     printf("WARNING            : delta_t = %.4f is not a valid value.\n", delta_t);
@@ -370,9 +375,9 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
   ctype z_expp, K_expp[4], M_expp[SPL_BINS+1][4];
   ctype z_trig, K_trig[4], M_trig[SPL_BINS+1][4];
 
-  z_expm = cmul( cte2 , cnew(G-0.5*DG,  0) );
-  z_expp = cmul( cte2 , cnew(G+0.5*DG,  0) );
-  z_trig = cmul( cte2 , cnew(       G,-DM) );
+  z_expm = cmul( cte2 , C(G-0.5*DG,  0) );
+  z_expp = cmul( cte2 , C(G+0.5*DG,  0) );
+  z_trig = cmul( cte2 , C(       G,-DM) );
 
   // Fill Kn                 (only need to calculate this once per minimization)
   for (int j=0; j<4; ++j)
@@ -422,9 +427,9 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
   }
 
   // Integral calculation for cosh, expm, cos, sin terms
-  ctype int_expm = cnew(0.,0.);
-  ctype int_expp = cnew(0.,0.);
-  ctype int_trig = cnew(0.,0.);
+  ctype int_expm = C(0.,0.);
+  ctype int_expp = C(0.,0.);
+  ctype int_trig = C(0.,0.);
   ctype aux, int_expm_aux, int_expp_aux, int_trig_aux;
 
   for (int bin=0; bin < SPL_BINS; ++bin)
@@ -433,7 +438,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
     {
       for (int k=0; k<=3-j; ++k)
       {
-        aux = cnew( S[bin][j][k]*delta_t_fact[j+k] , 0 );
+        aux = C( S[bin][j][k]*delta_t_fact[j+k] , 0 );
 
         int_expm_aux = csub(M_expm[bin+1][j],M_expm[bin][j]);
         int_expm_aux = cmul(int_expm_aux,K_expm[k]);
@@ -582,7 +587,7 @@ WITHIN_KERNEL ftype get_int_td_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ft
 WITHIN_KERNEL
 void integralSpline( ftype result[2],
                      const ftype vn[10], const ftype va[10],const ftype vb[10], const ftype vc[10],const ftype vd[10],
-                     GLOBAL_MEM const ftype *norm, const ftype G, const ftype DG, const ftype DM,
+                    const ftype *norm, const ftype G, const ftype DG, const ftype DM,
                      const ftype delta_t,
                      const ftype tLL, const ftype tUL,
                      const ftype t_offset,
@@ -646,7 +651,7 @@ void integralSpline( ftype result[2],
 WITHIN_KERNEL
 void integralFullSpline( ftype result[2],
                          const ftype vn[10], const ftype va[10],const ftype vb[10], const ftype vc[10],const ftype vd[10],
-                         GLOBAL_MEM const ftype *norm, const ftype G, const ftype DG, const ftype DM,
+                         const ftype *norm, const ftype G, const ftype DG, const ftype DM,
                          const ftype delta_t,
                          const ftype tLL, const ftype tUL,
                          const ftype t_offset,
@@ -839,7 +844,7 @@ ftype getOneSplineTimeAcc(const ftype t,
     c1 = getCoeff(coeffs,k,1);
     c2 = getCoeff(coeffs,k,2);
     c3 = getCoeff(coeffs,k,3);
-    
+
     ipdf += (exp((pow(gamma,2)*pow(sigma,2))/2.)*((c1*(-exp(-(gamma*tf))
     + exp(-(gamma*ti)) -
     (gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
@@ -918,7 +923,7 @@ ftype getOneSplineTimeAcc(const ftype t,
     erfc((gamma*pow(sigma,2) -
     ti)/(sqrt(2.0)*sigma))/exp(gamma*ti)))/gamma))/2.;
   }
-  
+
   return fpdf/ipdf;
 
 }
@@ -929,14 +934,14 @@ ftype getOneSplineTimeAcc(const ftype t,
 // PDF = conv x sp1 x sp2 //////////////////////////////////////////////////////
 
 WITHIN_KERNEL
-ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2, 
+ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
                           GLOBAL_MEM const ftype *coeffs1,
                           const ftype sigma, const ftype gamma, const ftype tLL,
                           const ftype tUL)
 {
   // Compute pdf
   ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
-  ftype fpdf = 1.0; ftype ipdf = 0.0; 
+  ftype fpdf = 1.0; ftype ipdf = 0.0;
   fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2*t) ) * (erf_value);
   fpdf *= calcTimeAcceptance(t, coeffs1, tLL, tUL);
   fpdf *= calcTimeAcceptance(t, coeffs2, tLL, tUL);
@@ -966,7 +971,7 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
     b1 = getCoeff(coeffs2,k,1);
     b2 = getCoeff(coeffs2,k,2);
     b3 = getCoeff(coeffs2,k,3);
-    
+
     term1i = -((exp(gamma*ti - (ti*(2*gamma*pow(sigma,2) +
     ti))/(2.*pow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*ti)
     + 12*pow(gamma,2)*(2*r1 + 5*r2*ti + 10*r3*(2*pow(sigma,2) +

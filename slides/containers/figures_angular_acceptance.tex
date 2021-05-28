@@ -1,75 +1,51 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Angular acceptance}
-% This section contains all plots related to time acceptance
+% This section contains all plots related to angular acceptance
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Time acceptance in bins %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \foreach \year in {2015,...,2018}{
-\begin{frame} % ----------------------------------------------------------------
-\frametitle{Comparison of fits in bins of $p_T(B)$}
-\framesubtitle{\year\,  \TupleVersion\, tuples}
+  \begin{frame} % -------------------------------------------------------------
+  \frametitle{Analytic angular acceptance}
+  \framesubtitle{$B_s^0$ MC \year\,  \TupleVersion\, tuples}
 
-\begin{tabular}{cc}
-  Biased & Unbiased \\
+  \begin{tabular}{ccc}
+    \multicolumn{3}{c}{Biased} \\
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi/\TupleVersion_analytic2knots_biased_cosK.pdf} &
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi/\TupleVersion_analytic2knots_biased_cosL.pdf} &
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi/\TupleVersion_analytic2knots_biased_hphi.pdf} \\
+    \multicolumn{3}{c}{Unbiased} \\
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi/\TupleVersion_analytic2knots_unbiased_cosK.pdf} &
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi/\TupleVersion_analytic2knots_unbiased_cosL.pdf} &
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi/\TupleVersion_analytic2knots_unbiased_hphi.pdf}
+  \end{tabular}
 
-  \includegraphics[width=0.45\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/\TupleVersion@cutpt_run2_simul_biased.pdf}
-  &
-  \includegraphics[width=0.45\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/\TupleVersion@cutpt_run2_simul_unbiased.pdf}
-
-\end{tabular}
-
-\end{frame} % ------------------------------------------------------------------
-}
-
-\foreach \year in {2015,...,2018}{
-\begin{frame} % ----------------------------------------------------------------
-\frametitle{Comparison of fits in bins of $\sigma(B)$}
-\framesubtitle{\year\,  \TupleVersion\, tuples}
-
-\begin{tabular}{cc}
-  Biased & Unbiased \\
-
-  \includegraphics[width=0.45\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/\TupleVersion@cutsigmat_run2_simul_biased.pdf}
-  &
-  \includegraphics[width=0.45\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/\TupleVersion@cutsigmat_run2_simul_unbiased.pdf}
-
-\end{tabular}
-
-\end{frame} % ------------------------------------------------------------------
-}
-
-\foreach \year in {2015,...,2018}{
-\begin{frame} % ----------------------------------------------------------------
-\frametitle{Comparison of fits in bins of $\eta(B)$}
-\framesubtitle{\year\,  \TupleVersion\, tuples}
-
-\begin{tabular}{cc}
-  Biased & Unbiased \\
-
-  \includegraphics[width=0.45\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/\TupleVersion@cuteta_run2_simul_biased.pdf}
-  &
-  \includegraphics[width=0.45\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/\TupleVersion@cuteta_run2_simul_unbiased.pdf}
-
-\end{tabular}
-
-\end{frame} % ------------------------------------------------------------------
+  \end{frame} % ---------------------------------------------------------------
 }
 
 
 
+\foreach \year in {2015,...,2018}{
+  \begin{frame} % -------------------------------------------------------------
+  \frametitle{Analytic angular acceptance}
+  \framesubtitle{$B_s^0$ MC $\Delta\Gamma=0$ \year\,  \TupleVersion\, tuples}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \begin{tabular}{ccc}
+    \multicolumn{3}{c}{Biased} \\
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion_analytic2knots_biased_cosK.pdf} &
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion_analytic2knots_biased_cosL.pdf} &
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion_analytic2knots_biased_hphi.pdf} \\
+    \multicolumn{3}{c}{Unbiased} \\
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion_analytic2knots_unbiased_cosK.pdf} &
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion_analytic2knots_unbiased_cosL.pdf} &
+    \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion_analytic2knots_unbiased_hphi.pdf}
+  \end{tabular}
 
-
+  \end{frame} % ---------------------------------------------------------------
+}
 
 
 
