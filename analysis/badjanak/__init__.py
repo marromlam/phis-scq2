@@ -262,7 +262,6 @@ def delta_gamma5Bd(input, output,
 def parser_rateBs(
       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
       # Time-dependent angular distribution
-      #cambiado ramon
       fSlon = 0.00, fPlon =  0.600,                 fPper = 0.50,
       dSlon = 3.07, dPlon =  0,      dPpar = 3.30, dPper = 3.07,
       pSlon = 0.00, pPlon = -0.03,   pPpar = 0.00, pPper = 0.00,
@@ -343,6 +342,7 @@ def parser_rateBs(
   r['mu'] = mu
 
   # # Tagging
+
   r['eta_os'] = eta_os
   r['eta_ss'] = eta_ss
   r['p0_os'] = p0_os
@@ -359,7 +359,7 @@ def parser_rateBs(
   r['dp2_ss'] = dp2_ss
 
   # Time acceptance
-  timeacc = [ p[k] for k in p.keys() if re.compile('c([0-9])([0-9])?(u|b)?').match(k)]
+  timeacc = [ p[k] for k in p.keys() if re.compile('(a|b|c)([0-9])([0-9])?(u|b)?').match(k)]
   if timeacc:
     r['timeacc'] = THREAD.to_device(get_4cs(timeacc, flatend))
   else:
@@ -551,7 +551,7 @@ BLOCK_SIZE=256, **pars):
 
 
 
-def delta_gamma5_mc(input, output, use_fk=1, **pars):
+def delta_gamma5_mc(input, output, use_fk=1, set_tagging=0, **pars):
   """
   delta_gamma5_mc(input, output, **pars)
   This function is intended to be used with MC input arrays. It doesn't use
@@ -573,7 +573,7 @@ def delta_gamma5_mc(input, output, use_fk=1, **pars):
   """
   p = parser_rateBs(**pars)
   delta_gamma5(input, output, use_fk=use_fk, use_angacc=0, use_timeacc=0,
-               use_timeoffset=0, set_tagging=0, use_timeres=0, BLOCK_SIZE=256,
+               use_timeoffset=0, set_tagging=set_tagging, use_timeres=0, BLOCK_SIZE=256,
                **p)
 
 def delta_gamma5_mc_Bd(input, output, use_fk=1, use_angacc=1, **pars): #use_angacc = 1
@@ -716,6 +716,7 @@ def get_angular_acceptance_weights(true, reco, weight, kind='norm_weights', BLOC
     for j in range(0,cov.shape[1]):
       corr[i,j] = cov[i][j]/np.sqrt(cov[i][i]*cov[j][j])
   return w/w[0], np.sqrt(np.diagonal(cov)), cov, corr
+  #return w, np.sqrt(np.diagonal(cov)), cov, corr
 
 
 #####PRUEBAS Con Legendre 3d.
@@ -732,15 +733,17 @@ def get_angular_acceptance_L3D(true, reco, weight, BLOCK_SIZE=256, **parameters)
     delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
     l3djlm = get_l3djlm(reco.get()[:,0:3],4)
     cjlm = l3djlm*(weight.get()*num/den).T[::,np.newaxis]
-    cjlm_media = np.array(cjlm.sum(axis=0)/scale)
-    print(cjlm_media)
+    #cjlm_media = np.array(cjlm.sum(axis=0)/scale)
+    cjlm_media = np.array([0.984343, 0.0, -0.0200683 ,0.0,0.0,0.0,0.000863937,0.0,-0.000526386,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0716313,0.0,-0.00418124,0.0,0.0,0.0,-0.00059725,0.0,0.00338139])
+    print(len(cjlm_media))
     #exit()
     matrix = L3DSIMON(cjlm_media)
+    print(matrix)
     matrix = np.array(matrix.T)
     print(matrix.shape[0], matrix.shape[1])
     ang_acc = np.matmul(matrix,cjlm_media)
     for i in range(len(ang_acc)):
-        print(f"ang_acc{i}:%.15f", ang_acc[i]/ang_acc[0])
+        print(f"ang_acc{i}:", ang_acc[i])#/ang_acc[0])
     print(ang_acc/ang_acc[0])
     exit()
     return ang_acc
@@ -808,7 +811,7 @@ def splinexerf(
       coeffs,
       mu=0.0, sigma=0.04, gamma=0.6,
       tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256, flatend=False 
+      BLOCK_SIZE=256, flatend=False
     ):
   """
     In:
@@ -1024,8 +1027,8 @@ def get_4cs(listcoeffs, flatend=False):
   # linear extrapolation in the last bin till tUL
   m = C[1] + 2*C[2]*u(n) + 3*C[3]*u(n)**2
   if flatend:
-    # *flat* acceptance since last bin 
-    m = 0 
+    # *flat* acceptance since last bin
+    m = 0
   C = [C[0] + C[1]*u(n) + C[2]*u(n)**2 + C[3]*u(n)**3 - m*u(n),m,0,0]
   result.append(C)
   return np.array(result)
@@ -1173,13 +1176,13 @@ def Cs2Ws(z):
 
 def L3DSIMON(z):
   #z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
-  m = 4
+  m = 2
   c = np.zeros((np.atleast_2d(z).shape[1], len(config['tristan'])))
   #print(np.atleast_2d(z).shape[0], np.atleast_2d(z).shape[1])
   c_dev = THREAD.to_device(np.ascontiguousarray(c, dtype=np.float64))
   __KERNELS__.ShitSimon(np.float64(-1.0), np.float64(1.0), #cosK
                         np.float64(-1.0), np.float64(1.0), #cosL
                         -np.float64(np.pi), np.float64(np.pi), #phi
-                        np.int32(m), #orden polynomial
+                        np.int32(2), #orden polynomial
                         c_dev, global_size=(np.atleast_2d(z).shape[0]))
   return ristra.get(c_dev)
