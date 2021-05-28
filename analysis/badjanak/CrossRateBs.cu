@@ -149,6 +149,7 @@ ftype rateBs(const ftype *data,
   if (USE_TIMERES) // use_per_event_res
   {
     delta_t  = parabola(sigma_t, sigma_offset, sigma_slope, sigma_curvature);
+    //delta_t = parabola(sigma_t, 0.0, 1.0, 0.0);
   }
 
   #if DEBUG
@@ -157,11 +158,17 @@ ftype rateBs(const ftype *data,
     printf("\nTIME RESOLUTION    : delta_t=%.8f\n", delta_t);
   }
   #endif
-
-  exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
-  exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
-  exp_i = expconv(time-t_offset,          G, DM, delta_t);
-
+  if (USE_TIMEACC == 2)
+  {
+    exp_p = expconv_wores(time-t_offset, G + 0.5*DG, 0.);
+    exp_m = expconv_wores(time-t_offset, G - 0.5*DG, 0.);
+    exp_i = expconv_wores(time-t_offset,          G, DM);   
+}
+  else{
+    exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
+    exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
+    exp_i = expconv(time-t_offset,          G, DM, delta_t);
+  }
   ftype ta = 0.5*(exp_m.x+exp_p.x);
   ftype tb = 0.5*(exp_m.x-exp_p.x);
   ftype tc = exp_i.x;
@@ -233,7 +240,7 @@ ftype rateBs(const ftype *data,
   //     then calcTimeAcceptance locates the time bin of the event and returns
   //     the value of the cubic spline.
   ftype dta = 1.0;
-  if (USE_TIMEACC)
+  if (USE_TIMEACC==1 || USE_TIMEACC==2)
   {
     dta = calcTimeAcceptance(time, coeffs, tLL, tUL);
   }
@@ -324,7 +331,7 @@ ftype rateBs(const ftype *data,
     integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angular_weights, G, DG,
                    DM, tLL, tUL);
   }
-  else
+  else if(USE_TIMEACC==1)
   {
     // This integral works for all decay times, remember delta_t != 0.
     #if FAST_INTEGRAL
@@ -333,11 +340,20 @@ ftype rateBs(const ftype *data,
     #else
       int simon_j = sigma_t/(SIGMA_T/80);
       integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angular_weights,
-                         G, DG, DM, //delta_t, // what should be used
-                         parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
+                         G, DG, DM,  delta_t,// what should be used
+                         //parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
+                         //parabola((0.5+simon_j)*(SIGMA_T/80), 0.0, 1.0, 0.0),
                          tLL, tUL, t_offset,
                          coeffs);
      #endif
+  }
+  else if(USE_TIMEACC==2)
+  {
+      integralFullSpline_wores(intBBar, vnk, vak, vbk, vck, vdk, angular_weights,
+                         G, DG, DM,  
+                         tLL, tUL, 
+                         coeffs);
+
   }
   ftype intB = intBBar[0]; ftype intBbar = intBBar[1];
 
