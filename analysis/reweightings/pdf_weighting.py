@@ -3,86 +3,71 @@
 
 __author__ = ['Marcos Romero']
 __email__  = ['mromerol@cern.ch']
+__all__ = ['pdf_weighting', 'dg0_weighting']
 
-__all__ = ['pdf_weighting']
 
-
-################################################################################
-#%% Modules ####################################################################
+# Modules {{{ 
 
 import argparse
 import numpy as np
-import pandas as pd
 import uproot3 as uproot
-from shutil import copyfile
+from utils.strings import printsec
 import os
 
-ROOT_PANDAS = True
+ROOT_PANDAS = False
 if ROOT_PANDAS:
-  import root_pandas
+  from shutil import copyfile
   import root_numpy
-
+  # import root_pandas
 
 from ipanema import initialize
-#initialize('opencl',1)
+from ipanema import ristra, Parameters
+
 initialize(os.environ['IPANEMA_BACKEND'],1)
-from ipanema import ristra, Sample, Parameters, Parameter, Optimizer
 
 import badjanak
+# kernel debugging handlers
+badjanak.config['debug_evt'] = 0#2930619
+badjanak.config['debug'] = 5
+# since HD-fitter always use faddeva for the pdf integral, let also do it here
+# this should impy identical pdf weights between us
+badjanak.config['fast_integral'] = 0
 
-# Parse arguments for this script
-def argument_parser():
-  p = argparse.ArgumentParser()
-  p.add_argument('--input-file', help='File to add pdfWeight to')
-  p.add_argument('--tree-name', help='Name of the original tree')
-  p.add_argument('--output-file', help='File to store the ntuple with weights')
-  p.add_argument('--target-params', help='Parameters of the target PDF')
-  p.add_argument('--original-params', help='Gen parameters of input file')
-  p.add_argument('--mode', help='Mode (MC_BsJpsiPhi or MC_BdJpsiKstar)')
-  return p
+# }}}
 
 
-################################################################################
-
-
-################################################################################
-# pdf_weighting ################################################################
+# PDF weighting {{{
 
 def pdf_weighting(data, target_params, original_params, mode):
   # Modify flags, compile model and get kernels
-  badjanak.config['debug_evt'] = 0#2930619
-  badjanak.config['debug'] = 5
-  badjanak.config['fast_integral'] = 0
-
-  if mode == "MC_Bd2JpsiKstar":
+  if mode in ("MC_Bd2JpsiKstar"):
     badjanak.config["mHH"] = [826, 861, 896, 931, 966]
-    tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
-                'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M','sigmat',
-                'B_ID', 'B_ID', 'B_ID', 'B_ID']
-                #'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
-  elif mode.startswith("MC_Bs2Jpsi"):
+    # WARNING : Here we should be using 511*X_ID/311
+    avars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
+             'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M','sigmat',
+             'B_ID', 'B_ID', 'B_ID', 'B_ID']
+    badjanak.get_kernels(True)
+    cross_rate = badjanak.delta_gamma5_mc
+  elif mode in ("MC_Bs2JpsiPhi", "MC_Bs2JpsiPhi_dG0"):
     badjanak.config["mHH"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
-    tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
-                'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M','sigmat',
-                'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
-
-  badjanak.get_kernels(True)
-  cross_rate = badjanak.delta_gamma5_mc
+    avars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
+             'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M','sigmat',
+             'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
+    badjanak.get_kernels(True)
+    cross_rate = badjanak.delta_gamma5_mc
 
   # Load file
-  vars_h = np.ascontiguousarray(data[tad_vars].values)    # input array (matrix)
-  vars_h[:,3] *= 1e3                                                # time in ps
-  vars_h[:,5] *= 0                                                  # time in ps
-  vars_h[:,8] *= 0                                                  # time in ps
-  vars_h[:,9] *= 0                                                  # time in ps
-  pdf_h  = np.zeros(vars_h.shape[0])                        # output array (pdf)
+  vars_h = np.ascontiguousarray(data[avars].values)      # input array (matrix)
+  vars_h[:,3] *= 1e3                                               # time in ps
+  vars_h[:,5] *= 0                                                 # time in ps
+  vars_h[:,8] *= 0                                                 # time in ps
+  vars_h[:,9] *= 0                                                 # time in ps
+  pdf_h = np.zeros(vars_h.shape[0])                        # output array (pdf)
 
-  print(tad_vars)
-  print(data)
-  print(vars_h)
   # Allocate device_arrays
   vars_d = ristra.allocate(vars_h).astype(np.float64)
-  pdf_d  = ristra.allocate(pdf_h).astype(np.float64)
+  pdf_d = ristra.allocate(pdf_h).astype(np.float64)
+
   # Compute!
   original_params = Parameters.load(original_params)
   target_params = Parameters.load(target_params)
@@ -99,6 +84,7 @@ def pdf_weighting(data, target_params, original_params, mode):
 
   return pdfWeight
 
+
 ################################################################################
 
 
@@ -112,20 +98,20 @@ def dg0_weighting(data, target_params, original_params, mode):
   badjanak.config['fast_integral'] = 0
 
   badjanak.config["mHH"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
-  tad_vars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
-              'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
-              'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
+  avars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
+           'truehelphi_GenLvl','B_TRUETAU_GenLvl', 'X_M','sigmat',
+           'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
 
   badjanak.get_kernels()
   cross_rate = badjanak.delta_gamma5_mc
 
   # Load file
-  vars_h = np.ascontiguousarray(data[tad_vars].values)    # input array (matrix)
-  vars_h[:,3] *= 1e3                                                # time in ps
-  vars_h[:,5] *= 0                                                  # time in ps
-  vars_h[:,8] *= 0                                                  # time in ps
-  vars_h[:,9] *= 0                                                  # time in ps
-  pdf_h  = np.zeros(vars_h.shape[0])                        # output array (pdf)
+  vars_h = np.ascontiguousarray(data[avars].values)      # input array (matrix)
+  vars_h[:,3] *= 1e3                                               # time in ps
+  vars_h[:,5] *= 0                                                 # time in ps
+  vars_h[:,8] *= 0                                                 # time in ps
+  vars_h[:,9] *= 0                                                 # time in ps
+  pdf_h  = np.zeros(vars_h.shape[0])                       # output array (pdf)
 
   # Allocate device_arrays
   vars_d = ristra.allocate(vars_h).astype(np.float64)
@@ -147,52 +133,57 @@ def dg0_weighting(data, target_params, original_params, mode):
 
   return dg0Weight
 
-################################################################################
+# }}}
 
 
-
-################################################################################
-#%% Run and get the job done ###################################################
+# Run and get the job done {{{ 
 
 if __name__ == '__main__':
-  args = vars(argument_parser().parse_args())
-  print(f"\n{80*'='}\nPDF weighting\n{80*'='}\n")
+  
+  # parse comandline arguments
+  p = argparse.ArgumentParser()
+  p.add_argument('--input-file', help='File to add pdfWeight to')
+  p.add_argument('--tree-name', help='Name of the original tree')
+  p.add_argument('--output-file', help='File to store the ntuple with weights')
+  p.add_argument('--target-params', help='Parameters of the target PDF')
+  p.add_argument('--original-params', help='Gen parameters of input file')
+  p.add_argument('--mode', help='Mode (MC_BsJpsiPhi or MC_BdJpsiKstar)')
+  args = vars(p.parse_args())
 
-  input_file = args['input_file']
-  tree_name = args['tree_name']
-  target_params = args['target_params']
-  original_params = args['original_params']
-  output_file = args['output_file']
-  mode = args['mode']
-  weight = 'pdfWeight'
-  if 'dg0Weight' in output_file:
-    weight = 'dg0Weight'
+  printsec(f"PDF weighting")
 
+  # load arguments
+  ifile = args['input_file']
+  itree = args['tree_name']
+  tparams = args['target_params']
+  oparams = args['original_params']
+  rfile = args['output_file']
 
-  print(f'Loading {input_file}')
-  df = uproot.open(input_file)[tree_name].pandas.df(flatten=None)
+  # check for dg0 string in output_file name, so derive what to do
+  weight = 'dg0Weight' if 'dg0Weight' in rfile else 'pdfWeight'
+
+  # add weight to dataframe
+  print(f'Loading {ifile}')
+  df = uproot.open(ifile)[itree].pandas.df()
   if weight == 'pdfWeight':
-    df['pdfWeight'] = pdf_weighting(df, target_params, original_params, mode)
+    df['pdfWeight'] = pdf_weighting(df, tparams, oparams, args['mode'])
     print('pdfWeight was succesfully calculated')
   elif weight == 'dg0Weight':
-    df['dg0Weight'] = dg0_weighting(df, target_params, original_params, mode)
+    df['dg0Weight'] = dg0_weighting(df, tparams, oparams, args['mode'])
     print('dg0Weight was succesfully calculated')
 
-  # Save weights to file -------------------------------------------------------
-  #    Save pdfWeight to the file
-  if os.path.exists(output_file):
-    print(f'Deleting previous {output_file}')
-    os.remove(output_file)                               # delete file if exists
-  print(f'Writing on {output_file}')
+  # save weights to file
   if ROOT_PANDAS:
-    copyfile(input_file, output_file)
+    copyfile(ifile, rfile)
     var = np.array(df[weight].values, dtype=[(weight, np.float64)])
-    root_numpy.array2root(var, output_file, tree_name, mode='update')
+    root_numpy.array2root(var, rfile, itree, mode='update')
+    # root_pandas.to_root(odf, output_file, key=otree)
   else:
-    f = uproot.recreate(output_file)
-    f[tree_name] = uproot.newtree({var:'float64' for var in df})
-    f[tree_name].extend(df.to_dict(orient='list'))
-    f.close()
+    with uproot.recreate(rfile) as rf:
+      rf[itree] = uproot.newtree({var:'float64' for var in df})
+      rf[itree].extend(df.to_dict(orient='list'))
 
-################################################################################
-# that's all folks
+# }}}
+
+
+# vim: foldmethod=marker
