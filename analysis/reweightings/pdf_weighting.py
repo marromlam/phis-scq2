@@ -44,19 +44,20 @@ def pdf_weighting(data, target_params, original_params, mode):
     badjanak.config["mHH"] = [826, 861, 896, 931, 966]
     # WARNING : Here we should be using 511*X_ID/311
     avars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
-             'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M','sigmat',
+             'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M', 'sigmat',
              'B_ID', 'B_ID', 'B_ID', 'B_ID']
     badjanak.get_kernels(True)
     cross_rate = badjanak.delta_gamma5_mc
   elif mode in ("MC_Bs2JpsiPhi", "MC_Bs2JpsiPhi_dG0"):
     badjanak.config["mHH"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
     avars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
-             'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M','sigmat',
+             'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M', 'sigmat',
              'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
     badjanak.get_kernels(True)
     cross_rate = badjanak.delta_gamma5_mc
 
   # Load file
+  print(data[avars].values)
   vars_h = np.ascontiguousarray(data[avars].values)      # input array (matrix)
   vars_h[:,3] *= 1e3                                               # time in ps
   vars_h[:,5] *= 0                                                 # time in ps
