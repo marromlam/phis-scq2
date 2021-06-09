@@ -158,7 +158,7 @@ if __name__ == "__main__":
   p.add_argument('--trigger', help='Trigger(s) to fit [comb/(biased)/unbiased]')
   args = vars(p.parse_args())
 
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   ANGACC = args['angacc']
   MODE = args['mode']

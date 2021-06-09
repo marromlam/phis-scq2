@@ -1,18 +1,14 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-""" --
+DESCRIPTION = """
 ANGULAR ACCEPTANCE
--- """
+"""
 
-################################################################################
-#%% Modules ####################################################################
+
+# Modules {{{
 
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import uproot
 import os
 import sys
 import hjson
@@ -27,12 +23,9 @@ from ipanema import initialize
 #initialize('cuda',1)
 from ipanema import ristra, Sample, Parameters
 
-
-################################################################################
-
+# }}}
 
 
-################################################################################
 #%% ############################################################################
 
 

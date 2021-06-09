@@ -1,7 +1,8 @@
 # naive angular acceptance - no correction (only sWeight and polWeight) --------
 #     Here we have 2 rules to compute angular acceptance without correcting
 #     MC samples. First rule computes angular acceptance for MC, and second one
-#     merges MC results to compute RD angular acceptance
+#     merges MC results to compute RD angular acceptance {{{
+
 rule angular_acceptance_naive:
   resources:
     mem_mb = 4096
@@ -1048,11 +1049,14 @@ rule angular_acceptance_iterativeRun2MCBs4:
            --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
            --version                 {wildcards.version}\
            --mode                    {wildcards.mode}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 MC Bs :: {wildcards}", f"{log}")
-# Yearly angular acceptance ------------------------------------------------------
+
+
+
+# Yearly angular acceptance
 #     This rule runs the iterative procedure for only one year using both
-#     MC and MC_dG0 files.
+#     MC and MC_dG0 files. {{{
 rule angular_acceptance_iterative_yearly:
   wildcard_constraints:
     year = "\d{4}",
