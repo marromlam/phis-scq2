@@ -1,0 +1,289 @@
+% !TEX program = xelatex
+\documentclass[aspectratio=43,9pt]{beamer}
+\usetheme{Compostela}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{Simulation meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}
+}
+\newcommand{\TalkAuthorShort}{Veronika Chobanova, Diego Martínez, Marcos Romero}
+\newcommand{\TalkTitle}{Bug fix in\\ \texttt{EvtBsMuMuKK} model}
+\newcommand{\TalkTitleShort}{Bug fix in \texttt{EvtBsMuMuKK} model}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{January 12th}
+\newcommand{\TalkDateNumber}{2021/01/12}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{adjustbox,booktabs,float}
+\usepackage{array, bm}
+
+\newcommand{\Bs}{B_s^0}
+\newcommand{\antiBs}{\overline{B_s^0}}
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE PAGE & CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[plain,overlaytitlepage=0.9]
+  \begin{minipage}[b][\textheight][b]{5cm}
+    \includegraphics[height=0.5cm]{logos/igfae_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/usc_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/xunta_bw}\hspace{1mm}\\[2mm]
+    \includegraphics[height=0.5cm]{logos/maeztu_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/lhcb_bw}\\[-1mm]
+  \end{minipage}
+\end{frame}
+
+% \begin{frame}[plain,overlaytoc=0.9]
+%   \addtocounter{framenumber}{-1}
+%   \hspace*{5.3cm}\begin{minipage}{8cm}
+%     \tableofcontents
+%   \end{minipage}
+% \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{News}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsection{Rewinding} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[default] % --------------------------------------
+\frametitle{noframetitle}
+
+\begin{itemize}
+  \item Back in 2016 Veronika and Diego introduced a new \texttt{EvtBsMuMuKK} model. 
+  \begin{itemize}
+    \item Capable of simulating S (resonant/non-resonant), P and D-wave interference which \texttt{PVV\_CPLH} (currently used) was not (only P-wave).
+    \item It had some bugs with units and handling decay particles.
+    \item Better angular acceptance description.
+  \end{itemize}
+  \item In 2019 we updated the model. \href{https://indico.cern.ch/event/693534/contributions/3248540/attachments/1769507/2874529/EvtGenBsJPsiKK.pdf}{\beamerbutton{talk}} 
+  \begin{itemize}
+    \item Fixed the aforementioned bugs.
+    \item Added corresponding DecFile.
+    \item After some code cleaning a bug was introduced, which we are about to fix.
+  \end{itemize}
+\end{itemize}
+
+\bigskip 
+
+By August 2020 we discovered that our S-wave samples used for the $\phi_s$ analysis were not correct. We could not get proper fit results when fitting them.
+
+Now \href{https://its.cern.ch/jira/browse/LHCBGAUSS-2132}{LHCBGAUSS-2132} branch implements the correction.
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+\subsection{Fit to sample} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[default,allowframebreaks] % --------------------------------------
+  \frametitle{Buggy example - 2+ M events generated with Gauss}
+  
+  \centering
+  \begin{tabular}{cccc}
+    \hline
+    Parameter  &                   Fit  &      Gen  &  Pull \\
+    \hline
+    $                       f_S^{1} $&$         0.4331 \pm 0.0066 $&$ +0.4332 $&$ -0.0 $\\
+    $                       f_S^{2} $&$       0.04128 \pm 0.00079 $&$ +0.0415 $&$ -0.3 $\\
+    $                       f_S^{3} $&$       0.00635 \pm 0.00018 $&$ +0.0048 $&$ +8.3 $\\
+    $                       f_S^{4} $&$       0.00801 \pm 0.00023 $&$ +0.0068 $&$ +5.1 $\\
+    $                       f_S^{5} $&$       0.03834 \pm 0.00072 $&$ +0.0339 $&$ +6.3 $\\
+    $                       f_S^{6} $&$         0.1460 \pm 0.0018 $&$ +0.1220 $&$ +13.4 $\\
+    $                           f_0 $&$       0.50216 \pm 0.00055 $&$ +0.5242 $&$ -39.8 $\\
+    $                     f_{\perp} $&$       0.27191 \pm 0.00073 $&$ +0.2500 $&$ +30.0 $\\
+    % $               \phi_S - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+    $                        \phi_0 $&$        -0.0309 \pm 0.0014 $&$ -0.0300 $&$ -0.6 $\\
+    % $     \phi_{\parallel} - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+    % $         \phi_{\perp} - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+    % $ \delta_S^{1} - \delta_{\perp} $&$         1.8221 \pm 0.0098 $&$ +1.7158 $&$ +10.8 $\\
+    % $ \delta_S^{2} - \delta_{\perp} $&$           1.615 \pm 0.011 $&$ +1.5315 $&$ +7.5 $\\
+    % $ \delta_S^{3} - \delta_{\perp} $&$           0.773 \pm 0.015 $&$ +0.7146 $&$ +4.0 $\\
+    % $ \delta_S^{4} - \delta_{\perp} $&$          -0.256 \pm 0.014 $&$ -0.4623 $&$ +15.1 $\\
+    % $ \delta_S^{5} - \delta_{\perp} $&$        -0.7875 \pm 0.0099 $&$ -0.9354 $&$ +14.9 $\\
+    % $ \delta_S^{6} - \delta_{\perp} $&$        -0.9149 \pm 0.0072 $&$ -1.0528 $&$ +19.2 $\\
+    $                      \delta_0 $&$                 0.0 \pm 0 $\\
+    $ \delta_{\parallel} - \delta_0 $&$         3.2587 \pm 0.0051 $&$ +3.2600 $&$ -0.3 $\\
+    $     \delta_{\perp} - \delta_0 $&$         3.0814 \pm 0.0045 $&$ +3.0800 $&$ +0.3 $\\
+    % $           \lambda_S/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+    $                     \lambda_0 $&$       1.00071 \pm 0.00091 $&$ +1.0000 $&$ +0.8 $\\
+    % $ \lambda_{\parallel}/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+    % $     \lambda_{\perp}/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+    $                      \Gamma_d $&$             0.65789 \pm 0 $&$ +0.6579 $&$ +0.0 $\\
+    $                \Delta\Gamma_s $&$         0.0355 \pm 0.0011 $&$ +0.0854 $&$ -45.5 $\\
+    $           \Gamma_s - \Gamma_d $&$      -0.10685 \pm 0.00042 $&$ +0.0035 $&$ -262.7 $\\
+    $                      \Delta m $&$        17.8014 \pm 0.0014 $&$ +17.800 $&$ +1.0 $\\
+  \hline
+  \end{tabular}
+  
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsection{Fit to sample} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[default] % --------------------------------------
+  \frametitle{Bug Fixed - 300+ k events generated with Gauss}
+  
+  \centering
+  \begin{tabular}{cccc}
+    \hline
+    Parameter  &                   Fit  &      Gen  &  Pull \\
+    \hline
+    $                       f_S^{1} $&$           0.445 \pm 0.017 $&$ +0.4332 $&$ +0.7 $\\
+    $                       f_S^{2} $&$         0.0403 \pm 0.0020 $&$ +0.0415 $&$ -0.6 $\\
+    $                       f_S^{3} $&$       0.00554 \pm 0.00039 $&$ +0.0048 $&$ +1.8 $\\
+    $                       f_S^{4} $&$       0.00686 \pm 0.00053 $&$ +0.0068 $&$ +0.1 $\\
+    $                       f_S^{5} $&$         0.0315 \pm 0.0017 $&$ +0.0339 $&$ -1.4 $\\
+    $                       f_S^{6} $&$         0.1270 \pm 0.0043 $&$ +0.1220 $&$ +1.2 $\\
+    $                           f_0 $&$         0.5207 \pm 0.0015 $&$ +0.5242 $&$ -2.4 $\\
+    $                     f_{\perp} $&$         0.2563 \pm 0.0019 $&$ +0.2500 $&$ +3.3 $\\
+%    $               \phi_S - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+    $                        \phi_0 $&$        -0.0305 \pm 0.0034 $&$ -0.0300 $&$ -0.1 $\\
+%    $     \phi_{\parallel} - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+%    $         \phi_{\perp} - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+%    $ \delta_S^{1} - \delta_{\perp} $&$           1.853 \pm 0.026 $&$ +1.7158 $&$ +5.4 $\\
+%    $ \delta_S^{2} - \delta_{\perp} $&$           1.655 \pm 0.029 $&$ +1.5315 $&$ +4.2 $\\
+%    $ \delta_S^{3} - \delta_{\perp} $&$           0.831 \pm 0.037 $&$ +0.7146 $&$ +3.1 $\\
+%    $ \delta_S^{4} - \delta_{\perp} $&$          -0.293 \pm 0.036 $&$ -0.4623 $&$ +4.7 $\\
+%    $ \delta_S^{5} - \delta_{\perp} $&$          -0.808 \pm 0.027 $&$ -0.9354 $&$ +4.6 $\\
+%    $ \delta_S^{6} - \delta_{\perp} $&$          -0.940 \pm 0.019 $&$ -1.0528 $&$ +5.9 $\\
+    $                      \delta_0 $&$                 0.0 \pm 0 $\\
+    $ \delta_{\parallel} - \delta_0 $&$           3.258 \pm 0.013 $&$ +3.2600 $&$ -0.2 $\\
+    $     \delta_{\perp} - \delta_0 $&$           3.083 \pm 0.011 $&$ +3.0800 $&$ +0.3 $\\
+%    $           \lambda_S/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+    $                     \lambda_0 $&$         1.0035 \pm 0.0023 $&$ +1.0000 $&$ +1.5 $\\
+%    $ \lambda_{\parallel}/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+%    $     \lambda_{\perp}/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+    $                      \Gamma_d $&$             0.65789 \pm 0 $&$ +0.6579 $&$ +0.0 $\\
+    $                \Delta\Gamma_s $&$         0.0740 \pm 0.0041 $&$ +0.0854 $&$ -2.8 $\\
+    $           \Gamma_s - \Gamma_d $&$         0.0056 \pm 0.0013 $&$ +0.0035 $&$ +1.6 $\\
+    $                      \Delta m $&$        17.8063 \pm 0.0037 $&$ +17.800 $&$ +1.7 $\\
+  \hline
+  \end{tabular}
+
+
+  
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsection{Fit to sample} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[default] % --------------------------------------
+  \frametitle{Bug fixed - 8+ M events generated with standalone EvtGen}
+  
+  \centering
+  \begin{tabular}{cccc}
+    \hline
+    Parameter  &                   Fit  &      Gen  &  Pull \\
+    \hline
+    $                       f_S^{1} $&$         0.4344 \pm 0.0032 $&$ +0.4332 $&$ +0.4 $\\
+    $                       f_S^{2} $&$       0.04160 \pm 0.00042 $&$ +0.0415 $&$ +0.2 $\\
+    $                       f_S^{3} $&$     0.004870 \pm 0.000073 $&$ +0.0048 $&$ +0.5 $\\
+    $                       f_S^{4} $&$       0.00668 \pm 0.00010 $&$ +0.0068 $&$ -1.5 $\\
+    $                       f_S^{5} $&$       0.03471 \pm 0.00035 $&$ +0.0339 $&$ +2.4 $\\
+    $                       f_S^{6} $&$       0.12192 \pm 0.00084 $&$ +0.1220 $&$ -0.1 $\\
+    $                           f_0 $&$       0.52469 \pm 0.00029 $&$ +0.5242 $&$ +1.7 $\\
+    $                     f_{\perp} $&$       0.24969 \pm 0.00038 $&$ +0.2500 $&$ -0.8 $\\
+    % $               \phi_S - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+    $                        \phi_0 $&$      -0.03026 \pm 0.00067 $&$ -0.0300 $&$ -0.4 $\\
+    % $     \phi_{\parallel} - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+    % $         \phi_{\perp} - \phi_0 $&$                 0.0 \pm 0 $&$ +0.0000 $&$ +0.0 $\\
+    % $ \delta_S^{1} - \delta_{\perp} $&$         1.8518 \pm 0.0051 $&$ +1.7158 $&$ +26.8 $\\
+    % $ \delta_S^{2} - \delta_{\perp} $&$         1.6563 \pm 0.0058 $&$ +1.5315 $&$ +21.6 $\\
+    % $ \delta_S^{3} - \delta_{\perp} $&$         0.8496 \pm 0.0079 $&$ +0.7146 $&$ +17.1 $\\
+    % $ \delta_S^{4} - \delta_{\perp} $&$        -0.3335 \pm 0.0073 $&$ -0.4623 $&$ +17.7 $\\
+    % $ \delta_S^{5} - \delta_{\perp} $&$        -0.8038 \pm 0.0053 $&$ -0.9354 $&$ +24.9 $\\
+    % $ \delta_S^{6} - \delta_{\perp} $&$        -0.9289 \pm 0.0039 $&$ -1.0528 $&$ +31.7 $\\
+    $                      \delta_0 $&$                 0.0 \pm 0 $\\
+    $ \delta_{\parallel} - \delta_0 $&$         3.2582 \pm 0.0026 $&$ +3.2600 $&$ -0.7 $\\
+    $     \delta_{\perp} - \delta_0 $&$         3.0787 \pm 0.0021 $&$ +3.0800 $&$ -0.6 $\\
+    % $           \lambda_S/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+    $                     \lambda_0 $&$       0.99968 \pm 0.00045 $&$ +1.0000 $&$ -0.7 $\\
+    % $ \lambda_{\parallel}/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+    % $     \lambda_{\perp}/\lambda_0 $&$                 1.0 \pm 0 $&$ +1.0000 $&$ +0.0 $\\
+    $                      \Gamma_d $&$             0.65789 \pm 0 $&$ +0.6579 $&$ +0.0 $\\
+    $                \Delta\Gamma_s $&$       0.08579 \pm 0.00081 $&$ +0.0854 $&$ +0.4 $\\
+    $           \Gamma_s - \Gamma_d $&$       0.00364 \pm 0.00026 $&$ +0.0035 $&$ +0.5 $\\
+    $                      \Delta m $&$      17.80031 \pm 0.00072 $&$ +17.800 $&$ +0.4 $\\
+  \hline
+  \end{tabular}
+
+
+  
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsection{Code} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[default,fragile] % --------------------------------------
+\frametitle{noframetitle}
+
+The bug is basically an over-simplifying error in these code lines:
+
+\begin{variableblock}{Current}{bg=scqred!20}{bg=scqred!99}
+  \phantom{ }
+  \begin{verbatim}
+ double p3Kp_KK_CMS_i = (pow(M_KK_i,2) - MKpiKm2)/(2.0*M_KK_i);
+ double p3Kp_KK_CMS_f = (pow(M_KK_f,2) - MKpiKm2)/(2.0*M_KK_f);
+  \end{verbatim}
+\end{variableblock} 
+
+\begin{variableblock}{Corrected}{bg=scqgreen!20}{bg=scqgreen!99}
+  \phantom{ }
+  \begin{verbatim}
+ double p3Kp_KK_CMS_i = sqrt((pow(M_KK_i,2) - pow(MKp+MKm,2)) * 
+                        (pow(M_KK_i,2) - pow(MKp-MKm,2)))/(2.*M_KK_i);
+ double p3Kp_KK_CMS_f = sqrt((pow(M_KK_f,2) - pow(MKp+MKm,2)) * 
+                        (pow(M_KK_f,2) - pow(MKp-MKm,2)))/(2.*M_KK_f);}}
+  \end{verbatim}
+\end{variableblock}  
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+\end{document}

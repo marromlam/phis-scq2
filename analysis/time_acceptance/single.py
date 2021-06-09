@@ -58,7 +58,7 @@ if __name__ != '__main__':
 ################################################################################
 #%% Run and get the job done ###################################################
 if __name__ == '__main__':
-  bkgcat = True
+
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
@@ -66,7 +66,6 @@ if __name__ == '__main__':
   MODE = args['mode']
   TRIGGER = args['trigger']
   TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
-  print(CORR)
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
@@ -114,10 +113,7 @@ if __name__ == '__main__':
       if CORR:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
       else:
-        if bkgcat==True:
-            weight = f'time/time'
-        else:
-          weight = f'{sw}/gb_weights'
+        weight = f'{sw}/gb_weights'
       mode = 'BsMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
       if CORR:
@@ -132,23 +128,13 @@ if __name__ == '__main__':
         weight = f'{sw}'
       mode = 'BdRD'; c = 'c'
     print(weight)
+
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    if bkgcat==True:
-      cats[mode].chop(cuts_and('(evtN %2)==0', 'bkgcatB != 60.0', 'logIPchi2B >= -1',  'logIPchi2B <= 1',  'log(BDTFchi2) <= 1', 'log(BDTFchi2) >= -1')) #check Peilia n'(evtN % 2) == 0',
-    else:
-      cats[mode].chop(cuts_and('(evtN % 2)==0'))#,'logIPchi2B >= 0', 'log(BDTFchi2) >=0')) 
-    print(cats[mode])
-    #if YEAR == '2015':
-        #cats[mode].chop(cuts_and('index>600000', 'index<700000'))
-    #if YEAR =='2016':
-        #cats[mode].chop(cuts_and('index>3000000', 'index<3500000'))
-    #print(cats[mode])
-    #exit()
-    #,'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
     cats[mode].allocate(time='gentime', lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
+
     # Add knots
     cats[mode].knots = Parameters()
     cats[mode].knots.add(*[
@@ -210,6 +196,8 @@ if __name__ == '__main__':
     result = mini.optimize(method='minuit', verbose=False)
     result = mini.optimize(method='emcee', verbose=False, steps=1000,
                            nwalkers=100, is_weighted=False)
+  else:
+    exit()
   print(result)
 
 

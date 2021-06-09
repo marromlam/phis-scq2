@@ -43,10 +43,10 @@ ftype getN(const ftype A10, const ftype A00, const ftype A1a, const ftype A1e,
 WITHIN_KERNEL
 ftype getF(const ftype cosK, const ftype cosL, const ftype hphi, const int k)
 {
-  ftype sinK   = sqrt(1. - cosK*cosK);
-  ftype sinL   = sqrt(1. - cosL*cosL);
-  ftype sinphi = sin(hphi);
-  ftype cosphi = cos(hphi);
+  const ftype sinK   = sqrt(1. - cosK*cosK);
+  const ftype sinL   = sqrt(1. - cosL*cosL);
+  const ftype sinphi = sin(hphi);
+  const ftype cosphi = cos(hphi);
 
   ftype fk;
   switch(k) {

@@ -1,0 +1,431 @@
+% !TEX program = xelatex
+\documentclass[aspectratio=43,9pt]{beamer}
+\usetheme{Compostela}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{$\phi_s$ meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}
+}
+\newcommand{\TalkAuthorShort}{Veronika Chobanova, Diego Martínez, Marcos Romero}
+\newcommand{\TalkTitle}{\textit{phis SCQ} status}
+\newcommand{\TalkTitleShort}{\textit{phis SCQ} status}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{November 12th}
+\newcommand{\TalkDateNumber}{2020/11/12}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{adjustbox,booktabs,float}
+
+\usepackage{array}
+\newcommand{\TupleVersion}{v0r5}
+\newcommand{\FIGS}{/home3/marcos.romero/phis-scq/output/figures}
+\newcommand{\PARS}{/home3/marcos.romero/phis-scq/output/tables}
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE PAGE & CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[plain,overlaytitlepage=0.9]
+  \begin{minipage}[b][\textheight][b]{5cm}
+    \includegraphics[height=0.5cm]{logos/igfae_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/usc_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/xunta_bw}\hspace{1mm}\\[2mm]
+    \includegraphics[height=0.5cm]{logos/maeztu_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/lhcb_bw}\\[-1mm]
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain,overlaytoc=0.9]
+  \addtocounter{framenumber}{-1}
+  \hspace*{5.3cm}\begin{minipage}{8cm}
+    \tableofcontents
+  \end{minipage}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{News}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsection{Decay--time acceptance}
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{noframetitle}
+
+\begin{enumerate}
+  \item SCQ has some diffences in the uncertainty estimation wrt. HD.
+  \begin{itemize}
+    \item Central values are the same.
+    \item Likelihood seems to be correct.
+    \item Correlation matrix is clearly not the same (next slides).
+  \end{itemize} 
+  \item The issue arises in the nominal decay-time acceptance.
+  \item It is more important in the $\tau_{B_d^0}$ validation fit.
+  \begin{itemize}
+    \item Both cov matrixes (biased and unbiased) are diffent.
+    \item Gaussian constraints are based on those numbers.
+  \end{itemize} 
+\end{enumerate}
+
+\bigskip
+
+
+
+\begin{center}
+  \textbf{Current status} \\[5mm]
+  \begin{tabular}{l|ccc}
+    framework    & $\tau_{B_d^0}$ \\ \hline
+    HD (w/  100) & 1.513  \pm 0.006 & the note \\
+    HD (w/o 100) & 1.5277 \pm 0.0063 \\
+    SCQ          & 1.5203 \pm 0.0092\\
+  \end{tabular}
+\end{center}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{Nominal procedure}
+
+\footnotesize
+
+\begin{columns}[T]
+
+
+  \begin{column}{0.25\textwidth}
+    \begin{block}{SCQ 2015 unbiased} \centering
+    \begin{tabular}{ccc}
+      $c_0^u$ & $1.0   \pm 0.0  $ \\
+      $c_1^u$ & $1.053 \pm 0.073$ \\
+      $c_2^u$ & $1.096 \pm 0.048$ \\
+      $c_3^u$ & $0.970 \pm 0.052$ \\
+      $c_4^u$ & $1.052 \pm 0.048$ \\
+      $c_5^u$ & $1.051 \pm 0.049$ \\
+      $c_6^u$ & $1.027 \pm 0.063$ \\
+      $c_7^u$ & $1.090 \pm 0.062$ \\
+      $c_8^u$ & $1.047 \pm 0.052$ \\
+    \end{tabular}
+    \end{block}
+    \begin{block}{SCQ 2015 biased} \centering
+    \begin{tabular}{ccc}
+      $c_0^b$ & $1.0   \pm 0.0  $ \\
+      $c_1^b$ & $1.69 \pm 0.26$ \\
+      $c_2^b$ & $1.74 \pm 0.17$ \\
+      $c_3^b$ & $1.85 \pm 0.23$ \\
+      $c_4^b$ & $1.99 \pm 0.21$ \\
+      $c_5^b$ & $1.92 \pm 0.21$ \\
+      $c_6^b$ & $2.01 \pm 0.25$ \\
+      $c_7^b$ & $2.18 \pm 0.26$ \\
+      $c_8^b$ & $1.93 \pm 0.22$ \\
+    \end{tabular}
+    \end{block}
+  \end{column}
+
+  \begin{column}{0.33\textwidth}
+    \begin{variableblock}{HD 2015 unbiased (w/o 100)}{bg=scqgreen!20}{bg=scqgreen}  \centering
+    \begin{tabular}{ccc}
+      $c_0^u$ & $1.0   \pm 0.0  $ \\
+      $c_1^u$ & $1.0529293 \pm 0.0692581$ \\
+      $c_2^u$ & $1.0959797 \pm 0.0472742$ \\
+      $c_3^u$ & $0.9697771 \pm 0.0491934$ \\
+      $c_4^u$ & $1.0519474 \pm 0.0462747$ \\
+      $c_5^u$ & $1.0506712 \pm 0.0477968$ \\
+      $c_6^u$ & $1.0268674 \pm 0.0617825$ \\
+      $c_7^u$ & $1.0896288 \pm 0.0612373$ \\
+      $c_8^u$ & $1.0466603 \pm 0.0504906$ \\
+    \end{tabular}
+    \end{variableblock}    
+    \begin{variableblock}{HD 2015 unbiased (w/o 100)}{bg=scqgreen!20}{bg=scqgreen} \centering
+    \begin{tabular}{ccc}
+      $c_0^b$ & $1.0   \pm 0.0  $ \\
+      $c_1^b$ & $1.688347 \pm 0.339727$ \\
+      $c_2^b$ & $1.735007 \pm 0.224214$ \\
+      $c_3^b$ & $1.846176 \pm 0.288358$ \\
+      $c_4^b$ & $1.991670 \pm 0.280367$ \\
+      $c_5^b$ & $1.917418 \pm 0.279126$ \\
+      $c_6^b$ & $2.007715 \pm 0.314697$ \\
+      $c_7^b$ & $2.177218 \pm 0.334333$ \\
+      $c_8^b$ & $1.931568 \pm 0.285051$ \\
+    \end{tabular}
+    \end{variableblock}    
+
+  \end{column}
+
+  \begin{column}{0.33\textwidth}
+  \begin{variableblock}{HD 2015 unbiased (w/ 100)}{bg=scqred!20}{bg=scqred} \centering
+    \begin{tabular}{ccc}
+      $c_0^u$ & $1.0   \pm 0.0  $ \\
+      $c_1^u$ & $1.0529252 \pm 0.0755269 $ \\
+      $c_2^u$ & $1.0959766 \pm 0.0485381 $ \\
+      $c_3^u$ & $0.9697744 \pm 0.0536680 $ \\
+      $c_4^u$ & $1.0519446 \pm 0.0485572 $ \\
+      $c_5^u$ & $1.0506682 \pm 0.0514357 $ \\
+      $c_6^u$ & $1.0268646 \pm 0.0636260 $ \\
+      $c_7^u$ & $1.0896256 \pm 0.0641377 $ \\
+      $c_8^u$ & $1.0466575 \pm 0.0536177 $ \\
+    \end{tabular}
+  \end{variableblock}  
+  \begin{variableblock}{HD 2015 biased (w/ 100)}{bg=scqred!20}{bg=scqred} \centering
+    \begin{tabular}{ccc}
+      $c_0^b$ & $1.0   \pm 0.0  $ \\
+      $c_1^b$ & $1.688349 \pm 0.269013$ \\
+      $c_2^b$ & $1.734971 \pm 0.193378$ \\
+      $c_3^b$ & $1.846173 \pm 0.229659$ \\
+      $c_4^b$ & $1.991636 \pm 0.228200$ \\
+      $c_5^b$ & $1.917400 \pm 0.224474$ \\
+      $c_6^b$ & $2.007672 \pm 0.266767$ \\
+      $c_7^b$ & $2.177233 \pm 0.277439$ \\
+      $c_8^b$ & $1.931570 \pm 0.232201$ \\
+    \end{tabular}
+  \end{variableblock}  
+
+  \end{column}
+
+\end{columns}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{Nominal procedure}
+
+\footnotesize
+
+\begin{columns}[T]
+
+
+  \begin{column}{0.25\textwidth}
+    \begin{block}{SCQ 2016 unbiased} \centering
+    \begin{tabular}{ccc}
+      $c_0^u$ & $1.0   \pm 0.0  $ \\
+      $c_1^u$ & $1.007 \pm 0.027$ \\
+      $c_2^u$ & $1.030 \pm 0.018$ \\
+      $c_3^u$ & $1.000 \pm 0.020$ \\
+      $c_4^u$ & $0.982 \pm 0.017$ \\
+      $c_5^u$ & $0.998 \pm 0.018$ \\
+      $c_6^u$ & $1.004 \pm 0.024$ \\
+      $c_7^u$ & $0.983 \pm 0.021$ \\
+      $c_8^u$ & $0.981 \pm 0.018$ \\
+    \end{tabular}
+    \end{block}
+    \begin{block}{SCQ 2016 biased} \centering
+    \begin{tabular}{ccc}
+      $c_0^b$ & $1.0  \pm 0.0 $ \\
+      $c_1^b$ & $1.49 \pm 0.12$ \\
+      $c_2^b$ & $2.06 \pm 0.12$ \\
+      $c_3^b$ & $2.12 \pm 0.13$ \\
+      $c_4^b$ & $2.28 \pm 0.14$ \\
+      $c_5^b$ & $2.29 \pm 0.14$ \\
+      $c_6^b$ & $2.45 \pm 0.16$ \\
+      $c_7^b$ & $2.24 \pm 0.15$ \\
+      $c_8^b$ & $2.32 \pm 0.14$ \\
+    \end{tabular}
+    \end{block}
+  \end{column}
+
+  \begin{column}{0.33\textwidth}
+    \begin{variableblock}{HD 2016 unbiased (w/o 100)}{bg=scqgreen!20}{bg=scqgreen}  \centering
+    \begin{tabular}{ccc}
+      $c_0^u$ & $1.0   \pm 0.0  $ \\
+      $c_1^u$ & $1.0073325 \pm 0.0291029 $ \\
+      $c_2^u$ & $1.0295961 \pm 0.0183241 $ \\
+      $c_3^u$ & $1.0004724 \pm 0.0217002 $ \\
+      $c_4^u$ & $0.9823660 \pm 0.0183612 $ \\
+      $c_5^u$ & $0.9979454 \pm 0.0194668 $ \\
+      $c_6^u$ & $1.0044627 \pm 0.0246674 $ \\
+      $c_7^u$ & $0.9834125 \pm 0.0239021 $ \\
+      $c_8^u$ & $0.9808167 \pm 0.0201142 $ \\
+    \end{tabular}
+    \end{variableblock}    
+    \begin{variableblock}{HD 2016 unbiased (w/o 100)}{bg=scqgreen!20}{bg=scqgreen} \centering
+    \begin{tabular}{ccc}
+      $c_0^b$ & $1.0   \pm 0.0  $ \\
+      $c_1^b$ & $1.485637 \pm 0.143534$ \\
+      $c_2^b$ & $2.056237 \pm 0.121219$ \\
+      $c_3^b$ & $2.117313 \pm 0.153726$ \\
+      $c_4^b$ & $2.278232 \pm 0.145004$ \\
+      $c_5^b$ & $2.289664 \pm 0.154264$ \\
+      $c_6^b$ & $2.449816 \pm 0.172595$ \\
+      $c_7^b$ & $2.235729 \pm 0.162972$ \\
+      $c_8^b$ & $2.321797 \pm 0.157485$ \\
+    \end{tabular}
+    \end{variableblock}    
+
+  \end{column}
+
+  \begin{column}{0.33\textwidth}
+  \begin{variableblock}{HD 2016 unbiased (w/ 100)}{bg=scqred!20}{bg=scqred} \centering
+    \begin{tabular}{ccc}
+      $c_0^u$ & $1.0   \pm 0.0  $ \\
+      $c_1^u$ & $1.0073325 \pm 0.0291029 $ \\
+      $c_2^u$ & $1.0295961 \pm 0.0183241 $ \\
+      $c_3^u$ & $1.0004724 \pm 0.0217002 $ \\
+      $c_4^u$ & $0.9823660 \pm 0.0183612 $ \\
+      $c_5^u$ & $0.9979454 \pm 0.0194668 $ \\
+      $c_6^u$ & $1.0044627 \pm 0.0246674 $ \\
+      $c_7^u$ & $0.9834125 \pm 0.0239021 $ \\
+      $c_8^u$ & $0.9808167 \pm 0.0201142 $ \\
+    \end{tabular}
+  \end{variableblock}  
+  \begin{variableblock}{HD 2016 biased (w/ 100)}{bg=scqred!20}{bg=scqred} \centering
+    \begin{tabular}{ccc}
+      $c_0^b$ & $1.0   \pm 0.0  $ \\
+      $c_1^b$ & $1.485637 \pm 0.143538$ \\
+      $c_2^b$ & $2.056237 \pm 0.121222$ \\
+      $c_3^b$ & $2.117313 \pm 0.153731$ \\
+      $c_4^b$ & $2.278232 \pm 0.145008$ \\
+      $c_5^b$ & $2.289664 \pm 0.154269$ \\
+      $c_6^b$ & $2.449816 \pm 0.172598$ \\
+      $c_7^b$ & $2.235729 \pm 0.162978$ \\
+      $c_8^b$ & $2.321797 \pm 0.157490$ \\
+    \end{tabular}
+  \end{variableblock}  
+
+  \end{column}
+
+\end{columns}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{Lifetime check}
+
+\footnotesize
+
+\begin{columns}[T]
+
+
+  \begin{column}{0.25\textwidth}
+\begin{enumerate}
+  \item Fit biased and unbiased using half of $B_d^0$ MC as $B_s^0$ MC, the other part  as $B_d^0$ MC, and use half of $B_d^0$ RD as $B_d^0$ data.
+  \item With the previous coefficients fit the other part of $B_d^0$ RD and get $\Gamma_d$.
+\end{enumerate}
+  \end{column}
+
+
+  \begin{column}{0.25\textwidth}
+    \begin{block}{SCQ 2016 unbiased} \centering
+    \begin{tabular}{ccc}
+      $c_0^u$ & $1.0   \pm 0.0  $ \\
+      $c_1^u$ &  $  1.026 \pm   0.019 $ \\
+      $c_2^u$ &  $  1.014 \pm   0.012 $ \\
+      $c_3^u$ &  $  1.006 \pm   0.013 $ \\
+      $c_4^u$ &  $  0.978 \pm   0.011 $ \\
+      $c_5^u$ &  $ 1.0110 \pm  0.0098 $ \\
+      $c_6^u$ &  $  0.983 \pm   0.016 $ \\
+      $c_7^u$ &  $  1.001 \pm   0.013 $ \\
+      $c_8^u$ &  $ 0.9752 \pm  0.0095 $ \\
+    \end{tabular}
+    \end{block}
+    \begin{block}{SCQ 2016 biased} \centering
+    \begin{tabular}{ccc}
+      $c_0^b$ & $1.0  \pm 0.0 $ \\
+      $c_1^b$ &  $   1.48 \pm   0.16  $ \\
+      $c_2^b$ &  $   1.92 \pm   0.13  $ \\
+      $c_3^b$ &  $   1.96 \pm   0.16  $ \\
+      $c_4^b$ &  $   2.12 \pm   0.15  $ \\
+      $c_5^b$ &  $   2.01 \pm   0.15  $ \\
+      $c_6^b$ &  $   2.27 \pm   0.18  $ \\
+      $c_7^b$ &  $   1.96 \pm   0.16  $ \\
+      $c_8^b$ &  $   1.97 \pm   0.15  $ \\
+      
+    \end{tabular}
+    \end{block}
+  \end{column}
+
+  \begin{column}{0.33\textwidth}
+    \begin{variableblock}{HD 2016 unbiased (w/o 100)}{bg=scqgreen!20}{bg=scqgreen}  \centering
+    \begin{tabular}{ccc}
+      $c_0^u$ & $1.0   \pm 0.0  $ \\
+      $c_1^u$ & $ 1.0261777 \pm 0.039740 $ \\
+      $c_2^u$ & $ 1.0134355 \pm 0.024767 $ \\
+      $c_3^u$ & $ 1.0059144 \pm 0.029610 $ \\
+      $c_4^u$ & $ 0.9776838 \pm 0.024378 $ \\
+      $c_5^u$ & $ 1.0109416 \pm 0.026998 $ \\
+      $c_6^u$ & $ 0.9827142 \pm 0.033094 $ \\
+      $c_7^u$ & $ 1.0011691 \pm 0.033002 $ \\
+      $c_8^u$ & $ 0.9751761 \pm 0.027328 $ \\
+    \end{tabular}
+    \end{variableblock}    
+    \begin{variableblock}{HD 2016 unbiased (w/o 100)}{bg=scqgreen!20}{bg=scqgreen} \centering
+    \begin{tabular}{ccc}
+      $c_0^b$ & $1.0   \pm 0.0  $ \\
+      $c_1^b$ & $ 1.482384  \pm 0.109847 $ \\
+      $c_2^b$ & $ 1.9221582 \pm 0.090003 $ \\
+      $c_3^b$ & $ 1.964173  \pm 0.115798 $ \\
+      $c_4^b$ & $ 2.1244238 \pm 0.097933 $ \\
+      $c_5^b$ & $ 2.0063265 \pm 0.097196 $ \\
+      $c_6^b$ & $ 2.274594  \pm 0.137173 $ \\
+      $c_7^b$ & $ 1.960124  \pm 0.110102 $ \\
+      $c_8^b$ & $ 1.9743433 \pm 0.093964 $ \\
+    \end{tabular}
+    \end{variableblock}    
+
+  \end{column}
+
+\end{columns}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{Lifetime check - correlations unbiased}
+
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{gpx/composU.pdf}
+  \includegraphics[width=0.8\textwidth]{gpx/simonU.pdf}
+\end{center}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{Lifetime check - correlations biased}
+
+
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{gpx/composB.pdf}
+  \includegraphics[width=0.8\textwidth]{gpx/simonB.pdf}
+\end{center}
+
+\end{frame} % ------------------------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+\end{document}

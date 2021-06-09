@@ -3,26 +3,28 @@ import os
 import hjson
 import numpy as np
 from ipanema import ristra
+
+
 # %%
 CONFIG = hjson.load(open('config.json'))
 SAMPLES_PATH = CONFIG['path']
 MAILS = CONFIG['mail']
 
 YEARS = {#
-  '2011'  : ['2011'],
-  '2012'  : ['2012'],
-  'Run1'  : ['2011','2012'],
-  'run1'  : ['2011','2012'],
-  '2015'  : ['2015'],
-  '2016'  : ['2016'],
-  'Run2a' : ['2015','2016'],
-  'run2a' : ['2015','2016'],
-  '2017'  : ['2017'],
-  '2018'  : ['2018'],
-  'Run2b' : ['2017','2018'],
-  'run2b' : ['2017','2018'],
-  'Run2'  : ['2015','2016','2017','2018'],
-  'run2'  : ['2015','2016','2017','2018']
+  '2011': ['2011'],
+  '2012': ['2012'],
+  'Run1': ['2011','2012'],
+  'run1': ['2011','2012'],
+  '2015': ['2015'],
+  '2016': ['2016'],
+  'Run2a': ['2015','2016'],
+  'run2a': ['2015','2016'],
+  '2017': ['2017'],
+  '2018': ['2018'],
+  'Run2b': ['2017','2018'],
+  'run2b': ['2017','2018'],
+  'Run2': ['2015','2016','2017','2018'],
+  'run2': ['2015','2016','2017','2018']
 };
 
 from utils.strings import cammel_case_split, cuts_and
@@ -47,7 +49,6 @@ def timeacc_guesser(timeacc):
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
 
 
-
 def physpar_guesser(physics):
   # Check if the tuple will be modified
   pattern = r'\A(0)(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
@@ -59,9 +60,10 @@ def physpar_guesser(physics):
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
 
 
-
-
 def version_guesser(version):
+  """
+  From a version string, return the configuration of the tuple
+  """
   # Check if the tuple will be modified
   # print(version)
   version = version.split('@')
@@ -69,17 +71,57 @@ def version_guesser(version):
   # Dig in mod
   if mod:
     #pattern = r'\A(\d+)?(magUp|magDown)?(cut(B_PT|B_ETA|sigmat)(\d{1}))?\Z'
-    pattern = r'\A(\d+)?(magUp|magDown)?(cut(pTB|etaB|sigmat)(\d{1}))?\Z'
+    pattern = [
+        # percentage of tuple to be loaded
+        r"(\d+)?",
+        # split tuple by event number: useful for MC tests and crosschecks
+        # odd is plays data role and MC is even
+        r"(evtOdd|evtEven)?",
+        # split by magnet Up or Down: useful for crosschecks
+        r"(magUp|magDown)?",
+        # split in pTB, etaB and sigmat bins: for systematics
+        r"((pTB|etaB|sigmat)(\d{1}))?"
+        ]
+    pattern = rf"\A{''.join(pattern)}\Z"
+    # print(pattern)
     p = re.compile(pattern)
     try:
-      share, mag, fullcut, var, bin = p.search(mod).groups()
-      return v, int(share) if share else None, mag, fullcut, var, int(bin)-1 if bin else None
+      share, evt, mag, fullcut, var, nbin = p.search(mod).groups()
+      share = int(share) if share else 100
+      evt = evt if evt else None
+      nbin = int(nbin)-1 if nbin else None
+      return v, share, evt, mag, fullcut, var, nbin 
     except:
       raise ValueError(f'Cannot interpret {mod} as a version modifier')
   else:
-    return v, int(100), None, None, None, None
+    return v, int(100), None, None, None, None, None
 
 
+
+def cut_translate(version_substring):
+  vsub_dict = {
+    # "evtOdd": "( (evt % 2) != 0 ) & logIPchi2B>=0 & log(BDTFchi2)>=0",
+    "evtOdd": "(evt % 2) != 0",
+    "evtEven": "(evt % 2) == 0",
+    "magUp": "magnet == 1",
+    "magDown": "magnet == 0",
+    "bkgcat050": "bkgcat != 60",
+    "pTB1": "pTB >= 0 & pTB < 3.8e3",
+    "pTB2": "pTB >= 3.8e3 & pTB < 6e3",
+    "pTB3": "pTB >= 6e3 & pTB <= 9e3",
+    "pTB4": "pTB >= 9e3",
+    "etaB1": "etaB >= 0 & etaB <= 3.3",
+    "etaB2": "etaB >= 3.3 & etaB <= 3.9",
+    "etaB3": "etaB >= 3.9 & etaB <= 6",
+    "sigmat1": "sigmat >= 0 & sigmat <= 0.031",
+    "sigmat2": "sigmat >= 0.031 & sigmat <= 0.042",
+    "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15"
+  }
+  list_of_cuts = []
+  for k,v in vsub_dict.items():
+    if k in version_substring:
+      list_of_cuts.append(v)
+  return f"( {' ) & ( '.join(list_of_cuts)} )"
 #version_guesser('v0r5@10')
 
 
@@ -91,9 +133,12 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
   # Get version withoud modifier
   if not version:
     version = f"{wcs.version}"
-  #print(f'{version}')
-  v, share, mag, fullcut, var, bin = version_guesser(f'{version}')
-  #print(wcs)
+
+  # print(f'{version}')
+  v, share, evt, mag, fullcut, var, bin = version_guesser(f'{version}')
+  v = f'{version}'
+  # print(v, share, evt, mag, fullcut, var, bin)
+
   # Try to extract mode from wcs then from mode arg
   try:
     m = f'{wcs.mode}'
@@ -125,7 +170,7 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
     elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
       m = mode
 
-  # Model handler when asking for weights
+  # Model handler when asking for weises
   if weight:
     if m == 'Bs2JpsiPhi':
       weight = 'sWeight'
@@ -139,25 +184,28 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
       if weight not in ('sWeight', 'polWeight', 'kinWeight'):
         weight = 'polWeight'
     elif m == 'MC_Bd2JpsiKstar':
-      if weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kbuWeight', 'kinWeight'):
+      if weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kbuWeight',
+                        'kinWeight', 'oddWeight'):
         weight = 'polWeight'
     elif m == 'MC_Bs2JpsiPhi':
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
-      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight', 'kinWeight', 'angWeight'):
+      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight',
+                          'kinWeight', 'angWeight', 'oddWeight'):
         weight = 'dg0Weight'
     elif m == 'MC_Bs2JpsiKK_Swave':
       if weight == 'kbuWeight':
         weight = 'polWeight'
-      elif weight not in ('sWeight', 'polWeight', 'angWeight'):
+      elif weight not in ('sWeight', 'polWeight', 'angWeight', 'kinWeight', 'oddWeight'):
         weight = 'polWeight'
     elif m == 'MC_Bs2JpsiPhi_dG0':
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
-      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight', 'angWeight'):
+      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight',
+                          'angWeight', 'oddWeight'):
         weight = 'polWeight'
 
-  
+
   # Year
   if year:
     years = YEARS[year]
@@ -189,7 +237,6 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
   return path
 
 
-
 def send_mail(subject, body, files=None):
   import os
   body = os.path.abspath(body)
@@ -214,7 +261,6 @@ def send_mail(subject, body, files=None):
       os.system(f"""ssh master '{cmd} | /usr/sbin/sendmail {mail}'""")
 
 
-
 def trigger_scissors(trigger, CUT=""):
   if trigger == 'biased':
     CUT = cuts_and("hlt1b==1",CUT)
@@ -223,8 +269,9 @@ def trigger_scissors(trigger, CUT=""):
   return CUT
 
 
-
 def swnorm(sw):
   sw_ = ristra.get(sw)
   return ristra.allocate(sw_*(np.sum(sw_)/np.sum(sw_**2)))
 
+
+# vim: foldmethod=marker

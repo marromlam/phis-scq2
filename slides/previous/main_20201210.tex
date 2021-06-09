@@ -1,0 +1,278 @@
+% !TEX program = xelatex
+\documentclass[aspectratio=43,9pt]{beamer}
+\usetheme{Compostela}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{$\phi_s$ meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}
+}
+\newcommand{\TalkAuthorShort}{Veronika Chobanova, Diego Martínez, Marcos Romero}
+\newcommand{\TalkTitle}{\textit{phis SCQ} status}
+\newcommand{\TalkTitleShort}{\textit{phis SCQ} status}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{December 10th}
+\newcommand{\TalkDateNumber}{2020/12/10}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{adjustbox,booktabs,float}
+
+\usepackage{array}
+\newcommand{\TupleVersion}{v0r5}
+\newcommand{\FIGS}{/home3/marcos.romero/phis-scq/output/figures}
+\newcommand{\PARS}{/home3/marcos.romero/phis-scq/output/tables}
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{allintypewriter}{\ttfamily}{\par}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE PAGE & CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[plain,overlaytitlepage=0.9]
+  \begin{minipage}[b][\textheight][b]{5cm}
+    \includegraphics[height=0.5cm]{logos/igfae_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/usc_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/xunta_bw}\hspace{1mm}\\[2mm]
+    \includegraphics[height=0.5cm]{logos/maeztu_bw}\hspace{1mm}
+    \includegraphics[height=0.5cm]{logos/lhcb_bw}\\[-1mm]
+  \end{minipage}
+\end{frame}
+
+\begin{frame}[plain,overlaytoc=0.9]
+  \addtocounter{framenumber}{-1}
+  \hspace*{5.3cm}\begin{minipage}{8cm}
+    \tableofcontents
+  \end{minipage}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{News}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsection{DGsd problem}
+\begin{frame}[default,allowframebreaks] % --------------------------------------
+\frametitle{noframetitle}
+
+\footnotesize
+
+\begin{columns}
+  \begin{column}{0.35\textwidth} 
+\begin{variableblock}{All $B_s^0$ MC tuples}{bg=scqred!20}{bg=scqred}
+\begin{tabular}{lcc}
+fPlon  & +0.5175 & +0.0029\\
+fPper  & +0.2455 & +0.0040\\
+dPpar  & +3.0484 & +0.0803\\
+dPper  & +2.6116 & +0.1231\\
+pPlon  & -0.0864 & +0.0398\\
+lPlon  & +1.0111 & +0.0150\\
+DGsd   & -0.0059 & +0.0023\\
+DGs    & +0.0780 & +0.0076\\
+DM     & +17.6862 & +0.0554\\
+dSlon1 & +2.2420 & +0.1727\\
+dSlon2 & +1.6567 & +0.2754\\
+dSlon3 & +0.9999 & +0.3727\\
+dSlon4 & -0.3094 & +0.2251\\
+dSlon5 & -0.5145 & +0.0882\\
+dSlon6 & -1.0748 & +0.1476\\
+fSlon1 & +0.5068 & +0.0425\\
+fSlon2 & +0.0407 & +0.0079\\
+fSlon3 & +0.0050 & +0.0026\\
+fSlon4 & +0.0053 & +0.0049\\
+fSlon5 & +0.0791 & +0.0132\\
+fSlon6 & +0.1451 & +0.0185\\
+\end{tabular}
+\end{variableblock}
+  \end{column}
+  \begin{column}{0.35\textwidth} 
+\begin{variableblock}{All MC tuples}{bg=scqred!20}{bg=scqred}
+\begin{tabular}{lcc}
+fPlon  & +0.5175 & +0.0029\\
+fPper  & +0.2455 & +0.0040\\
+dPpar  & +3.0484 & +0.0803\\
+dPper  & +2.6116 & +0.1231\\
+pPlon  & -0.0864 & +0.0398\\
+lPlon  & +1.0111 & +0.0150\\
+DGsd   & -0.0059 & +0.0023\\
+DGs    & +0.0780 & +0.0076\\
+DM     & +17.6862 & +0.0554\\
+dSlon1 & +2.2420 & +0.1727\\
+dSlon2 & +1.6567 & +0.2754\\
+dSlon3 & +0.9999 & +0.3727\\
+dSlon4 & -0.3094 & +0.2251\\
+dSlon5 & -0.5145 & +0.0882\\
+dSlon6 & -1.0748 & +0.1476\\
+fSlon1 & +0.5068 & +0.0425\\
+fSlon2 & +0.0407 & +0.0079\\
+fSlon3 & +0.0050 & +0.0026\\
+fSlon4 & +0.0053 & +0.0049\\
+fSlon5 & +0.0791 & +0.0132\\
+fSlon6 & +0.1451 & +0.0185\\
+\end{tabular}
+\end{variableblock}
+  \end{column}
+\end{columns}
+
+\newpage
+
+\begin{columns}
+  \begin{column}{0.35\textwidth} 
+\begin{variableblock}{All $B_s^0$ tuples}{bg=scqred!20}{bg=scqred}
+\begin{tabular}{lcc}
+fPlon  & +0.5175 & +0.0029\\
+fPper  & +0.2455 & +0.0040\\
+dPpar  & +3.0484 & +0.0803\\
+dPper  & +2.6116 & +0.1231\\
+pPlon  & -0.0864 & +0.0398\\
+lPlon  & +1.0111 & +0.0150\\
+DGsd   & -0.0059 & +0.0023\\
+DGs    & +0.0780 & +0.0076\\
+DM     & +17.6862 & +0.0554\\
+dSlon1 & +2.2420 & +0.1727\\
+dSlon2 & +1.6567 & +0.2754\\
+dSlon3 & +0.9999 & +0.3727\\
+dSlon4 & -0.3094 & +0.2251\\
+dSlon5 & -0.5145 & +0.0882\\
+dSlon6 & -1.0748 & +0.1476\\
+fSlon1 & +0.5068 & +0.0425\\
+fSlon2 & +0.0407 & +0.0079\\
+fSlon3 & +0.0050 & +0.0026\\
+fSlon4 & +0.0053 & +0.0049\\
+fSlon5 & +0.0791 & +0.0132\\
+fSlon6 & +0.1451 & +0.0185\\
+\end{tabular}
+\end{variableblock}
+  \end{column}
+  \begin{column}{0.35\textwidth} 
+\begin{variableblock}{All $B_d^0$ tuples + $B_s^0$ with $\Delta \Gamma = 0$ MC}{bg=scqgreen!20}{bg=scqgreen}
+\begin{tabular}{lcc}
+fPlon  & +0.5172 & +0.0029\\
+fPper  & +0.2457 & +0.0040\\
+dPpar  & +3.0477 & +0.0806\\
+dPper  & +2.6109 & +0.1230\\
+pPlon  & -0.0868 & +0.0398\\
+lPlon  & +1.0116 & +0.0150\\
+DGsd   & -0.0043 & +0.0023\\
+DGs    & +0.0780 & +0.0076\\
+DM     & +17.6853 & +0.0554\\
+dSlon1 & +2.2430 & +0.1726\\
+dSlon2 & +1.6546 & +0.2747\\
+dSlon3 & +1.0036 & +0.3759\\
+dSlon4 & -0.3254 & +0.2366\\
+dSlon5 & -0.5186 & +0.0889\\
+dSlon6 & -1.0792 & +0.1484\\
+fSlon1 & +0.5060 & +0.0426\\
+fSlon2 & +0.0403 & +0.0079\\
+fSlon3 & +0.0048 & +0.0026\\
+fSlon4 & +0.0050 & +0.0048\\
+fSlon5 & +0.0784 & +0.0132\\
+fSlon6 & +0.1445 & +0.0184\\
+\end{tabular}
+\end{variableblock}
+
+\end{column}
+\end{columns}
+
+\newpage
+
+\begin{columns}
+  \begin{column}{0.35\textwidth} 
+\begin{variableblock}{All $B_d^0$ tuples}{bg=scqgreen!20}{bg=scqgreen}
+\begin{tabular}{lcc}
+fPlon  & +0.5169 & +0.0029\\
+fPper  & +0.2458 & +0.0040\\
+dPpar  & +3.0507 & +0.0802\\
+dPper  & +2.6113 & +0.1230\\
+pPlon  & -0.0870 & +0.0398\\
+lPlon  & +1.0121 & +0.0150\\
+DGsd   & -0.0043 & +0.0023\\
+DGs    & +0.0778 & +0.0076\\
+DM     & +17.6846 & +0.0554\\
+dSlon1 & +2.2431 & +0.1726\\
+dSlon2 & +1.6515 & +0.2732\\
+dSlon3 & +1.0097 & +0.3765\\
+dSlon4 & -0.3329 & +0.2433\\
+dSlon5 & -0.5208 & +0.0896\\
+dSlon6 & -1.0811 & +0.1489\\
+fSlon1 & +0.5054 & +0.0426\\
+fSlon2 & +0.0401 & +0.0078\\
+fSlon3 & +0.0048 & +0.0025\\
+fSlon4 & +0.0047 & +0.0046\\
+fSlon5 & +0.0776 & +0.0132\\
+fSlon6 & +0.1439 & +0.0184\\
+\end{tabular}
+\end{variableblock}
+\end{column}
+\end{columns}
+
+\end{frame} % ------------------------------------------------------------------
+
+
+\subsection{Angular acceptance}
+
+\foreach \year in {2015,...,2018}{
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{Time dependence - angular weights}
+
+\begin{tabular}{cc}
+  \year\, biased & \year\, unbiased \\
+  \includegraphics[width=0.47\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_run2Timedep_simul_biased.pdf} & 
+  \includegraphics[width=0.47\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_run2Timedep_simul_unbiased.pdf}
+\end{tabular}
+
+\end{frame}} % -----------------------------------------------------------------
+
+
+
+\foreach \year in {2015,...,2018}{
+\begin{frame}[default] % -------------------------------------------------------
+\frametitle{Time dependence - efficiency functions}
+\centering
+\begin{tabular}{cc}
+  \year\, biased & \year\, unbiased \\
+  \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_naiveTimeCosk_biased.pdf} & 
+  \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_naiveTimeCosk_unbiased.pdf} \\
+  \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_naiveTimeCosl_biased.pdf} &
+  \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_naiveTimeCosl_unbiased.pdf} \\
+  \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_naiveTimeHphi_biased.pdf} & 
+  \includegraphics[width=0.3\textwidth]{\FIGS/angular_acceptance/\year/Bs2JpsiPhi/v0r5_naiveTimeHphi_unbiased.pdf} \\
+\end{tabular}
+
+\end{frame}} % -----------------------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+\end{document}
