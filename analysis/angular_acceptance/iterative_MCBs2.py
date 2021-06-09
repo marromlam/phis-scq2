@@ -29,6 +29,12 @@ from scipy import special
 from timeit import default_timer as timer
 from hep_ml.metrics_utils import ks_2samp_weighted
 
+import ipanema
+import uproot
+import matplotlib.pyplot as plt
+import matplotlib
+from ipanema import plotting, Sample, Parameter, Parameters
+from utils.plot import watermark, mode_tex
 # threading
 import logging
 import threading
@@ -67,6 +73,9 @@ bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
 reweighter = reweight.GBReweighter(**bdconfig)
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
+
+def acceptance_effect(p, a):
+     return p**3/(a+p**3)
 
 def check_for_convergence(a,b):
   a_f = np.array( [float(a[p].unc_round[0]) for p in a] )
@@ -149,7 +158,6 @@ def get_angular_acceptance(mc, kkpWeight=False):
   # cook weight for angular acceptance
   weight  = mc.df.eval(f'angWeight*{weight_rd}').values
   i = len(mc.kkpWeight.keys())
-
   if kkpWeight:
     weight *= ristra.get(mc.kkpWeight[i])
   weight = ristra.allocate(weight)
@@ -500,7 +508,6 @@ def do_mc_combination(verbose):
 
 def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
   global pars
-
   itstr = f"[iteration #{iteration}]"
 
 
@@ -521,14 +528,67 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
   do_kkp_weighting(verbose)
   tf = timer()-t0
   print(f'Kinematic weighting took {tf:.3f} seconds.')
-
   # 4th step: angular weights
   print(f'\n{itstr} Extract angular normalisation weights')
   t0 = timer()
   do_angular_weights(verbose)
   tf = timer()-t0
   print(f'Extract angular normalisation weights took {tf:.3f} seconds.')
-
+  #branches = ['pTHp', 'pTHm', 'pHm', 'pHp']
+  branches = ['cosK', 'cosL', 'hphi', 'pTHm', 'pHm', 'pLm', 'pTLm','pLp', 'pTLp', 'pHp', 'pTHp','gentime']
+  for i, y in enumerate( YEARS ):
+    for t in ['biased','unbiased']:
+      for j, key in enumerate(branches):
+       fig, axplot, axpull = plotting.axes_plotpull()
+       if (key=='gentime'):
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
+                      weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
+                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+       elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
+                      weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
+                           weights = mc[y]['MC_Bs2JpsiPhi'][t].kkpWeight[iteration]*mc[y]['MC_Bs2JpsiPhi'][t].df['angWeight'], density=True)
+       elif (key=='cosK' or  key=='cosL'):
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
+                        weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
+                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+       elif (key=='hphi'):
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
+                        weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
+                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+       else:
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
+                          weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
+                          weights = mc[y]['MC_Bs2JpsiPhi'][t].kkpWeight[iteration]*mc[y]['MC_Bs2JpsiPhi'][t].df['angWeight'], density=True)
+       axplot.step(ht.bins, ht.counts, where='mid', label=f'{y}-{t}-{iteration}-0-DATA-CUTs',  color='C0')
+       axplot.step(hc.bins, hc.counts, where='mid', label=f'{y}-{t}-{iteration}-0-MC', color='C1')
+       axpull.fill_between(ht.bins,hc.counts/ht.counts,1,
+                               alpha=0.4)
+       axplot.errorbar(ht.bins, ht.counts, yerr=[ht.errl, ht.errh], fmt='.', color='C0')
+       axplot.errorbar(hc.bins, hc.counts, yerr=[hc.errl, hc.errh], fmt='.', color='C1')
+       axplot.set_ylabel(f"Candidates")
+       axpull.set_xlabel(f"{branches[j]}")
+       axpull.set_ylim(0.0,2.0)
+       if key=='gentime':
+          axpull.set_xlim(0.3, 15.)
+       elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
+          axpull.set_xlim(0.0, 1.5e5)
+       elif (key=='cosK' or key=='cosL'):
+          axpull.set_xlim(-1.0, 1.0)
+       elif (key=='hphi'):
+          axpull.set_xlim(-np.pi, np.pi)
+       else:
+          axpull.set_xlim(0.0, 1.0e4)
+       axpull.set_yticks([0.5, 1, 1.5])
+       axplot.legend(fontsize='small')
+       watermark(axplot, version=f'$v0r5$', scale=1.2)
+       fig.savefig(f'pruebas_plots/{branches[j]}_{y}_{t}_{iteration}.pdf')
+       plt.close()
   # 5th step: merge MC std and dg0 results
   print(f'\n{itstr} Combining MC_Bs2JpsiPhi and MC_Bs2JpsiPhi_dG0')
   t0 = timer()
@@ -783,6 +843,7 @@ if __name__ == '__main__':
   print(MODE)
   ANGACC = args['angacc']
   bkgcat = True
+  #np.random.seed(0)
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
 
@@ -790,9 +851,11 @@ if __name__ == '__main__':
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = cuts_and(CUT,f'gentime>={tLL} & gentime<={tUL}')
   # List samples, params and tables --------------------------------------------
-  samples_std   = args['sample_mc_std'].split(',')
+  samples   = args['sample_mc_std'].split(',')
   #samples_std = [samples_std[1]]
-  samples_std = samples_std[0:2]
+  samples_std = samples[0:2]
+  samples_data = [samples[i].replace('v0r5.root', 'v0r5@evtOdd.root') for i in range(len(samples))]
+  samples_std = [samples[i].replace('v0r5.root', 'v0r5@evtEven.root') for i in range(len(samples))]
   input_std_params = args['params_mc_std'].split(',')
   #input_std_params = [input_std_params[1]]
   input_std_params = input_std_params[0:2]
@@ -831,7 +894,7 @@ if __name__ == '__main__':
   # MC reconstructed and generator level variable names
   reco  = ['cosK', 'cosL', 'hphi', 'time']
   true  = [f'gen{i}' for i in reco]
-  #reco = ['cosK', 'cosL', 'hphi', 'gentime']
+  reco = ['cosK', 'cosL', 'hphi', 'gentime']
   reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
   true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
 
@@ -843,7 +906,7 @@ if __name__ == '__main__':
   weight_rd = f'sw/gb_weights'
   weight_mc = f'sw/gb_weights'
   if bkgcat == True:
-    weight_rd = f'time/time'
+    weight_rd = f'oddWeight' #f'time/time' #f'oddWeight'
     weight_mc = f'time/time'
   #weight_rd = f'sw/gb_weights'
   #weight_mc = f'sw/gb_weights'
@@ -889,31 +952,58 @@ if __name__ == '__main__':
   for i, y in enumerate(YEARS):
     data[y] = {}
     resolution = Parameters.load(time_resolution[i])
-    for key in resolution.keys():
-        print(resolution[key].value)
     for t in ['biased','unbiased']:
-      data[y][t] = Sample.from_root(samples_std[i], share=SHARE)
-      print(data[y][t])
+      data[y][t] = Sample.from_root(samples_data[i], share=SHARE)
       data[y][t].name = f"{m}-{y}-{t}"
       data[y][t].resolution = resolution
-      print(data[y][t].resolution)
+      # shit_gorda = np.array(data[y][t].df['oddWeight'])
+      # pTp = np.array(data[y][t].df['pTHp'])
+      # pTm = np.array(data[y][t].df['pTHm'])
+      # for j in range(len(shit_gorda)):
+      #      shit_gorda[j] = acceptance_effect(pTp, 500**3)
+      #      shit_gorda[j] *= acceptance_effect(pTm, 500**3)
+      # shit_gorda = np.zeros_like(data[y][t].df['oddWeight'])
+      # pos = data[y][t].df.eval('oddWeight < 0.975')
+      # shit_gorda = np.where(pos, data[y][t].df.eval('oddWeight*10'), shit_gorda)
+      # pos = data[y][t].df.eval('oddWeight > 0.975 & oddWeight < 1.025')
+      # shit_gorda = np.where(pos, data[y][t].df.eval('oddWeight'), shit_gorda)
+      # pos = data[y][t].df.eval('oddWeight > 1.025')
+      # shit_gorda = np.where(pos, data[y][t].df.eval('oddWeight*10'), shit_gorda)
+      # data[y][t].df['oddWeight'] = shit_gorda
+      #print(data[y][t].df['oddWeight'])
     for t, coeffs in zip(['biased','unbiased'],[coeffs_biased,coeffs_unbiased]):
       c = Parameters.load(coeffs[i])
       data[y][t].knots = Parameters.build(c,c.fetch('k.*'))
       badjanak.config['knots'] = np.array( data[y][t].knots ).tolist()
       data[y][t].timeacc = Parameters.build(c,c.fetch('a.*'))
       if bkgcat==True:
-        data[y][t].chop(cuts_and(trigger_scissors(t), CUT,'bkgcatB != 60.0', '(evtN % 2) != 0', 'logIPchi2B >= -1',  'logIPchi2B <= 1',  'log(BDTFchi2) <= 1', 'log(BDTFchi2) >= -1'))
-        print(data[y][t])
+        data[y][t].chop(cuts_and(trigger_scissors(t), CUT,'bkgcatB != 60.0', '(evtN % 2) != 0'))#,'pHm<45000', 'pHp<45000', 'pTHm<3500', 'pTHp<3500'))#, 'logIPchi2B >= 0', 'log(BDTFchi2) >= 0'))
       else:
           data[y][t].chop(cuts_and(trigger_scissors(t), CUT, ('evtN % 2 != 0'),'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
           #, 'logIPchi2B >= 0'))#, 'log(BDTFchi2) >=0'))
+      shit_gorda = np.array(data[y][t].df['oddWeight'])
+      pTp = np.array(data[y][t].df['pTHp'])
+      pTm = np.array(data[y][t].df['pTHm'])
+      for j in range(len(shit_gorda)):
+        shit_gorda[j] = acceptance_effect(pTp[j], 300**3)
+        shit_gorda[j] *= acceptance_effect(pTm[j], 300**3)
+      data[y][t].df['oddWeight'] = shit_gorda
+        #if np.random.rand() <= 0.3: # threshold this implies the acceptance you loose
+           #shit_gorda[j] = 0.0
+      # shit_gorda = np.zeros_like(data[y][t].df['oddWeight'])
+      # pos = data[y][t].df.eval('oddWeight < 0.975')
+      # shit_gorda = np.where(pos, data[y][t].df.eval('oddWeight*10'), shit_gorda)
+      # pos = data[y][t].df.eval('oddWeight > 0.975 & oddWeight < 1.025')
+      # shit_gorda = np.where(pos, data[y][t].df.eval('oddWeight'), shit_gorda)
+      # pos = data[y][t].df.eval('oddWeight > 1.025')
+      # shit_gorda = np.where(pos, data[y][t].df.eval('oddWeight*10'), shit_gorda)
+      #data[y][t].df['oddWeight'] = shit_gorda
+      #print(data[y][t].df['oddWeight'])
     for t, path in zip(['biased','unbiased'],[params_biased,params_unbiased]):
       data[y][t].params_path = path[i]
 
     for t, path in zip(['biased','unbiased'],[tables_biased,tables_unbiased]):
       data[y][t].tables_path = path[i]
-    #exit()
 
 
   ##Calculate the corrected that is obtained from a part of the MC
@@ -926,7 +1016,6 @@ if __name__ == '__main__':
                         original_weight = mc[y][m][t].df.eval(weight_mc),
                         target_weight   = data[y][t].df.eval(weight_rd));
         angWeight = reweighter.predict_weights(mc[y][m][t].df[['mHH', 'pB', 'pTB']])
-        #angWeight = np.ones_like(mc[y][m][t].df['angWeight'])
         mc[y][m][t].df['angWeight'] = angWeight
         mc[y][m][t].olen = len(angWeight)
         print('mc params')
@@ -950,35 +1039,94 @@ if __name__ == '__main__':
   for i, y in enumerate(YEARS):
     for d in [data[y]['biased'],data[y]['unbiased']]:
       #sw = np.zeros_like(d.df[f'{weight_rd}'])
-      sw = np.zeros_like(d.df[f'sw'])
-      for l,h in zip(mass[:-1],mass[1:]):
-        pos = d.df.eval(f'mHH>={l} & mHH<{h}')
-        this_sw = d.df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
-        sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
-      d.df['sWeight'] = sw
-      # print(sw)
-      # print(np.sum(sw), len(sw))
-      # print(d.df[d.df['sWeight']==1.].shape[0]) 
-      # exit()
-      d.allocate(data=real,weight='sWeight/sWeight',lkhd='0*time')
+      #sw = np.zeros_like(d.df[f'sw'])
+      # for l,h in zip(mass[:-1],mass[1:]):
+      #   pos = d.df.eval(f'mHH>={l} & mHH<{h}')
+      #   this_sw = d.df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
+      #   sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
+      # d.df['sWeight'] = sw
+      # # print(sw)
+      # # print(np.sum(sw), len(sw))
+      # # print(d.df[d.df['sWeight']==1.].shape[0]) 
+      # # exit()
+      d.allocate(data=real,weight=f'{weight_rd}',lkhd='0*time')
+      #d.allocate(data=real,weight='sWeight/sWeight',lkhd='0*time')
 
 
+
+  #branches = ['pTLp', 'pTLm', 'pLm', 'pLp']
+  branches = ['hphi',  'cosL', 'cosK', 'pHm', 'pTHm', 'pLm', 'pTLm','pLp', 'pTLp', 'pHp', 'pTHp', 'gentime']
+  #branches = ['gentime']
+  for i, y in enumerate( YEARS ):
+    for t in ['biased','unbiased']:
+      for j, key in enumerate(branches):
+       fig, axplot, axpull = plotting.axes_plotpull()
+       if (key=='gentime'):
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
+                      weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
+                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+       elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
+                      weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
+                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+       elif (key=='cosK' or key=='cosL'):
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
+                        weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
+                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+       elif (key=='hphi'):
+         print(j)
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-np.pi,np.pi, 20),
+                        weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
+                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+       else:
+         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
+                          weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
+                          weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+       axplot.step(ht.bins, ht.counts, where='mid', label=f'{y}-{t}-0-DATA-CUTs', color='C0')
+       axplot.step(hc.bins, hc.counts, where='mid', label=f'{y}-{t}-0-MC', color='C1')
+       axpull.fill_between(ht.bins,hc.counts/ht.counts,1,
+                               alpha=0.4)
+       axplot.errorbar(ht.bins, ht.counts, yerr=[ht.errl, ht.errh], fmt='.', color='C0')
+       axplot.errorbar(hc.bins, hc.counts, yerr=[hc.errl, hc.errh], fmt='.', color='C1')
+       axplot.set_ylabel(f"Candidates")
+       axpull.set_xlabel(f"{branches[j]}")
+       axpull.set_ylim(0.0,2.0)
+       print(key)
+       if key=='gentime':
+          axpull.set_xlim(0.3, 15.)
+       elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
+          axpull.set_xlim(0.0, 1.5e5)
+       elif (key=='cosK' or key=='cosL'):
+          axpull.set_xlim(-1.0, 1.0)
+       elif (key=='hphi'):
+          axpull.set_xlim(-np.pi,np.pi)
+       else:
+          axpull.set_xlim(0.0, 1.0e4)
+       axpull.set_yticks([0.5, 1, 1.5])
+       axplot.legend(fontsize='small')
+       watermark(axplot, version=f'$v0r5$', scale=1.2)
+       fig.savefig(f'pruebas_plots/{branches[j]}_{y}_{t}.pdf')
+       plt.close()
   # Prepare dict of parameters -------------------------------------------------
   printsec('Parameters and initial status')
 
   print(f"\nFitting parameters\n{80*'='}")
   global pars; pars = Parameters()
-
   # P wave fractions
-  pars.add(dict(name="fPlon", value=0.521284,
+  pars.add(dict(name="fPlon", value=0.520,
             free=True, latex=r'f_0'))
-  pars.add(dict(name="fPper", value=0.249001,
+  pars.add(dict(name="fPper", value=0.25,
             free=True, latex=r'f_{\perp}'))
 
   # Weak phases
   pars.add(dict(name="pSlon", value= 0.00, min=-1, max=+1, #min -1 max +1
             free=False, latex=r"\phi_S - \phi_0"))
-  pars.add(dict(name="pPlon", value= 0.07, min=-1, max=+1,
+  pars.add(dict(name="pPlon", value= 0.05, min=-1, max=+1,
             free=True , latex=r"\phi_0" ))
   pars.add(dict(name="pPpar", value= 0.00, min=-1, max=+1,
             free=False, latex=r"\phi_{\parallel} - \phi_0"))
@@ -990,9 +1138,9 @@ if __name__ == '__main__':
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-2*3.14, max=2*3.14,
             free=False, latex=r"\delta_0"))
-  pars.add(dict(name="dPpar", value=3.30,  
+  pars.add(dict(name="dPpar", value=3.20,  
             free=True, latex=r"\delta_{\parallel} - \delta_0"))
-  pars.add(dict(name="dPper", value=3.07, 
+  pars.add(dict(name="dPper", value=3.04, 
             free=True, latex=r"\delta_{\perp} - \delta_0"))
 
   # lambdas
