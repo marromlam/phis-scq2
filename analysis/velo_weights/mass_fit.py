@@ -492,7 +492,23 @@ if __name__ == '__main__':
   print(f"Selection cut: {cut}")
   print(f"Selected sample has {sample.shape}")
 
+  if "hplus" in args['params']:
+    DOCAz = "Bu_PVConst_Kplus_DOCAz"
+    sample.df.eval(f"DOCAz={DOCAz}", inplace=True)
+  elif "hminus" in args['params']:
+    DOCAz = "Bu_PVConst_Kplus_DOCAz"
+    sample.df.eval(f"DOCAz={DOCAz}", inplace=True)
+  elif "muplus" in args['params']:
+    DOCAz = "Bu_PVConst_J_psi_1S_muplus_0_DOCAz"
+    sample.df.eval(f"DOCAz={DOCAz}", inplace=True)
+  elif "muminus" in args['params']:
+    DOCAz = "Bu_PVConst_J_psi_1S_muminus_0_DOCAz"
+    sample.df.eval(f"DOCAz={DOCAz}", inplace=True)
+  else:
+    print("bug here")
+    exit()
 
+  print(sample.df)
   # Select model and set parameters -------------------------------------------
   #    Select model from command-line arguments and create corresponding set of
   #    paramters
@@ -620,8 +636,8 @@ if __name__ == '__main__':
   # sample = ipanema.Sample.from_root(args["sample"])
 
   # Get DOCAz bins
-  docaz = np.round(equibins1d(sample.df['Bu_PVConst_Kplus_DOCAz'],
-                              DOCAz_BINS)*1e4)/1e4
+  # docaz = np.round(equibins1d(sample.df['DOCAz'],
+  #                             DOCAz_BINS)*1e4)/1e4
   # docaz = [0., 0.0119, 0.0247, 0.0394, 0.0584, 0.0875, 0.1427, 0.2767, 5.]
   docaz = [0.0, 0.3, 0.58, 0.91, 1.35, 1.96, 3.01, 7.0]
   docaz = [0.01909757, 0.02995095, 0.04697244, 0.07366745, 0.11553356,
@@ -642,19 +658,21 @@ if __name__ == '__main__':
   # %% Start Bu mass to get efficiency shape ----------------------------------
   printsec(f"Fitting Bu mass in DOCAz range = [{docaz[0]}, {docaz[1]})")
 
-  doca_cut = [f"(Bu_PVConst_Kplus_DOCAz>={docaz[0]})",
-              f"(Bu_PVConst_Kplus_DOCAz<{docaz[1]})"]
+  doca_cut = [f"(DOCAz>={docaz[0]})",
+              f"(DOCAz<{docaz[1]})"]
   doca_cut = f"({' & '.join(doca_cut)})"
   # do both fits
   for match in [True, False]:
     _pars = ipanema.Parameters.clone(pars)
     if match:
       rd = Sample.from_root(SAMPLE)
+      rd.df.eval(f"DOCAz={DOCAz}", inplace=True)
       rd.chop(f'{cut} & {doca_cut} & (Bu_PVConst_veloMatch>0)')
       rd.allocate(mass=f'{BuM}', pdf=f'0*{BuM}', weight=f'{BuM}/{BuM}')
       printsubsec(f"Fitting {len(rd.mass)} VELO-matched events.")
     else:
       rd = Sample.from_root(SAMPLE)
+      rd.df.eval(f"DOCAz={DOCAz}", inplace=True)
       rd.chop(f'{cut} & {doca_cut} & ~(Bu_PVConst_veloMatch>0)')
       rd.allocate(mass=f'{BuM}', pdf=f'0*{BuM}', weight=f'{BuM}/{BuM}')
       _pars.lock()
