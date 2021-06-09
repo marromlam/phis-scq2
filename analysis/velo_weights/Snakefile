@@ -3,18 +3,19 @@ rule eff_from_bu_mass_fit:
     mem_mb = 8192
   wildcard_constraints:
     bin = "(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)",
-    model = "(cb|dgauss|ipatia)"
+    model = "(cb|dgauss|ipatia)",
+    particle = "(muplus|muminus|hplus|hminus)"
   input:
     sample = "/scratch46/marcos.romero/v8s_sidecar/{year}/{mode}/downstream.root",
   output:
-    pars = "output/params/velo_weights/{year}/{mode}/v0r5_{model}_docaz{bin}.json",
-    pars_match = "output/params/velo_weights/{year}/{mode}/v0r5_{model}_docaz{bin}_match.json",
-    fit = "output/figures/velo_weights/{year}/{mode}/v0r5_massfit_{model}_docaz{bin}.pdf",
-    logfit = "output/figures/velo_weights/{year}/{mode}/v0r5_logmassfit_{model}_docaz{bin}.pdf",
-    fit_match = "output/figures/velo_weights/{year}/{mode}/v0r5_massfit_{model}_docaz{bin}_match.pdf",
-    logfit_match = "output/figures/velo_weights/{year}/{mode}/v0r5_logmassfit_{model}_docaz{bin}_match.pdf",
+    pars = "output/params/velo_weights/{year}/{mode}/v0r5_{model}_{particle}docaz{bin}.json",
+    pars_match = "output/params/velo_weights/{year}/{mode}/v0r5_{model}_{particle}docaz{bin}_match.json",
+    fit = "output/figures/velo_weights/{year}/{mode}/v0r5_massfit_{model}_{particle}docaz{bin}.pdf",
+    logfit = "output/figures/velo_weights/{year}/{mode}/v0r5_logmassfit_{model}_{particle}docaz{bin}.pdf",
+    fit_match = "output/figures/velo_weights/{year}/{mode}/v0r5_massfit_{model}_{particle}docaz{bin}_match.pdf",
+    logfit_match = "output/figures/velo_weights/{year}/{mode}/v0r5_logmassfit_{model}_{particle}docaz{bin}_match.pdf",
   log:
-    "output/log/eff_from_bu_mass_fit/{year}/{mode}/v0r5_{model}_docaz{bin}.log"
+    "output/log/eff_from_bu_mass_fit/{year}/{mode}/v0r5_{model}_{particle}docaz{bin}.log"
   run:
     shell(f"""(time\
     python analysis/velo_weights/mass_fit.py\
@@ -36,12 +37,12 @@ rule eff_from_bu_mass_fit:
 rule eff_from_bu_fit:
   input:
     sample = "/scratch46/marcos.romero/v8s_sidecar/{year}/{mode}/downstream.root",
-    pars = expand("output/params/velo_weights/{{year}}/{{mode}}/v0r5_{{massmodel}}_docaz{bin}.json", bin=range(1,15)),
-    pars_match = expand("output/params/velo_weights/{{year}}/{{mode}}/v0r5_{{massmodel}}_docaz{bin}_match.json", bin=range(1,15)),
+    pars = expand("output/params/velo_weights/{{year}}/{{mode}}/v0r5_{{massmodel}}_{{particle}}docaz{bin}.json", bin=range(1,15)),
+    pars_match = expand("output/params/velo_weights/{{year}}/{{mode}}/v0r5_{{massmodel}}_{{particle}}docaz{bin}_match.json", bin=range(1,15)),
   output:
-    pars = "output/params/velo_weights/{year}/{mode}/v0r5_{effmodel}_{massmodel}.json",
-    plot = "output/figures/velo_weights/{year}/{mode}/v0r5_{effmodel}_{massmodel}.pdf",
-    logplot = "output/figures/velo_weights/{year}/{mode}/v0r5_log{effmodel}_{massmodel}.pdf",
+    pars = "output/params/velo_weights/{year}/{mode}/v0r5_{effmodel}_{massmodel}_{particle}.json",
+    plot = "output/figures/velo_weights/{year}/{mode}/v0r5_{effmodel}_{massmodel}_{particle}.pdf",
+    logplot = "output/figures/velo_weights/{year}/{mode}/v0r5_log{effmodel}_{massmodel}_{particle}.pdf",
   run:
     shell(f"""
     python analysis/velo_weights/efficiency_fitter.py\
@@ -57,18 +58,19 @@ rule eff_from_bu_fit:
     """)
 
 
-
-rule time_acceptance_upper:
-  input:
-    # sample = "/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}.root",
-    sample = "/scratch17/marcos.romero/Bs2JpsiPhi-FullRun2/selection/output/tuples/MC_Bu2JpsiKplus/MC_Bu2JpsiKplus_2016_selected_bdt.root",
-    eff = "output/params/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}.json",
-  output:
-    timeacc = "output/params/time_acceptance/{year}/{mode}/{version}_{effmodel}_{massmodel}.json"
-  run:
-    shell(f"""
-    python analysis/velo_weights/time_acceptance_upper.py\
-    --sample {input.sample}\
-    --eff {input.eff}\
-    --timeacc {output.timeacc}\
-    """)
+#
+# rule time_acceptance_upper:
+#   input:
+#     # sample = "/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}.root",
+#     sample = "/scratch17/marcos.romero/Bs2JpsiPhi-FullRun2/selection/output/tuples/MC_Bu2JpsiKplus/MC_Bu2JpsiKplus_2016_selected_bdt.root",
+#     eff = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{effmodel}}_{{massmodel}}_{particle}.json",
+#                  particle=['muminus', 'hplus'])
+#   output:
+#     timeacc = "output/params/time_acceptance/{year}/{mode}/{version}_{effmodel}_{massmodel}.json"
+#   run:
+#     shell(f"""
+#     python analysis/velo_weights/time_acceptance_upper.py\
+#     --sample {input.sample}\
+#     --eff {input.eff}\
+#     --timeacc {output.timeacc}\
+#     """)

@@ -78,7 +78,8 @@ ftype getCoeff(GLOBAL_MEM const ftype *mat, int const r, int const c)
 
 
 WITHIN_KERNEL
-ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs, const ftype tLL, const ftype tUL)
+ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs,
+                      const ftype tLL, const ftype tUL)
 {
   int bin   = getTimeBin(t);
   ftype c0 = getCoeff(coeffs,bin,0);
@@ -106,7 +107,8 @@ ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs, const ftype
 
 
 WITHIN_KERNEL
-ctype expconv_simon(const ftype t, const ftype G, const ftype omega, const ftype sigma)
+ctype expconv_simon(const ftype t, const ftype G, const ftype omega,
+                    const ftype sigma)
 {
   ctype I2 = C(-1, 0);
   ctype I3 = C( 0,-1);
@@ -677,6 +679,10 @@ void integralFullSpline( ftype result[2],
   }
   #endif
 }
+
+
+
+
 WITHIN_KERNEL
 ctype getI(ctype z, int n, const ftype xmin, const ftype xmax)
 {

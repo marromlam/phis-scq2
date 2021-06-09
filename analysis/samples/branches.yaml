@@ -23,14 +23,9 @@ common: &common
   "magnet" : "Polarity"
   "etaB" : "B_ETA"
   "evtN" : "eventNumber"
+  "runN" : "runNumber"
   "sw" : "sw"
-  "sw_etaB" : "sw_etaB"
-  "sw_pTB" : "sw_pTB"
-  "sw_sigmat" : "sw_sigmat"
   "sWeight" : "sw"
-  "sWeight_etaB" : "sw_etaB"
-  "sWeight_pTB" : "sw_pTB"
-  "sWeight_sigmat" : "sw_sigmat"
   "logIPchi2B" : "log_B_IPCHI2_mva" #From this point, added by Ramon
   "BDTFchi2" : "B_DTF_CHI2NDOF"
   "logMINkPNNk" : "log_min_K_PNNk_mva"
@@ -52,9 +47,7 @@ MC_common: &MC_common
   "gencosL" : "truehelcosthetaL_GenLvl"
   "genhphi" : "truehelphi_GenLvl"
   "kinWeight" : "kinWeight"
-  "kinWeight_etaB" : "kinWeight_etaB"
-  "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pTB" : "kinWeight_pTB"
+  "oddWeight" : "oddWeight"
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "bkgcatB" : "B_BKGCAT"
@@ -85,9 +78,6 @@ MC_Bd2JpsiKstar:
   <<: *MC_Bs2JpsiPhi
   "genidB" : "511*X_ID_GenLvl/311"
   "kbuWeight" : "kbuWeight"
-  "kbuWeight_etaB" : "kbuWeight_etaB"
-  "kbuWeight_sigmat" : "kbuWeight_sigmat"
-  "kbuWeight_pTB" : "kbuWeight_pTB"
 
 MC_Bu2JpsiKplus:
   <<: *MC_common
@@ -103,13 +93,8 @@ Bs2JpsiPhi: &Bs2JpsiPhi
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
   "kinWeight" : "kinWeight"
-  "kinWeight_etaB" : "kinWeight_etaB"
-  "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pTB" : "kinWeight_pTB"
+  "oddWeight" : "oddWeight"
   "kbuWeight" : "kbuWeight"
-  "kbuWeight_etaB" : "kbuWeight_etaB"
-  "kbuWeight_sigmat" : "kbuWeight_sigmat"
-  "kbuWeight_pTB" : "kbuWeight_pTB"
   "tagOSdec" : "0*time"
   "tagSSdec" : "0*time"
   "tagOSeta" : "0*time"

@@ -77,6 +77,10 @@ def version_guesser(version):
         # split tuple by event number: useful for MC tests and crosschecks
         # odd is plays data role and MC is even
         r"(evtOdd|evtEven)?",
+        # background category  
+        r"(bkgcat60)?",
+        # split in runNumber  
+        r"(l210300|g210300)?",
         # split by magnet Up or Down: useful for crosschecks
         r"(magUp|magDown)?",
         # split in pTB, etaB and sigmat bins: for systematics
@@ -86,11 +90,11 @@ def version_guesser(version):
     # print(pattern)
     p = re.compile(pattern)
     try:
-      share, evt, mag, fullcut, var, nbin = p.search(mod).groups()
+      share, evt, shit, runN, mag, fullcut, var, nbin = p.search(mod).groups()
       share = int(share) if share else 100
       evt = evt if evt else None
       nbin = int(nbin)-1 if nbin else None
-      return v, share, evt, mag, fullcut, var, nbin 
+      return v, share, evt, mag, fullcut, var, nbin
     except:
       raise ValueError(f'Cannot interpret {mod} as a version modifier')
   else:
@@ -105,7 +109,9 @@ def cut_translate(version_substring):
     "evtEven": "(evt % 2) == 0",
     "magUp": "magnet == 1",
     "magDown": "magnet == 0",
-    "bkgcat050": "bkgcat != 60",
+    "bkgcat60": "bkgcat != 60",
+    "g210300": "runN > 210300",
+    "l210300": "runN < 210300",
     "pTB1": "pTB >= 0 & pTB < 3.8e3",
     "pTB2": "pTB >= 3.8e3 & pTB < 6e3",
     "pTB3": "pTB >= 6e3 & pTB <= 9e3",
@@ -171,6 +177,7 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
       m = mode
 
   # Model handler when asking for weises
+  # print("start", weight)
   if weight:
     if m == 'Bs2JpsiPhi':
       weight = 'sWeight'
@@ -178,7 +185,9 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
       if weight not in ('kinWeight'):
         weight = 'sWeight'
     elif m == 'Bd2JpsiKstar':
-      if weight not in ('kinWeight', 'kbuWeight'):
+      if weight == 'oddWeight':
+        weight = 'kbuWeight'
+      elif weight not in ('kinWeight', 'kbuWeight'):
         weight = 'sWeight'
     elif m == 'MC_Bu2JpsiKplus':
       if weight not in ('sWeight', 'polWeight', 'kinWeight'):
@@ -205,9 +214,11 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
                           'angWeight', 'oddWeight'):
         weight = 'polWeight'
 
+  # print("end", weight)
 
   # Year
   if year:
+    print(year)
     years = YEARS[year]
     path = []
     for y in years:

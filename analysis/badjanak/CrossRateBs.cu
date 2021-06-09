@@ -177,6 +177,8 @@ ftype rateBs(const ftype *data,
   }
   #endif
 
+  ctype exp_p = C(0,0); ctype exp_m = C(0,0); ctype exp_i = C(0,0);
+
   if (USE_TIMEACC & !USE_TIMERES)
   {
     exp_p = expconv_wores(time-t_offset, G + 0.5*DG, 0.);

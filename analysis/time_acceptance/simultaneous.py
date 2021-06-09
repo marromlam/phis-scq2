@@ -38,7 +38,6 @@ def argument_parser():
   p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
   p.add_argument('--params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--tables', help='Bs2JpsiPhi MC sample')
   p.add_argument('--year', help='Year to fit') 
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--trigger', help='Trigger to fit')
@@ -59,11 +58,11 @@ if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bs2JpsiPhi'
-  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORRECT, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
@@ -71,7 +70,9 @@ if __name__ == '__main__':
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-  CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
+  print("CUT is (but I will not care about it)", CUT)
+
+  CUT = trigger_scissors(TRIGGER)          # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   # Print settings
@@ -86,51 +87,62 @@ if __name__ == '__main__':
   # List samples, params and tables
   samples = args['samples'].split(',')
   oparams = args['params'].split(',')
-  otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(NKNOTS)]
-  kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  sw = f'sw_{VAR}' if VAR else 'sw'
-
+  sWeight = "sw"
 
 
   # Get data into categories ---------------------------------------------------
   printsec(f"Loading categories")
+  
+  def samples_to_cats(samples, correct, oddity):
+    cats = {}
+    return cats
 
   cats = {}
-  for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
+  for i,m in enumerate(samples):
     # Correctly apply weight and name for diffent samples
-    if (m=='MC_Bs2JpsiPhi_dG0') and not ('MC_Bs2JpsiPhi_dG0' in samples[i]):
-      if CORR:
-        weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
+    if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
+      m = 'MC_Bs2JpsiPhi'
+      if CORRECT:
+        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
-        weight = f'dg0Weight*{sw}/gb_weights'
-      mode = 'BsMC'; c = 'a'
-    elif m=='MC_Bs2JpsiPhi_dG0':
-      if CORR:
-        weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
+        weight = f'dg0Weight*{sWeight}/gb_weights'
+      # apply oddWeight if evtOdd in filename
+      if EVT == 'evtOdd':
+        weight = f"oddWeight*{weight}"
+      mode = 'signalMC'; c = 'a'
+    elif 'MC_Bs2JpsiPhi_dG0' in m:
+      m = 'MC_Bs2JpsiPhi_dG0'
+      if CORRECT:
+        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
-        weight = f'{sw}/gb_weights'
-      mode = 'BsMC'; c = 'a'
+        weight = f'{sWeight}/gb_weights'
+      # apply oddWeight if evtOdd in filename
+      if EVT == 'evtOdd':
+        weight = f"oddWeight*{weight}"
+      mode = 'signalMC'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      if CORR:
-        weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+      if CORRECT:
+        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
       else:
-        weight = f'{sw}'
-      mode = 'BdMC'; c = 'b'
+        weight = f'{sWeight}'
+      # apply oddWeight if evtOdd in filename
+      if EVT == 'evtOdd':
+        weight = f"oddWeight*{weight}"
+      mode = 'controlMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      if CORR:
-        weight = f'{kinWeight}{sw}'
+      if CORRECT:
+        weight = f'kinWeight*{sWeight}'
       else:
-        weight = f'{sw}'
-      mode = 'BdRD'; c = 'c'
+        weight = f'{sWeight}'
+      mode = 'controlRD'; c = 'c'
     print(weight)
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    cats[mode].allocate(time='time',lkhd='0*time')
-    cats[mode].allocate(weight=weight)
+    cats[mode].allocate(time='time', lkhd='0*time', weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
 
     # Add knots
@@ -167,7 +179,6 @@ if __name__ == '__main__':
     # Attach labels and paths
     cats[mode].label = mode_tex(mode)
     cats[mode].pars_path = oparams[i]
-    cats[mode].tabs_path = otables[i]
 
 
 
@@ -180,11 +191,11 @@ if __name__ == '__main__':
   # Time to fit ----------------------------------------------------------------
   printsec(f"Simultaneous minimization procedure")
   fcn_call = fcns.saxsbxscxerf
-  fcn_pars = cats['BsMC'].params+cats['BdMC'].params+cats['BdRD'].params
+  fcn_pars = cats['signalMC'].params+cats['controlMC'].params+cats['controlRD'].params
   fcn_kwgs={
-    'data': [cats['BsMC'].time, cats['BdMC'].time, cats['BdRD'].time],
-    'prob': [cats['BsMC'].lkhd, cats['BdMC'].lkhd, cats['BdRD'].lkhd],
-    'weight': [cats['BsMC'].weight, cats['BdMC'].weight, cats['BdRD'].weight],
+    'data': [cats['signalMC'].time, cats['controlMC'].time, cats['controlRD'].time],
+    'prob': [cats['signalMC'].lkhd, cats['controlMC'].lkhd, cats['controlRD'].lkhd],
+    'weight': [cats['signalMC'].weight, cats['controlMC'].weight, cats['controlRD'].weight],
     'flatend': FLAT
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
@@ -207,8 +218,8 @@ if __name__ == '__main__':
     if len(args['contour'].split('vs')) > 1:
       fig, ax = plot_conf2d(
           mini, result, args['contour'].split('vs'), size=(50, 50))
-      fig.savefig(cats[mode].tabs_path.replace('tables', 'figures').replace(
-          '.tex', f"_scan{args['contour']}.pdf"))
+      fig.savefig(cats[mode].pars_path.replace('tables', 'figures').replace(
+          '.json', f"_scan{args['contour']}.pdf"))
     else:
       import matplotlib.pyplot as plt
       # x, y = result._minuit.profile(args['contour'], bins=100, bound=5, subtract_min=True)
@@ -216,10 +227,10 @@ if __name__ == '__main__':
       # ax.plot(x,y,'-')
       # ax.set_xlabel(f"${result.params[ args['contour'] ].latex}$")
       # ax.set_ylabel(r"$L-L_{\mathrm{opt}}$")
-      # fig.savefig(cats[mode].tabs_path.replace('tables', 'figures').replace('.tex', f"_contour{args['contour']}.pdf"))
+      # fig.savefig(cats[mode].pars_path.replace('tables', 'figures').replace('.tex', f"_contour{args['contour']}.pdf"))
       result._minuit.draw_mnprofile(
           args['contour'], bins=20, bound=3, subtract_min=True, band=True, text=True)
-      plt.savefig(cats[mode].tabs_path.replace('tables', 'figures').replace('.tex', f"_contour{args['contour']}.pdf"))
+      plt.savefig(cats[mode].pars_path.replace('tables', 'figures').replace('.json', f"_contour{args['contour']}.pdf"))
 
 
 
@@ -230,12 +241,6 @@ if __name__ == '__main__':
     list_params = cat.params.find('(a|b|c)(\d{1})(u|b)')
     print(list_params)
     cat.params.add(*[result.params.get(par) for par in list_params])
-
-    print(f"Dumping tex table to {cats[name].tabs_path}")
-    with open(cat.tabs_path, "w") as text:
-      text.write(cat.params.dump_latex(caption=f"Time acceptance for the $\
-      {mode_tex(f'{MODE}')}$ ${YEAR}$ {TRIGGER} category in simultaneous fit."))
-    text.close()
 
     print(f"Dumping json parameters to {cats[name].pars_path}")
     cat.params = cat.knots + cat.params

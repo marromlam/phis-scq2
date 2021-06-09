@@ -8,9 +8,11 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 __all__ = []
 
-import numpy as np
+
+# Modules {{{
+# import numpy as np
 import hjson
-import pandas as pd
+# import pandas as pd
 import os
 import argparse
 import uproot3 as uproot
@@ -20,19 +22,24 @@ ROOT_PANDAS = True
 if ROOT_PANDAS:
   import root_pandas
 
-binned_vars = {'etaB': 'B_ETA', 'pTB': 'B_PT', 'sigmat': 'sigmat'}
-binned_files = {'etaB': 'eta', 'pTB': 'pt', 'sigmat': 'sigmat'}
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+# }}}
+
+
+# Some config {{{
+
+# binned_vars = {'etaB': 'B_ETA', 'pTB': 'B_PT', 'sigmat': 'sigmat'}
+# binned_files = {'etaB': 'eta', 'pTB': 'pt', 'sigmat': 'sigmat'}
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 EOSPATH = hjson.load(open('config.json'))['eos']
-
-
 
 vsub_dict = {
   "evtOdd": "(eventNumber % 2) != 0",
   "evtEven": "(eventNumber % 2) == 0",
   "magUp": "Polarity == 1",
   "magDown": "Polarity == -1",
-  "bkgCat60": "B_BKGCAT != 60",
+  "bkgcat60": "B_BKGCAT != 60",
+  "g210300": "runNumber > 210300",
+  "l210300": "runNumber < 210300",
   "pTB1": "B_PT >= 0 & B_PT < 3.8e3",
   "pTB2": "B_PT >= 3.8e3 & B_PT < 6e3",
   "pTB3": "B_PT >= 6e3 & B_PT <= 9e3",
@@ -45,7 +52,10 @@ vsub_dict = {
   "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15"
 }
 
+# }}}
 
+
+# CMDLINE interfrace {{{
 if __name__ == "__main__":
   p = argparse.ArgumentParser(description=DESCRIPTION)
   # Samples
@@ -59,7 +69,7 @@ if __name__ == "__main__":
 
   # Get the flags and that stuff
   v = args['version'].split("@")[0].split("bdt")[0]  # pipeline tuple version
-  V = args['version'] # full version for phis-scq
+  V = args['version']  # full version for phis-scq
   y = args['year']
   m = args['mode']
   tree = args['tree']
@@ -157,17 +167,34 @@ if __name__ == "__main__":
   result = uproot.open(local_path)[tree].pandas.df(flatten=None)
   result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
 
+
   # place cuts according to version substring
-  list_of_cuts = []
+  list_of_cuts = []; vsub_cut = None
   for k,v in vsub_dict.items():
     if k in V:
-      list_of_cuts.append(v)
-  vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
+      try:
+        noe = len(result.query(v))
+        if (k in ("g210300", "l210300")) and ("MC" in args['output']):
+          print("MCs are not cut in runNumber")
+        elif (k in ("g210300", "l210300")) and ("2018" not in args['output']):
+          print("Only 2018 is cut in runNumber")
+        else:
+          list_of_cuts.append(v)
+        if noe == 0:
+          print(f"ERROR: This cut leaves df empty. {v}")
+          print(f"       Query halted.")
+      except:
+        print(f"non hai variable para o corte {v}")
+  if list_of_cuts:
+    vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
 
-  print(vsub_cut)
 
-  #
-  result.query(vsub_cut)
+  # place the cut
+  print(f"{80*'-'}\nApplied cut: {vsub_cut}\n{80*'-'}")
+  if vsub_cut:
+    result = result.query(vsub_cut)
+  print(result)
+
 
   # write
   print(f"\nStarting to write {os.path.basename(args['output'])} file.")
@@ -182,3 +209,8 @@ if __name__ == "__main__":
 
   # delete donwloaded files
   shutil.rmtree(path, ignore_errors=True)
+
+# }}}
+
+
+# vim: foldmethod=marker

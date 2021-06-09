@@ -224,7 +224,7 @@ def merge_std_dg0(std, dg0, verbose=True, label=''):
   for k, wk in enumerate(std.keys()):
     correl = {f'{wk}{label}':corr[k][j] for j in range(0,len(w)) if k>0 and j>0}
     out.add({'name': f'{wk}{label}', 'value': w[k], 'stdev': uw[k],
-             'free': False, 'latex': f'{std[wk]}^{label}', 'correl': correl})
+             'free': False, 'latex': f'{std[wk].latex}^{label}', 'correl': correl})
 
   if verbose:
     print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
@@ -655,7 +655,7 @@ if __name__ == '__main__':
   p.add_argument('--version', help='Year of data-taking')
   args = vars(p.parse_args())
   
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEARS = args['year'].split(',') 
   MODE = 'Bs2JpsiPhi'
   ANGACC = args['angacc']
@@ -724,6 +724,7 @@ if __name__ == '__main__':
   
   # sWeight variable
   weight_rd = f'sw_{VAR}' if VAR else 'sw'
+  weight_rd = 'sw'
 
   # Load Monte Carlo samples
   mc = {}

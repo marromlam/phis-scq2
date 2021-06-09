@@ -13,7 +13,7 @@ __email__  = ['mromerol@cern.ch']
 import argparse
 import numpy as np
 import pandas as pd
-import uproot
+import uproot3 as uproot
 import os
 import sys
 import hjson
@@ -25,10 +25,17 @@ from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
 import badjanak
-badjanak.config['fast_integral'] = 1
+badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 774
 
+from utils.plot import mode_tex
+from utils.strings import cammel_case_split, cuts_and
+from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
+
+
+
+"""
 # Parse arguments for this script
 def argument_parser():
   parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
@@ -56,8 +63,29 @@ def argument_parser():
     help='Year of data-taking')
 
   return parser
+"""
 
-
+def argument_parser():
+  parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
+  # Samples
+  parser.add_argument('--samples', help='Bs2JpsiPhi data sample')
+  # Input parameters
+  parser.add_argument('--angacc-biased', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--angacc-unbiased', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--timeacc-biased', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--timeacc-unbiased', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--csp', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--time-resolution', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--flavor-tagging', help='Bs2JpsiPhi MC sample')
+  # Output parameters
+  parser.add_argument('--params', help='Bs2JpsiPhi MC sample')
+  parser.add_argument('--tables', help='Bs2JpsiPhi MC sample')
+  # Configuration file ---------------------------------------------------------
+  parser.add_argument('--year', help='Year of data-taking')
+  parser.add_argument('--version', help='Year of data-taking')
+  parser.add_argument('--flag',help='Year of data-taking')
+  parser.add_argument('--blind', default=1, help='Year of data-taking')
+  return parser
 
 
 
@@ -72,14 +100,16 @@ YEARS = [int(y) for y in args['year'].split(',')] # years are int
 VERSION = args['version']
 
 
+for k,v in args.items():
+  print(f'{k}: {v}\n')
 
 # %% Load samples --------------------------------------------------------------
 print(f"\n{80*'='}\n", "Loading samples", f"\n{80*'='}\n")
 
 # Lists of data variables to load and build arrays
-real  = ['helcosthetaK','helcosthetaL','helphi','time']                        # angular variables
-real += ['X_M','0*B_ID']                                     # mass and sigmat
-real += ['B_ID','B_ID', '0*B_ID', '0*B_ID']  # tagging
+real  = ['cosK','cosL','hphi','time']                       # angular variables
+real += ['mHH','0*idB']                                      # mass and sigmat
+real += ['idB','idB', '0*idB', '0*idB']  # tagging
 
 real  = ['gencosK','gencosL','genhphi','gentime']                        # angular variables
 real += ['mHH','0*genidB']                                     # mass and sigmat
@@ -89,26 +119,50 @@ weight_rd='(gentime/gentime)'
 
 
 data = {}
+badjanak.config['mHH'] = [990, 1050]
 mass = badjanak.config['mHH']
+
+CUT = "time>0.3 & time<15"
+
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
-  tree = uproot.open(args['samples'].split(',')[i]).keys()[0]
-  data[f'{y}'] = Sample.from_root(args['samples'].split(',')[i], treename=tree, cuts="gentime>=0.0 & gentime<=15 & mHH>=990 & mHH<=1050")
-  csp = Parameters.load(args['csp'].split(',')[i])
-  print(csp)
-  data[f'{y}'].csp = csp.build(csp,csp.find('CSP.*'))
-  print(f" *  Allocating {y} arrays in device ")
-  sw = np.ones_like(data[f'{y}'].df.eval(weight_rd))
-  for l,h in zip(mass[:-1],mass[1:]):
-      pos = data[f'{y}'].df.eval(f'mHH>={l} & mHH<{h}')
-      this_sw = data[f'{y}'].df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
+  data[y] = {}
+  # csp = Parameters.load(args['csp'].split(',')[i])
+  # mass = np.array(csp.build(csp, csp.find('mKK.*')))
+  # csp = csp.build(csp,csp.find('CSP.*'))
+  # flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
+  # resolution = Parameters.load(args['time_resolution'].split(',')[i])
+  # badjanak.config['mHH'] = mass.tolist()
+  for t in ['biased','unbiased']:
+    tc = trigger_scissors(t, CUT)
+    data[y][t] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
+    data[y][t].name = f"Bs2JpsiPhi-{y}-{t}"
+    # data[y][t].csp = csp
+    # data[y][t].flavor = flavor
+    # data[y][t].resolution = resolution
+    # Time acceptance
+    c = Parameters.load(args[f'timeacc_{t}'].split(',')[i])
+    knots = np.array(Parameters.build(c,c.fetch('k.*')))
+    print(knots)
+    badjanak.config['knots'] = knots.tolist()
+    # Angular acceptance
+    data[y][t].timeacc = Parameters.build(c,c.fetch('c.*'))
+    w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
+    data[y][t].angacc = Parameters.build(w,w.fetch('w.*'))
+    print(data[y][t])
+    # Normalize sWeights per bin
+    sw = np.zeros_like(data[y][t].df['sw'])
+    for l,h in zip(mass[:-1],mass[1:]):
+      pos = data[y][t].df.eval(f'mHH>={l} & mHH<{h}')
+      this_sw = data[y][t].df.eval(f'sw*(mHH>={l} & mHH<{h})')
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
-  data[f'{y}'].df['sWeight'] = sw
-  data[f'{y}'].allocate(input=real,weight='sWeight',output='0*gentime')
+    data[y][t].df['sWeight'] = sw
+    print(sw)
+    data[y][t].allocate(input=real,weight='sWeight',output='0*time')
 
 # Prepare parameters
-SWAVE = True
-DGZERO = False
+SWAVE = False
+DGZERO = True
 POLDEP = False
 BLIND = False
 
@@ -207,9 +261,10 @@ def fcn_data(parameters, data):
   pars_dict = parameters.valuesdict(blind=False)
   chi2 = []
   for y, dy in data.items():
-    badjanak.delta_gamma5_mc(dy.input, dy.output, **pars_dict,
-                             **dy.csp.valuesdict(), tLL=0.00, tUL=15.0)
-    chi2.append( -2.0 * (ristra.log(dy.output) * 1.0 ).get() );
+    for t, dt in dy.items():
+      badjanak.delta_gamma5_data(dt.input, dt.output, **pars_dict,
+                                 use_timeacc=2, use_timeres=0, set_tagging=0, tLL=0.30, tUL=15.0)
+      chi2.append( -2.0 * (ristra.log(dt.output) * 1.0 ).get() );
   return np.concatenate(chi2)
 
 ################################################################################
@@ -221,7 +276,7 @@ def fcn_data(parameters, data):
 
 print(f"\n{80*'='}\n", "Simultaneous minimization procedure", f"\n{80*'='}\n")
 result = optimize(fcn_data, method='minuit', params=pars, fcn_kwgs={'data':data},
-                  verbose=False, timeit=True, tol=0.05 , strategy=1)
+                  verbose=True, timeit=True, tol=0.05 , strategy=1)
 print(result)
 
 # Dump json file

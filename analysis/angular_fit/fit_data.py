@@ -15,7 +15,7 @@ __email__  = ['mromerol@cern.ch']
 import argparse
 import numpy as np
 import pandas as pd
-import uproot
+# import uproot
 import os
 import sys
 import hjson
@@ -88,7 +88,7 @@ def argument_parser():
 
 
 args = vars(argument_parser().parse_args())
-VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
 YEARS = args['year'].split(',')
 MODE = 'Bs2JpsiPhi'
 FIT, ANGACC, TIMEACC = args['flag'].split('_')

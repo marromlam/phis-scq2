@@ -24,7 +24,7 @@ from utils.plot import mode_tex
 from utils.strings import cuts_and
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
-from reweightings.kinematic_weighting import computekinWeight
+from reweightings.kinematic_weighting import reweight
 
 # binned variables
 bdconfig = hjson.load(open('config.json'))['time_acceptance_bdtconfig']
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
   # Parse arguments -----------------------------------------------------------
   args = vars(argument_parser().parse_args())
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bu2JpsiKplus'

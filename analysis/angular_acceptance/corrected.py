@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
@@ -110,6 +110,7 @@ if __name__ == '__main__':
   reco = ['cosK', 'cosL', 'hphi', 'time']
   true = [f'gen{i}' for i in reco]
   weight_rd = f'sw_{VAR}' if VAR else 'sw'
+  weight_rd = 'sw'
   weight_mc = f'polWeight*{weight_rd}'
   if 'Bs2JpsiPhi' in MODE:
     weight_mc += '/gb_weights'

@@ -21,28 +21,32 @@ from utils.helpers import tuples, version_guesser, send_mail
 #    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
 
 SAMPLES_PATH = CONFIG['path']
+SAMPLES = CONFIG['path']
+NOTE = CONFIG['note']
 MAILS = CONFIG['mail']
 
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
-
-
 # Some wildcards options ( this is not actually used )
-modes = ['Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bs2JpsiPhi', 'MC_Bs2JpsiKK_Swave', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus'];
+modes = ['Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi',
+         'MC_Bs2JpsiKK_Swave', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar',
+         'Bu2JpsiKplus', 'MC_Bu2JpsiKplus']
+
 #{Bs2JpsiPhi,MC_Bs2JpsiPhi_dG0,MC_Bs2JpsiPhi,Bd2JpsiKstar,MC_Bd2JpsiKstar,Bu2JpsiKplus,MC_Bu2JpsiKplus}
+
 YEARS = {#
-  '2011'  : ['2011'],
-  '2012'  : ['2012'],
-  'Run1'  : ['2011','2012'],
-  '2015'  : ['2015'],
-  '2016'  : ['2016'],
+  '2011' : ['2011'],
+  '2012' : ['2012'],
+  'Run1' : ['2011','2012'],
+  '2015' : ['2015'],
+  '2016' : ['2016'],
   'Run2a' : ['2015','2016'],
   'run2a' : ['2015','2016'],
-  '2017'  : ['2017'],
-  '2018'  : ['2018'],
+  '2017' : ['2017'],
+  '2018' : ['2018'],
   'Run2b' : ['2017','2018'],
-  'Run2'  : ['2015','2016','2017','2018'],
-  'run2'  : ['2015','2016','2017','2018']
+  'Run2' : ['2015','2016','2017','2018'],
+  'run2' : ['2015','2016','2017','2018']
 };
 
 
@@ -87,72 +91,74 @@ rule all:
 
 rule compile_slides:
   input:
-    # time acceptance table:
+    # time acceptance table
     f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul3.tex",
     # lifetimes
-    f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_lifeBdsimul3.tex",
-    f"output/packandgo/tables/time_acceptance/run2/Bu2JpsiKplus/{config['version']}_lifeBusimul3.tex",
-    # angular acceptance table:
+    f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_lifesimul3.tex",
+    f"output/packandgo/tables/time_acceptance/run2/Bu2JpsiKplus/{config['version']}_lifesimul3.tex",
+    # angular acceptance table
     f"output/packandgo/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_run2_simul3.tex",
     #
     # physics parameters
     #
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_simul3.tex",
-    #f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_run2_simul3.tex",
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@cutpTB_run2_run2_simul3.tex",
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@cutetaB_run2_run2_simul3.tex",
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@cutsigmat_run2_run2_simul3.tex",
-    # --
-    f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@cutpTB_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@cutetaB_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@cutsigmat_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@cutpTB_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@cutetaB_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@cutsigmat_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@cutpTB_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@cutetaB_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@cutsigmat_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@cutpTB_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@cutetaB_yearly_yearly_simul3.tex",
-    f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@cutsigmat_yearly_yearly_simul3.tex",
-    # physics parameters cross-checks :: time acceptance
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3Noncorr.tex",
     f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3.tex",
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3DGn0.tex",
+    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_yearly_simul3.tex",
+    #f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_run2_simul3.tex",
+    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@pTB_run2_run2_simul3.tex",
+    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@etaB_run2_run2_simul3.tex",
+    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@sigmat_run2_run2_simul3.tex",
+    # --
+    # f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_simul3.tex",
+    # f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_simul3.tex",
+    # physics parameters cross-checks :: time acceptance
+    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3Noncorr.tex",
+    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3.tex",
+    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3DGn0.tex",
     ##
     #
     # reweighting plots
-    expand( rules.reweightings_plot_time_acceptance.output,
-            version='v0r5',
-            mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-            branch=['B_P','B_PT','X_M'],
-            year=['2015','2016','2017','2018']),
+    # expand(rules.reweightings_plot_time_acceptance.output,
+    #        version = 'v0r5',
+    #        mode = ['MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar',
+    #                'Bd2JpsiKstar'],
+    #        branch = ['B_P', 'B_PT', 'X_M'],
+    #        year = ['2015', '2016', '2017', '2018']),
     # time acceptance plot - nominal case only
-    expand( rules.time_acceptance_plot.output,
-            version=config['version'],
-            mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-            timeacc=['simul3'],
-            year=['2015','2016','2017','2018'],
-            plot=['fitlog', 'splinelog'],
-            trigger=['biased','unbiased']),
+    # expand(rules.time_acceptance_plot.output,
+    #        version=config['version'],
+    #        mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
+    #        timeacc=['simul3'],
+    #        year=['2015', '2016', '2017', '2018'],
+    #        plot=['fitlog', 'splinelog'],
+    #        trigger=['biased', 'unbiased']),
     # time acceptance plots - binned variables
-    expand( rules.time_acceptance_plot.output,
-            version=['v0r5+v0r5@cutpTB1+v0r5@cutpTB2+v0r5@cutpTB3+v0r5@cutpTB4',
-                     'v0r5+v0r5@cutsigmat1+v0r5@cutsigmat2+v0r5@cutsigmat3',
-                     'v0r5+v0r5@cutetaB1+v0r5@cutetaB2+v0r5@cutetaB3'],
-            mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-            timeacc=['simul3'],
-            year=['2015','2016','2017','2018'],
-            plot=['splinelog'],
-            trigger=['biased','unbiased']),
+    # expand(rules.time_acceptance_plot.output,
+    #        version=['v0r5+v0r5@pTB1+v0r5@pTB2+v0r5@pTB3+v0r5@pTB4',
+    #                 'v0r5+v0r5@sigmat1+v0r5@sigmat2+v0r5@sigmat3',
+    #                 'v0r5+v0r5@etaB1+v0r5@etaB2+v0r5@etaB3'],
+    #        mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
+    #        timeacc=['simul3'],
+    #        year=['2015', '2016', '2017', '2018'],
+    #        plot=['splinelog'],
+    #        trigger=['biased', 'unbiased']),
     # time acceptance plot - different knots + w/o kinWeight
-    expand( rules.time_acceptance_plot.output,
-            version=config['version'],
-            mode=['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar'],
-            timeacc=['simul3+simul6','simul3+simul3Noncorr'],
-            year=['2015','2016','2017','2018'],
-            plot=['splinelog'],
-            trigger=['biased','unbiased']),
+    # expand(rules.time_acceptance_plot.output,
+    #        version=config['version'],
+    #        mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
+    #        timeacc=['simul3+simul6', 'simul3+simul3Noncorr'],
+    #        year=['2015', '2016', '2017', '2018'],
+    #        plot=['splinelog'],
+    #        trigger=['biased', 'unbiased']),
     # rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
     #               version=['v0r5'],
     #               mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],

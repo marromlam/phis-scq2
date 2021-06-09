@@ -1,6 +1,4 @@
-root_pandas
 snakemake
-hep_ml
 py-cpuinfo
 uproot3
 numpy
@@ -17,3 +15,4 @@ iminuit==1.5.2
 matplotlib
 tqdm
 corner
+termplotlib

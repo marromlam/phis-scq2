@@ -88,11 +88,10 @@ rule reweighting_dg0:
 # }}}
 
 
-# kinematic weighting ----------------------------------------------------------
+# kinematic weighting {{{
 #    Adds kinWeight to MC_BsJpsiPhi*, MC_BdJpsiKstar and Bd2JpsiKstar tuples
 #    gb-weighting them to match kinematic distributions of their complementary
 #    sample.
-#    {{{
 
 rule reweighting_kinematic:
   resources:
@@ -121,97 +120,97 @@ rule reweighting_kinematic:
     
     if mode.startswith('MC_Bs2Jpsi'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "B_PT X_M" \
-          --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "B_PT X_M"\
-          --target-weight "sw"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "B_PT X_M" \
+      --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "B_PT X_M"\
+      --target-weight "sw"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log}""")
     elif mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "B_PT X_M" \
-          --original-weight "sw*polWeight*pdfWeight"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "B_PT X_M"\
-          --target-weight "sw*kinWeight"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "B_PT X_M" \
+      --original-weight "sw*polWeight*pdfWeight"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "B_PT X_M"\
+      --target-weight "sw*kinWeight"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log}""")
     elif mode.startswith('Bd2JpsiKstar'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "B_PT B_P" \
-          --original-weight "sw"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "B_PT B_P"\
-          --target-weight "sw"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "B_PT B_P" \
+      --original-weight "sw"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "B_PT B_P"\
+      --target-weight "sw"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log}""")
     elif mode.startswith('MC_Bu2JpsiKplus'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "B_PT" \
-          --original-weight "sw"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "B_PT"\
-          --target-weight "sw"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "B_PT" \
+      --original-weight "sw"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "B_PT"\
+      --target-weight "sw"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log}""")
     elif mode.startswith('Bu2JpsiKplus'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "B_PT B_P" \
-          --original-weight "sw"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "B_PT B_P"\
-          --target-weight "sw"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "B_PT B_P" \
+      --original-weight "sw"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "B_PT B_P"\
+      --target-weight "sw"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log}""")
     else:
       shell(f"""(time\
-        cp {input.original} {output.sample}
+      cp {input.original} {output.sample}
       ) &> {log}""")
     send_mail(f"Kinematic weighting :: {wildcards}", f"{log}")
 
 
-rule reweighting_wisely:
+rule reweighting_weirdly:
   resources:
     mem_mb=7168
   wildcard_constraints:
@@ -238,41 +237,41 @@ rule reweighting_wisely:
 
     if mode.startswith('MC_Bs2Jpsi'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF" \
-          --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF"\
-          --target-weight "sw"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF" \
+      --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF"\
+      --target-weight "sw"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log}""")
     elif mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF" \
-          --original-weight "sw*polWeight*pdfWeight"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF"\
-          --target-weight "sw*kinWeight"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF" \
+      --original-weight "sw*polWeight*pdfWeight"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "log_B_IPCHI2_mva B_DTF_CHI2NDOF"\
+      --target-weight "sw*kinWeight"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}
       ) &> {log}""")
     else:
       shell(f"""(time\
-        cp {input.original} {output.sample}
+      cp {input.original} {output.sample}
       ) &> {log}""")
     send_mail(f"Kinematic weighting :: {wildcards}", f"{log}")
 
@@ -305,41 +304,41 @@ rule reweighting_kinematicBu:
     
     if mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "B_PT X_M" \
-          --original-weight "sw*polWeight*pdfWeight"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "B_PT X_M"\
-          --target-weight "sw*kbuWeight"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}\
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "B_PT X_M" \
+      --original-weight "sw*polWeight*pdfWeight"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "B_PT X_M"\
+      --target-weight "sw*kbuWeight"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}\
       ) &> {log}""")
     elif mode.startswith('Bd2JpsiKstar'):
       shell(f"""(time\
-        python analysis/reweightings/kinematic_weighting.py\
-          --original-file {input.original}\
-          --original-treename DecayTree\
-          --original-vars "B_PT B_P"\
-          --original-weight "sw"\
-          --target-file {input.target}\
-          --target-treename DecayTree\
-          --target-vars "B_PT B_P"\
-          --target-weight "sw"\
-          --output-file {output.sample}\
-          --n-estimators {bdconfig['n_estimators']}\
-          --learning-rate {bdconfig['learning_rate']}\
-          --max-depth {bdconfig['max_depth']}\
-          --min-samples-leaf {bdconfig['min_samples_leaf']}\
+      python analysis/reweightings/kinematic_weighting.py\
+      --original-file {input.original}\
+      --original-treename DecayTree\
+      --original-vars "B_PT B_P"\
+      --original-weight "sw"\
+      --target-file {input.target}\
+      --target-treename DecayTree\
+      --target-vars "B_PT B_P"\
+      --target-weight "sw"\
+      --output-file {output.sample}\
+      --n-estimators {bdconfig['n_estimators']}\
+      --learning-rate {bdconfig['learning_rate']}\
+      --max-depth {bdconfig['max_depth']}\
+      --min-samples-leaf {bdconfig['min_samples_leaf']}\
       ) &> {log}""")
     else:
       shell(f"""(time\
-        cp {input.original} {output.sample}
+      cp {input.original} {output.sample}
       ) &> {log}""")
     send_mail(f"Kinematic Bu weighting :: {wildcards}", f"{log}")
 
@@ -348,6 +347,7 @@ rule reweighting_kinematicBu:
 # reweighting plots ------------------------------------------------------------
 #    Creates some plots for the reweightings done for the time acceptance,
 #    angular acceptance and some comparison with Simon
+
 rule reweightings_plot_time_acceptance:
   resources:
     mem_mb=1024
@@ -365,17 +365,16 @@ rule reweightings_plot_time_acceptance:
   run:
     shell(f"""(time\
     python analysis/reweightings/reweighting_plots.py\
-           --original {input.original}\
-           --target {input.target}\
-           --year {wildcards.year}\
-           --mode {wildcards.mode}\
-           --version {wildcards.version}\
-           --branch {wildcards.branch}\
-           --sweighted {output.sweighted}\
-           --kinweighted {output.kinweighted}\
+    --original {input.original}\
+    --target {input.target}\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --branch {wildcards.branch}\
+    --sweighted {output.sweighted}\
+    --kinweighted {output.kinweighted}\
     ) &> {log}""")
     send_mail(f"Reweighting plots TA :: {wildcards}", f"{log}", f"{output}".split(' '))
-
 
 
 rule reweightings_plot_angular_acceptance:
@@ -394,18 +393,17 @@ rule reweightings_plot_angular_acceptance:
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/plot1.py\
-           --original {input.original}\
-           --weights {input.weights}\
-           --target {input.target}\
-           --year {wildcards.year}\
-           --mode {wildcards.mode}\
-           --version {wildcards.version}\
-           --branch {wildcards.branch}\
-           --treename {wildcards.angacc}_{wildcards.timeacc}\
-           --kkpweighted {output}\
+    --original {input.original}\
+    --weights {input.weights}\
+    --target {input.target}\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --branch {wildcards.branch}\
+    --treename {wildcards.angacc}_{wildcards.timeacc}\
+    --kkpweighted {output}\
     ) &> {log}""")
     send_mail(f"Reweighting plot AA :: {wildcards}", f"{output}")
-
 
 
 rule reweightings_simon_comparisons:
@@ -421,14 +419,14 @@ rule reweightings_simon_comparisons:
   run:
     shell(f"""(time\
     python analysis/reweightings/reweighting_plots.py\
-           --original {input.original}\
-           --target {input.target}\
-           --year {wildcards.year}\
-           --mode {wildcards.mode}\
-           --version {wildcards.version}\
-           --branch {wildcards.branch}\
-           --sweighted {output.sweighted}\
-           --kinweighted {output.kinweighted}\
+    --original {input.original}\
+    --target {input.target}\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --branch {wildcards.branch}\
+    --sweighted {output.sweighted}\
+    --kinweighted {output.kinweighted}\
     ) &> {log}""")
 
 # }}}
