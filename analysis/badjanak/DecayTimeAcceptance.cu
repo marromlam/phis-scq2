@@ -194,7 +194,7 @@ ctype expconv_wores(ftype t, ftype G, ftype omega)
 {
   //The name of course is stupid is only an exponential the plan is to do this 
   //with an if in the function above. (something like if sigma==0)
-  return cexp(cmul(cnew(-G, +omega), cnew(t, 0.)));
+  return cexp(cmul(C(-G, +omega), C(t, 0.)));
 
 }
 
@@ -687,8 +687,8 @@ ctype getI(ctype z, int n, const ftype xmin, const ftype xmax)
   ctype z2 = cmul(z,z);
   ctype z3 = cmul(z,z2);
   ctype z4 = cmul(z, z3);
-  ctype expp = cexp((cmul(cnew(-xmax,0.), z)));
-  ctype expm =  cexp((cmul(cnew(-xmin,0.), z)));
+  ctype expp = cexp((cmul(C(-xmax,0.), z)));
+  ctype expm =  cexp((cmul(C(-xmin,0.), z)));
   ftype xmin2 = xmin*xmin;
   ftype xmax2 = xmax*xmax;
   ftype xmin3 = xmin*xmin2;
@@ -696,34 +696,34 @@ ctype getI(ctype z, int n, const ftype xmin, const ftype xmax)
   if (z.x != 0. || z.y != 0.)
   {
     if (n==0){
-      ctype frac = cdiv(cnew(-1.0, 0.0), z);
+      ctype frac = cdiv(C(-1.0, 0.0), z);
       return cmul(frac, csub(expp, expm));
     }
     else if (n==1){
-      ctype frac = cdiv(cnew(-1.0, 0.0), z2);
-      ctype polp = cadd(cmul(z, cnew(xmax, 0.)), cnew(1., 0.0));
-      ctype polm = cadd(cmul(z, cnew(xmin, 0.)), cnew(1., 0.0));
+      ctype frac = cdiv(C(-1.0, 0.0), z2);
+      ctype polp = cadd(cmul(z, C(xmax, 0.)), C(1., 0.0));
+      ctype polm = cadd(cmul(z, C(xmin, 0.)), C(1., 0.0));
       return cmul(frac, csub(cmul(expp, polp), cmul(expm, polm)));
     }
     else if (n==2){
-      ctype frac = cdiv(cnew(-1.0, 0.0), z3);
-      ctype polm = cadd(cadd(cmul(cnew(xmin2,0.), z2), cmul(cnew(2*xmin, 0.),z)), cnew(2.0, 0.0));
-      ctype polp = cadd(cadd(cmul(cnew(xmax2,0.), z2), cmul(cnew(2*xmax, 0.),z)), cnew(2.0, 0.0));
+      ctype frac = cdiv(C(-1.0, 0.0), z3);
+      ctype polm = cadd(cadd(cmul(C(xmin2,0.), z2), cmul(C(2*xmin, 0.),z)), C(2.0, 0.0));
+      ctype polp = cadd(cadd(cmul(C(xmax2,0.), z2), cmul(C(2*xmax, 0.),z)), C(2.0, 0.0));
       return cmul(frac, csub(cmul(expp, polp), cmul(expm, polm)));
     }
     else if (n==3){
-      ctype frac = cdiv(cnew(-1.0, 0.0), z4);
-      ctype polpaux = cadd(cmul(cnew(xmax3,0.), z3), cmul(cnew(3.*xmax2, 0.), z2));
-      ctype polp = cadd(cadd(cmul(cnew(6.*xmax, 0.), z), cnew(6.,0.)), polpaux);
-      ctype polmaux = cadd(cmul(cnew(xmin3,0.), z3), cmul(cnew(3.*xmin2, 0.), z2));
-      ctype polm = cadd(cadd(cmul(cnew(6.*xmin, 0.), z), cnew(6.,0.)), polmaux);
+      ctype frac = cdiv(C(-1.0, 0.0), z4);
+      ctype polpaux = cadd(cmul(C(xmax3,0.), z3), cmul(C(3.*xmax2, 0.), z2));
+      ctype polp = cadd(cadd(cmul(C(6.*xmax, 0.), z), C(6.,0.)), polpaux);
+      ctype polmaux = cadd(cmul(C(xmin3,0.), z3), cmul(C(3.*xmin2, 0.), z2));
+      ctype polm = cadd(cadd(cmul(C(6.*xmin, 0.), z), C(6.,0.)), polmaux);
       return cmul(frac, csub(cmul(expp, polp), cmul(expm, polm))); 
     }
   }
   else{
-    return cnew(0., 0.);
+    return C(0., 0.);
   }
-  return cnew(0.,0.);
+  return C(0.,0.);
 }
 
 WITHIN_KERNEL
@@ -741,9 +741,9 @@ void intgTimeAcceptance_wores(ftype time_terms[4], const ftype G,
   }
   knots[NKNOTS] = tUL;
   //constant complex numbers for the integrals 
-  ctype z_expm = cnew((G-0.5*DG), 0.);
-  ctype z_expp = cnew((G+0.5*DG), 0.);
-  ctype z_trig = cnew(G, -DM);
+  ctype z_expm = C((G-0.5*DG), 0.);
+  ctype z_expp = C((G+0.5*DG), 0.);
+  ctype z_trig = C(G, -DM);
   #ifdef DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
@@ -753,18 +753,18 @@ void intgTimeAcceptance_wores(ftype time_terms[4], const ftype G,
   }
   #endif 
   //Declaration of the differents Integrals (one for each z) that we want to calculate
-  ctype I_expm = cnew(0., 0.);
-  ctype I_expp = cnew(0.,0.);
-  ctype I_trig = cnew(0.,0.);
+  ctype I_expm = C(0., 0.);
+  ctype I_expp = C(0.,0.);
+  ctype I_trig = C(0.,0.);
 
   //We fill the integrals basis of projections for ak (0), bk(1), ck(2), dk(3)
   for (int bin = 0; bin< SPL_BINS; ++bin)
   {
     for (int i=0; i<4; ++i)
     {
-    I_expm = cadd(cmul(cnew(getCoeff(coeffs, bin, i),0.),getI(z_expm, i, knots[bin], knots[bin+1])), I_expm);
-    I_expp = cadd(cmul(cnew(getCoeff(coeffs, bin, i),0.),getI(z_expp, i, knots[bin], knots[bin+1])), I_expp);
-    I_trig = cadd(cmul(cnew(getCoeff(coeffs, bin, i),0.),getI(z_trig, i, knots[bin], knots[bin+1])), I_trig);
+    I_expm = cadd(cmul(C(getCoeff(coeffs, bin, i),0.),getI(z_expm, i, knots[bin], knots[bin+1])), I_expm);
+    I_expp = cadd(cmul(C(getCoeff(coeffs, bin, i),0.),getI(z_expp, i, knots[bin], knots[bin+1])), I_expp);
+    I_trig = cadd(cmul(C(getCoeff(coeffs, bin, i),0.),getI(z_trig, i, knots[bin], knots[bin+1])), I_trig);
   }
   #ifdef DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
