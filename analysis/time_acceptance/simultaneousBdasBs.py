@@ -38,7 +38,6 @@ def argument_parser():
   p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
   p.add_argument('--params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--tables', help='Bs2JpsiPhi MC sample')
   p.add_argument('--year', help='Year to fit')
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--trigger', help='Different flag to ... ')
@@ -59,7 +58,7 @@ if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bd2JpsiKstar'
@@ -94,7 +93,6 @@ if __name__ == '__main__':
   # List samples, params and tables
   samples = args['samples'].split(',')
   oparams = args['params'].split(',')
-  otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(NKNOTS)]
@@ -107,89 +105,102 @@ if __name__ == '__main__':
   print(f"\n{80*'='}\nLoading categories\n{80*'='}\n")
 
   cats = {}
-  for i,m in enumerate(['MC_Bd2JpsiKstar','Bd2JpsiKstar']):
+  for i,m in enumerate(['MC_Bd2JpsiKstar','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     if m=='MC_Bd2JpsiKstar':
       if CORR:
-        weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+        weight = f'kinWeight*polWeight*pdfWeight*sw'
       else:
-        weight = f'{sw}'
+        weight = f'sw'
       mode = 'BdMC'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      weight = f'{sw}'
+      weight = f'sw'
       mode = 'BdRD'; c = 'c'
     print(weight)
+    
+    F = 1 if i%2==0 else 0
+    f = 'A' if F else 'B'
+    F = f'({splitter}) == {F}'
+    
+    if not mode in cats:
+      cats[mode] = {}
 
-    cats[mode] = {}
-    for f, F in zip(['A', 'B'], [f'({splitter}) == 1', f'({splitter}) == 0']):
-      cats[mode][f] = Sample.from_root(samples[i], share=SHARE)
-      cats[mode][f].name = f"{mode}-{f}"
-      cats[mode][f].chop( cuts_and(CUT,F) )
+    # for f, F in zip(['A', 'B'], [f'({splitter}) == 1', f'({splitter}) == 0']):
+    cats[mode][f] = Sample.from_root(samples[i], share=SHARE)
+    cats[mode][f].name = f"{mode}-{f}"
+    cats[mode][f].chop( cuts_and(CUT,F) )
 
-      # allocate arrays
-      cats[mode][f].allocate(time='time', lkhd='0*time')
-      cats[mode][f].allocate(weight=weight)
-      cats[mode][f].weight = swnorm(cats[mode][f].weight)
-      print(cats[mode][f])
+    # allocate arrays
+    cats[mode][f].allocate(time='time', lkhd='0*time')
+    cats[mode][f].allocate(weight=weight)
+    cats[mode][f].weight = swnorm(cats[mode][f].weight)
+    print(cats[mode][f])
 
-      # Add knots
-      cats[mode][f].knots = Parameters()
-      cats[mode][f].knots.add(*[
-                    {'name':f'k{j}', 'value':v, 'latex':f'k_{j}', 'free':False}
-                    for j,v in enumerate(knots[:-1])
-                  ])
-      cats[mode][f].knots.add({'name':f'tLL', 'value':knots[0],
-                            'latex':'t_{ll}', 'free':False})
-      cats[mode][f].knots.add({'name':f'tUL', 'value':knots[-1],
-                            'latex':'t_{ul}', 'free':False})
+    # Add knots
+    cats[mode][f].knots = Parameters()
+    cats[mode][f].knots.add(*[
+                  {'name':f'k{j}', 'value':v, 'latex':f'k_{j}', 'free':False}
+                  for j,v in enumerate(knots[:-1])
+                ])
+    cats[mode][f].knots.add({'name':f'tLL', 'value':knots[0],
+                          'latex':'t_{ll}', 'free':False})
+    cats[mode][f].knots.add({'name':f'tUL', 'value':knots[-1],
+                          'latex':'t_{ul}', 'free':False})
 
-      # Add coeffs parameters
-      cats[mode][f].params = Parameters()
-      cats[mode][f].params.add(*[
-                    {'name':f'{c}{f}{j}{TRIGGER[0]}', 'value':1.0,
-                     'latex': f'{c}_{{{f},{j}}}^{TRIGGER[0]}',
-                     'free':True if j>0 else False, #'min':0.10, 'max':5.0,
-                    } for j in range(len(knots[:-1])+2)
-      ])
-      cats[mode][f].params.add({'name':f'gamma_{f}{c}',
-                              'value':Gdvalue+resolutions[m]['DGsd'],
-                              'latex':f'\Gamma_{{{f}{c}}}', 'free':False})
-      cats[mode][f].params.add({'name':f'mu_{f}{c}',
-                              'value':resolutions[m]['mu'],
-                              'latex':f'\mu_{{{f}{c}}}', 'free':False})
-      cats[mode][f].params.add({'name':f'sigma_{f}{c}',
-                              'value':resolutions[m]['sigma'],
-                              'latex':f'\sigma_{{{f}{c}}}', 'free':False})
-      #print(cats[mode][f].knots)
-      #print(cats[mode][f].params)
+    # Add coeffs parameters
+    cats[mode][f].params = Parameters()
+    cats[mode][f].params.add(*[
+                  {'name':f'{c}{f}{j}{TRIGGER[0]}', 'value':1.0,
+                   'latex': f'{c}_{{{f},{j}}}^{TRIGGER[0]}',
+                   'free':True if j>0 else False, #'min':0.10, 'max':5.0,
+                  } for j in range(len(knots[:-1])+2)
+    ])
+    cats[mode][f].params.add({'name':f'gamma_{f}{c}',
+                            'value':Gdvalue+resolutions[m]['DGsd'],
+                            'latex':f'\Gamma_{{{f}{c}}}', 'free':False})
+    cats[mode][f].params.add({'name':f'mu_{f}{c}',
+                            'value':resolutions[m]['mu'],
+                            'latex':f'\mu_{{{f}{c}}}', 'free':False})
+    cats[mode][f].params.add({'name':f'sigma_{f}{c}',
+                            'value':resolutions[m]['sigma'],
+                            'latex':f'\sigma_{{{f}{c}}}', 'free':False})
+    #print(cats[mode][f].knots)
+    #print(cats[mode][f].params)
 
-      # Attach labels and paths
-      cats[mode][f].label = mode_tex(mode)
-      _i = len([k for K in cats.keys() for k in cats[K].keys()]) -1
-      #_i = len(cats) + len(cats[mode]) - 2
-      if _i in (0,1,3):
-        cats[mode][f].pars_path = oparams[_i if _i<3 else 2]
-        cats[mode][f].tabs_path = otables[_i if _i < 3 else 2]
-      else:
-        print('\t\tThis sample is NOT being used, only for check purposes!')
+    # Attach labels and paths
+    cats[mode][f].label = mode_tex(mode)
+    _i = len([k for K in cats.keys() for k in cats[K].keys()]) -1
+    #_i = len(cats) + len(cats[mode]) - 2
+    if _i in (0,1,3):
+      cats[mode][f].pars_path = oparams[_i if _i<3 else 2]
+    else:
+      print('\t\tThis sample is NOT being used, only for check purposes!')
 
   del cats['BdRD']['A'] # remove this one
 
 
-  # Configure kernel -----------------------------------------------------------
+  # Configure kernel
   fcns.badjanak.config['knots'] = knots[:-1]
   fcns.badjanak.get_kernels(True)
 
-
-
-
-  # Time to fit acceptance -----------------------------------------------------
+  # Time to fit acceptance
   print(f"\n{80*'='}\nSimultaneous minimization procedure\n{80*'='}\n")
 
-  fcn_pars = cats['BdMC']['A'].params+cats['BdMC']['B'].params+cats['BdRD']['B'].params
-  fcn_kwgs={
-    'data': [cats['BdMC']['A'].time, cats['BdMC']['B'].time, cats['BdRD']['B'].time],
-    'prob': [cats['BdMC']['A'].lkhd, cats['BdMC']['B'].lkhd, cats['BdRD']['B'].lkhd],
-    'weight': [cats['BdMC']['A'].weight, cats['BdMC']['B'].weight, cats['BdRD']['B'].weight]
+  fcn_pars = cats['BdMC']['A'].params
+  fcn_pars += cats['BdMC']['B'].params
+  fcn_pars += cats['BdRD']['B'].params
+  fcn_kwgs = {
+    'data': [cats['BdMC']['A'].time,
+             cats['BdMC']['B'].time,
+             cats['BdRD']['B'].time
+    ],
+    'prob': [cats['BdMC']['A'].lkhd,
+             cats['BdMC']['B'].lkhd,
+             cats['BdRD']['B'].lkhd
+    ],
+    'weight': [cats['BdMC']['A'].weight,
+               cats['BdMC']['B'].weight,
+               cats['BdRD']['B'].weight
+    ]
   }
 
   if MINER.lower() in ("minuit","minos"):

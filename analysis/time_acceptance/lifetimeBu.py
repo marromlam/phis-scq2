@@ -57,7 +57,7 @@ if __name__ == '__main__':
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--timeacc', help='Different flag to ... ')
   args = vars(p.parse_args())
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = 'Bu2JpsiKplus'
   TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])

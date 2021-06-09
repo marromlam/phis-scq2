@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
@@ -94,6 +94,8 @@ if __name__ == '__main__':
   knots = all_knots[str(NKNOTS)]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   sw = f'sw_{VAR}' if VAR else 'sw'
+  # if EVT == 'evtOdd':
+  #   sw = f"oddWeight*{sw}"
 
 
 
