@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
   # Get data into categories ---------------------------------------------------
   printsec(f"Loading categories")
-  
+
   def samples_to_cats(samples, correct, oddity):
     cats = {}
     return cats
@@ -123,7 +123,8 @@ if __name__ == '__main__':
       if EVT == 'evtOdd':
         weight = f"oddWeight*{weight}"
       mode = 'signalMC'; c = 'a'
-    elif m=='MC_Bd2JpsiKstar':
+    elif 'MC_Bd2JpsiKstar' in m:
+      m = 'MC_Bd2JpsiKstar'
       if CORRECT:
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
       else:
@@ -132,7 +133,8 @@ if __name__ == '__main__':
       if EVT == 'evtOdd':
         weight = f"oddWeight*{weight}"
       mode = 'controlMC'; c = 'b'
-    elif m=='Bd2JpsiKstar':
+    elif 'Bd2JpsiKstar' in m:
+      m = 'Bd2JpsiKstar'
       if CORRECT:
         weight = f'kinWeight*{sWeight}'
       else:
