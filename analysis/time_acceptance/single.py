@@ -38,7 +38,6 @@ def argument_parser():
   p = argparse.ArgumentParser(description='Compute single decay-time acceptance.')
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
   p.add_argument('--params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--tables', help='Bs2JpsiPhi MC sample')
   p.add_argument('--year', help='Year to fit')
   p.add_argument('--mode', help='Year to fit', default='Bd2JpsiKstar')
   p.add_argument('--version', help='Version of the tuples to use')
@@ -88,7 +87,6 @@ if __name__ == '__main__':
   # List samples, params and tables
   samples = args['samples'].split(',')
   oparams = args['params'].split(',')
-  otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(NKNOTS)]
@@ -171,7 +169,6 @@ if __name__ == '__main__':
     # Attach labels and paths
     cats[mode].label = mode_tex(mode)
     cats[mode].pars_path = oparams[i]
-    cats[mode].tabs_path = otables[i]
 
 
 
@@ -226,11 +223,6 @@ if __name__ == '__main__':
   cats[mode].params = cats[mode].knots + result.params
   print(f"Dumping json parameters to {cats[mode].pars_path}")
   cats[mode].params.dump(cats[mode].pars_path)
-  print(f"Dumping tex table to {cats[mode].tabs_path}")
-  with open(cats[mode].tabs_path, "w") as text:
-    text.write( cats[mode].params.dump_latex(caption=f"Time acceptance for the \
-    {VERSION} ${mode_tex(f'{MODE}')}$ ${YEAR}$ {TRIGGER} category in {TIMEACC} fit."))
-  text.close()
 
 ################################################################################
 # that's all folks!
