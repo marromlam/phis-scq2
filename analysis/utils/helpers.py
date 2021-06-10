@@ -218,7 +218,7 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
 
   # Year
   if year:
-    print(year)
+    # print(year)
     years = YEARS[year]
     path = []
     for y in years:
