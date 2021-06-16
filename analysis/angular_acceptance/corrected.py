@@ -8,9 +8,7 @@ __email__ = ['mromerol@cern.ch']
 __all__ = []
 
 
-
-################################################################################
-# Modules ######################################################################
+# Modules {{{
 
 import argparse
 import os
@@ -47,8 +45,14 @@ bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
 reweighter = reweight.GBReweighter(**bdconfig)
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
-# Parse arguments for this script
-def argument_parser():
+# }}}
+
+
+# Run and get the job done {{{
+
+if __name__ == '__main__':
+
+  # Parse arguments {{{ 
   p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--sample-mc', help='Bs2JpsiPhi MC sample')
   p.add_argument('--sample-data', help='Bs2JpsiPhi data sample')
@@ -60,22 +64,8 @@ def argument_parser():
   p.add_argument('--year', help='Year to compute angular acceptance with')
   p.add_argument('--version', help='Version of the tuples')
   p.add_argument('--trigger', help='Trigger to compute angular acceptance with')
-  return p
+  args = vars(p.parse_args())
 
-
-
-
-################################################################################
-
-
-
-################################################################################
-# Run and get the job done #####################################################
-
-if __name__ == '__main__':
-
-  # Parse arguments ------------------------------------------------------------
-  args = vars(argument_parser().parse_args())
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = args['mode']
@@ -83,6 +73,7 @@ if __name__ == '__main__':
 
   # Prepare the cuts
   CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  # CUT = "gentime>=0.3 & gentime<=15"
 
   # Print settings
   printsec('Settings')
@@ -92,9 +83,11 @@ if __name__ == '__main__':
   print(f"{'angacc':>15}: {'corrected':50}")
   print(f"{'bdtconfig':>15}: {list(bdconfig.values())}\n")
 
+  # }}}
 
 
-  # %% Load samples ------------------------------------------------------------
+  # Load samples {{{ 
+
   printsec("Loading categories")
 
   # Load Monte Carlo samples
@@ -109,11 +102,22 @@ if __name__ == '__main__':
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
   true = [f'gen{i}' for i in reco]
-  weight_rd = f'sw_{VAR}' if VAR else 'sw'
+
+  # if not using bkgcat==60, then don't use sWeight
   weight_rd = 'sw'
-  weight_mc = f'polWeight*{weight_rd}'
-  if 'Bs2JpsiPhi' in MODE:
+  weight_mc = 'polWeight*sw'
+  if "bkgcat60" in args['version']:
+    weight_mc = 'polWeight'
+
+  # if mode is from Bs family, then use gb_weights
+  if 'Bs2Jpsi' in MODE:
     weight_mc += '/gb_weights'
+    if 'evt' in args['version']:
+      weight_rd = f'kinWeight*oddWeight*{weight_rd}/gb_weights'
+      reco[3] = 'gentime'  # use gentime, since no time_resolution will be used
+
+  print(f"Using weight = {weight_mc} for MC")
+  print(f"Using weight = {weight_rd} for data")
 
   # Allocate some arrays with the needed branches
   mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
@@ -121,11 +125,13 @@ if __name__ == '__main__':
   mc.allocate(pdf='0*time')
   mc.allocate(weight=weight_mc)
 
+  # }}}
 
 
-  # Compute standard kinematic weights -----------------------------------------
+  # Compute standard kinematic weights {{{
   #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
+
   printsec('Compute angWeights correcting MC sample in kinematics')
   print(f" * Computing kinematic GB-weighting in pTB, pB and mHH")
 
@@ -144,9 +150,10 @@ if __name__ == '__main__':
 
   np.save(args['output_weights_file'], kinWeight)
 
+# }}}
 
 
-  # Compute angWeights correcting with kinematic weights -----------------------
+  # Compute angWeights correcting with kinematic weights {{{
   #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
 
@@ -164,9 +171,10 @@ if __name__ == '__main__':
 
   print(f"{pars}")
 
+  # }}}
 
 
-  # Writing results ------------------------------------------------------------
+  # Writing results {{{
   #    Exporting computed results
   printsec("Dumping parameters")
   # Dump json file
@@ -181,5 +189,10 @@ if __name__ == '__main__':
     )
   tex_file.close()
 
-################################################################################
+  # }}}
+
+# }}}
+
+
+# vim:foldmethod=marker
 # that's all folks!
