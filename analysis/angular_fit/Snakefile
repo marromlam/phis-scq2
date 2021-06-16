@@ -357,9 +357,10 @@ rule physics_params_data_run2a:
 
 
 
-# Yearly time-dependent angular fit --------------------------------------------
+# Yearly time-dependent angular fit {{{
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
+
 rule physics_params_data_yearly:
   wildcard_constraints:
     fit = "yearly.*"
@@ -374,12 +375,14 @@ rule physics_params_data_yearly:
       'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json'
     ],
     # Time acceptance coefficients
-    timeacc_biased = [
-      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
-    ],
-    timeacc_unbiased = [
-      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
-    ],
+    timeacc_biased = lambda wcs : expand(
+        'output/params/time_acceptance/{{year}}/{mode}/{{version}}_{{timeacc}}_biased.json',
+        mode='MC_Bs2JpsiPhi_dG0' if f'{wcs.timeacc}'=='single' else 'Bd2JpsiKstar'
+    ),
+    timeacc_unbiased = lambda wcs : expand(
+        'output/params/time_acceptance/{{year}}/{mode}/{{version}}_{{timeacc}}_unbiased.json',
+        mode='MC_Bs2JpsiPhi_dG0' if f'{wcs.timeacc}'=='single' else 'Bd2JpsiKstar'
+    ),
     # CSP
     csp_factors = lambda wcs: [
       f'output/params/csp_factors/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0]}.json'
@@ -417,7 +420,7 @@ rule physics_params_data_yearly:
     ) &> {log}""")
     send_mail(f"Physics Parameters RD Yearly :: {wildcards}", f"{log}")
 
-
+# }}}
 
 
 

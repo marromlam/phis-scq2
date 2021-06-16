@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
   args = vars(argument_parser().parse_args())
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   ANGACC = args['angacc']
   MODE = args['mode']
@@ -107,11 +107,19 @@ if __name__ == '__main__':
   # Variables and branches to be used
   reco = ['cosK', 'cosL', 'hphi', 'time']
   true = [f'gen{i}' for i in reco]
-  weight = f'polWeight*sw_{VAR}' if VAR else 'polWeight*sw'
+
+  # if not using bkgcat==60, then don't use sWeight
+  weight = 'polWeight*sw'
+  if "bkgcat60" in args['version']:
+    weight = 'polWeight'
+
+  # if mode is from Bs family, then use gb_weights
   if 'Bs2JpsiPhi' in MODE:
     weight += '/gb_weights'
   print(weight)
+
   # Allocate some arrays with the needed branches
+  # WARNING: please add directly sigma and mHH to TOY samples so we can skip the following if
   try:
     mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
     mc.allocate(true=true+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
