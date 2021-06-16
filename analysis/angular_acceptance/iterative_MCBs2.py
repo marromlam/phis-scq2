@@ -535,60 +535,60 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
   tf = timer()-t0
   print(f'Extract angular normalisation weights took {tf:.3f} seconds.')
   #branches = ['pTHp', 'pTHm', 'pHm', 'pHp']
-  branches = ['cosK', 'cosL', 'hphi', 'pTHm', 'pHm', 'pLm', 'pTLm','pLp', 'pTLp', 'pHp', 'pTHp','gentime']
-  for i, y in enumerate( YEARS ):
-    for t in ['biased','unbiased']:
-      for j, key in enumerate(branches):
-       fig, axplot, axpull = plotting.axes_plotpull()
-       if (key=='gentime'):
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
-                      weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
-                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
-       elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
-                      weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
-                           weights = mc[y]['MC_Bs2JpsiPhi'][t].kkpWeight[iteration]*mc[y]['MC_Bs2JpsiPhi'][t].df['angWeight'], density=True)
-       elif (key=='cosK' or  key=='cosL'):
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
-                        weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
-                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
-       elif (key=='hphi'):
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
-                        weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
-                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
-       else:
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
-                          weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
-                          weights = mc[y]['MC_Bs2JpsiPhi'][t].kkpWeight[iteration]*mc[y]['MC_Bs2JpsiPhi'][t].df['angWeight'], density=True)
-       axplot.step(ht.bins, ht.counts, where='mid', label=f'{y}-{t}-{iteration}-0-DATA-CUTs',  color='C0')
-       axplot.step(hc.bins, hc.counts, where='mid', label=f'{y}-{t}-{iteration}-0-MC', color='C1')
-       axpull.fill_between(ht.bins,hc.counts/ht.counts,1,
-                               alpha=0.4)
-       axplot.errorbar(ht.bins, ht.counts, yerr=[ht.errl, ht.errh], fmt='.', color='C0')
-       axplot.errorbar(hc.bins, hc.counts, yerr=[hc.errl, hc.errh], fmt='.', color='C1')
-       axplot.set_ylabel(f"Candidates")
-       axpull.set_xlabel(f"{branches[j]}")
-       axpull.set_ylim(0.0,2.0)
-       if key=='gentime':
-          axpull.set_xlim(0.3, 15.)
-       elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
-          axpull.set_xlim(0.0, 1.5e5)
-       elif (key=='cosK' or key=='cosL'):
-          axpull.set_xlim(-1.0, 1.0)
-       elif (key=='hphi'):
-          axpull.set_xlim(-np.pi, np.pi)
-       else:
-          axpull.set_xlim(0.0, 1.0e4)
-       axpull.set_yticks([0.5, 1, 1.5])
-       axplot.legend(fontsize='small')
-       watermark(axplot, version=f'$v0r5$', scale=1.2)
-       fig.savefig(f'pruebas_plots/{branches[j]}_{y}_{t}_{iteration}.pdf')
-       plt.close()
+  # branches = ['cosK', 'cosL', 'hphi', 'pTHm', 'pHm', 'pLm', 'pTLm','pLp', 'pTLp', 'pHp', 'pTHp','gentime']
+  # for i, y in enumerate( YEARS ):
+  #   for t in ['biased','unbiased']:
+  #     for j, key in enumerate(branches):
+  #      fig, axplot, axpull = plotting.axes_plotpull()
+  #      if (key=='gentime'):
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
+  #                     weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
+  #                     weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+  #      elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
+  #                     weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
+  #                          weights = mc[y]['MC_Bs2JpsiPhi'][t].kkpWeight[iteration]*mc[y]['MC_Bs2JpsiPhi'][t].df['angWeight'], density=True)
+  #      elif (key=='cosK' or  key=='cosL'):
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
+  #                       weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
+  #                     weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+  #      elif (key=='hphi'):
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
+  #                       weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
+  #                     weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+  #      else:
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
+  #                         weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
+  #                         weights = mc[y]['MC_Bs2JpsiPhi'][t].kkpWeight[iteration]*mc[y]['MC_Bs2JpsiPhi'][t].df['angWeight'], density=True)
+  #      axplot.step(ht.bins, ht.counts, where='mid', label=f'{y}-{t}-{iteration}-0-DATA-CUTs',  color='C0')
+  #      axplot.step(hc.bins, hc.counts, where='mid', label=f'{y}-{t}-{iteration}-0-MC', color='C1')
+  #      axpull.fill_between(ht.bins,hc.counts/ht.counts,1,
+  #                              alpha=0.4)
+  #      axplot.errorbar(ht.bins, ht.counts, yerr=[ht.errl, ht.errh], fmt='.', color='C0')
+  #      axplot.errorbar(hc.bins, hc.counts, yerr=[hc.errl, hc.errh], fmt='.', color='C1')
+  #      axplot.set_ylabel(f"Candidates")
+  #      axpull.set_xlabel(f"{branches[j]}")
+  #      axpull.set_ylim(0.0,2.0)
+  #      if key=='gentime':
+  #         axpull.set_xlim(0.3, 15.)
+  #      elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
+  #         axpull.set_xlim(0.0, 1.5e5)
+  #      elif (key=='cosK' or key=='cosL'):
+  #         axpull.set_xlim(-1.0, 1.0)
+  #      elif (key=='hphi'):
+  #         axpull.set_xlim(-np.pi, np.pi)
+  #      else:
+  #         axpull.set_xlim(0.0, 1.0e4)
+  #      axpull.set_yticks([0.5, 1, 1.5])
+  #      axplot.legend(fontsize='small')
+  #      watermark(axplot, version=f'$v0r5$', scale=1.2)
+  #      fig.savefig(f'pruebas_plots/{branches[j]}_{y}_{t}_{iteration}.pdf')
+  #      plt.close()
   # 5th step: merge MC std and dg0 results
   print(f'\n{itstr} Combining MC_Bs2JpsiPhi and MC_Bs2JpsiPhi_dG0')
   t0 = timer()
@@ -835,14 +835,14 @@ if __name__ == '__main__':
   p.add_argument('--mode', help='Mode of the sample')
   args = vars(p.parse_args())
 
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEARS = args['year'].split(',') 
   #YEARS = ['2016']
   YEARS = ['2015', '2016']
   MODE = args['mode']
   print(MODE)
   ANGACC = args['angacc']
-  bkgcat = True
+  bkgcat = False
   #np.random.seed(0)
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
@@ -894,7 +894,7 @@ if __name__ == '__main__':
   # MC reconstructed and generator level variable names
   reco  = ['cosK', 'cosL', 'hphi', 'time']
   true  = [f'gen{i}' for i in reco]
-  reco = ['cosK', 'cosL', 'hphi', 'gentime']
+  #reco = ['cosK', 'cosL', 'hphi', 'gentime']
   reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
   true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
 
@@ -979,15 +979,15 @@ if __name__ == '__main__':
       if bkgcat==True:
         data[y][t].chop(cuts_and(trigger_scissors(t), CUT,'bkgcatB != 60.0', '(evtN % 2) != 0'))#,'pHm<45000', 'pHp<45000', 'pTHm<3500', 'pTHp<3500'))#, 'logIPchi2B >= 0', 'log(BDTFchi2) >= 0'))
       else:
-          data[y][t].chop(cuts_and(trigger_scissors(t), CUT, ('evtN % 2 != 0'),'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
+          data[y][t].chop(cuts_and(trigger_scissors(t), CUT, ('evtN % 2 != 0')))#,'logIPchi2B >= 0', 'log(BDTFchi2) >=0'))
           #, 'logIPchi2B >= 0'))#, 'log(BDTFchi2) >=0'))
-      shit_gorda = np.array(data[y][t].df['oddWeight'])
-      pTp = np.array(data[y][t].df['pTHp'])
-      pTm = np.array(data[y][t].df['pTHm'])
-      for j in range(len(shit_gorda)):
-        shit_gorda[j] = acceptance_effect(pTp[j], 300**3)
-        shit_gorda[j] *= acceptance_effect(pTm[j], 300**3)
-      data[y][t].df['oddWeight'] = shit_gorda
+      # shit_gorda = np.array(data[y][t].df['oddWeight'])
+      # pTp = np.array(data[y][t].df['pTHp'])
+      # pTm = np.array(data[y][t].df['pTHm'])
+      # for j in range(len(shit_gorda)):
+      #   shit_gorda[j] = acceptance_effect(pTp[j], 300**3)
+      #   shit_gorda[j] *= acceptance_effect(pTm[j], 300**3)
+      # data[y][t].df['oddWeight'] = shit_gorda
         #if np.random.rand() <= 0.3: # threshold this implies the acceptance you loose
            #shit_gorda[j] = 0.0
       # shit_gorda = np.zeros_like(data[y][t].df['oddWeight'])
@@ -1048,70 +1048,69 @@ if __name__ == '__main__':
       # # print(sw)
       # # print(np.sum(sw), len(sw))
       # # print(d.df[d.df['sWeight']==1.].shape[0]) 
-      # # exit()
       d.allocate(data=real,weight=f'{weight_rd}',lkhd='0*time')
       #d.allocate(data=real,weight='sWeight/sWeight',lkhd='0*time')
 
 
 
-  #branches = ['pTLp', 'pTLm', 'pLm', 'pLp']
-  branches = ['hphi',  'cosL', 'cosK', 'pHm', 'pTHm', 'pLm', 'pTLm','pLp', 'pTLp', 'pHp', 'pTHp', 'gentime']
-  #branches = ['gentime']
-  for i, y in enumerate( YEARS ):
-    for t in ['biased','unbiased']:
-      for j, key in enumerate(branches):
-       fig, axplot, axpull = plotting.axes_plotpull()
-       if (key=='gentime'):
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
-                      weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
-                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
-       elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
-                      weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
-                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
-       elif (key=='cosK' or key=='cosL'):
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
-                        weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
-                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
-       elif (key=='hphi'):
-         print(j)
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-np.pi,np.pi, 20),
-                        weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
-                      weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
-       else:
-         ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
-                          weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
-         hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
-                          weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
-       axplot.step(ht.bins, ht.counts, where='mid', label=f'{y}-{t}-0-DATA-CUTs', color='C0')
-       axplot.step(hc.bins, hc.counts, where='mid', label=f'{y}-{t}-0-MC', color='C1')
-       axpull.fill_between(ht.bins,hc.counts/ht.counts,1,
-                               alpha=0.4)
-       axplot.errorbar(ht.bins, ht.counts, yerr=[ht.errl, ht.errh], fmt='.', color='C0')
-       axplot.errorbar(hc.bins, hc.counts, yerr=[hc.errl, hc.errh], fmt='.', color='C1')
-       axplot.set_ylabel(f"Candidates")
-       axpull.set_xlabel(f"{branches[j]}")
-       axpull.set_ylim(0.0,2.0)
-       print(key)
-       if key=='gentime':
-          axpull.set_xlim(0.3, 15.)
-       elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
-          axpull.set_xlim(0.0, 1.5e5)
-       elif (key=='cosK' or key=='cosL'):
-          axpull.set_xlim(-1.0, 1.0)
-       elif (key=='hphi'):
-          axpull.set_xlim(-np.pi,np.pi)
-       else:
-          axpull.set_xlim(0.0, 1.0e4)
-       axpull.set_yticks([0.5, 1, 1.5])
-       axplot.legend(fontsize='small')
-       watermark(axplot, version=f'$v0r5$', scale=1.2)
-       fig.savefig(f'pruebas_plots/{branches[j]}_{y}_{t}.pdf')
-       plt.close()
+  # #branches = ['pTLp', 'pTLm', 'pLm', 'pLp']
+  # branches = ['hphi',  'cosL', 'cosK', 'pHm', 'pTHm', 'pLm', 'pTLm','pLp', 'pTLp', 'pHp', 'pTHp', 'gentime']
+  # #branches = ['gentime']
+  # for i, y in enumerate( YEARS ):
+  #   for t in ['biased','unbiased']:
+  #     for j, key in enumerate(branches):
+  #      fig, axplot, axpull = plotting.axes_plotpull()
+  #      if (key=='gentime'):
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
+  #                     weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.3, 15., 40),
+  #                     weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+  #      elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
+  #                     weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.5e5, 50),
+  #                     weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+  #      elif (key=='cosK' or key=='cosL'):
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
+  #                       weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-1.0, 1.0, 20),
+  #                     weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+  #      elif (key=='hphi'):
+  #        print(j)
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(-np.pi,np.pi, 20),
+  #                       weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(-np.pi, np.pi, 20),
+  #                     weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+  #      else:
+  #        ht = ipanema.hist(data[y][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
+  #                         weights = data[y][t].df.eval(f'{weight_rd}'), density=True)
+  #        hc = ipanema.hist(mc[y]['MC_Bs2JpsiPhi'][t].df[branches[j]], bins = np.linspace(0.0, 1.0e4, 50),
+  #                         weights = mc[y]['MC_Bs2JpsiPhi'][t].df.eval('angWeight'), density=True)
+  #      axplot.step(ht.bins, ht.counts, where='mid', label=f'{y}-{t}-0-DATA-CUTs', color='C0')
+  #      axplot.step(hc.bins, hc.counts, where='mid', label=f'{y}-{t}-0-MC', color='C1')
+  #      axpull.fill_between(ht.bins,hc.counts/ht.counts,1,
+  #                              alpha=0.4)
+  #      axplot.errorbar(ht.bins, ht.counts, yerr=[ht.errl, ht.errh], fmt='.', color='C0')
+  #      axplot.errorbar(hc.bins, hc.counts, yerr=[hc.errl, hc.errh], fmt='.', color='C1')
+  #      axplot.set_ylabel(f"Candidates")
+  #      axpull.set_xlabel(f"{branches[j]}")
+  #      axpull.set_ylim(0.0,2.0)
+  #      print(key)
+  #      if key=='gentime':
+  #         axpull.set_xlim(0.3, 15.)
+  #      elif (key=='pLp' or key=='pLm' or key=='pHm' or key=='pHp'):
+  #         axpull.set_xlim(0.0, 1.5e5)
+  #      elif (key=='cosK' or key=='cosL'):
+  #         axpull.set_xlim(-1.0, 1.0)
+  #      elif (key=='hphi'):
+  #         axpull.set_xlim(-np.pi,np.pi)
+  #      else:
+  #         axpull.set_xlim(0.0, 1.0e4)
+  #      axpull.set_yticks([0.5, 1, 1.5])
+  #      axplot.legend(fontsize='small')
+  #      watermark(axplot, version=f'$v0r5$', scale=1.2)
+  #      fig.savefig(f'pruebas_plots/{branches[j]}_{y}_{t}.pdf')
+  #      plt.close()
   # Prepare dict of parameters -------------------------------------------------
   printsec('Parameters and initial status')
 
