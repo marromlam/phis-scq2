@@ -8,7 +8,7 @@ rule samples_sync_tuple:
   resources:
     mem_mb=6144
   output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root'
+    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root')
   log:
     'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
   run:
