@@ -153,29 +153,52 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
 
   # Check modifiers for mode
   if mode:
-    if mode == 'data':
-      if m.startswith('MC_'):
-        m = m[3:]
-        if m.endswith('_dG0'):
-          m = m[:-4]
-        elif m.endswith('_Swave'):
-          m = m[:-8] + 'Phi'
-    elif mode == 'cdata':
-      if m.startswith('MC_'):
-        m = m[3:]
-        if m.endswith('_dG0'):
-          m = m[:-4]
-        elif m.endswith('_Swave'):
-          m = m[:-8] + 'Phi'
-      elif m == 'Bs2JpsiPhi':
-        m = 'Bd2JpsiKstar'
-      elif m == 'Bd2JpsiKstar':
-        m = 'Bs2JpsiPhi'
-      elif m == 'Bu2JpsiKplus':
-        m = 'Bs2JpsiPhi'
-    elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
-      m = mode
-
+    if "evtEven" in v:
+      if mode == 'data':
+        if m.startswith('MC_'):
+          v = v.replace('evtEven', 'evtOdd')
+      elif mode == 'cdata':
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+    elif "evtOdd" in v:
+      if mode == 'data':
+        if m.startswith('MC_'):
+          v = v.replace('evtOdd', 'evtEven')
+      elif mode == 'cdata':
+        # v = v.replace('evtOdd', '')
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+    else:
+      if mode == 'data':
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+      elif mode == 'cdata':
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+        elif m == 'Bs2JpsiPhi':
+          m = 'Bd2JpsiKstar'
+        elif m == 'Bd2JpsiKstar':
+          m = 'Bs2JpsiPhi'
+        elif m == 'Bu2JpsiKplus':
+          m = 'Bs2JpsiPhi'
+      elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
+        m = mode
   # Model handler when asking for weises
   # print("start", weight)
   if weight:
@@ -225,9 +248,9 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
       terms = [y, m, v]
       if weight:
         if weight=='angWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{version}']) + f'_{weight}.root' )
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{weight}.root' )
         elif weight=='kkpWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{version}']) + f'_{wcs.angacc}_{wcs.timeacc}_{weight}.root' )
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{wcs.angacc}_{wcs.timeacc}_{weight}.root' )
         else:
           path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
       else:
@@ -237,9 +260,9 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
     terms = [y, m, v]
     if weight:
         if weight=='angWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{version}']) + f'_{weight}.root'
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{weight}.root'
         elif weight=='kkpWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{version}']) + f'_{wcs.angacc}_{wcs.timeacc}_{weight}.root'
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{wcs.angacc}_{wcs.timeacc}_{weight}.root'
         else:
           path =  SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
     else:
