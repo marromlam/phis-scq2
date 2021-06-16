@@ -34,6 +34,7 @@ EOSPATH = hjson.load(open('config.json'))['eos']
 
 vsub_dict = {
   "evtOdd": "(eventNumber % 2) != 0",
+  # "evtOdd": "(eventNumber % 2) != 0 & B_DTF_CHI2NDOF <= 1 & log_B_IPCHI2_mva <= 0",
   "evtEven": "(eventNumber % 2) == 0",
   "magUp": "Polarity == 1",
   "magDown": "Polarity == -1",

@@ -143,3 +143,39 @@ def splinexerfconstr(pars, cats, weight=False, flatend=False):
         chi2.append( ristra.get( (-2*ristra.log(dt.lkhd)+cnstr)             ) )
       
   return np.concatenate(chi2)
+
+
+def splinexerfconstr_single(pars, cats, weight=False, flatend=False):
+  # shit
+  chi2 = []
+  g = pars['gamma'].value  # lifetime
+
+  for y, dy in cats.items():
+    for t, dt in dy.items():
+      m = pars['mu'].value  # convolution offset
+      s = pars['sigma'].value  # deviation to convolve with
+
+      # get coeffs - currently being fitted
+      lpars = pars.find(f'c(A)?(\d{{1}})(\d{{1}})?({t[0]})_({y[2:]})')
+      # print(lpars)
+      c = pars.valuesarray(lpars)
+
+      # compute gaussian constraint - from previous fits
+      lpars = dt.params.find(f'(a|b|c)(B)?(\d{{1}})(\d{{1}})?({t[0]})')[1:]
+      # print(lpars)
+      c0 = np.matrix(c[1:] - dt.params.valuesarray(lpars))  # constraint mu
+      cov = dt.params.cov(lpars)  # constraint covariance matrix
+      cnstr  = np.dot(np.dot(c0, np.linalg.inv(cov)), c0.T)
+      cnstr += len(c0)*np.log(2*np.pi) + np.log(np.linalg.det(cov))
+      cnstr  = np.float64(cnstr[0][0])/len(dt.lkhd)  # per event constraint
+
+      # call device function and compute
+      badjanak.splinexerf(dt.time, dt.lkhd, coeffs=c, mu=m, sigma=s, gamma=g, flatend=flatend)
+
+      # append to chi2 for each subsample - weight switcher
+      if weight:
+        chi2.append( ristra.get( (-2*ristra.log(dt.lkhd)+cnstr) * dt.weight ) )
+      else:
+        chi2.append( ristra.get( (-2*ristra.log(dt.lkhd)+cnstr)             ) )
+
+  return np.concatenate(chi2)
