@@ -337,7 +337,7 @@ def do_kkp_weighting(verbose):
   #    the GBweighter gives different results when having those 0s or having
   #    nothing after cutting the sample.
   global mc, data, weight_rd
-  
+
   threads = list()
   for y, dy in mc.items(): # loop over years
     for m, dm in dy.items(): # loop over mc_std and mc_dg0
@@ -411,7 +411,7 @@ def do_mc_combination(verbose):
       checker.append( qwe )
   
   check_dict = {}
-  for ci in range(0,i):    
+  for ci in range(0,i):
     check_dict[ci] = []
     for y, dy in data.items(): # loop over years
       for t in ['biased','unbiased']:
@@ -880,11 +880,11 @@ if __name__ == '__main__':
             free=False, latex="\lambda_{\perp}/\lambda_0"))
   
   # life parameters
-  pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
+  pars.add(dict(name="Gd", value= 0.65789,  # min= 0.0, max= 1.0,
             free=False, latex=r"\Gamma_d"))
-  pars.add(dict(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
+  pars.add(dict(name="DGs", value= 0.0917,  # min= 0.03, max= 0.15,
             free=True, latex=r"\Delta\Gamma_s"))
-  pars.add(dict(name="DGsd", value= 0.03, min=-0.2, max= 0.2,
+  pars.add(dict(name="DGsd", value= 0.03,  # min=-0.2, max= 0.2,
             free=True, latex=r"\Gamma_s - \Gamma_d"))
   pars.add(dict(name="DM", value=17.768, min=16.0, max=20.0,
             free=True, latex=r"\Delta m"))
