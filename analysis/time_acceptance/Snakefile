@@ -38,6 +38,7 @@ rule time_acceptance_single:
     send_mail(f"Time Acceptance Single :: {wildcards}", f"{log}")
 
 
+
 rule time_acceptance_simultaneous:
   resources:
     mem_mb=4096
@@ -265,7 +266,7 @@ rule time_acceptance_simultaneous_BuasBs:
 #     send_mail("Single Time Acceptance", f"{log}")
 
 
-rule lifetimeBd:
+rule lifetime_simul_Bd:
   resources:
     mem_mb=4096,
   wildcard_constraints:
@@ -296,11 +297,44 @@ rule lifetimeBd:
     send_mail(f"Lifetime Bd fit :: {wildcards}", f"{log}")
 
 
+rule lifetime_single:
+  resources:
+    mem_mb=4096,
+  wildcard_constraints:
+    timeacc = "single.*",
+  input:
+    sample = lambda wcs: [tuples(wcs)],
+    biased = lambda wcs: expand('output/params/time_acceptance/{year}/{mode}/{version}_{{timeacc}}_biased.json',
+                                year=YEARS[f'{wcs.year}'], version=f'{wcs.version}',
+                                mode = f"MC_{wcs.mode}_dG0" if "Bs" in f"{wcs.mode}" else "MC_{wcs.mode}"),
+    unbiased = lambda wcs: expand('output/params/time_acceptance/{year}/{mode}/{version}_{{timeacc}}_unbiased.json',
+                                  year=YEARS[f'{wcs.year}'], version=f'{wcs.version}',
+                                  mode = f"MC_{wcs.mode}_dG0" if "Bs" in f"{wcs.mode}" else "MC_{wcs.mode}"),
+  output:
+    params = 'output/params/lifetime/{year}/{mode}/{version}_life{timeacc}_{trigger}.json',
+  log:
+    'output/log/lifetime_single/{year}/{mode}/{version}_life{timeacc}_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python analysis/time_acceptance/lifetime_single.py\
+    --sample {",".join(input.sample)}\
+    --biased-params {",".join(input.biased)}\
+    --unbiased-params {",".join(input.unbiased)}\
+    --output-params {output.params}\
+    --year {",".join(YEARS[f'{wildcards.year}'])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    --trigger {wildcards.trigger}\
+    ) &> {log}""")
+    send_mail(f"Lifetime Bd fit :: {wildcards}", f"{log}")
+
+
 rule lifetimeBu:
   resources:
     mem_mb=4096
   input:
-    sample = lambda wcs: tuples(wcs,mode='Bu2JpsiKplus',year=f'{wcs.year}'),
+    sample = lambda wcs: tuples(wcs, mode='Bu2JpsiKplus'),
     biased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BuasBs_biased.json', y=YEARS[f'{wcs.year}']),
     unbiased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BuasBs_unbiased.json', y=YEARS[f'{wcs.year}']),
   output:
