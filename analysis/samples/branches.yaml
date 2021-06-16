@@ -35,6 +35,13 @@ common: &common
   "MUmaxTRchi2" : "max_mu_TRCHI2_mva"
   "logJpsiVXchi2" : "log_Jpsi_VX_CHI2NDOF_mva"
   "logMINmuPNNmu" : "log_min_mu_PNNmu_mva"
+  "HpTrackchi2" : "hplus_TRACK_CHI2NDOF" #MC vs data differences to check with data weight ang acc
+  "HpPID" : "hplus_PIDK"
+  "HmTrackchi2" : "hminus_TRACK_CHI2NDOF"
+  "LmTrackchi2" : "muplus_TRACK_CHI2NDOF"
+  "LpTrackchi2" : "muminus_TRACK_CHI2NDOF"
+  "HTRchi2" : "max_K_TRCHI2_mva"
+  "LTRchi2" : "max_mu_TRCHI2_mva"
 
 MC_common: &MC_common
   <<: *common

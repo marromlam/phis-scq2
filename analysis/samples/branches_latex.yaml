@@ -51,7 +51,6 @@ Bs_common: &Bs_common
   "etaB" :
     latex_name: $\eta_{B_s}$
     range: [2, 5]
-  #chinoca
   "logIPchi2B" :
     latex_name : $\mathrm{log} \chi^2 IP_{B_s}$
     range: [-12.0, 12.0]
@@ -70,9 +69,163 @@ Bs_common: &Bs_common
   "KmaxTRchi2" :
     latex_name: $TR_{\chi^2, max} K$
     range: [0.3, 3.5]
-
-
-
+  #plots MC vs data non reduced:
+  "sigmat" :
+    latex_name: $\sigma_t$
+    range: [0.0, 0.13] 
+  "B_LOKI_DTF_CTAU":
+    latex_name: $B\_LOKI\_DTF_CTAU$
+    range: [0., 2.] 
+  "B_LOKI_DTF_CTAUERR":
+    latex_name: $B\_LOKI\_DTF\_CTAUERR$
+    range: [0.0, 0.04] 
+  "B_IPCHI2_OWNPV":
+    latex_name: $B\_IPCHI2\_OWNPV$
+    range: [0.0, 10.0] 
+  "nTracks":
+    latex_name: $nTracks$
+    range: [0., 1000.]
+  "nLongTracks":
+    latex_name: $nLongTracks$
+    range: [0. ,180.]
+  "nSPDHits":
+    latex_name: $nSPDHits$
+    range: [0., 1200]
+  "hplus_TRACK_CHI2NDOF":
+    latex_name: $K^{+}_{TRACK, \chi2_{ndof}}$
+    range: [0., 5.] 
+  "hplus_ProbNNk":
+    latex_name: $K^{+}_{ProbK}$
+    range: [-0.2, 1.2]
+  "hplus_ProbNNpi":
+    latex_name: $K^{+}_{Prob\pi}$
+    range: [-0.2, 1.2]
+  "hplus_ProbNNp":
+    latex_name: $K^{+}_{Probp}$
+    range: [-0.2, 1.2]
+  "hminus_TRACK_CHI2NDOF":
+    latex_name: $K^{-}_{TRACK, \chi2_{ndof}}$
+    range: [0.2, 2.2]
+  "hminus_ProbNNk":
+    latex_name: $K^{-}_{ProbK}$
+    range: [-0.2, 1.2]
+  "hminus_ProbNNpi":
+    latex_name: $K^{-}_{Prob\pi}$
+    range: [-0.2, 1.2]
+  "muplus_TRACK_CHI2NDOF":
+    latex_name: $\mu^{+}_{TRACK, \chi2_{ndof}}$
+    range: [0., 3.]
+  "muplus_ProbNNmu":
+    latex_name: $\mu^{+}_{Prob\mu}$
+    range: [-0.2, 1.2]
+  "muplus_PIDmu":
+    latex_name: $\mu^{+}_{PID}$
+    range: [-1., 16.]
+  "muminus_TRACK_CHI2NDOF":
+    latex_name: $\mu^{-}_{TRACK, \chi2_{ndof}}$
+    range: [0.1, 2.5]
+  "muminus_ProbNNmu":
+    latex_name: $\mu^{-}_{Prob\mu}$
+    range: [-0.2, 1.2]
+  "muminus_PIDmu":
+    latex_name: $\mu^{-}_{PID}$
+    range: [-1., 16.]
+  "hplus_PIDK":
+    latex_name: $K^{+}_{PID}$
+    range: [-2., 100. ]
+  "B_DTF_CHI2NDOF": 
+    latex_name: $B_DTF_{\chi2,ndof}$
+    range: [-0.2, 8.]
+  "B_FDS": 
+    latex_name: $B\_FDS$
+    range: [-0.2, 200.]
+  "B_M":
+    latex_name: $B_M$
+    range: [5190, 5600]
+  "B_ETA":
+    latex_name: $\eta_{B}$
+    range: [1.5, 7.]
+  "beam_shift_X":
+    latex_name: $Beam\_shift_X$
+    range: [0.65, 0.95]
+  "beam_shift_Y":
+    latex_name: $Beam\_shift_Y$
+    range: [0.0, 0.3]
+  "B_pKMuMuKminus_M_1":
+    latex_name: $B\_pKMuMuKminus\_M\_1$
+    range: [5400, 6200]
+  "B_B2KpPiJpsi_M_1":
+    latex_name: $B_B2KpPiJpsi\_M\_1$
+    range: [4600, 5600]
+  "B_B2KmPiJpsi_M_1":
+    latex_name: $B\_B2KpPiJpsi\_M\_1$
+    range: [4600, 5600]
+  "X_ENDVERTEX_CHI2":
+    latex_name: $\Phi_{EndVertex,\chi^2 }$     
+    range: [-0.2, 1.2]
+  "docaz_muminus":
+    latex_name: $DOCAZ_{mu^{-}}$
+    range: [-0.1, 2.5]
+  "docaz_muplus":
+    latex_name: $DOCAZ_{mu^{+}}$
+    range: [-0.1, 2.5]
+  "docaz_hminus":
+    latex_name: $DOCAZ_{K^{-}}$
+    range: [-0.1, 2.5]
+  "docaz_hplus":
+    latex_name: $DOCAZ_{K^{+}}$
+    range: [-0.1, 2.5]
+  "muplus_ProbNNmu_corr":
+    latex_name: $\mu^{+}_{Prob\mu, corr}$
+    range: [0., 1.2]
+  "muminus_ProbNNmu_corr":
+    latex_name: $\mu^{-}_{Prob\mu, corr}$
+    range: [0., 1.2]
+  "hplus_ProbNNpi_corr":
+    latex_name: $K^{+}_{Prob\pi, corr}$
+    range: [0., 1.2]
+  "hplus_ProbNNp_corr":
+    latex_name: $K^{+}_{Probp, corr}$
+    range: [0., 1.2]
+  "hplus_ProbNNk_corr":
+    latex_name: $K^{+}_{ProbK, corr}$
+    range: [0., 1.2]
+  "hminus_ProbNNpi_corr":
+    latex_name: $K^{-}_{Prob\pi, corr}$
+    range: [0., 1.2]
+  "hminus_ProbNNp_corr":
+    latex_name: $K^{-}_{Probp, corr}$
+    range: [0., 1.2]
+  "hminus_ProbNNk_corr":
+    latex_name: $K^{-}_{ProbK, corr}$
+    range: [0., 1.2]
+  "max_K_TRCHI2_mva":
+    latex_name: $K_{max, TR\chi^2 mva}$
+    range: [0.4, 3.2]
+  "log_min_K_PNNk_mva":
+    latex_name: $log_{min}\_K\_{PNNk}_{mva}$
+    range: [-1., 0.3]
+  "max_mu_TRCHI2_mva":
+    latex_name: $\mu_{max, TR\chi^2 mva}$
+    range: [0.4, 3.]
+  "log_min_mu_PNNmu_mva":
+    latex_name: $log_{min}\_\mu\_{PNN\mu}_{mva}$
+    range: [-1., 0.3]
+  "log_Jpsi_VX_CHI2NDOF_mva":
+    latex_name: $log\_Jpsi\_VX\_CHI2NDOF\_mva$
+    range: [-12., 4.]
+  "X_PT_mva":
+    latex_name: $X_{P_T, mva}$
+    range: [0., 10000]
+  "B_VX_CHI2NDOF_mva":
+    latex_name: $B\_VX_{\chi2 ndof, mva}$
+    range: [-0.3, 5.0]
+  "log_B_DTF_CHI2NDOF_mva":
+    latex_name: $log\_B\_DTF_{\chi^2 ndof, mva}$
+    range: [-4., 10.0]
+  "log_B_IPCHI2_mva":
+    latex_name: $log\_B\_IPCHI2\_mva$
+    range: [-4., 4.]
 
 Bd_common: &Bd_common
   #cinematics
