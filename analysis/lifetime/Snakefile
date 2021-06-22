@@ -1,0 +1,28 @@
+
+
+# lifetime trend plot {{{
+
+rule lifetime_trend:
+  input:
+    biased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_biased.json',
+                       year=YEARS[f'{wcs.year}']),
+    unbiased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_unbiased.json',
+                       year=YEARS[f'{wcs.year}']),
+    combined = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_combined.json',
+                       year=YEARS[f'{wcs.year}']),
+  output:
+    'output/figures/lifetime/{year}/{mode}/{version}_life{timeacc}_trend.pdf',
+  log:
+    'output/log/lifetime_trend/{year}/{mode}/{version}_life{timeacc}.log',
+  run:
+    shell(f"""(time\
+    python analysis/lifetime/trend_plot.py\
+    --biased-params {",".join(input.biased)}\
+    --unbiased-params {",".join(input.unbiased)}\
+    --combined-params {",".join(input.combined)}\
+    --figure {output}\
+    --mode {wildcards.mode}\
+    --year {",".join(YEARS[f'{wildcards.year}'])}\
+    ) #&> {log}""")
+
+# }}}
