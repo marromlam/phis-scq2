@@ -1,0 +1,15 @@
+{
+  "version": "v0r5",
+  "angacc": "run2",
+  "timeacc": "simul3",
+  "fit": "run2",
+  "year": "run2",
+  "csp": "vgc",
+  "flavor": "amsrd",
+  "timeres": "amsrd",
+  "trigger": "combined",
+  "randomize_variables": true,
+  "randomize_timeacc": false,
+  "randomize_angacc": false,
+  "randomize_flavor": false
+}
