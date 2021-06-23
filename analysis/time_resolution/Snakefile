@@ -1,74 +1,48 @@
-rule get_resolution_from_git:
-  params:
-    repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
+# Time resolution basics {{{
+#    This rule copies Csp factors from analysis/params and places them according
+#    to the name of the output.
+
+rule time_resolution_basics:
+  wildcard_constraints:
+    timeres = "(none|old)"
   output:
-    params = "output/params/time_resolution/{year}/{mode}/{version}.json",
+    "output/params/time_resolution/{year}/{mode}/{version}_{timeres}.json",
   run:
     import os
-    import hjson
-    from ipanema import Parameters
+    res = "analysis/params/time_resolution/{wildcards.mode}/{wildcards.timeres}.json"
+    shell(f"mkdir -p {os.path.dirname(f'{output}')}")
+    shell(f"cp {res} {output}")
 
-    year = f"{wildcards.year}"
-    version = f"{wildcards.version}"
+# }}}
 
-    if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
-      params = Parameters.load(f'analysis/params/v0r0/time_resolution/time_resolution.json')
-      print(params)
-      params.dump(f"{output.params}")
-      print(f'Dumping parameters to {output.params}')
-    else:
-      os.makedirs("./tmp/{year}",exist_ok=True)
-      csp_path = f"fitinputs/{version}/time_resolution/{year}/"     # YEARLY
 
-      print(f"\n{80*'='}\n",
-            "Get CSP from Bs2JpsiPhi-FullRun2 repository",
-            f"\n{80*'='}\n")
+# Time resolution from git {{{
+#    Currently time resolution is only computed at NIKHEF, hence we need to sync
+#    it from there.
 
-      print(f'Downloading Bs2JpsiPhi-FullRun2:{csp_path}CspFactors{year}.json')
-      if f"{wildcards.mode}" == "MC_Bs2JpsiPhi":
-        file = f"mc_signal_calibration.json"
-        #os.system(f"git archive --remote={params.repo} --prefix=./tmp/ HEAD:{csp_path} mc_signal_calibration.json | tar -x")
-        #raw_json = hjson.load( open(f'./tmp/mc_signal_calibration.json','r') )
-      if f"{wildcards.mode}" == "MC_Bs2JpsiPhi_dG0":
-        file = f"dG0_calibration.json"
-      else:
-        file = f"binned_fit_{year}.json"
-      os.system(f"git archive --remote={params.repo} --prefix=./tmp/ HEAD:{csp_path} {file} | tar -x")     # YEARLY
-      #os.system(f"git archive --remote={params.repo} --prefix=./tmp/{year}/ HEAD:{csp_path} CspFactorsAll.json | tar -x")     # SHARED
+rule time_resolution_from_git:
+  wildcard_constraints:
+    timeres = "ams(rd|mc|dg0)"
+  params:
+    repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
+    linker = "analysis/params/time_resolution/linker.json"
+  output:
+    "output/params/time_resolution/{year}/{mode}/{version}_{timeres}.json",
+  log:
+    "output/log/time_resolution_from_git/{year}/{mode}/{version}_{timeres}.log",
+  run:
+    shell(f"""(time\
+    python analysis/time_resolution/download_from_git.py\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --timeres {wildcards.timeres}\
+    --output {output}\
+    --repo {params.repo}\
+    --linker {params.linker}\
+    ) &> {log}""")
 
-      print(f"Loading Time Resolution {year}")
-      raw_json = hjson.load( open(f'./tmp/{file}','r') )     # YEARLY
-      raw_json = raw_json['TimeResParameters']
-      #exit()
-      #raw_json = hjson.load( open(f'./tmp/{year}/CspFactorsAll.json','r') )     # SHARED
-      #raw_json = raw_json[f'All']['CspFactors']
+# }}}
 
-      print(f'Parsing parameters to match phis-scq sctructure')
-      cooked = {};
 
-      cooked['sigma_offset'] = {'name':f'sigma_offset'}
-      cooked['sigma_offset'].update({'value':raw_json[0]['Value'], 'stdev':raw_json[0]['Error']})
-      cooked['sigma_offset'].update({'latex': f"\sigma_0"})
-      cooked['sigma_offset'].update({'free': False})
-
-      cooked['sigma_slope'] = {'name':f'sigma_slope'}
-      cooked['sigma_slope'].update({'value':raw_json[1]['Value'], 'stdev':raw_json[1]['Error']})
-      cooked['sigma_slope'].update({'latex': f"\sigma_1"})
-      cooked['sigma_slope'].update({'free': False})
-
-      cooked['sigma_curvature'] = {'name':f'sigma_curvature'}
-      cooked['sigma_curvature'].update({'value':0.0*raw_json[2]['Value'], 'stdev':raw_json[2]['Error']})
-      cooked['sigma_curvature'].update({'latex': f"\sigma_{2}"})
-      cooked['sigma_curvature'].update({'free': False})
-
-      # Build the ipanema.Parameters object
-      print(f"\nCSP parameters for {year} are:")
-      list_params = list(cooked.keys())                 # list all parameter names
-      list_params = sorted( list_params )               # sort them
-      params = Parameters()
-      [params.add(cooked[par]) for par in list_params]
-      print(params)
-      params.dump(f"{output.params}")
-      print(f'Dumping parameters to {output.params}')
-      print(f'Clean up ./tmp/{file}.json\n')
-      os.remove(f"./tmp/{file}")
+# vim:foldmethod=marker
