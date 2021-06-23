@@ -7,5 +7,5 @@
     "gb_args": { "subsample": 1 }
   },
   "analytic_bins": [20, 20, 20],
-  "legendre_order": [4, 4, 2]
+  "legendre_order": [4, 2, 0]
 }
