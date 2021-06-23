@@ -1,29 +1,39 @@
-# Main Workflow - phis-scq
+# WORKFLOW
 #
 #    This is the Snakefile for the phis analysis within Santiago framework
 #
 # Contributors:
 #       Marcos Romero Lamas, mromerol@cern.ch
-
-import hjson
-CONFIG = hjson.load(open('config.json'))
-configfile: "standard.json"
-
-from utils.helpers import tuples, version_guesser, send_mail
+#       Ramón Ángel Ruiz Fernández, rruizfer@cern.ch
 
 
+# Modules {{{
 
-# Main constants ---------------------------------------------------------------
-#    VERSION: is the version Bs2JpsiPhi-FullRun2 pipeline was run against, and
-#             should be matched with this constant.
-#    MAIN_PATH: the path where all eos-samples will be synced, make sure there
-#               is enough free space there
-#    SAMPLES_PATH: where all ntuples for a given VERSION will be stored
+import config as settings
+from utils.helpers import (tuples, angaccs, csps, flavors, timeaccs, timeress,
+                           version_guesser, send_mail)
+configfile: "config/base.json"
 
-SAMPLES_PATH = CONFIG['path']
-SAMPLES = CONFIG['path']
-NOTE = CONFIG['note']
-MAILS = CONFIG['mail']
+# }}}
+
+
+# Main constants {{{
+
+SAMPLES_PATH = settings.user['path']
+SAMPLES = settings.user['path']
+NOTE = settings.user['note']
+MAILS = settings.user['mail']
+YEARS = settings.years
+
+# }}}
+
+
+# Set pipeline-wide constraints {{{
+#     Some wilcards will only have some well defined values.
+
+wildcard_constraints:
+  trigger = "(biased|unbiased|combined)",
+  year = "(2015|2016|run2a|2017|2018|run2b|run2|2020)"
 
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
@@ -34,44 +44,16 @@ modes = ['Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi',
 
 #{Bs2JpsiPhi,MC_Bs2JpsiPhi_dG0,MC_Bs2JpsiPhi,Bd2JpsiKstar,MC_Bd2JpsiKstar,Bu2JpsiKplus,MC_Bu2JpsiKplus}
 
-YEARS = {#
-  '2011' : ['2011'],
-  '2012' : ['2012'],
-  'Run1' : ['2011','2012'],
-  '2015' : ['2015'],
-  '2016' : ['2016'],
-  'Run2a' : ['2015','2016'],
-  'run2a' : ['2015','2016'],
-  '2017' : ['2017'],
-  '2018' : ['2018'],
-  'Run2b' : ['2017','2018'],
-  'Run2' : ['2015','2016','2017','2018'],
-  'run2' : ['2015','2016','2017','2018']
-};
+# }}}
 
 
-
-# Rule orders
-#ruleorder: sync_ntuples > reduce_ntuples
-
-
-
-# Set pipeline-wide constraints ------------------------------------------------
-#     Some wilcards will only have some well defined values.
-
-wildcard_constraints:
-  trigger = "(biased|unbiased|combined)",
-  year = "(2015|2016|run2a|2017|2018|run2b|run2|2020)"
-
-
-
-# Including Snakefiles ---------------------------------------------------------
-#     dfdf
+# Including Snakefiles {{{
 
 include: 'analysis/samples/Snakefile'
 include: 'analysis/reweightings/Snakefile'
 include: 'analysis/velo_weights/Snakefile'
 include: 'analysis/time_acceptance/Snakefile'
+include: 'analysis/lifetime/Snakefile'
 include: 'analysis/flavor_tagging/Snakefile'
 include: 'analysis/csp_factors/Snakefile'
 include: 'analysis/time_resolution/Snakefile'
@@ -82,12 +64,15 @@ include: 'analysis/params/Snakefile'
 include: 'analysis/toys/Snakefile'
 include: 'packandgo/Snakefile'
 
+# }}}
 
-# Final rule (compile slides) --------------------------------------------------
+
+# Final rule (compile slides) {{{
 
 rule all:
   input:
     "output/b2cc_all.pdf"
+
 
 rule compile_slides:
   input:
@@ -182,3 +167,8 @@ rule compile_slides:
     shell(f"cp slides/main_{date}.pdf output/b2cc_{date}.pdf")
     shell(f"cd slides/; latexmk -c -silent main_{date}.tex")
     shell(f"rm slides/*.xdv")
+
+# }}}
+
+
+# vim:foldmethod=marker
