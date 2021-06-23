@@ -11,13 +11,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Functions ///////////////////////////////////////////////////////////////////
-
 #include <ipanema/core.h>
 #include <ipanema/complex.h>
 #include <ipanema/special.h>
 
+
+// Some helpers {{{
 
 WITHIN_KERNEL
 unsigned int getTimeBin(ftype const t)
@@ -75,7 +74,10 @@ ftype getCoeff(GLOBAL_MEM const ftype *mat, int const r, int const c)
   return mat[4*r+c];
 }
 
+// }}}
 
+
+// Decay-time efficiency {{{
 
 WITHIN_KERNEL
 ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs,
@@ -97,14 +99,10 @@ ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs,
   return (c0 + t*(c1 + t*(c2 + t*c3)));
 }
 
+// }}}
 
 
-
-
-
-
-
-
+// Some exponential convolution functions {{{
 
 WITHIN_KERNEL
 ctype expconv_simon(const ftype t, const ftype G, const ftype omega,
@@ -160,7 +158,6 @@ ctype expconv_simon(const ftype t, const ftype G, const ftype omega,
 }
 
 
-
 WITHIN_KERNEL
 ctype expconv(ftype t, ftype G, ftype omega, ftype sigma)
 {
@@ -191,6 +188,7 @@ ctype expconv(ftype t, ftype G, ftype omega, ftype sigma)
   }
 }
 
+
 WITHIN_KERNEL
 ctype expconv_wores(ftype t, ftype G, ftype omega)
 {
@@ -199,6 +197,11 @@ ctype expconv_wores(ftype t, ftype G, ftype omega)
   return cexp(cmul(C(-G, +omega), C(t, 0.)));
 
 }
+
+// }}}
+
+
+// Full spline integral using faddeva function {{{
 
 WITHIN_KERNEL
 ctype getK(const ctype z, const int n)
@@ -486,6 +489,40 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
 }
 
 
+WITHIN_KERNEL
+void integralFullSpline( ftype result[2],
+                         const ftype vn[10], const ftype va[10],const ftype vb[10], const ftype vc[10],const ftype vd[10],
+                         const ftype *norm, const ftype G, const ftype DG, const ftype DM,
+                         const ftype delta_t,
+                         const ftype tLL, const ftype tUL,
+                         const ftype t_offset,
+                         GLOBAL_MEM const ftype *coeffs)
+{
+  ftype integrals[4] = {0., 0., 0., 0.};
+  intgTimeAcceptance(integrals, delta_t, G, DG, DM, coeffs, t_offset, tLL, tUL);
+
+  ftype ta = integrals[0];
+  ftype tb = integrals[1];
+  ftype tc = integrals[2];
+  ftype td = integrals[3];
+
+  for(int k=0; k<10; k++)
+  {
+    result[0] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb + vc[k]*tc + vd[k]*td);
+    result[1] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb - vc[k]*tc - vd[k]*td);
+  }
+  #ifdef DEBUG
+  if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
+  {
+    printf("                   : t_offset=%+.16f  delta_t=%+.16f\n", t_offset, delta_t);
+  }
+  #endif
+}
+
+// }}}
+
+
+// Spline integration {{{
 
 WITHIN_KERNEL ftype get_int_ta_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ftype a,ftype b,ftype c,ftype d,ftype t_0,ftype t_1)
 {
@@ -642,46 +679,9 @@ void integralSpline( ftype result[2],
 
 
 
+// }}}
 
-
-
-
-
-
-
-
-WITHIN_KERNEL
-void integralFullSpline( ftype result[2],
-                         const ftype vn[10], const ftype va[10],const ftype vb[10], const ftype vc[10],const ftype vd[10],
-                         const ftype *norm, const ftype G, const ftype DG, const ftype DM,
-                         const ftype delta_t,
-                         const ftype tLL, const ftype tUL,
-                         const ftype t_offset,
-                         GLOBAL_MEM const ftype *coeffs)
-{
-  ftype integrals[4] = {0., 0., 0., 0.};
-  intgTimeAcceptance(integrals, delta_t, G, DG, DM, coeffs, t_offset, tLL, tUL);
-
-  ftype ta = integrals[0];
-  ftype tb = integrals[1];
-  ftype tc = integrals[2];
-  ftype td = integrals[3];
-
-  for(int k=0; k<10; k++)
-  {
-    result[0] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb + vc[k]*tc + vd[k]*td);
-    result[1] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb - vc[k]*tc - vd[k]*td);
-  }
-  #ifdef DEBUG
-  if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
-  {
-    printf("                   : t_offset=%+.16f  delta_t=%+.16f\n", t_offset, delta_t);
-  }
-  #endif
-}
-
-
-
+// Spline integration without resolution effects {{{
 
 WITHIN_KERNEL
 ctype getI(ctype z, int n, const ftype xmin, const ftype xmax)
@@ -731,6 +731,7 @@ ctype getI(ctype z, int n, const ftype xmin, const ftype xmax)
   }
   return C(0.,0.);
 }
+
 
 WITHIN_KERNEL
 void intgTimeAcceptance_wores(ftype time_terms[4], const ftype G,
@@ -787,10 +788,12 @@ void intgTimeAcceptance_wores(ftype time_terms[4], const ftype G,
   time_terms[3] = sqrt(0.5)*I_trig.y;
   }
 }
+
+
 WITHIN_KERNEL
 void integralFullSpline_wores( ftype result[2],
                          const ftype vn[10], const ftype va[10],const ftype vb[10], const ftype vc[10],const ftype vd[10],
-                         GLOBAL_MEM const ftype *norm, const ftype G, const ftype DG, const ftype DM,
+                         const ftype *norm, const ftype G, const ftype DG, const ftype DM,
                          const ftype tLL, const ftype tUL,
                          GLOBAL_MEM const ftype *coeffs)
 {
@@ -815,10 +818,12 @@ void integralFullSpline_wores( ftype result[2],
   #endif
 }
 
+// }}}
 
 
-////////////////////////////////////////////////////////////////////////////////
-// PDF = conv x sp1 ////////////////////////////////////////////////////////////
+// Decay-time acceptance computation pdfs {{{
+
+// PDF = conv x sp1 {{{
 
 WITHIN_KERNEL
 ftype getOneSplineTimeAcc(const ftype t,
@@ -934,10 +939,10 @@ ftype getOneSplineTimeAcc(const ftype t,
 
 }
 
+// }}}
 
 
-////////////////////////////////////////////////////////////////////////////////
-// PDF = conv x sp1 x sp2 //////////////////////////////////////////////////////
+// PDF = conv x sp1 x sp2 {{{
 
 WITHIN_KERNEL
 ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
@@ -1091,6 +1096,9 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
 
 }
 
+// }}}
+
+// }}}
 
 
-////////////////////////////////////////////////////////////////////////////////
+// vim:foldmethod=marker
