@@ -1,45 +1,29 @@
+# Modules {{{
+
 import re
-import os
 import hjson
 import numpy as np
-from ipanema import ristra
-
-
-# %%
-CONFIG = hjson.load(open('config.json'))
-SAMPLES_PATH = CONFIG['path']
-MAILS = CONFIG['mail']
-
-YEARS = {#
-  '2011': ['2011'],
-  '2012': ['2012'],
-  'Run1': ['2011','2012'],
-  'run1': ['2011','2012'],
-  '2015': ['2015'],
-  '2016': ['2016'],
-  'Run2a': ['2015','2016'],
-  'run2a': ['2015','2016'],
-  '2017': ['2017'],
-  '2018': ['2018'],
-  'Run2b': ['2017','2018'],
-  'run2b': ['2017','2018'],
-  'Run2': ['2015','2016','2017','2018'],
-  'run2': ['2015','2016','2017','2018']
-};
-
 from utils.strings import cammel_case_split, cuts_and
-import numpy as np
+from ipanema import ristra
+import config
+
+SAMPLES_PATH = config.user['path']
+MAILS = config.user['mail']
+
+YEARS = config.years
+
+# }}}
 
 
-
+# Guessers {{{
 
 def timeacc_guesser(timeacc):
   # Check if the tuple will be modified
   #pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9]knots)?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
-  pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[2-9])?(Noncorr)?(Flatend)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
+  pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[2-9])?(BuasBd)?(Noncorr)?(Flatend)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
   try:
-    acc, knots, corr, flat, lifecut, mini = p.search(timeacc).groups()
+    acc, knots, pipas, corr, flat, lifecut, mini = p.search(timeacc).groups()
     corr = False if corr=='Noncorr' else True
     mini = mini.lower() if mini else 'minuit'
     knots = int(knots) if knots else 3
@@ -100,7 +84,10 @@ def version_guesser(version):
   else:
     return v, int(100), None, None, None, None, None
 
+# }}}
 
+
+# Cuts and @ modifiers {{{
 
 def cut_translate(version_substring):
   vsub_dict = {
@@ -130,10 +117,10 @@ def cut_translate(version_substring):
   return f"( {' ) & ( '.join(list_of_cuts)} )"
 #version_guesser('v0r5@10')
 
+# }}}
 
 
-
-
+# Snakemake helpers {{{
 
 def tuples(wcs, version=False, year=None, mode=None, weight=None):
   # Get version withoud modifier
@@ -271,6 +258,161 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
   return path
 
 
+def timeress(wcs, version=False, year=False, mode=False, timeres=False):
+  if not version:
+    version = f"{wcs.version}"
+  if not year:
+    year = f"{wcs.year}"
+  if not timeres:
+    timeres = f"{wcs.timeres}"
+  if not mode:
+    mode = f"{wcs.mode}"
+
+  # loop over years and return list of time acceptances
+  ans = []
+  for y in YEARS[year]:
+    ans.append(f'output/params/time_resolution/{y}/{mode}/{version}_{timeres}.json')
+  return ans
+
+
+def csps(wcs, version=False, year=False, mode=False, csp=False):
+  if not version:
+    version = f"{wcs.version}"
+  if not year:
+    year = f"{wcs.year}"
+  if not csp:
+    csp = f"{wcs.csp}"
+  if not mode:
+    mode = f"{wcs.mode}"
+
+  # loop over years and return list of time acceptances
+  ans = []
+  for y in YEARS[year]:
+    ans.append(f'output/params/csp_factors/{y}/{mode}/{version}_{csp}.json')
+  return ans
+
+
+def flavors(wcs, version=False, year=False, mode=False, flavor=False):
+  if not version:
+    version = f"{wcs.version}"
+  if not year:
+    year = f"{wcs.year}"
+  if not flavor:
+    flavor = f"{wcs.flavor}"
+  if not mode:
+    mode = f"{wcs.mode}"
+
+  # loop over years and return list of time acceptances
+  ans = []
+  for y in YEARS[year]:
+    ans.append(f'output/params/flavor_tagging/{y}/{mode}/{version}_{flavor}.json')
+  return ans
+
+
+def timeaccs(wcs, version=False, year=False, mode=False, timeacc=False, trigger=False):
+  if not version:
+    version = f"{wcs.version}"
+  if not year:
+    year = f"{wcs.year}"
+  if not timeacc:
+    timeacc = f"{wcs.timeacc}"
+  if not trigger:
+    trigger = f"{wcs.trigger}"
+  if not mode:
+    mode = f"{wcs.mode}"
+
+  # select mode
+  if mode=='Bs2JpsiPhi':
+    if "BuasBd" in timeacc:
+      m = 'Bu2JpsiKplus'
+    elif timeacc.startswith('simul'):
+      m = 'Bd2JpsiKstar'
+    elif timeacc.startswith('single'):
+      if timeacc.endswith('DGn0'):
+        m = 'MC_Bs2JpsiPhi'
+      else:
+        m = 'MC_Bs2JpsiPhi_dG0'
+
+  # loop over years and return list of time acceptances
+  ans = []
+  for y in YEARS[year]:
+    ans.append(f'output/params/time_acceptance/{y}/{m}/{version}_{timeacc}_{trigger}.json')
+  return ans
+
+
+def angaccs(wcs, version=False, year=False, mode=False, timeacc=False,
+            angacc=False, csp=False, timeres=False, flavor=False,
+            trigger=False):
+  if not version:
+    version = f"{wcs.version}"
+  if not year:
+    year = f"{wcs.year}"
+  if not timeacc:
+    timeacc = f"{wcs.timeacc}"
+  if not angacc:
+    angacc = f"{wcs.angacc}"
+  if not flavor:
+    flavor = f"{wcs.flavor}"
+  if not csp:
+    csp = f"{wcs.csp}"
+  if not timeres:
+    timeres = f"{wcs.timeres}"
+  if not trigger:
+    trigger = f"{wcs.trigger}"
+  if not mode:
+    mode = f"{wcs.mode}"
+
+  # select mode
+  if angacc.startswith('naive') or angacc.startswith('corrected'):
+    # loop over years and return list of time acceptances
+    m = mode
+    ans = []
+    for y in YEARS[year]:
+      ans.append(f'output/params/angular_acceptance/{y}/{m}/{version}_{angacc}_{csp}_{trigger}.json')
+  elif angacc.startswith('analytic'):
+    print("To be implemented!!")
+  else:
+    m = mode
+    ans = []
+    for y in YEARS[year]:
+      ans.append(f'output/params/angular_acceptance/{y}/{m}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json')
+  return ans
+
+def sphyspar(wcs, version=False, year=False, mode=False, timeacc=False,
+            angacc=False, fit=False, csp=False, timeres=False, flavor=False,
+            trigger=False):
+  if not version:
+    version = f"{wcs.version}"
+  if not year:
+    year = f"{wcs.year}"
+  if not timeacc:
+    timeacc = f"{wcs.timeacc}"
+  if not angacc:
+    angacc = f"{wcs.angacc}"
+  if not flavor:
+    flavor = f"{wcs.flavor}"
+  if not csp:
+    csp = f"{wcs.csp}"
+  if not fit:
+    csp = f"{wcs.fit}"
+  if not timeres:
+    timeres = f"{wcs.timeres}"
+  if not trigger:
+    trigger = f"{wcs.trigger}"
+  if not mode:
+    mode = f"{wcs.mode}"
+
+  # select mode
+  m = mode
+  ans = []
+  for y in YEARS[year]:
+    ans.append(f'output/params/physics_params/{y}/{m}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json')
+  return ans
+# }}}
+
+
+# Send mail {{{
+
 def send_mail(subject, body, files=None):
   import os
   body = os.path.abspath(body)
@@ -288,12 +430,16 @@ def send_mail(subject, body, files=None):
     else:
       # If it's a log file, then we try to force monospace fonts in mails
       # maybe not all of the email apps can read it as monospaced
-      # WIP
+      # WIP:
       start = f'Content-Type: text/html\nSubject: {subject}\n<pre style="font: monospace">'
       end = '</pre>'
       cmd = f'echo "{start}\n`cat {body}`\n{end}"'
       os.system(f"""ssh master '{cmd} | /usr/sbin/sendmail {mail}'""")
 
+# }}}
+
+
+# Other utils {{{
 
 def trigger_scissors(trigger, CUT=""):
   if trigger == 'biased':
@@ -306,6 +452,8 @@ def trigger_scissors(trigger, CUT=""):
 def swnorm(sw):
   sw_ = ristra.get(sw)
   return ristra.allocate(sw_*(np.sum(sw_)/np.sum(sw_**2)))
+
+# }}}
 
 
 # vim: foldmethod=marker
