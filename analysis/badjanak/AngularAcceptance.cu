@@ -36,7 +36,7 @@ void angWeightsToMoments(ftype *tijk, GLOBAL_MEM const ftype *nw)
 
 WITHIN_KERNEL
 ftype angular_wefficiency(const ftype cosK, const ftype cosL, const ftype phi,
-                          const ftype *nw)
+                          GLOBAL_MEM const ftype *nw)
 {
   ftype eff = 0.;
   ftype tijk[10];
@@ -327,7 +327,7 @@ void pyangular_efficiency(GLOBAL_MEM ftype *out, GLOBAL_MEM const ftype *cijk,
  * described by legendre polynomials
  */
 WITHIN_KERNEL
-void tijk2weights(ftype *w, const ftype *tijk, const int order_cosK, 
+void tijk2weights(GLOBAL_MEM ftype *w, GLOBAL_MEM const ftype *tijk, const int order_cosK, 
                   const int order_cosL, const int order_hphi)
 {
 
