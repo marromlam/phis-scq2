@@ -1,7 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                         DIFFERENTIAL CROSS RATE                            //
-//                                                                            //
 //   Created: 2020-06-25                                                      //
 //    Author: Marcos Romero Lamas (mromerol@cern.ch)                          //
 //                                                                            //
@@ -18,16 +16,12 @@ ftype getDiffRateBd(const ftype *data,
                     const ftype ASlon, const ftype APlon, const ftype APpar,
                     const ftype APper, const ftype dSlon, const ftype dPlon,
                     const ftype dPpar, const ftype dPper,
-                    // Time Limints
                     const ftype tLL, const ftype tUL,
-                    // Angular acceptance
-                    GLOBAL_MEM  const ftype *angular_weights,
+                    GLOBAL_MEM const ftype *angular_weights,
                     const int USE_FK, const int USE_ANGACC
                   )
 {
-
-
-  // Variables -----------------------------------------------------------------
+  // Variables {{{
   //     Make sure that the input it's in this order.
   //     lalala
   ftype cosK       = data[0];                      // Time-angular distribution
@@ -52,11 +46,20 @@ ftype getDiffRateBd(const ftype *data,
             ASlon, APlon, APpar, APper, CSP);
   }
   #endif
-  // Flavor tagging ------------------------------------------------------------
+
+  // }}}
+
+
+  // Flavor tagging {{{
+  
   ftype id;
   id = qOS/fabs(qOS);
+  
+  // }}}
+  
 
-  // Compute per event pdf -----------------------------------------------------
+  // Compute per event pdf {{{
+
   ftype fk, ak;
   ftype num_t, tnorm;
   ftype pdfB = 0.0;
@@ -96,7 +99,7 @@ ftype getDiffRateBd(const ftype *data,
   }
   pdfB = num_t*pdfB;
   norm = tnorm*norm;
-
+  
   #if DEBUG
   if ( DEBUG >= 1  && get_global_id(0) == DEBUG_EVT)
   {
@@ -109,6 +112,11 @@ ftype getDiffRateBd(const ftype *data,
     }
   }
   #endif
+  // }}}
+
 
   return pdfB/norm;
 }
+
+
+// vim:foldmethod=marker
