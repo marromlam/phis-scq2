@@ -11,5 +11,7 @@
   "randomize_variables": true,
   "randomize_timeacc": false,
   "randomize_angacc": false,
-  "randomize_flavor": false
+  "randomize_flavor": false,
+  "velo_effmodel": "francesca",
+  "velo_massmodel": "cb"
 }
