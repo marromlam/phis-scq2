@@ -21,17 +21,19 @@ from ipanema import ristra, Parameters, Sample, plot_conf2d, Optimizer
 
 # import some phis-scq utils
 from utils.plot import mode_tex
-from utils.strings import cuts_and, printsec
+from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
 
+import config
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 # Parse arguments for this script
 def argument_parser():
@@ -57,6 +59,7 @@ if __name__ != '__main__':
 if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
+  printsec("Time acceptance procedure")
   args = vars(argument_parser().parse_args())
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
@@ -69,14 +72,11 @@ if __name__ == '__main__':
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-  print("CUT is (but I will not care about it)", CUT)
-
   CUT = trigger_scissors(TRIGGER)          # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   # Print settings
-  printsec("Settings")
+  printsubsec("Settings")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
 
   # Get data into categories ---------------------------------------------------
-  printsec(f"Loading categories")
+  printsubsec(f"Loading categories")
 
   def samples_to_cats(samples, correct, oddity):
     cats = {}
@@ -103,6 +103,7 @@ if __name__ == '__main__':
   cats = {}
   for i,m in enumerate(samples):
     # Correctly apply weight and name for diffent samples
+    # MC_Bs2JpsiPhi {{{
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
       m = 'MC_Bs2JpsiPhi'
       if CORRECT:
@@ -113,6 +114,8 @@ if __name__ == '__main__':
       if EVT == 'evtOdd':
         weight = f"oddWeight*{weight}"
       mode = 'signalMC'; c = 'a'
+    # }}}
+    # MC_Bs2JpsiPhi_dG0 {{{
     elif 'MC_Bs2JpsiPhi_dG0' in m:
       m = 'MC_Bs2JpsiPhi_dG0'
       if CORRECT:
@@ -123,6 +126,8 @@ if __name__ == '__main__':
       if EVT == 'evtOdd':
         weight = f"oddWeight*{weight}"
       mode = 'signalMC'; c = 'a'
+    # }}}
+    # MC_Bd2JpsiKstar {{{
     elif 'MC_Bd2JpsiKstar' in m:
       m = 'MC_Bd2JpsiKstar'
       if CORRECT:
@@ -133,6 +138,8 @@ if __name__ == '__main__':
       if EVT == 'evtOdd':
         weight = f"oddWeight*{weight}"
       mode = 'controlMC'; c = 'b'
+    # }}}
+    # Bd2JpsiKstar {{{
     elif 'Bd2JpsiKstar' in m:
       m = 'Bd2JpsiKstar'
       if CORRECT:
@@ -140,6 +147,29 @@ if __name__ == '__main__':
       else:
         weight = f'{sWeight}'
       mode = 'controlRD'; c = 'c'
+    # }}}
+    # MC_Bu2JpsiKplus {{{
+    elif 'MC_Bu2JpsiKplus' in m:
+      m = 'MC_Bu2JpsiKplus'
+      if CORRECT:
+        weight = f'kinWeight*polWeight*{sWeight}'
+      else:
+        weight = f'{sWeight}'
+      # apply oddWeight if evtOdd in filename
+      if EVT == 'evtOdd':
+        weight = f"oddWeight*{weight}"
+      mode = 'controlMC'; c = 'b'
+    # }}}
+    # Bu2JpsiKplus {{{
+    elif 'Bu2JpsiKplus' in m:
+      m = 'Bu2JpsiKplus'
+      if CORRECT:
+        weight = f'kinWeight*{sWeight}'
+        weight = f'{sWeight}'  # TODO: fix kinWeight here, it should exist and be a reweight Bu -> Bs
+      else:
+        weight = f'{sWeight}'
+      mode = 'controlRD'; c = 'c'
+    # }}}
     print(weight)
 
     # Load the sample
@@ -191,7 +221,7 @@ if __name__ == '__main__':
 
 
   # Time to fit ----------------------------------------------------------------
-  printsec(f"Simultaneous minimization procedure")
+  printsubsec(f"Simultaneous minimization procedure")
   fcn_call = fcns.saxsbxscxerf
   fcn_pars = cats['signalMC'].params+cats['controlMC'].params+cats['controlRD'].params
   fcn_kwgs={
@@ -248,5 +278,6 @@ if __name__ == '__main__':
     cat.params = cat.knots + cat.params
     cat.params.dump(cats[name].pars_path)
 
-################################################################################
+
+# vim:foldmethod=marker
 # that's all folks!

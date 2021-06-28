@@ -24,16 +24,18 @@ from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
 
+import config
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 if __name__ != '__main__':
-  initialize(os.environ['IPANEMA_BACKEND'],1)
+  initialize(os.environ['IPANEMA_BACKEND'], 1)
   from time_acceptance.fcn_functions import splinexerf
 
 ################################################################################
@@ -67,7 +69,11 @@ if __name__ == '__main__':
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = f'time>={tLL} & time<={tUL}'
+  if EVT in ('evtOdd', 'evtEven'):
+    time = 'gentime'
+  else:
+    time = 'time'
+  CUT = f'{time}>={tLL} & {time}<={tUL}'
   CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
 
   # Print settings
@@ -104,7 +110,8 @@ if __name__ == '__main__':
         weight = f'dg0Weight*{sWeight}/gb_weights'
       # apply oddWeight if evtOdd in filename
       if EVT in ('evtEven', 'evtOdd'):
-        weight = weight.replace('pdfWeight', 'oddWeight')
+        weight = weight.replace('pdfWeight', 'dg0Weight*oddWeight')
+        weight = weight.replace('dg0Weight', 'dg0Weight*oddWeight')
       mode = 'signalMC'; c = 'a'
     elif 'MC_Bs2JpsiPhi_dG0' in m:
       m = 'MC_Bs2JpsiPhi_dG0'
@@ -147,9 +154,10 @@ if __name__ == '__main__':
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    cats[mode].allocate(time='time', lkhd='0*time')
+    cats[mode].allocate(time=time, lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
+    print(cats[mode])
 
     # Add knots
     cats[mode].knots = Parameters()
