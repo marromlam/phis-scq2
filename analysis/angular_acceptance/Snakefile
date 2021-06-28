@@ -421,7 +421,7 @@ rule angular_acceptance_iterative_mc_run2a:
       SAMPLES_PATH+'2015/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
       SAMPLES_PATH+'2016/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
-    params = 'tmp/params/physics_params/run2a/{mode}/{version}_{angacc}_{timeacc}.json'
+    params = 'tmp/params/physics_params/run2a/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.json'
   log:
     'output/log/angular_acceptance_iterative_mc/run2a/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
   run:
@@ -758,8 +758,8 @@ rule angular_acceptance_iterative_dual_data_run2:
   input:
     sample_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2'),
     sample_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2'),
-    weights_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2', weight=f'angWeight'),
-    weights_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2', weight=f'angWeight'),
+    weights_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2', angacc='corrected', weight=f'angWeight'),
+    weights_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2', angacc='corrected', weight=f'angWeight'),
     sample_data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', year='run2'),
     angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2', csp='none', angacc='corrected', trigger='biased'),
     angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2', csp='none', angacc='corrected', trigger='unbiased'),

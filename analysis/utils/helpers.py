@@ -169,7 +169,7 @@ def cut_translate(version_substring):
 
 # Snakemake helpers {{{
 
-def tuples(wcs, version=False, year=None, mode=None, csp=False, weight=None):
+def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, weight=None):
   # Get version withoud modifier
   if not version:
     version = f"{wcs.version}"
@@ -187,6 +187,9 @@ def tuples(wcs, version=False, year=None, mode=None, csp=False, weight=None):
 
   if not csp:
     csp = 'none'
+
+  if not angacc:
+    angacc = 'corrected'
 
   # Check modifiers for mode
   if mode:
@@ -315,10 +318,9 @@ def tuples(wcs, version=False, year=None, mode=None, csp=False, weight=None):
       terms = [y, m, v]
       if weight:
         if weight=='angWeight':
-          print('ola')
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'{wcs.angacc}_{csp}_{weight}.root' )
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root' )
         elif weight=='kkpWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{wcs.angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root' )
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root' )
         else:
           path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
       else:
@@ -328,10 +330,9 @@ def tuples(wcs, version=False, year=None, mode=None, csp=False, weight=None):
     terms = [y, m, v]
     if weight:
         if weight=='angWeight':
-          print(wcs)
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'{wcs.angacc}_{csp}_{weight}.root'
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root'
         elif weight=='kkpWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{wcs.angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root'
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root'
         else:
           path =  SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
     else:
