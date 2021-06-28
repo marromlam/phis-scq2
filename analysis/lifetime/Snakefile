@@ -1,6 +1,9 @@
+# LIFETIME
+#
+#
 
 
-# lifetime trend plot {{{
+# Lifetime trend plot {{{
 
 rule lifetime_trend:
   input:
@@ -26,3 +29,94 @@ rule lifetime_trend:
     ) #&> {log}""")
 
 # }}}
+
+
+# Lifetime tables {{{
+#    Create liftetime tables
+
+rule pack_lifetime_Bu:
+  wildcard_constraints:
+    mode = 'Bu2JpsiKplus'
+  resources:
+    mem_mb=1048
+  input:
+    corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_lifeBu{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
+    noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_lifeBu{{timeacc}}Noncorr.json', year=YEARS[f'{wcs.year}']),
+  output:
+    'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_life{timeacc}.tex',
+  log:
+    'output/log/pack_time_acceptance/{year}/{mode}/{version}_life{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python analysis/lifetime/lifetime_tables.py\
+    --corr {",".join(input.corr)}\
+    --noncorr {",".join(input.noncorr)}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --year {",".join(YEARS[f"{wildcards.year}"])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    ) &> {log}""")
+    if NOTE:
+      shell(f"cp {output} {NOTE}/tables/time_acceptance/{wildcards.year}/{wildcards.mode}/{wildcards.version}_life{wildcards.timeacc}.tex")
+
+
+rule tab_lifetime_single:
+  wildcard_constraints:
+    timeacc = 'single.*'
+  resources:
+    mem_mb=1048
+  input:
+    corr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_{{trigger}}.json',
+                              year=YEARS[f'{wcs.year}']),
+    noncorr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}Noncorr_{{trigger}}.json',
+                                 year=YEARS[f'{wcs.year}']),
+  output:
+    'output/tables/lifetime/{year}/{mode}/{version}_life{timeacc}_{trigger}.tex',
+  log:
+    'output/log/tab_lifetime_single/{year}/{mode}/{version}_life{timeacc}_{trigger}.log'
+  run:
+    shell(f"""(time\
+    python analysis/lifetime/lifetime_tables.py\
+    --corr {",".join(input.corr)}\
+    --noncorr {",".join(input.noncorr)}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --year {",".join(YEARS[f"{wildcards.year}"])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    ) &> {log}""")
+    if NOTE:
+      shell(f"cp {output} {NOTE}/tables/time_acceptance/{wildcards.year}/{wildcards.mode}/{wildcards.version}_life{wildcards.timeacc}.tex")
+
+
+rule pack_lifetime_Bd:
+  wildcard_constraints:
+    mode = 'Bd2JpsiKstar'
+  resources:
+    mem_mb=1048
+  input:
+    corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_lifeBd{{timeacc}}{mod}.json', year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
+    noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_lifeBd{{timeacc}}Noncorr{mod}.json', year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
+  output:
+    'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_life{timeacc}.tex',
+  log:
+    'output/log/pack_time_acceptance/{year}/{mode}/{version}_life{timeacc}.log'
+  run:
+    shell(f"""(time\
+    python analysis/lifetime/lifetime_tables.py\
+    --corr {",".join(input.corr)}\
+    --noncorr {",".join(input.noncorr)}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --year {",".join(YEARS[f"{wildcards.year}"])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    ) &> {log}""")
+    if NOTE:
+      shell(f"cp {output} {NOTE}/tables/time_acceptance/{wildcards.year}/{wildcards.mode}/{wildcards.version}_life{wildcards.timeacc}.tex")
+
+# }}}
+
+
+# vim:foldmethod=marker
