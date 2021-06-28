@@ -3,5 +3,6 @@
   "bdt_tests": 100,
   "tLL": 0.3,
   "tUL": 15,
-  "ntoys": 4000
+  "ntoys": 4000,
+  "oddWeight": "mochito"
 }
