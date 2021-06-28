@@ -826,10 +826,9 @@ void integralFullSpline_wores( ftype result[2],
 // PDF = conv x sp1 {{{
 
 WITHIN_KERNEL
-ftype getOneSplineTimeAcc(const ftype t,
-                             GLOBAL_MEM const ftype *coeffs,
-                             const ftype sigma, const ftype gamma,
-                             const ftype tLL, const ftype tUL)
+ftype getOneSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs,
+                          const ftype sigma, const ftype gamma,
+                          const ftype tLL, const ftype tUL)
 {
   // Compute pdf value
   ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
