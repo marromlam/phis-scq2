@@ -1,322 +1,755 @@
 common: &common
   "time" :
-    latex_name: $t$
+    peval: 'time'
+    latex: 't'
     range : [0.3,15.0]
+    units : 'ps'
+    descr : '' 
   "sigmat" :
-    latex_name: $\sigma_t$
-    range: [0.0, 10.0]
+    peval : 'sigmat'
+    latex: '\sigma_t'
+    range: [0.0, 0.13]
+    units : 'ps'
+    descr : ''
   "logMINmuPNNmu" :
-    latex_name: $\mathrm{log} PNN_{\mu,min}$
+    peval : "log_min_K_PNNk_mva"
+    latex: '\mathrm{log} PNN_{\mu,min}'
     range: [-6.0, 0.0]
+    units : ''
+    descr : ''
   "MUmaxTRchi2" :
-    latex_name: $TR_{\chi^2, max} \mu$
+    peval : "max_mu_TRCHI2_mva"
+    latex: 'TR_{\chi^2, max} \mu'
     range: [0.3, 3.5]
+    units : ''
+    descr : ''
   "logJpsiVXchi2" :
-    latex_name: $log \chi^2_{VX} J/\psi$
+    peval : "log_Jpsi_VX_CHI2NDOF_mva"
+    latex: 'log \chi^2_{VX} J/\psi'
     range: [-30.0, 1.0]
+    units : ''
+    descr : ''
   "cosK" :
-    latex_name: $\cos \theta_K$
+    peval : "helcosthetaK"
+    latex: '\cos \theta_K'
     range: [-1.0, 1.0]
+    units : ''
+    descr : ''
   "cosL" :
-    latex_name: $\cos \theta_{\mu}$
+    peval : "helcosthetaL"
+    latex: '\cos \theta_{\mu}'
     range: [-1.0, 1.0]
+    units : ''
+    descr : ''
   "hphi" :
-    latex_name: $\phi$
+    peval : "helphi"
+    latex: '\phi'
     range: [-3.142, 3.142]
-
+    units : 'rad'
+    descr : ''
+  "idB" :
+    peval : "B_ID"
+    latex : "B_{ID}"
+    range : [-1000.0, 1000.0]
+    units : ''
+    descr : ''
+  "idHH" : 
+    peval: "X_ID"
+    latex: "X_{ID}"
+    range: []
+    units : ''
+    descr : ''
+  "hlt1b": 
+    peval: "hlt1b"
+    latex: "trigger"
+    range: []
+    units: ''
+    descr: ''
+  "Jpsi_Hlt1DiMuonHighMassDecision_TOS":
+    peval : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
+    latex : ""
+    range : []
+    units : ''
+    descr : ''
+  "magnet" : 
+    peval : "Polarity"
+    latex : "magnet"
+    range : [-1.5, 1.5]
+    units : ''
+    descr : ''
+  "evtN" : 
+    peval : "eventNumber"
+    latex : "evtNumber"
+    range : []
+    units : ''
+    descr : ''
+  "runNumber" : 
+    peval : "runNumber"
+    latex : "runNumber"
+    range : []
+    units : ''
+    descr : ''
+  "sw" :
+    peval : "sw"
+    latex : "sw"
+    range : []
+    units : ''
+    descr : ''
+  "veloWeight" : 
+    peval : "veloWeight"
+    latex : "Velo Weight"
+    range : []
+    units : ''
+    descr : ''
+  "sWeight" : 
+    peval : "sw"
+    latex : "s_{w}"
+    range : []
+    units : ''
+    descr : ''
 
 Bs_common: &Bs_common
   #cinematics
   "pHp" :
-    latex_name : $p(K^+)$
+    peval : "hplus_P"
+    latex : 'p(K^+)'
     range : [0.0, 1.5e+5]
+    units : 'MeV'
+    descr : ''
   "pTHp" :
-    latex_name : $p_T(K^+)$
+    peval : "hplus_PT"
+    latex : 'p_T(K^+)'
     range: [0.0, 1.0e+4]
+    units : 'MeV'
+    descr : ''
   "pHm" :
-    latex_name : $p(K^-)$
+    peval : "hminus_P"
+    latex : 'p(K^-)'
     range: [0.0, 1.5e+5]
+    units : 'MeV'
+    descr : ''
   "pTHm" :
-    latex_name : $p_t(K^-)$
+    peval : "hminus_PT"
+    latex : 'p_t(K^-)'
     range: [0.0, 1.0e+4]
+    units : 'MeV'
+    descr : ''
   "mHH" :
-    latex_name : $m_{K^+K^-}$
+    peval : "X_M"
+    latex : 'm_{K^+K^-}'
     range: [990, 1050]
+    units : 'MeV'
+    descr : ''
   "pTB" :
-    latex_name: $P_T(B_s)$
+    peval : 'B_PT'
+    latex: 'P_T(B_s)'
     range: [0.0, 4.0e+4]
+    units : 'MeV'
+    descr : ''
   "pB" :
-    latex_name: $P(B_s)$
+    peval : 'B_P'
+    latex: 'P(B_s)'
     range: [0.0, 8.0e+5]
+    units : 'MeV'
+    descr : ''
   "etaB" :
-    latex_name: $\eta_{B_s}$
+    peval : 'B_ETA'
+    latex: '\eta_{B_s}'
     range: [2, 5]
+    units : ''
+    descr : ''
   "logIPchi2B" :
-    latex_name : $\mathrm{log} \chi^2 IP_{B_s}$
+    peval : 'log_B_IPCHI2_mva'
+    latex : '\mathrm{log} \chi^2 IP_{B_s}'
     range: [-12.0, 12.0]
+    units : ''
+    descr : ''
   "BDTFchi2" :
-    latex_name: $\chi^2_{DTF} B_s$
+    peval : "B_DTF_CHI2NDOF"
+    latex: '\chi^2_{DTF} B_s'
     range: [0.0, 8.0]
+    units : ''
+    descr : ''
   "logMINkPNNk" :
-    latex_name: $\mathrm{log} PNN_{k,min}$
+    peval : "log_min_K_PNNk_mva"
+    latex: '\mathrm{log} PNN_{k,min}'
     range: [-6.0, 0.0]
+    units : ''
+    descr : ''
   "BVXchi2" :
-    latex_name: $\chi^2 B_s VX$
+    peval : "B_VX_CHI2NDOF_mva"
+    latex: '\chi^2 B_s VX'
     range: [0.0,20.0]
+    units : ''
+    descr : ''
   "pTX" :
-    latex_name: $P_T (\phi)$
+    peval : "X_PT"
+    latex: 'P_T (\phi)'
     range: [0.0, 2.5e+4]
+    units : ''
+    descr : ''
   "KmaxTRchi2" :
-    latex_name: $TR_{\chi^2, max} K$
+    peval : "max_K_TRCHI2_mva"
+    latex: 'TR_{\chi^2, max} K'
     range: [0.3, 3.5]
+    units : ''
+    descr : ''
   #plots MC vs data non reduced:
-  "sigmat" :
-    latex_name: $\sigma_t$
-    range: [0.0, 0.13] 
   "B_LOKI_DTF_CTAU":
-    latex_name: $B\_LOKI\_DTF_CTAU$
+    peval: 'B_LOKI_DTF_CTAU'
+    latex: 'B\_LOKI\_DTF_CTAU'
     range: [0., 2.] 
+    units: ''
+    descr: ''
   "B_LOKI_DTF_CTAUERR":
-    latex_name: $B\_LOKI\_DTF\_CTAUERR$
+    peval: 'B_LOKI_DTF_CTAUERR'
+    latex: 'B\_LOKI\_DTF\_CTAUERR'
     range: [0.0, 0.04] 
+    units : ''
+    descr: ''
   "B_IPCHI2_OWNPV":
-    latex_name: $B\_IPCHI2\_OWNPV$
+    peval: 'B_IPCHI2_OWNPV'
+    latex: 'B\_IPCHI2\_OWNPV'
     range: [0.0, 10.0] 
-  "nTracks":
-    latex_name: $nTracks$
-    range: [0., 1000.]
-  "nLongTracks":
-    latex_name: $nLongTracks$
-    range: [0. ,180.]
-  "nSPDHits":
-    latex_name: $nSPDHits$
-    range: [0., 1200]
+    units : ''
+    descr : ''
+  # "nTracks":
+  #   peval : 'nTracks'
+  #   latex: 'nTracks'
+  #   range: [0., 1000.]
+  # "nLongTracks":
+  #   latex: 'nLongTracks'
+  #   range: [0. ,180.]
+  # "nSPDHits":
+  #   latex: 'nSPDHits'
+  #   range: [0., 1200]
   "hplus_TRACK_CHI2NDOF":
-    latex_name: $K^{+}_{TRACK, \chi2_{ndof}}$
+    peval: 'hplus_TRACK_CHI2NDOF'
+    latex: 'K^{+}_{TRACK, \chi2_{ndof}}'
     range: [0., 5.] 
-  "hplus_ProbNNk":
-    latex_name: $K^{+}_{ProbK}$
-    range: [-0.2, 1.2]
-  "hplus_ProbNNpi":
-    latex_name: $K^{+}_{Prob\pi}$
-    range: [-0.2, 1.2]
-  "hplus_ProbNNp":
-    latex_name: $K^{+}_{Probp}$
-    range: [-0.2, 1.2]
+    units : ''
+    descr : ''
+  # "hplus_ProbNNk":
+  #   latex: 'K^{+}_{ProbK}'
+  #   range: [-0.2, 1.2]
+  # "hplus_ProbNNpi":
+  #   latex: 'K^{+}_{Prob\pi}'
+  #   range: [-0.2, 1.2]
+  # "hplus_ProbNNp":
+  #   latex: 'K^{+}_{Probp}'
+  #   range: [-0.2, 1.2]
   "hminus_TRACK_CHI2NDOF":
-    latex_name: $K^{-}_{TRACK, \chi2_{ndof}}$
+    peval : 'hminus_TRACK_CHI2NDOF'
+    latex: 'K^{-}_{TRACK, \chi2_{ndof}}'
     range: [0.2, 2.2]
-  "hminus_ProbNNk":
-    latex_name: $K^{-}_{ProbK}$
-    range: [-0.2, 1.2]
-  "hminus_ProbNNpi":
-    latex_name: $K^{-}_{Prob\pi}$
-    range: [-0.2, 1.2]
-  "muplus_TRACK_CHI2NDOF":
-    latex_name: $\mu^{+}_{TRACK, \chi2_{ndof}}$
-    range: [0., 3.]
-  "muplus_ProbNNmu":
-    latex_name: $\mu^{+}_{Prob\mu}$
-    range: [-0.2, 1.2]
-  "muplus_PIDmu":
-    latex_name: $\mu^{+}_{PID}$
-    range: [-1., 16.]
+    units : ''
+    descr : ''
+  # "hminus_ProbNNk":
+  #   latex: 'K^{-}_{ProbK}'
+  #   range: [-0.2, 1.2]
+  # "hminus_ProbNNpi":
+  #   latex: 'K^{-}_{Prob\pi}'
+  #   range: [-0.2, 1.2]
+  # "muplus_TRACK_CHI2NDOF":
+  #   latex: '\mu^{+}_{TRACK, \chi2_{ndof}}'
+  #   range: [0., 3.]
+  # "muplus_ProbNNmu":
+  #   latex: '\mu^{+}_{Prob\mu}'
+  #   range: [-0.2, 1.2]
+  # "muplus_PIDmu":
+  #   latex: '\mu^{+}_{PID}'
+  #   range: [-1., 16.]
   "muminus_TRACK_CHI2NDOF":
-    latex_name: $\mu^{-}_{TRACK, \chi2_{ndof}}$
+    peval : 'muminus_TRACK_CHI2NDOF'
+    latex: '\mu^{-}_{TRACK, \chi2_{ndof}}'
     range: [0.1, 2.5]
-  "muminus_ProbNNmu":
-    latex_name: $\mu^{-}_{Prob\mu}$
-    range: [-0.2, 1.2]
-  "muminus_PIDmu":
-    latex_name: $\mu^{-}_{PID}$
-    range: [-1., 16.]
-  "hplus_PIDK":
-    latex_name: $K^{+}_{PID}$
-    range: [-2., 100. ]
-  "B_DTF_CHI2NDOF": 
-    latex_name: $B_DTF_{\chi2,ndof}$
+    units : ''
+    descr : ''
+  # "muminus_ProbNNmu":
+  #   latex: '\mu^{-}_{Prob\mu}'
+  #   range: [-0.2, 1.2]
+  # "muminus_PIDmu":
+  #   latex: '\mu^{-}_{PID}'
+  #   range: [-1., 16.]
+  # "hplus_PIDK":
+  #   latex: 'K^{+}_{PID}'
+  #   range: [-2., 100. ]
+  "BDTFchi2": 
+    peval : 'B_DTF_CHI2NDOF'
+    latex: 'B_DTF_{\chi2,ndof}'
     range: [-0.2, 8.]
-  "B_FDS": 
-    latex_name: $B\_FDS$
-    range: [-0.2, 200.]
-  "B_M":
-    latex_name: $B_M$
-    range: [5190, 5600]
-  "B_ETA":
-    latex_name: $\eta_{B}$
-    range: [1.5, 7.]
-  "beam_shift_X":
-    latex_name: $Beam\_shift_X$
-    range: [0.65, 0.95]
-  "beam_shift_Y":
-    latex_name: $Beam\_shift_Y$
-    range: [0.0, 0.3]
-  "B_pKMuMuKminus_M_1":
-    latex_name: $B\_pKMuMuKminus\_M\_1$
-    range: [5400, 6200]
-  "B_B2KpPiJpsi_M_1":
-    latex_name: $B_B2KpPiJpsi\_M\_1$
-    range: [4600, 5600]
-  "B_B2KmPiJpsi_M_1":
-    latex_name: $B\_B2KpPiJpsi\_M\_1$
-    range: [4600, 5600]
-  "X_ENDVERTEX_CHI2":
-    latex_name: $\Phi_{EndVertex,\chi^2 }$     
-    range: [-0.2, 1.2]
-  "docaz_muminus":
-    latex_name: $DOCAZ_{mu^{-}}$
-    range: [-0.1, 2.5]
-  "docaz_muplus":
-    latex_name: $DOCAZ_{mu^{+}}$
-    range: [-0.1, 2.5]
-  "docaz_hminus":
-    latex_name: $DOCAZ_{K^{-}}$
-    range: [-0.1, 2.5]
-  "docaz_hplus":
-    latex_name: $DOCAZ_{K^{+}}$
-    range: [-0.1, 2.5]
-  "muplus_ProbNNmu_corr":
-    latex_name: $\mu^{+}_{Prob\mu, corr}$
-    range: [0., 1.2]
-  "muminus_ProbNNmu_corr":
-    latex_name: $\mu^{-}_{Prob\mu, corr}$
-    range: [0., 1.2]
-  "hplus_ProbNNpi_corr":
-    latex_name: $K^{+}_{Prob\pi, corr}$
-    range: [0., 1.2]
-  "hplus_ProbNNp_corr":
-    latex_name: $K^{+}_{Probp, corr}$
-    range: [0., 1.2]
-  "hplus_ProbNNk_corr":
-    latex_name: $K^{+}_{ProbK, corr}$
-    range: [0., 1.2]
-  "hminus_ProbNNpi_corr":
-    latex_name: $K^{-}_{Prob\pi, corr}$
-    range: [0., 1.2]
-  "hminus_ProbNNp_corr":
-    latex_name: $K^{-}_{Probp, corr}$
-    range: [0., 1.2]
-  "hminus_ProbNNk_corr":
-    latex_name: $K^{-}_{ProbK, corr}$
-    range: [0., 1.2]
+  # "B_FDS": 
+  #   latex: 'B\_FDS'
+  #   range: [-0.2, 200.]
+  # "B_M":
+  #   latex: 'B_M'
+  #   range: [5190, 5600]
+  # "B_ETA":
+  #   latex: '\eta_{B}'
+  #   range: [1.5, 7.]
+  # "beam_shift_X":
+  #   latex: 'Beam\_shift_X'
+  #   range: [0.65, 0.95]
+  # "beam_shift_Y":
+  #   latex: 'Beam\_shift_Y'
+  #   range: [0.0, 0.3]
+  # "B_pKMuMuKminus_M_1":
+  #   latex: 'B\_pKMuMuKminus\_M\_1'
+  #   range: [5400, 6200]
+  # "B_B2KpPiJpsi_M_1":
+  #   latex: 'B_B2KpPiJpsi\_M\_1'
+  #   range: [4600, 5600]
+  # "B_B2KmPiJpsi_M_1":
+  #   latex: 'B\_B2KpPiJpsi\_M\_1'
+  #   range: [4600, 5600]
+  # "X_ENDVERTEX_CHI2":
+  #   latex: '\Phi_{EndVertex,\chi^2 }'     
+  #   range: [-0.2, 1.2]
+  # "docaz_muminus":
+  #   latex: 'DOCAZ_{mu^{-}}'
+  #   range: [-0.1, 2.5]
+  # "docaz_muplus":
+  #   latex: 'DOCAZ_{mu^{+}}'
+  #   range: [-0.1, 2.5]
+  # "docaz_hminus":
+  #   latex: 'DOCAZ_{K^{-}}'
+  #   range: [-0.1, 2.5]
+  # "docaz_hplus":
+  #   latex: 'DOCAZ_{K^{+}}'
+  #   range: [-0.1, 2.5]
+  # "muplus_ProbNNmu_corr":
+  #   latex: '\mu^{+}_{Prob\mu, corr}'
+  #   range: [0., 1.2]
+  # "muminus_ProbNNmu_corr":
+  #   latex: '\mu^{-}_{Prob\mu, corr}'
+  #   range: [0., 1.2]
+  # "hplus_ProbNNpi_corr":
+  #   latex: 'K^{+}_{Prob\pi, corr}'
+  #   range: [0., 1.2]
+  # "hplus_ProbNNp_corr":
+  #   latex: 'K^{+}_{Probp, corr}'
+  #   range: [0., 1.2]
+  # "hplus_ProbNNk_corr":
+  #   latex: 'K^{+}_{ProbK, corr}'
+  #   range: [0., 1.2]
+  # "hminus_ProbNNpi_corr":
+  #   latex: 'K^{-}_{Prob\pi, corr}'
+  #   range: [0., 1.2]
+  # "hminus_ProbNNp_corr":
+  #   latex: 'K^{-}_{Probp, corr}'
+  #   range: [0., 1.2]
+  # "hminus_ProbNNk_corr":
+  #   latex: 'K^{-}_{ProbK, corr}'
+  #   range: [0., 1.2]
   "max_K_TRCHI2_mva":
-    latex_name: $K_{max, TR\chi^2 mva}$
+    peval : 'max_K_TRCHI2_mva'
+    latex: 'K_{max, TR\chi^2 mva}'
     range: [0.4, 3.2]
-  "log_min_K_PNNk_mva":
-    latex_name: $log_{min}\_K\_{PNNk}_{mva}$
-    range: [-1., 0.3]
+    units : ''
+    descr: ''
+  # "log_min_K_PNNk_mva":
+  #   latex: 'log_{min}\_K\_{PNNk}_{mva}'
+  #   range: [-1., 0.3]
   "max_mu_TRCHI2_mva":
-    latex_name: $\mu_{max, TR\chi^2 mva}$
+    peval : 'max_mu_TRCHI2_mva'
+    latex: '\mu_{max, TR\chi^2 mva}'
     range: [0.4, 3.]
-  "log_min_mu_PNNmu_mva":
-    latex_name: $log_{min}\_\mu\_{PNN\mu}_{mva}$
-    range: [-1., 0.3]
-  "log_Jpsi_VX_CHI2NDOF_mva":
-    latex_name: $log\_Jpsi\_VX\_CHI2NDOF\_mva$
-    range: [-12., 4.]
-  "X_PT_mva":
-    latex_name: $X_{P_T, mva}$
-    range: [0., 10000]
-  "B_VX_CHI2NDOF_mva":
-    latex_name: $B\_VX_{\chi2 ndof, mva}$
-    range: [-0.3, 5.0]
-  "log_B_DTF_CHI2NDOF_mva":
-    latex_name: $log\_B\_DTF_{\chi^2 ndof, mva}$
-    range: [-4., 10.0]
-  "log_B_IPCHI2_mva":
-    latex_name: $log\_B\_IPCHI2\_mva$
-    range: [-4., 4.]
-
+    units : ''
+    descr : ''
+  # "log_min_mu_PNNmu_mva":
+  #   latex: 'log_{min}\_\mu\_{PNN\mu}_{mva}'
+  #   range: [-1., 0.3]
+  # "log_Jpsi_VX_CHI2NDOF_mva":
+  #   latex: 'log\_Jpsi\_VX\_CHI2NDOF\_mva'
+  #   range: [-12., 4.]
+  # "X_PT_mva":
+  #   latex: 'X_{P_T, mva}'
+  #   range: [0., 10000]
+  # "B_VX_CHI2NDOF_mva":
+  #   latex: 'B\_VX_{\chi2 ndof, mva}'
+  #   range: [-0.3, 5.0]
+  # "log_B_DTF_CHI2NDOF_mva":
+  #   latex: 'log\_B\_DTF_{\chi^2 ndof, mva}'
+  #   range: [-4., 10.0]
+  # "log_B_IPCHI2_mva":
+  #   latex: 'log\_B\_IPCHI2\_mva'
+  #   range: [-4., 4.]
+  "pLp" : 
+    peval: "muplus_P"
+    latex: "P_{\mu^{+}}"
+    range: [0.0, 4.0e+4]
+    units: 'MeV'
+    descr: ''
+  "pTLp" : 
+    peval: "muplus_PT"
+    latex: "P_{T, \mu^{+}}"
+    range: [0.0, 1.0e+4]
+    units: 'MeV'
+    descr: ''
+  "pLm" : 
+    peval: "muminus_P"
+    latex: "P_{\mu^{-}}"
+    range: [0.0, 4.0e+4]
+    units: 'MeV'
+    descr: ''
+  "pTLm" : 
+    peval: "muminus_PT"
+    latex: "P_{T, \mu^{+}}"
+    range: [0.0, 1.0e+4]
+    units: 'MeV'
+    descr: ''
 Bd_common: &Bd_common
   #cinematics
-    "pHp" :
-      latex_name: $p(K)$
-      range: [0.0, 1.5e+5]
-    "pTHp" :
-      latex_name: $p_T(K)$
-      range: [0.0, 1.0e+4]
-    "pHm" :
-      latex_name: $p(\pi)$
-      range: [0.0, 1.5e+5]
-    "pTHm" :
-      latex_name: $p_t(\pi)$
-      range: [0.0, 1.0e+4]
-    "mHH" :
-      latex_name: $m_{K\pi}$
-      range: [840, 960]
-    "pTB" :
-      latex_name: $P_T(B_d)$
-      range: [0.0, 4.0e+4]
-    "pB" :
-      latex_name: $P(B_d)$
-      range: [0.0, 8.0e+5]
-    "etaB" :
-      latex_name: $\eta_{B_d}$
-      range:  [2, 5]
+  "pHp" :
+    peval: "hplus_P"
+    latex: 'p(K)'
+    range: [0.0, 1.5e+5]
+    units: 'MeV'
+    descr: ''
+  "pTHp" :
+    peval: "hplus_PT"
+    latex: 'p_T(K)'
+    range: [0.0, 1.0e+4]
+    units : 'MeV'
+    descr: ''
+  "pHm" :
+    peval: "hminus_P"
+    latex: 'p(\pi)'
+    range: [0.0, 1.5e+5]
+    units : 'MeV'
+    descr : ''
+  "pTHm" :
+    peval : "hminus_PT"
+    latex: 'p_t(\pi)'
+    range: [0.0, 1.0e+4]
+    units : 'MeV'
+    descr: ''
+  "mHH" :
+    peval: "X_M"
+    latex: 'm_{K\pi}'
+    range: [840, 960]
+    units : 'MeV'
+    descr : ''
+  "pTB" :
+    peval: "B_PT"
+    latex: 'P_T(B_d)'
+    range: [0.0, 4.0e+4]
+    units: 'MeV'
+    descr: ''
+  "pB" :
+    peval: "B_P"
+    latex: 'P(B_d)'
+    range: [0.0, 8.0e+5]
+    units: 'MeV'
+    descr: ''
+  "etaB" :
+    peval : 'B_ETA'
+    latex: '\eta_{B_d}'
+    range:  [2, 5]
+    units : ''
+    descr: ''
   #chinoca
-    "logIPchi2B" :
-      latex_name : $\mathrm{log} \chi^2 IP_{B_d}$
-      range: [-12.0, 12.0]
-    "BDTFchi2" :
-      latex_name: $\chi^2_{DTF} B_d$
-      range: [0.0, 8.0]
-    "logMINkPNNk" :
-      latex_name: $\mathrm{log} PNN_{k,min}$
-      range: [-6, 0]
-    "BVXchi2" :
-      latex_name: $\chi^2 B_d VX$
-      range: [0,20]
-    "pTX" :
-      latex_name: $P_T (K^*)$
-      range: [0, 2.5e+4]
-    "KmaxTRchi2" :
-      latex_name: $TR_{\chi^2, max} K$
-      range: [0.3, 3.5]
+  "logIPchi2B" :
+    peval: 'log_B_IPCHI2_mva'
+    latex : '\mathrm{log} \chi^2 IP_{B_d}'
+    range: [-12.0, 12.0]
+    units : ''
+    descr : ''
+  "BDTFchi2" :
+    peval: 'B_DTF_CHI2NDOF'
+    latex: '\chi^2_{DTF} B_d'
+    range: [0.0, 8.0]
+    units: ''
+    descr: ''
+  "logMINkPNNk" :
+    peval: 'log_min_K_PNNk_mva'
+    latex: '\mathrm{log} PNN_{k,min}'
+    range: [-6, 0]
+    units: ''
+    descr: ''
+  "BVXchi2" :
+    peval: "B_VX_CHI2NDOF_mva"
+    latex: '\chi^2 B_d VX'
+    range: [0,20]
+    units: ''
+    descr: ''
+  "pTX" :
+    peval: "X_PT"
+    latex: 'P_T (K^*)'
+    range: [0, 2.5e+4]
+    units: 'MeV'
+    descr: ''
+  "KmaxTRchi2" :
+    peval : "max_K_TRCHI2_mva"
+    latex: 'TR_{\chi^2, max} K'
+    range: [0.3, 3.5]
+    units: ''
+    descr: ''
+  "pLp" : 
+    peval: "muplus_P"
+    latex: "P_{\mu^{+}}"
+    range: [0.0, 4.0e+4]
+    units: 'MeV'
+    descr: ''
+  "pTLp" : 
+    peval: "muplus_PT"
+    latex: "P_{T, \mu^{+}}"
+    range: [0.0, 1.0e+4]
+    units: 'MeV'
+    descr: ''
+  "pLm" : 
+    peval: "muminus_P"
+    latex: "P_{\mu^{-}}"
+    range: [0.0, 4.0e+4]
+    units: 'MeV'
+    descr: ''
+  "pTLm" : 
+    peval: "muminus_PT"
+    latex: "P_{T, \mu^{+}}"
+    range: [0.0, 1.0e+4]
+    units: 'MeV'
+    descr: ''
+
+
 
 MC_common: &MC_common
   <<: *common
-
+  "truetime" :
+    peval: "1000*B_TRUETAU"
+    latex: "t_{true}" 
+    range: [0.3, 15.] 
+    units: 'ps'
+    descr: ''
+  "truecosK" : 
+    peval: "truehelcosthetaK"
+    latex: "cosK_{true}"
+    range: [-1., 1.]
+    units: ''
+    descr: ''
+  "truecosL" : 
+    peval: "truehelcosthetaL"
+    latex: "cosL_{true}"
+    range: [-1., 1.]
+    units: ''
+    descr: ''
+  "truehphi" : 
+    peval: "truehelphi"
+    latex: "\phi_{true}"
+    range: [-3.142, 3.142]
+    units: 'rad'
+    descr : ''
+  "gentime" : 
+    peval: "1000*B_TRUETAU_GenLvl"
+    latex: "t_{GenLvl}"
+    range: [0.3, 15.]
+    units: "ps"
+    descr : ''
+  "gencosK" : 
+    peval: "truehelcosthetaK_GenLvl"
+    latex: "cosK_{GenLvl}"
+    range: [-1.,1.]
+    units: ''
+    descr : ''
+  "gencosL" :
+    peval: "truehelcosthetaL_GenLvl"
+    latex: "cosL_{GenLvl}"
+    range: [-1., 1.]
+    units: ''
+    descr : ''
+  "genhphi" : 
+    peval: "truehelphi_GenLvl"
+    latex: "\phi_{GenLvl}"
+    range: [-3.142, 3.142]
+    units: 'rad'
+    descr: ''
+  "kinWeight" : 
+    peval: "kinWeight"
+    latex: "kinematic Weight"
+    range: []
+    units: ''
+    descr : ''
+  "oddWeight" : 
+    peval: "odd Weight"
+    latex: "Odd Weight"
+    range: []
+    units: ''
+    descr : ''
+  "polWeight" : 
+    peval: "polWeight"
+    latex: "Polarity Weight"
+    range: []
+    units: ''
+    descr : ''
+  "pdfWeight" : 
+    peval: "pdfWeight"
+    latex: "pdf Weight"
+    range: []
+    units: ''
+    descr: ''
+  "bkgcatB" : 
+    peval: "B_BKGCAT"
+    latex: "Bkg category"
+    range: []
+    units: ''
+    descr : ''
+  "gb_weights" : 
+    peval: "gb_weights"
+    latex: "GB Weight"
+    range: []
+    units: ''
+    descr: ''
+ 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
   <<: *Bs_common
+  "genidB": 
+    peval: "B_ID_GenLvl"
+    latex: "Bs_{ID}_{GenLvl}"
+    range: []
+    units: ''
+    descr: ''
 
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
   <<: *Bs_common
+  "genidB": 
+    peval: "B_ID_GenLvl"
+    latex: "Bs_{ID}_{GenLvl}"
+    range: []
+    units: ''
+    descr: ''
 
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_common
   <<: *Bs_common
+  "genidB": 
+    peval: "B_ID_GenLvl"
+    latex: "Bs_{ID}_{GenLvl}"
+    range: []
+    units: ''
+    descr: ''
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
   <<: *MC_common
   <<: *Bs_common
+  "genidB": 
+    peval: "B_ID_GenLvl"
+    latex: "Bs_{ID}_{GenLvl}"
+    range: []
+    units: ''
+    descr: ''
 
 MC_Bs2JpsiPhi_Prompt:
   <<: *MC_Bs2JpsiPhi
   <<: *Bs_common
+  "genidB": 
+    peval: "B_ID_GenLvl"
+    latex: "Bs_{ID}_{GenLvl}"
+    range: []
+    units: ''
+    descr: ''
 
 MC_Bd2JpsiKstar:
-  <<: *MC_Bs2JpsiPhi
+  <<: *common
+  <<: *MC_common
   <<: *Bd_common
+  "genidB": 
+    peval: "511*X_ID_GenLvl/311"
+    latex: "Bs_{ID}_{GenLvl}"
+    range: []
+    units: ''
+    descr: ''
+  "kbuWeight": 
+    peval: "kbuWeight"
+    latex: "kbu Weight"
+    range: []
+    units: ''
+    descr: ''
 
 
 MC_Bu2JpsiKplus:
   <<: *MC_common
+  "genidB": 
+    peval: "B_ID_GenLvl"
+    latex: "Bu_{ID}_{GenLvl}"
+    range: []
+    units: ''
+    descr: ''
 
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
   <<: *Bs_common
-  "tagOSdec" : "OS_Combination_DEC"
-  "tagSSdec" : "B_SSKaonLatest_TAGDEC"
-  "tagOSeta" : "OS_Combination_ETA"
-  "tagSSeta" : "B_SSKaonLatest_TAGETA"
+  "tagOSdec" : 
+    peval: "OS_Combination_DEC"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "tagSSdec" : 
+    peval: "B_SSKaonLatest_TAGDEC"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "tagOSeta" : 
+    peval: "OS_Combination_ETA"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "tagSSeta" : 
+    peval: "B_SSKaonLatest_TAGETA"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
 
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
   <<: *Bd_common
-
+  "kinWeight" : 
+    peval: "kinWeight"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "oddWeight" : 
+    peval: "oddWeight"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "kbuWeight" : 
+    peval: "kbuWeight"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "tagOSdec" : 
+    peval: "0*time"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "tagSSdec" : 
+    peval: "0*time"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "tagOSeta" : 
+    peval: "0*time"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
+  "tagSSeta" : 
+    peval: "0*time"
+    latex: ""
+    range: []
+    units: ''
+    descr: ''
 Bu2JpsiKplus:
   <<: *common
