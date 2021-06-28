@@ -8,10 +8,10 @@ rule reweighting_polarity:
   wildcard_constraints:
     mode = "MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)"
   input:
-    original = lambda wcs: tuples(wcs, weight='sWeight'),
+    original = lambda wcs: tuples(wcs, weight='veloWeight'),
     target   = lambda wcs: tuples(wcs, mode='data', weight='sWeight'),
   output:
-    sample   = temp(SAMPLES_PATH+'{year}/{mode}/{version}_polWeight.root')
+    sample   = temp(SAMPLES+'/{year}/{mode}/{version}_polWeight.root')
   log:
     'output/log/reweightings/polarity_weighting/{year}/{mode}/{version}.log'
   run:
@@ -27,10 +27,11 @@ rule reweighting_polarity:
 
 # }}}
 
-# p.d.f. weighting -------------------------------------------------------------
+
+# p.d.f. weighting {{{
 #    Adds pdfWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
-#    {{{
+
 rule reweighting_pdf:
   resources:
     mem_mb=7168
@@ -43,7 +44,7 @@ rule reweighting_pdf:
     original = lambda wcs: f"{wcs.year}/{'Bs2JpsiPhi' if 'Bs' in f'{wcs.mode}' else 'Bd2JpsiKstar'}.json",
     target = lambda wcs: f"{wcs.year}/{wcs.mode}.json",
   output:
-    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_pdfWeight.root')
+    sample = temp(SAMPLES+'/{year}/{mode}/{version}_pdfWeight.root')
   log:
     'output/log/reweightings/pdf_weighting/{year}/{mode}/{version}.log'
   run:
@@ -70,7 +71,7 @@ rule reweighting_dg0:
     original = lambda wcs: f"{wcs.year}/MC_Bs2JpsiPhi_dG0.json",
     target = lambda wcs: f"{wcs.year}/{wcs.mode}.json", #WARNING!
   output:
-    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_dg0Weight.root')
+    sample = temp(SAMPLES+'/{year}/{mode}/{version}_dg0Weight.root')
   log:
     'output/log/reweightings/pdf_weighting/{year}/{mode}/{version}.log'
   run:
@@ -102,12 +103,12 @@ rule reweighting_kinematic:
     original = lambda wcs: tuples(wcs, weight='oddWeight'),
     target = lambda wcs: tuples(wcs, mode='cdata', weight='kinWeight'),
   output:
-    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_kinWeight.root')
+    sample = temp(SAMPLES+'/{year}/{mode}/{version}_kinWeight.root')
   log:
     'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
   run:
     from angular_acceptance.bdtconf_tester import bdtmesh
-    bdconfig = CONFIG['time_acceptance_bdtconfig']
+    bdconfig = settings.timeacc['bdtconfig']
     # 
     year = f'{wildcards.year}'
     mode = f'{wildcards.mode}'
@@ -116,7 +117,7 @@ rule reweighting_kinematic:
     # change bdt according to filename, if applies
     if 'bdt' in version:
       bdtconfig = int(version.split('bdt')[1])
-      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], False)
+      bdtconfig = bdtmesh(bdtconfig, settings.general['bdt_tests'], False)
     #
     if mode.startswith('MC_Bs2Jpsi'):
       shell(f"""(time\
@@ -219,12 +220,12 @@ rule reweighting_wisely:
     original = lambda wcs: tuples(wcs, weight='kbuWeight'),
     target = lambda wcs: tuples(wcs, mode='cdata', weight='kinWeight'),
   output:
-    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_oddWeight.root')
+    sample = temp(SAMPLES+'/{year}/{mode}/{version}_oddWeight.root')
   log:
     'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
   run:
     from angular_acceptance.bdtconf_tester import bdtmesh
-    bdconfig = CONFIG['time_acceptance_bdtconfig']
+    bdconfig = settings.timeacc['bdtconfig']
 
     # TODO: move this string to config.json at some point
     WEIRD_ONES = 'log_B_IPCHI2_mva B_DTF_CHI2NDOF'
@@ -236,7 +237,7 @@ rule reweighting_wisely:
     # change bdt according to filename, if applies
     if 'bdt' in version:
       bdtconfig = int(version.split('bdt')[1])
-      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], False)
+      bdtconfig = bdtmesh(bdtconfig, settings.general['bdt_tests'], False)
 
     if mode.startswith('MC_Bs2Jpsi'):
       shell(f"""(time\
@@ -247,7 +248,7 @@ rule reweighting_wisely:
       --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
       --target-file {input.target}\
       --target-treename DecayTree\
-      --target-vars {WEIRD_ONES}\
+      --target-vars "{WEIRD_ONES}"\
       --target-weight "sw"\
       --output-file {output.sample}\
       --n-estimators {bdconfig['n_estimators']}\
@@ -279,7 +280,7 @@ rule reweighting_wisely:
     send_mail(f"Kinematic weighting :: {wildcards}", f"{log}")
 
 
-rule reweighting_kinematicBu:
+rule reweighting_kinematic_Bu:
   resources:
     mem_mb=7168
   wildcard_constraints:
@@ -290,12 +291,12 @@ rule reweighting_kinematicBu:
       mode='Bu2JpsiKplus' if f'{wcs.mode}'=='Bd2JpsiKstar' else 'Bd2JpsiKstar',
       weight='kbuWeight'),
   output:
-    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_kbuWeight.root')
+    sample = temp(SAMPLES+'/{year}/{mode}/{version}_kbuWeight.root')
   log:
     'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
   run:
     from angular_acceptance.bdtconf_tester import bdtmesh
-    bdconfig = CONFIG['time_acceptance_bdtconfig']    
+    bdconfig = settings.timeacc['bdtconfig']    
     year = f'{wildcards.year}'
     mode = f'{wildcards.mode}'
     version = f'{wildcards.version}'
@@ -303,7 +304,7 @@ rule reweighting_kinematicBu:
     # change bdt according to filename, if applies
     if 'bdt' in version:
       bdtconfig = int(version.split('bdt')[1])
-      bdtconfig = bdtmesh(bdtconfig, CONFIG['bdt_tests'], False)
+      bdtconfig = bdtmesh(bdtconfig, settings.general['bdt_tests'], False)
     
     if mode.startswith('MC_Bd2JpsiKstar'):
       shell(f"""(time\
@@ -387,8 +388,8 @@ rule reweightings_plot_angular_acceptance:
     weight = "(s|kin|kkp)Weight"
   input:
     original = lambda wcs: tuples(wcs),
-    weights = lambda wcs: tuples(wcs,weight='angWeight'),
-    target = lambda wcs: tuples(wcs,mode='cdata')
+    weights = lambda wcs: tuples(wcs, weight='kkpWeight'),
+    target = lambda wcs: tuples(wcs, mode='cdata')
   output:
     'output/figures/reweightings/{year}/{mode}/{version,[A-Za-z0-9]+}_{branch}_{angacc}_{timeacc}_{weight}.pdf',
   log:

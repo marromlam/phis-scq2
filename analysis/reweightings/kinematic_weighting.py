@@ -89,12 +89,16 @@ def kinematic_weighting(original_file, original_treename, original_vars,
   print('Loading branches for original_sample')
   odf = uproot.open(original_file)[original_treename].pandas.df()
   print(odf)
-
+  print(odf.keys())
   print('Loading branches for target_sample')
   tdf = uproot.open(target_file)[target_treename].pandas.df()
   print(tdf)
   print(tdf.keys())
 
+  print(f"Original weight = {original_weight}")
+  print(f"Target weight = {target_weight}")
+  print(odf.eval(original_weight))
+  print(tdf.eval(target_weight))
 
   # create branch according to file name
   if 'kbuWeight' in output_file:
