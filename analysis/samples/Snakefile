@@ -144,4 +144,34 @@ rule plot_samples_yearly_v0r5_vs_v0r0:
 # }}}
 
 
+# samples plot-----------------------------------------------------------------
+#   plot of differents branches of the ntuples. this rule get the plots for
+#   the years with no corrections, sw and kinematic corrections (MC vs data)
+#   {{{
+
+rule plot_samples_99:
+  resources:
+    mem_mb=1024
+  wildcard_constraints:
+    mode = "MC_Bs2JpsiPhi(_dG0)?",
+    branch = "(sigmat|B_LOKI_DTF_CTAU|B_LOKI_DTF_CTAUERR|B_IPCHI2_OWNPV|nTracks|nLongTracks|nSPDHits|hplus_TRACK_CHI2NDOF|hplus_ProbNNk|hplus_ProbNNpi|hplus_ProbNNp|muplus_TRACK_CHI2NDOF|muplus_ProbNNmu|muminus_TRACK_CHI2NDOF|muminus_ProbNNmu|muplus_PIDmu|muminus_PIDmu|hplus_PIDK|B_DTF_CHI2NDOF|B_FDS|B_DIRA|B_M|B_ETA|beam_shift_X|beam_shift_Y|B_pKMuMuKminus_M_1|B_B2KpPiJpsi_M_1|B_B2KmPiJpsi_M_1|hminus_TRACK_CHI2NDOF|hminus_ProbNNk|hminus_ProbNNpi|hminus_ProbNNp|X_ENDVERTEX_CHI2|docaz_muminus|docaz_muplus|docaz_hplus|docaz_hminus|muplus_ProbNNmu_corr|muminus_ProbNNmu_corr|hplus_ProbNNpi_corr|hplus_ProbNNp_corr|hplus_ProbNNk_corr|hminus_ProbNNpi_corr|hminus_ProbNNp_corr|hminus_ProbNNk_corr|max_K_TRCHI2_mva|log_min_K_PNNk_mva|max_mu_TRCHI2_mva|log_min_mu_PNNmu_mva|log_Jpsi_VX_CHI2NDOF_mva|X_PT_mva|B_VX_CHI2NDOF_mva|log_B_DTF_CHI2NDOF_mva|log_B_IPCHI2_mva)"
+  input:
+    tuple = lambda wcs: tuples(wcs, mode='cdata', year=f'{wcs.year}', weight='sWeight'),
+    control = lambda wcs: tuples(wcs, year=f'{wcs.year}', weight='sWeight')
+  output:
+    'output/figures/plot_samples_99/{year}/{mode}/{version}_{branch}.pdf',
+  log:
+    'output/log/plot_samples_99/{year}/{mode}/{version}_{branch}.log',
+  run:
+    shell(f"""(time\
+    python analysis/samples/plot_noreduced.py\
+           --tuple {",".join(input.tuple)}\
+           --control {",".join(input.control)}\
+           --year {",".join(YEARS['Run2'])}\
+           --version {wildcards.version}\
+           --mode {wildcards.mode}\
+           --branch {wildcards.branch}\
+           --output {",".join(output)}\
+    ) &> {log}""")
+    send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
 # vim: foldmethod=marker

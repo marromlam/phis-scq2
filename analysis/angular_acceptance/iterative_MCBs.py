@@ -42,7 +42,7 @@ from ipanema import ristra, Sample, Parameters, Parameter, optimize, plot_conf2d
 
 # get badjanak and compile it with corresponding flags
 import badjanak
-badjanak.config['fast_integral'] = 1
+badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
 badjanak.get_kernels(True)
@@ -775,13 +775,13 @@ if __name__ == '__main__':
   p.add_argument('--mode', help='Mode of the sample')
   args = vars(p.parse_args())
 
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE,EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEARS = args['year'].split(',') 
   #YEARS = ['2016']
-  YEARS = ['2015', '2016']
+  YEARS = ['2015']#, '2016']
   MODE = args['mode']
   ANGACC = args['angacc']
-  bkgcat = True
+  bkgcat = False
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
 
@@ -791,20 +791,20 @@ if __name__ == '__main__':
 
   # List samples, params and tables --------------------------------------------
   samples_std   = args['sample_mc_std'].split(',')
-  #samples_std = [samples_std[1]]
-  samples_std = samples_std[0:2]
+  samples_std = [samples_std[0]]
+  #samples_std = samples_std[0:1]
   input_std_params = args['params_mc_std'].split(',')
-  #input_std_params = [input_std_params[1]]
-  input_std_params = input_std_params[0:2]
+  input_std_params = [input_std_params[0]]
+  #input_std_params = input_std_params[0:1]
   coeffs_biased      = args['input_coeffs_biased'].split(',')
-  #coeffs_biased = [coeffs_biased[1]]
-  coeffs_biased = coeffs_biased[0:2]
+  coeffs_biased = [coeffs_biased[0]]
+  #coeffs_biased = coeffs_biased[0:1]
   coeffs_unbiased    = args['input_coeffs_unbiased'].split(',')
-  #coeffs_unbiased = [coeffs_unbiased[1]]
-  coeffs_unbiased = coeffs_unbiased[0:2]
+  coeffs_unbiased = [coeffs_unbiased[0]]
+  #coeffs_unbiased = coeffs_unbiased[0:2]
   time_resolution = args['input_time_resolution'].split(',')
-  time_resolution = time_resolution[0:2]
-  #time_resolution = [time_resolution[1]]
+  #time_resolution = time_resolution[0:2]
+  time_resolution = [time_resolution[0]]
   params_biased      = args['output_weights_biased'].split(',')
   params_unbiased    = args['output_weights_unbiased'].split(',')
   tables_biased      = args['output_tables_biased'].split(',')
@@ -921,14 +921,15 @@ if __name__ == '__main__':
       for t in ['biased','unbiased']:
         print('Compute angWeights correcting MC sample in kinematics')
         print(f" * Computing kinematic GB-weighting in pTB, pB and mHH")
-        # reweighter.fit(original        = mc[y][m][t].df[['mHH','pB','pTB']],
-        #                target          = data[y][t].df[['mHH','pB','pTB']],
-        #                original_weight = mc[y][m][t].df.eval(weight_mc),
-        #                target_weight   = data[y][t].df.eval(weight_rd));
-        # angWeight = reweighter.predict_weights(mc[y][m][t].df[['mHH', 'pB', 'pTB']])
-        angWeight = np.ones_like(mc[y][m][t].df['angWeight'])
+        reweighter.fit(original        = mc[y][m][t].df[['mHH','pB','pTB']],
+                        target          = data[y][t].df[['mHH','pB','pTB']],
+                        original_weight = mc[y][m][t].df.eval(weight_mc),
+                        target_weight   = data[y][t].df.eval(weight_rd));
+        angWeight = reweighter.predict_weights(mc[y][m][t].df[['mHH', 'pB', 'pTB']])
+        #angWeight = np.ones_like(mc[y][m][t].df['angWeight'])
         mc[y][m][t].df['angWeight'] = angWeight
         mc[y][m][t].olen = len(angWeight)
+        print(mc[y][m][t].df[['sw', 'angWeight']])
         print('mc params')
         print(mc[y][m][t].params.valuesdict())
         angacc = badjanak.get_angular_acceptance_weights(mc[y][m][t].true, mc[y][m][t].reco,
@@ -945,7 +946,7 @@ if __name__ == '__main__':
         print(f"{pars_w}")
         data[y][t].angacc = pars_w
         data[y][t].angaccs = {0:pars_w}
-
+  exit()
 
   for i, y in enumerate(YEARS):
     for d in [data[y]['biased'],data[y]['unbiased']]:

@@ -274,7 +274,7 @@ def do_fit(verbose=False):
                     tol=0.05, strategy=2)
 
   #print fit results
-  # print(result) # parameters are not blinded, so we dont print the result
+  print(result) # parameters are not blinded, so we dont print the result
   if verbose:
     if not '2018' in data.keys() and not '2017' in data.keys():
       for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd',
@@ -294,6 +294,13 @@ def do_fit(verbose=False):
         except:
           0
   # store parameters + add likelihood to list
+  for p, par in result.params.items():
+    if not par.casket:
+      par.casket = {}
+      i = 1
+    else:
+      i = len(par.casket.keys())+1
+    par.casket.update({f"{i}": {"value":par.uvalue.n, "stdev":par.uvalue.s}})
   pars = Parameters.clone(result.params)
   return result.chi2
 
@@ -481,6 +488,7 @@ def lipschitz_iteration(max_iter=30, verbose=True):
 
 
     if all(checker) or i > 25:
+      pars.dump(args["output_physics_params"])
       print(f"\nDone! Convergence was achieved within {i} iterations")
       for y, dy in data.items(): # loop over years
         for trigger in ['biased','unbiased']:
@@ -495,14 +503,11 @@ def lipschitz_iteration(max_iter=30, verbose=True):
 def aitken_iteration(max_iter=30, verbose=True):
   global pars
   likelihoods = []
-  
   for i in range(1,max_iter):
-    
     # x1 = angular_acceptance_iterative_procedure <- x0
     ans = angular_acceptance_iterative_procedure(verbose, 2*i-1)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
-    
     # x2 = angular_acceptance_iterative_procedure <- x1
     ans = angular_acceptance_iterative_procedure(verbose, 2*i)
     likelihood, checker, checker_dict = ans
@@ -556,6 +561,7 @@ def aitken_iteration(max_iter=30, verbose=True):
 
 
     if all(checker) or i > 25:
+      pars.dump(args["output_physics_params"])
       print(f"\nDone! Convergence was achieved within {i} iterations")
       for y, dy in data.items(): # loop over years
         for trigger in ['biased','unbiased']:
@@ -620,6 +626,7 @@ if __name__ == '__main__':
   p.add_argument('--output-angacc-biased', help='Bs2JpsiPhi MC sample')
   p.add_argument('--output-angacc-unbiased', help='Bs2JpsiPhi MC sample')
   p.add_argument('--output-weights-mc', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--output-physics-params', help='physics params')
   p.add_argument('--year', help='Year of data-taking')
   p.add_argument('--angacc', help='Year of data-taking')
   p.add_argument('--timeacc', help='Year of data-taking')
@@ -698,6 +705,8 @@ if __name__ == '__main__':
     if 'evt' in args['version']:
       weight_rd = f'kinWeight*oddWeight*{weight_rd}/gb_weights'
 
+  #weight_mc = "sw/gb_weights*polWeight" #warning -> checking what is happening here!
+  #weight_rd = "sw/gb_weights"
   HAS_SWAVE = False
   if "Swave" in MODE:
     HAS_SWAVE = True
@@ -736,7 +745,6 @@ if __name__ == '__main__':
 
       # add path to store kkp and pdf weights when converged
       mc[y][t].path_to_weights = weights_mc[i]
-  
   # }}}
 
   # Load corresponding data sample {{{

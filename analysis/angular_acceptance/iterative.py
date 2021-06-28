@@ -182,7 +182,7 @@ def fcn_data(parameters, data):
       badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc = 0)
+                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc = 1)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)
@@ -272,9 +272,9 @@ def do_fit(verbose=False):
   
   # do the fit
   result = optimize(fcn_data, method='minuit', params=pars, 
-                    fcn_kwgs={'data':data}, verbose=False, timeit=True, 
+                    fcn_kwgs={'data':data}, verbose=True, timeit=True, 
                     tol=0.05, strategy=2)
-  
+  print(result.params) 
   #print fit results
   #print(result) # parameters are not blinded, so we dont print the result
   if not '2018' in data.keys() and not '2017' in data.keys():
@@ -916,7 +916,7 @@ if __name__ == '__main__':
   # run the procedure!
   
   
-  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=False)
+  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True)
   
   if not ok:
     ok, likelihoods = aitken_iteration(max_iter=30, verbose=True)
