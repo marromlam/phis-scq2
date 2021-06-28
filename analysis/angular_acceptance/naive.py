@@ -29,13 +29,15 @@ from utils.helpers import version_guesser, trigger_scissors
 from utils.strings import printsec
 from utils.plot import mode_tex
 
+import config
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 # get badjanak and compile it with corresponding flags
 import badjanak
@@ -50,7 +52,6 @@ def argument_parser():
   p.add_argument('--sample', help='Bs2JpsiPhi MC sample')
   p.add_argument('--input-params', help='Bs2JpsiPhi MC sample')
   p.add_argument('--output-params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--output-tables', help='Bs2JpsiPhi MC sample')
   p.add_argument('--mode', help='Configuration')
   p.add_argument('--year', help='Year of data-taking')
   p.add_argument('--angacc', help='Year of data-taking')
@@ -76,7 +77,7 @@ if __name__ == '__main__':
   TRIGGER = args['trigger']
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ''
 
   if ANGACC != 'naive':
     nknots, timebin = ANGACC.split('knots')
@@ -141,8 +142,7 @@ if __name__ == '__main__':
   badjanak.get_kernels(True)
 
   print('Computing angular weights')
-  w, uw, cov, corr = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, mc.weight,
-                                                            kind='norm_weights', **mc.params.valuesdict())
+  w, uw, cov, corr = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, mc.weight, **mc.params.valuesdict())
   pars = Parameters()
   for i in range(0,len(w)):
     correl = {f'w{j}{TRIGGER[0]}': corr[i][j]
@@ -154,15 +154,6 @@ if __name__ == '__main__':
   # Writing results ------------------------------------------------------------
   print('Dumping parameters')
   pars.dump(args['output_params'])
-  # Export parameters in tex tables
-  print('Saving table of params in tex')
-  with open(args['output_tables'], "w") as tex_file:
-    tex_file.write(
-      pars.dump_latex( caption="""
-      Naive angular weights for {YEAR} {TRIGGER} ${mode_tex(MODE)}$
-      category.""")
-    )
-  tex_file.close()
   print(f"Naive angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
   print(f"{pars}")
 

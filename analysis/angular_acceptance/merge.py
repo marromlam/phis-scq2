@@ -44,10 +44,6 @@ def argument_parser():
   parser.add_argument('--output-params',
                       default = 'output/time_acceptance/parameters/2016/MC_Bs2JpsiPhi_DG0/test_biased.json',
                       help='Bs2JpsiPhi MC sample')
-  # Output parameters
-  parser.add_argument('--output-tables',
-                      default = 'output/time_acceptance/parameters/2016/MC_Bs2JpsiPhi_DG0/test_biased.json',
-                      help='Bs2JpsiPhi MC sample')
   # Configuration file ---------------------------------------------------------
   parser.add_argument('--step',
                       default = 'baseline',
@@ -88,7 +84,6 @@ STEP = args['step']
 TRIGGER = args['trigger']
 weights_std_path = args['weights_std']
 weights_dg0_path = args['weights_dg0']
-output_tables_path = args['output_tables']
 output_params_path = args['output_params']
 
 #print(weights_std_path,weights_dg0_path,output_tables_path)
@@ -176,14 +171,5 @@ for _i in range(len(pars.keys())):
 print('Dumping parameters')
 pars.dump(output_params_path)
 # Export parameters in tex tables
-print('Saving table of params in tex')
-with open(output_tables_path, "w") as tex_file:
-  tex_file.write(
-    pars.dump_latex( caption="""
-    %s angular weights for \\textbf{%s} \\texttt{\\textbf{%s}}
-    category using combined MC samples.""" % (STEP.title(),YEAR,TRIGGER)
-    )
-  )
-tex_file.close()
 print(f"Combined {STEP} angular weights for {YEAR}-{TRIGGER} sample are:")
 print(pars)

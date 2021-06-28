@@ -25,10 +25,15 @@ from utils.helpers import version_guesser, trigger_scissors
 from utils.strings import printsec
 from utils.plot import mode_tex
 
+import config
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 # get badjanak and compile it with corresponding flags
 import badjanak
@@ -41,8 +46,7 @@ badjanak.get_kernels(True)
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 from hep_ml import reweight
-bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
-reweighter = reweight.GBReweighter(**bdconfig)
+reweighter = reweight.GBReweighter(**bdtconfig)
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
 # }}}
@@ -58,7 +62,6 @@ if __name__ == '__main__':
   p.add_argument('--sample-data', help='Bs2JpsiPhi data sample')
   p.add_argument('--input-params', help='Bs2JpsiPhi MC generator parameters')
   p.add_argument('--output-params', help='Bs2JpsiPhi MC angular acceptance')
-  p.add_argument('--output-tables', help='Bs2JpsiPhi MC angular acceptance tex')
   p.add_argument('--output-weights-file', help='angWeights file')
   p.add_argument('--mode', help='Mode to compute angular acceptance with')
   p.add_argument('--year', help='Year to compute angular acceptance with')
@@ -72,7 +75,7 @@ if __name__ == '__main__':
   TRIGGER = args['trigger']
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ''
   # CUT = "gentime>=0.3 & gentime<=15"
 
   # Print settings
@@ -81,7 +84,7 @@ if __name__ == '__main__':
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {trigger_scissors(TRIGGER, CUT):50}")
   print(f"{'angacc':>15}: {'corrected':50}")
-  print(f"{'bdtconfig':>15}: {list(bdconfig.values())}\n")
+  print(f"{'bdtconfig':>15}: {list(bdtconfig.values())}\n")
 
   # }}}
 
@@ -180,14 +183,6 @@ if __name__ == '__main__':
   # Dump json file
   print(f"Dumping json parameters to {args['output_params']}")
   pars.dump(args['output_params'])
-  # Export parameters in tex tables
-  print(f"Dumping tex table to {args['output_tables']}")
-  with open(args['output_tables'], "w") as tex_file:
-    tex_file.write(
-      pars.dump_latex(caption=f"""Kinematically corrected angular weights for
-      {YEAR} {TRIGGER} ${mode_tex(MODE)}$  category.""")
-    )
-  tex_file.close()
 
   # }}}
 
