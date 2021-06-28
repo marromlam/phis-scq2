@@ -1,3 +1,9 @@
+# HELPERS
+#
+#
+#
+
+
 # Modules {{{
 
 import re
@@ -7,10 +13,15 @@ from utils.strings import cammel_case_split, cuts_and
 from ipanema import ristra
 import config
 
-SAMPLES_PATH = config.user['path']
+SAMPLES_PATH = config.user['path']+'/'
 MAILS = config.user['mail']
 
 YEARS = config.years
+
+if config.user['velo_weights']:
+  vw8s = 'veloWeight'
+else:
+  vw8s = 'sWeight'
 
 # }}}
 
@@ -18,12 +29,25 @@ YEARS = config.years
 # Guessers {{{
 
 def timeacc_guesser(timeacc):
+  """
+  Parse decay-time acceptance string and derive its components.
+
+  Parameters
+  ----------
+  timeacc : str
+    Decay-time acceptance string.
+
+  Returns
+  -------
+  tuple
+    Components of the decay-time acceptance.
+  """
   # Check if the tuple will be modified
   #pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9]knots)?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
-  pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[2-9])?(BuasBd)?(Noncorr)?(Flatend)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
+  pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[2-9])?(BuasBd)?(Noncorr)?(Odd)?(Flatend)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
   p = re.compile(pattern)
   try:
-    acc, knots, pipas, corr, flat, lifecut, mini = p.search(timeacc).groups()
+    acc, knots, pipas, corr, oddity, flat, lifecut, mini = p.search(timeacc).groups()
     corr = False if corr=='Noncorr' else True
     mini = mini.lower() if mini else 'minuit'
     knots = int(knots) if knots else 3
@@ -31,6 +55,30 @@ def timeacc_guesser(timeacc):
     return acc, knots, corr, flat, lifecut, mini
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
+
+
+def parse_angacc(angacc):
+  """
+  Parse angular acceptance string and derive its components.
+
+  Parameters
+  ----------
+  angacc : str
+    Angular acceptance string.
+
+  Returns
+  -------
+  tuple
+    Components of the angular acceptance.
+  """
+  pattern = r'\A(yearly|run2|run2a|run2b)(Odd)?\Z'
+  p = re.compile(pattern)
+  try:
+    acc, oddity = p.search(angacc).groups()
+    oddity = True if oddity=='Odd' else False
+    return acc, oddity
+  except:
+    raise ValueError(f'Cannot interpret {angacc} as a angacc modifier')
 
 
 def physpar_guesser(physics):
@@ -59,7 +107,7 @@ def version_guesser(version):
         # percentage of tuple to be loaded
         r"(\d+)?",
         # split tuple by event number: useful for MC tests and crosschecks
-        # odd is plays data role and MC is even
+        # Odd is plays data role and MC is Even
         r"(evtOdd|evtEven)?",
         # background category  
         r"(bkgcat60)?",
@@ -115,14 +163,13 @@ def cut_translate(version_substring):
     if k in version_substring:
       list_of_cuts.append(v)
   return f"( {' ) & ( '.join(list_of_cuts)} )"
-#version_guesser('v0r5@10')
 
 # }}}
 
 
 # Snakemake helpers {{{
 
-def tuples(wcs, version=False, year=None, mode=None, weight=None):
+def tuples(wcs, version=False, year=None, mode=None, csp=False, weight=None):
   # Get version withoud modifier
   if not version:
     version = f"{wcs.version}"
@@ -137,6 +184,9 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
     m = f'{wcs.mode}'
   except:
     m = '{mode}'
+
+  if not csp:
+    csp = 'none'
 
   # Check modifiers for mode
   if mode:
@@ -186,47 +236,77 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
           m = 'Bs2JpsiPhi'
       elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
         m = mode
-  # Model handler when asking for weises
-  # print("start", weight)
+  
+  # Model handler when asking for weights {{{
+  __weight = weight
   if weight:
+    # Bs2JpsiPhi {{{
     if m == 'Bs2JpsiPhi':
-      weight = 'sWeight'
+      if weight not in ('sWeight', vw8s):
+        weight = vw8s
+    # }}}
+    # Bu2JpsiKplus {{{
     elif m == 'Bu2JpsiKplus':
-      if weight not in ('kinWeight'):
-        weight = 'sWeight'
+      if weight not in ('sWeight', vw8s, 'kinWeight'):
+        weight = vw8s
+    # }}}
+    # Bd2JpsiKstar {{{
     elif m == 'Bd2JpsiKstar':
       if weight == 'oddWeight':
         weight = 'kbuWeight'
-      elif weight not in ('kinWeight', 'kbuWeight'):
-        weight = 'sWeight'
+      elif weight not in ('sWeight', vw8s, 'kbuWeight', 'kinWeight'):
+        weight = vw8s
+    # }}}
+    # MC_Bu2JpsiKplus {{{
     elif m == 'MC_Bu2JpsiKplus':
-      if weight not in ('sWeight', 'polWeight', 'kinWeight'):
+      if weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in ('sWeight', vw8s, 'polWeight', 'kinWeight'):
         weight = 'polWeight'
+    # }}}
+    # MC_Bd2JpsiKstar {{{
     elif m == 'MC_Bd2JpsiKstar':
-      if weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kbuWeight',
-                        'kinWeight', 'oddWeight'):
+      if weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in ('sWeight', vw8s, 'polWeight', 'pdfWeight',
+                        'kbuWeight', 'oddWeight', 'kinWeight'):
         weight = 'polWeight'
+    # }}}
+    # MC_Bs2JpsiPhi {{{
     elif m == 'MC_Bs2JpsiPhi':
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
-      elif weight not in ('sWeight', 'polWeight', 'dg0Weight', 'pdfWeight',
-                          'kinWeight', 'angWeight', 'oddWeight'):
+      elif weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
+                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight'):
         weight = 'dg0Weight'
+    # }}}
+    # MC_Bs2JpsiKK_Swave {{{
     elif m == 'MC_Bs2JpsiKK_Swave':
       if weight == 'kbuWeight':
         weight = 'polWeight'
-      elif weight not in ('sWeight', 'polWeight', 'angWeight', 'kinWeight', 'oddWeight'):
-        weight = 'polWeight'
+      elif weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
+                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight'):
+        weight = 'dg0Weight'
+    # }}}
+    # MC_Bs2JpsiPhi_dG0 {{{
     elif m == 'MC_Bs2JpsiPhi_dG0':
       if weight == 'kbuWeight':
         weight = 'pdfWeight'
-      elif weight not in ('sWeight', 'polWeight', 'pdfWeight', 'kinWeight',
-                          'angWeight', 'oddWeight'):
+      elif weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in ('sWeight', vw8s, 'polWeight', 'pdfWeight',
+                          'oddWeight', 'kinWeight', 'angWeight'):
         weight = 'polWeight'
+    # }}}
+  # print("Weight was transformed {__weight}->{weight}")
+  # }}}
 
-  # print("end", weight)
 
-  # Year
+  # Return list of tuples for YEARS[year] {{{
   if year:
     # print(year)
     years = YEARS[year]
@@ -235,9 +315,10 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
       terms = [y, m, v]
       if weight:
         if weight=='angWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{weight}.root' )
+          print('ola')
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'{wcs.angacc}_{csp}_{weight}.root' )
         elif weight=='kkpWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{wcs.angacc}_{wcs.timeacc}_{weight}.root' )
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{wcs.angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root' )
         else:
           path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
       else:
@@ -247,14 +328,16 @@ def tuples(wcs, version=False, year=None, mode=None, weight=None):
     terms = [y, m, v]
     if weight:
         if weight=='angWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{weight}.root'
+          print(wcs)
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'{wcs.angacc}_{csp}_{weight}.root'
         elif weight=='kkpWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{wcs.angacc}_{wcs.timeacc}_{weight}.root'
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{wcs.angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root'
         else:
           path =  SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
     else:
       path = SAMPLES_PATH + '/'.join(terms) + f'.root'
   #print(path)
+  # }}}
   return path
 
 
@@ -443,8 +526,10 @@ def send_mail(subject, body, files=None):
 
 def trigger_scissors(trigger, CUT=""):
   if trigger == 'biased':
+    # CUT = cuts_and("Jpsi_Hlt1DiMuonHighMassDecision_TOS==0",CUT)
     CUT = cuts_and("hlt1b==1",CUT)
   elif trigger == 'unbiased':
+    # CUT = cuts_and("Jpsi_Hlt1DiMuonHighMassDecision_TOS==1",CUT)
     CUT = cuts_and("hlt1b==0",CUT)
   return CUT
 
