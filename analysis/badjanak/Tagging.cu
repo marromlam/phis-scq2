@@ -1,7 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                                 TAGGING                                    //
-//                                                                            //
 //   Created: 2020-11-07                                                      //
 //    Author: Marcos Romero Lamas (mromerol@cern.ch)                          //
 //                                                                            //
@@ -23,7 +21,7 @@ ftype parabola(const ftype sigma, const ftype sigma_offset,
 
 WITHIN_KERNEL
 ftype get_omega(const ftype eta, const ftype tag,
-                const ftype p0,  const ftype p1, const ftype p2,
+                const ftype p0, const ftype p1, const ftype p2,
                 const ftype dp0, const ftype dp1, const ftype dp2,
                 const ftype eta_bar)
 {
