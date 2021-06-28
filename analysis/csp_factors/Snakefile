@@ -34,6 +34,8 @@ rule csp_factors_from_git:
     linker = "analysis/params/csp_factors/linker.json"
   output:
     params = "output/params/csp_factors/{year}/{mode}/{version}_{csp}.json",
+  log:
+    "output/log/csp_factors_from_git/{year}/{mode}/{version}_{csp}.json"
   run:
     shell(f"""(time\
     python analysis/csp_factors/download_from_git.py\
