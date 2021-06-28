@@ -1,3 +1,9 @@
+# CSP FACTORS
+#
+#
+#
+
+
 # Csp basics {{{
 #    This rule copies Csp factors from analysis/params and places them according
 #    to the name of the output. It only runs for none or old wildcards, which
@@ -17,6 +23,7 @@ rule csp_factors_basics:
 # }}}
 
 
+# Clone Csp from git {{{
 
 rule csp_factors_from_git:
   wildcard_constraints:
@@ -37,11 +44,12 @@ rule csp_factors_from_git:
     --output {output}\
     --repo {params.repo}\
     --linker {params.linker}\
-    ) #&> {log}""")
+    ) &> {log}""")
+
+# }}}
 
 
-
-# THESE RULES ARE TO COMPUTE CSP FACTORS WITHIN PHIS-SCQ 
+# THESE RULES ARE TO COMPUTE CSP FACTORS WITHIN PHIS-SCQ {{{
 #
 # #files_Csp_den = {'MC_Bs2JpsiPhi': '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsjpsiphi_CPLH_10M.root', 'MC_Bs2JpsiKK_Swave': '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsmumukk_RunI_new.root'}
 # trees_Csp_den = {'MC_Bs2JpsiPhi': 'bsjpsikk',
@@ -142,6 +150,8 @@ rule csp_factors_from_git:
 #                               --input-dir2 {input.dir2} \
 #                               --year All\
 #                               --output {output}'
+
+# }}}
 
 
 # vim:foldmethod=marker

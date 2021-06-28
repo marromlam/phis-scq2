@@ -1,3 +1,9 @@
+# FLAVOR TAGGING
+#
+#
+#
+
+
 # Flavor tagging basics {{{
 #    This rule copies Csp factors from analysis/params and places them according
 #    to the name of the output.
@@ -14,7 +20,6 @@ rule flavor_tagging_basics:
     shell(f"cp {res} {output}")
 
 # }}}
-
 
 
 # Flavor tagging from git {{{
@@ -95,7 +100,6 @@ rule flavor_tagging_from_git:
       os.remove(f"{tmp_path}/{_flavor}")
 
 # }}}
-
 
 
 # vim:foldmethod=marker

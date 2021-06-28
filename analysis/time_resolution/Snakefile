@@ -1,3 +1,9 @@
+# TIME RESOLUTION
+#
+#
+#
+
+
 # Time resolution basics {{{
 #    This rule copies Csp factors from analysis/params and places them according
 #    to the name of the output.
