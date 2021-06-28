@@ -1,4 +1,9 @@
-# naive angular acceptance - no correction (only sWeight and polWeight) {{{
+# ANGULAR ACCEPTANCE
+#
+#
+
+
+# naive angular acceptance - no corrections (only sWeight and polWeight) {{{
 #     Here we have 2 rules to compute angular acceptance without correcting
 #     MC samples. First rule computes angular acceptance for MC, and second one
 #     merges MC results to compute RD angular acceptance
@@ -7,24 +12,22 @@ rule angular_acceptance_naive:
   resources:
     mem_mb = 4096
   wildcard_constraints:
-    mode = "(TOY|MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+    mode = "(TOY|MC)_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bs2JpsiKK_Swave)",
     angacc = "(naive).*"
   input:
-    sample = lambda wcs: tuples(wcs),
+    lambda wcs: tuples(wcs),
   params:
-    params = 'analysis/params/generator/{year}/{mode}.json'
+    'analysis/params/generator/{year}/{mode}.json'
   output:
-    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}.json',
-    tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}.tex'
+    'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{csp}_{trigger}.json',
   log:
-    'output/log/angular_acceptance_naive/{year}/{mode}/{version}_{angacc}_{trigger}.log'
+    'output/log/angular_acceptance_naive/{year}/{mode}/{version}_{angacc}_{csp}_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/naive.py\
-    --sample {input.sample}\
-    --input-params {params.params}\
-    --output-params {output.params}\
-    --output-tables {output.tables}\
+    --sample {input}\
+    --input-params {params}\
+    --output-params {output}\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
@@ -36,7 +39,7 @@ rule angular_acceptance_naive:
 # }}}
 
 
-# alalytical {{{
+# analytical {{{
 
 #rule angular_acceptance_naive_analytical:
 #  resources:
@@ -102,32 +105,68 @@ rule angular_acceptance_naive_analytical:
 # }}}
 
 
+# Correcting MC with kinematic weights {{{
+#     Correcting MC sample with kinematic weighting in B_P, B_PT and X_M helps
+#     to better match MC to RD.
 
-# blend angular acceptance - no correction (only sWeight and polWeight) {{{
+rule angular_acceptance_corrected:
+  resources:
+    mem_mb = 4096
+  wildcard_constraints:
+    mode = "(MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+    angacc = "corrected(.*)?"
+  input:
+    sample_mc = lambda wcs: tuples(wcs),
+    sample_rd = lambda wcs: tuples(wcs, mode='data'),
+  params:
+    params = 'analysis/params/generator/{year}/{mode}.json',
+  output:
+    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{csp}_{trigger}.json',
+    weight = temp(SAMPLES+'/{year}/{mode}/{version}_{angacc}_{csp}_angWeight_{trigger}.npy')
+  log:
+    'output/log/angular_acceptance_corrected/{year}/{mode}/{version}_{angacc}_{csp}_{trigger}.log'
+  run:
+    shell(f"""(time\
+    python analysis/angular_acceptance/corrected.py\
+    --sample-mc {input.sample_mc}\
+    --sample-data {input.sample_rd}\
+    --input-params {params.params}\
+    --output-params {output.params}\
+    --output-weights-file {output.weight}\
+    --mode {wildcards.mode}\
+    --year {wildcards.year}\
+    --version {wildcards.version}\
+    --trigger {wildcards.trigger}\
+    ) &> {log}""")
+    send_mail(f"Angular Acceptance Corrected :: {wildcards}", f"{log}")
+
+# }}}
+
+
+# blend angular acceptance and weights {{{ 
 #     Here we have 2 rules to compute angular acceptance without correcting
 #     MC samples. First rule computes angular acceptance for MC, and second one
 #     merges MC results to compute RD angular acceptance
-rule angular_acceptance_blend:
+
+rule angular_acceptance_corrected_dual:
   resources:
     mem_mb = 512
   wildcard_constraints:
     step = "(naive|corrected|analytic).*",
     #version = "^((?!v0r1).)*$",
   input:
-    weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{trigger}.json',
-    weights_dg0 = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{step}_{trigger}.json',
+    weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{csp}_{trigger}.json',
+    weights_dg0 = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{step}_{csp}_{trigger}.json',
   output:
-    params = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.json',
-    tables = 'output/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.tex'
+    'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{csp}_{trigger}.json',
   log:
-    'output/log/angular_acceptance_blend/{year}/Bs2JpsiPhi/{version}_{step}_{trigger}.log'
+    'output/log/angular_acceptance_blend/{year}/Bs2JpsiPhi/{version}_{step}_{csp}_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/merge.py\
     --weights-std {input.weights_std}\
     --weights-dg0 {input.weights_dg0}\
-    --output-params {output.params}\
-    --output-tables {output.tables}\
+    --output-params {output}\
     --year {wildcards.year}\
     --version {wildcards.version}\
     --trigger {wildcards.trigger}\
@@ -141,22 +180,21 @@ rule angular_acceptance_joinWeights:
   resources:
     mem_mb = 4096
   wildcard_constraints:
-    wflag = "(angWeight|angWeightBin.*)"
+    wflag = "(.*)?_(angWeight|angWeightBin.*)"
   input:
-    b = SAMPLES_PATH+'{year}/{mode}/{version}_{wflag}_biased.npy',
-    u = SAMPLES_PATH+'{year}/{mode}/{version}_{wflag}_unbiased.npy'
+    b = SAMPLES+'/{year}/{mode}/{version}_{wflag}_biased.npy',
+    u = SAMPLES+'/{year}/{mode}/{version}_{wflag}_unbiased.npy'
   output:
-    SAMPLES_PATH+'{year}/{mode}/{version}_{wflag}.root'
+    SAMPLES+'/{year}/{mode}/{version}_{wflag}.root'
   run:
-    import uproot3 # uproot4 recreate method not yet avaliable
+    import uproot3 as uproot
+    # import uproot  # uproot4 recreate method not yet avaliable
     import numpy as np
     b = np.load(f"{input.b}")
     u = np.load(f"{input.u}")
-    with uproot3.recreate(f"{output}") as rfile:
-      rfile['DecayTree'] = uproot3.newtree({'angWeight':np.float64})
+    with uproot.recreate(f"{output}") as rfile:
+      rfile['DecayTree'] = uproot.newtree({'angWeight':np.float64})
       rfile['DecayTree'].extend({'angWeight':b+u})
-    rfile.close()
-
 
 
 rule angular_acceptance_veronikaWeights:
@@ -166,7 +204,7 @@ rule angular_acceptance_veronikaWeights:
     a = lambda wcs: tuples(wcs, weight='kkpWeight'),
     b = lambda wcs: tuples(wcs, weight='sWeight')
   output:
-    SAMPLES_PATH+'{year}/{mode}/{version}_veronikaWeight.root'
+    SAMPLES+'/{year}/{mode}/{version}_veronikaWeight.root'
   run:
     import uproot3
     import numpy as np
@@ -181,159 +219,82 @@ rule angular_acceptance_veronikaWeights:
 # }}}
 
 
-
-# Correcting MC with kinematic weights {{{
-#     Correcting MC sample with kinematic weighting in B_P, B_PT and X_M helps
-#     to better match MC to RD.
-
-rule angular_acceptance_corrected:
-  resources:
-    mem_mb = 4096
-  wildcard_constraints:
-    mode = "(MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
-  input:
-    sample_mc = lambda wcs: tuples(wcs),
-    sample_rd = lambda wcs: tuples(wcs, mode='data'),
-  params:
-    params = 'analysis/params/generator/{year}/{mode}.json',
-  output:
-    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.json',
-    tables = 'output/tables/angular_acceptance/{year}/{mode}/{version}_corrected_{trigger}.tex',
-    weight = temp(SAMPLES_PATH+'{year}/{mode}/{version}_angWeight_{trigger}.npy')
-  log:
-    'output/log/angular_acceptance_corrected/{year}/{mode}/{version}_corrected_{trigger}.log'
-  run:
-    shell(f"""(time\
-    python analysis/angular_acceptance/corrected.py\
-    --sample-mc {input.sample_mc}\
-    --sample-data {input.sample_rd}\
-    --input-params {params.params}\
-    --output-params {output.params}\
-    --output-tables {output.tables}\
-    --output-weights-file {output.weight}\
-    --mode {wildcards.mode}\
-    --year {wildcards.year}\
-    --version {wildcards.version}\
-    --trigger {wildcards.trigger}\
-    ) &> {log}""")
-    send_mail(f"Angular Acceptance Corrected :: {wildcards}", f"{log}")
-
-# }}}
-
-
-
 # run2a angular acceptance {{{
 #     This rule runs the iterative procedure for all Run2 YEARS using both
 #     MC and MC_dG0 files.
 
-rule angular_acceptance_iterative_data_run2a:
+rule angular_acceptance_iterative_dual_data_run2a:
   resources:
     mem_mb = 16384
   wildcard_constraints:
     angacc = "run2a.*"
   input:
-    # Samples and weights
     sample_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2a'),
     sample_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2a'),
-    weights_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi',year='run2a', weight=f'angWeight'),
+    weights_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2a', weight=f'angWeight'),
     weights_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2a', weight=f'angWeight'),
     sample_data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', year='run2a'),
-    # Angular acceptance at corrected level
-    angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_corrected_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_corrected_biased.json'
-    ],
-    angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_corrected_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_corrected_unbiased.json'
-    ],
-    # Time acceptance coefficients
-    timeacc_biased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
-    ],
-    timeacc_unbiased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
-    ],
-    # CSP
-    csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ],
-    # Time resolution
-    time_resolution = lambda wcs: [
-      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ],
-    # Flavor tagging
-    flavor = lambda wcs: [
-      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ]
+    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2a', csp='none', angacc='corrected', trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2a', csp='none', angacc='corrected', trigger='unbiased'),
+    timeacc_biased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', year='run2a', trigger='biased'),
+    timeacc_unbiased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', year='run2a', trigger='unbiased'),
+    csp_factors = lambda wcs: csps(wcs, mode='Bs2JpsiPhi', year='run2a'),
+    time_resolution = lambda wcs: timeress(wcs, mode='Bs2JpsiPhi', year='run2a'),
+    flavor = lambda wcs: flavors(wcs, mode='Bs2JpsiPhi', year='run2a')
   params:
     params_std = [
-      'analysis/params/generator/2015/MC_Bs2JpsiPhi.json', # WARNING
-      'analysis/params/generator/2016/MC_Bs2JpsiPhi.json'], # WARNING
+      'analysis/params/generator/2015/MC_Bs2JpsiPhi.json',
+      'analysis/params/generator/2016/MC_Bs2JpsiPhi.json'],
     params_dG0 = [
-      'analysis/params/generator/2015/MC_Bs2JpsiPhi_dG0.json', # WARNING
-      'analysis/params/generator/2016/MC_Bs2JpsiPhi_dG0.json'], # WARNING
+      'analysis/params/generator/2015/MC_Bs2JpsiPhi_dG0.json',
+      'analysis/params/generator/2016/MC_Bs2JpsiPhi_dG0.json'],
   output:
     angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json'
-    ],
-    tables_biased = [
-      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.tex',
-      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.tex'
-    ],
-    tables_unbiased = [
-      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.tex',
-      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.tex'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json'
     ],
     weights_std = [
-      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi/{version}_{angacc}_{timeacc}_kkpWeight.root'
+      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
     weights_dg0 = [
-      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{timeacc}_kkpWeight.root'
+      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
   log:
-    'output/log/angular_acceptance_iterative/{angacc}/Bs2JpsiPhi/{version}_run2a_{timeacc}.log'
+    'output/log/angular_acceptance_iterative/{angacc}/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/iterative.py\
-           --sample-mc-std           {",".join(input.sample_std)}\
-           --sample-mc-dg0           {",".join(input.sample_dG0)}\
-           --sample-data             {",".join(input.sample_data)}\
-           --params-mc-std           {",".join(params.params_std)}\
-           --params-mc-dg0           {",".join(params.params_dG0)}\
-           --angular-weights-mc-std  {",".join(input.weights_std)}\
-           --angular-weights-mc-dg0  {",".join(input.weights_dG0)}\
-           --input-weights-biased    {",".join(input.angacc_biased)}\
-           --input-weights-unbiased  {",".join(input.angacc_unbiased)}\
-           --input-coeffs-biased     {",".join(input.timeacc_biased)}\
-           --input-coeffs-unbiased   {",".join(input.timeacc_unbiased)}\
-           --input-csp               {",".join(input.csp_factors)}\
-           --input-time-resolution   {",".join(input.time_resolution)}\
-           --input-flavor-tagging    {",".join(input.flavor)}\
-           --output-weights-biased   {",".join(output.angacc_biased)}\
-           --output-weights-unbiased {",".join(output.angacc_unbiased)}\
-           --output-tables-biased    {",".join(output.tables_biased)}\
-           --output-tables-unbiased  {",".join(output.tables_unbiased)}\
-           --output-angular-weights-mc-std  {",".join(output.weights_std)}\
-           --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
-           --year                    {",".join(YEARS['Run2a'])}\
-           --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
-           --version                 {wildcards.version}\
+    --sample-mc-std           {",".join(input.sample_std)}\
+    --sample-mc-dg0           {",".join(input.sample_dG0)}\
+    --sample-data             {",".join(input.sample_data)}\
+    --params-mc-std           {",".join(params.params_std)}\
+    --params-mc-dg0           {",".join(params.params_dG0)}\
+    --angular-weights-mc-std  {",".join(input.weights_std)}\
+    --angular-weights-mc-dg0  {",".join(input.weights_dG0)}\
+    --input-weights-biased    {",".join(input.angacc_biased)}\
+    --input-weights-unbiased  {",".join(input.angacc_unbiased)}\
+    --input-coeffs-biased     {",".join(input.timeacc_biased)}\
+    --input-coeffs-unbiased   {",".join(input.timeacc_unbiased)}\
+    --input-csp               {",".join(input.csp_factors)}\
+    --input-time-resolution   {",".join(input.time_resolution)}\
+    --input-flavor-tagging    {",".join(input.flavor)}\
+    --output-weights-biased   {",".join(output.angacc_biased)}\
+    --output-weights-unbiased {",".join(output.angacc_unbiased)}\
+    --output-tables-biased    {",".join(output.tables_biased)}\
+    --output-tables-unbiased  {",".join(output.tables_unbiased)}\
+    --output-angular-weights-mc-std  {",".join(output.weights_std)}\
+    --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
+    --year                    {",".join(YEARS['Run2a'])}\
+    --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
+    --version                 {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2a :: {wildcards}", f"{log}")
-
 
 
 rule angular_acceptance_iterative_mc_run2a:
@@ -351,11 +312,11 @@ rule angular_acceptance_iterative_mc_run2a:
     data_sample = lambda wcs: tuples(wcs, year='run2a'),
     # Angular acceptance at corrected level
     angacc_biased = lambda wcs: expand(
-      "output/params/angular_acceptance/{year}/{mode}/{version}_corrected_biased.json",
+      "output/params/angular_acceptance/{year}/{mode}/{version}_corrected_{csp}_biased.json",
       year=YEARS[f'run2a'], version=f'{wcs.version}'.replace('Odd','Even'), mode=f'{wcs.mode}'
     ),
     angacc_unbiased = lambda wcs: expand(
-      "output/params/angular_acceptance/{year}/{mode}/{version}_corrected_unbiased.json",
+      "output/params/angular_acceptance/{year}/{mode}/{version}_corrected_{csp}_unbiased.json",
         year=YEARS[f'run2a'], version=f'{wcs.version}'.replace('Odd','Even'), mode=f'{wcs.mode}'
     ),
     # Time acceptance coefficients
@@ -371,18 +332,18 @@ rule angular_acceptance_iterative_mc_run2a:
     ),
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/{wcs.mode}/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/csp_factors/2016/{wcs.mode}/{wcs.version.split("@")[0].split("bdt")[0]}.json'
+      f'output/params/csp_factors/2015/{wcs.mode}/{version}_{csp}.json',
+      f'output/params/csp_factors/2016/{wcs.mode}/{version}_{csp}.json'
     ],
     # Time resolution
     time_resolution = lambda wcs: [
-      f'output/params/time_resolution/2015/{wcs.mode}/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/time_resolution/2016/{wcs.mode}/{wcs.version.split("@")[0].split("bdt")[0]}.json'
+      f'output/params/time_resolution/2015/{wcs.mode}/{version}_{timeres}.json',
+      f'output/params/time_resolution/2016/{wcs.mode}/{version}_{timeres}.json'
     ],
     # Flavor tagging
     flavor = lambda wcs: [
-      f'output/params/flavor_tagging/2015/{wcs.mode}/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/flavor_tagging/2016/{wcs.mode}/{wcs.version.split("@")[0].split("bdt")[0]}.json'
+      f'output/params/flavor_tagging/2015/{wcs.mode}/{version}_{flavor}.json',
+      f'output/params/flavor_tagging/2016/{wcs.mode}/{version}_{flavor}.json'
     ]
   params:
     params = [
@@ -390,19 +351,19 @@ rule angular_acceptance_iterative_mc_run2a:
       'analysis/params/generator/2016/{mode}.json'],
   output:
     angacc_biased = [
-      'output/params/angular_acceptance/2015/{mode}/{version}_{angacc}_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2016/{mode}/{version}_{angacc}_{timeacc}_biased.json'
+      'output/params/angular_acceptance/2015/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json',
+      'output/params/angular_acceptance/2016/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/{mode}/{version}_{angacc}_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2016/{mode}/{version}_{angacc}_{timeacc}_unbiased.json'
+      'output/params/angular_acceptance/2015/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json',
+      'output/params/angular_acceptance/2016/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json'
     ],
     weights = [
-      SAMPLES_PATH+'2015/{mode}/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2016/{mode}/{version}_{angacc}_{timeacc}_kkpWeight.root'
+      SAMPLES_PATH+'2015/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2016/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
   log:
-    'output/log/angular_acceptance_iterative_mc/run2a/{mode}/{version}_{angacc}_{timeacc}.log'
+    'output/log/angular_acceptance_iterative_mc/run2a/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/iterative_mc.py\
@@ -431,71 +392,29 @@ rule angular_acceptance_iterative_mc_run2a:
 # }}}
 
 
-
 # Run2 angular acceptance {{{
 #     This rule runs the iterative procedure for all Run2 YEARS using both
 #     MC and MC_dG0 files.
 
-rule angular_acceptance_iterative_data_run2:
+rule angular_acceptance_iterative_dual_data_run2:
   resources:
     mem_mb = 16384
   threads: 16
   wildcard_constraints:
-    angacc = "run2(shit)?"
+    angacc = "run2(shit)?",
   input:
-    # Samples and weights
-    sample_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',year='Run2'),
-    sample_dG0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',year='Run2'),
-    weights_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',year='Run2',weight=f'angWeight'),
-    weights_dG0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',year='Run2',weight=f'angWeight'),
-    sample_data = lambda wcs: tuples(wcs,mode='Bs2JpsiPhi',year='Run2'),
-    # Angular acceptance at corrected level
-    angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_corrected_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_corrected_biased.json',
-      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_corrected_biased.json',
-      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_corrected_biased.json'
-    ],
-    angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_corrected_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_corrected_unbiased.json',
-      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_corrected_unbiased.json',
-      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_corrected_unbiased.json'
-    ],
-    # Time acceptance coefficients
-    timeacc_biased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
-      'output/params/time_acceptance/2017/Bd2JpsiKstar/{version}_{timeacc}_biased.json',
-      'output/params/time_acceptance/2018/Bd2JpsiKstar/{version}_{timeacc}_biased.json'
-    ],
-    timeacc_unbiased = [
-      'output/params/time_acceptance/2015/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
-      'output/params/time_acceptance/2016/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
-      'output/params/time_acceptance/2017/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json',
-      'output/params/time_acceptance/2018/Bd2JpsiKstar/{version}_{timeacc}_unbiased.json'
-    ],
-    # CSP
-    csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/csp_factors/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/csp_factors/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/csp_factors/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ],
-    # Time resolution
-    time_resolution = lambda wcs: [
-      f'output/params/time_resolution/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/time_resolution/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/time_resolution/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/time_resolution/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ],
-    # Flavor tagging
-    flavor = lambda wcs: [
-      f'output/params/flavor_tagging/2015/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/flavor_tagging/2016/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/flavor_tagging/2017/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json',
-      f'output/params/flavor_tagging/2018/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ]
+    sample_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2'),
+    sample_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2'),
+    weights_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2', weight=f'angWeight'),
+    weights_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2', weight=f'angWeight'),
+    sample_data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', year='run2'),
+    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2', csp='none', angacc='corrected', trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2', csp='none', angacc='corrected', trigger='unbiased'),
+    timeacc_biased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', year='run2', trigger='biased'),
+    timeacc_unbiased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', year='run2', trigger='unbiased'),
+    csp_factors = lambda wcs: csps(wcs, mode='Bs2JpsiPhi', year='run2'),
+    time_resolution = lambda wcs: timeress(wcs, mode='Bs2JpsiPhi', year='run2'),
+    flavor = lambda wcs: flavors(wcs, mode='Bs2JpsiPhi', year='run2')
   params:
     params_std = [
       'analysis/params/generator/2015/MC_Bs2JpsiPhi.json',
@@ -511,74 +430,62 @@ rule angular_acceptance_iterative_data_run2:
     ],
   output:
     angacc_biased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json',
-      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json',
+      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json',
+      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json',
-      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json'
-    ],
-    tables_biased = [
-      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.tex',
-      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.tex',
-      'output/tables/angular_acceptance/2017/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.tex',
-      'output/tables/angular_acceptance/2018/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.tex'
-    ],
-    tables_unbiased = [
-      'output/tables/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.tex',
-      'output/tables/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.tex',
-      'output/tables/angular_acceptance/2017/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.tex',
-      'output/tables/angular_acceptance/2018/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.tex'
+      'output/params/angular_acceptance/2015/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json',
+      'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json',
+      'output/params/angular_acceptance/2017/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json',
+      'output/params/angular_acceptance/2018/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json'
     ],
     weights_std = [
-      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2017/MC_Bs2JpsiPhi/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2018/MC_Bs2JpsiPhi/{version}_{angacc}_{timeacc}_kkpWeight.root',
+      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2017/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2018/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
     ],
     weights_dg0 = [
-      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2017/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{timeacc}_kkpWeight.root',
-      SAMPLES_PATH+'2018/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{timeacc}_kkpWeight.root',
+      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2017/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'2018/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
     ],
   log:
-    'output/log/angular_acceptance_iterative/{angacc}/Bs2JpsiPhi/{version}_base_{timeacc}.log'
+    'output/log/angular_acceptance_iterative/{angacc}/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/iterative.py\
-    --sample-mc-std           {",".join(input.sample_std)}\
-    --sample-mc-dg0           {",".join(input.sample_dG0)}\
-    --sample-data             {",".join(input.sample_data)}\
-    --params-mc-std           {",".join(params.params_std)}\
-    --params-mc-dg0           {",".join(params.params_dG0)}\
-    --angular-weights-mc-std  {",".join(input.weights_std)}\
-    --angular-weights-mc-dg0  {",".join(input.weights_dG0)}\
-    --input-weights-biased    {",".join(input.angacc_biased)}\
-    --input-weights-unbiased  {",".join(input.angacc_unbiased)}\
-    --input-coeffs-biased     {",".join(input.timeacc_biased)}\
-    --input-coeffs-unbiased   {",".join(input.timeacc_unbiased)}\
-    --input-csp               {",".join(input.csp_factors)}\
-    --input-time-resolution   {",".join(input.time_resolution)}\
-    --input-flavor-tagging    {",".join(input.flavor)}\
-    --output-weights-biased   {",".join(output.angacc_biased)}\
+    --sample-mc-std {",".join(input.sample_std)}\
+    --sample-mc-dg0 {",".join(input.sample_dG0)}\
+    --sample-data {",".join(input.sample_data)}\
+    --params-mc-std {",".join(params.params_std)}\
+    --params-mc-dg0 {",".join(params.params_dG0)}\
+    --angular-weights-mc-std {",".join(input.weights_std)}\
+    --angular-weights-mc-dg0 {",".join(input.weights_dG0)}\
+    --input-weights-biased {",".join(input.angacc_biased)}\
+    --input-weights-unbiased {",".join(input.angacc_unbiased)}\
+    --input-coeffs-biased {",".join(input.timeacc_biased)}\
+    --input-coeffs-unbiased {",".join(input.timeacc_unbiased)}\
+    --input-csp {",".join(input.csp_factors)}\
+    --input-time-resolution {",".join(input.time_resolution)}\
+    --input-flavor-tagging {",".join(input.flavor)}\
+    --output-weights-biased {",".join(output.angacc_biased)}\
     --output-weights-unbiased {",".join(output.angacc_unbiased)}\
-    --output-tables-biased    {",".join(output.tables_biased)}\
-    --output-tables-unbiased  {",".join(output.tables_unbiased)}\
-    --output-angular-weights-mc-std  {",".join(output.weights_std)}\
-    --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
-    --year                    {",".join(YEARS['Run2'])}\
-    --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
-    --version                 {wildcards.version}\
+    --output-angular-weights-mc-std {",".join(output.weights_std)}\
+    --output-angular-weights-mc-dg0 {",".join(output.weights_dg0)}\
+    --year {",".join(YEARS['Run2'])}\
+    --angacc {wildcards.angacc}\
+    --version {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 :: {wildcards}", f"{log}")
 
 # }}}
 
+
+# bd rules and monchito stuff (not fixed)  --- NEEDS CLEANING {{{
 
 rule angular_acceptance_iterativeRun2Bd:
   resources:
@@ -654,7 +561,10 @@ rule angular_acceptance_iterativeRun2Bd:
     --version                 {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 Bd :: {wildcards}", f"{log}")
-##Comparacion Simon Ramon
+ 
+
+
+#Comparacion Simon Ramon
 rule angular_acceptance_iterativeRun2BdSimon:
   resources:
     mem_mb=8192
@@ -717,7 +627,7 @@ rule angular_acceptance_iterativeRun2BdSimon:
     send_mail(f"Angular Acceptance Run2 Bd :: {wildcards}", f"{log}")
 
 
-
+## its unfinished
 rule angular_acceptance_iterative_run2_mc:
   resources:
     mem_mb=8192
@@ -784,7 +694,6 @@ rule angular_acceptance_iterative_run2_mc:
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 MC :: {wildcards}", f"{log}")
 
-# }}}
 
 
 # Run2 MC Bs angular acceptance ------------------------------------------------------
@@ -1161,50 +1070,31 @@ rule angular_acceptance_iterativeRun2MCBs4:
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 MC Bs :: {wildcards}", f"{log}")
 
+# }}}
 
 
-# Yearly angular acceptance
+# Yearly angular acceptance {{{
 #     This rule runs the iterative procedure for only one year using both
-#     MC and MC_dG0 files. {{{
-rule angular_acceptance_iterative_yearly:
+#     MC and MC_dG0 files.
+
+rule angular_acceptance_iterative_dual_data_yearly:
   wildcard_constraints:
     year = "\d{4}",
     angacc = "yearly(shit)?"
   threads: 8
   input:
-    sample_std = lambda wcs: [tuples(wcs,mode='MC_Bs2JpsiPhi')],
-    sample_dG0 = lambda wcs: [tuples(wcs,mode='MC_Bs2JpsiPhi_dG0')],
-    weights_std = lambda wcs: [tuples(wcs,mode='MC_Bs2JpsiPhi',weight=f'angWeight')],
-    weights_dG0 = lambda wcs: [tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',weight=f'angWeight')],
-    sample_data = lambda wcs: [tuples(wcs,mode='Bs2JpsiPhi')],
-    # Angular acceptance at corrected level
-    angacc_biased = [
-      'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_corrected_biased.json'
-    ],
-    angacc_unbiased = [
-      'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_corrected_unbiased.json'
-    ],
-    # Time acceptance coefficients
-    timeacc_biased = lambda wcs : expand(
-        'output/params/time_acceptance/{{year}}/{mode}/{{version}}_{{timeacc}}_biased.json',
-        mode='MC_Bs2JpsiPhi_dG0' if 'single' in f'{wcs.timeacc}' else 'Bd2JpsiKstar'
-    ),
-    timeacc_unbiased = lambda wcs : expand(
-        'output/params/time_acceptance/{{year}}/{mode}/{{version}}_{{timeacc}}_unbiased.json',
-        mode='MC_Bs2JpsiPhi_dG0' if 'single' in f'{wcs.timeacc}' else 'Bd2JpsiKstar'
-    ),
-    # CSP
-    csp_factors = lambda wcs: [
-      f'output/params/csp_factors/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ],
-    # Time resolution
-    time_resolution = lambda wcs: [
-      f'output/params/time_resolution/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ],
-    # Flavor tagging
-    flavor = lambda wcs: [
-      f'output/params/flavor_tagging/{wcs.year}/Bs2JpsiPhi/{wcs.version.split("@")[0].split("bdt")[0]}.json'
-    ]
+    sample_std = lambda wcs: [tuples(wcs, mode='MC_Bs2JpsiPhi')],
+    sample_dG0 = lambda wcs: [tuples(wcs, mode='MC_Bs2JpsiPhi_dG0')],
+    weights_std = lambda wcs: [tuples(wcs, mode='MC_Bs2JpsiPhi', csp='none', weight=f'angWeight')],
+    weights_dG0 = lambda wcs: [tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', csp='none', weight=f'angWeight')],
+    sample_data = lambda wcs: [tuples(wcs, mode='Bs2JpsiPhi')],
+    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', csp='none', angacc='corrected', trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', csp='none', angacc='corrected', trigger='unbiased'),
+    timeacc_biased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', trigger='biased'),
+    timeacc_unbiased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', trigger='unbiased'),
+    csp_factors = lambda wcs: csps(wcs, mode='Bs2JpsiPhi'),
+    time_resolution = lambda wcs: timeress(wcs, mode='Bs2JpsiPhi'),
+    flavor = lambda wcs: flavors(wcs, mode='Bs2JpsiPhi')
   params:
     params_std = [
       'analysis/params/generator/{year}/MC_Bs2JpsiPhi.json'
@@ -1214,51 +1104,43 @@ rule angular_acceptance_iterative_yearly:
     ],
   output:
     angacc_biased   = [
-      'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json'
+      'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json'
     ],
     angacc_unbiased = [
-      'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json'
-    ],
-    tables_biased   = [
-      'output/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_biased.json'
-    ],
-    tables_unbiased = [
-      'output/tables/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_unbiased.json'
+      'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json'
     ],
     weights_std = [
-      SAMPLES_PATH+'{year}/MC_Bs2JpsiPhi/{version}_{angacc}_{timeacc}_kkpWeight.root'
+      SAMPLES+'/{year}/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
     weights_dg0 = [
-      SAMPLES_PATH+'{year}/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{timeacc}_kkpWeight.root'
+      SAMPLES+'/{year}/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
   log:
-    'output/log/angular_acceptance_iterative/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}.log'
+    'output/log/angular_acceptance_iterative_dual_data/{year}/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/iterative.py\
-    --sample-mc-std                  {",".join(input.sample_std)}\
-    --sample-mc-dg0                  {",".join(input.sample_dG0)}\
-    --sample-data                    {",".join(input.sample_data)}\
-    --params-mc-std                  {",".join(params.params_std)}\
-    --params-mc-dg0                  {",".join(params.params_dG0)}\
-    --angular-weights-mc-std         {",".join(input.weights_std)}\
-    --angular-weights-mc-dg0         {",".join(input.weights_dG0)}\
-    --input-weights-biased           {",".join(input.angacc_biased)}\
-    --input-weights-unbiased         {",".join(input.angacc_unbiased)}\
-    --input-coeffs-biased            {",".join(input.timeacc_biased)}\
-    --input-coeffs-unbiased          {",".join(input.timeacc_unbiased)}\
-    --input-csp                      {",".join(input.csp_factors)}\
-    --input-time-resolution          {",".join(input.time_resolution)}\
-    --input-flavor-tagging           {",".join(input.flavor)}\
-    --output-weights-biased          {",".join(output.angacc_biased)}\
-    --output-weights-unbiased        {",".join(output.angacc_unbiased)}\
-    --output-tables-biased           {",".join(output.tables_biased)}\
-    --output-tables-unbiased         {",".join(output.tables_unbiased)}\
-    --output-angular-weights-mc-std  {",".join(output.weights_std)}\
-    --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
-    --year                           {",".join([wildcards.year])}\
-    --angacc                         {wildcards.angacc}_{wildcards.timeacc}\
-    --version                        {wildcards.version}\
+    --sample-mc-std {",".join(input.sample_std)}\
+    --sample-mc-dg0 {",".join(input.sample_dG0)}\
+    --sample-data {",".join(input.sample_data)}\
+    --params-mc-std {",".join(params.params_std)}\
+    --params-mc-dg0 {",".join(params.params_dG0)}\
+    --angular-weights-mc-std {",".join(input.weights_std)}\
+    --angular-weights-mc-dg0 {",".join(input.weights_dG0)}\
+    --input-weights-biased {",".join(input.angacc_biased)}\
+    --input-weights-unbiased {",".join(input.angacc_unbiased)}\
+    --input-coeffs-biased {",".join(input.timeacc_biased)}\
+    --input-coeffs-unbiased {",".join(input.timeacc_unbiased)}\
+    --input-csp {",".join(input.csp_factors)}\
+    --input-time-resolution {",".join(input.time_resolution)}\
+    --input-flavor-tagging {",".join(input.flavor)}\
+    --output-weights-biased {",".join(output.angacc_biased)}\
+    --output-weights-unbiased {",".join(output.angacc_unbiased)}\
+    --output-angular-weights-mc-std {",".join(output.weights_std)}\
+    --output-angular-weights-mc-dg0 {",".join(output.weights_dg0)}\
+    --year {",".join([wildcards.year])}\
+    --angacc {wildcards.angacc}\
+    --version {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Yearly :: {wildcards}", f"{log}")
 
@@ -1267,6 +1149,7 @@ rule angular_acceptance_iterative_yearly:
 # Yearly angular acceptance ------------------------------------------------------
 #     This rule runs the iterative procedure for only one year using both
 #     MC and MC_dG0 files.
+
 rule angular_acceptance_compare_cuts:
   input:
     params = lambda wcs: [
@@ -1292,12 +1175,15 @@ rule angular_acceptance_compare_cuts:
 
 # }}}
 
+
+# Time dependence of the angular acceptance {{{
+
 rule angular_weights_time_dependence:
   resources:
     mem_mb = 8192
   input:
-    sample_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi'),
-    sample_dg0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
+    sample_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi'),
+    sample_dg0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0'),
     weights_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',weight=f'kkpWeight'),
     weights_dg0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',weight=f'kkpWeight'),
     timeacc = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
@@ -1312,23 +1198,24 @@ rule angular_weights_time_dependence:
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/time_dependence.py\
-           --sample-std             {input.sample_std}\
-           --sample-dg0             {input.sample_dg0}\
-           --params-std             {params.params_std}\
-           --params-dg0             {params.params_dg0}\
-           --kkpweight-std          {input.weights_std}\
-           --kkpweight-dg0          {input.weights_dg0}\
-           --angacc                 {input.angacc}\
-           --timeacc                {input.timeacc}\
-           --figure                 {output.figure}\
-           --mode                   {wildcards.mode}\
-           --version                {wildcards.version}\
-           --trigger                {wildcards.trigger}\
-           --year                   {wildcards.year}\
-           --shit                   {wildcards.angacc}_{wildcards.timeacc}\
+    --sample-std             {input.sample_std}\
+    --sample-dg0             {input.sample_dg0}\
+    --params-std             {params.params_std}\
+    --params-dg0             {params.params_dg0}\
+    --kkpweight-std          {input.weights_std}\
+    --kkpweight-dg0          {input.weights_dg0}\
+    --angacc                 {input.angacc}\
+    --timeacc                {input.timeacc}\
+    --figure                 {output.figure}\
+    --mode                   {wildcards.mode}\
+    --version                {wildcards.version}\
+    --trigger                {wildcards.trigger}\
+    --year                   {wildcards.year}\
+    --shit                   {wildcards.angacc}_{wildcards.timeacc}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Time Dependence :: {wildcards}", f"{log}", [f"{output}"])
 
+# }}}
 
 
 # Produce plots with the time dependece of the angular efficiency {{{
@@ -1371,5 +1258,6 @@ rule angular_efficiency_time_dependence:
 # }}}
 
 
-
 # vim:foldmethod=marker
+# TODO: 1. Clean and tidy up analitic rules
+# TODO: 2. Moncho rules ? 
