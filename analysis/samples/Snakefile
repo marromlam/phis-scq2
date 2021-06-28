@@ -1,14 +1,15 @@
-# sync_ntuples ----------------------------------------------------------------
+# Syncronize tuples from EOS {{{
 #    This rule downloads all files corresponding to a given VERSION from EOS
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
 #    and then it worka automatically.
-#    {{{
 
 rule samples_sync_tuple:
   resources:
     mem_mb=6144
+  params:
+    settings.user['eos']
   output:
-    sample = temp(SAMPLES_PATH+'{year}/{mode}/{version}_sWeight.root')
+    temp(SAMPLES+'/{year}/{mode}/{version}_sWeight.root')
   log:
     'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
   run:
@@ -20,15 +21,40 @@ rule samples_sync_tuple:
              --version {wildcards.version}\
              --tree DecayTree\
              --output {output}\
+             --eos {params}\
       ) &> {log}""")
 
 # }}}
 
 
-# reduce_ntuples --------------------------------------------------------------
+# Create stat table for sample {{{
+#    This rule downloads all files corresponding to a given VERSION from EOS
+#    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
+#    and then it worka automatically.
+
+rule samples_stat_tuple:
+  resources:
+    mem_mb=6144
+  input:
+    lambda wcs: tuples(wcs, year=f'{wcs.year}')
+  output:
+    'output/tables/samples_stat_tuple/{year}/{mode}/{version}.tex'
+  log:
+    'output/log/samples_stat_tuple/{year}/{mode}/{version}.log'
+  run:
+    shell(f"""(time\
+    python analysis/samples/tuple_stat.py\
+    --year {wildcards.year}\
+    --sample {','.join(input)}\
+    --output {output}\
+    ) &> {log}""")
+
+# }}}
+
+
+# Reduce branches in tuples {{{
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package.
-#    {{{
 
 rule samples_reduce_tuple:
   wildcard_constraints:
@@ -38,7 +64,7 @@ rule samples_reduce_tuple:
   input:
     sample = lambda wcs: tuples(wcs, weight='kinWeight')
   output:
-    sample = SAMPLES_PATH+'{year}/{mode}/{version,[A-Za-z0-9@]+}.root'
+    sample = SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}.root'
   log:
     'output/log/samples_reduce_tuple/{year}/{mode}/{version}.log'
   run:
@@ -53,10 +79,9 @@ rule samples_reduce_tuple:
 # }}}
 
 
-# samples plot-----------------------------------------------------------------
+# samples plot {{{
 #   plot of differents branches of the ntuples. this rule get the plots for
 #   the years with no corrections, sw and kinematic corrections (MC vs data)
-#   {{{
 
 rule plot_samples:
   resources:

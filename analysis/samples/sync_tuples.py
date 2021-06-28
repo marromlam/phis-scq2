@@ -22,6 +22,8 @@ ROOT_PANDAS = True
 if ROOT_PANDAS:
   import root_pandas
 
+import config
+
 # }}}
 
 
@@ -30,7 +32,6 @@ if ROOT_PANDAS:
 # binned_vars = {'etaB': 'B_ETA', 'pTB': 'B_PT', 'sigmat': 'sigmat'}
 # binned_files = {'etaB': 'eta', 'pTB': 'pt', 'sigmat': 'sigmat'}
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-EOSPATH = hjson.load(open('config.json'))['eos']
 
 vsub_dict = {
   "evtOdd": "(eventNumber % 2) != 0",
@@ -65,6 +66,7 @@ if __name__ == "__main__":
   p.add_argument('--version', help='Full root file with huge amount of branches.')
   p.add_argument('--tree', help='Input file tree name.')
   p.add_argument('--output', help='Input file tree name.')
+  p.add_argument('--eos', help='Input file tree name.')
   p.add_argument('--uproot-kwargs', help='Arguments to uproot.pandas.df')
   args = vars(p.parse_args())
 
@@ -74,6 +76,7 @@ if __name__ == "__main__":
   y = args['year']
   m = args['mode']
   tree = args['tree']
+  EOSPATH = args['eos']
 
   path = os.path.dirname(os.path.abspath(args['output']))
   path = os.path.join(path, f"{abs(hash(f'{m}_{y}_selected_bdt_sw_{V}.root'))}")
