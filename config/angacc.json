@@ -1,0 +1,11 @@
+{
+  "bdtconfig": {
+    "n_estimators": 20,
+    "learning_rate": 0.1,
+    "max_depth": 3,
+    "min_samples_leaf": 500,
+    "gb_args": { "subsample": 1 }
+  },
+  "analytic_bins": [20, 20, 20],
+  "legendre_order": [4, 2, 0]
+}

@@ -11,9 +11,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 #include <ipanema/complex.h>
-
 
 
 WITHIN_KERNEL
@@ -49,6 +47,8 @@ ftype rateBs(const ftype *data,
              const int USE_TIMERES
              )
 {
+  // Print inputs {{{
+
   #if DEBUG
   if ( DEBUG > 4 && get_global_id(0) == DEBUG_EVT )
   {
@@ -113,9 +113,11 @@ ftype rateBs(const ftype *data,
             coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
   }
   #endif
+  
+  // }}}
 
-
-  // Variables -----------------------------------------------------------------
+  
+  // Variables {{{
   //     Make sure that the input it's in this order.
   //     lalala
   const ftype cosK       = data[0];                // Time-angular distribution
@@ -150,8 +152,10 @@ ftype rateBs(const ftype *data,
   const bool FULL_RANGE = (cosKLL==-1)&&(cosKUL==1) &&
                           (cosLLL==-1)&&(cosLUL==1) &&
                           (hphiLL==-M_PI)&&(hphiUL==M_PI);
+  // }}}
 
-  // Time resolution -----------------------------------------------------------
+
+  // Time resolution {{{
   //     In order to remove the effects of conv, set sigma_t=0, so in this way
   //     you are running the first branch of getExponentialConvolution.
   ftype delta_t = sigma_t;
@@ -176,6 +180,13 @@ ftype rateBs(const ftype *data,
     printf("                   : time-t_offset=%.8f\n", delta_t);
   }
   #endif
+  
+  // }}}
+
+
+  // Time-dependent part {{{
+
+  ctype exp_p = C(0,0); ctype exp_m = C(0,0); ctype exp_i = C(0,0);
 
   if (USE_TIMEACC & !USE_TIMERES)
   {
@@ -210,7 +221,11 @@ ftype rateBs(const ftype *data,
   }
   #endif
 
-  // Flavor tagging ------------------------------------------------------------
+  // }}}
+
+
+  // Flavor tagging {{{
+
   ftype omegaOSB = 0; ftype omegaOSBbar = 0; ftype tagOS = 0;
   ftype omegaSSB = 0; ftype omegaSSBbar = 0; ftype tagSS = 0;
 
@@ -256,17 +271,27 @@ ftype rateBs(const ftype *data,
   }
   #endif
 
-  // Decay-time acceptance -----------------------------------------------------
+  // }}}
+
+
+  // Decay-time acceptance {{{
   //     To get rid of decay-time acceptance set USE_TIMEACC to False. If True
   //     then time_efficiency locates the time bin of the event and returns
   //     the value of the cubic spline.
+
   ftype dta = 1.0;
   if (USE_TIMEACC)
   {
     dta = time_efficiency(time, coeffs, tLL, tUL);
   }
 
-  // Compute per event pdf -----------------------------------------------------
+  // }}}
+
+
+  // Compute per event pdf {{{
+
+  // Allocate some variables {{{
+
   ftype vnk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   #if DEBUG
     ftype vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
@@ -279,6 +304,11 @@ ftype rateBs(const ftype *data,
 
   ftype nk, fk, ak, bk, ck, dk, hk_B, hk_Bbar;
   ftype pdfB = 0.0; ftype pdfBbar = 0.0;
+
+  // }}}
+
+
+  // Angular-dependent part {{{
 
   for(int k = 1; k <= NTERMS; k++)
   {
@@ -350,9 +380,12 @@ ftype rateBs(const ftype *data,
     }
   }
   #endif
+  
+  // }}}
 
 
-  // Compute pdf integral ------------------------------------------------------
+  // Compute pdf integral {{{
+
   ftype intBBar[2] = {0.,0.};
   if (USE_TIMEACC == 0)
   {
@@ -385,10 +418,12 @@ ftype rateBs(const ftype *data,
   }
   const ftype intB = intBBar[0];
   const ftype intBbar = intBBar[1];
+  
+  // }}}
 
 
+  // Cooking the output {{{
 
-  // Cooking the output -------------------------------------------------------
   ftype num = 1.0; ftype den = 1.0;
   num = (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
         (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar;
@@ -416,10 +451,13 @@ ftype rateBs(const ftype *data,
   }
   #endif
 
+  // }}}
+  
+  // }}}
+
   return num/den;
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
+// vim:foldmethod=marker
 // that's all folks!

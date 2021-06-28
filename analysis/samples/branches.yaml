@@ -1,3 +1,11 @@
+# BRANCHES
+#
+#
+#
+
+
+# Common branches for all samples {{{
+
 common: &common
   "time" : "time"
   "cosK" : "helcosthetaK"
@@ -23,14 +31,11 @@ common: &common
   "magnet" : "Polarity"
   "etaB" : "B_ETA"
   "evtN" : "eventNumber"
+  "runN" : "runNumber"
   "sw" : "sw"
-  "sw_etaB" : "sw_etaB"
-  "sw_pTB" : "sw_pTB"
-  "sw_sigmat" : "sw_sigmat"
+  "veloWeight" : "time/time"
+  "docaz" : "doca_z"
   "sWeight" : "sw"
-  "sWeight_etaB" : "sw_etaB"
-  "sWeight_pTB" : "sw_pTB"
-  "sWeight_sigmat" : "sw_sigmat"
   "logIPchi2B" : "log_B_IPCHI2_mva" #From this point, added by Ramon
   "BDTFchi2" : "B_DTF_CHI2NDOF"
   "logMINkPNNk" : "log_min_K_PNNk_mva"
@@ -40,6 +45,18 @@ common: &common
   "MUmaxTRchi2" : "max_mu_TRCHI2_mva"
   "logJpsiVXchi2" : "log_Jpsi_VX_CHI2NDOF_mva"
   "logMINmuPNNmu" : "log_min_mu_PNNmu_mva"
+  "HpTrackchi2" : "hplus_TRACK_CHI2NDOF" #MC vs data differences to check with data weight ang acc
+  "HpPID" : "hplus_PIDK"
+  "HmTrackchi2" : "hminus_TRACK_CHI2NDOF"
+  "LmTrackchi2" : "muplus_TRACK_CHI2NDOF"
+  "LpTrackchi2" : "muminus_TRACK_CHI2NDOF"
+  "HTRchi2" : "max_K_TRCHI2_mva"
+  "LTRchi2" : "max_mu_TRCHI2_mva"
+
+# }}}
+
+
+# MC common variables {{{
 
 MC_common: &MC_common
   <<: *common
@@ -52,13 +69,23 @@ MC_common: &MC_common
   "gencosL" : "truehelcosthetaL_GenLvl"
   "genhphi" : "truehelphi_GenLvl"
   "kinWeight" : "kinWeight"
-  "kinWeight_etaB" : "kinWeight_etaB"
-  "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pTB" : "kinWeight_pTB"
+  "oddWeight" : "oddWeight"
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "bkgcatB" : "B_BKGCAT"
   "gb_weights" : "gb_weights"
+
+# }}}
+
+
+# Bs family {{{
+
+Bs2JpsiPhi: &Bs2JpsiPhi
+  <<: *common
+  "tagOSdec" : "OS_Combination_DEC"
+  "tagSSdec" : "B_SSKaonLatest_TAGDEC"
+  "tagOSeta" : "OS_Combination_ETA"
+  "tagSSeta" : "B_SSKaonLatest_TAGETA"
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
@@ -68,52 +95,60 @@ MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
   "dg0Weight" : "dg0Weight"
   "genidB" : "B_ID_GenLvl"
+  "truemHH" : "sqrt(X_TRUEP_E*X_TRUEP_E-(X_TRUEP_X*X_TRUEP_X+X_TRUEP_Y*X_TRUEP_Y+X_TRUEP_Z*X_TRUEP_Z))"
+  "truthMatch" : "(B_BKGCAT == 0 | B_BKGCAT == 10 | (B_BKGCAT == 50 & B_TRUETAU > 0))"
+  # "truthMatch" : "abs(B_TRUEID)==531"
+  # "truthMatch" : "B_BKGCAT!=60 && abs(B_TRUEID)==531"
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_common
   "genidB" : "B_ID_GenLvl"
+  "truemHH" : "sqrt((hplus_TRUEP_E+hminus_TRUEP_E)*(hplus_TRUEP_E+hminus_TRUEP_E) - ((hplus_TRUEP_X+hminus_TRUEP_X)*(hplus_TRUEP_X+hminus_TRUEP_X)+(hplus_TRUEP_Y+hminus_TRUEP_Y)*(hplus_TRUEP_Y+hminus_TRUEP_Y)+(hplus_TRUEP_Z+hminus_TRUEP_Z)*(hplus_TRUEP_Z+hminus_TRUEP_Z)))"
+  "truthMatch" : "(B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0))"#"abs(B_TRUEID)==531"
+  # "truthMatch" : "B_BKGCAT!=60 && abs(B_TRUEID)==531"
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
   <<: *MC_common
   "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiPhi_Prompt:
-  <<: *MC_Bs2JpsiPhi
-  "genidB" : "B_ID_GenLvl"
-
-MC_Bd2JpsiKstar:
-  <<: *MC_Bs2JpsiPhi
-  "genidB" : "511*X_ID_GenLvl/311"
-  "kbuWeight" : "kbuWeight"
-  "kbuWeight_etaB" : "kbuWeight_etaB"
-  "kbuWeight_sigmat" : "kbuWeight_sigmat"
-  "kbuWeight_pTB" : "kbuWeight_pTB"
-
-MC_Bu2JpsiKplus:
   <<: *MC_common
   "genidB" : "B_ID_GenLvl"
 
-Bs2JpsiPhi: &Bs2JpsiPhi
-  <<: *common
-  "tagOSdec" : "OS_Combination_DEC"
-  "tagSSdec" : "B_SSKaonLatest_TAGDEC"
-  "tagOSeta" : "OS_Combination_ETA"
-  "tagSSeta" : "B_SSKaonLatest_TAGETA"
+# }}}
+
+
+# Bd family {{{
 
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
   "kinWeight" : "kinWeight"
-  "kinWeight_etaB" : "kinWeight_etaB"
-  "kinWeight_sigmat" : "kinWeight_sigmat"
-  "kinWeight_pTB" : "kinWeight_pTB"
+  "oddWeight" : "oddWeight"
   "kbuWeight" : "kbuWeight"
-  "kbuWeight_etaB" : "kbuWeight_etaB"
-  "kbuWeight_sigmat" : "kbuWeight_sigmat"
-  "kbuWeight_pTB" : "kbuWeight_pTB"
   "tagOSdec" : "0*time"
   "tagSSdec" : "0*time"
   "tagOSeta" : "0*time"
   "tagSSeta" : "0*time"
 
+MC_Bd2JpsiKstar:
+  <<: *MC_common
+  "dg0Weight" : "dg0Weight"
+  "genidB" : "511*X_ID_GenLvl/311"
+  "kbuWeight" : "kbuWeight"
+
+# }}}
+
+
+# Bu family {{{
+
 Bu2JpsiKplus:
   <<: *common
+
+MC_Bu2JpsiKplus:
+  <<: *MC_common
+  "genidB" : "B_ID_GenLvl"
+
+# }}}
+
+
+# vim:foldmethod=marker

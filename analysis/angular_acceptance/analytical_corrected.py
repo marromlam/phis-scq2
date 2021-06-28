@@ -33,14 +33,14 @@ from scipy import stats, special
 import os
 import hjson
 
-CONFIG = hjson.load(open('config.json'))
+import config
 
-tLL = CONFIG['tLL']
-tUL = CONFIG['tUL']
-all_knots = CONFIG['time_acceptance_knots']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
+all_knots = config.timeacc['knots']
 
-order_cosK, order_cosL, order_hphi = CONFIG['angular_acceptance_legendre_order']
-nob = CONFIG['angular_acceptance_bins'][0]
+order_cosK, order_cosL, order_hphi = config.angacc['legendre_order']
+nob = config.angacc['analytic_bins'][0]
 
 
 def transform_cijk(cijk, order_x, order_y, order_z, w=False):
@@ -158,7 +158,7 @@ if __name__ == "__main__":
   p.add_argument('--trigger', help='Trigger(s) to fit [comb/(biased)/unbiased]')
   args = vars(p.parse_args())
 
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   ANGACC = args['angacc']
   MODE = args['mode']

@@ -1,5 +1,5 @@
-# decay_time_acceptance tables -------------------------------------------------
-#    ----
+# Decay-time acceptance  {{{
+#    Packs time acceptance to the note
 
 rule pack_time_acceptance:
   wildcard_constraints:
@@ -10,24 +10,28 @@ rule pack_time_acceptance:
     biased = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_{{timeacc}}_biased.json', year=YEARS[f'{wcs.year}']),
     unbiased = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_{{timeacc}}_unbiased.json', year=YEARS[f'{wcs.year}'])
   output:
-    'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_{timeacc}.tex',
+    'output/tables/time_acceptance/{year}/{mode}/{version}_{timeacc}.tex',
   log:
     'output/log/pack_time_acceptance/{year}/{mode}/{version}_{timeacc}.log'
   run:
     shell(f"""(time\
     python packandgo/acceptance_tables.py\
-           --biased {",".join(input.biased)}\
-           --unbiased {",".join(input.unbiased)}\
-           --output {output}\
-           --mode {wildcards.mode}\
-           --year {",".join(YEARS[f"{wildcards.year}"])}\
-           --version {wildcards.version}\
-           --timeacc {wildcards.timeacc}\
+    --biased {",".join(input.biased)}\
+    --unbiased {",".join(input.unbiased)}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --year {",".join(YEARS[f"{wildcards.year}"])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
     ) &> {log}""")
+    if NOTE:
+      shell(f"cp {output} {f'{output}'.replace('output', NOTE)}")
+
+# }}}
 
 
-# angular_acceptance tables ----------------------------------------------------
-#    ----
+# Angular acceptance {{{
+#    Packs angulat acceptance to the note
 
 rule pack_angular_acceptance:
   resources:
@@ -51,52 +55,60 @@ rule pack_angular_acceptance:
            --timeacc {wildcards.timeacc}\
            --angacc {wildcards.angacc}\
     ) &> {log}""")
+    if NOTE:
+      shell(f"cp {output} {NOTE}/tables/angular_acceptance/{wildcards.year}/{wildcards.mode}/{wildcards.version}_{wildcards.angacc}_{wildcards.timeacc}.tex")
+
+# }}}
 
 
+# Physics paramters {{{
+#    Cook tables with physics paramters
 
-# angular_acceptance tables ----------------------------------------------------
-#    ----
-ruleorder: pack_physics_params_1on1 > pack_physics_params_yearly
-
-rule pack_physics_params_1on1:
-  wildcard_constraints:
-    timeacc = 'simul.*'
-  resources:
-    mem_mb=1048
-  input:
-    lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{timeacc}.json', 
-    			year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
-    lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json'),
-    lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
-                        dyear=config['year'], dfit=config['fit'], dangacc=config['angacc'], dtimeacc=config['timeacc'])
-  output:
-    'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.tex',
-  log:
-    'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.log'
-  run:
-    import hjson
-    import numpy as np
-    import os
-    
-    print(input)
-    dlls = {}
-    dlls[1] = {}
-    dlls[1][0] = np.load(input[-1]).tolist()[:-1]
-
-    with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
-      hjson.dump(dlls, fp)
-    print(dlls)
-    shell(f"""(time\
-    python packandgo/physics_tables.py\
-           --params {",".join(input[:-1])}\
-           --output {output}\
-           --mode {wildcards.mode}\
-           --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
-           --version {wildcards.version}\
-           --timeacc {wildcards.timeacc}\
-           --angacc {wildcards.angacc}\
-    ) &> {log}""")
-    os.remove( f'{output}'.replace('.tex','.json') )
+# ruleorder: pack_physics_params_1on1 > pack_physics_params_yearly
+# ruleorder: pack_physics_params_yearly > pack_physics_params_1on1
+#
+# rule pack_physics_params_1on1:
+#   wildcard_constraints:
+#     timeacc = 'simul.*'
+#   resources:
+#     mem_mb=1048
+#   input:
+#     lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{timeacc}.json',
+#                        year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
+#     lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json'),
+#     lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
+#                        dyear=config['year'], dfit=config['fit'], dangacc=config['angacc'], dtimeacc=config['timeacc'])
+#   output:
+#     'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.tex',
+#   log:
+#     'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.log'
+#   run:
+#     import hjson
+#     import numpy as np
+#     import os
+#     # print(input)
+#     dlls = {}
+#     dlls[1] = {}
+#     dlls[1][0] = np.load(input[-1]).tolist()[:-1]
+#
+#     with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
+#       hjson.dump(dlls, fp)
+#
+#     # print(dlls)
+#     shell(f"""(time\
+#     python packandgo/physics_tables.py\
+#     --params {",".join(input[:-1])}\
+#     --output {output}\
+#     --mode {wildcards.mode}\
+#     --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
+#     --version {wildcards.version}\
+#     --timeacc {wildcards.timeacc}\
+#     --angacc {wildcards.angacc}\
+#     ) &> {log}""")
+#     os.remove( f'{output}'.replace('.tex','.json') )
+#
+#     if NOTE:
+#       shell(f"cp {output} {NOTE}/tables/physics_params/{wildcards.year}/{wildcards.mode}/{wildcards.version}_{wildcards.fit}_{wildcards.angacc}_{wildcards.timeacc}.tex")
 
 
 rule pack_physics_params_magnet:
@@ -105,11 +117,11 @@ rule pack_physics_params_magnet:
   resources:
     mem_mb=1048
   input:
-    lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{fit}_{{angacc}}_{{timeacc}}.json', 
-    				            fit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown']),
+    lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{fit}_{{angacc}}_{{timeacc}}.json',
+                       fit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown']),
     lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}_{dfit}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}_{pfit}_{{angacc}}_{{timeacc}}.npy",
-                        dfit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown'],
-                        pfit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown'])
+                       dfit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown'],
+                       pfit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown'])
   output:
     'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}magnet_{angacc}_{timeacc}.tex',
   log:
@@ -144,32 +156,39 @@ rule pack_physics_params_magnet:
     ) &> {log}""")
     os.remove( f'{output}'.replace('.tex','.json') )
 
+    if NOTE:
+      shell(f"cp {output} {NOTE}/tables/physics_params/{wildcards.year}/{wildcards.mode}/{wildcards.version}_{wildcards.fit}_{wildcards.angacc}_{wildcards.timeacc}.tex")
+
 
 
 rule pack_physics_params_yearly:
   wildcard_constraints:
     fit = 'yearly.*',
-    angacc = 'yearly.*',
-    timeacc = 'simul.*'
+    #angacc = 'yearly.*',
   resources:
     mem_mb=1048,
     cores=50
   input:
-    p1 = lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{timeacc}.json', year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
-    p2 = lambda wcs: expand('output/params/physics_params/2015/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
-    p3 = lambda wcs: expand('output/params/physics_params/2016/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
-    p4 = lambda wcs: expand('output/params/physics_params/2017/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
-    p5 = lambda wcs: expand('output/params/physics_params/2018/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
-    l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{{version}}_{pfit}_{pangacc}_{ptimeacc}.npy",
-                        pyear=config['year'], pfit=config['fit'], pangacc=config['angacc'], ptimeacc=config['timeacc'],
-                        dyear=YEARS['run2'], dfit=f'{wcs.fit}', dangacc=f'{wcs.angacc}', dtimeacc=f'{wcs.timeacc}'),
-    l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{pyear}_{{version}}_{pfit}_{pangacc}_{ptimeacc}.npy",
-                        pyear=YEARS['run2'], pfit=f'{wcs.fit}', pangacc=f'{wcs.angacc}', ptimeacc=f'{wcs.timeacc}',
-                        dyear=YEARS['run2'], dfit=f'{wcs.fit}', dangacc=f'{wcs.angacc}', dtimeacc=f'{wcs.timeacc}')
+    p1 = lambda wcs: expand('output/params/physics_params/{year}/{{mode}}/{{version}}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+                            fit=config['fit'], angacc=config['angacc'],
+                            csp=config['csp'], flavor=config['flavor'],
+                            timeacc=config['timeacc'], timeres=config['timeres'],
+                            year=config['year'], trigger=config['trigger']
+                            ),
+    p2 = lambda wcs: expand('output/params/physics_params/2015/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.json'),
+    p3 = lambda wcs: expand('output/params/physics_params/2016/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.json'),
+    p4 = lambda wcs: expand('output/params/physics_params/2017/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.json'),
+    p5 = lambda wcs: expand('output/params/physics_params/2018/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.json'),
+    l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{pyear}_{{version}}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.npy",
+                            pyear=config['year'], pfit=config['fit'], pangacc=config['angacc'], pcsp=config['csp'], pflavor=config['flavor'], ptimeacc=config['timeacc'], ptimeres=config['timeres'], ptrigger=config['trigger'],
+                            dyear=YEARS['run2'], dfit=f'{wcs.fit}', dangacc=f'{wcs.angacc}', dcsp=config['csp'], dflavor=config['flavor'], dtimeacc=f'{wcs.timeacc}', dtimeres=f'{wcs.timeres}', dtrigger=f'{wcs.trigger}'),
+    l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{pyear}_{{version}}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.npy",
+                            pyear=YEARS['run2'], pfit=f'{wcs.fit}', pangacc=f'{wcs.angacc}', pcsp=config['csp'], pflavor=config['flavor'], ptimeacc=f'{wcs.timeacc}', ptimeres=f'{wcs.timeres}', ptrigger=f'{wcs.trigger}',
+                            dyear=YEARS['run2'], dfit=f'{wcs.fit}', dangacc=f'{wcs.angacc}', dcsp=config['csp'], dflavor=config['flavor'], dtimeacc=f'{wcs.timeacc}', dtimeres=f'{wcs.timeres}', dtrigger=f'{wcs.trigger}'),
   output:
-    'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.tex',
+    'output/packandgo/tables/physics_params/run2/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.tex',
   log:
-    'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.log'
+    'output/log/pack_physics_params/run2/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
   run:
     import numpy as np
     import hjson
@@ -200,12 +219,14 @@ rule pack_physics_params_yearly:
            --params {",".join([f"{input.p1}",f"{input.p2}",f"{input.p3}",f"{input.p4}",f"{input.p5}"])}\
            --output {output}\
            --mode {wildcards.mode}\
-           --year run2,{",".join(YEARS[f"{wildcards.year}"])}\
+           --year run2,{",".join(YEARS[f"run2"])}\
            --version {wildcards.version}\
            --timeacc {wildcards.timeacc}\
            --angacc {wildcards.angacc}\
     ) &> {log}""")
     os.remove( f'{output}'.replace('.tex','.json') )
+    if NOTE:
+      shell(f"cp {output} {NOTE}/tables/physics_params/run2/{wildcards.mode}/{wildcards.version}_{wildcards.timeacc}.tex")
 
 
 
@@ -216,17 +237,17 @@ rule pack_physics_params_binned:
     var = "(pTB|sigmat|etaB)"
   input:
     p1 = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.json',
-    p2 = lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}@cut{{var}}{bin}_{{fit}}_{{angacc}}_{{timeacc}}.json',
-    						bin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4]),
-    l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}@cut{{var}}{bin}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
-                        	bin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4]),
-    l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}@cut{{var}}{dbin}_{{fit}}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}@cut{{var}}{pbin}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
-                        	pbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4],
-                        	dbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4])
+    p2 = lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}@{{var}}{bin}_{{fit}}_{{angacc}}_{{timeacc}}.json',
+                            bin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4]),
+    l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}@{{var}}{bin}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
+                            bin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4]),
+    l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}@{{var}}{dbin}_{{fit}}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}@{{var}}{pbin}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
+                            pbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4],
+                            dbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4])
   output:
-    'output/packandgo/tables/physics_params/{year}/{mode}/{version}@cut{var}_{fit}_{angacc}_{timeacc}.tex',
+    'output/packandgo/tables/physics_params/{year}/{mode}/{version}@{var}_{fit}_{angacc}_{timeacc}.tex',
   log:
-    'output/log/pack_physics_params/{year}/{mode}/{version}@cut{var}_{fit}_{angacc}_{timeacc}.log'
+    'output/log/pack_physics_params/{year}/{mode}/{version}@{var}_{fit}_{angacc}_{timeacc}.log'
   run:
     import numpy as np
     import hjson
@@ -251,7 +272,7 @@ rule pack_physics_params_binned:
     print(f'{output}'.replace('.tex','.json'))
     with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
       hjson.dump(dlls, fp)
-     
+
     shell(f"""(time\
     python packandgo/physics_tables.py\
            --params {",".join( [f"{input.p1}"]+f"{','.join(input.p2)}".split(",")  )}\
@@ -263,56 +284,12 @@ rule pack_physics_params_binned:
            --angacc {wildcards.angacc}\
     ) &> {log}""")
     os.remove( f'{output}'.replace('.tex','.json') )
+    if NOTE:
+      shell(f"cp {output} {NOTE}/tables/physics_params/{wildcards.year}/{wildcards.mode}/{wildcards.version}_{wildcards.timeacc}.tex")
 
-
-# lifetime tables --------------------------------------------------------------
-#    ----
-rule pack_lifetimeBu:
-  wildcard_constraints:
-    mode = 'Bu2JpsiKplus'
-  resources:
-    mem_mb=1048
-  input:
-    corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
-    noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}Noncorr.json', year=YEARS[f'{wcs.year}']),
-  output:
-    'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_life{timeacc}.tex',
-  log:
-    'output/log/pack_time_acceptance/{year}/{mode}/{version}_life{timeacc}.log'
-  run:
-    shell(f"""(time\
-    python packandgo/lifetime_tables.py\
-           --corr {",".join(input.corr)}\
-           --noncorr {",".join(input.noncorr)}\
-           --output {output}\
-           --mode {wildcards.mode}\
-           --year {",".join(YEARS[f"{wildcards.year}"])}\
-           --version {wildcards.version}\
-           --timeacc {wildcards.timeacc}\
-    ) &> {log}""")
+# }}}
 
 
 
-rule pack_lifetimeBd:
-  wildcard_constraints:
-    mode = 'Bd2JpsiKstar'
-  resources:
-    mem_mb=1048
-  input:
-    corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}{mod}.json', year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
-    noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_life{{timeacc}}Noncorr{mod}.json', year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
-  output:
-    'output/packandgo/tables/time_acceptance/{year}/{mode}/{version}_life{timeacc}.tex',
-  log:
-    'output/log/pack_time_acceptance/{year}/{mode}/{version}_life{timeacc}.log'
-  run:
-    shell(f"""(time\
-    python packandgo/lifetime_tables.py\
-           --corr {",".join(input.corr)}\
-           --noncorr {",".join(input.noncorr)}\
-           --output {output}\
-           --mode {wildcards.mode}\
-           --year {",".join(YEARS[f"{wildcards.year}"])}\
-           --version {wildcards.version}\
-           --timeacc {wildcards.timeacc}\
-    ) &> {log}""")
+
+# vim:foldmethod=marker

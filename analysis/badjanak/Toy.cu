@@ -1,7 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                        GENERATE TOY CROSS RATE                             //
-//                                                                            //
 //   Created: 2019-01-25                                                      //
 //    Author: Marcos Romero Lamas (mromerol@cern.ch)                          //
 //                                                                            //
@@ -16,9 +14,7 @@
 #include <ipanema/random.h>
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Generate toy ////////////////////////////////////////////////////////////////
+// Generate toy {{{
 
 KERNEL
 void dG5toy(GLOBAL_MEM ftype * out,
@@ -70,7 +66,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
   ftype threshold = 0.0;
   ftype iter = 0.0;
 
-  // Prepare curand
+  // Prepare rng
   #ifdef CUDA
     curandState state;
     curand_init((unsigned long long)clock(), evt, 0, &state);
@@ -85,7 +81,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
   ftype sigmat = 0.0;
   if (USE_TIMERES)
   {
-    sigmat = curand_log_normal(&state,-3.22,0.309);
+    sigmat = rng_log_normal(-3.22, 0.309, &state);
   }
 
 
@@ -98,12 +94,12 @@ void dG5toy(GLOBAL_MEM ftype * out,
   if (SET_TAGGING == 1) // DATA
   {
     // generate qOS
-    ftype tag = curand_uniform(&state);
+    ftype tag = rng_uniform(&state);
     if      (tag < 0.175) { qOS =  1.; }
     else if (tag < 0.350) { qOS = -1.; }
     else                  { qOS =  0.; }
     // generate qSS
-    tag = curand_uniform(&state);
+    tag = rng_uniform(&state);
     if      (tag < 0.330) { qSS =  1.; }
     else if (tag < 0.660) { qSS = -1.; }
     else                  { qSS =  0.; }
@@ -116,8 +112,8 @@ void dG5toy(GLOBAL_MEM ftype * out,
     {
       while(1)
       {
-        tag = 0.49*curand_uniform(&state);
-        threshold = OSmax*curand_uniform(&state);
+        tag = 0.49*rng_uniform(&state);
+        threshold = OSmax*rng_uniform(&state);
         if (tagOSgen(tag) > threshold) break;
       }
       etaOS = tag;
@@ -127,8 +123,8 @@ void dG5toy(GLOBAL_MEM ftype * out,
     {
       while(1)
       {
-        tag = 0.49*curand_uniform(&state);
-        threshold = SSmax*curand_uniform(&state);
+        tag = 0.49*rng_uniform(&state);
+        threshold = SSmax*rng_uniform(&state);
         if (tagSSgen(tag) > threshold) break;
       }
       etaSS = tag;
@@ -136,7 +132,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
   }
   else if (SET_TAGGING == 0) // PERFECT, MC
   {
-    ftype tag = curand_uniform(&state);
+    ftype tag = rng_uniform(&state);
     if (tag < 0.5) {qOS = +1.0; qSS = +1.0;}
     else           {qOS = -1.0; qSS = -1.0;}
     etaOS = 0.5; etaSS = 0.5;
@@ -157,10 +153,10 @@ void dG5toy(GLOBAL_MEM ftype * out,
   while(1)
   {
     // Random numbers
-    cosK = - 1.0  +    2.0*curand_uniform(&state);
-    cosL = - 1.0  +    2.0*curand_uniform(&state);
-    hphi = - M_PI + 2*M_PI*curand_uniform(&state);
-    time =   tLL  -    log(curand_uniform(&state)) / (G-0.5*DG);
+    cosK = - 1.0  +    2.0*rng_uniform(&state);
+    cosL = - 1.0  +    2.0*rng_uniform(&state);
+    hphi = - M_PI + 2*M_PI*rng_uniform(&state);
+    time =   tLL  -    log(rng_uniform(&state)) / (G-0.5*DG);
 
     //WARN!
     //cosK=+0.45774651;
@@ -171,7 +167,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
     //printf("cosK=%lf cosL=%lf hphi=%lf time=%lf sigmat=%lf qOS=%lf qSS=%lf etaOS=%lf etaSS=%lf", cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS);
 
     // PDF threshold
-    threshold = PROB_MAX * curand_uniform(&state);
+    threshold = PROB_MAX * rng_uniform(&state);
 
     // Prepare data and pdf variables to DiffRate CUDA function
     ftype data[9] = {cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS};
@@ -252,4 +248,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
 
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// }}}
+
+
+// vim:foldmethod=marker

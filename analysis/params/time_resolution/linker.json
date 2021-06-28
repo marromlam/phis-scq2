@@ -1,0 +1,5 @@
+{
+  "amsrd": "translated_numerical_calibrations_{year}.json",
+  "amsmc": "mc_signal_calibration.json",
+  "amsdg0": "dG0_calibration.json"
+}

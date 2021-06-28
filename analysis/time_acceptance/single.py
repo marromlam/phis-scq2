@@ -1,6 +1,5 @@
 DESCRIPTION = """
-    This file contains 3 fcn functions to be minimized under ipanema3 framework
-    those functions are, actually functions of badjanak kernels.
+    Lifetime shit shit shit
 """
 
 __author__ = ['Marcos Romero Lamas']
@@ -21,34 +20,22 @@ from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 
 # import some phis-scq utils
 from utils.plot import mode_tex
-from utils.strings import cuts_and, printsec
+from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
 
+import config
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
-
-# Parse arguments for this script
-def argument_parser():
-  p = argparse.ArgumentParser(description='Compute single decay-time acceptance.')
-  p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--tables', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--year', help='Year to fit')
-  p.add_argument('--mode', help='Year to fit', default='Bd2JpsiKstar')
-  p.add_argument('--version', help='Version of the tuples to use')
-  p.add_argument('--trigger', help='Trigger to fit')
-  p.add_argument('--timeacc', help='Different flag to ... ')
-  p.add_argument('--contour', help='Different flag to ... ')
-  return p
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 if __name__ != '__main__':
-  initialize(os.environ['IPANEMA_BACKEND'],1)
+  initialize(os.environ['IPANEMA_BACKEND'], 1)
   from time_acceptance.fcn_functions import splinexerf
 
 ################################################################################
@@ -57,24 +44,37 @@ if __name__ != '__main__':
 
 ################################################################################
 #%% Run and get the job done ###################################################
+
 if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
-  args = vars(argument_parser().parse_args())
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  p = argparse.ArgumentParser(description='Compute single decay-time acceptance.')
+  p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--year', help='Year to fit')
+  p.add_argument('--mode', help='Year to fit', default='Bd2JpsiKstar')
+  p.add_argument('--version', help='Version of the tuples to use')
+  p.add_argument('--trigger', help='Trigger to fit')
+  p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--contour', help='Different flag to ... ')
+  args = vars(p.parse_args())
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORRECT, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  if EVT in ('evtOdd', 'evtEven'):
+    time = 'gentime'
+  else:
+    time = 'time'
+  CUT = f'{time}>={tLL} & {time}<={tUL}'
   CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
-  CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   # Print settings
   print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
@@ -88,52 +88,76 @@ if __name__ == '__main__':
   # List samples, params and tables
   samples = args['samples'].split(',')
   oparams = args['params'].split(',')
-  otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(NKNOTS)]
-  kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  sw = f'sw_{VAR}' if VAR else 'sw'
+  sWeight = "sw"
 
 
 
-  # Get data into categories ---------------------------------------------------
-  print(f"\n{80*'='}\nLoading category\n{80*'='}\n")
+  # Get data into categories {{{ 
+
+  printsubsec(f"Loading category")
 
   cats = {}
   for i, m in enumerate([MODE]):
     # Correctly apply weight and name for diffent samples
-    if m=='MC_Bs2JpsiPhi':
-      if CORR:
-        weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
+    if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
+      m = 'MC_Bs2JpsiPhi'
+      if CORRECT:
+        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
-        weight = f'dg0Weight*{sw}/gb_weights'
-      mode = 'BsMC'; c = 'a'
-    elif m=='MC_Bs2JpsiPhi_dG0':
-      if CORR:
-        weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
+        weight = f'dg0Weight*{sWeight}/gb_weights'
+      # apply oddWeight if evtOdd in filename
+      if EVT in ('evtEven', 'evtOdd'):
+        weight = weight.replace('pdfWeight', 'dg0Weight*oddWeight')
+        weight = weight.replace('dg0Weight', 'dg0Weight*oddWeight')
+      mode = 'signalMC'; c = 'a'
+    elif 'MC_Bs2JpsiPhi_dG0' in m:
+      m = 'MC_Bs2JpsiPhi_dG0'
+      if CORRECT:
+        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
-        weight = f'{sw}/gb_weights'
-      mode = 'BsMC'; c = 'a'
-    elif m=='MC_Bd2JpsiKstar':
-      if CORR:
-        weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+        weight = f'{sWeight}/gb_weights'
+      # apply oddWeight if evtOdd in filename
+      if EVT in ('evtEven', 'evtOdd'):
+        weight = weight.replace('pdfWeight', 'oddWeight')
+      mode = 'signalMC'; c = 'a'
+    elif 'MC_Bd2JpsiKstar' in m:
+      m = 'MC_Bd2JpsiKstar'
+      if CORRECT:
+        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
       else:
-        weight = f'{sw}'
-      mode = 'BdMC'; c = 'b'
-    elif m=='Bd2JpsiKstar':
-      if CORR:
-        weight = f'{kinWeight}{sw}'
+        weight = f'{sWeight}'
+      # apply oddWeight if evtOdd in filename
+      if EVT in ('evtEven', 'evtOdd'):
+        weight = weight.replace('pdfWeight', 'oddWeight')
+      mode = 'controlMC'; c = 'b'
+    elif 'MC_Bu2JpsiKplus' in m:
+      m = 'MC_Bu2JpsiKplus'
+      if CORRECT:
+        weight = f'kinWeight*polWeight*{sWeight}'
       else:
-        weight = f'{sw}'
-      mode = 'BdRD'; c = 'c'
+        weight = f'{sWeight}'
+      # apply oddWeight if evtOdd in filename
+      if EVT in ('evtEven', 'evtOdd'):
+        weight = weight.replace('pdfWeight', 'oddWeight')
+      mode = 'controlMC'; c = 'b'
+    elif 'Bd2JpsiKstar' in m:
+      m = 'Bd2JpsiKstar'
+      if CORRECT:
+        weight = f'kinWeight*{sWeight}'
+      else:
+        weight = f'{sWeight}'
+      mode = 'controlRD'; c = 'c'
     print(weight)
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    cats[mode].allocate(time='gentime', lkhd='0*time')
+    cats[mode].allocate(time=time, lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
+    print(cats[mode])
 
     # Add knots
     cats[mode].knots = Parameters()
@@ -169,7 +193,6 @@ if __name__ == '__main__':
     # Attach labels and paths
     cats[mode].label = mode_tex(mode)
     cats[mode].pars_path = oparams[i]
-    cats[mode].tabs_path = otables[i]
 
 
 
@@ -178,8 +201,9 @@ if __name__ == '__main__':
   fcns.badjanak.get_kernels(True)
 
 
-  # Time to fit ----------------------------------------------------------------
-  print(f"\n{80*'='}\nMinimization procedure\n{80*'='}\n")
+  # Time to fit {{{
+
+  printsubsec(f"Minimization procedure")
   fcn_call = fcns.splinexerf
   fcn_pars = cats[mode].params
   fcn_kwgs = {
@@ -200,9 +224,11 @@ if __name__ == '__main__':
     exit()
   print(result)
 
+  # }}}
 
 
-  # Do contours or scans if asked ----------------------------------------------
+  # Do contours or scans if asked {{{
+
   if args['contour'] != "0":
     if len(args['contour'].split('vs'))>1:
       fig, ax = plot_conf2d(mini, result, args['contour'].split('vs'), size=(50,50))
@@ -217,18 +243,20 @@ if __name__ == '__main__':
       result._minuit.draw_mnprofile(args['contour'], bins=30, bound=1, subtract_min=True, band=True, text=True)
       plt.savefig(cats[mode].tabs_path.replace('tables', 'figures').replace('.tex', f"_contour{args['contour']}.pdf"))
 
+  # }}}
 
 
-  # Writing results ------------------------------------------------------------
+  # Writing results {{{ 
+
   printsec('Dumping parameters')
   cats[mode].params = cats[mode].knots + result.params
   print(f"Dumping json parameters to {cats[mode].pars_path}")
   cats[mode].params.dump(cats[mode].pars_path)
-  print(f"Dumping tex table to {cats[mode].tabs_path}")
-  with open(cats[mode].tabs_path, "w") as text:
-    text.write( cats[mode].params.dump_latex(caption=f"Time acceptance for the \
-    {VERSION} ${mode_tex(f'{MODE}')}$ ${YEAR}$ {TRIGGER} category in {TIMEACC} fit."))
-  text.close()
 
-################################################################################
+  # }}}
+
+# }}}
+
+
+# vim:foldmethod=marker
 # that's all folks!

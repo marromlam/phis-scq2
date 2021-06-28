@@ -87,7 +87,7 @@ rule toys_fit:
            --year                    {",".join(YEARS[f'{wildcards.year}'])}\
            --flag                    {wildcards.year}_{wildcards.angacc}_{wildcards.timeacc}\
            --version                 {config['version']}\
-           --blind                   {CONFIG['blind']}\
+           --blind                   {settings.general['blind']}\
     ) &> {log}""")
     send_mail(f"Physics Parameters TOY Run2a", f"{log}")
 
@@ -100,7 +100,7 @@ rule toys_compute_pulls:
     data_params = expand('output/params/physics_params/{{year}}/Bs2JpsiPhi/{version}_{{fitconf}}.json',
                          version=config['version']),
     toy_params = expand('output/params/physics_params/{{year}}/TOY_Bs2JpsiPhi/{{dateflag}}{i}_{{fitconf}}.json',
-                    i=list(range(1,CONFIG['ntoys']+1)))
+                    i=list(range(1,settings.general['ntoys']+1)))
   output:
     #params = 'output/params/systematics/run2a/TOY_Bs2JpsiPhi/{version}w{toyconf}gen{dateflag}_run2a_{angacc}_{timeacc}.json',
     tables = 'output/tables/systematics/fit_bias/{year}/TOY_Bs2JpsiPhi/{dateflag}_{fitconf}.tex',
@@ -113,7 +113,7 @@ rule toys_compute_pulls:
            --data-parameters      {",".join(input.data_params)}\
            --toy-parameters       output/params/physics_params/{wildcards.year}/TOY_Bs2JpsiPhi/{wildcards.dateflag}ntoy_{wildcards.fitconf}.json\
            --figures              {output.figures}\
-           --ntoys                {CONFIG['ntoys']}
+           --ntoys                {settings.general['ntoys']}
     ) #&> {log}""")
     shell(f"""touch {output.tables}""")
     #send_mail(f"Physics Parameters TOY Run2a", f"{log}")

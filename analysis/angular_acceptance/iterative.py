@@ -11,6 +11,7 @@ __email__ = ['mromerol@cern.ch']
 # Modules ######################################################################
 
 # ignore all future warnings
+from analysis.utils.helpers import parse_angacc
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -49,21 +50,22 @@ badjanak.get_kernels(True)
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
-from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
+from utils.helpers import  version_guesser, parse_angacc, timeacc_guesser, trigger_scissors
 
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+import config
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 # reweighting config
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 from hep_ml import reweight
-bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
-reweighter = reweight.GBReweighter(**bdconfig)
+reweighter = reweight.GBReweighter(**bdtconfig)
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
 
@@ -180,7 +182,7 @@ def fcn_data(parameters, data):
       badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc = 0)
+                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc = 1)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)
@@ -224,7 +226,7 @@ def merge_std_dg0(std, dg0, verbose=True, label=''):
   for k, wk in enumerate(std.keys()):
     correl = {f'{wk}{label}':corr[k][j] for j in range(0,len(w)) if k>0 and j>0}
     out.add({'name': f'{wk}{label}', 'value': w[k], 'stdev': uw[k],
-             'free': False, 'latex': f'{std[wk]}^{label}', 'correl': correl})
+             'free': False, 'latex': f'{std[wk].latex}^{label}', 'correl': correl})
 
   if verbose:
     print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
@@ -270,29 +272,28 @@ def do_fit(verbose=False):
   
   # do the fit
   result = optimize(fcn_data, method='minuit', params=pars, 
-                    fcn_kwgs={'data':data}, verbose=False, timeit=True, 
+                    fcn_kwgs={'data':data}, verbose=True, timeit=True, 
                     tol=0.05, strategy=2)
-  
+  print(result.params) 
   #print fit results
   #print(result) # parameters are not blinded, so we dont print the result
-  if verbose:
-    if not '2018' in data.keys() and not '2017' in data.keys():
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 
-                'DGs', 'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5',
-                'dSlon6', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 
-                'fSlon6']:
-        try:
-          print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
-        except:
-          0
-    else:
-      for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'lPlon', 'DGsd', 'DM', 
-                'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
-                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
-        try:
-          print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
-        except:
-          0    
+  if not '2018' in data.keys() and not '2017' in data.keys():
+    for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 
+              'DGs', 'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5',
+              'dSlon6', 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 
+              'fSlon6']:
+      try:
+        print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
+      except:
+        0
+  else:
+    for p in ['fPlon', 'fPper', 'dPpar', 'dPper', 'lPlon', 'DGsd', 'DM', 
+              'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
+              'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
+      try:
+        print(f"{p:>12} : {pars[p].value:+.8f} +/- {pars[p].stdev:+.8f}")
+      except:
+        0    
   # store parameters + add likelihood to list
   pars = Parameters.clone(result.params)
   return result.chi2
@@ -337,7 +338,7 @@ def do_kkp_weighting(verbose):
   #    the GBweighter gives different results when having those 0s or having
   #    nothing after cutting the sample.
   global mc, data, weight_rd
-  
+
   threads = list()
   for y, dy in mc.items(): # loop over years
     for m, dm in dy.items(): # loop over mc_std and mc_dg0
@@ -411,7 +412,7 @@ def do_mc_combination(verbose):
       checker.append( qwe )
   
   check_dict = {}
-  for ci in range(0,i):    
+  for ci in range(0,i):
     check_dict[ci] = []
     for y, dy in data.items(): # loop over years
       for t in ['biased','unbiased']:
@@ -501,15 +502,6 @@ def lipschitz_iteration(max_iter=30, verbose=True):
           pars = data[y][trigger].angaccs[i]
           print('Saving table of params in json')
           pars.dump(data[y][trigger].params_path)
-          print('Saving table of params in tex')
-          with open(data[y][trigger].tables_path, "w") as tex_file:
-            tex_file.write(
-              pars.dump_latex( caption="""
-              Angular acceptance for \\textbf{%s} \\texttt{\\textbf{%s}}
-              category.""" % (y,trigger)
-              )
-            )
-          tex_file.close()
       break
   return all(checker), likelihoods
 
@@ -585,15 +577,6 @@ def aitken_iteration(max_iter=30, verbose=True):
           pars = data[y][trigger].angaccs[i]
           print('Saving table of params in json')
           pars.dump(data[y][trigger].params_path)
-          print('Saving table of params in tex')
-          with open(data[y][trigger].tables_path, "w") as tex_file:
-            tex_file.write(
-              pars.dump_latex( caption="""
-              Angular acceptance for \\textbf{%s} \\texttt{\\textbf{%s}}
-              category.""" % (y,trigger)
-              )
-            )
-          tex_file.close()
       break
   return all(checker), likelihoods
 
@@ -646,8 +629,6 @@ if __name__ == '__main__':
   p.add_argument('--input-flavor-tagging', help='Bs2JpsiPhi MC sample')
   p.add_argument('--output-weights-biased', help='Bs2JpsiPhi MC sample')
   p.add_argument('--output-weights-unbiased', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--output-tables-biased', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--output-tables-unbiased', help='Bs2JpsiPhi MC sample')
   p.add_argument('--output-angular-weights-mc-std', help='Bs2JpsiPhi MC sample')
   p.add_argument('--output-angular-weights-mc-dg0', help='Bs2JpsiPhi MC sample')
   p.add_argument('--year', help='Year of data-taking')
@@ -655,16 +636,16 @@ if __name__ == '__main__':
   p.add_argument('--version', help='Year of data-taking')
   args = vars(p.parse_args())
   
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEARS = args['year'].split(',') 
   MODE = 'Bs2JpsiPhi'
-  ANGACC = args['angacc']
+  ANGACC, USE_ODDWEIGHT = parse_angacc(args['angacc'])
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
 
   # Prepare the cuts -----------------------------------------------------------
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ''
   CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
 
   # List samples, params and tables --------------------------------------------
@@ -690,8 +671,6 @@ if __name__ == '__main__':
 
   params_biased      = args['output_weights_biased'].split(',')
   params_unbiased    = args['output_weights_unbiased'].split(',')
-  tables_biased      = args['output_tables_biased'].split(',')
-  tables_unbiased    = args['output_tables_unbiased'].split(',')
 
   kkpWeight_std = args['output_angular_weights_mc_std'].split(',')
   kkpWeight_dg0 = args['output_angular_weights_mc_dg0'].split(',')
@@ -703,7 +682,7 @@ if __name__ == '__main__':
   print(f"{'year(s)':>15}: {args['year']:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'angacc':>15}: {ANGACC:50}")
-  print(f"{'bdtconfig':>15}: {':'.join(str(x) for x in bdconfig.values()):50}\n")
+  print(f"{'bdtconfig':>15}: {':'.join(str(x) for x in bdtconfig.values()):50}\n")
 
 
 
@@ -724,6 +703,7 @@ if __name__ == '__main__':
   
   # sWeight variable
   weight_rd = f'sw_{VAR}' if VAR else 'sw'
+  weight_rd = 'sw'
 
   # Load Monte Carlo samples
   mc = {}
@@ -784,7 +764,7 @@ if __name__ == '__main__':
       c = Parameters.load(coeffs[i])
       data[y][t].knots = Parameters.build(c,c.fetch('k.*'))
       badjanak.config['knots'] = np.array( data[y][t].knots ).tolist()
-      data[y][t].timeacc = Parameters.build(c,c.fetch('c.*'))
+      data[y][t].timeacc = Parameters.build(c,c.fetch('(a|b|c).*'))
       data[y][t].chop( trigger_scissors(t, CUT) )
       print(data[y][t])
 
@@ -795,9 +775,6 @@ if __name__ == '__main__':
 
     for t, path in zip(['biased','unbiased'],[params_biased,params_unbiased]):
       data[y][t].params_path = path[i]
-
-    for t, path in zip(['biased','unbiased'],[tables_biased,tables_unbiased]):
-      data[y][t].tables_path = path[i]
 
     for d in [data[y]['biased'],data[y]['unbiased']]:
       sw = np.zeros_like(d.df[f'{weight_rd}'])
@@ -879,11 +856,11 @@ if __name__ == '__main__':
             free=False, latex="\lambda_{\perp}/\lambda_0"))
   
   # life parameters
-  pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
+  pars.add(dict(name="Gd", value= 0.65789,  # min= 0.0, max= 1.0,
             free=False, latex=r"\Gamma_d"))
-  pars.add(dict(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
+  pars.add(dict(name="DGs", value= 0.0917,  # min= 0.03, max= 0.15,
             free=True, latex=r"\Delta\Gamma_s"))
-  pars.add(dict(name="DGsd", value= 0.03, min=-0.2, max= 0.2,
+  pars.add(dict(name="DGsd", value= 0.03,  # min=-0.2, max= 0.2,
             free=True, latex=r"\Gamma_s - \Gamma_d"))
   pars.add(dict(name="DM", value=17.768, min=16.0, max=20.0,
             free=True, latex=r"\Delta m"))
@@ -939,7 +916,7 @@ if __name__ == '__main__':
   # run the procedure!
   
   
-  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=False)
+  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True)
   
   if not ok:
     ok, likelihoods = aitken_iteration(max_iter=30, verbose=True)

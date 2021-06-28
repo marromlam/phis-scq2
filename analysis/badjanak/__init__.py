@@ -1,12 +1,13 @@
 DESCRIPTION = """
-    This file contains 3 fcn functions to be minimized under ipanema3 framework
-    those functions are, actually functions of badjanak kernels.
+    Implements bindings between ocl/cuda and python by means of ipanema. Most
+    important functions/p.d.f.s are binded here to their C counterparts.
 """
 
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
+# Modules {{{
 
 import os
 import builtins
@@ -28,9 +29,7 @@ CONTEXT = builtins.CONTEXT
 QUEUE = builtins.THREAD
 
 
-
 global __KERNELS__
-
 
 
 def get_sizes(size, BLOCK_SIZE=256):
@@ -47,10 +46,13 @@ def get_sizes(size, BLOCK_SIZE=256):
       gs, ls = a*BLOCK_SIZE, BLOCK_SIZE
     return int(gs), int(ls)
 
+# }}}
 
-# Default compile flags --------------------------------------------------------
+
+# Compile flags {{{
 #     The compile_flags is a dict where each key substitutes a same-named
 #     string in the kernel file by its value: #define KEY {KEY} <-- value
+
 global config
 config = dict(
 debug =           0, # no prints
@@ -64,9 +66,6 @@ precision =       'double',
 )
 
 
-
-# Prepare flag to device code --------------------------------------------------
-#    Bla bla bla
 def flagger(verbose=False):
   if verbose:
     print(f"\n{80*'='}\nBadjanak kernel\n{80*'='}\n")
@@ -92,22 +91,28 @@ def flagger(verbose=False):
       print(f'{key.upper():>20} : {value}')
   return dict_flags
 
+# }}}
 
 
-# Compiler ---------------------------------------------------------------------
-#     Compile kernel against given BACKEND
+# Compiler {{{
 
 def compile(verbose=False, pedantic=False):
   kstrg = open(os.path.join(PATH, 'Kernel.cu'), "r").read()
+  # some custom compiling options {{{
+  opts = ''
+  if BACKEND=='cuda':
+    opts = "-Xptxas -suppress-stack-size-warning"
+    opts = ''
+  # }}}
   if config['precision'] == 'double':
     prog = THREAD.compile(kstrg,
               render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
-              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH}"],
+              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH} {opts}"],
               keep=False)
   else:
     prog = THREAD.compile(kstrg,
               render_kwds={**{"USE_DOUBLE":"0"},**flagger(verbose)},
-              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH}"],
+              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH} {opts}"],
               keep=False)
   if pedantic:
     print(prog.source)
@@ -116,9 +121,6 @@ def compile(verbose=False, pedantic=False):
   return prog
 
 
-
-# Get kernels ------------------------------------------------------------------
-#    Hey ja
 def get_kernels(verbose=False, pedantic=False):
   """get_kernels.
 
@@ -134,7 +136,7 @@ def get_kernels(verbose=False, pedantic=False):
   items = ['pyrateBs', 'pyrateBd',
            'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
-           'dG5toy', 
+           'dG5toy',
            #'integral_ijk_fx'
            ]
   for item in items:
@@ -145,131 +147,15 @@ def get_kernels(verbose=False, pedantic=False):
 # Get the kernels just after one import this module
 get_kernels(verbose=False, pedantic=False)
 
+# }}}
 
 
-
-
-# Functions
+# Functions {{{
 #     Here pythonic versions of KERNEL functions are defined. There are wrappers
 #     that are simpler to interact with
 
-################################################################################
-# delta_gamma5 #################################################################
 
-def delta_gamma5(input, output,
-                  # Time-dependent angular distribution
-                  G, DG, DM,
-                  CSP,
-                  ASlon, APlon, APpar, APper,
-                  pSlon, pPlon, pPpar, pPper,
-                  dSlon, dPlon, dPpar, dPper,
-                  lSlon, lPlon, lPpar, lPper,
-                  # Time limits
-                  tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL, hphiLL, hphiUL,
-                  # Time resolution
-                  sigma_offset, sigma_slope, sigma_curvature,
-                  mu,
-                  # Flavor tagging
-                  eta_os, eta_ss,
-                  p0_os,  p1_os, p2_os,
-                  p0_ss,  p1_ss, p2_ss,
-                  dp0_os, dp1_os, dp2_os,
-                  dp0_ss, dp1_ss, dp2_ss,
-                  # Time acceptance
-                  timeacc,
-                  # Angular acceptance
-                  angacc,
-                  # Flags
-                  use_fk=1, use_angacc = 0, use_timeacc = 0,
-                  use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-                  BLOCK_SIZE=256, **crap):
-  g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
-  __KERNELS__.rateBs(
-    # Input and output arrays
-    input, output,
-    # Differential cross-rate parameters
-    np.float64(G), np.float64(DG), np.float64(DM),
-    CSP.astype(np.float64),
-    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
-    np.float64(pSlon),                 np.float64(pPlon),                 np.float64(pPpar),                 np.float64(pPper),
-    dSlon.astype(np.float64),          np.float64(dPlon),                 np.float64(dPpar),                 np.float64(dPper),
-    np.float64(lSlon),                 np.float64(lPlon),                 np.float64(lPpar),                 np.float64(lPper),
-    # Time range
-    np.float64(tLL), np.float64(tUL),
-    np.float64(cosKLL), np.float64(cosKUL),
-    np.float64(cosLLL), np.float64(cosLUL),
-    np.float64(hphiLL), np.float64(hphiUL),
-    # Time resolution
-    np.float64(sigma_offset), np.float64(sigma_slope), np.float64(sigma_curvature),
-    np.float64(mu),
-    # Flavor tagging
-    np.float64(eta_os), np.float64(eta_ss),
-    np.float64(p0_os), np.float64(p1_os), np.float64(p2_os),
-    np.float64(p0_ss), np.float64(p1_ss), np.float64(p2_ss),
-    np.float64(dp0_os), np.float64(dp1_os), np.float64(dp2_os),
-    np.float64(dp0_ss), np.float64(dp1_ss), np.float64(dp2_ss),
-    # Decay-time acceptance
-    timeacc.astype(np.float64),
-    # Angular acceptance
-    angacc.astype(np.float64),
-    # Flags
-    np.int32(use_fk), np.int32(len(CSP)), np.int32(use_angacc), np.int32(use_timeacc),
-    np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
-    np.int32(len(output)),
-    global_size=g_size, local_size=l_size)
-    #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
-
-
-
-def delta_gamma5Bd(input, output,
-                  # Time-dependent angular distribution
-                  G, DG, DM,
-                  CSP,
-                  ASlon, APlon, APpar, APper,
-                  pSlon, pPlon, pPpar, pPper,
-                  dSlon, dPlon, dPpar, dPper,
-                  lSlon, lPlon, lPpar, lPper,
-                  # Time limits
-                  tLL, tUL,
-                  # Time resolution
-                  sigma_offset, sigma_slope, sigma_curvature,
-                  mu,
-                  # Flavor tagging
-                  eta_os, eta_ss,
-                  p0_os,  p1_os, p2_os,
-                  p0_ss,  p1_ss, p2_ss,
-                  dp0_os, dp1_os, dp2_os,
-                  dp0_ss, dp1_ss, dp2_ss,
-                  # Time acceptance
-                  timeacc,
-                  # Angular acceptance
-                  angacc,
-                  # Flags
-                  use_fk=1, use_angacc = 0, use_timeacc = 0,
-                  use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-                  BLOCK_SIZE=256, **crap):
-  g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
-  __KERNELS__.rateBd(
-    # Input and output arrays
-    input, output,
-    # Differential cross-rate parameters
-    np.float64(G), CSP.astype(np.float64),
-    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
-    dSlon.astype(np.float64),          np.float64(dPlon),                 np.float64(dPpar),                 np.float64(dPper),
-    # Time range
-    np.float64(tLL), np.float64(tUL),
-    # Angular acceptance
-    angacc.astype(np.float64),
-    # Flags
-    np.int32(use_fk),
-    # BINS
-    np.int32(len(CSP)), np.int32(use_angacc),
-    # events
-    np.int32(len(output)),
-    global_size=g_size, local_size=l_size)
-    #np.int32(use_angacc)
-
-
+# Cross-section parameters parser {{{
 
 def parser_rateBs(
       Gd = 0.66137, DGsd = 0.08, DGs = 0.08, DGd=0, DM = 17.7, CSP = 1.0,
@@ -322,11 +208,11 @@ def parser_rateBs(
     r['G'] = Gd + DGsd + DGd
 
   # Compute fractions of S and P wave objects
-  FP = abs(1-fSlon)
+  FP = abs(1.-fSlon)
   r['ASlon'] = ipanema.ristra.sqrt( fSlon )
   r['APlon'] = ipanema.ristra.sqrt( FP*fPlon )
   r['APper'] = ipanema.ristra.sqrt( FP*fPper )
-  r['APpar'] = ipanema.ristra.sqrt( FP*abs(1-fPlon-fPper))
+  r['APpar'] = ipanema.ristra.sqrt( FP*abs(1.-fPlon-fPper))
 
   # Strong phases
   r['dPlon'] = dPlon
@@ -440,11 +326,11 @@ def parser_rateBd(
    r['DM'] = DM
    r['G'] = Gd#p['Gd']
    # Compute fractions of S and P wave objects
-   FP = abs(1-fSlon)
+   FP = abs(1.-fSlon)
    r['ASlon'] = ipanema.ristra.sqrt( fSlon )
    r['APlon'] = ipanema.ristra.sqrt( FP*fPlon )
    r['APper'] = ipanema.ristra.sqrt( FP*fPper )
-   r['APpar'] = ipanema.ristra.sqrt( FP*abs(1-fPlon-fPper))
+   r['APpar'] = ipanema.ristra.sqrt( FP*abs(1.-fPlon-fPper))
 
    # Strong phases
    r['dPlon'] = dPlon
@@ -506,16 +392,78 @@ def parser_rateBd(
 
    return r
 
-################################################################################
+# }}}
 
 
+# Wrappers arround Bs cross rate {{{
 
-################################################################################
-# wrappers arround delta_gamma5 ################################################
+def delta_gamma5(input, output,
+                  # Time-dependent angular distribution
+                  G, DG, DM,
+                  CSP,
+                  ASlon, APlon, APpar, APper,
+                  pSlon, pPlon, pPpar, pPper,
+                  dSlon, dPlon, dPpar, dPper,
+                  lSlon, lPlon, lPpar, lPper,
+                  # Time limits
+                  tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL, hphiLL, hphiUL,
+                  # Time resolution
+                  sigma_offset, sigma_slope, sigma_curvature,
+                  mu,
+                  # Flavor tagging
+                  eta_os, eta_ss,
+                  p0_os,  p1_os, p2_os,
+                  p0_ss,  p1_ss, p2_ss,
+                  dp0_os, dp1_os, dp2_os,
+                  dp0_ss, dp1_ss, dp2_ss,
+                  # Time acceptance
+                  timeacc,
+                  # Angular acceptance
+                  angacc,
+                  # Flags
+                  use_fk=1, use_angacc = 0, use_timeacc = 0,
+                  use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
+                  BLOCK_SIZE=256, **crap):
+  g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
+  __KERNELS__.rateBs(
+    # Input and output arrays
+    input, output,
+    # Differential cross-rate parameters
+    np.float64(G), np.float64(DG), np.float64(DM),
+    CSP.astype(np.float64),
+    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
+    np.float64(pSlon),                 np.float64(pPlon),                 np.float64(pPpar),                 np.float64(pPper),
+    dSlon.astype(np.float64),          np.float64(dPlon),                 np.float64(dPpar),                 np.float64(dPper),
+    np.float64(lSlon),                 np.float64(lPlon),                 np.float64(lPpar),                 np.float64(lPper),
+    # Time range
+    np.float64(tLL), np.float64(tUL),
+    np.float64(cosKLL), np.float64(cosKUL),
+    np.float64(cosLLL), np.float64(cosLUL),
+    np.float64(hphiLL), np.float64(hphiUL),
+    # Time resolution
+    np.float64(sigma_offset), np.float64(sigma_slope), np.float64(sigma_curvature),
+    np.float64(mu),
+    # Flavor tagging
+    np.float64(eta_os), np.float64(eta_ss),
+    np.float64(p0_os), np.float64(p1_os), np.float64(p2_os),
+    np.float64(p0_ss), np.float64(p1_ss), np.float64(p2_ss),
+    np.float64(dp0_os), np.float64(dp1_os), np.float64(dp2_os),
+    np.float64(dp0_ss), np.float64(dp1_ss), np.float64(dp2_ss),
+    # Decay-time acceptance
+    timeacc.astype(np.float64),
+    # Angular acceptance
+    angacc.astype(np.float64),
+    # Flags
+    np.int32(use_fk), np.int32(len(CSP)), np.int32(use_angacc), np.int32(use_timeacc),
+    np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
+    np.int32(len(output)),
+    global_size=g_size, local_size=l_size)
+    #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
 
-def delta_gamma5_data(input, output, use_fk=1, use_angacc = 1, use_timeacc = 1,
-use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
-BLOCK_SIZE=256, **pars):
+
+def delta_gamma5_data(input, output, use_fk=1, use_angacc=1, use_timeacc=1,
+                      use_timeoffset=0, set_tagging=1, use_timeres=1,
+                      BLOCK_SIZE=256, **pars):
   """
   delta_gamma5_data(input, output, **pars)
   This function is intended to be used with RD input arrays. It does use
@@ -536,40 +484,10 @@ BLOCK_SIZE=256, **pars):
          void
   """
   p = parser_rateBs(**pars)
-  delta_gamma5( input, output,
-                         use_fk=use_fk, use_angacc = use_angacc, use_timeacc = use_timeacc,
-                         use_timeoffset = use_timeoffset, set_tagging = set_tagging, use_timeres = use_timeres,
-                         BLOCK_SIZE=BLOCK_SIZE, **p)
-
-
-def delta_gamma5_data_Bd(input, output, use_fk=1, use_angacc = 1, use_timeacc = 1,
-use_timeoffset = 0, set_tagging = 1, use_timeres = 1,
-BLOCK_SIZE=256, **pars):
-  """
-  delta_gamma5_data(input, output, **pars)
-  This function is intended to be used with RD input arrays. It does use
-  time acceptance and angular acceptance. The tagging and resolution will use
-  calibration parameters.
-
-    this functions is a wrap around badjanak.delta_gamma5
-
-  In:
-  0.123456789:
-        input:  Input data with proper shape
-                ipanema.ristra
-       output:  Output array with proper shape to store pdf values
-                ipanema.ristra
-         pars:  Dictionary with parameters
-                dict
-  Out:
-         void
-  """
-  p = parser_rateBd(**pars)
-  delta_gamma5Bd( input, output,
-                         use_fk=use_fk, use_angacc = use_angacc, use_timeacc = use_timeacc,
-                         use_timeoffset = use_timeoffset, set_tagging = set_tagging, use_timeres = use_timeres,
-                         BLOCK_SIZE=BLOCK_SIZE, **p)
-
+  delta_gamma5(input, output, use_fk=use_fk, use_angacc=use_angacc,
+               use_timeacc=use_timeacc, use_timeoffset=use_timeoffset,
+               set_tagging=set_tagging, use_timeres=use_timeres,
+               BLOCK_SIZE=BLOCK_SIZE, **p)
 
 
 def delta_gamma5_mc(input, output, use_fk=1, set_tagging=0, **pars):
@@ -594,10 +512,93 @@ def delta_gamma5_mc(input, output, use_fk=1, set_tagging=0, **pars):
   """
   p = parser_rateBs(**pars)
   delta_gamma5(input, output, use_fk=use_fk, use_angacc=0, use_timeacc=0,
-               use_timeoffset=0, set_tagging=set_tagging, use_timeres=0, BLOCK_SIZE=256,
-               **p)
+               use_timeoffset=0, set_tagging=set_tagging, use_timeres=0,
+               BLOCK_SIZE=256, **p)
 
-def delta_gamma5_mc_Bd(input, output, use_fk=1, use_angacc=1, **pars): #use_angacc = 1
+# }}}
+
+
+# Wrappers arround Bd cross rate {{{
+
+def delta_gamma5Bd(input, output,
+                  # Time-dependent angular distribution
+                  G, DG, DM,
+                  CSP,
+                  ASlon, APlon, APpar, APper,
+                  pSlon, pPlon, pPpar, pPper,
+                  dSlon, dPlon, dPpar, dPper,
+                  lSlon, lPlon, lPpar, lPper,
+                  # Time limits
+                  tLL, tUL,
+                  # Time resolution
+                  sigma_offset, sigma_slope, sigma_curvature,
+                  mu,
+                  # Flavor tagging
+                  eta_os, eta_ss,
+                  p0_os,  p1_os, p2_os,
+                  p0_ss,  p1_ss, p2_ss,
+                  dp0_os, dp1_os, dp2_os,
+                  dp0_ss, dp1_ss, dp2_ss,
+                  # Time acceptance
+                  timeacc,
+                  # Angular acceptance
+                  angacc,
+                  # Flags
+                  use_fk=1, use_angacc = 0, use_timeacc = 0,
+                  use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
+                  BLOCK_SIZE=256, **crap):
+  g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
+  __KERNELS__.rateBd(
+    # Input and output arrays
+    input, output,
+    # Differential cross-rate parameters
+    np.float64(G), CSP.astype(np.float64),
+    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
+    dSlon.astype(np.float64),          np.float64(dPlon),                 np.float64(dPpar),                 np.float64(dPper),
+    # Time range
+    np.float64(tLL), np.float64(tUL),
+    # Angular acceptance
+    angacc.astype(np.float64),
+    # Flags
+    np.int32(use_fk),
+    # BINS
+    np.int32(len(CSP)), np.int32(use_angacc),
+    # events
+    np.int32(len(output)),
+    global_size=g_size, local_size=l_size)
+    #np.int32(use_angacc)
+
+
+def delta_gamma5_data_Bd(input, output, use_fk=1, use_angacc=1, use_timeacc=1,
+                         use_timeoffset=0, set_tagging=1, use_timeres=1,
+                         BLOCK_SIZE=256, **pars):
+  """
+  delta_gamma5_data(input, output, **pars)
+  This function is intended to be used with RD input arrays. It does use
+  time acceptance and angular acceptance. The tagging and resolution will use
+  calibration parameters.
+
+    this functions is a wrap around badjanak.delta_gamma5
+
+  In:
+  0.123456789:
+        input:  Input data with proper shape
+                ipanema.ristra
+       output:  Output array with proper shape to store pdf values
+                ipanema.ristra
+         pars:  Dictionary with parameters
+                dict
+  Out:
+         void
+  """
+  p = parser_rateBd(**pars)
+  delta_gamma5Bd(input, output, use_fk=use_fk, use_angacc=use_angacc,
+                 use_timeacc=use_timeacc, use_timeoffset=use_timeoffset,
+                 set_tagging=set_tagging, use_timeres=use_timeres,
+                 BLOCK_SIZE=BLOCK_SIZE, **p)
+
+
+def delta_gamma5_mc_Bd(input, output, use_fk=1, use_angacc=0, **pars):
   """
   delta_gamma5_mc_Bd(input, output, **pars)
   This function is intended to be used with MC input arrays. It doesn't use
@@ -618,30 +619,20 @@ def delta_gamma5_mc_Bd(input, output, use_fk=1, use_angacc=1, **pars): #use_anga
          void
   """
   p = parser_rateBd(**pars)
-  delta_gamma5Bd( input, output,
-                         use_fk=use_fk, use_angacc = use_angacc, use_timeacc = 0,
-                         use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
-                         BLOCK_SIZE=256, **p)
-################################################################################
+  delta_gamma5Bd(input, output, use_fk=use_fk, use_angacc=use_angacc,
+                 use_timeacc=0, use_timeoffset=0, set_tagging=0, use_timeres=0,
+                 BLOCK_SIZE=256, **p)
+
+# }}}
 
 
-
-
-
-
-
-################################################################################
-
-
-
-
-# angular acceptance functions ------------------------------------------------
+# angular acceptance functions {{{
 #    These are several rules related to decay-time acceptance. The main one is
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-def get_angular_acceptance_weights(true, reco, weight, kind='norm',
-                                   BLOCK_SIZE=256, **parameters):
+def get_angular_acceptance_weights(true, reco, weight, BLOCK_SIZE=256,
+                                   **parameters):
   # Filter some warnings
   warnings.filterwarnings('ignore')
   # Compute weights scale and number of weights to compute
@@ -669,7 +660,7 @@ def get_angular_acceptance_weights(true, reco, weight, kind='norm',
       cov[i,j,:] = (w10[:,i]-w[i]/scale)*(w10[:,j]-w[j]/scale)*weight.get()**2
   cov = cov.sum(axis=2) # sum all per event cov
   cov = cov + cov.T - np.eye(cov.shape[0])*cov         # fill the lower-triangle
-  
+
   # Handling cov matrix, and transform it to correlation matrix
   corr = np.zeros_like(cov)
   final_cov = np.zeros_like(cov)
@@ -770,18 +761,13 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
       corr[i,j] = final_cov[i][j]/np.sqrt(final_cov[i][i]*final_cov[j][j])
   return w/w[0], np.sqrt(np.diagonal(final_cov)), final_cov, corr
 
+# }}}
 
 
+# Time acceptance functions {{{
 
-# Time acceptance functions ---------------------------------------------------
-
-def splinexerf(
-      time, lkhd,
-      coeffs,
-      mu=0.0, sigma=0.04, gamma=0.6,
-      tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256, flatend=False
-    ):
+def splinexerf(time, lkhd, coeffs, mu=0.0, sigma=0.04, gamma=0.6, tLL=0.3,
+               tUL=15, BLOCK_SIZE=256, flatend=False):
   """
     In:
                  time:  1D gpuarray with time to be fitted
@@ -806,14 +792,9 @@ def splinexerf(
   )
 
 
-
-def sbxscxerf(
-      time_a, time_b, lkhd_a, lkhd_b,
-      coeffs_a, coeffs_b,
-      mu_a=0.0, sigma_a=0.04, gamma_a=0.6,
-      mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
-      tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256,  flatend=False, **crap):
+def sbxscxerf(time_a, time_b, lkhd_a, lkhd_b, coeffs_a, coeffs_b, mu_a=0.0,
+              sigma_a=0.04, gamma_a=0.6, mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
+              tLL=0.3, tUL=15, BLOCK_SIZE=256, flatend=False, **crap):
   """
   In:
           time: 2D list of 1D gpuarray with time to be fitted, the expected
@@ -840,7 +821,6 @@ def sbxscxerf(
     size_a, size_b,
     global_size=(len(output),)
   )
-
 
 
 def saxsbxscxerf(
@@ -883,7 +863,6 @@ def saxsbxscxerf(
   )
 
 
-
 def bspline(time, *coeffs, flatend=False, BLOCK_SIZE=32):
   if isinstance(time, np.ndarray):
     time_d = THREAD.to_device(time).astype(np.float64)
@@ -901,6 +880,7 @@ def bspline(time, *coeffs, flatend=False, BLOCK_SIZE=32):
   return ristra.get(spline_d) if deallocate else spline_d
 
 
+# Time accepntace helpers {{{
 
 def get_knot(i, knots, n):
   if (i<=0):
@@ -1001,7 +981,12 @@ def get_4cs(listcoeffs, flatend=False):
   result.append(C)
   return np.array(result)
 
+# }}}
 
+# }}}
+
+
+# Toy generators {{{
 
 def dG5toys(output,
             G, DG, DM,
@@ -1079,9 +1064,10 @@ def dG5toys(output,
     np.float64(prob_max), np.int32(seed),  np.int32(len(output)),
     global_size=g_size, local_size=l_size)
 
+# }}}
 
 
-
+# Duplicates {{{
 
 def get_4cs(listcoeffs, flatend=False):
   n = len(config['knots'])
@@ -1241,10 +1227,10 @@ def dG5toys(output,
     global_size=g_size, local_size=l_size)
     #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
 
+# }}}
 
 
-
-
+# Other useful bindings {{{
 
 def get_fk(z):
   z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
@@ -1253,3 +1239,10 @@ def get_fk(z):
   __KERNELS__.Fcoeffs(z_dev, w_dev, np.int32(len(z)), global_size=(len(z)))
   return ristra.get(w_dev)
 
+# }}}
+
+
+# }}}
+
+
+# vim:foldmethod=marker

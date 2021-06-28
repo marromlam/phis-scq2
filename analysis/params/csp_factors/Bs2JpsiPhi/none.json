@@ -1,0 +1,23 @@
+{
+  CSP:
+  {
+    name: CSP
+    value: 1.0
+    free: false
+    latex: C_{SP}
+  }
+  mKK0:
+  {
+    name: mKK0
+    value: 990
+    free: false
+    latex: m_{KK}^{0}
+  }
+  mKK1:
+  {
+    name: mKK1
+    value: 1050
+    free: false
+    latex: m_{KK}^{1}
+  }
+}

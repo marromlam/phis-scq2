@@ -1,90 +1,147 @@
-rule get_csp_from_gitBd:
-  params:
-    repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
-  output:
-    params = "output/params/csp_factors/{year}/Bd2JpsiKstar/{version}.json",
-  run:
-    import os
-    import hjson
-    from ipanema import Parameters
+# Csp basics {{{
+#    This rule copies Csp factors from analysis/params and places them according
+#    to the name of the output. It only runs for none or old wildcards, which
+#    basically mean the use of no Csp factors or to use the 2019 note ones.
 
-    year = f"{wildcards.year}"
-    version = f"{wildcards.version}"
-
-    params = Parameters.load(f'analysis/params/v0r0/Bd2JpsiKstar/csp_factors/CSP.json')
-    #print(params)
-    params.dump(f"{output.params}")
-    #print(f'Dumping parameters to {output.params}')
-
-
-rule get_csp_from_git:
+rule csp_factors_basics:
   wildcard_constraints:
-    version = "v0r0",#"(v0r0|v0r1)",                      # v0r0 not allowed
-  params:
-    repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
+    csp = "(none|old)"
   output:
-    params = "output/params/csp_factors/{year}/{mode}/{version}.json",
+    "output/params/csp_factors/{year}/{mode}/{version}_{csp}.json",
   run:
     import os
-    import hjson
-    from ipanema import Parameters
+    csp = "analysis/params/csp_factors/{wildcards.mode}/{wildcards.csp}.json"
+    shell(f"mkdir -p {os.path.dirname(f'{output}')}")
+    shell(f"cp {csp} {output}")
 
-    year = f"{wildcards.year}"
-    version = f"{wildcards.version}"
-    if version in ('v0r0', 'v0r2', 'v0r3', 'v0r4'): ##ramon para poder hacer test con simon
-    #if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
-      params = Parameters.load(f'analysis/params/v0r0/Bs2JpsiPhi/csp_factors/CSP.json')
-      print(params)
-      params.dump(f"{output.params}")
-      print(f'Dumping parameters to {output.params}')
-    else:
-      os.makedirs("./tmp/{year}",exist_ok=True)
-      #csp_path = f"fitinputs/{version}/Csp/{year}/"     # YEARLY
-      csp_path = f"fitinputs/{version}/Csp/All/"        # SHARED
+# }}}
 
-      print(f"\n{80*'='}\n",
-            "Get CSP from Bs2JpsiPhi-FullRun2 repository",
-            f"\n{80*'='}\n")
 
-      print(f'Downloading Bs2JpsiPhi-FullRun2:{csp_path}CspFactors{year}.json')
-      #os.system(f"git archive --remote={params.repo} --prefix=./tmp/ HEAD:{csp_path} CspFactors{year}.json | tar -x")     # YEARLY
-      os.system(f"git archive --remote={params.repo} --prefix=./tmp/{year}/ HEAD:{csp_path} CspFactorsAll.json | tar -x")     # SHARED
 
-      print(f"Loading CspFactors{year}.json")
-      #raw_json = hjson.load( open(f'./tmp/CspFactors{year}.json','r') )     # YEARLY
-      #raw_json = raw_json[f'{year}']['CspFactors']
-      raw_json = hjson.load( open(f'./tmp/{year}/CspFactorsAll.json','r') )     # SHARED
-      raw_json = raw_json[f'All']['CspFactors']
+rule csp_factors_from_git:
+  wildcard_constraints:
+    # version = "v0r0",#"(v0r0|v0r1)",                      # v0r0 not allowed
+    csp = "(vgc|run2|yearly)"
+  params:
+    repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
+    linker = "analysis/params/csp_factors/linker.json"
+  output:
+    params = "output/params/csp_factors/{year}/{mode}/{version}_{csp}.json",
+  run:
+    shell(f"""(time\
+    python analysis/csp_factors/download_from_git.py\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --csp {wildcards.csp}\
+    --output {output}\
+    --repo {params.repo}\
+    --linker {params.linker}\
+    ) #&> {log}""")
 
-      print(f'Parsing parameters to match phis-scq sctructure')
-      cooked = {};
-      for i, d in enumerate(raw_json):
-        bin = i+1
-        cooked[f'CSP{bin}'] = {'name':f'CSP{bin}'}
-        cooked[f'CSP{bin}'].update({'value':d['Value'], 'stdev':d['Error'] })
-        cooked[f'CSP{bin}'].update({'latex': f"C_{{SP}}^{{{bin}}}"})
-        cooked[f'CSP{bin}'].update({'free': False})
-        if not f'mKK{bin-1}' in cooked:
-          cooked[f'mKK{bin-1}'] = {'name':f'mKK{bin-1}'}
-          cooked[f'mKK{bin-1}'].update({'value':d['Bin_ll'], 'stdev':0 })
-          cooked[f'mKK{bin-1}'].update({'latex':f'm_{{KK}}^{{{bin-1}}}'})
-          cooked[f'mKK{bin-1}'].update({'free': False})
-        if not f'mKK{bin}' in cooked:
-          cooked[f'mKK{bin}'] = {'name':f'mKK{bin}'}
-          cooked[f'mKK{bin}'].update({'value':d['Bin_ul'], 'stdev':0 })
-          cooked[f'mKK{bin}'].update({'latex':f'm_{{KK}}^{{{bin}}}'})
-          cooked[f'mKK{bin}'].update({'free': False})
 
-      # Build the ipanema.Parameters object
-      print(f"\nCSP parameters for {year} are:")
-      list_params = list(cooked.keys())                 # list all parameter names
-      list_params = sorted( list_params )               # sort them
-      params = Parameters()
-      [params.add(cooked[par]) for par in list_params]
-      print(params)
-      params.dump(f"{output.params}")
-      print(f'Dumping parameters to {output.params}')
-      #print(f'Clean up ./tmp/CspFactors{year}.json\n')
-      #os.remove(f"./tmp/CspFactors{year}.json")
-      print(f'Clean up ./tmp/{year}/CspFactorsAll.json\n')
-      os.remove(f"./tmp/{year}/CspFactorsAll.json")
+
+# THESE RULES ARE TO COMPUTE CSP FACTORS WITHIN PHIS-SCQ 
+#
+# #files_Csp_den = {'MC_Bs2JpsiPhi': '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsjpsiphi_CPLH_10M.root', 'MC_Bs2JpsiKK_Swave': '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsmumukk_RunI_new.root'}
+# trees_Csp_den = {'MC_Bs2JpsiPhi': 'bsjpsikk',
+#                  'MC_Bs2JpsiKK_Swave': 'bsmumukk'}
+#
+# rule csp_factors_efficiency_hist:
+#     """
+#     Efficiency histograms in m(KK) for Csp factors.
+#     """
+#     input:
+#         script = '../Csp/epsmKK.py',
+#     output:
+#         directory(tuples_path('Csp/{mode}/{year}/eff_hists/'))
+#     params:
+#         csp = "analysis/params/csp_factors/Bs2JpsiPhi/none.json",
+#         name_file1 = "{SAMPLES}/{year}/MC_{mode}/{version}.root",
+#         name_file1 = "{SAMPLES}/{year}/TOY_{mode}/{version}.root",
+#         # name_file1 = lambda wildcards: config['localeos'] + '/' + config['version']+ '/{}/{}/{}_{}_selected_bdt_{}.root'.format(wildcards.mode, wildcards.year, wildcards.mode, wildcards.year, config['version']),
+#         # name_file2 = lambda wildcards: config['localeos'] + '/MC_Csp_standalone/BsMuMuKK_' + '{}.root'.format(wildcards.year) if 'Swave' in wildcards.mode else '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsjpsiphi_CPLH_10M.root', 
+# 	tree_name_file2 = lambda wildcards: trees_Csp_den[wildcards.mode]
+#     shell:
+#         config['runUrania'] + ' ' +
+#         'python {input.script} --input-file1 {params.name_file1} \
+#                               --input-file2 {params.name_file2} \
+#                               --input-tree-name-file2 {params.tree_name_file2} \
+#                               --output-dir {output} \
+#                               --mode {wildcards.mode}\
+#                               --year {wildcards.year}'
+#
+#
+#
+# rule csp_factors_calculator:
+#     """
+#     Calculate Csp factors and save them in a json file.
+#     """
+#     input:
+#         script = '../Csp/Csp_factors.py',
+#         dir1 = expand(rules.Csp_eff_hist.output, mode='MC_Bs2JpsiPhi', year='{year}'),
+#         dir2 = expand(rules.Csp_eff_hist.output, mode='MC_Bs2JpsiKK_Swave', year='{year}')
+#     output:
+#         tuples_path('Csp/{year}/CspFactors{year}.json').replace('selection/output/tuples','fitinputs/'+config['version'])
+#     shell:
+#         config['runUrania'] + ' ' +
+#         'python {input.script} --input-dir1 {input.dir1} \
+#                               --input-dir2 {input.dir2} \
+#                               --year {wildcards.year}\
+#                               --output {output}'
+#
+#
+#
+# rule csp_factors_merge_files_for_Csp:
+#     params:
+#         file_names = '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'+config['version']+'/{mode}/2015/{mode}_2015_selected_bdt_'+config['version']+'.root ' + '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'+config['version']+'/{mode}/2016/{mode}_2016_selected_bdt_'+config['version']+'.root ' + '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'+config['version']+'/{mode}/2017/{mode}_2017_selected_bdt_'+config['version']+'.root ' + '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'+config['version']+'/{mode}/2018/{mode}_2018_selected_bdt_'+config['version']+'.root ' 
+#     output:
+#         config['localeos'] + '/' + config['version'] + '/{mode}/All/{mode}_All_selected_bdt_' + config['version']  + '.root'
+#     shell:
+#         'hadd {output} {params.file_names}'
+#
+#
+#
+# rule csp_factors_csp_eff_hist_all:
+#     """
+#     Efficiency histograms in m(KK) for Csp factors using all years.
+#     """
+#     input:
+#         script = '../Csp/epsmKK.py',
+#         name_file1 = expand(rules.merge_files_for_Csp.output, mode='{mode}')
+#     output:
+#         directory(tuples_path('Csp/{mode}/All/eff_hists/'))
+#     params:
+#         #name_file1 = lambda wildcards: config['localeos'] + '/' + config['version']+ '/{}/All/{}_All_selected_bdt_{}.root'.format(wildcards.mode, wildcards.mode, config['version']),
+#         name_file2 = lambda wildcards: config['localeos'] + '/MC_Csp_standalone/BsMuMuKK_All.root' if 'Swave' in wildcards.mode else '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsjpsiphi_CPLH_10M.root',
+#         tree_name_file2 = lambda wildcards: trees_Csp_den[wildcards.mode]
+#     shell:
+#         config['runUrania'] + ' ' +
+#         'python {input.script} --input-file1 {input.name_file1} \
+#                               --input-file2 {params.name_file2} \
+#                               --input-tree-name-file2 {params.tree_name_file2} \
+#                               --output-dir {output} \
+#                               --mode {wildcards.mode}\
+#                               --year All'
+#
+#
+#
+# rule CspFactors_all:
+#     """
+#     Calculate Csp factors and save them in a json file.
+#     """
+#     input:
+#         script = '../Csp/Csp_factors.py',
+# 	dir1 = expand(rules.Csp_eff_hist_all.output, mode='MC_Bs2JpsiPhi'),
+# 	dir2 = expand(rules.Csp_eff_hist_all.output, mode='MC_Bs2JpsiKK_Swave')
+#     output:
+#         tuples_path('Csp/All/CspFactorsAll.json').replace('selection/output/tuples','fitinputs/'+config['version'])
+#     shell:
+#         config['runUrania'] + ' ' +
+# 	'python {input.script} --input-dir1 {input.dir1} \
+#                               --input-dir2 {input.dir2} \
+#                               --year All\
+#                               --output {output}'
+
+
+# vim:foldmethod=marker

@@ -19,7 +19,7 @@ from ipanema import initialize
 from ipanema import ristra, Parameters, optimize, Sample, extrap1d
 
 import pandas as pd
-import uproot
+import uproot3 as uproot
 import os, sys
 import platform
 import hjson
@@ -34,7 +34,8 @@ from ipanema import Parameters, fit_report, optimize
 from ipanema import histogram
 from ipanema import Sample
 from ipanema import plotting
-from ipanema import wrap_unc, get_confidence_bands
+from ipanema import wrap_unc
+from ipanema.confidence import get_confidence_bands
 
 import matplotlib.pyplot as plt
 from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
@@ -44,10 +45,15 @@ from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
 from utils.helpers import  version_guesser, timeacc_guesser, swnorm
 
+import config
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 
 # Parse arguments for this script
@@ -117,7 +123,9 @@ def plot_timeacc_fit(params, data, weight,
 
 
 
-def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24, log=False, axes=False, modelabel=None, label=None, flatend=False):
+def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
+                        log=False, axes=False, modelabel=None, label=None,
+                        flatend=False, timeacc=None):
   """
   Hi Marcos,
 
@@ -132,7 +140,8 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   Cheers,
   Simon
   """
-  # Look for axes
+  # Look for axes {{{
+
   if not axes:
     fig, axplot, axpull = plotting.axes_plotpull()
     FMTCOLOR = 'k'
@@ -140,29 +149,73 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
     fig, axplot, axpull = axes
     FMTCOLOR = next(axplot._get_lines.prop_cycler)['color']
 
+  # }}}
+
+  # Find all sets of parameters {{{
+
   a = params.build(params, params.find('a.*')) if params.find('a.*') else None
   b = params.build(params, params.find('b.*')) if params.find('b.*') else None
   c = params.build(params, params.find('c.*')) if params.find('c.*') else None
   knots = np.array(params.build(params, params.find('k.*'))).tolist()
   badjanak.config['knots'] = knots
   badjanak.get_kernels(True)
-  
+
+  # }}}
+
+  # Create some kinda lambda here {{{
   def splinef(time, *coeffs, BLOCK_SIZE=256):
      return badjanak.bspline(time, *coeffs, flatend=flatend, BLOCK_SIZE=BLOCK_SIZE)
+   # }}}
 
   # exit()
-  if 'BsMC' in mode:
-    list_coeffs = list(a.keys())
-    kind = 'single'
-    gamma = params['gamma_a'].value
-  elif 'BdMC' == mode:
-    list_coeffs = list(b.keys())
-    kind = 'ratio' if a else 'single'
-    gamma = params['gamma_b'].value
-  elif 'BdRD' == mode:
-    list_coeffs = list(c.keys())
-    kind = 'full' if b else 'single'
-    gamma = params['gamma_c'].value
+
+  # try to guess what do you what to plot {{{
+
+  if timeacc:
+    if 'single' in timeacc:
+      kind = 'single'
+      if mode in ('MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0'):
+        list_coeffs = list(a.keys())
+        gamma = params['gamma_a'].value
+      elif mode == 'MC_Bd2JpsiKstar':
+        list_coeffs = list(b.keys())
+        gamma = params['gamma_b'].value
+      elif mode == 'Bd2JpsiKstar':
+        list_coeffs = list(c.keys())
+        gamma = params['gamma_c'].value
+    elif 'simul' in timeacc:
+      if mode in ('MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0'):
+        list_coeffs = list(a.keys())
+        gamma = params['gamma_a'].value
+        kind = 'single'
+      elif mode == 'MC_Bd2JpsiKstar':
+        list_coeffs = list(b.keys())
+        gamma = params['gamma_b'].value
+        kind = 'ratio'
+      elif mode == 'Bd2JpsiKstar':
+        list_coeffs = list(c.keys())
+        gamma = params['gamma_c'].value
+        kind = 'fullBd'
+      elif mode == 'Bs2JpsiPhi':
+        list_coeffs = list(c.keys())
+        gamma = params['gamma_c'].value
+        kind = 'fullBs'
+  else:
+    if 'BsMC' in mode:
+      list_coeffs = list(a.keys())
+      kind = 'single'
+      gamma = params['gamma_a'].value
+    elif 'BdMC' == mode:
+      list_coeffs = list(b.keys())
+      kind = 'ratio' if a else 'single'
+      gamma = params['gamma_b'].value
+    elif 'BdRD' == mode:
+      list_coeffs = list(c.keys())
+      kind = 'full' if b else 'single'
+      gamma = params['gamma_c'].value
+
+  # }}}
+
   print(mode,kind)
 
   # Prepare coeffs as ufloats
@@ -172,9 +225,10 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
       coeffs.append(unc.ufloat(params[par].value,params[par].stdev))
     else:
       coeffs.append(unc.ufloat(params[par].value,0))
+  print(coeffs)
 
-  # Cook where should I place the bins
-  tLL = 0.3; tUL = 15
+  # Cook where should I place the bins {{{
+  
   def distfunction(tLL, tUL, gamma, ti, nob):
     return np.log(-((np.exp(gamma*ti + gamma*tLL + gamma*tUL)*nob)/
     (-np.exp(gamma*ti + gamma*tLL) + np.exp(gamma*ti + gamma*tUL) -
@@ -188,6 +242,8 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
     ipdf.append( 1.0/((-np.exp(-(tf*gamma)) + np.exp(-(ti*gamma)))/1.0) )
     widths.append(tf-ti)
   bins = np.array(list_bins); int_pdf = np.array(ipdf)
+  
+  # }}}
 
 
   # Manipulate data
@@ -197,7 +253,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   # Manipulate the decay-time dependence of the efficiency
   x = ref.cmbins#np.linspace(0.3,15,200)
   print(x)
-  X = np.linspace(0.3,15,200)
+  X = np.linspace(tLL, tUL, 200)
   y = wrap_unc(splinef, x, *coeffs)
   y_nom = unp.nominal_values(y)
   y_spl = interp1d(x, y_nom, kind='cubic', fill_value='extrapolate')(5)
@@ -209,14 +265,21 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
     spline_a = splinef(ref.cmbins,*coeffs_a)
     ref.counts /= spline_a; ref.errl /= spline_a; ref.errh /= spline_a
     ylabel_str = r'$\varepsilon_{MC}^{B_d^0/B_s^0}$ [a.u.]'
-
-  if kind == 'full':
+  elif kind == 'fullBd':
     coeffs_a = [params[key].value for key in params if key[0]=='a']
     coeffs_b = [params[key].value for key in params if key[0]=='b']
     spline_a = splinef(ref.cmbins, *coeffs_a)
     spline_b = splinef(ref.cmbins, *coeffs_b)
     ref.counts /= spline_b; ref.errl /= spline_b; ref.errh /= spline_b
     ylabel_str = r'$\varepsilon_{RD}^{B_d^0}$ [a.u.]'
+  elif kind == 'fullBs':
+    coeffs_a = [params[key].value for key in params if key[0]=='a']
+    coeffs_b = [params[key].value for key in params if key[0]=='b']
+    spline_a = splinef(ref.cmbins, *coeffs_a)
+    spline_b = splinef(ref.cmbins, *coeffs_b)
+    # ref.counts /= spline_b; ref.errl /= spline_b; ref.errh /= spline_b
+    ref.counts /= 1; ref.errl /= 1; ref.errh /= 1
+    ylabel_str = r'$\varepsilon_{RD}^{B_s^0}$ [a.u.]'
 
     #ref.counts *= spline_a; ref.errl *= spline_a; ref.errh *= spline_a
 
@@ -228,7 +291,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
   #y_norm = np.trapz(y_nom/y_spl, x)
 
   # Splines for pdf ploting
-  y_upp, y_low = get_confidence_bands(x, y, sigma=conf_level)/y_spl
+  y_upp, y_low = get_confidence_bands(y, sigma=conf_level)/y_spl
   y_nom_s = interp1d(x[:-1], y_nom[:-1]/y_spl, kind='cubic')
   y_upp_s = interp1d(x[:-1], y_upp[:-1], kind='cubic')
   y_low_s = interp1d(x[:-1], y_low[:-1], kind='cubic')
@@ -282,7 +345,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
 def plotter(args,axes):
 
   # Parse arguments ------------------------------------------------------------
-  VERSION, SHARE, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
@@ -344,25 +407,25 @@ def plotter(args,axes):
         weight = f'dg0Weight*{sw}/gb_weights'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
-      mode = 'BsMC'; c = 'a'
+      mode = 'MC_Bs2JpsiPhi'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
       if CORR=='Noncorr':
         weight = f'{sw}/gb_weights'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
-      mode = 'BsMC'; c = 'a'
+      mode = 'MC_Bs2JpsiPhi_dG0'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
       if CORR=='Noncorr':
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
-      mode = 'BdMC'; c = 'b'
+      mode = 'MC_Bd2JpsiKstar'; c = 'b'
     elif m=='Bd2JpsiKstar':
       if CORR=='Noncorr':
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}{sw}'
-      mode = 'BdRD'; c = 'c'
+      mode = 'Bd2JpsiKstar'; c = 'c'
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
@@ -372,7 +435,7 @@ def plotter(args,axes):
     cats[mode].assoc_params(params[i])
 
     # Attach labels and paths
-    if MODE==m:
+    if MODE==m or MODE=='Bs2JpsiPhi':
       MMODE=mode
       cats[mode].label = mode_tex(mode)
       cats[mode].figurepath = args['figure']
@@ -386,16 +449,20 @@ def plotter(args,axes):
       pars = pars + cats[cat].params
   #print(pars)
 
+  if args['mode'] == 'Bs2JpsiPhi':
+    MMMODE = 'Bs2JpsiPhi'
+  else:
+    MMMODE = MMODE
   if PLOT=='fit':
     axes = plot_timeacc_fit(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
-                                          MMODE, log=LOGSCALE, axes=axes,
+                                          mode=MMMODE, log=LOGSCALE, axes=axes,
                                           label=thelabel, flatend=FLAT)
   elif PLOT=='spline':
     axes = plot_timeacc_spline(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
-                                          mode=MMODE, log=LOGSCALE, axes=axes,
-                                          conf_level=1,
+                                          mode=MMMODE, log=LOGSCALE, axes=axes,
+                                          conf_level=1, timeacc=args['timeacc'],
                                           modelabel=mode_tex(MODE),
                                           label=thelabel, flatend=FLAT)
   return axes

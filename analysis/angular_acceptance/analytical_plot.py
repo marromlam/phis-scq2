@@ -39,15 +39,15 @@ import hjson
 from angular_acceptance.analytical_corrected import get_angular_prediction
 
 
-CONFIG = hjson.load(open('config.json'))
-tLL = CONFIG['tLL']
-tUL = CONFIG['tUL']
-all_knots = CONFIG['time_acceptance_knots']
+import config
+tLL = config.general['tLL']
+tUL = config.general['tUL']
+all_knots = config.timeacc['knots']
 
 
 
-order_cosK, order_cosL, order_hphi = CONFIG['angular_acceptance_legendre_order']
-nob = CONFIG['angular_acceptance_bins'][0]
+order_cosK, order_cosL, order_hphi = config.angacc['legendre_order']
+nob = config.angacc['analytic_bins'][0]
 
 
 if __name__ == "__main__":

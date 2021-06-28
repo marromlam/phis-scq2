@@ -1,66 +1,101 @@
-rule get_flavor_from_git:
+# Flavor tagging basics {{{
+#    This rule copies Csp factors from analysis/params and places them according
+#    to the name of the output.
+
+rule flavor_tagging_basics:
+  wildcard_constraints:
+    flavor = "(none|old)"
+  output:
+    "output/params/flavor_tagging/{year}/{mode}/{version}_{flavor}.json",
+  run:
+    import os
+    res = "analysis/params/flavor_tagging/{wildcards.mode}/{wildcards.flavor}.json"
+    shell(f"mkdir -p {os.path.dirname(f'{output}')}")
+    shell(f"cp {res} {output}")
+
+# }}}
+
+
+
+# Flavor tagging from git {{{
+#    Currently time resolution is only computed at NIKHEF, hence we need to sync
+#    it from there.
+
+rule flavor_tagging_from_git:
+  wildcard_constraints:
+    flavor = "amsrd"
   params:
     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
+    linker = "analysis/params/flavor_tagging/linker.json"
   output:
-    params = "output/params/flavor_tagging/{year}/{mode}/{version}.json",
+    "output/params/flavor_tagging/{year}/{mode}/{version}_{flavor}.json",
   run:
     import os
     import hjson
     from ipanema import Parameters
+    from utils.strings import printsec
 
     year = f"{wildcards.year}"
-    version = f"{wildcards.version}"
+    version = f"{wildcards.version}".split('@')[0]
+    flavor = f"{wildcards.flavor}"
+    repo = f"{params.repo}"
 
-    if version in ('v0r0','v0r1','v0r2','v0r3','v0r4','v0r5'):
-      params = Parameters.load(f'analysis/params/v0r0/flavor_tagging/flavor_tagging.json')
+    if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
+      params = Parameters.load(f'analysis/params/v0r0/time_resolution/time_resolution.json')
       print(params)
       params.dump(f"{output.params}")
       print(f'Dumping parameters to {output.params}')
     else:
-      os.makedirs("./tmp/{year}",exist_ok=True)
-      csp_path = f"fitinputs/{version}/time_resolution/{year}/"     # YEARLY
+      printsec("Get flavor tagging from Bs2JpsiPhi-FullRun2 repository")
 
-      print(f"\n{80*'='}\n",
-            "Get CSP from Bs2JpsiPhi-FullRun2 repository",
-            f"\n{80*'='}\n")
+      # get name for time resolution
+      _flavor = hjson.load(open(f'{params.linker}','r'))
+      _flavor = _flavor[flavor].format(year=f'{wildcards.year}')
 
-      print(f'Downloading Bs2JpsiPhi-FullRun2:{csp_path}CspFactors{year}.json')
-      os.system(f"git archive --remote={params.repo} --prefix=./tmp/ HEAD:{csp_path} binned_fit_{year}.json | tar -x")     # YEARLY
-      #os.system(f"git archive --remote={params.repo} --prefix=./tmp/{year}/ HEAD:{csp_path} CspFactorsAll.json | tar -x")     # SHARED
+      # cook local and remote paths
+      out_path = f"{output}"
+      tmp_path = out_path.replace('output', 'tmp')
+      tmp_path = os.path.dirname(tmp_path)
+      git_path = f"fitinputs/{version}/tagging_calibration/{year}"
+      os.makedirs(tmp_path, exist_ok=True)
 
-      print(f"Loading CspFactors{year}.json")
-      raw_json = hjson.load( open(f'./tmp/binned_fit_{year}.json','r') )     # YEARLY
-      raw_json = raw_json['TimeResParameters']
-      #exit()
-      #raw_json = hjson.load( open(f'./tmp/{year}/CspFactorsAll.json','r') )     # SHARED
-      #raw_json = raw_json[f'All']['CspFactors']
+      print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}')
+      os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
 
+      print(f"Loading Time Resolution {year}")
+      rawd = hjson.load(open(f"{tmp_path}/{_flavor}",'r'))['TaggingParameter']
+      outd = Parameters.load("analysis/params/flavor_tagging/Bs2JpsiPhi/none.json")
+
+      # parse parameters
       print(f'Parsing parameters to match phis-scq sctructure')
-      cooked = {};
+      for i, par in enumerate(list(outd.keys())):
+          for _i in range(len(rawd)):
+            if rawd[_i]['Name'][:5] == f'{par[:2]}_'+f'{par[3:]}'.upper():
+              outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
+              outd[par].correl = {}
+              for j in range(0,3):
+                pi = par[:2]; pj = f"p{j}"; tag = par[3:]
+                for k in range(len(rawd)):
+                  if rawd[k]['Name'][:12].lower() == f'rho_{pi}_{pj}_{tag}':
+                    outd[par].correl[f"{pj}_{tag}"] = rawd[k]['Value']
+                  elif rawd[k]['Name'][:12].lower() == f'rho_{pj}_{pi}_{tag}':
+                    outd[par].correl[f"{pj}_{tag}"] = rawd[k]['Value']
+            elif rawd[_i]['Name'][:6] == f'{par[:3]}_'+f'{par[4:]}'.upper():
+              outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
+            elif rawd[_i]['Name'][:10] == f'{par[:3]}_bar_'+f'{par[4:]}'.upper():
+              outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
 
-      cooked['sigma_offset'] = {'name':f'sigma_offset'}
-      cooked['sigma_offset'].update({'value':raw_json[0]['Value'], 'stdev':raw_json[0]['Error']})
-      cooked['sigma_offset'].update({'latex': f"\sigma_0"})
-      cooked['sigma_offset'].update({'free': False})
+      print("\nParameter table")
+      print(outd)
+      print("Correlation matrix")
+      print(outd.corr())
+      print(f'\nDumping parameters to {output}')
+      outd.dump(f"{output}")
+      print(f'Clean up {tmp_path}/{_flavor}\n')
+      os.remove(f"{tmp_path}/{_flavor}")
 
-      cooked['sigma_slope'] = {'name':f'sigma_slope'}
-      cooked['sigma_slope'].update({'value':raw_json[1]['Value'], 'stdev':raw_json[1]['Error']})
-      cooked['sigma_slope'].update({'latex': f"\sigma_1"})
-      cooked['sigma_slope'].update({'free': False})
+# }}}
 
-      cooked['sigma_curvature'] = {'name':f'sigma_curvature'}
-      cooked['sigma_curvature'].update({'value':0.0*raw_json[2]['Value'], 'stdev':raw_json[2]['Error']})
-      cooked['sigma_curvature'].update({'latex': f"\sigma_{2}"})
-      cooked['sigma_curvature'].update({'free': False})
 
-      # Build the ipanema.Parameters object
-      print(f"\nCSP parameters for {year} are:")
-      list_params = list(cooked.keys())                 # list all parameter names
-      list_params = sorted( list_params )               # sort them
-      params = Parameters()
-      [params.add(cooked[par]) for par in list_params]
-      print(params)
-      params.dump(f"{output.params}")
-      print(f'Dumping parameters to {output.params}')
-      print(f'Clean up ./tmp/binned_fit_{year}.json\n')
-      os.remove(f"./tmp/binned_fit_{year}.json")
+
+# vim:foldmethod=marker
