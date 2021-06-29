@@ -4,5 +4,5 @@
   "tLL": 0.3,
   "tUL": 15,
   "ntoys": 4000,
-  "oddWeight": "mochito"
+  "oddWeight": "hplus_TRACK_CHI2NDOF hplus_PIDK hminus_TRACK_CHI2NDOF muplus_TRACK_CHI2NDOF muminus_TRACK_CHI2NDOF max_K_TRCHI2_mva max_mu_TRCHI2_mva"
 }
