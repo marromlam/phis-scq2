@@ -272,7 +272,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
       if weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'polWeight', 'pdfWeight',
-                        'kbuWeight', 'oddWeight', 'kinWeight'):
+                          'kbuWeight', 'oddWeight', 'kinWeight', 'kkpWeight'):
         weight = 'polWeight'
     # }}}
     # MC_Bs2JpsiPhi {{{
@@ -282,7 +282,8 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
-                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight'):
+                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight',
+                          'kkpWeight'):
         weight = 'dg0Weight'
     # }}}
     # MC_Bs2JpsiKK_Swave {{{
@@ -292,7 +293,8 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
-                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight'):
+                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight',
+                          'kkpWeight'):
         weight = 'dg0Weight'
     # }}}
     # MC_Bs2JpsiPhi_dG0 {{{
@@ -302,7 +304,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'polWeight', 'pdfWeight',
-                          'oddWeight', 'kinWeight', 'angWeight'):
+                          'oddWeight', 'kinWeight', 'angWeight', 'kkpWeight'):
         weight = 'polWeight'
     # }}}
   # print("Weight was transformed {__weight}->{weight}")
