@@ -322,7 +322,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
         if weight=='angWeight':
           path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root' )
         elif weight=='kkpWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root' )
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root' )
         else:
           path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
       else:
@@ -334,7 +334,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
         if weight=='angWeight':
           path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root'
         elif weight=='kkpWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root'
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root'
         else:
           path =  SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
     else:
