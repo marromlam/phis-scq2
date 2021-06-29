@@ -169,10 +169,29 @@ def cut_translate(version_substring):
 
 # Snakemake helpers {{{
 
-def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, weight=None):
+def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, 
+           timeres = False, flavor=False, weight=None):
   # Get version withoud modifier
   if not version:
     version = f"{wcs.version}"
+  
+  if not flavor:
+    try:
+      flavor = f'{wcs.flavor}'
+    except:
+      flavor = 'none'
+
+  if not timeres:
+    try:
+      timeres = f'{wcs.timeres}'
+    except:
+      timeres = 'none'
+
+  if not timeacc:
+    try:
+      timeacc = f'{wcs.timeacc}'
+    except:
+      timeacc = 'none'
 
   # print(f'{version}')
   v, share, evt, mag, fullcut, var, bin = version_guesser(f'{version}')
@@ -183,13 +202,19 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
   try:
     m = f'{wcs.mode}'
   except:
-    m = '{mode}'
+    m = 'none'
 
   if not csp:
-    csp = 'none'
+      try:
+        csp = f'{wcs.csp}'
+      except: 
+        csp = f'{csp}'
 
   if not angacc:
-    angacc = 'corrected'
+    try:
+      angacc = f'{wcs.angacc}'
+    except:
+      angacc = '{angacc}'
 
   # Check modifiers for mode
   if mode:
@@ -322,7 +347,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
         if weight=='angWeight':
           path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root' )
         elif weight=='kkpWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root' )
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root' )
         else:
           path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
       else:
@@ -334,7 +359,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, we
         if weight=='angWeight':
           path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root'
         elif weight=='kkpWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root'
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root'
         else:
           path =  SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
     else:
