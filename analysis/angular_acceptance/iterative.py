@@ -344,10 +344,11 @@ def do_kkp_weighting(verbose):
   for y, dy in mc.items(): # loop over years
     for m, dm in dy.items(): # loop over mc_std and mc_dg0
       for t, v in dm.items():
-        # original variables + weight (mc)
+        # original variables + weight (mc) 
+        j = len(v.pdfWeight.keys())
         ov  = v.df[['pTHm','pTHp','pHm','pHp']]
         ow  = v.df.eval(f'angWeight*polWeight*{weight_rd}/gb_weights')
-        ow *= v.pdfWeight[i]
+        ow *= v.pdfWeight[j]
         # target variables + weight (real data)
         tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
         tw = data[y][t].df.eval(f'{weight_rd}')
