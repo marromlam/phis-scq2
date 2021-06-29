@@ -169,8 +169,8 @@ def cut_translate(version_substring):
 
 # Snakemake helpers {{{
 
-def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, 
-           timeres = False, flavor=False, weight=None):
+def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
+           timeacc=False, timeres = False, flavor=False, weight=None):
   # Get version withoud modifier
   if not version:
     version = f"{wcs.version}"

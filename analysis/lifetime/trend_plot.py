@@ -113,6 +113,7 @@ if __name__ == "__main__":
         y = fcn(res.params, x)
         expr = rf"({res.params['a0'].uvalue:+.2uL})"
         expr += rf" + ({res.params['a1'].uvalue:+.2uL}) y"
+        expr += rf"\,\, \chi_{{dof}}^2={res.chi2red:.4f}"
         ax.plot(x, y, '-', color=f'k', label=rf'$\tau_{{{trig}}} = {expr}$')
 
   # label and save
