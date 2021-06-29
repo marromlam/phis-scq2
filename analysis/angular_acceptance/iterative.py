@@ -312,7 +312,8 @@ def do_pdf_weighting(verbose):
       for t, v in dm.items(): # loop over triggers
         if verbose:
           print(f' * Calculating pdfWeight for {m}-{y}-{t} sample')
-        v.pdfWeight[i] = pdf_reweighting(v,v.params,pars+data[y][t].csp)
+        j = len(v.pdfWeight.keys())+1
+        v.pdfWeight[j] = pdf_reweighting(v, v.params,pars+data[y][t].csp)
   if verbose:
     for y, dy in mc.items(): # loop over years
       print(f'Show 10 fist pdfWeight[{i}] for {y}')
