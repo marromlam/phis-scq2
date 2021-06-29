@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import ipanema
 from utils.plot import get_range, watermark, mode_tex, get_var_in_latex
 import argparse
-
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def argument_parser():
@@ -21,68 +21,59 @@ def argument_parser():
                       help='Name of the target tree')
   parser.add_argument('--branch', default='B_P',
                       help='Name of the target tree')
-  parser.add_argument('--treename', default='yearly_repo',
+  parser.add_argument('--weight', default='corrected or iterations of iterative',
                       help='Name of the target tree')
   parser.add_argument('--kkpweighted', default='output/figures/reweightings/2015/MC_Bs2JpsiPhi/v0r5_B_P_yearly_repo_sWeight.pdf',
                       help='File to store the ntuple with weights')
   return parser
 
 
-def plot_angular_acceptance_reweightings(srd, smc, kin, kkp, strvar):
-  niter = len(kkp.find('kkp.*')) # get last iteration number
+def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
+  niter = 1
+  if weigt=='kkpWeight':
+    niter = len(kkp.find('kkp.*')) # get last iteration number
   print(niter)
   rdvar = srd.df.eval(strvar)
   mcvar = smc.df.eval(strvar)
   rdwei = srd.df.eval('sWeight')
-  try:
-    mckin = smc.df.eval('sWeight*polWeight')*kin.df.eval('kinWeight')
-  except:
-    mckin = smc.df.eval('sWeight*polWeight')
-  if niter > 0:
-    mckkp = mckin*kkp.df.eval(f'pdfWeight{niter}*kkpWeight{niter}')
-  else:
-    mckkp = mckin
+  mcwei = smc.df.eval('sWeight/gb_weights*polWeight*angWeight')
   #%% ---
-  hrd, hmckin = ipanema.histogram.compare_hist(
-                    [rdvar,mcvar], weights=[rdwei,mckin],
-                    density=True, range=get_range(strvar)
-                )
-  hrd, hmckkp = ipanema.histogram.compare_hist(
-                    [rdvar,mcvar], weights=[rdwei,mckkp],
-                    density=True, range=get_range(strvar)
-                )
-
-  fig, axplot, axpull = ipanema.plotting.axes_plotpull();
-  axplot.fill_between(hrd.cmbins,hrd.counts,
-                      step="mid",color='k',alpha=0.2,
-                      label=f"${mode_tex('Bs2JpsiPhi')}$")
-  axplot.fill_between(hmckkp.cmbins,hmckkp.counts,
-                      step="mid",facecolor='none',edgecolor='C0',hatch='xxx',
-                      label=f"${mode_tex('MC_Bs2JpsiPhi')}$")
-  axpull.fill_between(hrd.bins,hmckkp.counts/hrd.counts,1,color='C0')
-  axpull.set_ylabel(f"$\\frac{{N( {mode_tex('MC_Bs2JpsiPhi')} )}}{{N( {mode_tex('Bs2JpsiPhi')} )}}$")
-  axpull.set_ylim(-0.8,3.2)
-  axpull.set_yticks([-0.5, 1, 2.5])
-  axplot.set_ylabel('Weighted candidates')
-  axpull.set_xlabel(f"${get_var_in_latex(strvar)}$")
-  axplot.legend()
-  return fig, axplot, axpull
+  for i in range(niter):
+    if niter > 1:
+      mcwei = kkp.df.eval(f'pdfWeight{i}*kkpWeight{i}')*mcwei
+    fig, axplot, axpull = plotting.axes_plotpull()
+    hrd, hmckin = ipanema.histogram.compare_hist(
+                      [rdvar,mcvar], weights=[rdwei,mcwei],
+                      density=True, range=get_range(strvar)
+                  )
+    fig, axplot, axpull = ipanema.plotting.axes_plotpull();
+    axplot.fill_between(hrd.cmbins,hrd.counts,
+                        step="mid",color='k',alpha=0.2,
+                        label=f"${mode_tex('Bs2JpsiPhi')}$")
+    axplot.fill_between(hmckkp.cmbins,hmckkp.counts,
+                        step="mid",facecolor='none',edgecolor='C0',hatch='xxx',
+                        label=f"${mode_tex('MC_Bs2JpsiPhi')}$")
+    axpull.fill_between(hrd.bins,hmckkp.counts/hrd.counts,1,color='C0')
+    axpull.set_ylabel(f"$\\frac{{N( {mode_tex('MC_Bs2JpsiPhi')} )}}{{N( {mode_tex('Bs2JpsiPhi')} )}}$")
+    axpull.set_ylim(-0.8,3.2)
+    axpull.set_yticks([-0.5, 1, 2.5])
+    axplot.set_ylabel('Weighted candidates')
+    axpull.set_xlabel(rf"${get_var_in_latex(strvar)}$")
+    axplot.legend()
+    watermark(axplot,version=f"${args['version']}$",scale=1.25)
+    pdf_pages.savefig(fig)
+  pdf_pages.close()
+  return pdf_pages
 
 
 if __name__ == '__main__':
   args = vars( argument_parser().parse_args() )
   srd = ipanema.Sample.from_root(args['target'])
   smc = ipanema.Sample.from_root(args['original'])
-  kin = ipanema.Sample.from_root(args['weights'])
-  kkp = ipanema.Sample.from_root(args['weights'],treename=args['treename'])
+  kkp = ipanema.Sample.from_root(args['weights'])
+  weight = args['weight']
+  print(kkp.df.keys())
   var = args['branch']
   path = args['kkpweighted']
-  if 'kkpWeight' in path:
-    fig, axplot, axpull = plot_angular_acceptance_reweightings(srd, smc, kin, kkp, var)
-  elif 'kinWeight' in path:
-    fig, axplot, axpull = plot_angular_acceptance_reweightings(srd, smc, kin, kin, var)
-  else: #sWeight
-    fig, axplot, axpull = plot_angular_acceptance_reweightings(srd, smc, smc, smc, var)
-  fig.show()
-  watermark(axplot,version=f"${args['version']}$",scale=1.25)
-  fig.savefig(path)
+  pdf_pages = PdfPages(path)
+  pdf_pages = plot_angular_acceptance_reweightings(srd, smc, kkp, var, weight)
