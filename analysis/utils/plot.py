@@ -1,3 +1,7 @@
+import yaml
+with open(r"analysis/samples/branches_latex.yaml") as file:
+    BRANCHES = yaml.load(file, Loader=yaml.FullLoader)
+
 def mode_tex(mode, mod=None, verbose=False):
   fmode = mode
   if mode.startswith('MC_') and mod=='comp':
@@ -35,16 +39,7 @@ def mode_tex(mode, mod=None, verbose=False):
   return tex_str
 
 def get_range(var, mode='Bs2JpsiPhi'):
-  ranges_dict = dict(
-  B_PT = (70,0,4e4),
-  B_P = (70,0,8e5),
-  X_M = (70,840,960) if 'Bd2JpsiKstar' in mode else (70,990,1050),
-  hplus_P = (70,0,1.5e5),
-  hplus_PT = (70,0,1.0e4),
-  hminus_P = (70,0,1.5e5),
-  hminus_PT = (70,0,1.0e4),
-  )
-  return ranges_dict[var][1:]
+  return BRANCHES[mode][var].get('range')
 
 
 
@@ -66,38 +61,12 @@ def get_nbins(var, mode='Bs'):
   )
   return ranges_dict[var][0]
 
+def get_var_in_latex(var, mode='Bs2JpsiPhi'):
+  return BRANCHES[mode][var].get('latex_name')
 
 
-def get_var_in_latex(var, mode='Bs'):
-  if mode in ('Bs', 'Bs2JpsiPhi'):
-    mode = 'Bs'
-  if mode in ('Bd', 'Bd2JpsiKstar'):
-    mode = 'Bd'
-  ranges_dict = dict(
-  B_PT = r"p_T(B)",
-  B_ETA = r"\eta(B)",
-  pt = r"p_T(B)",
-  eta = r"\eta(B)",
-  B_P = r"p(B)",
-  X_M       = r"m(K^+\pi^-)"  if 'Bd' in mode else r"m(K^+K^-)",
-  hplus_P   = r"m(K^+)"       if 'Bd' in mode else r"p(K^+)",
-  hplus_PT  = r"m(K^+)"       if 'Bd' in mode else r"p_T(K^+)",
-  hminus_P  = r"m(\pi^-)"     if 'Bd' in mode else r"p(K^-)",
-  hminus_PT = r"m(\pi^-)"     if 'Bd' in mode else r"p_T(K^-)",
-  # new naming convention :)
-  pTB = r"p_T(B)",
-  etaB = r"\eta(B)",
-  pB = r"p(B)",
-  sigmat = r"\sigma_t(B)",
-  mHH       = r"m(K^+\pi^-)"  if 'Bd' in mode else r"m(K^+K^-)",
-  pHp       = r"p(K^+)"       if 'Bd' in mode else r"p(K^+)",
-  pTHp      = r"p_T(K^+)"     if 'Bd' in mode else r"p_T(K^+)",
-  pHm       = r"p(\pi^-)"     if 'Bd' in mode else r"p(K^-)",
-  pTHm      = r"p_T(\pi^-)"   if 'Bd' in mode else r"p_T(K^-)",
-  )
-  return ranges_dict[var]
-
-
+def get_units(var, mode='Bs2JpsiPhi'):
+  return BRANCHES[mode][var].get('units')
 
 def make_square_axes(ax):
     """Make an axes square in screen units.
