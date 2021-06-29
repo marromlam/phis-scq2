@@ -320,13 +320,13 @@ def do_pdf_weighting(verbose):
       print(f"{'MC_Bs2JpsiPhi':<24} | {'MC_Bs2JpsiPhi_dG0':<24}")
       print(f"{'biased':<11}  {'unbiased':<11} | {'biased':<11}  {'unbiased':<11}")
       for evt in range(0, 10):
-        print(f"{dy['MC_BsJpsiPhi']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BsJpsiPhi']['biased'].pdfWeight[j][evt]:>+.8f}", end='')
         print(f"  ", end='')
-        print(f"{dy['MC_BsJpsiPhi']['unbiased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BsJpsiPhi']['unbiased'].pdfWeight[j][evt]:>+.8f}", end='')
         print(f" | ", end='')
-        print(f"{dy['MC_BsJpsiPhi_dG0']['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['MC_BsJpsiPhi_dG0']['biased'].pdfWeight[j][evt]:>+.8f}", end='')
         print(f"  ", end='')
-        print(f"{dy['MC_BsJpsiPhi_dG0']['unbiased'].pdfWeight[i][evt]:>+.8f}")
+        print(f"{dy['MC_BsJpsiPhi_dG0']['unbiased'].pdfWeight[j][evt]:>+.8f}")
 
 
 
