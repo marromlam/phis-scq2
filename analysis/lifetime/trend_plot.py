@@ -82,8 +82,8 @@ if __name__ == "__main__":
 
     # build dict to fit parameters
     fpars = ipanema.Parameters()
-    fpars.add(dict(name='a0', value=-1, latex='a_0'))
-    fpars.add(dict(name='a1', value=-2.75, latex='a_1'))
+    fpars.add(dict(name='a0', value=0, latex='a_0'))
+    fpars.add(dict(name='a1', value=0, free=False, latex='a_1'))
 
     # create fcn to do a linear fit
     def fcn(pars, x, y=None, w=None):
@@ -94,18 +94,27 @@ if __name__ == "__main__":
         return ans*ans
       return ans
 
-    # fit
-    res = ipanema.optimize(fcn, fpars, method='minuit',
-                           fcn_kwgs=dict(x=data[:,0], y=data[:,1], w=data[:,2]))
-    print(res)
-
-    # plot
-    y = fcn(res.params, x)
     ax.errorbar(data[:,0], data[:,1], yerr=data[:,2], fmt='.', color=f'C{k+1}',
                 label=rf"$\tau_{{{trig}}}$")
-    expr = rf"({res.params['a0'].uvalue:+.2uL})"
-    expr += rf" + ({res.params['a1'].uvalue:+.2uL}) y"
-    # ax.plot(x, y, '-', color=f'C{k}', label=rf'$\tau_{{{trig}}} = {expr}$')
+
+    if trig == 'unbiased':
+      for slope in [False, True]:
+        if slope:
+          fpars = ipanema.Parameters.clone(res.params)
+          fpars.unlock('a1')
+          fpars['a1'].set(value=1)
+
+        # fit
+        res = ipanema.optimize(fcn, fpars, method='minuit',
+                               fcn_kwgs=dict(x=data[:,0], y=data[:,1], w=data[:,2]))
+        print(res)
+
+        # plot
+        y = fcn(res.params, x)
+        expr = rf"({res.params['a0'].uvalue:+.2uL})"
+        expr += rf" + ({res.params['a1'].uvalue:+.2uL}) y"
+        expr += rf"\,\, \chi_{{dof}}^2={res.chi2red:.4f}"
+        ax.plot(x, y, '-', color=f'k', label=rf'$\tau_{{{trig}}} = {expr}$')
 
   # label and save
   ax.set_xlabel("year")

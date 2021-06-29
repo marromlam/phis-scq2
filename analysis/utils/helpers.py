@@ -169,8 +169,8 @@ def cut_translate(version_substring):
 
 # Snakemake helpers {{{
 
-def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False, 
-           timeres = False, flavor=False, weight=None):
+def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
+           timeacc=False, timeres = False, flavor=False, weight=None):
   # Get version withoud modifier
   if not version:
     version = f"{wcs.version}"
@@ -180,11 +180,18 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
       flavor = f'{wcs.flavor}'
     except:
       flavor = 'none'
+
   if not timeres:
     try:
       timeres = f'{wcs.timeres}'
     except:
       timeres = 'none'
+
+  if not timeacc:
+    try:
+      timeacc = f'{wcs.timeacc}'
+    except:
+      timeacc = 'none'
 
   # print(f'{version}')
   v, share, evt, mag, fullcut, var, bin = version_guesser(f'{version}')
@@ -202,6 +209,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
         csp = f'{wcs.csp}'
       except: 
         csp = f'{csp}'
+
   if not angacc:
     try:
       angacc = f'{wcs.angacc}'
@@ -289,7 +297,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
       if weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'polWeight', 'pdfWeight',
-                        'kbuWeight', 'oddWeight', 'kinWeight', 'kkpWeight'):
+                          'kbuWeight', 'oddWeight', 'kinWeight', 'kkpWeight'):
         weight = 'polWeight'
     # }}}
     # MC_Bs2JpsiPhi {{{
@@ -299,7 +307,8 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
-                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight', 'kkpWeight'):
+                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight',
+                          'kkpWeight'):
         weight = 'dg0Weight'
     # }}}
     # MC_Bs2JpsiKK_Swave {{{
@@ -309,7 +318,8 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
-                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight', 'kkpWeight'):
+                          'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight',
+                          'kkpWeight'):
         weight = 'dg0Weight'
     # }}}
     # MC_Bs2JpsiPhi_dG0 {{{
@@ -337,7 +347,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
         if weight=='angWeight':
           path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root' )
         elif weight=='kkpWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{wcs.csp}_{wcs.flavor}_{wcs.timeacc}_{wcs.timeres}_{weight}.root' )
+          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root' )
         else:
           path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
       else:
@@ -349,7 +359,7 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
         if weight=='angWeight':
           path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root'
         elif weight=='kkpWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{flavor}_{wcs.timeacc}_{timeres}_{weight}.root'
+          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root'
         else:
           path =  SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
     else:
