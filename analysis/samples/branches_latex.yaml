@@ -118,25 +118,25 @@ Bs_common: &Bs_common
     descr : ''
   'pTHp' :
     peval : 'hplus_PT'
-    latex : 'p_T(K^+)'
+    latex : 'P_T(K^+)'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr : ''
   'pHm' :
     peval : 'hminus_P'
-    latex : 'p(K^-)'
+    latex : 'P(K^-)'
     range: [0.0, 1.5e+5]
     units : 'MeV'
     descr : ''
   'pTHm' :
     peval : 'hminus_PT'
-    latex : 'p_t(K^-)'
+    latex : 'P_T(K^-)'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr : ''
   'mHH' :
     peval : 'X_M'
-    latex : 'm_{K^+K^-}'
+    latex : 'M_{K^+K^-}'
     range: [990, 1050]
     units : 'MeV'
     descr : ''
@@ -408,7 +408,7 @@ Bd_common: &Bd_common
     descr: ''
   'pTHp' :
     peval: 'hplus_PT'
-    latex: 'p_T(K)'
+    latex: 'P_T(K)'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr: ''
@@ -420,13 +420,13 @@ Bd_common: &Bd_common
     descr : ''
   'pTHm' :
     peval : 'hminus_PT'
-    latex: 'p_t(\pi)'
+    latex: 'P_T(\pi)'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr: ''
   'mHH' :
     peval: 'X_M'
-    latex: 'm_{K\pi}'
+    latex: 'M_{K\pi}'
     range: [840, 960]
     units : 'MeV'
     descr : ''
