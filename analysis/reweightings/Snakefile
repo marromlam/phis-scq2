@@ -384,16 +384,16 @@ rule reweightings_plot_time_acceptance:
 rule reweightings_plot_angular_acceptance:
   wildcard_constraints:
     mode = "(TOY|MC)_Bs2JpsiPhi(_dG0)?",
-    branch = "(p(T)?(B|Hp|Hm)|mHH)",
-    weight = "(s|kin|kkp)Weight"
+    branch = "(p(T)?(B|Hp|Hm|Lm|Lp)|mHH)",
+    weight = "(ang|kkp)Weight"
   input:
     original = lambda wcs: tuples(wcs),
     weights = lambda wcs: tuples(wcs, weight='kkpWeight'),
     target = lambda wcs: tuples(wcs, mode='cdata')
   output:
-    'output/figures/reweightings/{year}/{mode}/{version,[A-Za-z0-9]+}_{branch}_{angacc}_{timeacc}_{weight}.pdf',
+    'output/figures/reweightings/{year}/{mode}/{version}_{branch}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.pdf',
   log:
-    'output/log/reweightings/plot_angular_reweightings/{year}/{mode}/{version}_{branch}_{angacc}_{timeacc}_{weight}.log',
+    'output/log/reweightings/plot_angular_reweightings/{year}/{mode}/{version}_{branch}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.log',
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/plot1.py\
@@ -404,7 +404,7 @@ rule reweightings_plot_angular_acceptance:
     --mode {wildcards.mode}\
     --version {wildcards.version}\
     --branch {wildcards.branch}\
-    --treename {wildcards.angacc}_{wildcards.timeacc}\
+    --weight {wildcards.weight}\
     --kkpweighted {output}\
     ) &> {log}""")
     send_mail(f"Reweighting plot AA :: {wildcards}", f"{output}")

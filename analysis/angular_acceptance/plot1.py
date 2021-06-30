@@ -4,6 +4,9 @@ from utils.plot import get_range, watermark, mode_tex, get_var_in_latex
 import argparse
 from matplotlib.backends.backend_pdf import PdfPages
 
+from ipanema import plotting, Sample, Parameter, Parameters
+from utils.plot import watermark, mode_tex
+
 
 def argument_parser():
   parser = argparse.ArgumentParser()
@@ -30,20 +33,21 @@ def argument_parser():
 
 def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
   niter = 1
-  if weigt=='kkpWeight':
+  if weight=='kkpWeight':
     niter = len(kkp.find('kkp.*')) # get last iteration number
   print(niter)
   rdvar = srd.df.eval(strvar)
   mcvar = smc.df.eval(strvar)
   rdwei = srd.df.eval('sWeight')
-  mcwei = smc.df.eval('sWeight/gb_weights*polWeight*angWeight')
+  mcwei = smc.df.eval('sWeight/gb_weights*polWeight')
   #%% ---
-  for i in range(niter):
+  for i in range(1, niter+1):
+    correction = kkp.df.eval('angWeight')
     if niter > 1:
-      mcwei = kkp.df.eval(f'pdfWeight{i}*kkpWeight{i}')*mcwei
+      correction = kkp.df.eval(f'pdfWeight{i}*kkpWeight{i}')*correction
     fig, axplot, axpull = plotting.axes_plotpull()
-    hrd, hmckin = ipanema.histogram.compare_hist(
-                      [rdvar,mcvar], weights=[rdwei,mcwei],
+    hrd, hmckkp = ipanema.histogram.compare_hist(
+                      [rdvar,mcvar], weights=[rdwei,mcwei*correction],
                       density=True, range=get_range(strvar)
                   )
     fig, axplot, axpull = ipanema.plotting.axes_plotpull();
