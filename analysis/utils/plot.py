@@ -62,7 +62,7 @@ def get_nbins(var, mode='Bs'):
   return ranges_dict[var][0]
 
 def get_var_in_latex(var, mode='Bs2JpsiPhi'):
-  return BRANCHES[mode][var].get('latex_name')
+  return BRANCHES[mode][var].get('latex')
 
 
 def get_units(var, mode='Bs2JpsiPhi'):
