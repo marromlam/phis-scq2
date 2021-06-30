@@ -355,7 +355,13 @@ rule angular_acceptance_iterative_dual_data_run2a:
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2a :: {wildcards}", f"{log}")
 
+# }}}
 
+
+# run2a angular acceptance mc {{{
+#     This rule runs the iterative procedure for 2015-2016 using only MCs
+#     (signal MC or MC_DG0). For this one half of the MC is used as "data"
+#     Some Oddweights can be applied simulating acceptance effects.
 rule angular_acceptance_iterative_mc_run2a:
   resources:
     mem_mb = 16384
@@ -369,41 +375,13 @@ rule angular_acceptance_iterative_mc_run2a:
     mc_sample = lambda wcs: tuples(wcs, mode='data', year='run2a'),
     mc_weights = lambda wcs: tuples(wcs, year='run2a', mode='data', weight=f'angWeight'),
     data_sample = lambda wcs: tuples(wcs, year='run2a'),
-    # Angular acceptance at corrected level
-    angacc_biased = lambda wcs: expand(
-      "output/params/angular_acceptance/{year}/{mode}/{version}_corrected_{csp}_biased.json",
-      year=YEARS[f'run2a'], version=f'{wcs.version}'.replace('Odd','Even'), mode=f'{wcs.mode}'
-    ),
-    angacc_unbiased = lambda wcs: expand(
-      "output/params/angular_acceptance/{year}/{mode}/{version}_corrected_{csp}_unbiased.json",
-        year=YEARS[f'run2a'], version=f'{wcs.version}'.replace('Odd','Even'), mode=f'{wcs.mode}'
-    ),
-    # Time acceptance coefficients
-    timeacc_biased = lambda wcs: expand(
-      "output/params/time_acceptance/{year}/{mode}/{version}_{timeacc}_biased.json",
-      year=YEARS[f'run2a'], version=f'{wcs.version}'.replace('Odd','Even'), mode=f'{wcs.mode}',
-      timeacc = f'{wcs.timeacc}'
-    ),
-    timeacc_unbiased = lambda wcs: expand(
-      "output/params/time_acceptance/{year}/{mode}/{version}_{timeacc}_unbiased.json",
-      year=YEARS[f'run2a'], version=f'{wcs.version}'.replace('Odd','Even'), mode=f'{wcs.mode}',
-      timeacc = f'{wcs.timeacc}'
-    ),
-    # CSP
-    csp_factors = lambda wcs: [
-      f'output/params/csp_factors/2015/{wcs.mode}/{version}_{csp}.json',
-      f'output/params/csp_factors/2016/{wcs.mode}/{version}_{csp}.json'
-    ],
-    # Time resolution
-    time_resolution = lambda wcs: [
-      f'output/params/time_resolution/2015/{wcs.mode}/{version}_{timeres}.json',
-      f'output/params/time_resolution/2016/{wcs.mode}/{version}_{timeres}.json'
-    ],
-    # Flavor tagging
-    flavor = lambda wcs: [
-      f'output/params/flavor_tagging/2015/{wcs.mode}/{version}_{flavor}.json',
-      f'output/params/flavor_tagging/2016/{wcs.mode}/{version}_{flavor}.json'
-    ]
+    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', csp='none', angacc='corrected', trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', csp='none', angacc='corrected', trigger='unbiased'),
+    timeacc_biased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', trigger='biased'),
+    timeacc_unbiased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', trigger='unbiased'),
+    csp_factors = lambda wcs: csps(wcs, year='run2a'),
+    time_resolution = lambda wcs: timeress(wcs, year='run2a'),
+    flavor = lambda wcs: flavors(wcs, year='run2a'),
   params:
     params = [
       'analysis/params/generator/2015/{mode}.json',
@@ -418,8 +396,8 @@ rule angular_acceptance_iterative_mc_run2a:
       'output/params/angular_acceptance/2016/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json'
     ],
     weights = [
-      SAMPLES_PATH+'2015/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
-      SAMPLES_PATH+'2016/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
+      SAMPLES_PATH+'/2015/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'/2016/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
     params = 'tmp/params/physics_params/run2a/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.json'
   log:

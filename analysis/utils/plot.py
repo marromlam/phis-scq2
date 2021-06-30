@@ -115,7 +115,7 @@ def get_nbins(var, mode='Bs'):
 # Get branch and units in TeX {{{
 
 def get_var_in_latex(var, mode='Bs2JpsiPhi'):
-  return BRANCHES[mode][var].get('latex_name')
+  return BRANCHES[mode][var].get('latex')
 
 
 def get_units(var, mode='Bs2JpsiPhi'):
