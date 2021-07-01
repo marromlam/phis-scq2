@@ -43,8 +43,6 @@ def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
   correction = kkp.df.eval('angWeight/angWeight')
   if weight in ('angWeight' , 'kkpWeight'):
     correction = kkp.df.eval('angWeight')
-    print('ey')
-  print(correction)
   #%% ---
   for i in range(1, niter+1):
     if niter > 1:
