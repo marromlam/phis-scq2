@@ -1,7 +1,7 @@
 # HELPERS
 #
 #
-#
+#    Marcos Romero Lamas
 
 
 # Modules {{{
@@ -13,7 +13,12 @@ from utils.strings import cammel_case_split, cuts_and
 from ipanema import ristra
 import config
 
-SAMPLES_PATH = config.user['path']+'/'
+# }}}
+
+
+# Some common settings {{{
+
+SAMPLES = config.user['path']
 MAILS = config.user['mail']
 
 YEARS = config.years
@@ -27,6 +32,8 @@ else:
 
 
 # Guessers {{{
+
+# Time acceptance guesser {{{
 
 def timeacc_guesser(timeacc):
   """
@@ -43,18 +50,35 @@ def timeacc_guesser(timeacc):
     Components of the decay-time acceptance.
   """
   # Check if the tuple will be modified
-  #pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[3-9]knots)?(Noncorr)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
-  pattern = r'\A(single|simul|lifeBd|lifeBu)(1[0-2]|[2-9])?(BuasBd)?(Noncorr)?(Odd)?(Flatend)?(deltat|alpha|mKstar)?(Minos|BFGS|LBFGSB|CG|Nelder|EMCEE)?\Z'
+  pattern = [
+    r"(single,simul,lifeBd,lifeBu)",
+    # number of knots
+    r"(1[0-2]|[2-9])?"
+    # whether to use reweightings or not
+    r"(Noncorr)?",
+    # whether to use oddWeight or not
+    r"(Odd)?",
+    # whether to impose flat condition at upper decay times
+    r"(Flatend)?",
+    # custom variable cuts for lifetime test
+    r"(deltat|alpha|mKstar)?"
+    # use samples as others
+    r"(BuasBd)?"
+  ]
+  pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
+  # print(pattern)
   try:
-    acc, knots, pipas, corr, oddity, flat, lifecut, mini = p.search(timeacc).groups()
+    acc, nknots, corr, oddW, flat, cuts, swap = p.search(timeacc).groups()
     corr = False if corr=='Noncorr' else True
-    mini = mini.lower() if mini else 'minuit'
-    knots = int(knots) if knots else 3
+    oddW = False if oddW=='Odd' else True
+    nknots = int(nknots) if nknots else 3
     flat = True if flat=='Flatend' else False
-    return acc, knots, corr, flat, lifecut, mini
+    return acc, nknots, corr, oddW, flat, cuts, swap
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
+
+# }}}
 
 
 def parse_angacc(angacc):
@@ -169,46 +193,27 @@ def cut_translate(version_substring):
 
 # Snakemake helpers {{{
 
-def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
-           timeacc=False, timeres = False, flavor=False, weight=None):
-  # Get version withoud modifier
+def tuples(wcs, version=False, year=False, mode=False, weight=False,
+           angacc=False, csp=False, flavor=False, timeacc=False, timeres=False):
+  """
+  Snakemake tuple helper returns tuple path once some set of wildcards is
+  properly provided.
+
+  IMPROVE
+  """
+
+  # parse version {{{
+
   if not version:
     version = f"{wcs.version}"
-  
-  if not flavor:
-    try:
-      flavor = f'{wcs.flavor}'
-    except:
-      flavor = 'none'
-
-  if not timeres:
-    try:
-      timeres = f'{wcs.timeres}'
-    except:
-      timeres = 'none'
-
-  if not timeacc:
-    try:
-      timeacc = f'{wcs.timeacc}'
-    except:
-      timeacc = 'none'
-
   # print(f'{version}')
   v, share, evt, mag, fullcut, var, bin = version_guesser(f'{version}')
   v = f'{version}'
   # print(v, share, evt, mag, fullcut, var, bin)
 
-  # Try to extract mode from wcs then from mode arg
-  try:
-    m = f'{wcs.mode}'
-  except:
-    m = 'none'
+  # }}}
 
-  if not csp:
-      try:
-        csp = f'{wcs.csp}'
-      except: 
-        csp = f'{csp}'
+  # parse disciplines {{{
 
   if not angacc:
     try:
@@ -216,7 +221,43 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
     except:
       angacc = '{angacc}'
 
-  # Check modifiers for mode
+  if not csp:
+      try:
+        csp = f'{wcs.csp}'
+      except:
+        csp = f'{csp}'
+
+  if not flavor:
+    try:
+      flavor = f'{wcs.flavor}'
+    except:
+      flavor = 'none'
+
+  if not timeacc:
+    try:
+      timeacc = f'{wcs.timeacc}'
+    except:
+      timeacc = 'none'
+
+  if not timeres:
+    try:
+      timeres = f'{wcs.timeres}'
+    except:
+      timeres = 'none'
+
+  # }}}
+
+  # Try to extract mode from wcs then from mode arg {{{
+
+  try:
+    m = f'{wcs.mode}'
+  except:
+    m = 'none'
+
+  # }}}
+
+  # Check modifiers for mode {{{
+
   if mode:
     if "evtEven" in v:
       if mode == 'data':
@@ -264,7 +305,9 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
           m = 'Bs2JpsiPhi'
       elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
         m = mode
-  
+
+  # }}}
+
   # Model handler when asking for weights {{{
   __weight = weight
   if weight:
@@ -335,38 +378,28 @@ def tuples(wcs, version=False, year=None, mode=None, angacc=False, csp=False,
   # print("Weight was transformed {__weight}->{weight}")
   # }}}
 
-
   # Return list of tuples for YEARS[year] {{{
+
   if year:
-    # print(year)
     years = YEARS[year]
-    path = []
-    for y in years:
-      terms = [y, m, v]
-      if weight:
-        if weight=='angWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root' )
-        elif weight=='kkpWeight':
-          path.append( SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root' )
-        else:
-          path.append( SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root' )
-      else:
-        path.append( SAMPLES_PATH + '/'.join(terms) + f'.root' )
   else:
-    y = f'{wcs.year}'
-    terms = [y, m, v]
+    years = YEARS[f'{wcs.year}']
+
+  path = []
+  for y in years:
     if weight:
-        if weight=='angWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{weight}.root'
-        elif weight=='kkpWeight':
-          path =  SAMPLES_PATH + '/'.join([y,m,f'{v}']) + f'_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root'
-        else:
-          path =  SAMPLES_PATH + '/'.join(terms) + f'_{weight}.root'
+      if weight == 'angWeight':
+        path.append(f"{SAMPLES}/{y}/{m}/{v}_{angacc}_{csp}_{weight}.root")
+      elif weight == 'kkpWeight':
+        path.append(f"{SAMPLES}/{y}/{m}/{v}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root")
+      else:
+        path.append(f"{SAMPLES}/{y}/{m}/{v}_{weight}.root")
     else:
-      path = SAMPLES_PATH + '/'.join(terms) + f'.root'
-  #print(path)
+        path.append(f"{SAMPLES}/{y}/{m}/{v}.root")
+
   # }}}
-  return path
+
+  return path[0] if len(path) == 1 else path
 
 
 def timeress(wcs, version=False, year=False, mode=False, timeres=False):
@@ -489,9 +522,15 @@ def angaccs(wcs, version=False, year=False, mode=False, timeacc=False,
       ans.append(f'output/params/angular_acceptance/{y}/{m}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json')
   return ans
 
-def sphyspar(wcs, version=False, year=False, mode=False, timeacc=False,
-            angacc=False, fit=False, csp=False, timeres=False, flavor=False,
-            trigger=False):
+
+def smkphyspar(wcs, version=False, year=False, mode=False, timeacc=False,
+               angacc=False, fit=False, csp=False, timeres=False, flavor=False,
+               trigger=False):
+  """
+  Snakemake physics params helper returns a list of paths to parameters once
+  a set of wildcards is properly provided.
+  """
+
   if not version:
     version = f"{wcs.version}"
   if not year:
@@ -519,6 +558,7 @@ def sphyspar(wcs, version=False, year=False, mode=False, timeacc=False,
   for y in YEARS[year]:
     ans.append(f'output/params/physics_params/{y}/{m}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json')
   return ans
+
 # }}}
 
 

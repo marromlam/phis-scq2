@@ -1,6 +1,52 @@
+# STRINGS
+#
+#
+#
+
+
+# Modules {{{
+
 import yaml
-with open(r"analysis/samples/branches_latex.yaml") as file:
+
+# }}}
+
+
+# Load branches {{{
+
+with open("analysis/samples/branches_latex.yaml") as file:
     BRANCHES = yaml.load(file, Loader=yaml.FullLoader)
+
+# }}}
+
+
+# Get mode in TeX {{{
+
+def mode2tex(mode):
+  ans = ['', '', '']
+  if 'Bs' in mode:
+    ans[1] = 'B_s^0'
+  elif 'Bd' in mode:
+    ans[1] = 'B_d^0'
+  elif 'Bu' in mode:
+    ans[1] = 'B_u^+'
+  else:
+    print('ERROR: I cannot convert this mode')
+
+  # which kind of samples is it?
+  if 'MC' in mode:
+    ans[0] = 'MC'
+  elif 'TOY' in mode:
+    ans[0] = 'TOY'
+  else:
+    ans[0] = 'RD'
+
+  # special MC handlers
+  if 'dG0' in mode:
+    ans[2] = r'\text{w}\,\Delta\Gamma=0'
+  if 'Swave' in mode:
+    ans[2] = r'\text{w\,S-wave}'
+
+  return ans
 
 def mode_tex(mode, mod=None, verbose=False):
   fmode = mode
@@ -38,11 +84,13 @@ def mode_tex(mode, mod=None, verbose=False):
   #print(tex_str)
   return tex_str
 
+# }}}
+
+
+# Get range and get bins {{{
+
 def get_range(var, mode='Bs2JpsiPhi'):
   return BRANCHES[mode][var].get('range')
-
-
-
 
 
 def get_nbins(var, mode='Bs'):
@@ -61,6 +109,11 @@ def get_nbins(var, mode='Bs'):
   )
   return ranges_dict[var][0]
 
+# }}}
+
+
+# Get branch and units in TeX {{{
+
 def get_var_in_latex(var, mode='Bs2JpsiPhi'):
   return BRANCHES[mode][var].get('latex')
 
@@ -68,13 +121,17 @@ def get_var_in_latex(var, mode='Bs2JpsiPhi'):
 def get_units(var, mode='Bs2JpsiPhi'):
   return BRANCHES[mode][var].get('units')
 
+# }}}
+
+
+# Force square axes / Watermark {{{
+
 def make_square_axes(ax):
     """Make an axes square in screen units.
 
     Should be called after plotting.
     """
     ax.set_aspect(1 / ax.get_data_ratio())
-
 
 
 def watermark(ax, version='final', tag='', size=(20,8.25), scale=1.2, pos=(0.05,0.9)):
@@ -94,3 +151,8 @@ def watermark(ax, version='final', tag='', size=(20,8.25), scale=1.2, pos=(0.05,
   # ax.text(ax.get_xlim()[1]*0.025, ax.get_ylim()[1]*0.85,
   #         f'{tag}', fontsize=size[1], color='black',
   #         ha='left', va='top', alpha=1.0)
+
+# }}}
+
+
+# vim:foldmethod=marker
