@@ -40,14 +40,18 @@ def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
   mcvar = smc.df.eval(strvar)
   rdwei = srd.df.eval('sWeight')
   mcwei = smc.df.eval('sWeight/gb_weights*polWeight')
+  correction = kkp.df.eval('angWeight/angWeight')
+  if (weight=='angWeight' or 'kkpWeight'):
+    correction = kkp.df.eval('angWeight')
   #%% ---
   for i in range(1, niter+1):
-    correction = kkp.df.eval('angWeight')
     if niter > 1:
-      correction = kkp.df.eval(f'pdfWeight{i}*kkpWeight{i}')*correction
+      kkpit = kkp.df.eval(f'pdfWeight{i}*kkpWeight{i}')
+    else:
+      kkpit = kkp.df.eval(f'angWeight/angWeight')
     fig, axplot, axpull = plotting.axes_plotpull()
     hrd, hmckkp = ipanema.histogram.compare_hist(
-                      [rdvar,mcvar], weights=[rdwei,mcwei*correction],
+                      [rdvar,mcvar], weights=[rdwei,mcwei*correction*kkpit],
                       density=True, range=get_range(strvar)
                   )
     fig, axplot, axpull = ipanema.plotting.axes_plotpull();
@@ -59,8 +63,8 @@ def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
                         label=f"${mode_tex('MC_Bs2JpsiPhi')}$")
     axpull.fill_between(hrd.bins,hmckkp.counts/hrd.counts,1,color='C0')
     axpull.set_ylabel(f"$\\frac{{N( {mode_tex('MC_Bs2JpsiPhi')} )}}{{N( {mode_tex('Bs2JpsiPhi')} )}}$")
-    axpull.set_ylim(-0.8,3.2)
-    axpull.set_yticks([-0.5, 1, 2.5])
+    axpull.set_ylim(0.3,1.9)
+    axpull.set_yticks([0.5, 1.0, 1.5])
     axplot.set_ylabel('Weighted candidates')
     axpull.set_xlabel(rf"${get_var_in_latex(strvar)}$")
     axplot.legend()

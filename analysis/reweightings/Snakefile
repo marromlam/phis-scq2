@@ -385,7 +385,7 @@ rule reweightings_plot_angular_acceptance:
   wildcard_constraints:
     mode = "(TOY|MC)_Bs2JpsiPhi(_dG0)?",
     branch = "(p(T)?(B|Hp|Hm|Lm|Lp)|mHH)",
-    weight = "(ang|kkp)Weight"
+    weight = "(ang|kkp|s)Weight"
   input:
     original = lambda wcs: tuples(wcs),
     weights = lambda wcs: tuples(wcs, weight='kkpWeight'),

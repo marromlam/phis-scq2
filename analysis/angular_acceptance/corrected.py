@@ -75,8 +75,11 @@ if __name__ == '__main__':
   TRIGGER = args['trigger']
 
   # Prepare the cuts
-  CUT = ''
-  # CUT = "gentime>=0.3 & gentime<=15"
+  if EVT in ('evtOdd', 'evtEven'):
+    time = 'gentime'
+  else:
+    time = 'time'
+  CUT = f'{time}>={tLL} & {time}<={tUL}'
 
   # Print settings
   printsec('Settings')

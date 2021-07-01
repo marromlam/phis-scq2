@@ -145,7 +145,6 @@ def get_angular_acceptance(mc, kkpWeight=False):
   Compute angular acceptance
   """
   # cook weight for angular acceptance
-  # weight  = mc.df.eval(f'angWeight*{weight_mc}').values
   weight  = mc.df.eval(f'angWeight*polWeight*{weight_mc}').values  # WARNING: put polWeight again
   i = len(mc.kkpWeight.keys())
 
@@ -684,9 +683,7 @@ if __name__ == '__main__':
 
   # Load samples {{{
   printsec('Loading samples')
-  
   global mc, data, weight_rd, weight_mc
-  
   # MC reconstructed and generator level variable names
   reco  = ['cosK', 'cosL', 'hphi', 'gentime']
   true  = ['gencosK', 'gencosL', 'genhphi', 'gentime']
@@ -704,9 +701,9 @@ if __name__ == '__main__':
     weight_mc += '/gb_weights'
     if 'evt' in args['version']:
       weight_rd = f'kinWeight*oddWeight*{weight_rd}/gb_weights'
-
-  #weight_mc = "sw/gb_weights*polWeight" #warning -> checking what is happening here!
-  #weight_rd = "sw/gb_weights"
+  if "bkgcat60" in args['version']:
+    weight_mc = 'time/time'
+    weight_rd = 'time/time' #WARNING: Here, we can put also kinWeight and OddWeight
   HAS_SWAVE = False
   if "Swave" in MODE:
     HAS_SWAVE = True
