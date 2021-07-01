@@ -112,6 +112,9 @@ if __name__ == '__main__':
       if EVT in ('evtEven', 'evtOdd'):
         weight = weight.replace('pdfWeight', 'dg0Weight*oddWeight')
         weight = weight.replace('dg0Weight', 'dg0Weight*oddWeight')
+      #cut in bkgcat implies not to use sw/gb_weights
+      if "bkgcat60" in args['version']:
+        weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
       mode = 'signalMC'; c = 'a'
     elif 'MC_Bs2JpsiPhi_dG0' in m:
       m = 'MC_Bs2JpsiPhi_dG0'
@@ -122,6 +125,8 @@ if __name__ == '__main__':
       # apply oddWeight if evtOdd in filename
       if EVT in ('evtEven', 'evtOdd'):
         weight = weight.replace('pdfWeight', 'oddWeight')
+      if "bkgcat60" in args['version']:
+        weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
       mode = 'signalMC'; c = 'a'
     elif 'MC_Bd2JpsiKstar' in m:
       m = 'MC_Bd2JpsiKstar'
