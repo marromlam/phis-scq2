@@ -11,6 +11,7 @@ from ipanema import plotting
 import numpy as np
 import matplotlib.pyplot as plt
 import uncertainties as unc
+from scipy import stats
 
 # }}}
 
@@ -95,7 +96,7 @@ if __name__ == "__main__":
       return ans
 
     ax.errorbar(data[:,0], data[:,1], yerr=data[:,2], fmt='.', color=f'C{k+1}',
-                label=rf"$\tau_{{{trig}}}$")
+                label=rf"$\tau_{{{trig[0]}}}$")
 
     if trig == 'unbiased':
       for slope in [False, True]:
@@ -113,8 +114,10 @@ if __name__ == "__main__":
         y = fcn(res.params, x)
         expr = rf"({res.params['a0'].uvalue:+.2uL})"
         expr += rf" + ({res.params['a1'].uvalue:+.2uL}) y"
-        expr += rf"\,\, \chi_{{dof}}^2={res.chi2red:.4f}"
-        ax.plot(x, y, '-', color=f'k', label=rf'$\tau_{{{trig}}} = {expr}$')
+        expr += rf",\,\, \chi_{{dof}}^2={res.chi2red:.4f}"
+        #expr += rf",\,\, \chi_{{dof}}^2={res.chi2:.4f}"
+        expr += rf",\,\, \mathrm{{p}}={stats.chi2.sf(res.chi2, res.nvary):.4f}"
+        ax.plot(x, y, '-', color=f'k', label=rf'$\tau_{{{trig[0]}}} = {expr}$')
 
   # label and save
   ax.set_xlabel("year")

@@ -28,7 +28,7 @@ rule physics_params_data_Bs:
   run:
     shell(f"""(time\
     python analysis/angular_fit/fit_data.py\
-    --samples {",".join(input.samples)}\
+    --samples {",".join([input.samples])}\
     --angacc-biased {",".join(input.angacc_biased)}\
     --angacc-unbiased {",".join(input.angacc_unbiased)}\
     --timeacc-biased {",".join(input.timeacc_biased)}\
