@@ -98,7 +98,7 @@ if __name__ == "__main__":
     ax.errorbar(data[:,0], data[:,1], yerr=data[:,2], fmt='.', color=f'C{k+1}',
                 label=rf"$\tau_{{{trig[0]}}}$")
 
-    if trig == 'unbiased':
+    if trig in ('biased', 'unbiased'):
       for slope in [False, True]:
         if slope:
           fpars = ipanema.Parameters.clone(res.params)
