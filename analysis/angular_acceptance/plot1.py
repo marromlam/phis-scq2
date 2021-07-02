@@ -35,7 +35,7 @@ def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
   niter = 1
   if weight=='kkpWeight':
     niter = len(kkp.find('kkp.*')) # get last iteration number
-  print(niter)
+
   rdvar = srd.df.eval(strvar)
   mcvar = smc.df.eval(strvar)
   rdwei = srd.df.eval('sWeight')
@@ -43,9 +43,7 @@ def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
   correction = kkp.df.eval('angWeight/angWeight')
   if weight in ('angWeight' , 'kkpWeight'):
     correction = kkp.df.eval('angWeight')
-    print('ey')
-  print(correction)
-  #%% ---
+
   for i in range(1, niter+1):
     if niter > 1:
       kkpit = kkp.df.eval(f'pdfWeight{i}*kkpWeight{i}')
@@ -63,7 +61,7 @@ def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
     axplot.fill_between(hmckkp.cmbins,hmckkp.counts,
                         step="mid",facecolor='none',edgecolor='C0',hatch='xxx',
                         label=f"${mode_tex('MC_Bs2JpsiPhi')}$")
-    axpull.fill_between(hrd.bins,hmckkp.counts/hrd.counts,1,color='C0')
+    axpull.fill_between(hrd.bins, hmckkp.counts/hrd.counts, 1, color='C0')
     axpull.set_ylabel(f"$\\frac{{N( {mode_tex('MC_Bs2JpsiPhi')} )}}{{N( {mode_tex('Bs2JpsiPhi')} )}}$")
     axpull.set_ylim(0.3,1.9)
     axpull.set_yticks([0.5, 1.0, 1.5])
