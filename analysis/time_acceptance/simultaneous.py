@@ -58,7 +58,7 @@ if __name__ == '__main__':
   p.add_argument('--trigger', help='Trigger to fit')
   p.add_argument('--timeacc', help='Different flag to ... ')
   p.add_argument('--contour', help='Different flag to ... ')
-  p.add_argument('--minimizer', help='Different flag to ... ')
+  p.add_argument('--minimizer', default='minuit', help='Different flag to ... ')
   args = vars(p.parse_args())
 
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
