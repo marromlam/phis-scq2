@@ -31,9 +31,9 @@ else:
 # }}}
 
 
-# Guessers {{{
+# Wildcard parsers {{{
 
-# Time acceptance guesser {{{
+# Parse time acceptance wildcard (aka timeacc) {{{
 
 def timeacc_guesser(timeacc):
   """
@@ -49,11 +49,11 @@ def timeacc_guesser(timeacc):
   tuple
     Components of the decay-time acceptance.
   """
-  # Check if the tuple will be modified
+  # Define the pattern we use to regex-parse the time acceptance wildcard
   pattern = [
-    r"(single,simul,lifeBd,lifeBu)",
+    r"(single|simul|lifeBd|lifeBu)",
     # number of knots
-    r"(1[0-2]|[2-9])?"
+    r"(1[0-2]|[2-9])?",
     # whether to use reweightings or not
     r"(Noncorr)?",
     # whether to use oddWeight or not
@@ -61,7 +61,7 @@ def timeacc_guesser(timeacc):
     # whether to impose flat condition at upper decay times
     r"(Flatend)?",
     # custom variable cuts for lifetime test
-    r"(deltat|alpha|mKstar)?"
+    r"(deltat|alpha|mKstar)?",
     # use samples as others
     r"(BuasBd)?"
   ]
@@ -70,16 +70,23 @@ def timeacc_guesser(timeacc):
   # print(pattern)
   try:
     acc, nknots, corr, oddW, flat, cuts, swap = p.search(timeacc).groups()
-    corr = False if corr=='Noncorr' else True
-    oddW = False if oddW=='Odd' else True
-    nknots = int(nknots) if nknots else 3
-    flat = True if flat=='Flatend' else False
-    return acc, nknots, corr, oddW, flat, cuts, swap
+    ans = {
+      "acc": acc,
+      "nknots": int(nknots) if nknots else 3,
+      "use_oddWeight": True if oddW=='Odd' else False,
+      "corr": False if corr=='Noncorr' else True,
+      "use_flatend": True if flat=='Flatend' else False,
+      "swap": swap if swap else False,
+      "cuts": cuts if cuts else False
+    }
+    return ans
   except:
-    raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
+    raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier.')
 
 # }}}
 
+
+# Parse angular acceptance wildcard (aka angacc) {{{
 
 def parse_angacc(angacc):
   """
@@ -95,15 +102,30 @@ def parse_angacc(angacc):
   tuple
     Components of the angular acceptance.
   """
-  pattern = r'\A(yearly|run2|run2a|run2b)(Odd)?\Z'
+  # Define the pattern we use to regex-parse the time acceptance wildcard
+  pattern = [
+    r"(yearly|run2a|run2b|run2)",
+    # whether to use oddWeight or not
+    r"(Odd)?",
+  ]
+  pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
+  # print(pattern)
   try:
     acc, oddity = p.search(angacc).groups()
     oddity = True if oddity=='Odd' else False
-    return acc, oddity
+    ans = {
+      "acc": acc,
+      "use_oddWeight": oddity
+    }
+    return ans
   except:
     raise ValueError(f'Cannot interpret {angacc} as a angacc modifier')
 
+# }}}
+
+
+# Parse physics parameters wildcard (aka fit) {{{
 
 def physpar_guesser(physics):
   # Check if the tuple will be modified
@@ -115,6 +137,10 @@ def physpar_guesser(physics):
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
 
+# }}}
+
+
+# Parse version wildcard (aka version) {{{
 
 def version_guesser(version):
   """
@@ -155,6 +181,8 @@ def version_guesser(version):
       raise ValueError(f'Cannot interpret {mod} as a version modifier')
   else:
     return v, int(100), None, None, None, None, None
+
+# }}}
 
 # }}}
 
