@@ -35,17 +35,7 @@ Gdvalue = config.general['Gd']
 tLL = config.general['tLL']
 tUL = config.general['tUL']
 
-# Parse arguments for this script
-def argument_parser():
-  p = argparse.ArgumentParser(description=DESCRIPTION)
-  p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--year', help='Year to fit') 
-  p.add_argument('--version', help='Version of the tuples to use')
-  p.add_argument('--trigger', help='Trigger to fit')
-  p.add_argument('--timeacc', help='Different flag to ... ')
-  p.add_argument('--contour', help='Different flag to ... ')
-  return p
+
 
 if __name__ != '__main__':
   import badjanak
@@ -60,28 +50,38 @@ if __name__ == '__main__':
 
   # Parse arguments ------------------------------------------------------------
   printsec("Time acceptance procedure")
-  args = vars(argument_parser().parse_args())
+  p = argparse.ArgumentParser(description=DESCRIPTION)
+  p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--year', help='Year to fit') 
+  p.add_argument('--version', help='Version of the tuples to use')
+  p.add_argument('--trigger', help='Trigger to fit')
+  p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--contour', help='Different flag to ... ')
+  p.add_argument('--minimizer', help='Different flag to ... ')
+  args = vars(p.parse_args())
+
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bs2JpsiPhi'
-  TIMEACC, NKNOTS, CORRECT, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC = timeacc_guesser(args['timeacc'])
+  MINER = args['minimizer']
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
+  initialize(os.environ['IPANEMA_BACKEND'], 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = trigger_scissors(TRIGGER)          # place cut attending to trigger
-  CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
+  CUT = trigger_scissors(TRIGGER)              # place cut attending to trigger
+  CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')     # place decay-time cuts
 
   # Print settings
   printsubsec("Settings")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'timeacc':>15}: {TIMEACC:50}")
-  print(f"{'minimizer':>15}: {MINER:50}")
+  print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'contour':>15}: {args['contour']:50}\n")
 
   # List samples, params and tables
@@ -89,7 +89,7 @@ if __name__ == '__main__':
   oparams = args['params'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(NKNOTS)]
+  knots = all_knots[str(TIMEACC['nknots'])]
   sWeight = "sw"
 
 
@@ -106,43 +106,43 @@ if __name__ == '__main__':
     # MC_Bs2JpsiPhi {{{
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
       m = 'MC_Bs2JpsiPhi'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
         weight = f'dg0Weight*{sWeight}/gb_weights'
       # apply oddWeight if evtOdd in filename
-      if EVT == 'evtOdd':
+      if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
       mode = 'signalMC'; c = 'a'
     # }}}
     # MC_Bs2JpsiPhi_dG0 {{{
     elif 'MC_Bs2JpsiPhi_dG0' in m:
       m = 'MC_Bs2JpsiPhi_dG0'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
         weight = f'{sWeight}/gb_weights'
       # apply oddWeight if evtOdd in filename
-      if EVT == 'evtOdd':
+      if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
       mode = 'signalMC'; c = 'a'
     # }}}
     # MC_Bd2JpsiKstar {{{
     elif 'MC_Bd2JpsiKstar' in m:
       m = 'MC_Bd2JpsiKstar'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
       # apply oddWeight if evtOdd in filename
-      if EVT == 'evtOdd':
+      if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
       mode = 'controlMC'; c = 'b'
     # }}}
     # Bd2JpsiKstar {{{
     elif 'Bd2JpsiKstar' in m:
       m = 'Bd2JpsiKstar'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
@@ -151,19 +151,19 @@ if __name__ == '__main__':
     # MC_Bu2JpsiKplus {{{
     elif 'MC_Bu2JpsiKplus' in m:
       m = 'MC_Bu2JpsiKplus'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
       # apply oddWeight if evtOdd in filename
-      if EVT == 'evtOdd':
+      if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
       mode = 'controlMC'; c = 'b'
     # }}}
     # Bu2JpsiKplus {{{
     elif 'Bu2JpsiKplus' in m:
       m = 'Bu2JpsiKplus'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*{sWeight}'
         weight = f'{sWeight}'  # TODO: fix kinWeight here, it should exist and be a reweight Bu -> Bs
       else:
@@ -228,7 +228,7 @@ if __name__ == '__main__':
     'data': [cats['signalMC'].time, cats['controlMC'].time, cats['controlRD'].time],
     'prob': [cats['signalMC'].lkhd, cats['controlMC'].lkhd, cats['controlRD'].lkhd],
     'weight': [cats['signalMC'].weight, cats['controlMC'].weight, cats['controlRD'].weight],
-    'flatend': FLAT
+    'flatend': TIMEACC['use_flatend']
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
 
