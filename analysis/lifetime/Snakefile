@@ -26,7 +26,7 @@ rule lifetime_trend:
     --figure {output}\
     --mode {wildcards.mode}\
     --year {",".join(YEARS[f'{wildcards.year}'])}\
-    ) #&> {log}""")
+    ) &> {log}""")
 
 # }}}
 
