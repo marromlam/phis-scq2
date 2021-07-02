@@ -147,16 +147,16 @@ rule time_acceptance_simultaneous:
     --trigger {wildcards.trigger}\
     --timeacc {wildcards.timeacc}\
     --contour {contour}\
+    --minimizer minuit\
     ) &> {log}""")
     send_mail(f"Time Acceptance :: {wildcards}", f"{log}")
-
 
 
 rule time_acceptance_simultaneous_BuasBd:
   resources:
     mem_mb=4096
   wildcard_constraints:
-    timeacc = r"simul.*BuasBd.*",
+    timeacc = r"simul(.*)?BuasBd",
   input:
     sample = lambda wcs: [
       tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
@@ -176,8 +176,7 @@ rule time_acceptance_simultaneous_BuasBd:
       contour = config['contour']
     except:
       contour = 0
-    shell(f"""
-    (time\
+    shell(f"""(time\
     python analysis/time_acceptance/simultaneous.py\
     --samples {",".join(input.sample)}\
     --params {",".join(output.params)}\
@@ -186,9 +185,9 @@ rule time_acceptance_simultaneous_BuasBd:
     --trigger {wildcards.trigger}\
     --timeacc {wildcards.timeacc}\
     --contour {contour}\
-    ) #&> {log}""")
+    --minimizer minuit\
+    ) &> {log}""")
     send_mail(f"Time Acceptance :: {wildcards}", f"{log}")
-
 
 
 rule time_acceptance_simultaneous_dGn0:
