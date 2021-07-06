@@ -17,13 +17,14 @@ import hjson
 # load ipanema
 from ipanema import initialize, plotting
 from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
+import numpy as np
 
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
-
+from angular_acceptance.iterative_mc import acceptance_effect
 import config
 # binned variables
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -62,7 +63,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, NKNOTS, CORRECT, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC, NKNOTS, CORRECT, ODDW, FLAT, LIFECUT, SWAP = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
@@ -82,7 +83,6 @@ if __name__ == '__main__':
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'timeacc':>15}: {TIMEACC:50}")
-  print(f"{'minimizer':>15}: {MINER:50}")
   print(f"{'contour':>15}: {args['contour']:50}\n")
 
   # List samples, params and tables
@@ -108,10 +108,12 @@ if __name__ == '__main__':
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
         weight = f'dg0Weight*{sWeight}/gb_weights'
-      # apply oddWeight if evtOdd in filename
+      # apply  dG0Weight if evtOdd in filename
       if EVT in ('evtEven', 'evtOdd'):
-        weight = weight.replace('pdfWeight', 'dg0Weight*oddWeight')
-        weight = weight.replace('dg0Weight', 'dg0Weight*oddWeight')
+        weight = weight.replace('pdfWeight', 'dg0Weight')
+      #apply oddweight if flag is true
+      if ODDW == 'Odd':
+        weight = f'{weight}*oddWeight'
       #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
@@ -122,9 +124,12 @@ if __name__ == '__main__':
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
         weight = f'{sWeight}/gb_weights'
-      # apply oddWeight if evtOdd in filename
       if EVT in ('evtEven', 'evtOdd'):
-        weight = weight.replace('pdfWeight', 'oddWeight')
+        weight = f'{weight}*polWeight'
+      # apply oddWeight if Flag is True
+      if ODDW=='Odd':
+        weight = f'{weight}*oddWeight'
+      #Cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
       mode = 'signalMC'; c = 'a'
@@ -134,9 +139,9 @@ if __name__ == '__main__':
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
-      # apply oddWeight if evtOdd in filename
-      if EVT in ('evtEven', 'evtOdd'):
-        weight = weight.replace('pdfWeight', 'oddWeight')
+      # apply oddWeight if flag is true 
+      if ODDW=='Odd':
+        weight = f'{weight}*oddWeight'
       mode = 'controlMC'; c = 'b'
     elif 'MC_Bu2JpsiKplus' in m:
       m = 'MC_Bu2JpsiKplus'
@@ -144,9 +149,9 @@ if __name__ == '__main__':
         weight = f'kinWeight*polWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
-      # apply oddWeight if evtOdd in filename
-      if EVT in ('evtEven', 'evtOdd'):
-        weight = weight.replace('pdfWeight', 'oddWeight')
+      # apply oddWeight if flag is true 
+      if ODDW=='Odd':
+        weight = f'{weight}*oddWeight'
       mode = 'controlMC'; c = 'b'
     elif 'Bd2JpsiKstar' in m:
       m = 'Bd2JpsiKstar'
@@ -159,6 +164,16 @@ if __name__ == '__main__':
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
+    if ODDW=='pT':
+      pTp = np.array(cats[mode].df['pTHp'])
+      pTm = np.array(cats[mode].df['pTHm'])
+      pT_acc = np.ones_like(cats[mode].df['pTHp'])
+      for k in range(len(pT_acc)):
+        pT_acc[k] = acceptance_effect(pTp[k], 250**3)
+        pT_acc[k] *= acceptance_effect(pTm[k], 250**3)
+      cats[mode].df['pT_acc'] = pT_acc
+      weight = f'{weight}*pT_acc'
+      print(weight)
     cats[mode].allocate(time=time, lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
@@ -217,16 +232,7 @@ if __name__ == '__main__':
       'weight': cats[mode].weight
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
-  if MINER.lower() in ("minuit", "minos"):
-    result = mini.optimize(method=MINER, verbose=False, timeit=True, tol=0.05)
-  elif MINER.lower() in ('bfgfs', 'lbfgsb','nelder'):
-    result = mini.optimize(method=MINER, verbose=False)
-  elif MINER.lower() in ('emcee'):
-    result = mini.optimize(method='minuit', verbose=False)
-    result = mini.optimize(method='emcee', verbose=False, steps=1000,
-                           nwalkers=100, is_weighted=False)
-  else:
-    exit()
+  result = mini.optimize(method="minuit", verbose=False, timeit=True, tol=0.05)
   print(result)
 
   # }}}

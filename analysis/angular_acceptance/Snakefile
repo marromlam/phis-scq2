@@ -47,13 +47,13 @@ rule plot_parameters_angular_acceptance:
     resources:
       mem_mb = 4096
     input:
-      params_angacc = 'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}_{timeacc}.json'
+      params_angacc = 'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.json'
     params:
       params = 'analysis/params/generator/{year}/{mode}.json'
     output:
-      figures = directory('output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}')
+      figures = directory('output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}')
     log:
-      'output/log/angular_acceptance_plot_iteration/{year}/{mode}/{version}_{angacc}_{timeacc}.log'
+      'output/log/angular_acceptance_plot_iteration/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
     run:
       shell(f"""(time\
       python analysis/angular_acceptance/Plot_parameters.py\
@@ -197,6 +197,7 @@ rule angular_acceptance_corrected:
     --mode {wildcards.mode}\
     --year {wildcards.year}\
     --version {wildcards.version}\
+    --angacc {wildcards.angacc}\
     --trigger {wildcards.trigger}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Corrected :: {wildcards}", f"{log}")
@@ -375,10 +376,10 @@ rule angular_acceptance_iterative_mc_run2a:
   input:
     # Samples and weights
     mc_sample = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2a'),
-    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2a', weight=f'angWeight', angacc='corrected'),
-    data_sample = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2a'), #WARNING CHECK FIT THE EVTODD
-    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', csp='none', angacc='corrected', trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', csp='none', angacc='corrected', trigger='unbiased'),
+    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2a', weight=f'angWeight', angacc=f'{wcs.angacc}'.replace('run2a', 'corrected')),
+    data_sample = lambda wcs: tuples(wcs,  year='run2a'),
+    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', csp='none', angacc=f'{wcs.angacc}'.replace('run2a', 'corrected'), trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', csp='none', angacc=f'{wcs.angacc}'.replace('run2a', 'corrected'), trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', trigger='biased'),
     timeacc_unbiased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2a', trigger='unbiased'),
     csp_factors = lambda wcs: csps(wcs, year='run2a'),
@@ -423,7 +424,7 @@ rule angular_acceptance_iterative_mc_run2a:
     --output-weights-mc {",".join(output.weights)}\
     --output-physics-params {output.params}\
     --year {",".join(YEARS['run2a'])}\
-    --angacc {wildcards.angacc}_{wildcards.timeacc}\
+    --angacc {wildcards.angacc}\
     --timeacc {wildcards.timeacc}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
@@ -448,10 +449,10 @@ rule angular_acceptance_iterative_mc_run2b:
   input:
     # Samples and weights
     mc_sample = lambda wcs: tuples(wcs,version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2b'),
-    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'),year='run2b', weight=f'angWeight', angacc='corrected'),
+    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'),year='run2b', weight=f'angWeight',  angacc=f'{wcs.angacc}'.replace('run2b', 'corrected')),
     data_sample = lambda wcs: tuples(wcs, year='run2b'),
-    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2b', csp='none', angacc='corrected', trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2b', csp='none', angacc='corrected', trigger='unbiased'),
+    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2b', csp='none', angacc=f'{wcs.angacc}'.replace('run2b', 'corrected'),trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2b', csp='none', angacc=f'{wcs.angacc}'.replace('run2b', 'corrected'), trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2b', trigger='biased'),
     timeacc_unbiased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2b', trigger='unbiased'),
     csp_factors = lambda wcs: csps(wcs, year='run2b'),
@@ -496,7 +497,7 @@ rule angular_acceptance_iterative_mc_run2b:
     --output-weights-mc {",".join(output.weights)}\
     --output-physics-params {output.params}\
     --year {",".join(YEARS['run2b'])}\
-    --angacc {wildcards.angacc}_{wildcards.timeacc}\
+    --angacc {wildcards.angacc}\
     --timeacc {wildcards.timeacc}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
@@ -520,10 +521,10 @@ rule angular_acceptance_iterative_mc_run2:
   input:
     # Samples and weights
     mc_sample = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2'),
-    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2b', weight=f'angWeight', angacc='corrected'),
+    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2b', weight=f'angWeight', angacc=f'{wcs.angacc}'.replace('run2', 'corrected')),
     data_sample = lambda wcs: tuples(wcs, year='run2b'),
-    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp='none', angacc='corrected', trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp='none', angacc='corrected', trigger='unbiased'),
+    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp='none', angacc=f'{wcs.angacc}'.replace('run2', 'corrected'), trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp='none', angacc=f'{wcs.angacc}'.replace('run2', 'corrected'), trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', trigger='biased'),
     timeacc_unbiased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', trigger='unbiased'),
     csp_factors = lambda wcs: csps(wcs, year='run2'),
@@ -576,7 +577,7 @@ rule angular_acceptance_iterative_mc_run2:
     --output-weights-mc {",".join(output.weights)}\
     --output-physics-params {output.params}\
     --year {",".join(YEARS['run2'])}\
-    --angacc {wildcards.angacc}_{wildcards.timeacc}\
+    --angacc {wildcards.angacc}\
     --timeacc {wildcards.timeacc}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
@@ -601,10 +602,10 @@ rule angular_acceptance_iterative_mc_yearly:
   input:
     # Samples and weights
     mc_sample = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even')),
-    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), weight=f'angWeight', angacc='corrected'),
+    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), weight=f'angWeight', angacc=f'{wcs.angacc}'.replace(f'{year}', 'corrected')),
     data_sample = lambda wcs: tuples(wcs),
-    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), csp='none', angacc='corrected', trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), csp='none', angacc='corrected', trigger='unbiased'),
+    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), csp='none', angacc=f'{wcs.angacc}'.replace(f'{year}', 'corrected'), trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), csp='none', angacc=f'{wcs.angacc}'.replace(f'{year}', 'corrected'), trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), trigger='biased'),
     timeacc_unbiased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), trigger='unbiased'),
     csp_factors = lambda wcs: csps(wcs),

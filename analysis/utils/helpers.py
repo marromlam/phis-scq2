@@ -51,27 +51,25 @@ def timeacc_guesser(timeacc):
   """
   # Check if the tuple will be modified
   pattern = [
-    r"(single,simul,lifeBd,lifeBu)",
+    r"(single|simul|lifeBd|lifeBu)",
     # number of knots
-    r"(1[0-2]|[2-9])?"
+    r"(1[0-2]|[2-9])?",
     # whether to use reweightings or not
     r"(Noncorr)?",
     # whether to use oddWeight or not
-    r"(Odd)?",
+    r"(Odd|pT)?",
     # whether to impose flat condition at upper decay times
     r"(Flatend)?",
     # custom variable cuts for lifetime test
-    r"(deltat|alpha|mKstar)?"
+    r"(deltat|alpha|mKstar)?",
     # use samples as others
     r"(BuasBd)?"
   ]
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
-  # print(pattern)
   try:
     acc, nknots, corr, oddW, flat, cuts, swap = p.search(timeacc).groups()
     corr = False if corr=='Noncorr' else True
-    oddW = False if oddW=='Odd' else True
     nknots = int(nknots) if nknots else 3
     flat = True if flat=='Flatend' else False
     return acc, nknots, corr, oddW, flat, cuts, swap
@@ -95,11 +93,10 @@ def parse_angacc(angacc):
   tuple
     Components of the angular acceptance.
   """
-  pattern = r'\A(yearly|run2|run2a|run2b)(Odd)?\Z'
+  pattern = r'\A(yearly|run2|run2a|run2b|corrected)(Odd|pT)?\Z'
   p = re.compile(pattern)
   try:
     acc, oddity = p.search(angacc).groups()
-    oddity = True if oddity=='Odd' else False
     return acc, oddity
   except:
     raise ValueError(f'Cannot interpret {angacc} as a angacc modifier')
@@ -476,6 +473,8 @@ def timeaccs(wcs, version=False, year=False, mode=False, timeacc=False, trigger=
         m = 'MC_Bs2JpsiPhi'
       else:
         m = 'MC_Bs2JpsiPhi_dG0'
+  else:
+    m = f"{wcs.mode}"
 
   # loop over years and return list of time acceptances
   ans = []
@@ -505,7 +504,6 @@ def angaccs(wcs, version=False, year=False, mode=False, timeacc=False,
     trigger = f"{wcs.trigger}"
   if not mode:
     mode = f"{wcs.mode}"
-
   # select mode
   if angacc.startswith('naive') or angacc.startswith('corrected'):
     # loop over years and return list of time acceptances

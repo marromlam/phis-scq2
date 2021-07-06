@@ -49,7 +49,7 @@ badjanak.get_kernels(True)
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
-from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
+from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors, parse_angacc
 
 # binned variables
 bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
@@ -66,6 +66,8 @@ bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
 reweighter = reweight.GBReweighter(**bdconfig)
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
+def acceptance_effect(p, a):
+  return p**3/(a+p**3)
 
 def check_for_convergence(a,b):
   a_f = np.array( [float(a[p].unc_round[0]) for p in a] )
@@ -81,18 +83,32 @@ def check_for_convergence(a,b):
 #     They work for a given category only.
 
 def pdf_reweighting(mcsample, mcparams, rdparams):
-  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
-                           **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
-  original_pdf_h = mcsample.pdf.get()
-  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
-                           **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
-  original_pdf_h /= mcsample.pdf.get()
-  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
-                           **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
-  target_pdf_h = mcsample.pdf.get()
-  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
-                           **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
-  target_pdf_h /= mcsample.pdf.get()
+  if 'Bs2Jpsi' in MODE:
+    badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
+                             **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
+    original_pdf_h = mcsample.pdf.get()
+    badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
+                             **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
+    original_pdf_h /= mcsample.pdf.get()
+    badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
+                             **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
+    target_pdf_h = mcsample.pdf.get()
+    badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
+                             **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
+    target_pdf_h /= mcsample.pdf.get()
+  else:
+    badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
+                             **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
+    original_pdf_h = mcsample.pdf.get()
+    badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
+                             **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
+    original_pdf_h /= mcsample.pdf.get()
+    badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=1,
+                             **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
+    target_pdf_h = mcsample.pdf.get()
+    badjanak.delta_gamma5_mc_Bd(mcsample.true, mcsample.pdf, use_fk=0,
+                             **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
+    target_pdf_h /= mcsample.pdf.get()
   return np.nan_to_num(target_pdf_h/original_pdf_h)
 
 
@@ -153,7 +169,10 @@ def get_angular_acceptance(mc, kkpWeight=False):
   weight = ristra.allocate(weight)
 
   # compute angular acceptance
-  ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
+  if 'Bs2Jpsi' in MODE:
+    ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
+  else:
+    ans = badjanak.get_angular_acceptance_weights_Bd(mc.true, mc.reco, weight, **mc.params.valuesdict())
 
   # create ipanema.Parameters
   w, uw, cov, corr = ans
@@ -177,9 +196,15 @@ def fcn_data(parameters, data):
 
   for dy in data.values():
     for dt in dy.values():
-      badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
-                  **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
-                  tLL=tLL, tUL=tUL, use_timeacc=2, use_timeres=0, set_tagging=0)
+      if 'Bs2Jpsi' in MODE:
+        badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
+                    **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
+                    tLL=tLL, tUL=tUL, use_timeacc=2, use_timeres=0, set_tagging=0)
+      else:
+        badjanak.delta_gamma5_data_Bd(dt.data, dt.lkhd, **pars_dict,
+                                      **dt.angacc.valuesdict(),
+                                      tLL=tLL, tUL=tUL, use_timeacc=0, set_tagging=1, 
+                                      use_timeres=0)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)
@@ -635,8 +660,9 @@ if __name__ == '__main__':
 
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEARS = args['year'].split(',')
+  global MODE 
   MODE = args['mode']
-  ANGACC = args['angacc']
+  ANGACC, ODDW = parse_angacc(args['angacc'])
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
@@ -687,12 +713,15 @@ if __name__ == '__main__':
   # MC reconstructed and generator level variable names
   reco  = ['cosK', 'cosL', 'hphi', 'gentime']
   true  = ['gencosK', 'gencosL', 'genhphi', 'gentime']
-  reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
-  true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
-
-  # RD variable names
   real  = ['cosK', 'cosL', 'hphi', 'gentime']
-  real += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*mHH', '0*mHH']
+  if 'Bs2Jpsi' in MODE:
+    reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
+    true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
+    real += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*mHH', '0*mHH']
+  elif 'Bd2JpsiKstar' in MODE:
+    reco += ['mHH', '0*sigmat', 'idB', 'idB', '0*time', '0*time']
+    true += ['mHH', '0*sigmat', 'idB', 'idB', '0*time', '0*time']
+    real += ['mHH', '0*sigmat', 'idB', 'idB', '0*mHH', '0*mHH']
 
   # sWeight variable
   weight_mc = "sw"
@@ -700,10 +729,14 @@ if __name__ == '__main__':
   if "Bs2Jpsi" in MODE:
     weight_mc += '/gb_weights'
     if 'evt' in args['version']:
-      weight_rd = f'kinWeight*oddWeight*{weight_rd}/gb_weights'
+      weight_rd = f'{weight_rd}/gb_weights'
   if "bkgcat60" in args['version']:
     weight_mc = 'time/time'
-    weight_rd = 'time/time' #WARNING: Here, we can put also kinWeight and OddWeight
+    weight_rd = 'time/time'
+  if ODDW == 'Odd':
+    weight_rd = f'{weight_rd}*oddWeight'
+  if ODDW == 'pT':
+    weight_rd = f'{weight_rd}*pT_acc'
   HAS_SWAVE = False
   if "Swave" in MODE:
     HAS_SWAVE = True
@@ -772,6 +805,15 @@ if __name__ == '__main__':
       badjanak.config['knots'] = np.array(data[y][t].knots).tolist()
       data[y][t].timeacc = Parameters.build(c, c.fetch('(a|b|c).*'))
       data[y][t].chop( trigger_scissors(t, CUT) )
+      if ODDW=='pT':
+        pTp = np.array(data[y][t].df['pTHp'])
+        pTm = np.array(data[y][t].df['pTHm'])
+        pT_acc = np.ones_like(data[y][t].df['pTHp'])
+        for k in range(len(pT_acc)):
+          pT_acc[k] = acceptance_effect(pTp[k], 250**3)
+          pT_acc[k] *= acceptance_effect(pTm[k], 250**3)
+        data[y][t].df['pT_acc'] = pT_acc
+        print(weight_rd)
       print(data[y][t])
 
     # add angular acceptance
@@ -805,80 +847,97 @@ if __name__ == '__main__':
   print(f"\nFitting parameters\n{80*'='}")
   global pars; pars = Parameters()
 
+  if 'Bs2Jpsi' in MODE:
   # S wave fractions
-  if HAS_SWAVE:
-    pars.add(dict(name='fSlon1', value=0.480, min=0.00, max=0.90,
-              free=True, latex=r'f_S^{1}'))
-    pars.add(dict(name='fSlon2', value=0.040, min=0.00, max=0.90,
-              free=True, latex=r'f_S^{2}'))
-    pars.add(dict(name='fSlon3', value=0.004, min=0.00, max=0.90,
-              free=True, latex=r'f_S^{3}'))
-    pars.add(dict(name='fSlon4', value=0.009, min=0.00, max=0.90,
-              free=True, latex=r'f_S^{4}'))
-    pars.add(dict(name='fSlon5', value=0.059, min=0.00, max=0.90,
-              free=True, latex=r'f_S^{5}'))
-    pars.add(dict(name='fSlon6', value=0.130, min=0.00, max=0.90,
-              free=True, latex=r'f_S^{6}'))
+    if HAS_SWAVE:
+      pars.add(dict(name='fSlon1', value=0.480, min=0.00, max=0.90,
+                free=True, latex=r'f_S^{1}'))
+      pars.add(dict(name='fSlon2', value=0.040, min=0.00, max=0.90,
+                free=True, latex=r'f_S^{2}'))
+      pars.add(dict(name='fSlon3', value=0.004, min=0.00, max=0.90,
+                free=True, latex=r'f_S^{3}'))
+      pars.add(dict(name='fSlon4', value=0.009, min=0.00, max=0.90,
+                free=True, latex=r'f_S^{4}'))
+      pars.add(dict(name='fSlon5', value=0.059, min=0.00, max=0.90,
+                free=True, latex=r'f_S^{5}'))
+      pars.add(dict(name='fSlon6', value=0.130, min=0.00, max=0.90,
+                free=True, latex=r'f_S^{6}'))
 
-  # P wave fractions
-  pars.add(dict(name="fPlon", value=0.5240, min=0.4, max=0.6,
-            free=True, latex=r'f_0'))
-  pars.add(dict(name="fPper", value=0.2500, min=0.1, max=0.3,
-            free=True, latex=r'f_{\perp}'))
+    # P wave fractions
+    pars.add(dict(name="fPlon", value=0.5240, min=0.4, max=0.6,
+              free=True, latex=r'f_0'))
+    pars.add(dict(name="fPper", value=0.2500, min=0.1, max=0.3,
+              free=True, latex=r'f_{\perp}'))
 
-  # Weak phases
-  pars.add(dict(name="pSlon", value= 0.00, min=-1.0, max=1.0,
-            free=False, latex=r"\phi_S - \phi_0"))
-  pars.add(dict(name="pPlon", value= 0.07, min=-1.0, max=1.0,
-            free=True , latex=r"\phi_0" ))
-  pars.add(dict(name="pPpar", value= 0.00, min=-1.0, max=1.0,
-            free=False, latex=r"\phi_{\parallel} - \phi_0"))
-  pars.add(dict(name="pPper", value= 0.00, min=-1.0, max=1.0,
-            free=False, latex=r"\phi_{\perp} - \phi_0"))
+    # Weak phases
+    pars.add(dict(name="pSlon", value= 0.00, min=-1.0, max=1.0,
+              free=False, latex=r"\phi_S - \phi_0"))
+    pars.add(dict(name="pPlon", value= 0.05, min=-1.0, max=1.0,
+              free=True , latex=r"\phi_0" ))
+    pars.add(dict(name="pPpar", value= 0.00, min=-1.0, max=1.0,
+              free=False, latex=r"\phi_{\parallel} - \phi_0"))
+    pars.add(dict(name="pPper", value= 0.00, min=-1.0, max=1.0,
+              free=False, latex=r"\phi_{\perp} - \phi_0"))
 
-  # S wave strong phases
-  if HAS_SWAVE:
-    pars.add(dict(name='dSlon1', value=+2.34, min=-0.0, max=+4.0,
-              free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
-    pars.add(dict(name='dSlon2', value=+1.64, min=-0.0, max=+4.0,
-              free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
-    pars.add(dict(name='dSlon3', value=+1.09, min=-0.0, max=+4.0,
-              free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
-    pars.add(dict(name='dSlon4', value=-0.25, min=-4.0, max=+0.0,
-              free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
-    pars.add(dict(name='dSlon5', value=-0.48, min=-4.0, max=+0.0,
-              free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
-    pars.add(dict(name='dSlon6', value=-1.18, min=-4.0, max=+0.0,
-              free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
+    # S wave strong phases
+    if HAS_SWAVE:
+      pars.add(dict(name='dSlon1', value=+2.34, min=-0.0, max=+4.0,
+                free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
+      pars.add(dict(name='dSlon2', value=+1.64, min=-0.0, max=+4.0,
+                free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
+      pars.add(dict(name='dSlon3', value=+1.09, min=-0.0, max=+4.0,
+                free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
+      pars.add(dict(name='dSlon4', value=-0.25, min=-4.0, max=+0.0,
+                free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
+      pars.add(dict(name='dSlon5', value=-0.48, min=-4.0, max=+0.0,
+                free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
+      pars.add(dict(name='dSlon6', value=-1.18, min=-4.0, max=+0.0,
+                free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
 
-  # P wave strong phases
-  pars.add(dict(name="dPlon", value=0.000, min=-2*3.14, max=2*3.14,
-            free=False, latex=r"\delta_0"))
-  pars.add(dict(name="dPpar", value=3.260, min=-2*3.14, max=2*3.14,
-            free=True, latex=r"\delta_{\parallel} - \delta_0"))
-  pars.add(dict(name="dPper", value=3.026, min=-2*3.14, max=2*3.14,
-            free=True, latex=r"\delta_{\perp} - \delta_0"))
+    # P wave strong phases
+    pars.add(dict(name="dPlon", value=0.000, min=-2*3.14, max=2*3.14,
+              free=False, latex=r"\delta_0"))
+    pars.add(dict(name="dPpar", value=3.260, min=-2*3.14, max=2*3.14,
+              free=True, latex=r"\delta_{\parallel} - \delta_0"))
+    pars.add(dict(name="dPper", value=3.026, min=-2*3.14, max=2*3.14,
+              free=True, latex=r"\delta_{\perp} - \delta_0"))
 
-  # lambdas
-  pars.add(dict(name="lSlon", value=1.0, min=0.7, max=1.6,
-            free=False, latex="\lambda_S/\lambda_0"))
-  pars.add(dict(name="lPlon", value=1.0, min=0.7, max=1.6,
-            free=True,  latex="\lambda_0"))
-  pars.add(dict(name="lPpar", value=1.0, min=0.7, max=1.6,
-            free=False, latex="\lambda_{\parallel}/\lambda_0"))
-  pars.add(dict(name="lPper", value=1.0, min=0.7, max=1.6,
-            free=False, latex="\lambda_{\perp}/\lambda_0"))
+    # lambdas
+    pars.add(dict(name="lSlon", value=1.0, min=0.7, max=1.6,
+              free=False, latex="\lambda_S/\lambda_0"))
+    pars.add(dict(name="lPlon", value=1.0, min=0.7, max=1.6,
+              free=True,  latex="\lambda_0"))
+    pars.add(dict(name="lPpar", value=1.0, min=0.7, max=1.6,
+              free=False, latex="\lambda_{\parallel}/\lambda_0"))
+    pars.add(dict(name="lPper", value=1.0, min=0.7, max=1.6,
+              free=False, latex="\lambda_{\perp}/\lambda_0"))
 
-  # life parameters
-  pars.add(dict(name="Gd", value= 0.65789, #min= 0.0, max= 1.0,
-            free=False, latex=r"\Gamma_d"))
-  pars.add(dict(name="DGs", value= 0.0917, #min= 0.03, max= 0.15,              # WARNING THIS CAN BE FIXED TO ZERO
-            free=True, latex=r"\Delta\Gamma_s"))
-  pars.add(dict(name="DGsd", value= 0.03, #min=-0.2, max= 0.2,
-            free=True, latex=r"\Gamma_s - \Gamma_d"))
-  pars.add(dict(name="DM", value=17.768, #min=16.0, max=20.0,
-            free=True, latex=r"\Delta m"))
+    # life parameters
+    pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
+              free=False, latex=r"\Gamma_d"))
+    pars.add(dict(name="DGs", value= 0.0917, min= -0.15, max= 0.15,              # WARNING THIS CAN BE FIXED TO ZERO
+              free=True, latex=r"\Delta\Gamma_s"))
+    pars.add(dict(name="DGsd", value= 0.03, min=-0.15, max= 0.15,
+              free=True, latex=r"\Gamma_s - \Gamma_d"))
+    pars.add(dict(name="DM", value=17.768, min=16.0, max=19.0,
+              free=True, latex=r"\Delta m"))
+
+  else:
+    pars.add(dict(name="fPlon", value=0.5001, min=0.1, max=0.9,
+              free=True, latex=r'f_0'))
+    pars.add(dict(name="fPper", value=0.1601, min=0.1, max=0.9,
+              free=True, latex=r'f_{\perp}')) 
+    # P wave strong phases
+    pars.add(dict(name="dPlon", value=0.000, min=-3.14, max=3.14,
+              free=False, latex=r"\delta_0"))
+    pars.add(dict(name="dPpar", value=2.501, min=-2*3.14, max=2*3.14,
+              free=True, latex=r"\delta_{\parallel} - \delta_0"))
+    pars.add(dict(name="dPper", value=-0.17, min=-2*3.14, max=2*3.14,
+              free=True, latex=r"\delta_{\perp} - \delta_0"))
+    pars.add(dict(name="Gd", value= 0.65833, min= 0.0, max= 1.0,
+                  free=False, latex=r"\Gamma_d"))
   print(pars)
+
 
   # }}}
 
