@@ -117,7 +117,7 @@ if __name__ == "__main__":
         expr += rf",\,\, \chi_{{dof}}^2={res.chi2red:.4f}"
         #expr += rf",\,\, \chi_{{dof}}^2={res.chi2:.4f}"
         expr += rf",\,\, \mathrm{{p}}={stats.chi2.sf(res.chi2, res.nvary):.4f}"
-        ax.plot(x, y, '-', color=f'k', label=rf'$\tau_{{{trig[0]}}} = {expr}$')
+        ax.plot(x, y, '-', color=f'C{k+1}', label=rf'$\tau_{{{trig[0]}}} = {expr}$')
 
   # label and save
   ax.set_xlabel("year")

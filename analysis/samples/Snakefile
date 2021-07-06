@@ -1,3 +1,8 @@
+# SAMPLES
+#
+#
+
+
 # Syncronize tuples from EOS {{{
 #    This rule downloads all files corresponding to a given VERSION from EOS
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
@@ -9,28 +14,26 @@ rule samples_sync_tuple:
   params:
     settings.user['eos']
   output:
-    temp(SAMPLES+'/{year}/{mode}/{version}_sWeight.root')
+    SAMPLES+'/{year}/{mode}/{version}_sWeight.root'
   log:
     'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
   run:
-    shell(f"""
-      (time\
-      python analysis/samples/sync_tuples.py\
-             --year {wildcards.year}\
-             --mode {wildcards.mode}\
-             --version {wildcards.version}\
-             --tree DecayTree\
-             --output {output}\
-             --eos {params}\
-      ) &> {log}""")
+    shell(f"""(time\
+    python analysis/samples/sync_tuples.py\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --tree DecayTree\
+    --output {output}\
+    --eos {params}\
+    ) &> {log}""")
 
 # }}}
 
 
 # Create stat table for sample {{{
-#    This rule downloads all files corresponding to a given VERSION from EOS
-#    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
-#    and then it worka automatically.
+#    Creates tables spliting some given sample in biased and unbiased categories
+#    just showing how muchs statistics we have per year and trigger category.
 
 rule samples_stat_tuple:
   resources:
@@ -70,10 +73,10 @@ rule samples_reduce_tuple:
   run:
     shell(f"""(time\
     python analysis/samples/reduce_tuples.py\
-           --input-file {input.sample}\
-           --output-file {output.sample}\
-           --input-tree DecayTree\
-           --output-tree DecayTree\
+    --input-file {input.sample}\
+    --output-file {output.sample}\
+    --input-tree DecayTree\
+    --output-tree DecayTree\
     ) &> {log}""")
 
 # }}}
@@ -83,7 +86,7 @@ rule samples_reduce_tuple:
 #   plot of differents branches of the ntuples. this rule get the plots for
 #   the years with no corrections, sw and kinematic corrections (MC vs data)
 
-rule plot_samples:
+rule samples_plot:
   resources:
     mem_mb=1024
   wildcard_constraints:
@@ -101,18 +104,18 @@ rule plot_samples:
   run:
     shell(f"""(time\
     python analysis/samples/plot.py\
-           --tuple {",".join(input.tuple)}\
-           --control {",".join(input.control)}\
-           --year {",".join(YEARS['Run2'])}\
-           --version {wildcards.version}\
-           --mode {wildcards.mode}\
-           --branch {wildcards.branch}\
-           --output {",".join(output)}\
+    --tuple {",".join(input.tuple)}\
+    --control {",".join(input.control)}\
+    --year {",".join(YEARS['run2'])}\
+    --version {wildcards.version}\
+    --mode {wildcards.mode}\
+    --branch {wildcards.branch}\
+    --output {",".join(output)}\
     ) &> {log}""")
     send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
 
 
-rule plot_samples_yearly_v0r5_vs_v0r0:
+rule samples_plot_wrt_v0r0:
   resources:
     mem_mb=1024
   wildcard_constraints:
@@ -144,12 +147,11 @@ rule plot_samples_yearly_v0r5_vs_v0r0:
 # }}}
 
 
-# samples plot-----------------------------------------------------------------
+# samples plot {{{
 #   plot of differents branches of the ntuples. this rule get the plots for
 #   the years with no corrections, sw and kinematic corrections (MC vs data)
-#   {{{
 
-rule plot_samples_99:
+rule samples_plot_99:
   resources:
     mem_mb=1024
   wildcard_constraints:
@@ -165,13 +167,17 @@ rule plot_samples_99:
   run:
     shell(f"""(time\
     python analysis/samples/plot_noreduced.py\
-           --tuple {",".join(input.tuple)}\
-           --control {",".join(input.control)}\
-           --year {",".join(YEARS['Run2'])}\
-           --version {wildcards.version}\
-           --mode {wildcards.mode}\
-           --branch {wildcards.branch}\
-           --output {",".join(output)}\
+    --tuple {",".join(input.tuple)}\
+    --control {",".join(input.control)}\
+    --year {",".join(YEARS['run2'])}\
+    --version {wildcards.version}\
+    --mode {wildcards.mode}\
+    --branch {wildcards.branch}\
+    --output {",".join(output)}\
     ) &> {log}""")
     send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
+
+# }}}
+
+
 # vim: foldmethod=marker

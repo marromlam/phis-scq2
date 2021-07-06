@@ -43,7 +43,7 @@ common: &common
     descr : ''
   'hphi' :
     peval : 'helphi'
-    latex: '\phi'
+    latex: '\phi_h'
     range: [-3.142, 3.142]
     units : 'rad'
     descr : ''
@@ -97,7 +97,7 @@ common: &common
     descr : ''
   'veloWeight' : 
     peval : 'veloWeight'
-    latex : 'Velo Weight'
+    latex : 'w_{VELO}'
     range : []
     units : ''
     descr : ''
@@ -118,37 +118,37 @@ Bs_common: &Bs_common
     descr : ''
   'pTHp' :
     peval : 'hplus_PT'
-    latex : 'P_T(K^+)'
+    latex : 'p_T(K^+)'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr : ''
   'pHm' :
     peval : 'hminus_P'
-    latex : 'P(K^-)'
+    latex : 'p(K^-)'
     range: [0.0, 1.5e+5]
     units : 'MeV'
     descr : ''
   'pTHm' :
     peval : 'hminus_PT'
-    latex : 'P_T(K^-)'
+    latex : 'p_T(K^-)'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr : ''
   'mHH' :
     peval : 'X_M'
-    latex : 'M_{K^+K^-}'
+    latex : 'm_{K^+K^-}'
     range: [990, 1050]
     units : 'MeV'
     descr : ''
   'pTB' :
     peval : 'B_PT'
-    latex: 'P_T(B_s)'
+    latex: 'p_T(B_s)'
     range: [0.0, 4.0e+4]
     units : 'MeV'
     descr : ''
   'pB' :
     peval : 'B_P'
-    latex: 'P(B_s)'
+    latex: 'p(B_s)'
     range: [0.0, 8.0e+5]
     units : 'MeV'
     descr : ''
@@ -184,7 +184,7 @@ Bs_common: &Bs_common
     descr : ''
   'pTX' :
     peval : 'X_PT'
-    latex: 'P_T (\phi)'
+    latex: 'p_T (\phi)'
     range: [0.0, 2.5e+4]
     units : ''
     descr : ''
@@ -376,25 +376,25 @@ Bs_common: &Bs_common
   #   range: [-4., 4.]
   'pLp' : 
     peval: 'muplus_P'
-    latex: 'P_{\mu^{+}}'
+    latex: 'p(\mu^{+})'
     range: [0.0, 4.0e+4]
     units: 'MeV'
     descr: ''
   'pTLp' : 
     peval: 'muplus_PT'
-    latex: 'P_{T, \mu^{+}}'
+    latex: 'p_T(\mu^{+})'
     range: [0.0, 1.0e+4]
     units: 'MeV'
     descr: ''
   'pLm' : 
     peval: 'muminus_P'
-    latex: 'P_{\mu^{-}}'
+    latex: 'p_(\mu^{-})'
     range: [0.0, 4.0e+4]
     units: 'MeV'
     descr: ''
   'pTLm' : 
     peval: 'muminus_PT'
-    latex: 'P_{T, \mu^{+}}'
+    latex: 'p_T(\mu^{+})'
     range: [0.0, 1.0e+4]
     units: 'MeV'
     descr: ''
@@ -402,62 +402,62 @@ Bd_common: &Bd_common
   #cinematics
   'pHp' :
     peval: 'hplus_P'
-    latex: 'p(K)'
+    latex: 'p(K^+)'
     range: [0.0, 1.5e+5]
     units: 'MeV'
     descr: ''
   'pTHp' :
     peval: 'hplus_PT'
-    latex: 'P_T(K)'
+    latex: 'p_T(K^+)'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr: ''
   'pHm' :
     peval: 'hminus_P'
-    latex: 'p(\pi)'
+    latex: 'p(\pi^-)'
     range: [0.0, 1.5e+5]
     units : 'MeV'
     descr : ''
   'pTHm' :
     peval : 'hminus_PT'
-    latex: 'P_T(\pi)'
+    latex: 'p_T(\pi^+)'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr: ''
   'mHH' :
     peval: 'X_M'
-    latex: 'M_{K\pi}'
+    latex: 'm_{K\pi}'
     range: [840, 960]
     units : 'MeV'
     descr : ''
   'pTB' :
     peval: 'B_PT'
-    latex: 'P_T(B_d)'
+    latex: 'p_T(B_d)'
     range: [0.0, 4.0e+4]
     units: 'MeV'
     descr: ''
   'pB' :
     peval: 'B_P'
-    latex: 'P(B_d)'
+    latex: 'p(B_d)'
     range: [0.0, 8.0e+5]
     units: 'MeV'
     descr: ''
   'etaB' :
     peval : 'B_ETA'
-    latex: '\eta_{B_d}'
+    latex: '\eta({B_d})'
     range:  [2, 5]
     units : ''
     descr: ''
   #chinoca
   'logIPchi2B' :
     peval: 'log_B_IPCHI2_mva'
-    latex : '\mathrm{log} \chi^2 IP_{B_d}'
+    latex : '\mathrm{log} \chi^2 IP(B_d)'
     range: [-12.0, 12.0]
     units : ''
     descr : ''
   'BDTFchi2' :
     peval: 'B_DTF_CHI2NDOF'
-    latex: '\chi^2_{DTF} B_d'
+    latex: '\chi^2_{DTF} (B_d)'
     range: [0.0, 8.0]
     units: ''
     descr: ''
@@ -469,13 +469,13 @@ Bd_common: &Bd_common
     descr: ''
   'BVXchi2' :
     peval: 'B_VX_CHI2NDOF_mva'
-    latex: '\chi^2 B_d VX'
+    latex: '\chi_{VX}^2 (B_d)'
     range: [0,20]
     units: ''
     descr: ''
   'pTX' :
     peval: 'X_PT'
-    latex: 'P_T (K^*)'
+    latex: 'p_T (K\pi)'
     range: [0, 2.5e+4]
     units: 'MeV'
     descr: ''

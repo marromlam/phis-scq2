@@ -31,9 +31,9 @@ else:
 # }}}
 
 
-# Guessers {{{
+# Wildcard parsers {{{
 
-# Time acceptance guesser {{{
+# Parse time acceptance wildcard (aka timeacc) {{{
 
 def timeacc_guesser(timeacc):
   """
@@ -49,7 +49,7 @@ def timeacc_guesser(timeacc):
   tuple
     Components of the decay-time acceptance.
   """
-  # Check if the tuple will be modified
+  # Define the pattern we use to regex-parse the time acceptance wildcard
   pattern = [
     r"(single|simul|lifeBd|lifeBu)",
     # number of knots
@@ -74,10 +74,12 @@ def timeacc_guesser(timeacc):
     flat = True if flat=='Flatend' else False
     return acc, nknots, corr, oddW, flat, cuts, swap
   except:
-    raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
+    raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier.')
 
 # }}}
 
+
+# Parse angular acceptance wildcard (aka angacc) {{{
 
 def parse_angacc(angacc):
   """
@@ -93,14 +95,38 @@ def parse_angacc(angacc):
   tuple
     Components of the angular acceptance.
   """
+<<<<<<< HEAD
   pattern = r'\A(yearly|run2|run2a|run2b|corrected)(Odd|pT)?\Z'
+=======
+  # Define the pattern we use to regex-parse the time acceptance wildcard
+  pattern = [
+    r"(yearly|run2a|run2b|run2)",
+    # whether to use oddWeight or not
+    r"(Odd)?",
+  ]
+  pattern = rf"\A{''.join(pattern)}\Z"
+>>>>>>> 26a58f6cf60f707f8692b0c8f477562014ff5e9f
   p = re.compile(pattern)
+  # print(pattern)
   try:
     acc, oddity = p.search(angacc).groups()
+<<<<<<< HEAD
     return acc, oddity
+=======
+    oddity = True if oddity=='Odd' else False
+    ans = {
+      "acc": acc,
+      "use_oddWeight": oddity
+    }
+    return ans
+>>>>>>> 26a58f6cf60f707f8692b0c8f477562014ff5e9f
   except:
     raise ValueError(f'Cannot interpret {angacc} as a angacc modifier')
 
+# }}}
+
+
+# Parse physics parameters wildcard (aka fit) {{{
 
 def physpar_guesser(physics):
   # Check if the tuple will be modified
@@ -112,6 +138,10 @@ def physpar_guesser(physics):
   except:
     raise ValueError(f'Cannot interpret {timeacc} as a timeacc modifier')
 
+# }}}
+
+
+# Parse version wildcard (aka version) {{{
 
 def version_guesser(version):
   """
@@ -152,6 +182,8 @@ def version_guesser(version):
       raise ValueError(f'Cannot interpret {mod} as a version modifier')
   else:
     return v, int(100), None, None, None, None, None
+
+# }}}
 
 # }}}
 
