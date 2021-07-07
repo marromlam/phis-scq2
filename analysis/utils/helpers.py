@@ -58,6 +58,8 @@ def timeacc_guesser(timeacc):
     r"(Noncorr)?",
     # whether to use oddWeight or not
     r"(Odd)?",
+    # wether to create a pT weight or not
+    r"(pT)?",
     # whether to impose flat condition at upper decay times
     r"(Flatend)?",
     # custom variable cuts for lifetime test
@@ -67,13 +69,13 @@ def timeacc_guesser(timeacc):
   ]
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
-  # print(pattern)
   try:
-    acc, nknots, corr, oddW, flat, cuts, swap = p.search(timeacc).groups()
+    acc, nknots, corr, oddW, pTW, flat, cuts, swap = p.search(timeacc).groups()
     ans = {
       "acc": acc,
       "nknots": int(nknots) if nknots else 3,
       "use_oddWeight": True if oddW=='Odd' else False,
+      "use_pTWeight": True if pTW=='pT' else False,
       "corr": False if corr=='Noncorr' else True,
       "use_flatend": True if flat=='Flatend' else False,
       "swap": swap if swap else False,
@@ -104,19 +106,20 @@ def parse_angacc(angacc):
   """
   # Define the pattern we use to regex-parse the time acceptance wildcard
   pattern = [
-    r"(yearly|run2a|run2b|run2)",
+    r"(naive|corrected|analytic|yearly|run2a|run2b|run2)",
     # whether to use oddWeight or not
     r"(Odd)?",
+    # create a pT weight
+    r"(pT)?",
   ]
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
-  # print(pattern)
   try:
-    acc, oddity = p.search(angacc).groups()
-    oddity = True if oddity=='Odd' else False
+    acc, oddity, ptW = p.search(angacc).groups()
     ans = {
       "acc": acc,
-      "use_oddWeight": oddity
+      "use_oddWeight": True if oddity=='Odd' else False,
+      "use_pTWeight": True if ptW=='pT' else False
     }
     return ans
   except:
@@ -553,7 +556,6 @@ def angaccs(wcs, version=False, year=False, mode=False, timeacc=False,
     trigger = f"{wcs.trigger}"
   if not mode:
     mode = f"{wcs.mode}"
-
   # select mode
   if angacc.startswith('naive') or angacc.startswith('corrected'):
     # loop over years and return list of time acceptances

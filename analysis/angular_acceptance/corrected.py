@@ -21,9 +21,10 @@ from ipanema import ristra, Sample, Parameters
 initialize(os.environ['IPANEMA_BACKEND'],1)
 
 # import some phis-scq utils
-from utils.helpers import version_guesser, trigger_scissors
+from utils.helpers import version_guesser, trigger_scissors, parse_angacc
 from utils.strings import printsec
 from utils.plot import mode_tex
+from iterative_mc import acceptance_effect
 
 import config
 # binned variables
@@ -66,6 +67,7 @@ if __name__ == '__main__':
   p.add_argument('--mode', help='Mode to compute angular acceptance with')
   p.add_argument('--year', help='Year to compute angular acceptance with')
   p.add_argument('--version', help='Version of the tuples')
+  p.add_argument('--angacc', help='corrected only or with acceptance effects')
   p.add_argument('--trigger', help='Trigger to compute angular acceptance with')
   args = vars(p.parse_args())
 
@@ -73,7 +75,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-
+  ANGACC, ODDW = parse_angacc(args['angacc'])
   # Prepare the cuts
   if EVT in ('evtOdd', 'evtEven'):
     time = 'gentime'
@@ -112,22 +114,37 @@ if __name__ == '__main__':
   # if not using bkgcat==60, then don't use sWeight
   weight_rd = 'sw'
   weight_mc = 'polWeight*sw'
-  if "bkgcat60" in args['version']:
-    weight_mc = 'polWeight'
 
   # if mode is from Bs family, then use gb_weights
   if 'Bs2Jpsi' in MODE:
     weight_mc += '/gb_weights'
     if 'evt' in args['version']:
-      weight_rd = f'kinWeight*oddWeight*{weight_rd}/gb_weights'
-      reco[3] = 'gentime'  # use gentime, since no time_resolution will be used
+      weight_rd = f'{weight_rd}/gb_weights'
+  if "bkgcat60" in args['version']:
+    weight_mc = 'polWeight'
+    weight_rd = 'time/time'
+  if ODDW=='Odd':
+    weight_rd = f'{weight_rd}*oddWeight'
+  if ODDW=='pT':
+    pTp = np.array(rd.df['pTHp'])
+    pTm = np.array(rd.df['pTHm'])
+    pT_acc = np.ones_like(rd.df['pTHp'])
+    for k in range(len(pT_acc)):
+      pT_acc[k] = acceptance_effect(pTp[k], 250**3)
+      pT_acc[k] *= acceptance_effect(pTm[k], 250**3)
+    rd.df['pT_acc'] = pT_acc
+    weight_rd = f'{weight_rd}*pT_acc'
 
   print(f"Using weight = {weight_mc} for MC")
   print(f"Using weight = {weight_rd} for data")
 
   # Allocate some arrays with the needed branches
-  mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
-  mc.allocate(true=true+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
+  if 'Bs2Jpsi' in MODE:
+    mc.allocate(reco=reco+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
+    mc.allocate(true=true+['mHH', '0*mHH', 'genidB', 'genidB', '0*mHH', '0*mHH'])
+  elif 'Bd2JpsiKstar' in MODE:
+    mc.allocate(reco=reco+['mHH', '0*mHH', 'idB', 'idB', '0*mHH', '0*mHH'])
+    mc.allocate(true=true+['mHH', '0*mHH', 'idB', 'idB', '0*mHH', '0*mHH'])
   mc.allocate(pdf='0*time')
   mc.allocate(weight=weight_mc)
 
@@ -162,8 +179,12 @@ if __name__ == '__main__':
   # Compute angWeights correcting with kinematic weights {{{
   #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
-
-  angacc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco,
+  if 'Bs2Jpsi' in MODE:
+    angacc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco,
+                                     mc.weight*ristra.allocate(angWeight),
+                                     **mc.params.valuesdict())
+  elif 'Bd2JpsiKstar' in MODE:
+    angacc = badjanak.get_angular_acceptance_weights_Bd(mc.true, mc.reco,
                                      mc.weight*ristra.allocate(angWeight),
                                      **mc.params.valuesdict())
   w, uw, cov, corr = angacc

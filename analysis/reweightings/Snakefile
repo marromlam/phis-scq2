@@ -228,8 +228,12 @@ rule reweighting_wisely:
     bdconfig = settings.timeacc['bdtconfig']
 
     # TODO: move this string to config.json at some point
+<<<<<<< HEAD
     WEIRD_ONES = 'log_B_IPCHI2_mva B_DTF_CHI2NDOF'
     # WEIRD_ONES = config.general['oddWeight']
+=======
+    WEIRD_ONES = 'log_B_IPCHI2_mva B_DTF_CHI2NDOF hplus_TRACK_CHI2NDOF hplus_PIDK hminus_TRACK_CHI2NDOF muplus_TRACK_CHI2NDOF muminus_TRACK_CHI2NDOF max_K_TRCHI2_mva max_mu_TRCHI2_mva'
+>>>>>>> f21c6ee739ec2d48508f8433456c915aef28e2c1
 
     year = f'{wildcards.year}'
     mode = f'{wildcards.mode}'
@@ -246,7 +250,7 @@ rule reweighting_wisely:
       --original-file {input.original}\
       --original-treename DecayTree\
       --original-vars "{WEIRD_ONES}" \
-      --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
+      --original-weight "(sw/gb_weights)*polWeight"\
       --target-file {input.target}\
       --target-treename DecayTree\
       --target-vars "{WEIRD_ONES}"\
