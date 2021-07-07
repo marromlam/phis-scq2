@@ -1,6 +1,71 @@
 # LIFETIME
 #
-#
+#   Description:
+# 
+#        Author: Marcos Romero Lamas (mromerol@cern.ch)
+
+
+# Single lifetime {{{
+#     Two lifetime rules for single time acceptances are required. Mesons which
+#     do not oscillate (or we assume they almost don't) followe the single_Bx
+#     rule for lifetime. The Bs meson, which does oscillate needs to be 
+#     disentangled, hence it follows single_Bx_disentangle rule.
+
+rule lifetime_single_Bx:
+  resources:
+    mem_mb=4096,
+  wildcard_constraints:
+    timeacc = "single.*",
+    mode = "(Bu2JpsiKplus|Bd2JpsiKstar)"
+  input:
+    sample = lambda wcs: [tuples(wcs)],
+    biased = lambda wcs: expand('output/params/time_acceptance/{year}/{mode}/{version}_{{timeacc}}_biased.json',
+                                year=YEARS[f'{wcs.year}'], version=f'{wcs.version}',
+                                mode = f"MC_{wcs.mode}_dG0" if "Bs" in f"{wcs.mode}" else f"MC_{wcs.mode}"),
+    unbiased = lambda wcs: expand('output/params/time_acceptance/{year}/{mode}/{version}_{{timeacc}}_unbiased.json',
+                                  year=YEARS[f'{wcs.year}'], version=f'{wcs.version}',
+                                  mode = f"MC_{wcs.mode}_dG0" if "Bs" in f"{wcs.mode}" else f"MC_{wcs.mode}"),
+  output:
+    params = 'output/params/lifetime/{year}/{mode}/{version}_life{timeacc}_{trigger}.json',
+  log:
+    'output/log/lifetime_single/{year}/{mode}/{version}_life{timeacc}_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python analysis/time_acceptance/lifetime_single.py\
+    --sample {",".join(input.sample)}\
+    --biased-params {",".join(input.biased)}\
+    --unbiased-params {",".join(input.unbiased)}\
+    --output-params {output.params}\
+    --year {",".join(YEARS[f'{wildcards.year}'])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    --trigger {wildcards.trigger}\
+    ) &> {log}""")
+    send_mail(f"Lifetime Bd fit :: {wildcards}", f"{log}")
+
+
+
+rule lifetime_single_Bx_disentangle:
+  resources:
+    mem_mb=4096,
+  wildcard_constraints:
+    timeacc = "single.*",
+    mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
+  input:
+    "output/params/physics_params/{year}/{mode}/{version}_yearly_yearly_vgc_amsrd_{timeacc}_amsrd_{trigger}.json"
+  output:
+    params = 'output/params/lifetime/{year}/{mode}/{version}_life{timeacc}_{trigger}.json',
+  run:
+    from ipanema import Parameters
+    in_pars = Parameters.load(f"{input}")
+    out_pars = Parameters()
+    print(in_pars['Gd'], in_pars['DGsd'])
+    gamma = in_pars['Gd'] + in_pars['DGsd']
+    out_pars.add({"name":"gamma", "value":gamma.n, "stdev":gamma.s})
+    out_pars.dump(f"{output}")
+
+# }}}
 
 
 # Lifetime trend plot {{{
