@@ -13,5 +13,7 @@
   "randomize_angacc": false,
   "randomize_flavor": false,
   "velo_effmodel": "francesca",
-  "velo_massmodel": "cb"
+  "velo_massmodel": "cb",
+  "minimizer": "minuit",
+  "contour": 0
 }
