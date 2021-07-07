@@ -63,8 +63,8 @@ if __name__ == '__main__':
 
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
-  TRIGGER = args['trigger']
   MODE = 'Bs2JpsiPhi'
+  TRIGGER = args['trigger']
   TIMEACC = timeacc_guesser(args['timeacc'])
   MINER = args['minimizer']
 

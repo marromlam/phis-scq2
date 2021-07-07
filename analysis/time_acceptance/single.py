@@ -58,24 +58,27 @@ if __name__ == '__main__':
   p.add_argument('--trigger', help='Trigger to fit')
   p.add_argument('--timeacc', help='Different flag to ... ')
   p.add_argument('--contour', help='Different flag to ... ')
+  p.add_argument('--minimizer', default='minuit', help='Different flag to ... ')
   args = vars(p.parse_args())
+
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, NKNOTS, CORRECT, ODDW, FLAT, LIFECUT, SWAP = timeacc_guesser(args['timeacc'])
+  TIMEACC = timeacc_guesser(args['timeacc'])
+  MINER = args['minimizer']
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  if EVT in ('evtOdd', 'evtEven'):
+  if TIMEACC['use_oddWeight']:
     time = 'gentime'
   else:
     time = 'time'
   CUT = f'{time}>={tLL} & {time}<={tUL}'
-  CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
+  CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
 
   # Print settings
   print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
@@ -90,7 +93,7 @@ if __name__ == '__main__':
   oparams = args['params'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(NKNOTS)]
+  knots = all_knots[str(TIMEACC['nknots'])]
   sWeight = "sw"
 
 
@@ -103,59 +106,62 @@ if __name__ == '__main__':
   for i, m in enumerate([MODE]):
     # Correctly apply weight and name for diffent samples
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
+      # MC_Bs2JpsiPhi {{{
       m = 'MC_Bs2JpsiPhi'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
         weight = f'dg0Weight*{sWeight}/gb_weights'
       # apply  dG0Weight if evtOdd in filename
-      if EVT in ('evtEven', 'evtOdd'):
-        weight = weight.replace('pdfWeight', 'dg0Weight')
-      #apply oddweight if flag is true
-      if ODDW == 'Odd':
-        weight = f'{weight}*oddWeight'
+      if TIMEACC['use_oddWeight']:
+        weight = f"oddWeight*{weight}"
       #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
       mode = 'signalMC'; c = 'a'
+    # }}}
     elif 'MC_Bs2JpsiPhi_dG0' in m:
       m = 'MC_Bs2JpsiPhi_dG0'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
       else:
         weight = f'{sWeight}/gb_weights'
-      if EVT in ('evtEven', 'evtOdd'):
-        weight = f'{weight}*polWeight'
-      # apply oddWeight if Flag is True
-      if ODDW=='Odd':
-        weight = f'{weight}*oddWeight'
-      #Cut in bkgcat implies not to use sw/gb_weights
+      # apply  dG0Weight if evtOdd in filename
+      if TIMEACC['use_oddWeight']:
+        weight = f"oddWeight*{weight}"
+      #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
       mode = 'signalMC'; c = 'a'
     elif 'MC_Bd2JpsiKstar' in m:
       m = 'MC_Bd2JpsiKstar'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
-      # apply oddWeight if flag is true 
-      if ODDW=='Odd':
-        weight = f'{weight}*oddWeight'
+      # apply  dG0Weight if evtOdd in filename
+      if TIMEACC['use_oddWeight']:
+        weight = f"oddWeight*{weight}"
+      #cut in bkgcat implies not to use sw/gb_weights
+      if "bkgcat60" in args['version']:
+        weight = weight.replace(f'{sWeight}', 'time/time')
       mode = 'controlMC'; c = 'b'
     elif 'MC_Bu2JpsiKplus' in m:
       m = 'MC_Bu2JpsiKplus'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
-      # apply oddWeight if flag is true 
-      if ODDW=='Odd':
-        weight = f'{weight}*oddWeight'
+      # apply  dG0Weight if evtOdd in filename
+      if TIMEACC['use_oddWeight']:
+        weight = f"oddWeight*{weight}"
+      #cut in bkgcat implies not to use sw/gb_weights
+      if "bkgcat60" in args['version']:
+        weight = weight.replace(f'{sWeight}', 'time/time')
       mode = 'controlMC'; c = 'b'
     elif 'Bd2JpsiKstar' in m:
       m = 'Bd2JpsiKstar'
-      if CORRECT:
+      if TIMEACC['corr']:
         weight = f'kinWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
@@ -164,7 +170,7 @@ if __name__ == '__main__':
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    if ODDW=='pT':
+    if TIMEACC['use_pTWeight']=='pT':
       pTp = np.array(cats[mode].df['pTHp'])
       pTm = np.array(cats[mode].df['pTHm'])
       pT_acc = np.ones_like(cats[mode].df['pTHp'])
@@ -232,7 +238,7 @@ if __name__ == '__main__':
       'weight': cats[mode].weight
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
-  result = mini.optimize(method="minuit", verbose=False, timeit=True, tol=0.05)
+  result = mini.optimize(method=MINER, verbose=False, timeit=True, tol=0.05)
   print(result)
 
   # }}}
