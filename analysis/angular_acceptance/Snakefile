@@ -1,12 +1,29 @@
 # ANGULAR ACCEPTANCE
 #
+#   Description: Contains all angular acceptance-related rules. phis-scq has
+#                two big groups of rules, those based in iterative procedure
+#                and the others :). The iterative ones always depend in one of
+#                the previously-computed (non-iterative) rules. The naive method
+#                uses only sWeights, the corrected one matches RD and MC distros
+#                and the analytic one computes the angular accepntace fitting a
+#                set of Legendre polynomials to the angular efficiency histogram
+#                of the MC/pdf. The iterative-based ones, are asked by their 
+#                involved samples they run on: yearly does it in oly one year,
+#                run2a in 15+16, run2b in 17+18 and run2 in all years.
+#                The angular acceptance wildcard is quite easy to understand
+#                and is now briefly described:
+#                * naive/analytic/corrected/yearly/run2a/run2b/run2: The desired
+#                      kind of angular acceptance. 
+#                * Odd?: Whether to use oddWeights or not. This one only applies
+#                      to rules using the @evtEven/@evtOdd version flag. It is
+#                      meant to use with MC checks.
 #
+#        Author: Marcos Romero Lamas (mromerol@cern.ch)
+#                Ramón Ángel Ruiz Fernández (rruizfer@cern.ch)
 
 
 # Naive angular acceptance - no corrections (only sWeight and polWeight) {{{
-#     Here we have 2 rules to compute angular acceptance without correcting
-#     MC samples. First rule computes angular acceptance for MC, and second one
-#     merges MC results to compute RD angular acceptance
+#    Compute angular acceptance without correcting MC samples. 
 
 rule angular_acceptance_naive:
   resources:
@@ -42,7 +59,7 @@ rule angular_acceptance_naive:
 # Plotting parameters {{{ 
 #    of angular acceptance in each iteration 
 
-rule angular_acceptance_plot_parameters:
+rule angular_acceptance_iterative_plot_parameters:
   resources:
     mem_mb = 4096
   input:
@@ -1533,6 +1550,38 @@ rule angular_efficiency_time_dependence:
            --nknots {wildcards.nknots}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Time Dependence ::{wildcards}", f"{log}", [f"{output}"])
+
+# }}}
+
+
+# Tables for angular acceptance {{{
+#    Packs angulat acceptance to the note
+
+rule angular_acceptance_tabular:
+  resources:
+    mem_mb=1048
+  input:
+    biased = lambda wcs: angaccs(wcs, trigger='biased'),
+    unbiased = lambda wcs: angaccs(wcs, trigger='unbiased')
+  output:
+    'output/tables/angular_acceptance/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.tex',
+  log:
+    'output/log/angular_acceptance_tabular/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
+  run:
+    shell(f"""(time\
+    python packandgo/acceptance_tables.py\
+    --biased {",".join(input.biased)}\
+    --unbiased {",".join(input.unbiased)}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --year {",".join(YEARS[f"{wildcards.year}"])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    --angacc {wildcards.angacc}\
+    ) &> {log}""")
+    if NOTE:
+      notepath = f"{output}".replace('output', NOTE)
+      shell(f"cp {output} {notepath}")
 
 # }}}
 
