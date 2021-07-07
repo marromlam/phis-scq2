@@ -1,64 +1,3 @@
-# Decay-time acceptance  {{{
-#    Packs time acceptance to the note
-
-rule pack_time_acceptance:
-  wildcard_constraints:
-    timeacc = 'simul.*'
-  resources:
-    mem_mb=1048
-  input:
-    biased = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_{{timeacc}}_biased.json', year=YEARS[f'{wcs.year}']),
-    unbiased = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_{{timeacc}}_unbiased.json', year=YEARS[f'{wcs.year}'])
-  output:
-    'output/tables/time_acceptance/{year}/{mode}/{version}_{timeacc}.tex',
-  log:
-    'output/log/pack_time_acceptance/{year}/{mode}/{version}_{timeacc}.log'
-  run:
-    shell(f"""(time\
-    python packandgo/acceptance_tables.py\
-    --biased {",".join(input.biased)}\
-    --unbiased {",".join(input.unbiased)}\
-    --output {output}\
-    --mode {wildcards.mode}\
-    --year {",".join(YEARS[f"{wildcards.year}"])}\
-    --version {wildcards.version}\
-    --timeacc {wildcards.timeacc}\
-    ) &> {log}""")
-    if NOTE:
-      shell(f"cp {output} {f'{output}'.replace('output', NOTE)}")
-
-# }}}
-
-
-# Angular acceptance {{{
-#    Packs angulat acceptance to the note
-
-rule pack_angular_acceptance:
-  resources:
-    mem_mb=1048
-  input:
-    biased = lambda wcs: expand('output/params/angular_acceptance/{year}/{{mode}}/{{version}}_{{angacc}}_{{timeacc}}_biased.json', year=YEARS[f'{wcs.year}']),
-    unbiased = lambda wcs: expand('output/params/angular_acceptance/{year}/{{mode}}/{{version}}_{{angacc}}_{{timeacc}}_unbiased.json', year=YEARS[f'{wcs.year}'])
-  output:
-    'output/packandgo/tables/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}.tex',
-  log:
-    'output/log/pack_angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}.log'
-  run:
-    shell(f"""(time\
-    python packandgo/acceptance_tables.py\
-           --biased {",".join(input.biased)}\
-           --unbiased {",".join(input.unbiased)}\
-           --output {output}\
-           --mode {wildcards.mode}\
-           --year {",".join(YEARS[f"{wildcards.year}"])}\
-           --version {wildcards.version}\
-           --timeacc {wildcards.timeacc}\
-           --angacc {wildcards.angacc}\
-    ) &> {log}""")
-    if NOTE:
-      shell(f"cp {output} {NOTE}/tables/angular_acceptance/{wildcards.year}/{wildcards.mode}/{wildcards.version}_{wildcards.angacc}_{wildcards.timeacc}.tex")
-
-# }}}
 
 
 # Physics paramters {{{
@@ -67,51 +6,59 @@ rule pack_angular_acceptance:
 # ruleorder: pack_physics_params_1on1 > pack_physics_params_yearly
 # ruleorder: pack_physics_params_yearly > pack_physics_params_1on1
 #
-# rule pack_physics_params_1on1:
-#   wildcard_constraints:
-#     timeacc = 'simul.*'
-#   resources:
-#     mem_mb=1048
-#   input:
-#     lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{timeacc}.json',
-#                        year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
-#     lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json'),
-#     lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
-#                        dyear=config['year'], dfit=config['fit'], dangacc=config['angacc'], dtimeacc=config['timeacc'])
-#   output:
-#     'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.tex',
-#   log:
-#     'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.log'
-#   run:
-#     import hjson
-#     import numpy as np
-#     import os
-#     # print(input)
-#     dlls = {}
-#     dlls[1] = {}
-#     dlls[1][0] = np.load(input[-1]).tolist()[:-1]
-#
-#     with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
-#       hjson.dump(dlls, fp)
-#
-#     # print(dlls)
-#     shell(f"""(time\
-#     python packandgo/physics_tables.py\
-#     --params {",".join(input[:-1])}\
-#     --output {output}\
-#     --mode {wildcards.mode}\
-#     --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
-#     --version {wildcards.version}\
-#     --timeacc {wildcards.timeacc}\
-#     --angacc {wildcards.angacc}\
-#     ) &> {log}""")
-#     os.remove( f'{output}'.replace('.tex','.json') )
-#
-#     if NOTE:
-#       shell(f"cp {output} {NOTE}/tables/physics_params/{wildcards.year}/{wildcards.mode}/{wildcards.version}_{wildcards.fit}_{wildcards.angacc}_{wildcards.timeacc}.tex")
+
+# Compare any two different parameter sets {{{
+
+rule pack_physics_params_1on1:
+  wildcard_constraints:
+    timeacc = 'simul.*'
+  resources:
+    mem_mb=1048
+  input:
+    lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{timeacc}.json',
+                       year=config['year'], fit=config['fit'], angacc=config['angacc'], timeacc=config['timeacc']),
+    lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.json'),
+    lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dtimeacc}__vs__{{year}}_{{version}}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
+                       dyear=config['year'], dfit=config['fit'], dangacc=config['angacc'], dtimeacc=config['timeacc'])
+  output:
+    'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.tex',
+  log:
+    'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{timeacc}.log'
+  run:
+    import hjson
+    import numpy as np
+    import os
+    # print(input)
+    dlls = {}
+    dlls[1] = {}
+    dlls[1][0] = np.load(input[-1]).tolist()[:-1]
+
+    with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
+      hjson.dump(dlls, fp)
+
+    # print(dlls)
+    shell(f"""(time\
+    python packandgo/physics_tables.py\
+    --params {",".join(input[:-1])}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    --angacc {wildcards.angacc}\
+    ) &> {log}""")
+    os.remove( f'{output}'.replace('.tex','.json') )
+
+    if NOTE:
+      notepath = f"{output}".replace('output', NOTE)
+      shell(f"cp {output} {notepath}")
+
+# }}}
 
 
-rule pack_physics_params_magnet:
+# Magnet table {{{
+
+rule physics_params_tabular_magnet:
   wildcard_constraints:
     timeacc = 'simul.*'
   resources:
@@ -123,7 +70,7 @@ rule pack_physics_params_magnet:
                        dfit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown'],
                        pfit=[f'{wcs.fit}', f'{wcs.fit}magUp', f'{wcs.fit}magDown'])
   output:
-    'output/packandgo/tables/physics_params/{year}/{mode}/{version}_{fit}magnet_{angacc}_{timeacc}.tex',
+    'output/tables/physics_params/{year}/{mode}/{version}_{fit}magnet_{angacc}_{timeacc}.tex',
   log:
     'output/log/pack_physics_params/{year}/{mode}/{version}_{fit}magnet_{angacc}_{timeacc}.log'
   run:
@@ -146,22 +93,26 @@ rule pack_physics_params_magnet:
     print(dlls)
     shell(f"""(time\
     python packandgo/physics_tables.py\
-           --params {",".join(input[:-1])}\
-           --output {output}\
-           --mode {wildcards.mode}\
-           --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
-           --version {wildcards.version}\
-           --timeacc {wildcards.timeacc}\
-           --angacc {wildcards.angacc}\
+    --params {",".join(input[:-1])}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    --angacc {wildcards.angacc}\
     ) &> {log}""")
     os.remove( f'{output}'.replace('.tex','.json') )
 
     if NOTE:
-      shell(f"cp {output} {NOTE}/tables/physics_params/{wildcards.year}/{wildcards.mode}/{wildcards.version}_{wildcards.fit}_{wildcards.angacc}_{wildcards.timeacc}.tex")
+      notepath = f"{output}".replace('output', NOTE)
+      shell(f"cp {output} {notepath}")
+
+# }}}
 
 
+# Table comparing each year wrt full dataset {{{
 
-rule pack_physics_params_yearly:
+rule physics_params_tabular_yearly:
   wildcard_constraints:
     fit = 'yearly.*',
     #angacc = 'yearly.*',
@@ -186,7 +137,7 @@ rule pack_physics_params_yearly:
                             pyear=YEARS['run2'], pfit=f'{wcs.fit}', pangacc=f'{wcs.angacc}', pcsp=config['csp'], pflavor=config['flavor'], ptimeacc=f'{wcs.timeacc}', ptimeres=f'{wcs.timeres}', ptrigger=f'{wcs.trigger}',
                             dyear=YEARS['run2'], dfit=f'{wcs.fit}', dangacc=f'{wcs.angacc}', dcsp=config['csp'], dflavor=config['flavor'], dtimeacc=f'{wcs.timeacc}', dtimeres=f'{wcs.timeres}', dtrigger=f'{wcs.trigger}'),
   output:
-    'output/packandgo/tables/physics_params/run2/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.tex',
+    'output/tables/physics_params/run2/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.tex',
   log:
     'output/log/pack_physics_params/run2/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
   run:
@@ -226,11 +177,15 @@ rule pack_physics_params_yearly:
     ) &> {log}""")
     os.remove( f'{output}'.replace('.tex','.json') )
     if NOTE:
-      shell(f"cp {output} {NOTE}/tables/physics_params/run2/{wildcards.mode}/{wildcards.version}_{wildcards.timeacc}.tex")
+      notepath = f"{output}".replace('output', NOTE)
+      shell(f"cp {output} {notepath}")
+
+# }}}
 
 
+# Pack pTB, sigmat or etaB table {{{
 
-rule pack_physics_params_binned:
+rule physics_params_tabular_binned_variables:
   resources:
     mem_mb=1048
   wildcard_constraints:
@@ -245,7 +200,7 @@ rule pack_physics_params_binned:
                             pbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4],
                             dbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4])
   output:
-    'output/packandgo/tables/physics_params/{year}/{mode}/{version}@{var}_{fit}_{angacc}_{timeacc}.tex',
+    'output/tables/physics_params/{year}/{mode}/{version}@{var}_{fit}_{angacc}_{timeacc}.tex',
   log:
     'output/log/pack_physics_params/{year}/{mode}/{version}@{var}_{fit}_{angacc}_{timeacc}.log'
   run:
@@ -285,11 +240,12 @@ rule pack_physics_params_binned:
     ) &> {log}""")
     os.remove( f'{output}'.replace('.tex','.json') )
     if NOTE:
-      shell(f"cp {output} {NOTE}/tables/physics_params/{wildcards.year}/{wildcards.mode}/{wildcards.version}_{wildcards.timeacc}.tex")
+      notepath = f"{output}".replace('output', NOTE)
+      shell(f"cp {output} {notepath}")
 
 # }}}
 
-
+# }}}
 
 
 # vim:foldmethod=marker
