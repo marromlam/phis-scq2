@@ -522,6 +522,8 @@ def timeaccs(wcs, version=False, year=False, mode=False, timeacc=False, trigger=
         m = 'MC_Bs2JpsiPhi'
       else:
         m = 'MC_Bs2JpsiPhi_dG0'
+  else:
+    m = mode
 
   # loop over years and return list of time acceptances
   ans = []
