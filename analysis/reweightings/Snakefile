@@ -229,6 +229,7 @@ rule reweighting_wisely:
 
     # TODO: move this string to config.json at some point
     WEIRD_ONES = 'log_B_IPCHI2_mva B_DTF_CHI2NDOF'
+    # WEIRD_ONES = config.general['oddWeight']
 
     year = f'{wildcards.year}'
     mode = f'{wildcards.mode}'
@@ -286,7 +287,7 @@ rule reweighting_kinematic_Bu:
   wildcard_constraints:
     mode = "(MC_)?Bd2JpsiKstar"
   input:
-    original = lambda wcs: tuples(wcs,weight='pdfWeight'),
+    original = lambda wcs: tuples(wcs, weight='pdfWeight'),
     target = lambda wcs: tuples(wcs,
       mode='Bu2JpsiKplus' if f'{wcs.mode}'=='Bd2JpsiKstar' else 'Bd2JpsiKstar',
       weight='kbuWeight'),
