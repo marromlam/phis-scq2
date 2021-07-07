@@ -26,9 +26,12 @@ rule physics_params_data_Bs:
   log:
     'output/log/physics_params_data/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
   run:
+    # WARNING: maybe this needs to be understood
+    samples = input.samples
+    samples = [samples] if isinstance(samples,str) else samples
     shell(f"""(time\
     python analysis/angular_fit/fit_data.py\
-    --samples {",".join([input.samples])}\
+    --samples {",".join(samples)}\
     --angacc-biased {",".join(input.angacc_biased)}\
     --angacc-unbiased {",".join(input.angacc_unbiased)}\
     --timeacc-biased {",".join(input.timeacc_biased)}\
@@ -107,9 +110,11 @@ rule physics_params_data_Bs_dll:
   log:
     'tmp/dlls/{mode}/{dyear}_{dversion}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.log'
   run:
+    samples = input.samples
+    samples = [samples] if isinstance(samples,str) else samples
     shell(f"""(time\
     python analysis/angular_fit/fit_data_agreement.py\
-    --samples {",".join(input.samples)}\
+    --samples {",".join(samples)}\
     --angacc-biased {",".join(input.bangacc)}\
     --angacc-unbiased {",".join(input.uangacc)}\
     --timeacc-biased {",".join(input.btimeacc)}\
