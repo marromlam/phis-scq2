@@ -276,12 +276,18 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
   # }}}
 
   # Try to extract mode from wcs then from mode arg {{{
-
-  try:
-    m = f'{wcs.mode}'
-  except:
-    m = 'none'
-
+  if not mode:
+    try:
+      m = f'{wcs.mode}'
+    except:
+      m = 'none'
+  elif mode in ('data', 'cdata'):
+    try:
+      m = f'{wcs.mode}'
+    except:
+      m = 'none'
+  else:
+    m = mode
   # }}}
 
   # Check modifiers for mode {{{
@@ -298,6 +304,12 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
             m = m[:-4]
           elif m.endswith('_Swave'):
             m = m[:-8] + 'Phi'
+        elif m == 'Bs2JpsiPhi':
+          m = 'Bd2JpsiKstar'
+        elif m == 'Bd2JpsiKstar':
+          m = 'Bs2JpsiPhi'
+        elif m == 'Bu2JpsiKplus':
+          m = 'Bs2JpsiPhi'
     elif "evtOdd" in v:
       if mode == 'data':
         if m.startswith('MC_'):
@@ -310,6 +322,12 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
             m = m[:-4]
           elif m.endswith('_Swave'):
             m = m[:-8] + 'Phi'
+        elif m == 'Bs2JpsiPhi':
+          m = 'Bd2JpsiKstar'
+        elif m == 'Bd2JpsiKstar':
+          m = 'Bs2JpsiPhi'
+        elif m == 'Bu2JpsiKplus':
+          m = 'Bs2JpsiPhi'
     else:
       if mode == 'data':
         if m.startswith('MC_'):
@@ -335,7 +353,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         m = mode
 
   # }}}
-
+  # print("wcs.mode, m, mode = ", f"{wcs.mode}", m, mode)
   # Model handler when asking for weights {{{
   __weight = weight
   if weight:
@@ -351,9 +369,9 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
     # }}}
     # Bd2JpsiKstar {{{
     elif m == 'Bd2JpsiKstar':
-      if weight == 'oddWeight':
-        weight = 'kbuWeight'
-      elif weight not in ('sWeight', vw8s, 'kbuWeight', 'kinWeight'):
+      # if weight == 'oddWeight':
+      #   weight = 'kbuWeight'
+      if weight not in ('sWeight', vw8s, 'kbuWeight', 'kinWeight'):
         weight = vw8s
     # }}}
     # MC_Bu2JpsiKplus {{{
@@ -385,7 +403,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
     # MC_Bs2JpsiKK_Swave {{{
     elif m == 'MC_Bs2JpsiKK_Swave':
       if weight == 'kbuWeight':
-        weight = 'polWeight'
+        weight = 'pdfWeight'
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
@@ -403,7 +421,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
                           'oddWeight', 'kinWeight', 'angWeight', 'kkpWeight'):
         weight = 'polWeight'
     # }}}
-  # print("Weight was transformed {__weight}->{weight}")
+  # print(f"Weight was transformed {__weight}->{weight}")
   # }}}
 
   # Return list of tuples for YEARS[year] {{{
