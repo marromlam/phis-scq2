@@ -52,18 +52,19 @@ from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
 from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors, parse_angacc
 
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+import config
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 # reweighting config
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 from hep_ml import reweight
-bdconfig = hjson.load(open('config.json'))['angular_acceptance_bdtconfig']
-reweighter = reweight.GBReweighter(**bdconfig)
+reweighter = reweight.GBReweighter(**bdtconfig)
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
 def acceptance_effect(p, a):
@@ -194,17 +195,12 @@ def fcn_data(parameters, data):
   pars_dict = parameters.valuesdict(blind=False)
   chi2 = []
 
+
+
   for dy in data.values():
     for dt in dy.values():
-      if 'Bs2Jpsi' in MODE:
-        badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
-                    **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
-                    tLL=tLL, tUL=tUL, use_timeacc=2, use_timeres=0, set_tagging=0)
-      else:
-        badjanak.delta_gamma5_data_Bd(dt.data, dt.lkhd, **pars_dict,
-                                      **dt.angacc.valuesdict(),
-                                      tLL=tLL, tUL=tUL, use_timeacc=0, set_tagging=1, 
-                                      use_timeres=0)
+      badjanak_gamma5(dt.data, dt.lkhd, pars_dict, **dt.timeacc.valuesdict(),
+                      **dt.angacc.valuesdict())
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)
@@ -662,7 +658,19 @@ if __name__ == '__main__':
   YEARS = args['year'].split(',')
   global MODE 
   MODE = args['mode']
-  ANGACC, ODDW = parse_angacc(args['angacc'])
+  ANGACC = parse_angacc(args['angacc'])
+
+  if 'Bs2Jpsi' in MODE:
+    def badjanak_gamma5(data, lkhd, pars, **kwargs):
+      return badjanak.delta_gamma5_data(data, lkhd, **pars, **kwargs,
+                                        tLL=tLL, tUL=tUL, use_timeacc=2,
+                                        use_timeres=0, set_tagging=0)
+  else:
+    def badjanak_gamma5(data, lkhd, pars, **kwargs):
+      return badjanak.delta_gamma5_data_Bd(data, lkhd, **pars, **kwargs,
+                                           tLL=tLL, tUL=tUL, use_timeacc=0,
+                                           set_tagging=1, use_timeres=0)
+
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
@@ -701,8 +709,8 @@ if __name__ == '__main__':
   print(f"{'version':>15}: {VERSION:50}")
   print(f"{'year(s)':>15}: {args['year']:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'angacc':>15}: {ANGACC:50}")
-  print(f"{'bdtconfig':>15}: {':'.join(str(x) for x in bdconfig.values()):50}\n")
+  print(f"{'angacc':>15}: {ANGACC['acc']:50}")
+  print(f"{'bdtconfig':>15}: {':'.join(str(x) for x in bdtconfig.values()):50}\n")
 
   # }}}
 
@@ -733,10 +741,10 @@ if __name__ == '__main__':
   if "bkgcat60" in args['version']:
     weight_mc = 'time/time'
     weight_rd = 'time/time'
-  if ODDW == 'Odd':
-    weight_rd = f'{weight_rd}*oddWeight'
-  if ODDW == 'pT':
-    weight_rd = f'{weight_rd}*pT_acc'
+  if ANGACC['use_oddWeight']:
+    weight_rd = f'oddWeight*{weight_rd}'
+  if ANGACC['use_pTWeight']:
+    weight_rd = f'pTWeight*{weight_rd}'
   HAS_SWAVE = False
   if "Swave" in MODE:
     HAS_SWAVE = True
@@ -805,14 +813,14 @@ if __name__ == '__main__':
       badjanak.config['knots'] = np.array(data[y][t].knots).tolist()
       data[y][t].timeacc = Parameters.build(c, c.fetch('(a|b|c).*'))
       data[y][t].chop( trigger_scissors(t, CUT) )
-      if ODDW=='pT':
+      if ANGACC['use_pTWeight']:
         pTp = np.array(data[y][t].df['pTHp'])
         pTm = np.array(data[y][t].df['pTHm'])
         pT_acc = np.ones_like(data[y][t].df['pTHp'])
         for k in range(len(pT_acc)):
           pT_acc[k] = acceptance_effect(pTp[k], 250**3)
           pT_acc[k] *= acceptance_effect(pTm[k], 250**3)
-        data[y][t].df['pT_acc'] = pT_acc
+        data[y][t].df['pTWeight'] = pT_acc
         print(weight_rd)
       print(data[y][t])
 
@@ -926,7 +934,7 @@ if __name__ == '__main__':
     pars.add(dict(name="fPlon", value=0.5001, min=0.1, max=0.9,
               free=True, latex=r'f_0'))
     pars.add(dict(name="fPper", value=0.1601, min=0.1, max=0.9,
-              free=True, latex=r'f_{\perp}')) 
+              free=True, latex=r'f_{\perp}'))
     # P wave strong phases
     pars.add(dict(name="dPlon", value=0.000, min=-3.14, max=3.14,
               free=False, latex=r"\delta_0"))

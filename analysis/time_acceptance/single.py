@@ -65,6 +65,7 @@ if __name__ == '__main__':
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
+  print(args['timeacc'])
   TIMEACC = timeacc_guesser(args['timeacc'])
   MINER = args['minimizer']
 
@@ -73,7 +74,7 @@ if __name__ == '__main__':
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  if TIMEACC['use_oddWeight']:
+  if TIMEACC['use_truetime']:
     time = 'gentime'
   else:
     time = 'time'
@@ -85,7 +86,7 @@ if __name__ == '__main__':
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'contour':>15}: {args['contour']:50}\n")
 
   # List samples, params and tables

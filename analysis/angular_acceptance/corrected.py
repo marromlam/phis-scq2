@@ -75,9 +75,10 @@ if __name__ == '__main__':
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  ANGACC, ODDW = parse_angacc(args['angacc'])
+  ANGACC = parse_angacc(args['angacc'])
+
   # Prepare the cuts
-  if EVT in ('evtOdd', 'evtEven'):
+  if ANGACC['use_truetime']:
     time = 'gentime'
   else:
     time = 'time'
@@ -123,17 +124,17 @@ if __name__ == '__main__':
   if "bkgcat60" in args['version']:
     weight_mc = 'polWeight'
     weight_rd = 'time/time'
-  if ODDW=='Odd':
+  if ANGACC['use_oddWeight']:
     weight_rd = f'{weight_rd}*oddWeight'
-  if ODDW=='pT':
+  if ANGACC['use_pTWeight']:
     pTp = np.array(rd.df['pTHp'])
     pTm = np.array(rd.df['pTHm'])
     pT_acc = np.ones_like(rd.df['pTHp'])
     for k in range(len(pT_acc)):
       pT_acc[k] = acceptance_effect(pTp[k], 250**3)
       pT_acc[k] *= acceptance_effect(pTm[k], 250**3)
-    rd.df['pT_acc'] = pT_acc
-    weight_rd = f'{weight_rd}*pT_acc'
+    rd.df['pTWeight'] = pT_acc
+    weight_rd = f'{weight_rd}*pTWeight'
 
   print(f"Using weight = {weight_mc} for MC")
   print(f"Using weight = {weight_rd} for data")
