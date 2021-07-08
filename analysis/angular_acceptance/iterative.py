@@ -641,7 +641,7 @@ if __name__ == '__main__':
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEARS = args['year'].split(',') 
   MODE = 'Bs2JpsiPhi'
-  ANGACC, USE_ODDWEIGHT = parse_angacc(args['angacc'])
+  ANGACC = parse_angacc(args['angacc'])
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
@@ -683,7 +683,7 @@ if __name__ == '__main__':
   print(f"{'version':>15}: {VERSION:50}")
   print(f"{'year(s)':>15}: {args['year']:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'angacc':>15}: {ANGACC:50}")
+  print(f"{'angacc':>15}: {ANGACC['acc']:50}")
   print(f"{'bdtconfig':>15}: {':'.join(str(x) for x in bdtconfig.values()):50}\n")
 
 
