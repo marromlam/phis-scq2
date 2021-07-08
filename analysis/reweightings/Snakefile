@@ -408,6 +408,9 @@ rule reweightings_plot_angular_acceptance:
     --kkpweighted {output}\
     ) &> {log}""")
     send_mail(f"Reweighting plot AA :: {wildcards}", f"{output}")
+    if NOTE:
+      note_path = f"{output}".replace("output/figures", f"{NOTE}/figs")
+      shell(f"cp {output} {note_path}")
 
 
 rule reweightings_simon_comparisons:
