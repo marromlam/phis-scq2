@@ -157,7 +157,7 @@ def kkp_weighting_bins(original_v, original_w, target_v, target_w, path, y,m,t,i
   print(f" * GB-weighting {m}-{y}-{trigger} sample\n  {kkpWeight[:10]}")
 """
 
-def get_angular_acceptance(mc, kkpWeight=False):
+def get_angular_acceptance(mc, trigger, kkpWeight=False):
   """
   Compute angular acceptance
   """
@@ -179,10 +179,10 @@ def get_angular_acceptance(mc, kkpWeight=False):
   w, uw, cov, corr = ans
   mc.angaccs[i] = Parameters()
   for k in range(0,len(w)):
-    correl = {f'w{j}': corr[k][j]
+    correl = {f'w{j}{trigger}': corr[k][j]
               for j in range(0, len(w)) if k > 0 and j > 0}
-    mc.angaccs[i].add({'name': f'w{k}', 'value': w[k], 'stdev': uw[k],
-                       'free': False, 'latex': f'w_{k}', 'correl': correl})
+    mc.angaccs[i].add({'name': f'w{k}{trigger}', 'value': w[k], 'stdev': uw[k],
+                       'free': False, 'latex': f'w_{k}^{trigger}', 'correl': correl})
   #print(f"{  np.array(mc.angular_weights[t])}")
 
 
@@ -397,7 +397,7 @@ def do_angular_weights(verbose):
         path_to_weights = v.path_to_weights.replace('.root',f'_{t}.npy')
         v.kkpWeight[i] = np.load(path_to_weights)
         os.remove(path_to_weights)
-        get_angular_acceptance(v, kkpWeight=True)
+        get_angular_acceptance(v, t, kkpWeight=True)
     if verbose:
       print(f'Show 10 fist kkpWeight[{i}] for {y}')
       print(f"{'biased':<11}  {'unbiased':<11}")
