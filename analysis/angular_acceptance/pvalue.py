@@ -38,13 +38,18 @@ if __name__ == '__main__':
   gen_pars = Parameters.load(args['params'])
 
   names = [key for key in pars.keys() if pars[key].free==True]
+  if 'Bd2JpsiKstar':
+    names =  ['fPlon', 'fPper', 'dPpar', 'dPper']
   pars = Parameters.build(pars, names)
   latex = [pars[key].latex for key in pars.keys()]
   value = np.array([pars[key].value for key in pars.keys()])
   stdev = np.array([pars[key].stdev for key in pars.keys()])
   genvalue = np.array([gen_pars[key].value for key in pars.keys()])
   PULL = (value-genvalue)/stdev
-  pvalue = pvalue(pars, gen_pars)
+  if 'Bd2JpsiKstar' in MODE:
+    pvalue = pvalue(pars, gen_pars, names=names)
+  else:
+    pvalue = pvalue(pars, gen_pars)
 
   #Latex table
   table = []
