@@ -789,8 +789,8 @@ rule angular_acceptance_iterative_mc_run2:
   input:
     # Samples and weights
     mc_sample = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2'),
-    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2b', weight=f'angWeight', angacc=f'{wcs.angacc}'.replace('run2', 'corrected')),
-    data_sample = lambda wcs: tuples(wcs, year='run2b'),
+    mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2', weight=f'angWeight', angacc=f'{wcs.angacc}'.replace('run2', 'corrected')),
+    data_sample = lambda wcs: tuples(wcs, year='run2'),
     angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp='none', angacc=f'{wcs.angacc}'.replace('run2', 'corrected'), trigger='biased'),
     angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp='none', angacc=f'{wcs.angacc}'.replace('run2', 'corrected'), trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', trigger='biased'),

@@ -395,7 +395,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
       if weight == 'veloWeight':
         weight = vw8s
       elif weight not in ('sWeight', vw8s, 'polWeight', 'pdfWeight',
-                          'kbuWeight', 'oddWeight', 'kinWeight', 'kkpWeight'):
+                          'kbuWeight', 'oddWeight', 'angWeight', 'kinWeight', 'kkpWeight'):
         weight = 'polWeight'
     # }}}
     # MC_Bs2JpsiPhi {{{
