@@ -27,9 +27,6 @@ tau['Bs'] = unc.ufloat(1.515, 0.004)  # PDG
 def dump_joint_lifetimeBd(pars, caption=""):
   # prepare table
   table = []
-  table.append(r"\begin{table}[H]")
-  table.append(r"\caption{Values of $\tau({B_d^0})$ obtained for the validation of the time acceptance}")
-  table.append(r"\centering")
   table.append(r"\begin{tabular}{c|c|cccc}")
   table.append(r"\toprule")
   col1 = 'Event'
@@ -46,13 +43,12 @@ def dump_joint_lifetimeBd(pars, caption=""):
       #for test in ['', 'mKstar', 'deltat', 'alpha']:
       for test in ['', 'mKstar', 'deltat']:
         print(pars[year])
-        nsigma = abs(tauBd.n - pars[year][flag][test].n)/pars[year][flag][test].s
+        nsigma = abs(tau['Bd'].n - pars[year][flag][test].n)/pars[year][flag][test].s
         svalue = f"{pars[year][flag][test]:.2uL}"
         line.append(f"${svalue:>20}\,\,({nsigma:.1f}\sigma) $")
       table.append( "&".join(line) + r"\\" )
   table.append(r"\bottomrule")
   table.append(r"\end{tabular}")
-  table.append(r"\end{table}")
 
   return "\n".join(table)
 
@@ -61,9 +57,6 @@ def dump_joint_lifetimeBd(pars, caption=""):
 def dump_joint_lifetimeBu(pars, caption=""):
   # prepare table
   table = []
-  table.append(r"\begin{table}[H]")
-  table.append(r"\caption{Values of $\tau(B_u^+)/\tau(B_d^0)$ obtained for the validation of the time acceptance}")
-  table.append(r"\centering")
   table.append(r"\begin{tabular}{c|cc}")
   table.append(r"\toprule")
   col1 = 'With corrections'
@@ -74,18 +67,33 @@ def dump_joint_lifetimeBu(pars, caption=""):
     line = []
     line.append(f"{year} ")
     for flag in pars[year]:
-      nsigma = abs(tauBu.n-pars[year][flag].n)/pars[year][flag].s
+      nsigma = abs(tau['Bu'].n-pars[year][flag].n)/pars[year][flag].s
       svalue = f"{pars[year][flag]:.2uL}"
       line.append(f"${svalue:>20}\,\,({nsigma:.1f}\sigma) $")
     table.append( "&".join(line) + r"\\" )
   table.append(r"\bottomrule")
   table.append(r"\end{tabular}")
-  table.append(r"\end{table}")
 
   return "\n".join(table)
 
-def dump_joint_lifetime_Bx(pars, mode, caption=""):
-  # prepare table
+# Single-like lifetime table {{{
+
+def dump_joint_lifetime_Bx(pars, mode):
+  """
+  Creates lifetime tables for different modes of Bx.
+
+  Parameters
+  ----------
+  pars : dict,
+    Dictionary with parameters.
+  mode : string
+    Bx mode to compara WA lifetime with.
+
+  Returns
+  -------
+  string
+    LaTeX-style table.
+  """
   table = []
   table.append(r"\begin{tabular}{c|cc}")
   table.append(r"\toprule")
@@ -105,9 +113,12 @@ def dump_joint_lifetime_Bx(pars, mode, caption=""):
     table.append( "&".join(line) + r"\\" )
   table.append(r"\bottomrule")
   table.append(r"\end{tabular}")
-
   return "\n".join(table)
 
+# }}}
+
+
+# CMDline interface {{{
 
 if __name__ == '__main__':
   # parse cmdline arguments
@@ -168,14 +179,19 @@ if __name__ == '__main__':
     for i, year in enumerate(args['year'].split(',')):
       pars[year] = {}
       flag = f'{args["timeacc"]}'
-      # pars[year][flag] = 1/(tauBd*Parameters.load(icorr[i])['gamma'].uvalue)
+      # pars[year][flag] = 1/(tau['Bd']*Parameters.load(icorr[i])['gamma'].uvalue)
       print(Parameters.load(icorr[i])['gamma'].uvalue)
-      pars[year][flag] = 1/Parameters.load(icorr[i])['gamma'].uvalue #- 1/tauBd
+      pars[year][flag] = 1/Parameters.load(icorr[i])['gamma'].uvalue #- 1/tau['Bd']
       flag = f'{args["timeacc"]}Noncorr'
-      # pars[year][flag] = 1/(tauBd*Parameters.load(inoncorr[i])['gamma'].uvalue)
-      pars[year][flag] = 1/Parameters.load(inoncorr[i])['gamma'].uvalue #- 1/tauBd
+      # pars[year][flag] = 1/(tau['Bd']*Parameters.load(inoncorr[i])['gamma'].uvalue)
+      pars[year][flag] = 1/Parameters.load(inoncorr[i])['gamma'].uvalue #- 1/tau['Bd']
     table = dump_joint_lifetimeBu(pars)
   print(table)
 
   with open(args['output'], 'w') as fp:
     fp.write(table)
+
+# }}}
+
+
+# vim:foldmethod=marker
