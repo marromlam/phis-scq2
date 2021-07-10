@@ -1,5 +1,5 @@
 DESCRIPTION = """
-    Computes the lifetime of half a Bd RD sample using spline coefficients 
+    Computes the lifetime of half a Bu RD sample using spline coefficients
     taken from the other halve. Runs over YEARS variable tuples.
 """
 
@@ -7,9 +7,7 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
-
-################################################################################
-# Modules ######################################################################
+# Modules {{{
 
 import argparse
 import os
@@ -22,52 +20,55 @@ from ipanema import initialize
 from ipanema import Parameters, optimize, Sample
 
 # import some phis-scq utils
-from utils.strings import cuts_and
+from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import  version_guesser, timeacc_guesser
 from utils.helpers import  swnorm, trigger_scissors
 
-# binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+# phis-scq config
+import config
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
+
+# }}}
 
 
-if __name__ != '__main__':
-  import badjanak
-
-################################################################################
-
-
-
-################################################################################
-#%% Run and get the job done ###################################################
+# CMDline interface {{{
 
 if __name__ == '__main__':
 
-  #%% Parse arguments ----------------------------------------------------------
-  p = argparse.ArgumentParser(description='Compute decay-time acceptance.')
+  # Parse arguments {{{
+
+  p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--sample', help='Bs2JpsiPhi MC sample')
   p.add_argument('--biased-params', help='Bs2JpsiPhi MC sample')
   p.add_argument('--unbiased-params', help='Bs2JpsiPhi MC sample')
   p.add_argument('--output-params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--output-tables', help='Bs2JpsiPhi MC sample')
   p.add_argument('--year', help='Year to fit')
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--minimizer', default='minuit', help='Different flag to ... ')
   args = vars(p.parse_args())
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = 'Bu2JpsiKplus'
-  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC = timeacc_guesser(args['timeacc'])
+  MINER = args['minimizer']
+
+  # }}}
+
+
+  # Settings {{{
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
+  initialize(os.environ['IPANEMA_BACKEND'], 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ""#bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   # Print settings
@@ -75,22 +76,22 @@ if __name__ == '__main__':
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'year(s)':>15}: {YEAR:50}")
-  print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'minimizer':>15}: {MINER:50}\n")
 
-  # final arrangemets
-  samples = args['sample'].split(',')
-  sw = f'sw_{VAR}' if VAR else 'sw'
+  # }}}
 
 
-  # Get data into categories ---------------------------------------------------
-  print(f"\n{80*'='}\nLoading categories\n{80*'='}\n")
+  # Get data into categories {{{
 
+  printsubsec("Loading categories")
+
+  sw = 'sw'
   cats = {}
   for i, m in enumerate(YEAR.split(',')):
     cats[m] = {}
     for t in ['biased', 'unbiased']:
-      cats[m][t] = Sample.from_root(samples[i], share=SHARE)
+      cats[m][t] = Sample.from_root(args['sample'].split(',')[i], share=SHARE)
       cats[m][t].name = f"BdRD-{m}-{t}"
       cats[m][t].chop(trigger_scissors(t, CUT))
 
@@ -108,17 +109,20 @@ if __name__ == '__main__':
       # Update kernel with the corresponding knots
       fcns.badjanak.config['knots'] = np.array(knots).tolist()
 
+  # }}}
+
+
+  # Fit {{{
+
+  printsubsec("Minimization procedure")
+
   # recompile kernel (just in case)
   fcns.badjanak.get_kernels(True)
 
-
-
-  # Time to fit lifetime -------------------------------------------------------
-  print(f"\n{80*'='}\nMinimization procedure\n{80*'='}\n")
-
   # create a common gamma parameter for biased and unbiased
   lfpars = Parameters()
-  lfpars.add(dict(name='gamma', value=0.5, min=-1.0, max=1.0, latex="\Gamma_u-\Gamma_d"))
+  lfpars.add(dict(name='gamma', value=0.5, min=-1.0, max=1.0,
+                  latex="\Gamma_u-\Gamma_d"))
 
   # join and print parameters before the lifetime fit
   for y in cats:
@@ -137,33 +141,29 @@ if __name__ == '__main__':
   print(lfpars)
 
   # lifetime fit
-  if MINER.lower() in ("minuit","minos"):
-    lifefit = optimize(fcn_call=fcns.splinexerfconstr, params=lfpars,
-                       fcn_kwgs={'cats':cats, 'weight':True},
-                       method=MINER, verbose=False, strategy=1, tol=0.05);
-  elif MINER.lower() in ('bfgs', 'lbfgsb'):
-    0 # fix me!
+  lifefit = optimize(fcn_call=fcns.splinexerfconstr, params=lfpars,
+                     fcn_kwgs={'cats':cats, 'weight':True},
+                     method=MINER, verbose=False, strategy=1, tol=0.05);
 
+  # }}}
+
+
+  # Saving results {{{
+
+  printsubsec(f"Lifetime estimation")
   print(lifefit)
-  print(f"\n{80*'='}\nLifetime estimation\n{80*'='}\n")
   tauBd = unc.ufloat(1.520,0.004)
   tauBu = 1/lifefit.params['gamma'].uvalue
   print(f"\\tau(B_u^+) = {tauBu:.2uL}")
   print(f"\\tau(B_d^0) = {tauBd:.2uL} WA")
   print(f"\\tau(B_u^+)/\\tau(B_d^0) = {tauBu/tauBd:.2uL}")
 
-
-
-  # Writing results ------------------------------------------------------------
-  print(f"\n{80*'='}\nDumping parameters\n{80*'='}\n")
-
   print(f"Dumping json parameters to {args['output_params']}")
   lifefit.params.dump(args['output_params'])
 
-  print(f"Dumping tex table to {args['output_tables']}")
-  with open(args['output_tables'], "w") as text:
-    text.write(lifefit.params.dump_latex(caption=f"""Trigger-combinned fit 
-    parameters for $B_d^0$ lifetime check using {YEAR}."""))
+  # }}}
 
-################################################################################
-# that's all folks!
+# }}}
+
+
+# vim:foldmethod=marker

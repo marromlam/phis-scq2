@@ -26,14 +26,15 @@ from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
 from reweightings.kinematic_weighting import reweight
 
+import config
 # binned variables
-bdconfig = hjson.load(open('config.json'))['time_acceptance_bdtconfig']
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 # Parse arguments for this script
 def argument_parser():
@@ -46,6 +47,7 @@ def argument_parser():
   p.add_argument('--trigger', help='Different flag to ... ')
   p.add_argument('--timeacc', help='Different flag to ... ')
   #p.add_argument('--contour', help='Different flag to ... ')
+  p.add_argument('--minimizer', default='minuit', help='Different flag to ... ')
   return p
 
 if __name__ != '__main__':
@@ -65,14 +67,15 @@ if __name__ == '__main__':
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bu2JpsiKplus'
-  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC = timeacc_guesser(args['timeacc'])
+  MINER = args['minimizer']
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ''#bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
@@ -89,7 +92,7 @@ if __name__ == '__main__':
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'minimizer':>15}: {MINER:50}")
   # print(f"{'splitter':>15}: {splitter:50}\n")
 
@@ -99,10 +102,10 @@ if __name__ == '__main__':
   otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(NKNOTS)]
-  kinWeight = f'Weight_{VAR}' if VAR else 'Weight'
-  sw = f'sw_{VAR}' if VAR else 'sw'
-  if CORR:
+  knots = all_knots[str(TIMEACC['nknots'])]
+  kinWeight = 'Weight'
+  sw = 'sw'
+  if TIMEACC['corr']:
     # to be implemented
     0
 
@@ -115,19 +118,19 @@ if __name__ == '__main__':
   for i, m in enumerate(['MC_Bu2JpsiKplus', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m == 'MC_Bu2JpsiKplus':
-      if CORR:
+      if TIMEACC['corr']:
         weight = f'kin{kinWeight}*polWeight*{sw}'
       else:
         weight = f'polWeight*{sw}'
       mode = 'BuMC'; c = 'a'
     elif m == 'MC_Bd2JpsiKstar':
-      if CORR:
+      if TIMEACC['corr']:
         weight = f'kbu{kinWeight}*polWeight*pdfWeight*{sw}'
       else:
         weight = f'pdfWeight*polWeight*{sw}'
       mode = 'BdMC'; c = 'b'
     elif m == 'Bd2JpsiKstar':
-      if CORR:
+      if TIMEACC['corr']:
         weight = f'kbu{kinWeight}*{sw}'
       else:
         weight = f'{sw}'
