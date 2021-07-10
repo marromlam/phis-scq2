@@ -368,18 +368,18 @@ rule lifetime_simul_Bu:
     unbiased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BuasBs_unbiased.json', y=YEARS[f'{wcs.year}']),
   output:
     params = 'output/params/time_acceptance/{year}/Bu2JpsiKplus/{version}_lifeBu{timeacc}.json',
-    tables = 'output/tables/time_acceptance/{year}/Bu2JpsiKplus/{version}_lifeBu{timeacc}.tex',
   log:
     'output/log/lifetimeBu/{year}/Bu2JpsiKplus/{version}_lifeBu{timeacc}.log'
   run:
+    samples = input.sample
+    samples = [samples] if isinstance(samples,str) else samples
     shell(f"""
     (time\
     python analysis/time_acceptance/lifetimeBu.py\
-    --sample {",".join(input.sample)}\
+    --sample {",".join(samples)}\
     --biased-params {",".join(input.biased)}\
     --unbiased-params {",".join(input.unbiased)}\
     --output-params {output.params}\
-    --output-tables {output.tables}\
     --year {",".join(YEARS[f'{wildcards.year}'])}\
     --version {wildcards.version}\
     --timeacc {wildcards.timeacc}\
