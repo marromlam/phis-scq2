@@ -89,7 +89,13 @@ if __name__ == '__main__':
   # run 
   printsec("Polarity weighting")
   print(tdf)
-  odf = polarity_weighting(odf, tdf, verbose=True)
+  if 'magUp' in args['output_file'] or 'magDown' in args['output_file']:
+    # since we are cutting the sample to have only one category of magnet
+    # polarity, we should not compute the polWeight the regular way, otherwise
+    # Infs will appear.
+    odf.eval("polWeight=time/time", inplace=True)
+  else:
+    odf = polarity_weighting(odf, tdf, verbose=True)
   print(odf)
 
   # Save weights to file
