@@ -27,6 +27,7 @@ rule flavor_tagging_basics:
 #    it from there.
 
 rule flavor_tagging_from_git:
+  threads: 128
   wildcard_constraints:
     flavor = "amsrd"
   params:

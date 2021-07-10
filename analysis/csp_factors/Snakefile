@@ -26,6 +26,7 @@ rule csp_factors_basics:
 # Clone Csp from git {{{
 
 rule csp_factors_from_git:
+  threads: 128
   wildcard_constraints:
     # version = "v0r0",#"(v0r0|v0r1)",                      # v0r0 not allowed
     csp = "(vgc|run2|yearly)"

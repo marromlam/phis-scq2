@@ -27,6 +27,7 @@ rule time_resolution_basics:
 #    it from there.
 
 rule time_resolution_from_git:
+  threads: 128
   wildcard_constraints:
     timeres = "ams(rd|mc|dg0)"
   params:
