@@ -50,6 +50,7 @@ if __name__ == '__main__':
   p.add_argument('--year', help='Year to fit')
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--trigger', help='Different flag to ... ')
   p.add_argument('--minimizer', default='minuit', help='Different flag to ... ')
   args = vars(p.parse_args())
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
