@@ -51,6 +51,7 @@ badjanak.get_kernels(True)
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
 from utils.helpers import  version_guesser, parse_angacc, timeacc_guesser, trigger_scissors
+from angular_acceptance.bdtconf_tester import bdtmesh
 
 # binned variables
 import config
@@ -65,7 +66,6 @@ tUL = config.general['tUL']
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 from hep_ml import reweight
-reweighter = reweight.GBReweighter(**bdtconfig)
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
 
@@ -676,6 +676,12 @@ if __name__ == '__main__':
 
   kkpWeight_std = args['output_angular_weights_mc_std'].split(',')
   kkpWeight_dg0 = args['output_angular_weights_mc_dg0'].split(',')
+
+  # if version has bdt in name, then lets change it
+  if 'bdt' in VERSION:
+    bdtconfig = int(VERSION.split('bdt')[1])
+    bdtconfig = bdtmesh(bdtconfig, config.general['bdt_tests'], False)
+  reweighter = reweight.GBReweighter(**bdtconfig)
 
   # Print settings
   printsec('Settings')
