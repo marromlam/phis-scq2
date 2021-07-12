@@ -35,6 +35,7 @@ if __name__ == "__main__":
   year = args['year']
   mode = args['mode']
   version = args['version'].split('@')[0]
+  version = version.split('bdt')[0]
   timeres = args['timeres']
   out_path = args['output']
   linker = args['linker']
