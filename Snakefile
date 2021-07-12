@@ -61,6 +61,7 @@ include: 'analysis/angular_acceptance/Snakefile'
 include: 'analysis/angular_fit/Snakefile'
 # include: 'analysis/bundle/Snakefile'
 include: 'analysis/params/Snakefile'
+# include: 'analysis/sportpalastrede/Snakefile'
 include: 'analysis/toys/Snakefile'
 include: 'packandgo/Snakefile'
 
@@ -102,8 +103,8 @@ rule slides_compile:
     f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_lifesingle_biased.tex",
     # }}}
     # cross-checks {{{
-    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}_lifesimul3.tex",
-    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_lifesimul3.tex",
+    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}@evtEven_simul3BdasBs_combined.tex",
+    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_simul3BuasBs_combined.tex",
     # }}}
     # }}}
     # angular acceptance {{{
@@ -124,7 +125,8 @@ rule slides_compile:
     # }}}
     # yearly cross-checks {{{
     # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3Noncorr_amsrd_combined.tex",
     # }}}
     # pT cross-check {{{
     f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@pTB_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
