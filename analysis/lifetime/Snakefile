@@ -106,12 +106,12 @@ rule lifetime_tabular_Bu:
   resources:
     mem_mb=1048
   input:
-    corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_lifeBu{{timeacc}}.json', year=YEARS[f'{wcs.year}']),
-    noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_lifeBu{{timeacc}}Noncorr.json', year=YEARS[f'{wcs.year}']),
+    corr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}BuasBs_{{trigger}}.json', year=YEARS[f'{wcs.year}']),
+    noncorr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}NoncorrBuasBs_{{trigger}}.json', year=YEARS[f'{wcs.year}']),
   output:
-    'output/tables/lifetime/{year}/{mode}/{version}_life{timeacc}.tex',
+    'output/tables/lifetime/{year}/{mode}/{version}_{timeacc}BuasBs_{trigger}.tex',
   log:
-    'output/log/lifetime_tabular_Bu/{year}/{mode}/{version}_life{timeacc}.log'
+    'output/log/lifetime_tabular_Bu/{year}/{mode}/{version}_{timeacc}BuasBs_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/lifetime/lifetime_tables.py\
@@ -160,17 +160,20 @@ rule lifetime_tabular_single:
 
 rule lifetime_tabular_Bd:
   wildcard_constraints:
+    version = "(.*)?(evtEven|evtOdd)(.*)?",
     mode = 'Bd2JpsiKstar',
     timeacc = 'simul.*'
   resources:
     mem_mb=1048
   input:
-    corr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_lifeBd{{timeacc}}{mod}.json', year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
-    noncorr = lambda wcs: expand('output/params/time_acceptance/{year}/{{mode}}/{{version}}_lifeBd{{timeacc}}Noncorr{mod}.json', year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
+    corr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}{mod}BdasBs_{{trigger}}.json',
+                              year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
+    noncorr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}Noncorr{mod}BdasBs_{{trigger}}.json',
+                                 year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
   output:
-    'output/tables/lifetime/{year}/{mode}/{version}_life{timeacc}.tex',
+    'output/tables/lifetime/{year}/{mode}/{version}_{timeacc}BdasBs_{trigger}.tex',
   log:
-    'output/log/lifetime_tabular_Bd/{year}/{mode}/{version}_life{timeacc}.log'
+    'output/log/lifetime_tabular_Bd/{year}/{mode}/{version}_{timeacc}BdasBs_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/lifetime/lifetime_tables.py\
