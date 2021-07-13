@@ -25,13 +25,17 @@ from utils.strings import cuts_and
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
 
+
+import config
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-all_knots = hjson.load(open('config.json'))['time_acceptance_knots']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
+
 
 # Parse arguments for this script
 def argument_parser():
@@ -42,6 +46,7 @@ def argument_parser():
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--trigger', help='Different flag to ... ')
   p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--minimizer', default='minuit', help='Different flag to ... ')
   #p.add_argument('--contour', help='Different flag to ... ')
   return p
 
@@ -62,23 +67,24 @@ if __name__ == '__main__':
   YEAR = args['year']
   TRIGGER = args['trigger']
   MODE = 'Bd2JpsiKstar'
-  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC = timeacc_guesser(args['timeacc'])
+  MINER = args['minimizer']
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = '' #bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   splitter = '(evtN%2)==0' # this is Bd as Bs
-  if LIFECUT == 'mKstar':
+  if TIMEACC['cuts'] == 'mKstar':
     splitter = cuts_and(splitter, f"mHH>890")
-  elif LIFECUT == 'alpha':
+  elif TIMEACC['cuts'] == 'alpha':
     splitter = cuts_and(splitter, f"alpha<0.025")
-  elif LIFECUT == 'deltat':
+  elif TIMEACC['cuts'] == 'deltat':
     splitter = cuts_and(splitter, f"sigmat<0.04")
 
   # Print settings
@@ -86,7 +92,7 @@ if __name__ == '__main__':
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'minimizer':>15}: {MINER:50}")
   print(f"{'splitter':>15}: {splitter:50}\n")
 
@@ -95,7 +101,7 @@ if __name__ == '__main__':
   oparams = args['params'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(NKNOTS)]
+  knots = all_knots[str(TIMEACC['nknots'])]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
   sw = f'sw_{VAR}' if VAR else 'sw'
 
@@ -107,7 +113,7 @@ if __name__ == '__main__':
   cats = {}
   for i,m in enumerate(['MC_Bd2JpsiKstar','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     if m=='MC_Bd2JpsiKstar':
-      if CORR:
+      if TIMEACC['corr']:
         weight = f'kinWeight*polWeight*pdfWeight*sw'
       else:
         weight = f'sw'
@@ -119,6 +125,8 @@ if __name__ == '__main__':
     
     F = 1 if i%2==0 else 0
     f = 'A' if F else 'B'
+    f = 'B' if m == 'Bd2JpsiKstar' else f
+    F = 0 if m == 'Bd2JpsiKstar' else F
     F = f'({splitter}) == {F}'
     
     if not mode in cats:
@@ -128,12 +136,12 @@ if __name__ == '__main__':
     cats[mode][f] = Sample.from_root(samples[i], share=SHARE)
     cats[mode][f].name = f"{mode}-{f}"
     cats[mode][f].chop( cuts_and(CUT,F) )
+    print(cats[mode][f])
 
     # allocate arrays
     cats[mode][f].allocate(time='time', lkhd='0*time')
     cats[mode][f].allocate(weight=weight)
     cats[mode][f].weight = swnorm(cats[mode][f].weight)
-    print(cats[mode][f])
 
     # Add knots
     cats[mode][f].knots = Parameters()
@@ -170,12 +178,12 @@ if __name__ == '__main__':
     cats[mode][f].label = mode_tex(mode)
     _i = len([k for K in cats.keys() for k in cats[K].keys()]) -1
     #_i = len(cats) + len(cats[mode]) - 2
-    if _i in (0,1,3):
+    if _i in (0,1,2):
       cats[mode][f].pars_path = oparams[_i if _i<3 else 2]
     else:
       print('\t\tThis sample is NOT being used, only for check purposes!')
 
-  del cats['BdRD']['A'] # remove this one
+  #del cats['BdRD']['A'] # remove this one
 
 
   # Configure kernel
@@ -226,11 +234,6 @@ if __name__ == '__main__':
     print(list_params)
     cat.params.add(*[result.params.get(par) for par in list_params])
 
-    print(f"Dumping tex table to {cat.tabs_path}")
-    with open(cat.tabs_path, "w") as text:
-      text.write(cat.params.dump_latex(caption=f"Time acceptance for the $\
-      {mode_tex(f'{MODE}')}$ ${YEAR}$ {TRIGGER} category in simultaneous fit\
-      using $B_d^0$ as $B_s^0$."))
 
     print(f"Dumping json parameters to {cat.pars_path}")
     cat.params = cat.knots + cat.params

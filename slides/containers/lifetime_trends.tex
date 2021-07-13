@@ -1,0 +1,242 @@
+% LIFETIME TRENDS
+%
+%
+%
+
+
+\subsection{Lifetime trends} % {{{
+
+\begin{frame}
+  \frametitle{Procedure}
+
+  \begin{itemize}
+    \item  The following test tries to get the $B_{u,d,s}$ lifetime
+    independently. Two versions: with and without corrections.
+    \begin{itemize}
+      \item Without corrections: We do \textbf{not} use any reweightings nor bdts. 
+      We fit $B_q$ MC and we extract the time acceptance, and then we plug those
+      coefficients in $B_q$ RD to fit the lifetime.
+      \item With corrections: We use reweightings from $B_q$ MC to the
+      corresponding $B_q$ RD sample. We use these reweightings in the time 
+      acceptance procedure as weights for MC.
+    \end{itemize}
+    \item We \textbf{do not mix} samples during these tests.
+    \item We repeat the same test splitting $2018$ in runNumber. In order to
+    get these results we rerun the whole pipeline cutting the sample.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{$B_u^+$}
+  
+  \begin{columns}
+  
+    \begin{column}{0.45\textwidth}
+      {\color{scqorange}biased} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5_lifesingle_biased.tex}}\\[5mm]
+      {\color{scqred}unbiased} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5_lifesingle_unbiased.tex}}\\[5mm]
+      {\color{scqgreen}combined} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5_lifesingle_combined.tex}}\\
+      \begin{equation*}
+        \tau_{B_u^+}^{PDG} = 1.636 \pm 0.007
+      \end{equation*}
+    \end{column}
+  
+    \begin{column}{0.45\textwidth}
+      \footnotesize
+      {without corrections}\\[2mm]
+      \includegraphics[width=\textwidth]{\FIGS/lifetime/run2/Bu2JpsiKplus/v0r5_lifesingleNoncorr_trend.pdf}\\[3mm]
+      {with corrections}\\[2mm]
+      \includegraphics[width=\textwidth]{\FIGS/lifetime/run2/Bu2JpsiKplus/v0r5_lifesingleNoncorr_trend.pdf}
+    \end{column}
+  
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{$B_u^+$}
+  
+  \begin{columns}
+  
+    \begin{column}{0.45\textwidth}
+      $runNumber<210300$\\[3mm]
+      {biased} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5@l210300_lifesingle_biased.tex}}\\[5mm]
+      {unbiased} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5@l210300_lifesingle_unbiased.tex}}\\[5mm]
+      {combined} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5@l210300_lifesingle_combined.tex}}\\
+    \end{column}
+  
+    \begin{column}{0.45\textwidth}
+      $runNumber>210300$\\[3mm]
+      {biased} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5@g210300_lifesingle_biased.tex}}\\[5mm]
+      {unbiased} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5@g210300_lifesingle_unbiased.tex}}\\[5mm]
+      {combined} \\[2mm]
+      \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bu2JpsiKplus/v0r5@g210300_lifesingle_combined.tex}}\\
+    \end{column}
+  
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{$B_d^0$}
+  
+  \begin{columns}
+  
+  \begin{column}{0.45\textwidth}
+  {\color{scqorange}biased} \\[2mm]
+  \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5_lifesingle_biased.tex}}\\[5mm]
+  {\color{scqred}unbiased} \\[2mm]
+  \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5_lifesingle_unbiased.tex}}\\[5mm]
+  {\color{scqgreen}combined} \\[2mm]
+  \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5_lifesingle_combined.tex}}\\
+  \begin{equation*}
+    \tau_{B_d^0}^{PDG} = 1.520 \pm 0.004
+  \end{equation*}
+  \end{column}
+
+  \begin{column}{0.45\textwidth}
+  \footnotesize
+  {without corrections} \\[2mm]
+  \includegraphics[width=\textwidth]{\FIGS/lifetime/run2/Bd2JpsiKstar/v0r5_lifesingleNoncorr_trend.pdf}\\[3mm]
+  {with corrections} \\[2mm]
+  \includegraphics[width=\textwidth]{\FIGS/lifetime/run2/Bd2JpsiKstar/v0r5_lifesingleNoncorr_trend.pdf}
+  \end{column}
+  
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{$B_d^0$}
+  
+  \begin{columns}
+  
+    \begin{column}{0.45\textwidth}
+    $runNumber<210300$\\[3mm]
+    {biased} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5@l210300_lifesingle_biased.tex}}\\[5mm]
+    {unbiased} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5@l210300_lifesingle_unbiased.tex}}\\[5mm]
+    {combined} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5@l210300_lifesingle_combined.tex}}\\
+    \end{column}
+  
+    \begin{column}{0.45\textwidth}
+    $runNumber>210300$\\[3mm]
+    {biased} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5@g210300_lifesingle_biased.tex}}\\[5mm]
+    {unbiased} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5@g210300_lifesingle_unbiased.tex}}\\[5mm]
+    {combined} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bd2JpsiKstar/v0r5@g210300_lifesingle_combined.tex}}\\
+    \end{column}
+  
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{$B_s^0$}
+  
+  \begin{columns}
+  
+  \begin{column}{0.45\textwidth}
+  {\color{scqorange}biased} \\[2mm]
+  \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5_lifesingle_biased.tex}}\\[5mm]
+  {\color{scqred}unbiased} \\[2mm]
+  \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5_lifesingle_unbiased.tex}}\\[5mm]
+  {\color{scqgreen}combined} \\[2mm]
+  \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5_lifesingle_combined.tex}}\\
+  \begin{equation*}
+    \tau_{B_s^0}^{PDG} = 1.515 \pm 0.004
+  \end{equation*}
+  \end{column}
+  
+  \begin{column}{0.45\textwidth}
+  \footnotesize
+  {without corrections}\\[2mm]
+  \includegraphics[width=\textwidth]{\FIGS/lifetime/run2/Bs2JpsiPhi/v0r5_lifesingleNoncorr_trend.pdf}\\[3mm]
+  {with corrections}\\[2mm]
+  \includegraphics[width=\textwidth]{\FIGS/lifetime/run2/Bs2JpsiPhi/v0r5_lifesingleNoncorr_trend.pdf}
+  \end{column}
+  
+  \end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}{$B_s^0$}
+  
+  \begin{columns}
+  
+    \begin{column}{0.45\textwidth}
+    $runNumber<210300$\\[3mm]
+    {biased} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5@l210300_lifesingle_biased.tex}}\\[5mm]
+    {unbiased} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5@l210300_lifesingle_unbiased.tex}}\\[5mm]
+    {combined} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5@l210300_lifesingle_combined.tex}}\\
+    \end{column}
+  
+    \begin{column}{0.45\textwidth}
+    $runNumber>210300$\\[3mm]
+    {biased} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5@g210300_lifesingle_biased.tex}}\\[5mm]
+    {unbiased} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5@g210300_lifesingle_unbiased.tex}}\\[5mm]
+    {combined} \\[2mm]
+    \resizebox{\textwidth}{!}{\input{\PARS/lifetime/run2/Bs2JpsiPhi/v0r5@g210300_lifesingle_combined.tex}}\\
+    \end{column}
+  
+  \end{columns}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Our baseline}
+\footnotesize
+
+We see some kind of trend in the $B_s^0$ lifetime when using $B_d^0$ as control
+channel:
+
+\medskip
+
+\input{\PARS/physics_params/run2/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex}
+
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Time acceptance with $B_u^+$ vs. $B_d^0$}
+\footnotesize
+
+Swapping $B_d^0$ with $B_u^+$ we recompute decay-time acceptance.
+First column shows our current baseline fit, which uses $B_d^0$. Next colums
+show $B_u^+$-based time-acceptace fits per year.
+
+\medskip
+
+% \input{output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex}
+\input{\PARS/physics_params/run2/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex}
+
+\end{frame}
+
+% }}}
+
+
+% vi:foldmethod=marker

@@ -14,6 +14,7 @@ __email__ = ['mromerol@cern.ch']
 import argparse
 import os
 import hjson
+import numpy as np
 
 # load ipanema
 from ipanema import initialize, plotting
@@ -202,8 +203,10 @@ if __name__ == '__main__':
     cats[mode].params.add({'name':f'mu_{c}',
                            'value':resolutions[m]['mu'],
                            'latex':f'\mu_{c}', 'free':False})
+    _sigma = np.mean(cats[mode].df['sigmat'].values)
+    print(f"sigmat = {resolutions[m]['sigma']} -> {_sigma}")
     cats[mode].params.add({'name':f'sigma_{c}',
-                           'value':resolutions[m]['sigma'],
+                           'value':_sigma + 0*resolutions[m]['sigma'],
                            'latex':f'\sigma_{c}', 'free':False})
     print(cats[mode].knots)
     print(cats[mode].params)

@@ -71,6 +71,7 @@ if __name__ == "__main__":
   wa_yl = 2*[tau[f'B{q}'].n - tau[f'B{q}'].s]
   ax.fill_between(wa_x, wa_yl, wa_yu, color='C0', alpha=0.25, label='PDG')
 
+  titles = []; pipas = []
   for k, trig in enumerate(['combined', 'biased', 'unbiased']):
     # prepare data
     data = np.zeros((len(years), 3))
@@ -83,7 +84,7 @@ if __name__ == "__main__":
 
     # build dict to fit parameters
     fpars = ipanema.Parameters()
-    fpars.add(dict(name='a0', value=0, latex='a_0'))
+    fpars.add(dict(name='a0', value=1, latex='a_0'))
     fpars.add(dict(name='a1', value=0, free=False, latex='a_1'))
 
     # create fcn to do a linear fit
@@ -99,6 +100,7 @@ if __name__ == "__main__":
                 label=rf"$\tau_{{{trig[0]}}}$")
 
     if trig in ('biased', 'unbiased'):
+      chi2 = []
       for slope in [False, True]:
         if slope:
           fpars = ipanema.Parameters.clone(res.params)
@@ -106,22 +108,32 @@ if __name__ == "__main__":
           fpars['a1'].set(value=1)
 
         # fit
-        res = ipanema.optimize(fcn, fpars, method='minuit',
-                               fcn_kwgs=dict(x=data[:,0], y=data[:,1], w=data[:,2]))
+        res = ipanema.optimize(fcn, fpars, method='minuit', tol=0.01,
+                               fcn_kwgs=dict(x=data[:,0], y=data[:,1],
+                                             w=data[:,2]))
         print(res)
+        chi2.append(res.chi2)
 
         # plot
         y = fcn(res.params, x)
-        expr = rf"({res.params['a0'].uvalue:+.2uL})"
-        expr += rf" + ({res.params['a1'].uvalue:+.2uL}) y"
-        expr += rf",\,\, \chi_{{dof}}^2={res.chi2red:.4f}"
-        #expr += rf",\,\, \chi_{{dof}}^2={res.chi2:.4f}"
-        expr += rf",\,\, \mathrm{{p}}={stats.chi2.sf(res.chi2, res.nvary):.4f}"
-        ax.plot(x, y, '-', color=f'C{k+1}', label=rf'$\tau_{{{trig[0]}}} = {expr}$')
+        expr  = rf"{trig} & $({res.params['a0'].uvalue:+.2uL})"
+        expr += rf" + ({res.params['a1'].uvalue:+.2uL}) y$ & "
+        expr += rf"${res.chi2:.4f}$ & "
+        expr += rf"${stats.chi2.sf(res.chi2, res.nvary):.4f}$"
+        ax.plot(x, y, '-', color=f'C{k+1}')
+        pipas.append(expr)
+      pipas[-1] += f"& ${np.sqrt(chi2[0]-chi2[1]):.4f}$"
+  # ax.set_title(" -- ".join(titles))
+  shit = "\\begin{tabular}{r|l|c|c|c}"
+  shit += "trigger. & fit & $\chi^2$ & p-value & significance \\\\ "
+  shit += "\\\\ ".join(pipas)
+  shit += " \\end{tabular}"
+  print(shit)
+  ax.set_title(shit, fontsize='x-small')
 
   # label and save
   ax.set_xlabel("year")
-  ax.set_ylabel(rf"$\tau(B_{q})$")
+  ax.set_ylabel(rf"$\tau(B_{q})$", fontsize='x-small')
   # ax.set_ylim(1.45, 1.55)
   ax.set_xlim(2014, 2019)
   ax.legend(fontsize='x-small')

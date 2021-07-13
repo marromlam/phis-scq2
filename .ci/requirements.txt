@@ -1,6 +1,6 @@
 snakemake
 py-cpuinfo
-uproot3
+uproot
 numpy
 scipy
 six

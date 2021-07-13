@@ -76,6 +76,7 @@ phis-scq/bsjpsikk.egg-info/
 .pytest_cache
 output/
 .snakemake/*
+.vim
 */.fuse*
 .vscode
 sidecar/

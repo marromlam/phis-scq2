@@ -155,23 +155,18 @@ echo "
           pour yourself a drink, this is going to take a while
 "
 
-cp utils/default.json config.json
-
 if [ ${hasconda}=1 ];then
   echo "      ! wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh"
   echo "      ! bash miniconda.sh -b -p ${condapath}"
 fi
 
 echo "      ! source $condapath/bin/activate"
-echo "      ! conda create --name $myenv"
-echo "      ! conda activate $myenv"
-
-echo "      ! conda config --add channels conda-forge"
-echo "      ! conda install pip pocl pyopencl ROOT"
+echo "      ! conda env create -f .ci/environment.yaml"
+echo "      ! conda activate phisscq"
 
 echo "      ! git clone ssh://git@gitlab.cern.ch:7999/mromerol/ipanema3.git ${ipapath}"
 echo "      ! pip install -e ${ipapath}/"
-echo "      ! pip install snakemake hep_ml py-cpuinfo"
+echo "      ! pip install .ci/requiremnts.txt"
 
 if [ "${cudapath}" != "None" ];then
   echo "      ! export PATH='${cudapath}/bin:\$PATH'"
@@ -203,16 +198,13 @@ if [ "${cudapath}" != "None" ];then
 fi
 
 source ${condapath}/bin/activate
-conda create --name ${myenv}
-conda activate ${myenv}
+conda env create -f .ci/environment.yaml
+conda activate phisscq
 rm miniconda.sh
-
-conda config --add channels conda-forge
-conda install pip pocl pyopencl ROOT
 
 git clone ssh://git@gitlab.cern.ch:7999/mromerol/ipanema3.git ${ipapath}
 pip install -e ${ipapath}/
-pip install snakemake hep_ml py-cpuinfo
+pip install -r .ci/requirements.txt
 
 if [ "${cudapath}" != "None" ];then
   pip install pycuda

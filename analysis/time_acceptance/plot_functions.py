@@ -93,9 +93,9 @@ def plot_timeacc_fit(params, data, weight,
 
   # Get x and y for pdf plot
   x = np.linspace(params['tLL'].value, params['tUL'].value, nop)
-  if   mode == 'BsMC': i = 0
-  elif mode == 'BdMC': i = 1
-  elif mode == 'BdRD': i = 2
+  if   mode == 'MC_Bs2JpsiPhi_dG0': i = 0
+  elif mode == 'MC_Bd2JpsiKstar': i = 1
+  elif mode == 'Bd2JpsiKstar': i = 2
   if len(params.fetch('gamma.*')) > 1: # then is the simultaneous fit or similar
     y = saxsbxscxerf(params, [x, x, x] )[i]
     y_norm = saxsbxscxerf(params, [ref.bins, ref.bins, ref.bins], flatend=flatend )[i]
@@ -349,7 +349,7 @@ def plotter(args,axes):
   YEAR = args['year']
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC = timeacc_guesser(args['timeacc'])
   LOGSCALE = True if 'log' in args['plot'] else False
   PLOT = args['plot'][:-3] if LOGSCALE else args['plot']
   LABELED = args['labeled']
@@ -365,7 +365,7 @@ def plotter(args,axes):
     return CUT
   # Prepare the cuts
 
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ""#bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
 
   # Print settings
@@ -374,7 +374,7 @@ def plotter(args,axes):
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'mode':>15}: {MODE:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'plot':>15}: {PLOT:50}")
   print(f"{'logscale':>15}: {LOGSCALE:<50}")
 
@@ -385,10 +385,10 @@ def plotter(args,axes):
   # Check timeacc flag to set knots and weights and place the final cut
   knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
   kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  if CORR == '9knots':
+  if TIMEACC['corr'] == '9knots':
     knots = [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00, 15.0]
     kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
-  elif CORR == '12knots':
+  elif TIMEACC['corr'] == '12knots':
     knots = [0.30, 0.43, 0.58, 0.74, 0.91, 1.11, 1.35,
              1.63, 1.96, 2.40, 3.01, 4.06, 9.00, 15.0]
     kinWeight = f'kinWeight_{VAR}*' if VAR else 'kinWeight*'
@@ -399,29 +399,29 @@ def plotter(args,axes):
   print(f"\n{80*'='}\n", "Loading categories", f"\n{80*'='}\n")
 
   cats = {}
-  sw = f'sw_{VAR}' if VAR else 'sw'
+  sw = 'sw' #f'sw_{VAR}' if VAR else 'sw'
   for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
-      if CORR=='Noncorr':
+      if TIMEACC['corr']:
         weight = f'dg0Weight*{sw}/gb_weights'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
       mode = 'MC_Bs2JpsiPhi'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
-      if CORR=='Noncorr':
+      if TIMEACC['corr']:
         weight = f'{sw}/gb_weights'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
       mode = 'MC_Bs2JpsiPhi_dG0'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
-      if CORR=='Noncorr':
+      if TIMEACC['corr']:
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
       mode = 'MC_Bd2JpsiKstar'; c = 'b'
     elif m=='Bd2JpsiKstar':
-      if CORR=='Noncorr':
+      if TIMEACC['corr']:
         weight = f'{sw}'
       else:
         weight = f'{kinWeight}{sw}'
@@ -457,14 +457,14 @@ def plotter(args,axes):
     axes = plot_timeacc_fit(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           mode=MMMODE, log=LOGSCALE, axes=axes,
-                                          label=thelabel, flatend=FLAT)
+                                          label=thelabel, flatend=TIMEACC['use_flatend'])
   elif PLOT=='spline':
     axes = plot_timeacc_spline(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           mode=MMMODE, log=LOGSCALE, axes=axes,
                                           conf_level=1, timeacc=args['timeacc'],
                                           modelabel=mode_tex(MODE),
-                                          label=thelabel, flatend=FLAT)
+                                          label=thelabel, flatend=TIMEACC['use_flatend'])
   return axes
 
 

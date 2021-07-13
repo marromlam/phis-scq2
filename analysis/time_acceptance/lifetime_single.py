@@ -69,7 +69,8 @@ if __name__ == '__main__':
   YEAR = args['year'].split(',')
   MODE = args['mode']
   TRIGGER = args['trigger']
-  TIMEACC, NKNOTS, CORRECT, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC= timeacc_guesser(args['timeacc'])
+  MINER = config.base['minimizer']
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
@@ -84,7 +85,7 @@ if __name__ == '__main__':
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'minimizer':>15}: {MINER:50}")
 
   if TRIGGER == 'combined':
@@ -100,7 +101,7 @@ if __name__ == '__main__':
   print(f"\n{80*'='}\nLoading category\n{80*'='}\n")
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(NKNOTS)]
+  knots = all_knots[str(TIMEACC['nknots'])]
   sWeight = "sw"
 
   cats = {}

@@ -25,12 +25,15 @@ from utils.strings import cuts_and
 from utils.helpers import  version_guesser, timeacc_guesser
 from utils.helpers import  swnorm, trigger_scissors
 
+import config
 # binned variables
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = hjson.load(open('config.json'))['time_acceptance_resolutions']
-Gdvalue = hjson.load(open('config.json'))['Gd_value']
-tLL = hjson.load(open('config.json'))['tLL']
-tUL = hjson.load(open('config.json'))['tUL']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+resolutions = config.timeacc['constants']
+all_knots = config.timeacc['knots']
+bdtconfig = config.timeacc['bdtconfig']
+Gdvalue = config.general['Gd']
+tLL = config.general['tLL']
+tUL = config.general['tUL']
 
 
 if __name__ != '__main__':
@@ -55,27 +58,30 @@ if __name__ == '__main__':
   p.add_argument('--year', help='Year to fit')
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--trigger', help='Different flag to ... ')
+  p.add_argument('--minimizer', default='minuit', help='Different flag to ... ')
   args = vars(p.parse_args())
 
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = 'Bd2JpsiKstar'
-  TIMEACC, NKNOTS, CORR, FLAT, LIFECUT, MINER = timeacc_guesser(args['timeacc'])
+  TIMEACC = timeacc_guesser(args['timeacc'])
+  MINER = args['minimizer']
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''  # place cut attending to version
+  CUT = ""#bin_vars[VAR][BIN] if FULLCUT else ''  # place cut attending to version
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   splitter = '(evtN%2)==0'  # this is Bd as Bs
-  if LIFECUT == 'mKstar':
+  if TIMEACC['cuts'] == 'mKstar':
     splitter = cuts_and(splitter, f"mHH>890")
-  elif LIFECUT == 'alpha':
+  elif TIMEACC['cuts'] == 'alpha':
     splitter = cuts_and(splitter, f"alpha<0.025")
-  elif LIFECUT == 'deltat':
+  elif TIMEACC['cuts'] == 'deltat':
     splitter = cuts_and(splitter, f"sigmat<0.04")
 
   # Print settings
@@ -83,7 +89,7 @@ if __name__ == '__main__':
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'year(s)':>15}: {YEAR:50}")
-  print(f"{'timeacc':>15}: {TIMEACC:50}")
+  print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'splitter':>15}: {splitter:50}")
   print(f"{'minimizer':>15}: {MINER:50}\n")
 
@@ -166,10 +172,6 @@ if __name__ == '__main__':
   print(f"Dumping json parameters to {args['output_params']}")
   lifefit.params.dump(args['output_params'])
 
-  print(f"Dumping tex table to {args['output_tables']}")
-  with open(args['output_tables'], "w") as text:
-    text.write(lifefit.params.dump_latex(caption=f"""Trigger-combinned fit
-    parameters for $B_d^0$ lifetime check using {YEAR}."""))
 
 ################################################################################
 # that's all folks!

@@ -27,6 +27,7 @@ rule flavor_tagging_basics:
 #    it from there.
 
 rule flavor_tagging_from_git:
+  threads: 128
   wildcard_constraints:
     flavor = "amsrd"
   params:
@@ -42,6 +43,7 @@ rule flavor_tagging_from_git:
 
     year = f"{wildcards.year}"
     version = f"{wildcards.version}".split('@')[0]
+    version = version.split('bdt')[0]
     flavor = f"{wildcards.flavor}"
     repo = f"{params.repo}"
 

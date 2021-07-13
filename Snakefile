@@ -61,6 +61,7 @@ include: 'analysis/angular_acceptance/Snakefile'
 include: 'analysis/angular_fit/Snakefile'
 # include: 'analysis/bundle/Snakefile'
 include: 'analysis/params/Snakefile'
+# include: 'analysis/sportpalastrede/Snakefile'
 include: 'analysis/toys/Snakefile'
 include: 'packandgo/Snakefile'
 
@@ -74,42 +75,87 @@ rule all:
     "output/b2cc_all.pdf"
 
 
-rule compile_slides:
+rule slides_compile:
   input:
-    # time acceptance table
-    f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul3.tex",
-    # lifetimes
-    f"output/packandgo/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_lifesimul3.tex",
-    f"output/packandgo/tables/time_acceptance/run2/Bu2JpsiKplus/{config['version']}_lifesimul3.tex",
-    # angular acceptance table
-    f"output/packandgo/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_run2_simul3.tex",
-    #
-    # physics parameters
-    #
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3.tex",
-    f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_yearly_simul3.tex",
-    #f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_run2_simul3.tex",
-    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@pTB_run2_run2_simul3.tex",
-    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@etaB_run2_run2_simul3.tex",
-    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@sigmat_run2_run2_simul3.tex",
-    # --
-    # f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_simul3.tex",
-    # f"output/packandgo/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_simul3.tex",
-    # physics parameters cross-checks :: time acceptance
-    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3Noncorr.tex",
-    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3.tex",
-    # f"output/packandgo/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_simul3DGn0.tex",
-    ##
+    # TABLES {{{
+    # time acceptance tables {{{
+    # baseline time acceptance {{{ 
+    f"output/tables/time_acceptance/run2/MC_Bs2JpsiPhi_dG0/{config['version']}_simul3.tex",
+    f"output/tables/time_acceptance/run2/MC_Bd2JpsiKstar/{config['version']}_simul3.tex",
+    f"output/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul3.tex",
+    # }}}
+    # baseline with dG!=0 time acceptance {{{ 
+    f"output/tables/time_acceptance/run2/MC_Bs2JpsiPhi/{config['version']}_simul3DGn0.tex",
+    f"output/tables/time_acceptance/run2/MC_Bd2JpsiKstar/{config['version']}_simul3DGn0.tex",
+    f"output/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul3DGn0.tex",
+    # }}}
+    # }}}
+    # lifetimes {{{
+    # single (each mode independently fitted) {{{
+    f"output/tables/lifetime/run2/Bs2JpsiPhi/{config['version']}_lifesingle_combined.tex",
+    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}_lifesingle_combined.tex",
+    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_lifesingle_combined.tex",
+    f"output/tables/lifetime/run2/Bs2JpsiPhi/{config['version']}_lifesingle_unbiased.tex",
+    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}_lifesingle_unbiased.tex",
+    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_lifesingle_unbiased.tex",
+    f"output/tables/lifetime/run2/Bs2JpsiPhi/{config['version']}_lifesingle_biased.tex",
+    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}_lifesingle_biased.tex",
+    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_lifesingle_biased.tex",
+    # }}}
+    # cross-checks {{{
+    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}@evtEven_simul3BdasBs_combined.tex",
+    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_simul3BuasBs_combined.tex",
+    # }}}
+    # }}}
+    # angular acceptance {{{
+    # baseline
+    f"output/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_run2_vgc_amsrd_simul3_amsrd.tex",
+    # yearly
+    f"output/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_yearly_vgc_amsrd_simul3_amsrd.tex",
+    # }}}
+    # physics parameters {{{
+    # HERE nominal {{{
+    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
+    # }}}
+    # trigger cross-checks {{{
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@Trigger_run2_run2_vgc_amsrd_simul3_amsrd.tex",
+    # }}}
+    # magnet cross-checks {{{
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@Magnet_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
+    # }}}
+    # yearly cross-checks {{{
+    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3Noncorr_amsrd_combined.tex",
+    # }}}
+    # pT cross-check {{{
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@pTB_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    # }}}
+    # etaB cross-check {{{
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@etaB_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    # }}}
+    # sigmat cross-check {{{
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@sigmat_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    # }}}
+    # time acceptance variations {{{
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_vgc_amsrd_simul3DGn0_amsrd_combined.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_vgc_amsrd_simul3Noncorr_amsrd_combined.tex",
+    # }}}
+    # }}}
+    # }}}
+    # FIGURES {{{
     #
     # reweighting plots
     # expand(rules.reweightings_plot_time_acceptance.output,
@@ -153,6 +199,7 @@ rule compile_slides:
     #               weight=['sWeight','kinWeight','kkpWeight'],
     #               year=['2015']),
     #               #year=['2015','2016','2017','2018']),
+    # }}}
   output:
     "output/b2cc_{date}.pdf"
   log:
