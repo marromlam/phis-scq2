@@ -266,7 +266,7 @@ rule reweighting_wisely:
       --target-file {input.target}\
       --target-treename DecayTree\
       --target-vars "{WEIRD_ONES}"\
-      --target-weight "sw*kinWeight"\
+      --target-weight "sw"\
       --output-file {output.sample}\
       --n-estimators {bdconfig['n_estimators']}\
       --learning-rate {bdconfig['learning_rate']}\

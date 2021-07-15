@@ -179,10 +179,10 @@ def get_angular_acceptance(mc, trigger, kkpWeight=False):
   w, uw, cov, corr = ans
   mc.angaccs[i] = Parameters()
   for k in range(0,len(w)):
-    correl = {f'w{j}{trigger}': corr[k][j]
+    correl = {f'w{j}{trigger[0]}': corr[k][j]
               for j in range(0, len(w)) if k > 0 and j > 0}
-    mc.angaccs[i].add({'name': f'w{k}{trigger}', 'value': w[k], 'stdev': uw[k],
-                       'free': False, 'latex': f'w_{k}^{trigger}', 'correl': correl})
+    mc.angaccs[i].add({'name': f'w{k}{trigger[0]}', 'value': w[k], 'stdev': uw[k],
+                       'free': False, 'latex': f'w_{k}^{trigger[0]}', 'correl': correl})
   #print(f"{  np.array(mc.angular_weights[t])}")
 
 
@@ -550,9 +550,9 @@ def aitken_iteration(max_iter=30, verbose=True):
               aitken = x2
           else:
               #checker.append(False)
-              #aitken = x2 - ( (x2-x1)**2 ) / den # aitken
+              aitken = x2 - ( (x2-x1)**2 ) / den # aitken
               #aitken = x0 - ( (x1-x0)**2 ) / den # steffensen
-              aitken = x1 - ( (x2-x1)**2 ) / den # romero
+              #aitken = x1 - ( (x2-x1)**2 ) / den # romero
 
           # update angacc
           dt.angacc[p].set(value=aitken.n)
@@ -588,15 +588,6 @@ def aitken_iteration(max_iter=30, verbose=True):
           pars = data[y][trigger].angaccs[i]
           print('Saving table of params in json')
           pars.dump(data[y][trigger].params_path)
-          print('Saving table of params in tex')
-          with open(data[y][trigger].tables_path, "w") as tex_file:
-            tex_file.write(
-              pars.dump_latex( caption="""
-              Angular acceptance for \\textbf{%s} \\texttt{\\textbf{%s}}
-              category.""" % (y,trigger)
-              )
-            )
-          tex_file.close()
       break
   return all(checker), likelihoods
 

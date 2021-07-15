@@ -40,10 +40,10 @@ def bdtmesh(conf, bdt_tests=100, verbose=False):
     print(f"{int(ans[0])}:{ans[1]:.2f}:{int(ans[2])}:{int(ans[3])}")
 
   ans = {
-      "n_estimators": ans[0],
+      "n_estimators": int(ans[0]),
       "learning_rate": ans[1],
-      "max_depth": ans[2],
-      "min_samples_leaf": ans[3],
+      "max_depth": int(ans[2]),
+      "min_samples_leaf": int(ans[3]),
       "gb_args": {"subsample": 1}
   }
   return ans

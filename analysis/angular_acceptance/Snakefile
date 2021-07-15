@@ -63,19 +63,19 @@ rule angular_acceptance_iterative_plot_parameters:
   resources:
     mem_mb = 4096
   input:
-    'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}_{timeacc}.json'
+    'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.json'
   params:
     'analysis/params/generator/{year}/{mode}.json'
   output:
-    directory('output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}')
+    directory('output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}')
   log:
-    'output/log/angular_acceptance_plot_iteration/{year}/{mode}/{version}_{angacc}_{timeacc}.log'
+    'output/log/angular_acceptance_plot_iteration/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/Plot_parameters.py\
-    --input {params_angacc}\
+    --input {input}\
     --params {params}\
-    --output {figures}\
+    --output {output}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
     --angacc {wildcards.angacc}\

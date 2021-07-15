@@ -9,6 +9,7 @@
 #    and then it worka automatically.
 
 rule samples_sync_tuple:
+  threads: 2
   resources:
     mem_mb=6144
   params:
@@ -36,6 +37,7 @@ rule samples_sync_tuple:
 #    just showing how muchs statistics we have per year and trigger category.
 
 rule samples_stat_tuple:
+  threads: 1
   resources:
     mem_mb=6144
   input:
@@ -60,6 +62,7 @@ rule samples_stat_tuple:
 #    the ntuples that will actually be used for phis-scq analysis package.
 
 rule samples_reduce_tuple:
+  threads: 2
   wildcard_constraints:
     mode = "((MC_)?(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?|MC_Bs2JpsiKK_Swave)"
   resources:
@@ -87,6 +90,7 @@ rule samples_reduce_tuple:
 #   the years with no corrections, sw and kinematic corrections (MC vs data)
 
 rule samples_plot:
+  threads: 128
   resources:
     mem_mb=1024
   wildcard_constraints:
@@ -116,6 +120,7 @@ rule samples_plot:
 
 
 rule samples_plot_wrt_v0r0:
+  threads: 128
   resources:
     mem_mb=1024
   wildcard_constraints:
@@ -152,6 +157,7 @@ rule samples_plot_wrt_v0r0:
 #   the years with no corrections, sw and kinematic corrections (MC vs data)
 
 rule samples_plot_99:
+  threads: 128
   resources:
     mem_mb=1024
   wildcard_constraints:

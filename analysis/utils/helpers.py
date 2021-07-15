@@ -67,7 +67,7 @@ def timeacc_guesser(timeacc):
     # custom variable cuts for lifetime test
     r"(deltat|alpha|mKstar)?",
     # use samples as others
-    r"(BuasBd)?"
+    r"(BuasBs|BdasBs|BuasBd)?"
   ]
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
@@ -378,8 +378,8 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
     # }}}
     # Bd2JpsiKstar {{{
     elif m == 'Bd2JpsiKstar':
-      # if weight == 'oddWeight':
-      #   weight = 'kbuWeight'
+      if weight == 'oddWeight': # kbuWeight needed for Bd RD
+        weight = 'kbuWeight'
       if weight not in ('sWeight', vw8s, 'kbuWeight', 'kinWeight'):
         weight = vw8s
     # }}}
@@ -522,15 +522,40 @@ def timeaccs(wcs, version=False, year=False, mode=False, timeacc=False, trigger=
 
   # select mode
   if mode=='Bs2JpsiPhi':
-    if "BuasBd" in timeacc:
-      m = 'Bu2JpsiKplus'
-    elif timeacc.startswith('simul'):
-      m = 'Bd2JpsiKstar'
+    if timeacc.startswith('simul'):
+      if "BuasBd" in timeacc:
+        m = 'Bu2JpsiKplus'
+      else:
+        m = 'Bd2JpsiKstar'
     elif timeacc.startswith('single'):
       if timeacc.endswith('DGn0'):
         m = 'MC_Bs2JpsiPhi'
       else:
         m = 'MC_Bs2JpsiPhi_dG0'
+  elif mode=='Bd2JpsiKstar':
+    if timeacc.startswith('simul'):
+      if 'BdasBs' in timeacc:
+        if 'evtEven' in version:
+          version = version.replace('evtEven', 'evtOdd')
+        elif 'evtOdd' in version:
+          version = version.replace('evtOdd', 'evtEven')
+        else:
+          0#print('i need to understand this..')
+      m = 'Bd2JpsiKstar'
+    else:
+      m = 'Bd2JpsiKstar'
+  elif mode=='Bu2JpsiKplus':
+    if timeacc.startswith('simul'):
+      if 'BuasBs' in timeacc:
+        if 'evtEven' in version:
+          version = version.replace('evtEven', 'evtOdd')
+        elif 'evtOdd' in version:
+          version = version.replace('evtOdd', 'evtEven')
+        else:
+          0#print('i need to understand this..')
+      m = 'Bd2JpsiKstar'
+    else:
+      m = 'Bu2JpsiKplus'
   else:
     m = mode
 

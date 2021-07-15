@@ -175,15 +175,15 @@ rule time_acceptance_simultaneous_BdasBs:
     # version = "",
   input:
     sample = lambda wcs: [
-      tuples(wcs, version=f'{wcs.version}evtEven', mode='MC_Bd2JpsiKstar'),
-      tuples(wcs, version=f'{wcs.version}evtOdd', mode='MC_Bd2JpsiKstar'),
-      tuples(wcs, version=f'{wcs.version}evtEven', mode='Bd2JpsiKstar')
+      tuples(wcs, version=f'{wcs.version}@evtEven', mode='MC_Bd2JpsiKstar'),
+      tuples(wcs, version=f'{wcs.version}@evtOdd', mode='MC_Bd2JpsiKstar'),
+      tuples(wcs, version=f'{wcs.version}@evtOdd', mode='Bd2JpsiKstar')
     ]
   output:
     params = [
-      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}evtEven_{timeacc}BdasBsA_{trigger}.json',
-      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}evtOdd_{timeacc}BdasBsB_{trigger}.json',
-      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}evtEven_{timeacc}BdasBs_{trigger}.json'
+      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}@evtEven_{timeacc}BdasBsA_{trigger}.json',
+      'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}@evtOdd_{timeacc}BdasBsB_{trigger}.json',
+      'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}@evtOdd_{timeacc}BdasBs_{trigger}.json'
     ],
   log:
     'output/log/time_acceptance_simultaneousBdasBs/{year}/{version}_{timeacc}BdasBs_{trigger}.log'
@@ -331,45 +331,48 @@ rule lifetime_simul_Bd:
   resources:
     mem_mb=4096,
   wildcard_constraints:
-    version = "(.*)?(evtOdd)(.*)?",
-    timeacc = "simul.*"
+    version = "(.*)(evtOdd|evtEven)(.*)?",
+    mode = 'Bd2JpsiKstar',
+    timeacc = "simul(.*)?BdasBs"
   input:
-    sample = lambda wcs: tuples(wcs, mode='Bd2JpsiKstar'),
-    biased = lambda wcs: expand('output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{{timeacc}}BdasBs_biased.json',
-                                year=YEARS[f'{wcs.year}'], version=f'{wcs.version}'.replace('Odd', 'Even')),
-    unbiased = lambda wcs: expand('output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{{timeacc}}BdasBs_unbiased.json',
-                                  year=YEARS[f'{wcs.year}'], version=f'{wcs.version}'.replace('Odd', 'Even')),
+    sample = lambda wcs: tuples(wcs),
+    btimeacc = lambda wcs: timeaccs(wcs, trigger='biased'),
+    utimeacc = lambda wcs: timeaccs(wcs, trigger='unbiased'),
   output:
-    params = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_lifeBd{timeacc}.json',
+    'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   log:
-    'output/log/lifetimeBd/{year}/Bd2JpsiKstar/{version}_life{timeacc}.log'
+    'output/log/lifetime_simul_Bd/{year}/{mode}/{version}_{timeacc}_{trigger}.log'
   run:
-    shell(f"""
-    (time\
+    samples = input.sample
+    samples = [samples] if isinstance(samples,str) else samples
+    shell(f"""(time\
     python analysis/time_acceptance/lifetimeBd.py\
-    --sample {",".join(input.sample)}\
-    --biased-params {",".join(input.biased)}\
-    --unbiased-params {",".join(input.unbiased)}\
-    --output-params {output.params}\
+    --sample {",".join(samples)}\
+    --biased-params {",".join(input.btimeacc)}\
+    --unbiased-params {",".join(input.utimeacc)}\
+    --output-params {output}\
     --year {",".join(YEARS[f'{wildcards.year}'])}\
     --version {wildcards.version}\
     --timeacc {wildcards.timeacc}\
+    --trigger {wildcards.trigger}\
     ) &> {log}""")
     send_mail(f"Lifetime Bd fit :: {wildcards}", f"{log}")
-
 
 
 rule lifetime_simul_Bu:
   resources:
     mem_mb=4096
+  wildcard_constraints:
+    mode = 'Bu2JpsiKplus',
+    timeacc = "simul(.*)?BuasBs"
   input:
-    sample = lambda wcs: tuples(wcs, mode='Bu2JpsiKplus'),
-    biased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BuasBs_biased.json', y=YEARS[f'{wcs.year}']),
-    unbiased = lambda wcs: expand('output/params/time_acceptance/{y}/Bd2JpsiKstar/{{version}}_{{timeacc}}BuasBs_unbiased.json', y=YEARS[f'{wcs.year}']),
+    sample = lambda wcs: tuples(wcs),
+    btimeacc = lambda wcs: timeaccs(wcs, trigger='biased'),
+    utimeacc = lambda wcs: timeaccs(wcs, trigger='unbiased'),
   output:
-    params = 'output/params/time_acceptance/{year}/Bu2JpsiKplus/{version}_lifeBu{timeacc}.json',
+    'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   log:
-    'output/log/lifetimeBu/{year}/Bu2JpsiKplus/{version}_lifeBu{timeacc}.log'
+    'output/log/lifetime_simul_Bu/{year}/{mode}/{version}_{timeacc}_{trigger}.log'
   run:
     samples = input.sample
     samples = [samples] if isinstance(samples,str) else samples
@@ -377,12 +380,13 @@ rule lifetime_simul_Bu:
     (time\
     python analysis/time_acceptance/lifetimeBu.py\
     --sample {",".join(samples)}\
-    --biased-params {",".join(input.biased)}\
-    --unbiased-params {",".join(input.unbiased)}\
-    --output-params {output.params}\
+    --biased-params {",".join(input.btimeacc)}\
+    --unbiased-params {",".join(input.utimeacc)}\
+    --output-params {output}\
     --year {",".join(YEARS[f'{wildcards.year}'])}\
     --version {wildcards.version}\
     --timeacc {wildcards.timeacc}\
+    --trigger {wildcards.trigger}\
     ) &> {log}""")
     send_mail(f"Lifetime Bu fit :: {wildcards}", f"{log}")
 
