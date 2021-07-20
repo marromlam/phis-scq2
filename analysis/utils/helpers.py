@@ -54,6 +54,8 @@ def timeacc_guesser(timeacc):
     r"(single|simul|lifeBd|lifeBu)",
     # number of knots
     r"(1[0-2]|[2-9])?",
+    # whether to use Velo Weights or not
+    r"(VW)?",
     # whether to use reweightings or not
     r"(Noncorr)?",
     # wether to use resolution in time
@@ -72,12 +74,13 @@ def timeacc_guesser(timeacc):
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
   try:
-    acc, nknots, corr, res, oddW, pTW, flat, cuts, swap = p.search(timeacc).groups()
+    acc, nknots, vw8, corr, res, oddW, pTW, flat, cuts, swap = p.search(timeacc).groups()
     ans = {
       "acc": acc,
       "nknots": int(nknots) if nknots else 3,
       "use_truetime": True if res=='Nores' else False,
       "use_oddWeight": True if oddW=='Odd' else False,
+      "use_veloWeight": True if vw8=='VW' else False,
       "use_pTWeight": True if pTW=='pT' else False,
       "corr": False if corr=='Noncorr' else True,
       "use_flatend": True if flat=='Flatend' else False,
