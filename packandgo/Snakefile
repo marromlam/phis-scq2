@@ -5,7 +5,7 @@
 
 # ruleorder: physics_params_tabular_1on1 > physics_params_tabular_yearly
 # ruleorder: physics_params_tabular_magnet > physics_params_tabular_1on1
-# ruleorder: pack_physics_params_yearly > pack_physics_params_1on1
+ruleorder: physics_params_tabular_yearly > physics_params_tabular_1on1
 #
 
 # Compare any two different parameter sets {{{
@@ -277,7 +277,7 @@ rule physics_params_tabular_binned_variables:
                             bin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4]),
     l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}__vs__{{year}}_{{version}}@{{var}}{bin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.npy",
                             bin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4]),
-    l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}@{{var}}{dbin}_{{fit}}_{{angacc}}_{{timeacc}}__vs__{{year}}_{{version}}@{{var}}{pbin}_{{fit}}_{{angacc}}_{{timeacc}}.npy",
+    l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}@{{var}}{dbin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}__vs__{{year}}_{{version}}@{{var}}{pbin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.npy",
                             pbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4],
                             dbin=[1,2,3] if f'{wcs.var}'!='pTB' else [1,2,3,4])
   output:
