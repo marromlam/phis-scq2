@@ -399,6 +399,7 @@ rule lifetime_simul_Bu:
 #    Bs2JpsiPhi acceptance.
 
 rule time_acceptance_simultaneous_plot:
+  threads: 128
   resources:
     mem_mb=16384
   wildcard_constraints:
