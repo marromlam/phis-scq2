@@ -127,6 +127,7 @@ rule slides_compile:
     # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
     f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
     f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3Noncorr_amsrd_combined.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_vgc_amsrd_simul3DGn0_amsrd_combined.tex",
     # }}}
     # pT cross-check {{{
     f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@pTB_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
@@ -134,6 +135,13 @@ rule slides_compile:
     f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
     f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
     f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    # }}}
+    # pT cross-check using Bu as control channel {{{
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@pTB_run2_run2_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
+    f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
+    f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
+    f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
+    f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
     # }}}
     # etaB cross-check {{{
     f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@etaB_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
@@ -165,13 +173,20 @@ rule slides_compile:
     #        branch = ['B_P', 'B_PT', 'X_M'],
     #        year = ['2015', '2016', '2017', '2018']),
     # time acceptance plot - nominal case only
-    # expand(rules.time_acceptance_plot.output,
-    #        version=config['version'],
-    #        mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
-    #        timeacc=['simul3'],
-    #        year=['2015', '2016', '2017', '2018'],
-    #        plot=['fitlog', 'splinelog'],
-    #        trigger=['biased', 'unbiased']),
+    expand(rules.time_acceptance_simultaneous_plot.output,
+           version=config['version'],
+           mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
+           timeacc=['simul3', 'simul3Noncorr'],
+           year=['2015', '2016', '2017', '2018'],
+           plot=['fitlog', 'splinelog'],
+           trigger=['biased', 'unbiased']),
+    # lifetime trend plots {{{
+    expand(rules.lifetime_trend.output,
+           version=config['version'],
+           mode=['Bs2JpsiPhi', 'Bu2JpsiKplus', 'Bd2JpsiKstar'],
+           timeacc=['single', 'singleNoncorr'],
+           year=['run2']),
+    # }}}
     # time acceptance plots - binned variables
     # expand(rules.time_acceptance_plot.output,
     #        version=['v0r5+v0r5@pTB1+v0r5@pTB2+v0r5@pTB3+v0r5@pTB4',
