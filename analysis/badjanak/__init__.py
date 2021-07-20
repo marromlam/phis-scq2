@@ -97,7 +97,7 @@ def flagger(verbose=False):
 # Compiler {{{
 
 def compile(verbose=False, pedantic=False):
-  kstrg = open(os.path.join(PATH, 'Kernel.cu'), "r").read()
+  kstrg = open(os.path.join(PATH, 'kernel.cu'), "r").read()
   # some custom compiling options {{{
   opts = ''
   if BACKEND=='cuda':
@@ -769,7 +769,7 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
 def splinexerf(time, lkhd, coeffs, mu=0.0, sigma=0.04, gamma=0.6, tLL=0.3,
                tUL=15, BLOCK_SIZE=256, flatend=False):
   """
-    In:
+  In:
                  time:  1D gpuarray with time to be fitted
                  lkhd:  1D gpuarray where likelihood is being stored
               *params:  list of parameters
@@ -780,15 +780,15 @@ def splinexerf(time, lkhd, coeffs, mu=0.0, sigma=0.04, gamma=0.6, tLL=0.3,
 
   Look at pySingleTimeAcc kernel definition to see more help.
   """
-  g_size, l_size = get_sizes(lkhd.shape[0],BLOCK_SIZE)
+  g_size, l_size = get_sizes(lkhd.shape[0], BLOCK_SIZE)
 
   __KERNELS__.SingleTimeAcc(
-      time, lkhd, # input, output
-      THREAD.to_device(get_4cs(coeffs, flatend)).astype(np.float64),
-      np.float64(mu), np.float64(sigma), np.float64(gamma),
-      np.float64(tLL),np.float64(tUL),
-      np.int32(lkhd.shape[0]),
-      global_size=g_size, local_size=l_size
+    time, lkhd, # input, output
+    THREAD.to_device(get_4cs(coeffs, flatend)).astype(np.float64),
+    np.float64(mu), np.float64(sigma), np.float64(gamma),
+    np.float64(tLL),np.float64(tUL),
+    np.int32(lkhd.shape[0]),
+    global_size=g_size, local_size=l_size
   )
 
 
