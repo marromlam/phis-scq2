@@ -10,7 +10,7 @@ __all__ = []
 
 
 # Modules {{{
-# import numpy as np
+import numpy as np
 import hjson
 # import pandas as pd
 import os
@@ -169,7 +169,11 @@ if __name__ == "__main__":
   """
 
   result = uproot.open(local_path)[tree].pandas.df(flatten=None)
-  result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
+  try:
+    result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
+  except:
+    print("sWeight variable was not found. Set sw = 1")
+    result['sw'] = np.ones_like(result[result.keys()[0]])
 
 
   # place cuts according to version substring
