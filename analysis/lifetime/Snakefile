@@ -12,6 +12,7 @@
 #     disentangled, hence it follows single_Bx_disentangle rule.
 
 rule lifetime_single_Bx:
+  threads: 6
   resources:
     mem_mb=4096,
   wildcard_constraints:
@@ -47,6 +48,7 @@ rule lifetime_single_Bx:
 
 
 rule lifetime_single_Bx_disentangle:
+  threads: 6
   resources:
     mem_mb=4096,
   wildcard_constraints:
@@ -71,6 +73,7 @@ rule lifetime_single_Bx_disentangle:
 # Lifetime trend plot {{{
 
 rule lifetime_trend:
+  threads: 128
   input:
     biased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_biased.json',
                        year=YEARS[f'{wcs.year}']),
@@ -99,36 +102,8 @@ rule lifetime_trend:
 # Lifetime tables {{{
 #    Create liftetime tables
 
-rule lifetime_tabular_Bu:
-  wildcard_constraints:
-    mode = 'Bu2JpsiKplus',
-    timeacc = 'simul.*'
-  resources:
-    mem_mb=1048
-  input:
-    corr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}BuasBs_{{trigger}}.json', year=YEARS[f'{wcs.year}']),
-    noncorr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}NoncorrBuasBs_{{trigger}}.json', year=YEARS[f'{wcs.year}']),
-  output:
-    'output/tables/lifetime/{year}/{mode}/{version}_{timeacc}BuasBs_{trigger}.tex',
-  log:
-    'output/log/lifetime_tabular_Bu/{year}/{mode}/{version}_{timeacc}BuasBs_{trigger}.log'
-  run:
-    shell(f"""(time\
-    python analysis/lifetime/lifetime_tables.py\
-    --corr {",".join(input.corr)}\
-    --noncorr {",".join(input.noncorr)}\
-    --output {output}\
-    --mode {wildcards.mode}\
-    --year {",".join(YEARS[f"{wildcards.year}"])}\
-    --version {wildcards.version}\
-    --timeacc {wildcards.timeacc}\
-    ) &> {log}""")
-    if NOTE:
-      notepath = f"{output}".replace('output', NOTE)
-      shell(f"cp {output} {notepath}")
-
-
 rule lifetime_tabular_single:
+  threads: 2
   wildcard_constraints:
     timeacc = 'single.*'
   resources:
@@ -158,7 +133,38 @@ rule lifetime_tabular_single:
       shell(f"cp {output} {notepath}")
 
 
+rule lifetime_tabular_Bu:
+  threads: 2
+  wildcard_constraints:
+    mode = 'Bu2JpsiKplus',
+    timeacc = 'simul.*'
+  resources:
+    mem_mb=1048
+  input:
+    corr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}BuasBs_{{trigger}}.json', year=YEARS[f'{wcs.year}']),
+    noncorr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}NoncorrBuasBs_{{trigger}}.json', year=YEARS[f'{wcs.year}']),
+  output:
+    'output/tables/lifetime/{year}/{mode}/{version}_{timeacc}BuasBs_{trigger}.tex',
+  log:
+    'output/log/lifetime_tabular_Bu/{year}/{mode}/{version}_{timeacc}BuasBs_{trigger}.log'
+  run:
+    shell(f"""(time\
+    python analysis/lifetime/lifetime_tables.py\
+    --corr {",".join(input.corr)}\
+    --noncorr {",".join(input.noncorr)}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --year {",".join(YEARS[f"{wildcards.year}"])}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    ) &> {log}""")
+    if NOTE:
+      notepath = f"{output}".replace('output', NOTE)
+      shell(f"cp {output} {notepath}")
+
+
 rule lifetime_tabular_Bd:
+  threads: 2
   wildcard_constraints:
     version = "(.*)?(evtEven|evtOdd)(.*)?",
     mode = 'Bd2JpsiKstar',
