@@ -9,21 +9,22 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+#include "tagging.h"
 
-WITHIN_KERNEL
+
+  WITHIN_KERNEL
 ftype parabola(const ftype sigma, const ftype sigma_offset, 
-               const ftype sigma_slope, const ftype sigma_curvature)
+    const ftype sigma_slope, const ftype sigma_curvature)
 {
   return sigma_curvature*sigma*sigma + sigma_slope*sigma + sigma_offset;
 }
 
 
-
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype get_omega(const ftype eta, const ftype tag,
-                const ftype p0, const ftype p1, const ftype p2,
-                const ftype dp0, const ftype dp1, const ftype dp2,
-                const ftype eta_bar)
+    const ftype p0, const ftype p1, const ftype p2,
+    const ftype dp0, const ftype dp1, const ftype dp2,
+    const ftype eta_bar)
 {
   ftype result = 0;
   result += (p0 + tag*0.5*dp0);
@@ -41,15 +42,17 @@ ftype get_omega(const ftype eta, const ftype tag,
 /**
  * Generates tagOS 
  */
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype tagOSgen(const ftype x)
 {
   return 3.8 - 134.6*x + 1341.0*x*x;
 }
 
 
-
-WITHIN_KERNEL
+/**
+ * Generates tagOS 
+ */
+  WITHIN_KERNEL
 ftype tagSSgen(const ftype x)
 {
   if (x < 0.46)

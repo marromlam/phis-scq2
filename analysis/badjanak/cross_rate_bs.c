@@ -13,43 +13,48 @@
 
 #include <ipanema/complex.h>
 
+#include "time_angular_distribution.h"
+#include "tagging.h"
+#include "decay_time_acceptance.h"
+#include "cross_rate_bs.h"
+
 
 WITHIN_KERNEL
 ftype rateBs(const ftype *data,
-             // Time-dependent angular distribution
-             const ftype G, const ftype DG, const ftype DM, const ftype CSP,
-             const ftype ASlon, const ftype APlon, const ftype APpar,
-             const ftype APper, const ftype pSlon, const ftype pPlon,
-             const ftype pPpar, const ftype pPper, const ftype dSlon,
-             const ftype dPlon, const ftype dPpar, const ftype dPper,
-             const ftype lSlon, const ftype lPlon, const ftype lPpar,
-             const ftype lPper,
-             // Time limits
-             const ftype tLL, const ftype tUL,
-             const ftype cosKLL, const ftype cosKUL,
-             const ftype cosLLL, const ftype cosLUL,
-             const ftype hphiLL, const ftype hphiUL,
-             // Time resolution
-             const ftype sigma_offset, const ftype sigma_slope,
-             const ftype sigma_curvature, const ftype mu,
-             // Flavor tagging
-             const ftype eta_bar_os, const ftype eta_bar_ss,
-             const ftype p0_os,  const ftype p1_os, const ftype p2_os,
-             const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
-             const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
-             const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
-             // Time acceptance
-             GLOBAL_MEM const ftype *coeffs,
-             // Angular acceptance
-             GLOBAL_MEM  const ftype *angular_weights,
-             const int USE_FK, const int USE_ANGACC, const int USE_TIMEACC,
-             const int USE_TIMEOFFSET, const int SET_TAGGING,
-             const int USE_TIMERES
-             )
+    // Time-dependent angular distribution
+    const ftype G, const ftype DG, const ftype DM, const ftype CSP,
+    const ftype ASlon, const ftype APlon, const ftype APpar,
+    const ftype APper, const ftype pSlon, const ftype pPlon,
+    const ftype pPpar, const ftype pPper, const ftype dSlon,
+    const ftype dPlon, const ftype dPpar, const ftype dPper,
+    const ftype lSlon, const ftype lPlon, const ftype lPpar,
+    const ftype lPper,
+    // Time limits
+    const ftype tLL, const ftype tUL,
+    const ftype cosKLL, const ftype cosKUL,
+    const ftype cosLLL, const ftype cosLUL,
+    const ftype hphiLL, const ftype hphiUL,
+    // Time resolution
+    const ftype sigma_offset, const ftype sigma_slope,
+    const ftype sigma_curvature, const ftype mu,
+    // Flavor tagging
+    const ftype eta_bar_os, const ftype eta_bar_ss,
+    const ftype p0_os,  const ftype p1_os, const ftype p2_os,
+    const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
+    const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
+    const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
+    // Time acceptance
+    GLOBAL_MEM const ftype *coeffs,
+    // Angular acceptance
+    GLOBAL_MEM  const ftype *angular_weights,
+    const int USE_FK, const int USE_ANGACC, const int USE_TIMEACC,
+    const int USE_TIMEOFFSET, const int SET_TAGGING,
+    const int USE_TIMERES
+    )
 {
   // Print inputs {{{
 
-  #if DEBUG
+#if DEBUG
   if ( DEBUG > 4 && get_global_id(0) == DEBUG_EVT )
   {
     printf("*USE_FK            : %d\n", USE_FK);
@@ -98,25 +103,25 @@ ftype rateBs(const ftype *data,
     printf("dp1OS, dp1SS       : %+.8f, %+.8f\n", dp1_os, dp1_ss);
     printf("dp2OS, dp2SS       : %+.8f, %+.8f\n", dp2_os, dp2_ss);
     printf("COEFFS             : %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
-            coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
+        coeffs[0*4+0],coeffs[0*4+1],coeffs[0*4+2],coeffs[0*4+3]);
     printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
-            coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
+        coeffs[1*4+0],coeffs[1*4+1],coeffs[1*4+2],coeffs[1*4+3]);
     printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
-            coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
+        coeffs[2*4+0],coeffs[2*4+1],coeffs[2*4+2],coeffs[2*4+3]);
     printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
-            coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
+        coeffs[3*4+0],coeffs[3*4+1],coeffs[3*4+2],coeffs[3*4+3]);
     printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
-            coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
+        coeffs[4*4+0],coeffs[4*4+1],coeffs[4*4+2],coeffs[4*4+3]);
     printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
-            coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
+        coeffs[5*4+0],coeffs[5*4+1],coeffs[5*4+2],coeffs[5*4+3]);
     printf("                     %+.8f\t%+.8f\t%+.8f\t%+.8f\n",
-            coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
+        coeffs[6*4+0],coeffs[6*4+1],coeffs[6*4+2],coeffs[6*4+3]);
   }
-  #endif
-  
+#endif
+
   // }}}
 
-  
+
   // Variables {{{
   //     Make sure that the input it's in this order.
   //     lalala
@@ -131,27 +136,27 @@ ftype rateBs(const ftype *data,
   const ftype etaOS      = data[7];
   const ftype etaSS 	   = data[8];
 
-  #if DEBUG
+#if DEBUG
   if ( DEBUG > 99 && ( (time>=tUL) || (time<=tLL) ) )
   {
     printf("WARNING            : Event with time not within [%.4f,%.4f].\n",
-           tLL, tUL);
+        tLL, tUL);
   }
-  #endif
-  
-  #if DEBUG
+#endif
+
+#if DEBUG
   if (DEBUG >= 1 && get_global_id(0) == DEBUG_EVT )
   {
     printf("\nINPUT              : cosK=%+.8f  cosL=%+.8f  hphi=%+.8f  time=%+.8f\n",
-           cosK,cosL,hphi,time);
+        cosK,cosL,hphi,time);
     printf("                   : sigma_t=%+.8f  qOS=%+.8f  qSS=%+.8f  etaOS=%+.8f  etaSS=%+.8f\n",
-           sigma_t,qOS,qSS,etaOS,etaSS);
+        sigma_t,qOS,qSS,etaOS,etaSS);
   }
-  #endif
-  
+#endif
+
   const bool FULL_RANGE = (cosKLL==-1)&&(cosKUL==1) &&
-                          (cosLLL==-1)&&(cosLUL==1) &&
-                          (hphiLL==-M_PI)&&(hphiUL==M_PI);
+    (cosLLL==-1)&&(cosLUL==1) &&
+    (hphiLL==-M_PI)&&(hphiUL==M_PI);
   // }}}
 
 
@@ -173,14 +178,14 @@ ftype rateBs(const ftype *data,
     delta_t  = parabola(sigma_t, sigma_offset, sigma_slope, sigma_curvature);
   }
 
-  #if DEBUG
+#if DEBUG
   if (DEBUG > 3 && get_global_id(0) == DEBUG_EVT )
   {
     printf("\nTIME RESOLUTION    : delta_t=%.8f\n", delta_t);
     printf("                   : time-t_offset=%.8f\n", delta_t);
   }
-  #endif
-  
+#endif
+
   // }}}
 
 
@@ -205,21 +210,21 @@ ftype rateBs(const ftype *data,
   ftype tc = exp_i.x;
   ftype td = exp_i.y;
 
-  #if FAST_INTEGRAL
-    // Veronika has these factors wrt HD-fitter
-    ta *= sqrt(2*M_PI); tb *= sqrt(2*M_PI);
-    tc *= sqrt(2*M_PI); td *= sqrt(2*M_PI);
-  #endif
+#if FAST_INTEGRAL
+  // Veronika has these factors wrt HD-fitter
+  ta *= sqrt(2*M_PI); tb *= sqrt(2*M_PI);
+  tc *= sqrt(2*M_PI); td *= sqrt(2*M_PI);
+#endif
 
-  #if DEBUG
+#if DEBUG
   if (DEBUG >= 3 && get_global_id(0) == DEBUG_EVT)
   {
     printf("\nTIME TERMS         : ta=%.8f  tb=%.8f  tc=%.8f  td=%.8f\n",
-           ta,tb,tc,td);
+        ta,tb,tc,td);
     printf("                   : exp_m=%.8f  exp_p=%.8f  exp_i=%.8f  exp_i=%.8f\n",
-           sqrt(2*M_PI)*exp_m.x,sqrt(2*M_PI)*exp_p.x,sqrt(2*M_PI)*exp_i.x,exp_i.y);
+        sqrt(2*M_PI)*exp_m.x,sqrt(2*M_PI)*exp_p.x,sqrt(2*M_PI)*exp_i.x,exp_i.y);
   }
-  #endif
+#endif
 
   // }}}
 
@@ -251,25 +256,25 @@ ftype rateBs(const ftype *data,
   }
 
   // Print warning if tagOS|tagSS == 0
-  #if DEBUG
+#if DEBUG
   if ( DEBUG > 99 && ( (tagOS == 0)|(tagSS == 0) ) )
   {
     printf("This event is not tagged!\n");
   }
-  #endif
+#endif
 
-  #if DEBUG
+#if DEBUG
   if ( DEBUG > 3  && get_global_id(0) == DEBUG_EVT )
   {
     printf("\nFLAVOR TAGGING     : delta_t=%.8f\n", delta_t);
     printf("                   : tagOS=%.8f, tagSS=%.8f\n",
-           tagOS, tagSS);
+        tagOS, tagSS);
     printf("                   : omegaOSB=%.8f, omegaOSBbar=%.8f\n",
-           omegaOSB, omegaOSBbar);
+        omegaOSB, omegaOSBbar);
     printf("                   : omegaSSB=%.8f, omegaSSBbar=%.8f\n",
-           omegaSSB, omegaSSBbar);
+        omegaSSB, omegaSSBbar);
   }
-  #endif
+#endif
 
   // }}}
 
@@ -293,9 +298,9 @@ ftype rateBs(const ftype *data,
   // Allocate some variables {{{
 
   ftype vnk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  #if DEBUG
-    ftype vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-  #endif
+#if DEBUG
+  ftype vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+#endif
   ftype vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   ftype vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   ftype vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
@@ -315,11 +320,11 @@ ftype rateBs(const ftype *data,
     nk = getN(APlon,ASlon,APpar,APper,CSP,k);
     if (USE_FK)
     {
-      #if FAST_INTEGRAL
-        fk = getF(cosK,cosL,hphi,k);
-      #else
-        fk = ( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);
-      #endif
+#if FAST_INTEGRAL
+      fk = getF(cosK,cosL,hphi,k);
+#else
+      fk = ( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);
+#endif
     }
     else
     {
@@ -351,10 +356,10 @@ ftype rateBs(const ftype *data,
         hk_Bbar = ak*ta + ck*tc;
       }
     }
-    #if FAST_INTEGRAL
-      hk_B = 3./(4.*M_PI)*hk_B;
-      hk_Bbar = 3./(4.*M_PI)*hk_Bbar;
-    #endif
+#if FAST_INTEGRAL
+    hk_B = 3./(4.*M_PI)*hk_B;
+    hk_Bbar = 3./(4.*M_PI)*hk_Bbar;
+#endif
     pdfB += nk*fk*hk_B; pdfBbar += nk*fk*hk_Bbar;
     vnk[k-1] = 1.*nk;
     vak[k-1] = 1.*ak; vbk[k-1] = 1.*bk; vck[k-1] = 1.*ck; vdk[k-1] = 1.*dk;
@@ -364,23 +369,23 @@ ftype rateBs(const ftype *data,
     else
       angnorm[k-1] = getFintegral(cosKLL,cosKUL,cosLLL,cosLUL,hphiLL,hphiUL,0,0,0,k);
 
-    #if DEBUG
-      vfk[k-1] = 1.*fk;
-    #endif
+#if DEBUG
+    vfk[k-1] = 1.*fk;
+#endif
   }
 
-  #if DEBUG
+#if DEBUG
   if ( DEBUG > 3  && get_global_id(0) == DEBUG_EVT )
   {
     printf("\nANGULAR PART       :  n            a            b            c            d            f            angnorm\n");
     for(int k = 0; k < 10; k++)
     {
       printf("               (%d) : %+.8f  %+.8f  %+.8f  %+.8f  %+.8f  %+.8f  %+.8f\n",
-             k,vnk[k], vak[k], vbk[k], vck[k], vdk[k], vfk[k], angnorm[k]);
+          k,vnk[k], vak[k], vbk[k], vck[k], vdk[k], vfk[k], angnorm[k]);
     }
   }
-  #endif
-  
+#endif
+
   // }}}
 
 
@@ -392,33 +397,33 @@ ftype rateBs(const ftype *data,
     // Here we can use the simplest 4xPi integral of the pdf since there are no
     // resolution effects
     integralSimple(intBBar, vnk, vak, vbk, vck, vdk, angnorm, G, DG,
-                   DM, tLL, tUL);
+        DM, tLL, tUL);
   }
   else if (USE_TIMERES)
   {
     // This integral works for all decay times, remember delta_t != 0.
-    #if FAST_INTEGRAL
-      integralSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm, G, DG,
-                     DM, delta_t, tLL, tUL, t_offset, coeffs);
-    #else
-      // const int simon_j = sigma_t/(SIGMA_T/80);
-      integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm,
-                         G, DG, DM, 
-                         /* what should beused */ delta_t,
-                         /* HD-fitter used */ //parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
-                         tLL, tUL, t_offset,
-                         coeffs);
-     #endif
+#if FAST_INTEGRAL
+    integralSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm, G, DG,
+        DM, delta_t, tLL, tUL, t_offset, coeffs);
+#else
+    // const int simon_j = sigma_t/(SIGMA_T/80);
+    integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm,
+        G, DG, DM, 
+        /* what should beused */ delta_t,
+        /* HD-fitter used */ //parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
+        tLL, tUL, t_offset,
+        coeffs);
+#endif
   }
   else
   {
-      integralFullSpline_wores(intBBar, vnk, vak, vbk, vck, vdk, angnorm,
-                               G, DG, DM, tLL, tUL, coeffs);
+    integralFullSpline_wores(intBBar, vnk, vak, vbk, vck, vdk, angnorm,
+        G, DG, DM, tLL, tUL, coeffs);
 
   }
   const ftype intB = intBBar[0];
   const ftype intBbar = intBBar[1];
-  
+
   // }}}
 
 
@@ -426,33 +431,33 @@ ftype rateBs(const ftype *data,
 
   ftype num = 1.0; ftype den = 1.0;
   num = (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
-        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar;
+    (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar;
   den = (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * intB +
-        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar;
+    (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar;
 
-  #if FAST_INTEGRAL 
-    num = dta*num;
-  #else
-    num = dta*num/4; den = den/4; // this is only to agree with Peilian
-  #endif
+#if FAST_INTEGRAL 
+  num = dta*num;
+#else
+  num = dta*num/4; den = den/4; // this is only to agree with Peilian
+#endif
 
-  #if DEBUG
+#if DEBUG
   if ( DEBUG >= 1  && get_global_id(0) == DEBUG_EVT)
   {
     printf("\nRESULT             : <  pdf/ipdf = %+.8f  >\n",
-           num/den);
+        num/den);
     if ( DEBUG >= 2 )
     {
-     printf("                   : pdf=%+.8f  ipdf=%+.8f\n",
-            num,den);
-     printf("                   : pdfB=%+.8f  pdBbar=%+.8f  ipdfB=%+.8f  ipdfBbar=%+.8f\n",
-            pdfB,pdfBbar,intB,intBbar);
+      printf("                   : pdf=%+.8f  ipdf=%+.8f\n",
+          num,den);
+      printf("                   : pdfB=%+.8f  pdBbar=%+.8f  ipdfB=%+.8f  ipdfBbar=%+.8f\n",
+          pdfB,pdfBbar,intB,intBbar);
     }
   }
-  #endif
+#endif
 
   // }}}
-  
+
   // }}}
 
   return num/den;
@@ -460,4 +465,3 @@ ftype rateBs(const ftype *data,
 
 
 // vim:foldmethod=marker
-// that's all folks!

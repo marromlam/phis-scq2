@@ -11,14 +11,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
-#include <ipanema/complex.h>
-
+#include "time_angular_distribution.h"
 
 
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype getN(const ftype A10, const ftype A00, const ftype A1a, const ftype A1e,
-           const ftype C01, const int k)
+    const ftype C01, const int k)
 {
   ftype nk;
   switch(k) {
@@ -32,15 +30,19 @@ ftype getN(const ftype A10, const ftype A00, const ftype A1a, const ftype A1e,
     case 8:  nk = C01*A00*A1a; break;
     case 9:  nk = C01*A00*A1e; break;
     case 10: nk = C01*A00*A10; break;
-    default: printf("Wrong k index in nk, please check code %d\\n", k);
-             return 0.;
+    default: 
+    #ifdef CUDA
+      printf("Wrong k index in nk, please check code %d\\n", k);
+      return 0.;
+    #else
+      return 0.;
+    #endif
   }
   return nk;
 }
 
 
-
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype getF(const ftype cosK, const ftype cosL, const ftype hphi, const int k)
 {
   const ftype sinK   = sqrt(1. - cosK*cosK);
@@ -60,18 +62,22 @@ ftype getF(const ftype cosK, const ftype cosL, const ftype hphi, const int k)
     case 8:  fk = 2.*sinK*sinL*cosL*cosphi/sqrt(6.); break;
     case 9:  fk = -2.*sinK*sinL*cosL*sinphi/sqrt(6.); break;
     case 10: fk = 2.*cosK*sinL*sinL/sqrt(3.); break;
-    default: printf("Wrong k index in fk, please check code %d\\n", k);
-             return 0.;
+    default: 
+    #ifdef CUDA
+      printf("Wrong k index in fk, please check code %d\\n", k);
+      return 0.;
+    #else
+      return 0.;
+    #endif
   }
   return fk;
 }
 
 
-
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype getAbd(ftype aslon, ftype aplon, ftype appar, ftype apper,
-                ftype dslon, ftype dplon, ftype dppar, ftype dpper,
-                ftype csp,  int k)
+    ftype dslon, ftype dplon, ftype dppar, ftype dpper,
+    ftype csp,  int k)
 {
   ftype ak;
   switch(k) {
@@ -85,19 +91,23 @@ ftype getAbd(ftype aslon, ftype aplon, ftype appar, ftype apper,
     case 8:  ak = csp*aslon*appar*cos(dppar-dslon); break;
     case 9:  ak = csp*aslon*apper*sin(dpper-dslon); break;
     case 10: ak = csp*aslon*aplon*cos(dslon); break;
-    default: printf("Wrong k index in ak, please check code %d\\n", k);
-             return 0.;
+    default: 
+    #ifdef CUDA
+      printf("Wrong k index in ak, please check code %d\\n", k);
+      return 0.;
+    #else
+      return 0.;
+    #endif
   }
   return ak;
 }
 
 
-
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype getA(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
-           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
-           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
-           const int k)
+    const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
+    const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
+    const int k)
 {
   ftype ak;
   switch(k) {
@@ -111,19 +121,23 @@ ftype getA(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
     case 8:  ak = 0.5*(cos(d00-d1a) - l00*l1a*cos(d00-d1a-p00+p1a)); break;
     case 9:  ak = -0.5*(sin(d00-d1e) + l00*l1e*sin(d00-d1e-p00+p1e)); break;
     case 10: ak = 0.5*(cos(d00-d10) - l00*l10*cos(d00-d10-p00+p10)); break;
-    default: printf("Wrong k index in ak, please check code %d\\n", k);
-             return 0.;
+    default: 
+    #ifdef CUDA
+      printf("Wrong k index in ak, please check code %d\\n", k);
+      return 0.;
+    #else
+      return 0.;
+    #endif
   }
   return ak;
 }
 
 
-
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype getB(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
-           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
-           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
-           const int k)
+    const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
+    const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
+    const int k)
 {
   ftype bk;
   switch(k) {
@@ -137,19 +151,23 @@ ftype getB(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
     case 8:  bk = 0.5*(l00*cos(d00-d1a-p00) - l1a*cos(d1a-d00-p1a)); break;
     case 9:  bk = -0.5*(l00*sin(d00-d1e-p00) - l1e*sin(d1e-d00-p1e)); break;
     case 10: bk = 0.5*(l00*cos(d00-d10-p00) - l10*cos(d10-d00-p10)); break;
-    default: printf("Wrong k index in bk, please check code %d\\n", k);
-             return 0.;
+    default: 
+    #ifdef CUDA
+      printf("Wrong k index in bk, please check code %d\\n", k);
+      return 0.;
+    #else
+      return 0.;
+    #endif
   }
   return bk;
 }
 
 
-
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype getC(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
-           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
-           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
-           const int k)
+    const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
+    const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
+    const int k)
 {
 
   ftype ck;
@@ -164,19 +182,23 @@ ftype getC(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
     case 8:  ck = 0.5*(cos(d00-d1a) + l00*l1a*cos(d00-d1a-p00+p1a)); break;
     case 9:  ck = -0.5*(sin(d00-d1e) - l00*l1e*sin(d00-d1e-p00+p1e)); break;
     case 10: ck = 0.5*(cos(d00-d10) + l00*l10*cos(d00-d10-p00+p10)); break;
-    default: printf("Wrong k index in ck, please check code %d\\n", k);
-             return 0.;
+    default: 
+    #ifdef CUDA
+      printf("Wrong k index in ck, please check code %d\\n", k);
+      return 0.;
+    #else
+      return 0.;
+    #endif
   }
   return ck;
 }
 
 
-
-WITHIN_KERNEL
+  WITHIN_KERNEL
 ftype getD(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
-           const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
-           const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
-           const int k)
+    const ftype d10, const ftype d00, const ftype d1a, const ftype d1e,
+    const ftype l10, const ftype l00, const ftype l1a, const ftype l1e,
+    const int k)
 {
 
   ftype dk;
@@ -191,20 +213,25 @@ ftype getD(const ftype p10, const ftype p00, const ftype p1a, const ftype p1e,
     case 8:  dk = 0.5*(l00*sin(d00-d1a-p00) - l1a*sin(d1a-d00-p1a)); break;
     case 9:  dk = -0.5*(-l00*cos(d00-d1e-p00) + l1e*cos(d1e-d00-p1e)); break;
     case 10: dk = 0.5*(l00*sin(d00-d10-p00) - l10*sin(d10-d00-p10)); break;
-    default: printf("Wrong k index in dk, please check code %d\\n", k);
-             return 0.;
+    default: 
+    #ifdef CUDA
+      printf("Wrong k index in dk, please check code %d\\n", k);
+      return 0.;
+    #else
+      return 0.;
+    #endif
   }
   return dk;
 }
 
 
 
-WITHIN_KERNEL
+  WITHIN_KERNEL
 void integralSimple(ftype result[2],
-                    const ftype vn[10], const ftype va[10], const ftype vb[10],
-                    const ftype vc[10], const ftype vd[10],
-                    const ftype *norm, const ftype G, const ftype DG,
-                    const ftype DM, const ftype ti, const ftype tf)
+    const ftype vn[10], const ftype va[10], const ftype vb[10],
+    const ftype vc[10], const ftype vd[10],
+    const ftype *norm, const ftype G, const ftype DG,
+    const ftype DM, const ftype ti, const ftype tf)
 {
   // rewrite me! (please)
   ftype ita = (2*(DG*sinh(.5*DG*ti) + 2*G*cosh(.5*DG*ti))*exp(G*tf) - 2*(DG*sinh(.5*DG*tf) + 2*G*cosh(.5*DG*tf))*exp(G*ti))*exp(-G*(ti + tf))/(-pow(DG, 2) + 4 *pow(G, 2));
@@ -218,15 +245,14 @@ void integralSimple(ftype result[2],
     result[1] += vn[k]*norm[k]*(va[k]*ita + vb[k]*itb - vc[k]*itc - vd[k]*itd);
   }
 
-  #ifdef DEBUG
+#ifdef DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
     printf("INTEGRAL           : ta=%.8f\ttb=%.8f\ttc=%.8f\ttd=%.8f\n",
-           ita,itb,itc,itd );
+        ita,itb,itc,itd );
   }
-  #endif
+#endif
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

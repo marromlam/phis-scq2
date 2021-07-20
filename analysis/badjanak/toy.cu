@@ -9,55 +9,59 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
 #include <ipanema/core.h>
 #include <ipanema/random.h>
+
+#include "time_angular_distribution.h"
+#include "decay_time_acceptance.h"
+#include "angular_acceptance.h"
+#include "cross_rate_bs.h"
 
 
 // Generate toy {{{
 
 KERNEL
 void dG5toy(GLOBAL_MEM ftype * out,
-            const ftype G, const ftype DG, const ftype DM,
-            GLOBAL_MEM const ftype * CSP,
-            //GLOBAL_MEM const ftype * CSD,
-            //GLOBAL_MEM const ftype * CPD,
-            GLOBAL_MEM const ftype * ASlon,
-            GLOBAL_MEM const ftype * APlon,
-            GLOBAL_MEM const ftype * APpar,
-            GLOBAL_MEM const ftype * APper,
-            //const ftype ADlon, const ftype ADpar, const ftype ADper,
-            const ftype pSlon,
-            const ftype pPlon, const ftype pPpar, const ftype pPper,
-            //const ftype pDlon, const ftype pDpar, const ftype pDper,
-            GLOBAL_MEM const ftype *dSlon,
-            const ftype dPlon, const ftype dPpar, const ftype dPper,
-            //const ftype dDlon, const ftype dDpar, const ftype dDper,
-            const ftype lSlon,
-            const ftype lPlon, const ftype lPpar, const ftype lPper,
-            //const ftype lDlon, const ftype lDpar, const ftype lDper,
-            // Time limits
-            const ftype tLL, const ftype tUL,
-            const ftype cosKLL, const ftype cosKUL,
-            const ftype cosLLL, const ftype cosLUL,
-            const ftype hphiLL, const ftype hphiUL,
-            // Time resolution
-            const ftype sigma_offset, const ftype sigma_slope, const ftype sigma_curvature,
-            const ftype mu,
-            // Flavor tagging
-            const ftype eta_bar_os, const ftype eta_bar_ss,
-            const ftype p0_os,  const ftype p1_os, const ftype p2_os,
-            const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
-            const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
-            const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
-            // Time acceptance
-            GLOBAL_MEM const ftype *coeffs,
-            // Angular acceptance
-            GLOBAL_MEM const ftype *tijk,
-            const int order_cosK, const int order_cosL, const int order_hphi,
-            const int USE_FK, const int BINS, const int USE_ANGACC, const int USE_TIMEACC,
-            const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES,
-            const ftype PROB_MAX, const int SEED, const int NEVT)
+    const ftype G, const ftype DG, const ftype DM,
+    GLOBAL_MEM const ftype * CSP,
+    //GLOBAL_MEM const ftype * CSD,
+    //GLOBAL_MEM const ftype * CPD,
+    GLOBAL_MEM const ftype * ASlon,
+    GLOBAL_MEM const ftype * APlon,
+    GLOBAL_MEM const ftype * APpar,
+    GLOBAL_MEM const ftype * APper,
+    //const ftype ADlon, const ftype ADpar, const ftype ADper,
+    const ftype pSlon,
+    const ftype pPlon, const ftype pPpar, const ftype pPper,
+    //const ftype pDlon, const ftype pDpar, const ftype pDper,
+    GLOBAL_MEM const ftype *dSlon,
+    const ftype dPlon, const ftype dPpar, const ftype dPper,
+    //const ftype dDlon, const ftype dDpar, const ftype dDper,
+    const ftype lSlon,
+    const ftype lPlon, const ftype lPpar, const ftype lPper,
+    //const ftype lDlon, const ftype lDpar, const ftype lDper,
+    // Time limits
+    const ftype tLL, const ftype tUL,
+    const ftype cosKLL, const ftype cosKUL,
+    const ftype cosLLL, const ftype cosLUL,
+    const ftype hphiLL, const ftype hphiUL,
+    // Time resolution
+    const ftype sigma_offset, const ftype sigma_slope, const ftype sigma_curvature,
+    const ftype mu,
+    // Flavor tagging
+    const ftype eta_bar_os, const ftype eta_bar_ss,
+    const ftype p0_os,  const ftype p1_os, const ftype p2_os,
+    const ftype p0_ss,  const ftype p1_ss, const ftype p2_ss,
+    const ftype dp0_os, const ftype dp1_os, const ftype dp2_os,
+    const ftype dp0_ss, const ftype dp1_ss, const ftype dp2_ss,
+    // Time acceptance
+    GLOBAL_MEM const ftype *coeffs,
+    // Angular acceptance
+    GLOBAL_MEM const ftype *tijk,
+    const int order_cosK, const int order_cosL, const int order_hphi,
+    const int USE_FK, const int BINS, const int USE_ANGACC, const int USE_TIMEACC,
+    const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES,
+    const ftype PROB_MAX, const int SEED, const int NEVT)
 {
   int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
@@ -67,13 +71,13 @@ void dG5toy(GLOBAL_MEM ftype * out,
   ftype iter = 0.0;
 
   // Prepare rng
-  #ifdef CUDA
-    curandState state;
-    curand_init((unsigned long long)clock(), evt, 0, &state);
-  #else
-    int _seed = SEED;
-    int *state = &_seed;
-  #endif
+#ifdef CUDA
+  curandState state;
+  curand_init((unsigned long long)clock(), evt, 0, &state);
+#else
+  int _seed = SEED;
+  int *state = &_seed;
+#endif
 
 
 
@@ -192,26 +196,26 @@ void dG5toy(GLOBAL_MEM ftype * out,
       }
 
       pdf = rateBs(data,
-                   G, DG, DM, CSP[bin],
-                   ASlon[bin], APlon[bin], APpar[bin], APper[bin],
-                   pSlon,      pPlon,      pPpar,      pPper,
-                   dSlon[bin], dPlon,      dPpar,      dPper,
-                   lSlon,      lPlon,      lPpar,      lPper,
-                   tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL, hphiLL, hphiUL,
-                   sigma_offset, sigma_slope, sigma_curvature, mu,
-                   eta_bar_os, eta_bar_ss,
-                   p0_os,  p1_os, p2_os,
-                   p0_ss,  p1_ss, p2_ss,
-                   dp0_os, dp1_os, dp2_os,
-                   dp0_ss, dp1_ss, dp2_ss,
-                   coeffs,
-                   tijk,
-                   USE_FK, USE_ANGACC, USE_TIMEACC,
-                   USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
+          G, DG, DM, CSP[bin],
+          ASlon[bin], APlon[bin], APpar[bin], APper[bin],
+          pSlon,      pPlon,      pPpar,      pPper,
+          dSlon[bin], dPlon,      dPpar,      dPper,
+          lSlon,      lPlon,      lPpar,      lPper,
+          tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL, hphiLL, hphiUL,
+          sigma_offset, sigma_slope, sigma_curvature, mu,
+          eta_bar_os, eta_bar_ss,
+          p0_os,  p1_os, p2_os,
+          p0_ss,  p1_ss, p2_ss,
+          dp0_os, dp1_os, dp2_os,
+          dp0_ss, dp1_ss, dp2_ss,
+          coeffs,
+          tijk,
+          USE_FK, USE_ANGACC, USE_TIMEACC,
+          USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
       pdf *= angacc * exp((G-0.5*DG)*(time-tLL));
       pdf *= (G-0.5*DG) * (1 - exp((G-0.5*DG)*(-tUL+tLL)));
     }
-    
+
     // final checks -----------------------------------------------------------
 
     // check if probability is greater than the PROB_MAX
