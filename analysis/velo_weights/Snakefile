@@ -7,20 +7,22 @@
 # sync downstream {{{
 
 rule velo_weights_sync_downstream:
+  threads: 2
   resources:
-    mem_mb = 8192
+    mem_mb = 15000
   wildcard_constraints:
     version = 'downstream',
   params:
-    '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/downstream'
+    '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'
   output:
-    temp(SAMPLES+'/{year}/{mode}/{version}_full.root')
+    SAMPLES+'/{year}/{mode}/{version}_full.root'
   log:
     'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
   run:
+    # WARNING: here I am harcoding the YEAR
     shell(f"""(time\
     python analysis/samples/sync_tuples.py\
-    --year {wildcards.year}\
+    --year 2016\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
     --tree DecayTree\
@@ -32,25 +34,20 @@ rule velo_weights_sync_downstream:
 ruleorder: velo_weights_reduce_downstream > samples_reduce_tuple
 rule velo_weights_reduce_downstream:
   resources:
-    mem_mb = 8192
+    mem_mb = 15000
   wildcard_constraints:
     version = 'downstream',
   input:
-    SAMPLES+'/{year}/{mode}/{version}_full.root'
+    ancient(SAMPLES+'/{year}/{mode}/{version}_full.root')
   output:
     SAMPLES+'/{year}/{mode}/{version}.root'
   log:
-    'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
+    'output/log/velo_weights_reduce_downstream/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
-    python analysis/samples/sync_tuples.py\
-    --year {wildcards.year}\
-    --mode {wildcards.mode}\
-    --version {wildcards.version}\
-    --version {wildcards.version}\
-    --tree DecayTree\
-    --output {output}\
-    --eos {params}\
+    python analysis/velo_weights/reduce_tuple.py\
+    --input-sample {input}\
+    --output-sample {output}\
     ) &> {log}""")
 
 # }}}
@@ -69,12 +66,12 @@ rule velo_weights_mass_fit_Bu:
   input:
     sample = SAMPLES+"/{year}/{mode}/{version}.root",
   output:
-    pars = "output/params/velo_weights/{year}/{mode}/{version}_{model}_{particle}docaz{bin}.json",
-    pars_match = "output/params/velo_weights/{year}/{mode}/{version}_{model}_{particle}docaz{bin}_match.json",
-    fit = "output/figures/velo_weights/{year}/{mode}/{version}_massfit_{model}_{particle}docaz{bin}.pdf",
-    logfit = "output/figures/velo_weights/{year}/{mode}/{version}_logmassfit_{model}_{particle}docaz{bin}.pdf",
-    fit_match = "output/figures/velo_weights/{year}/{mode}/{version}_massfit_{model}_{particle}docaz{bin}_match.pdf",
-    logfit_match = "output/figures/velo_weights/{year}/{mode}/{version}_logmassfit_{model}_{particle}docaz{bin}_match.pdf",
+    pars = "output/params/velo_weights/{year}/{mode}/{version}_{model}_{particle}_docaz{bin}.json",
+    pars_match = "output/params/velo_weights/{year}/{mode}/{version}_{model}_{particle}_docaz{bin}_match.json",
+    fit = "output/figures/velo_weights/{year}/{mode}/{version}_massfit_{model}_{particle}_docaz{bin}.pdf",
+    logfit = "output/figures/velo_weights/{year}/{mode}/{version}_logmassfit_{model}_{particle}_docaz{bin}.pdf",
+    fit_match = "output/figures/velo_weights/{year}/{mode}/{version}_massfit_{model}_{particle}_docaz{bin}_match.pdf",
+    logfit_match = "output/figures/velo_weights/{year}/{mode}/{version}_logmassfit_{model}_{particle}_docaz{bin}_match.pdf",
   log:
     "output/log/velo_weights_mass_fit_Bu/{year}/{mode}/{version}_{model}_{particle}docaz{bin}.log"
   run:
@@ -100,8 +97,8 @@ rule velo_weights_efficiency_Bu:
     version = 'downstream'
   input:
     sample = SAMPLES+"/{year}/{mode}/{version}.root",
-    pars = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}docaz{bin}.json", bin=range(1,15)),
-    pars_match = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}docaz{bin}_match.json", bin=range(1,15)),
+    pars = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}.json", bin=range(1,15)),
+    pars_match = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}_match.json", bin=range(1,15)),
   output:
     pars = "output/params/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}.json",
     plot = "output/figures/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}.pdf",
