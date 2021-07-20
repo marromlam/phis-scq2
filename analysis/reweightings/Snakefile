@@ -1,3 +1,9 @@
+# REWEIGHTING
+#
+#
+#
+
+
 # polarity weighting {{{
 #    Adds polWeight to MC tuples matching the corresponding data sample. This
 #    rule runs only over MC tuples.
@@ -105,7 +111,7 @@ rule reweighting_kinematic:
   output:
     sample = temp(SAMPLES+'/{year}/{mode}/{version}_kinWeight.root')
   log:
-    'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
+    'output/log/reweighting_kinematic/{year}/{mode}/{version}.log'
   run:
     from angular_acceptance.bdtconf_tester import bdtmesh
     bdconfig = settings.timeacc['bdtconfig']
@@ -222,7 +228,7 @@ rule reweighting_wisely:
   output:
     sample = temp(SAMPLES+'/{year}/{mode}/{version}_oddWeight.root')
   log:
-    'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
+    'output/log/reweighting_wisely/{year}/{mode}/{version}.log'
   run:
     from angular_acceptance.bdtconf_tester import bdtmesh
     bdconfig = settings.timeacc['bdtconfig']
@@ -293,7 +299,7 @@ rule reweighting_kinematic_Bu:
   output:
     sample = temp(SAMPLES+'/{year}/{mode}/{version}_kbuWeight.root')
   log:
-    'output/log/reweightings/kinematic_weighting/{year}/{mode}/{version}.log'
+    'output/log/reweighting_kinematic_Bu/{year}/{mode}/{version}.log'
   run:
     from angular_acceptance.bdtconf_tester import bdtmesh
     bdconfig = settings.timeacc['bdtconfig']    
