@@ -21,76 +21,108 @@ with open("analysis/samples/branches_latex.yaml") as file:
 
 # Get mode in TeX {{{
 
-def mode2tex(mode):
+def guess_mode(mode, modifier=False, version=False):
+  m = mode
+  v = version if version else ''
+  if modifier:
+    if "evtEven" in v:
+      if modifier == 'data':
+        if m.startswith('MC_'):
+          v = v.replace('evtEven', 'evtOdd')
+      elif modifier == 'cdata':
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+        elif m == 'Bs2JpsiPhi':
+          m = 'Bd2JpsiKstar'
+        elif m == 'Bd2JpsiKstar':
+          m = 'Bs2JpsiPhi'
+        elif m == 'Bu2JpsiKplus':
+          m = 'Bs2JpsiPhi'
+    elif "evtOdd" in v:
+      if modifier == 'data':
+        if m.startswith('MC_'):
+          v = v.replace('evtOdd', 'evtEven')
+      elif modifier == 'cdata':
+        # v = v.replace('evtOdd', '')
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+        elif m == 'Bs2JpsiPhi':
+          m = 'Bd2JpsiKstar'
+        elif m == 'Bd2JpsiKstar':
+          m = 'Bs2JpsiPhi'
+        elif m == 'Bu2JpsiKplus':
+          m = 'Bs2JpsiPhi'
+    else:
+      if modifier == 'data':
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+      elif modifier == 'cdata':
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+        elif m == 'Bs2JpsiPhi':
+          m = 'Bd2JpsiKstar'
+        elif m == 'Bd2JpsiKstar':
+          m = 'Bs2JpsiPhi'
+        elif m == 'Bu2JpsiKplus':
+          m = 'Bs2JpsiPhi'
+      elif modifier in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
+        m = modifier
+  return m
+
+
+
+def mode2tex(mode, modifier=False, version=False):
+  m = guess_mode(mode, modifier, version)
+  print(mode, modifier, version, m)
   ans = ['', '', '']
-  if 'Bs' in mode:
-    ans[1] = 'B_s^0'
-  elif 'Bd' in mode:
-    ans[1] = 'B_d^0'
-  elif 'Bu' in mode:
+  if 'Bs' in m: ans[1] = 'B_s^0'
+  elif 'Bd' in m: ans[1] = 'B_d^0'
+  elif 'Bu' in m:
     ans[1] = 'B_u^+'
   else:
     print('ERROR: I cannot convert this mode')
 
   # which kind of samples is it?
-  if 'MC' in mode:
-    ans[0] = 'MC'
-  elif 'TOY' in mode:
-    ans[0] = 'TOY'
-  else:
-    ans[0] = 'RD'
+  if 'MC' in m: ans[0] = 'MC'
+  elif 'TOY' in m: ans[0] = 'TOY'
+  else: ans[0] = 'RD'
 
   # special MC handlers
-  if 'dG0' in mode:
-    ans[2] = r'\text{w}\,\Delta\Gamma=0'
-  if 'Swave' in mode:
-    ans[2] = r'\text{w\,S-wave}'
+  if 'dG0' in m: ans[2] = r'\mathrm{w}\,\Delta\Gamma=0'
+  if 'Swave' in m: ans[2] = r'\mathrm{w\,S-wave}'
 
   return ans
 
-def mode_tex(mode, mod=None, verbose=False):
-  fmode = mode
-  if mode.startswith('MC_') and mod=='comp':
-    if mode in ('MC_BsJpsiPhi','MC_BsJpsiPhi_dG0','MC_Bs2JpsiKK_Swave'):
-      fmode = 'Bs2JpsiPhi'
-    elif mode in ('MC_BdJpsiKstar'):
-      fmode = 'Bd2JpsiKstar'
-  if mode=='Bd2JpsiKstar' and mod=='comp':
-    fmode = 'Bs2JpsiPhi'
-  if verbose:
-    print(f'{mode}@{mod} => {fmode}')
-  tex_str = ''
-  # Particle in latex form
-  if 'Bd2JpsiKstar' in fmode:
-    tex_str += 'B_d'
-  elif 'Bs2JpsiPhi' in fmode:
-    tex_str += 'B_s^0'
-  elif 'Bs2JpsiKK' in fmode:
-    tex_str += 'B_s^0'
-  # Add sim, toy or data info
-  tex_str += r'\,\mathrm{'
-  if 'MC' in fmode:
-    tex_str += 'sim'
-  elif 'TOY' in fmode:
-    tex_str += 'toy'
-  else:
-    tex_str += 'data'
-  tex_str += '}'
-  # Add other info
-  if 'dG0' in fmode:
-    tex_str += r' \mathrm{w } \Delta \Gamma = 0'
-  if 'Swave' in fmode:
-    tex_str += r' \mathrm{w S-wave}'
-  #print(tex_str)
-  return tex_str
+
+def mode_tex(mode, modifier=False, version=False):
+  _tex_list = mode2tex(mode, modifier, version)
+  _tex_str = rf"{_tex_list[1]}\,{_tex_list[0]}\,{_tex_list[2]}"
+  return _tex_str
 
 # }}}
 
 
 # Get range and get bins {{{
 
-def get_range(var, mode='Bs2JpsiPhi'):
-  return BRANCHES[mode][var].get('range')
+def get_range(var, mode='Bs2JpsiPhi', modifier=False, version=False):
+  _mode = guess_mode(mode, modifier, version)
+  return BRANCHES[_mode][var].get('range')
 
 
 def get_nbins(var, mode='Bs'):
