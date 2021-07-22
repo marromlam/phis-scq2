@@ -33,7 +33,7 @@ common: &common
   "evtN" : "eventNumber"
   "runN" : "runNumber"
   "sw" : "sw"
-  "veloWeight" : "time/time"
+  "veloWeight" : "veloWeight"
   "docaz" : "doca_z"
   "sWeight" : "sw"
   "logIPchi2B" : "log_B_IPCHI2_mva" #From this point, added by Ramon
@@ -104,7 +104,7 @@ MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_common
   "genidB" : "B_ID_GenLvl"
   "truemHH" : "sqrt((hplus_TRUEP_E+hminus_TRUEP_E)*(hplus_TRUEP_E+hminus_TRUEP_E) - ((hplus_TRUEP_X+hminus_TRUEP_X)*(hplus_TRUEP_X+hminus_TRUEP_X)+(hplus_TRUEP_Y+hminus_TRUEP_Y)*(hplus_TRUEP_Y+hminus_TRUEP_Y)+(hplus_TRUEP_Z+hminus_TRUEP_Z)*(hplus_TRUEP_Z+hminus_TRUEP_Z)))"
-  "truthMatch" : "(B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0))"#"abs(B_TRUEID)==531"
+  "truthMatch" : "(B_BKGCAT == 0 | B_BKGCAT == 10 | (B_BKGCAT == 50 & B_TRUETAU > 0))" #"abs(B_TRUEID)==531"
   # "truthMatch" : "B_BKGCAT!=60 && abs(B_TRUEID)==531"
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
