@@ -95,6 +95,8 @@ if __name__ == '__main__':
     TRIGGER = [TRIGGER]
 
   sWeight = "sw"
+  if TIMEACC['use_veloweight']:
+    sweight = f'veloweight*{sWeight}'
 
   # }}}
 

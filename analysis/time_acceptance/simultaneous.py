@@ -108,12 +108,14 @@ if __name__ == '__main__':
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
       m = 'MC_Bs2JpsiPhi'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
+        weight = f'kinWeight*polWeight*pdfWeight*dg0Weight*{sWeight}/gb_weights'
       else:
         weight = f'dg0Weight*{sWeight}/gb_weights'
       # apply oddWeight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'signalMC'; c = 'a'
     # }}}
     # MC_Bs2JpsiPhi_dG0 {{{
@@ -126,6 +128,8 @@ if __name__ == '__main__':
       # apply oddWeight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'signalMC'; c = 'a'
     # }}}
     # MC_Bd2JpsiKstar {{{
@@ -138,6 +142,8 @@ if __name__ == '__main__':
       # apply oddWeight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'controlMC'; c = 'b'
     # }}}
     # Bd2JpsiKstar {{{
@@ -147,6 +153,8 @@ if __name__ == '__main__':
         weight = f'kinWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'controlRD'; c = 'c'
     # }}}
     # MC_Bu2JpsiKplus {{{
@@ -156,6 +164,8 @@ if __name__ == '__main__':
         weight = f'kinWeight*polWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       # apply oddWeight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
@@ -166,9 +176,11 @@ if __name__ == '__main__':
       m = 'Bu2JpsiKplus'
       if TIMEACC['corr']:
         weight = f'kinWeight*{sWeight}'
-        weight = f'{sWeight}'  # TODO: fix kinWeight here, it should exist and be a reweight Bu -> Bs
+        # weight = f'{sWeight}'  # TODO: fix kinWeight here, it should exist and be a reweight Bu -> Bs
       else:
         weight = f'{sWeight}'
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'controlRD'; c = 'c'
     # }}}
     print(weight)
@@ -177,6 +189,7 @@ if __name__ == '__main__':
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
     cats[mode].allocate(time='time', lkhd='0*time', weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
+    print(cats[mode].df['veloWeight'])
 
     # Add knots
     cats[mode].knots = Parameters()
@@ -212,7 +225,6 @@ if __name__ == '__main__':
     print(cats[mode].params)
 
     # Attach labels and paths
-    cats[mode].label = mode_tex(mode)
     cats[mode].pars_path = oparams[i]
 
 

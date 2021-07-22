@@ -130,6 +130,8 @@ if __name__ == '__main__':
       # apply  dG0Weight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
@@ -143,6 +145,8 @@ if __name__ == '__main__':
       # apply  dG0Weight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}', 'time/time')
@@ -156,6 +160,8 @@ if __name__ == '__main__':
       # apply  dG0Weight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}', 'time/time')
@@ -166,6 +172,8 @@ if __name__ == '__main__':
         weight = f'kinWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'controlRD'; c = 'c'
     print(weight)
 
