@@ -147,7 +147,7 @@ def get_angular_acceptance(mc, kkpWeight=False):
   Compute angular acceptance
   """
   # cook weight for angular acceptance
-  weight  = mc.df.eval(f'angWeight*polWeight*{weight_rd}/gb_weights').values
+  weight  = mc.df.eval(f'angWeight*polWeight*{weight_mc}').values
   i = len(mc.kkpWeight.keys())
 
   if kkpWeight:
@@ -338,7 +338,7 @@ def do_kkp_weighting(verbose):
   #    As a matter of fact, it's important to have data[y][combined] sample,
   #    the GBweighter gives different results when having those 0s or having
   #    nothing after cutting the sample.
-  global mc, data, weight_rd
+  global mc, data, weight_rd, weight_mc
 
   threads = list()
   for y, dy in mc.items(): # loop over years
@@ -347,11 +347,11 @@ def do_kkp_weighting(verbose):
         # original variables + weight (mc) 
         j = len(v.pdfWeight.keys())
         ov  = v.df[['pTHm','pTHp','pHm','pHp']]
-        ow  = v.df.eval(f'angWeight*polWeight*{weight_rd}/gb_weights')
+        ow  = v.df.eval(f'angWeight*polWeight*{weight_mc}')
         ow *= v.pdfWeight[j]
         # target variables + weight (real data)
         tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
-        tw = data[y][t].df.eval(f'{weight_rd}')
+        tw = data[y][t].df.eval(weight_rd)
         # Run multicore (about 15 minutes per iteration)
         job = multiprocessing.Process(
           target=kkp_weighting, 
@@ -635,6 +635,7 @@ if __name__ == '__main__':
   p.add_argument('--output-angular-weights-mc-dg0', help='Bs2JpsiPhi MC sample')
   p.add_argument('--year', help='Year of data-taking')
   p.add_argument('--angacc', help='Year of data-taking')
+  p.add_argument('--timeacc', help='Year of data-taking')
   p.add_argument('--version', help='Year of data-taking')
   args = vars(p.parse_args())
   
@@ -642,6 +643,8 @@ if __name__ == '__main__':
   YEARS = args['year'].split(',') 
   MODE = 'Bs2JpsiPhi'
   ANGACC = parse_angacc(args['angacc'])
+  print(args['timeacc'])
+  TIMEACC = timeacc_guesser(args['timeacc'])
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
@@ -697,7 +700,7 @@ if __name__ == '__main__':
   # Load samples ---------------------------------------------------------------
   printsec('Loading samples')
   
-  global mc, data, weight_rd
+  global mc, data, weight_rd, weight_mc
   
   # MC reconstructed and generator level variable names
   reco  = ['cosK', 'cosL', 'hphi', 'time']
@@ -710,8 +713,11 @@ if __name__ == '__main__':
   real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta'] 
   
   # sWeight variable
-  weight_rd = f'sw_{VAR}' if VAR else 'sw'
   weight_rd = 'sw'
+  weight_mc = 'sw/gb_weights'
+  if TIMEACC['use_veloWeight']:
+    weight_rd = f'veloWeight*{weight_rd}'
+    # weight_mc = f'veloWeight*{weight_mc}'
 
   # Load Monte Carlo samples
   mc = {}
@@ -785,7 +791,7 @@ if __name__ == '__main__':
       data[y][t].params_path = path[i]
 
     for d in [data[y]['biased'],data[y]['unbiased']]:
-      sw = np.zeros_like(d.df[f'{weight_rd}'])
+      sw = np.zeros_like(d.df.eval(weight_rd))
       for l,h in zip(mass[:-1],mass[1:]):
         pos = d.df.eval(f'mHH>={l} & mHH<{h}')
         this_sw = d.df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
