@@ -1,10 +1,17 @@
 # VELO WEIGHTS
 #
 #
-#
+#    Marcos Romero Lamas (mromerol@cern.ch)
 
 
-# sync downstream {{{
+# Set ruleorders {{{
+
+ruleorder: velo_weights_reduce_downstream > samples_reduce_tuple
+
+# }}}
+
+
+# Sync downstream {{{
 
 rule velo_weights_sync_downstream:
   threads: 2
@@ -12,17 +19,17 @@ rule velo_weights_sync_downstream:
     mem_mb = 15000
   wildcard_constraints:
     version = 'downstream',
+    mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)"
   params:
     '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'
   output:
     SAMPLES+'/{year}/{mode}/{version}_full.root'
   log:
-    'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
+    'output/log/velo_weights_sync_downstream/{year}/{mode}/{version}.log'
   run:
-    # WARNING: here I am harcoding the YEAR
     shell(f"""(time\
     python analysis/samples/sync_tuples.py\
-    --year 2016\
+    --year {wildcards.year}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
     --tree DecayTree\
@@ -31,12 +38,13 @@ rule velo_weights_sync_downstream:
     ) &> {log}""")
 
 
-ruleorder: velo_weights_reduce_downstream > samples_reduce_tuple
 rule velo_weights_reduce_downstream:
+  threads: 2
   resources:
     mem_mb = 15000
   wildcard_constraints:
     version = 'downstream',
+    mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)",
   input:
     ancient(SAMPLES+'/{year}/{mode}/{version}_full.root')
   output:
@@ -56,13 +64,15 @@ rule velo_weights_reduce_downstream:
 # Bu mass fit {{{
 
 rule velo_weights_mass_fit_Bu:
+  threads: 6
   resources:
-    mem_mb = 8192
+    mem_mb = 16000
   wildcard_constraints:
     bin = "(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)",
     model = "(cb|dgauss|ipatia)",
     particle = "(muplus|muminus|hplus|hminus)",
-    version = 'downstream'
+    version = 'downstream',
+    mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)"
   input:
     sample = SAMPLES+"/{year}/{mode}/{version}.root",
   output:
@@ -73,7 +83,7 @@ rule velo_weights_mass_fit_Bu:
     fit_match = "output/figures/velo_weights/{year}/{mode}/{version}_massfit_{model}_{particle}_docaz{bin}_match.pdf",
     logfit_match = "output/figures/velo_weights/{year}/{mode}/{version}_logmassfit_{model}_{particle}_docaz{bin}_match.pdf",
   log:
-    "output/log/velo_weights_mass_fit_Bu/{year}/{mode}/{version}_{model}_{particle}docaz{bin}.log"
+    "output/log/velo_weights_mass_fit_Bu/{year}/{mode}/{version}_{model}_{particle}_docaz{bin}.log"
   run:
     shell(f"""(time\
     python analysis/velo_weights/mass_fit.py\
@@ -90,21 +100,32 @@ rule velo_weights_mass_fit_Bu:
     --mass-model {wildcards.model}\
     ) &> {log}""")
 
+# }}}
 
+
+# compute efficiency shape and velo weights {{{
+
+# WARNING: 2016 only
 
 rule velo_weights_efficiency_Bu:
+  threads: 6
+  resources:
+    mem_mb = 4000
   wildcard_constraints:
-    version = 'downstream'
+    version = 'downstream',
+    mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)"
   input:
-    sample = SAMPLES+"/{year}/{mode}/{version}.root",
-    pars = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}.json", bin=range(1,15)),
-    pars_match = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}_match.json", bin=range(1,15)),
+    sample = SAMPLES+"/2016/{mode}/{version}.root",
+    pars = expand("output/params/velo_weights/2016/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}.json", bin=range(1,15)),
+    pars_match = expand("output/params/velo_weights/2016/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}_match.json", bin=range(1,15)),
   output:
     pars = "output/params/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}.json",
-    plot = "output/figures/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}.pdf",
-    logplot = "output/figures/velo_weights/{year}/{mode}/{version}_log{effmodel}_{massmodel}_{particle}.pdf",
+    plot = "output/figures/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}_fit.pdf",
+    logplot = "output/figures/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}_fitlog.pdf",
+  log:
+    "output/log/velo_weights_efficiency_Bu/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}.log"
   run:
-    shell(f"""
+    shell(f"""(time\
     python analysis/velo_weights/efficiency_fitter.py\
     --params {",".join(input.pars)}\
     --params-match {",".join(input.pars_match)}\
@@ -115,25 +136,39 @@ rule velo_weights_efficiency_Bu:
     --trigger "combined"\
     --year {wildcards.year}\
     --mass-model {wildcards.massmodel}\
-    """)
+    ) &> {log}""")
 
 
 rule velo_weights_compute:
+  threads: 2
   resources:
-    mem_mb=7168
+    mem_mb=5000
   input:
     original = lambda wcs: tuples(wcs, weight='sWeight'),
-    pars = expand("output/params/velo_weights/{{year}}/Bu2JpsiKplus/downstream_{effmodel}_{massmodel}_hplus.json",
-                  effmodel=config['velo_effmodel'], massmodel=config['velo_massmodel'])
+    pars = lambda wcs: expand("output/params/velo_weights/{{year}}/{mode}/downstream_{effmodel}_{massmodel}_hplus.json",
+                  effmodel=config['velo_effmodel'], massmodel=config['velo_massmodel'],
+                  mode="MC_Bu2JpsiKplus" if f'{wcs.mode}'[:2]=='MC' else "Bu2JpsiKplus")
   output:
     temp(SAMPLES+'/{year}/{mode}/{version}_veloWeight.root')
   log:
     'output/log/velo_weights_compute/{year}/{mode}/{version}.log'
   run:
-    shell(f"cp {input.original} {output}")
-    send_mail(f"Polarity weighting :: {wildcards}", f"{log}")
+    shell(f"""(time\
+    python analysis/velo_weights/compute_weight.py\
+    --input-sample {input.original}\
+    --output-sample {output}\
+    --params {input.pars}\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    ) &> {log}""")
+    send_mail(f"Compute VELO weight :: {wildcards}", f"{log}")
 
-#
+# }}}
+
+
+# cross-check time acceptance with velo weights {{{
+
 # rule time_acceptance_upper:
 #   input:
 #     # sample = "/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}.root",
@@ -149,3 +184,8 @@ rule velo_weights_compute:
 #     --eff {input.eff}\
 #     --timeacc {output.timeacc}\
 #     """)
+
+# }}}
+
+
+# vim:foldmethod=marker

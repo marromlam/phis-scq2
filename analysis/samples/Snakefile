@@ -62,7 +62,6 @@ rule samples_stat_tuple:
 #    the ntuples that will actually be used for phis-scq analysis package.
 
 rule samples_reduce_tuple:
-  message: "Reduce the branches of the {wildcards.mode}-{wildcards.year} sample. Also applies the phisscq branches naming convention."
   threads: 2
   wildcard_constraints:
     mode = "((MC_)?(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?|MC_Bs2JpsiKK_Swave)"
