@@ -41,7 +41,9 @@ rule physics_params_data_Bs:
     --flavor-tagging {",".join(input.flavor)}\
     --params {output.params}\
     --year {",".join(YEARS[f'{wildcards.year}'])}\
-    --flag {wildcards.fit}_{wildcards.angacc}_{wildcards.timeacc}\
+    --fit {wildcards.fit}\
+    --angacc {wildcards.angacc}\
+    --timeacc {wildcards.timeacc}\
     --trigger {wildcards.trigger}\
     --version {wildcards.version}\
     --blind {settings.blinding['blind']}\
