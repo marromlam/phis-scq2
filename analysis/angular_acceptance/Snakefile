@@ -365,6 +365,7 @@ rule angular_acceptance_iterative_dual_data_yearly:
     --output-angular-weights-mc-dg0 {",".join(output.weights_dg0)}\
     --year {",".join([wildcards.year])}\
     --angacc {wildcards.angacc}\
+    --timeacc {wildcards.timeacc}\
     --version {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Yearly :: {wildcards}", f"{log}")
@@ -444,7 +445,8 @@ rule angular_acceptance_iterative_dual_data_run2a:
     --output-angular-weights-mc-std  {",".join(output.weights_std)}\
     --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
     --year                    {",".join(YEARS['Run2a'])}\
-    --angacc                  {wildcards.angacc}_{wildcards.timeacc}\
+    --angacc                  {wildcards.angacc}\
+    --timeacc                 {wildcards.timeacc}\
     --version                 {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2a :: {wildcards}", f"{log}")
@@ -544,6 +546,7 @@ rule angular_acceptance_iterative_dual_data_run2:
     --output-angular-weights-mc-dg0 {",".join(output.weights_dg0)}\
     --year {",".join(YEARS['Run2'])}\
     --angacc {wildcards.angacc}\
+    --timeacc {wildcards.timeacc}\
     --version {wildcards.version}\
     ) &> {log}""")
     send_mail(f"Angular Acceptance Run2 :: {wildcards}", f"{log}")
