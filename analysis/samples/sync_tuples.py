@@ -40,6 +40,8 @@ vsub_dict = {
   "magUp": "Polarity == 1",
   "magDown": "Polarity == -1",
   "bkgcat60": "B_BKGCAT != 60",
+  "LT": "time < 2",
+  "UT": "time > 2",
   "g210300": "runNumber > 210300",
   "l210300": "runNumber < 210300",
   "pTB1": "B_PT >= 0 & B_PT < 3.8e3",

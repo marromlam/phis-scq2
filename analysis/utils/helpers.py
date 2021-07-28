@@ -56,6 +56,8 @@ def timeacc_guesser(timeacc):
     r"(1[0-2]|[2-9])?",
     # whether to use Velo Weights or not
     r"(VW)?",
+    # whether to use Velo Weights or not
+    r"(LT|UT)?",
     # whether to use reweightings or not
     r"(Noncorr)?",
     # wether to use resolution in time
@@ -74,12 +76,14 @@ def timeacc_guesser(timeacc):
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
   try:
-    acc, nknots, vw8, corr, res, oddW, pTW, flat, cuts, swap = p.search(timeacc).groups()
+    acc, nknots, vw8, lut, corr, res, oddW, pTW, flat, cuts, swap = p.search(timeacc).groups()
     ans = {
       "acc": acc,
       "nknots": int(nknots) if nknots else 3,
       "use_truetime": True if res=='Nores' else False,
       "use_oddWeight": True if oddW=='Odd' else False,
+      "use_lowTime": True if lut=='LT' else False,
+      "use_upTime": True if lut=='UT' else False,
       "use_veloWeight": True if vw8=='VW' else False,
       "use_pTWeight": True if pTW=='pT' else False,
       "corr": False if corr=='Noncorr' else True,
@@ -173,6 +177,8 @@ def version_guesser(version):
         r"(evtOdd|evtEven)?",
         # background category  
         r"(bkgcat60)?",
+        # upper / lower times
+        r"(LT|UT)?",
         # split in runNumber  
         r"(l210300|g210300)?",
         # split by magnet Up or Down: useful for crosschecks
@@ -184,7 +190,7 @@ def version_guesser(version):
     # print(pattern)
     p = re.compile(pattern)
     try:
-      share, evt, shit, runN, mag, fullcut, var, nbin = p.search(mod).groups()
+      share, evt, shit, time, runN, mag, fullcut, var, nbin = p.search(mod).groups()
       share = int(share) if share else 100
       evt = evt if evt else None
       nbin = int(nbin)-1 if nbin else None
@@ -209,6 +215,8 @@ def cut_translate(version_substring):
     "magUp": "magnet == 1",
     "magDown": "magnet == 0",
     "bkgcat60": "bkgcat != 60",
+    "LT": "time < 2",
+    "UT": "time > 2",
     "g210300": "runN > 210300",
     "l210300": "runN < 210300",
     "pTB1": "pTB >= 0 & pTB < 3.8e3",
