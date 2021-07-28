@@ -638,13 +638,18 @@ if __name__ == '__main__':
   p.add_argument('--timeacc', help='Year of data-taking')
   p.add_argument('--version', help='Year of data-taking')
   args = vars(p.parse_args())
-  
+
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
-  YEARS = args['year'].split(',') 
+  YEARS = args['year'].split(',')
   MODE = 'Bs2JpsiPhi'
   ANGACC = parse_angacc(args['angacc'])
   print(args['timeacc'])
   TIMEACC = timeacc_guesser(args['timeacc'])
+
+  if TIMEACC['use_upTime']:
+    tLL = 2
+  if TIMEACC['use_lowTime']:
+    tUL = 2
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)

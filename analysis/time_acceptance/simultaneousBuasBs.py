@@ -109,7 +109,7 @@ if __name__ == '__main__':
     # to be implemented
     0
   if TIMEACC['use_veloweight']:
-    sw = f'veloweight*{sw}'
+    sw = f'veloWeight*{sw}'
 
 
 

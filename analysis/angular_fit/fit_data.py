@@ -99,6 +99,11 @@ MODE = 'Bs2JpsiPhi'
 FIT = args['fit']
 TIMEACC = timeacc_guesser(args['timeacc'])
 
+if TIMEACC['use_upTime']:
+  tLL = 2
+if TIMEACC['use_lowTime']:
+  tUL = 2
+
 # Prepare the cuts -----------------------------------------------------------
 CUT = '' 
 CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
@@ -117,10 +122,6 @@ weight_rd='(sw)'
 if TIMEACC['use_veloWeight']:
   weight_rd = f'veloWeight*{weight_rd}'
 
-if 'magUp' in FIT:
-  CUT = cuts_and("magnet>0", CUT)
-if 'magDown' in FIT:
-  CUT = cuts_and("magnet<0", CUT)
 
 if TRIGGER == 'combined':
   TRIGGER = ['biased', 'unbiased']

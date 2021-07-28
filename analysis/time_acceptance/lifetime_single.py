@@ -25,6 +25,7 @@ from utils.plot import mode_tex
 from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
+from trash_can.knot_generator import create_time_bins
 
 import config
 # binned variables
@@ -78,6 +79,10 @@ if __name__ == '__main__':
   initialize(os.environ['IPANEMA_BACKEND'],1)
   import time_acceptance.fcn_functions as fcns
 
+  if TIMEACC['use_upTime']:
+    tLL = 2
+  if TIMEACC['use_lowTime']:
+    tUL = 2
   # Prepare the cuts
   CUT = cuts_and(f'time>={tLL} & time<={tUL}')
 
@@ -95,8 +100,8 @@ if __name__ == '__main__':
     TRIGGER = [TRIGGER]
 
   sWeight = "sw"
-  if TIMEACC['use_veloweight']:
-    sweight = f'veloweight*{sWeight}'
+  if TIMEACC['use_veloWeight']:
+    sweight = f'veloWeight*{sWeight}'
 
   # }}}
 
@@ -174,7 +179,7 @@ if __name__ == '__main__':
   # lifetime fit
   if MINER.lower() in ("minuit","minos"):
     lifefit = optimize(fcn_call=fcns.splinexerfconstr_single, params=lfpars,
-                       fcn_kwgs={'cats':cats, 'weight':True},
+                       fcn_kwgs={'cats':cats, 'weight':True, 'tLL':tLL, 'tUL':tUL},
                        method=MINER, verbose=False, strategy=1, tol=0.05);
     print(lifefit)
   elif MINER.lower() in ('bfgs', 'lbfgsb'):

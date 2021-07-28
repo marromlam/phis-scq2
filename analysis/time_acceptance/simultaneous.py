@@ -25,6 +25,7 @@ from utils.plot import mode_tex
 from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
+from trash_can.knot_generator import create_time_bins
 
 import config
 # binned variables
@@ -73,6 +74,11 @@ if __name__ == '__main__':
   initialize(os.environ['IPANEMA_BACKEND'], 1)
   import time_acceptance.fcn_functions as fcns
 
+  if TIMEACC['use_upTime']:
+    tLL = 2
+  if TIMEACC['use_lowTime']:
+    tUL = 2
+  print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
   # Prepare the cuts
   CUT = trigger_scissors(TRIGGER)              # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')     # place decay-time cuts
@@ -91,6 +97,9 @@ if __name__ == '__main__':
 
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(TIMEACC['nknots'])]
+  if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
+    knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
+  knots = knots.tolist()
   sWeight = "sw"
 
 
@@ -243,7 +252,9 @@ if __name__ == '__main__':
     'data': [cats['signalMC'].time, cats['controlMC'].time, cats['controlRD'].time],
     'prob': [cats['signalMC'].lkhd, cats['controlMC'].lkhd, cats['controlRD'].lkhd],
     'weight': [cats['signalMC'].weight, cats['controlMC'].weight, cats['controlRD'].weight],
-    'flatend': TIMEACC['use_flatend']
+    'flatend': TIMEACC['use_flatend'],
+    'tLL': tLL,
+    'tUL': tUL
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
 
