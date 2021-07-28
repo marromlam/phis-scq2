@@ -104,7 +104,7 @@ dlls = np.random.rand(50,50)*0
 
 
 
-def dump_joint_physics(pars, titles, dlls=False, caption=""):
+def dump_joint_physics(pars, titles, dlls=False):
 
 
   pval = blend_parameters(*pars[1:], p0=pars[0], params=False, pvalue=True)
@@ -192,13 +192,9 @@ if __name__ == '__main__':
     print('no dlls')
     dlls = False
 
-
-  # create a caption
-  caption = f"Physics parameters obtained with {acc} for ${'+'.join(years)}$."
-
   # tabule
   print(titles)
-  table = dump_joint_physics(params, titles, dlls=dlls, caption=caption)
+  table = dump_joint_physics(params, titles, dlls=dlls)
   print(table)
 
   print(  f"{args['output']}".replace('/packandgo/','/') )
