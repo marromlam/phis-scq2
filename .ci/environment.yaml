@@ -3,22 +3,10 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python 3.8.5
-  - pip
+  - python
   - pocl
   - pyopencl
-  - ROOT 6.22.2
+  - ROOT
   - root_pandas
-  - hep_ml
-  - iminuit 1.5.2
-  - matplotlib
-  - corner
-  - tqdm
   - reikna
-  - py-cpuinfo
-  - uproot3
-  - numpy
-  - scipy
-  - uncertainties
-  - numdifftools
-  - emcee
+
