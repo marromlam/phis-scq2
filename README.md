@@ -3,7 +3,7 @@
 This repository contains the code for running different parts of $`B_s \rightarrow J/\psi K^+K^-`$ analysis. Each folder contains a part that is needed to attain the $`\phi_s`$ value.
 
 <p align="center">
-  <img src="logo/pelegrin_phis.png" width="500" title="Pelegrin and the phis vs DG plot">
+  <img src=".logo/pelegrin_phis.png" width="500" title="Pelegrin and the phis vs DG plot">
 </p>
 
 
@@ -55,7 +55,7 @@ running the following example and that is it!
 ```bash
 activatephisscq
 kinit user@CERN.CH
-snakemake output/params/angular_fit/run2/Bs2JpsiPhi/v0r5_base_base.json -j
+snakemake output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_vgc_amsrd_simul3_amsrd_combined.json -j
 ```
 
 

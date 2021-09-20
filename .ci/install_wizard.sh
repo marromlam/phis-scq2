@@ -1,5 +1,6 @@
 #!/bin/bash
-export CONDA_ALWAYS_YES="true"
+
+# phis ascii Logo {{{
 
 clear && printf "\e[3J"
 echo "
@@ -31,8 +32,10 @@ PHIS-SCQ
 This is the phis-scq install wizard ...
 "
 
+# }}}
 
-################################################################################
+
+# Conda installation {{{
 
 echo "
 [ 1 ] Conda installation -------------------------------------------------------
@@ -41,7 +44,7 @@ echo "
       installation of miniconda3 in your computer.
 "
 
-read -p "      Do you have a conda3/miniconda3 installation (y/[n])? " q
+read -p "      Do you have a conda3/miniconda3 installation (y/[n])? " hasconda
 hasconda=${hasconda:-n}
 if [ "$hasconda" != "${hasconda#[Yy]}" ] ;then
   hasconda=1
@@ -58,11 +61,10 @@ else
   condapath=${condapath:-$HOME/conda3/}
 fi
 
-################################################################################
+# }}}
 
 
-
-################################################################################
+# Conda environment creation {{{
 
 echo "
 [ 2 ] Conda environment creation -----------------------------------------------
@@ -88,11 +90,10 @@ else
   cudapath="None"
 fi
 
-#################################################################################
+# }}}
 
 
-
-#################################################################################
+# Create bash function to activate environment {{{
 
 echo "
 [ 3 ] Initialization function ---------------------------------------------------
@@ -142,6 +143,10 @@ if [ "${bashpath}" != "None" ];then
   echo "$function_string" >> ${bashpath}
 fi
 
+# }}}
+
+
+# Installation plan {{{
 
 echo "
 [ 4 ] Installation plan  --------------------------------------------------------
@@ -155,18 +160,19 @@ echo "
           pour yourself a drink, this is going to take a while
 "
 
-if [ ${hasconda}=1 ];then
-  echo "      ! wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh"
+if [ "${hasconda}" == 0 ];then
+  echo "      ! wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh"
   echo "      ! bash miniconda.sh -b -p ${condapath}"
 fi
 
 echo "      ! source $condapath/bin/activate"
-echo "      ! conda env create -f .ci/environment.yaml"
+# echo "      ! conda env create -f .ci/environment.yaml"
+echo "      ! conda create --name $myenv --file .ci/environment.txt"
 echo "      ! conda activate phisscq"
 
 echo "      ! git clone ssh://git@gitlab.cern.ch:7999/mromerol/ipanema3.git ${ipapath}"
 echo "      ! pip install -e ${ipapath}/"
-echo "      ! pip install .ci/requiremnts.txt"
+echo "      ! pip install .ci/requirements.txt"
 
 if [ "${cudapath}" != "None" ];then
   echo "      ! export PATH='${cudapath}/bin:\$PATH'"
@@ -176,30 +182,31 @@ fi
 echo " "
 read -p "      [PRESS ENTER]" dummy
 
-#################################################################################
+# }}}
 
 
+# Run the installation {{{
 
-#################################################################################
-
-if [ ${hasconda}=1 ];then
+export CONDA_ALWAYS_YES="true"
+unset PYTHONPATH
+if [ "${hasconda}" == 0 ];then
   if [ "$(uname)" == "Darwin" ]; then
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
+    wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
   elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   fi
   bash miniconda.sh -b -f -p ${condapath}
 fi
 
-unset PYTHONPATH
-if [ "${cudapath}" != "None" ];then
+if [ "${cudapath}" != "None" ]; then
   export PATH="${cudapath}/bin:${PATH}"
   export LD_LIBRARY_PATH="${cudapath}/lib64:${LD_LIBRARY_PATH}"
 fi
 
 source ${condapath}/bin/activate
-conda env create -f .ci/environment.yaml
-conda activate phisscq
+# conda env create -f .ci/environment.yaml
+conda create --name $myenv --file .ci/environment.txt
+conda activate $myenv
 rm miniconda.sh
 
 git clone ssh://git@gitlab.cern.ch:7999/mromerol/ipanema3.git ${ipapath}
@@ -210,4 +217,7 @@ if [ "${cudapath}" != "None" ];then
   pip install pycuda
 fi
 
-#################################################################################
+# }}}
+
+
+# vim:foldmethod=marker
