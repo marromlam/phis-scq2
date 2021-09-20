@@ -38,8 +38,9 @@ if __name__ == '__main__':
   gen_pars = Parameters.load(args['params'])
 
   names = [key for key in pars.keys() if pars[key].free==True]
-  if 'Bd2JpsiKstar':
+  if 'Bd2JpsiKstar' in MODE:
     names =  ['fPlon', 'fPper', 'dPpar', 'dPper']
+  print(names)
   pars = Parameters.build(pars, names)
   latex = [pars[key].latex for key in pars.keys()]
   value = np.array([pars[key].value for key in pars.keys()])
