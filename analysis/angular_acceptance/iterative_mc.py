@@ -168,7 +168,6 @@ def get_angular_acceptance(mc, trigger, kkpWeight=False):
   if kkpWeight:
     weight *= ristra.get(mc.kkpWeight[i])
   weight = ristra.allocate(weight)
-
   # compute angular acceptance
   if 'Bs2Jpsi' in MODE:
     ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
@@ -200,7 +199,7 @@ def fcn_data(parameters, data):
   for dy in data.values():
     for dt in dy.values():
       badjanak_gamma5(dt.data, dt.lkhd, pars_dict, **dt.timeacc.valuesdict(),
-                      **dt.angacc.valuesdict())
+                     **dt.csp.valuesdict(), **dt.angacc.valuesdict())
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)
@@ -290,7 +289,7 @@ def do_fit(verbose=False):
 
   # do the fit
   result = optimize(fcn_data, method='minuit', params=pars,
-                    fcn_kwgs={'data':data}, verbose=False, timeit=True,
+                    fcn_kwgs={'data':data}, verbose=True, timeit=True,
                     tol=0.05, strategy=2)
 
   #print fit results
@@ -809,8 +808,8 @@ if __name__ == '__main__':
         pTm = np.array(data[y][t].df['pTHm'])
         pT_acc = np.ones_like(data[y][t].df['pTHp'])
         for k in range(len(pT_acc)):
-          pT_acc[k] = acceptance_effect(pTp[k], 250**3)
-          pT_acc[k] *= acceptance_effect(pTm[k], 250**3)
+          pT_acc[k] = acceptance_effect(pTp[k], 200**3)
+          pT_acc[k] *= acceptance_effect(pTm[k], 200**3)
         data[y][t].df['pTWeight'] = pT_acc
         print(weight_rd)
       print(data[y][t])
@@ -933,8 +932,12 @@ if __name__ == '__main__':
               free=True, latex=r"\delta_{\parallel} - \delta_0"))
     pars.add(dict(name="dPper", value=-0.17, min=-2*3.14, max=2*3.14,
               free=True, latex=r"\delta_{\perp} - \delta_0"))
-    pars.add(dict(name="Gd", value= 0.65833, min= 0.0, max= 1.0,
+    if ANGACC['use_pTWeight'] or ANGACC['use_oddWeight']:
+      pars.add(dict(name="Gd", value= 0.65833, min= 0.0, max= 1.0,
                   free=False, latex=r"\Gamma_d"))
+    else:
+      pars.add(dict(name="Gd", value= 0.65833, min= 0.0, max= 1.0,
+                  free=True, latex=r"\Gamma_d")) #Warining a true
   print(pars)
 
 
