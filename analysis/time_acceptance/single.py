@@ -120,7 +120,19 @@ if __name__ == '__main__':
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
       mode = 'signalMC'; c = 'a'
-    # }}}
+    elif 'MC_Bs2JpsiKK_Swave' in m:
+      # MC_Bs2JpsiKK_Swave {{{
+      m = 'MC_Bs2JpsiKK_Swave'
+      if TIMEACC['corr']:
+        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
+      else:
+        weight = f'dg0Weight*{sWeight}/gb_weights'
+      if TIMEACC['use_oddWeight']:
+        weight = f"oddWeight*{weight}"
+      #cut in bkgcat implies not to use sw/gb_weights
+      if "bkgcat60" in args['version']:
+        weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
+      mode = 'signalMC'; c = 'a'
     elif 'MC_Bs2JpsiPhi_dG0' in m:
       m = 'MC_Bs2JpsiPhi_dG0'
       if TIMEACC['corr']:
@@ -167,6 +179,7 @@ if __name__ == '__main__':
       else:
         weight = f'{sWeight}'
       mode = 'controlRD'; c = 'c'
+    # }}}
     print(weight)
 
     # Load the sample
@@ -176,8 +189,8 @@ if __name__ == '__main__':
       pTm = np.array(cats[mode].df['pTHm'])
       pT_acc = np.ones_like(cats[mode].df['pTHp'])
       for k in range(len(pT_acc)):
-        pT_acc[k] = acceptance_effect(pTp[k], 250**3)
-        pT_acc[k] *= acceptance_effect(pTm[k], 250**3)
+        pT_acc[k] = acceptance_effect(pTp[k], 200**3)
+        pT_acc[k] *= acceptance_effect(pTm[k], 200**3)
       cats[mode].df['pT_acc'] = pT_acc
       weight = f'{weight}*pT_acc'
       print(weight)
