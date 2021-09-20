@@ -1,6 +1,7 @@
 {
   "constants": {
     "MC_Bs2JpsiPhi": { "mu": 0, "sigma": 0.0417, "DGsd": 0.003486 },
+    "MC_Bs2JpsiKK_Swave": { "mu": 0, "sigma": 0.0417, "DGsd": 0.00351 },
     "MC_Bs2JpsiPhi_dG0": { "mu": 0, "sigma": 0.0417, "DGsd": 0.003486 },
     "MC_Bd2JpsiKstar": { "mu": 0, "sigma": 0.03864, "DGsd": 0.00044 },
     "Bd2JpsiKstar": { "mu": 0, "sigma": 0.04244, "DGsd": 0.0 },
