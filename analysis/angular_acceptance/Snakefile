@@ -86,6 +86,40 @@ rule angular_acceptance_iterative_plot_parameters:
 # }}}
 
 
+# Plotting naive vs parameters {{{ 
+#    of angular acceptance in each iteration 
+
+rule angular_acceptance_iterative_plot_parameters_vs_naive:
+  resources:
+    mem_mb = 4096
+  input:
+    acceptance = 'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.json',
+    naive = 'tmp/params/physics_params/{year}/{mode}/{version}_{year}Nores_{csp}_{flavor}_singleNoncorrNores_{timeres}.json'
+  params:
+    'analysis/params/generator/{year}/{mode}.json'
+  output:
+    directory('output/figures/angular_acceptance_vs_naive/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}')
+  log:
+    'output/log/angular_acceptance_plot_iteration_vs_naive/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
+  run:
+    shell(f"""(time\
+    python analysis/angular_acceptance/Plot_parameters_vs_naive.py\
+    --input {input.acceptance}\
+    --naive {input.naive}\
+    --params {params}\
+    --output {output}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --angacc {wildcards.angacc}\
+    --year {wildcards.year}\
+    ) &> {log}""")
+    send_mail(f"Plot parameters angular acceptance :: {wildcards}", f"{log}")
+    if NOTE:
+      note_path = f"{output}".replace("output/figures", f"{NOTE}/figs")
+      shell(f"mkdir -p {note_path}")
+      shell(f"cp -r {output}/* {note_path}")
+
+# }}}
 # Latex table with overall p-values {{{
 #   pulls for a set of parameters 
 
@@ -190,7 +224,7 @@ rule angular_acceptance_corrected:
   resources:
     mem_mb = 4096
   wildcard_constraints:
-    mode = "(MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+    mode = "(MC)_(Bs2JpsiPhi|Bd2JpsiKstar|Bs2JpsiKK_Swave)(_dG0)?",
     angacc = "corrected(.*)?"
   input:
     sample_mc = lambda wcs: tuples(wcs),
@@ -791,8 +825,8 @@ rule angular_acceptance_iterative_mc_run2:
     mc_sample = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2'),
     mc_weights = lambda wcs: tuples(wcs, version=f'{wcs.version}'.replace('Odd', 'Even'), year='run2', weight=f'angWeight', angacc=f'{wcs.angacc}'.replace('run2', 'corrected')),
     data_sample = lambda wcs: tuples(wcs, year='run2'),
-    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp='none', angacc=f'{wcs.angacc}'.replace('run2', 'corrected'), trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp='none', angacc=f'{wcs.angacc}'.replace('run2', 'corrected'), trigger='unbiased'),
+    angacc_biased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp=f'{wcs.csp}', angacc=f'{wcs.angacc}'.replace('run2', 'corrected'), trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', csp=f'{wcs.csp}', angacc=f'{wcs.angacc}'.replace('run2', 'corrected'), trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', trigger='biased'),
     timeacc_unbiased = lambda wcs: timeaccs(wcs, version = f'{wcs.version}'.replace('Odd', 'Even'), year = 'run2', trigger='unbiased'),
     csp_factors = lambda wcs: csps(wcs, year='run2'),
