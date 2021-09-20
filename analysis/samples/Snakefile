@@ -118,7 +118,6 @@ rule samples_plot:
     ) &> {log}""")
     send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
 
-
 rule samples_plot_wrt_v0r0:
   threads: 128
   resources:
@@ -184,6 +183,42 @@ rule samples_plot_99:
     send_mail(f"Samples plot :: {wildcards}", f"{log}", f"{output}".split(' '))
 
 # }}}
+
+# IFT plot {{{
+# Plotting some branches that will enter in the IFT calibration.
+rule IFT_plot:
+  threads: 128
+  resources:
+    mem_mb=1024
+  wildcard_constraints:
+    mode = "MC_(Bs2JpsiPhi|Bs2DsPi)(_dG0)?",
+    branch = "(B_IFT_InclusiveTagger_TAG|B_SSKaonLatest_TAG)(ETA|DEC)"
+  input:
+    tuple = lambda wcs: tuples(wcs, mode='cdata', year=f'{wcs.year}', weight='sWeight'),
+    control = lambda wcs: tuples(wcs, year=f'{wcs.year}', weight='sWeight')
+  output:
+    'output/figures/plot_ift/{year}/{mode}/{version}_{branch}.pdf',
+    'output/figures/plot_ift/{year}/{mode}/{version}_{branch}_sw.pdf',
+  log:
+    'output/log/plot_ift/{year}/{mode}/{version}_{branch}.log',
+  run:
+    tuple = input.tuple
+    tuple = [tuple] if isinstance(tuple,str) else tuple
+    control = input.control
+    control = [control] if isinstance(control,str) else control
+    shell(f"""(time\
+    python analysis/samples/plot_ift_check.py\
+    --tuple {",".join(tuple)}\
+    --control {",".join(control)}\
+    --year {wildcards.year}\
+    --version {wildcards.version}\
+    --mode {wildcards.mode}\
+    --branch {wildcards.branch}\
+    --output {",".join(output)}\
+    ) &> {log}""")
+    send_mail(f"IFT plot :: {wildcards}", f"{log}", f"{output}".split(' '))
+#}}}
+
 
 
 # vim: foldmethod=marker
