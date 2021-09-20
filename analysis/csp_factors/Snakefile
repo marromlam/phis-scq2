@@ -11,7 +11,7 @@
 
 rule csp_factors_basics:
   wildcard_constraints:
-    csp = "(none|old)"
+    csp = "(none|old|gen)"
   output:
     "output/params/csp_factors/{year}/{mode}/{version}_{csp}.json",
   run:
