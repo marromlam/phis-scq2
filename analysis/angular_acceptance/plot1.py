@@ -66,7 +66,10 @@ def plot_angular_acceptance_reweightings(srd, smc, kkp,strvar, weight):
     axpull.set_ylim(0.3,1.9)
     axpull.set_yticks([0.5, 1.0, 1.5])
     axplot.set_ylabel('Weighted candidates')
-    axpull.set_xlabel(rf"${get_var_in_latex(strvar)}$")
+    if var=='mHH':
+      axpull.set_xlabel(rf"${get_var_in_latex(strvar)}$ $[MeV/c^2]$")
+    else:
+      axpull.set_xlabel(rf"${get_var_in_latex(strvar)}$ $[MeV/c]$")
     axplot.legend()
     watermark(axplot,version=f"${args['version']}$",scale=1.25)
     pdf_pages.savefig(fig)
