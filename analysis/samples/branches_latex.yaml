@@ -107,7 +107,30 @@ common: &common
     range : []
     units : ''
     descr : ''
-
+  'B_IFT_InclusiveTagger_TAGDEC':
+    peval: 'B_IFT_InclusiveTagger_TAGDEC'
+    latex : 'B_IFT_InclusiveTagger_TAGDEC'
+    range : [-2.0, 2.0]
+    units : ''
+    descr : ''
+  'B_SSKaonLatest_TAGDEC':
+    peval: 'B_SSKaonLatest_TAGDEC'
+    latex : 'B_SSKaonLatest_TAGDEC'
+    range : [-2.0, 2.0]
+    units : ''
+    descr : ''
+  'B_IFT_InclusiveTagger_TAGETA':
+    peval : 'B_IFT_InclusiveTagger_TAGETA'
+    latex : 'B_IFT_InclusiveTagger_TAGETA'
+    range : [0.0, 0.6]
+    units : ''
+    descr : ''
+  'B_SSKaonLatest_TAGETA':
+    peval: 'B_SSKaonLatest_TAGETA'
+    latex : 'B_SSKaonLatest_TAGETA'
+    range : [0.0, 0.6]
+    units : ''
+    descr : ''
 Bs_common: &Bs_common
   #cinematics
   'pHp' :
@@ -377,7 +400,7 @@ Bs_common: &Bs_common
   'pLp' : 
     peval: 'muplus_P'
     latex: 'p(\mu^{+})'
-    range: [0.0, 4.0e+4]
+    range: [0.0, 1.0e+5]
     units: 'MeV'
     descr: ''
   'pTLp' : 
@@ -389,7 +412,7 @@ Bs_common: &Bs_common
   'pLm' : 
     peval: 'muminus_P'
     latex: 'p_(\mu^{-})'
-    range: [0.0, 4.0e+4]
+    range: [0.0, 1.0e+5]
     units: 'MeV'
     descr: ''
   'pTLm' : 
