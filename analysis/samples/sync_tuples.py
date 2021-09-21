@@ -18,7 +18,7 @@ import argparse
 import uproot3 as uproot
 import shutil
 
-ROOT_PANDAS = True
+ROOT_PANDAS = False
 if ROOT_PANDAS:
   import root_pandas
 
@@ -40,8 +40,8 @@ vsub_dict = {
   "magUp": "Polarity == 1",
   "magDown": "Polarity == -1",
   "bkgcat60": "B_BKGCAT != 60",
-  "LT": "time < 2",
-  "UT": "time > 2",
+  "LT": "time < 0.89",
+  "UT": "time > 0.89",
   "g210300": "runNumber > 210300",
   "l210300": "runNumber < 210300",
   "pTB1": "B_PT >= 0 & B_PT < 3.8e3",
@@ -118,6 +118,16 @@ if __name__ == "__main__":
   else:
     eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+    if status:
+      print("WARNING: Could not found sw tuple. Downloading without sw...")
+      # WARNING: eos tuples seem to do not have version anymore...
+      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
+      status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+      if status:
+        print("WARNING: Could not found v1r0 tuple. Downloading without v0r5...")
+        # WARNING: eos tuples seem to do not have version anymore...
+        eos_path = f'{EOSPATH}/v0r5/{m}/{y}/{m}_{y}_selected_bdt_sw_v0r5.root'
+        status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     sw = 'sw'
   if status:
     print("These tuples are not yet avaliable at root://eoslhcb.cern.ch/*.",
@@ -126,7 +136,7 @@ if __name__ == "__main__":
     exit()
 
   # If we reached here, then all should be fine 
-  print(f"Downloaded {m}_{y}_selected_bdt_sw_{v}.root")
+  print(f"Downloaded {eos_path}")
 
   """
   # download main file
@@ -174,8 +184,13 @@ if __name__ == "__main__":
   try:
     result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
   except:
-    print("sWeight variable was not found. Set sw = 1")
-    result['sw'] = np.ones_like(result[result.keys()[0]])
+    print(result.keys())
+    if 'B_BKGCAT' in list(result.keys()):
+      print("sWeight is set to zero for B_BKGCAT==60")
+      result['sw'] = np.where(result['B_BKGCAT'].values!=60,1,0)
+    else:
+      print("sWeight variable was not found. Set sw = 1")
+      result['sw'] = np.ones_like(result[result.keys()[0]])
 
 
   # place cuts according to version substring
