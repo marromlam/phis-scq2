@@ -61,6 +61,8 @@ def timeacc_guesser(timeacc):
     # whether to use reweightings or not
     r"(Noncorr)?",
     # wether to use resolution in time
+    r"(timeT)?",
+    # wether to use resolution in time
     r"(Nores)?",
     # whether to use oddWeight or not
     r"(Odd)?",
@@ -76,11 +78,12 @@ def timeacc_guesser(timeacc):
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
   try:
-    acc, nknots, vw8, lut, corr, res, oddW, pTW, flat, cuts, swap = p.search(timeacc).groups()
+    acc, nknots, vw8, lut, corr, timeT, res, oddW, pTW, flat, cuts, swap = p.search(timeacc).groups()
     ans = {
       "acc": acc,
       "nknots": int(nknots) if nknots else 3,
       "use_truetime": True if res=='Nores' else False,
+      "use_transvers_time": True if timeT=='timeT' else False,
       "use_oddWeight": True if oddW=='Odd' else False,
       "use_lowTime": True if lut=='LT' else False,
       "use_upTime": True if lut=='UT' else False,
@@ -117,6 +120,8 @@ def parse_angacc(angacc):
   # Define the pattern we use to regex-parse the time acceptance wildcard
   pattern = [
     r"(naive|corrected|analytic|yearly|run2a|run2b|run2)",
+    # dual MC or single
+    r"(Dual)?",
     # wether to use resolution time or not
     r"(Nores)?",
     # whether to use oddWeight or not
@@ -127,9 +132,10 @@ def parse_angacc(angacc):
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
   try:
-    acc, res, oddity, ptW = p.search(angacc).groups()
+    acc, dual, res, oddity, ptW = p.search(angacc).groups()
     ans = {
       "acc": acc,
+      "dual": True if dual else False,
       "use_truetime": True if res=='Nores' else False,
       "use_oddWeight": True if oddity=='Odd' else False,
       "use_pTWeight": True if ptW=='pT' else False
