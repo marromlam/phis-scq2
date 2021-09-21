@@ -108,27 +108,33 @@ def dump_joint_physics(pars, titles, dlls=False):
 
 
   pval = blend_parameters(*pars[1:], p0=pars[0], params=False, pvalue=True)
-
+  print(titles)
   texcode = ''
   if len(titles) > 2:
     texcode += "\\resizebox{\\textwidth}{!}{"
   texcode += f"\\begin{{tabular}}{{l{'r'*(len(titles))}}}\n"
   texcode += "\\toprule\n"
+  # Header
   for i, w in enumerate(['tuple', 'fit', 'AA', 'CSP', 'FT', 'TA', 'TR', 'trigger']):
-    texcode += "\n"+" & ".join([f"  {'':>35}  "]+[f"""  {f'{w}: {f"{y[0]}{y[i+1][6:]}" if "yearly" in y[i+1] else y[i+1]}':>20}  """ for y in titles])
+    texcode += "\n"+" & ".join([f"  {'':>60}  "]+[f"""  {f'{w}: {f"{y[0]}{y[i+1][6:]}" if "yearly" in y[i+1] else y[i+1]}':>20}  """ for y in titles])
     texcode += " \\\\"
   texcode += "\n\\midrule\n"
+  # Parameters
   table = []
   for p in pars[0]:
-    line = [f'$ {pars[0][p].latex:>35} $']
+    line = [f'$ {pars[0][p].latex:>60} $']
     for i, y in enumerate(titles):
       par = f"{pars[i][p].uvalue:.2uL}"
       line.append(f"$ {par:>20} $")
     table.append(' & '.join(line))
   texcode += ' \\\\ \n'.join(table)
   texcode += ' \\\\\n\\midrule\n\nAgreement [pull (pvalue)]\\\\\n'
+  # Agreement
   for i, t in enumerate(titles):
-    col0 = [f"{' '.join(t[1:]):<30}   "]
+    col0 = [f"{' '.join(t[1:]):<60}   "]
+    if 'yearly' in ''.join(col0):
+        print('yearly')
+        col0 = [col0[0].replace('yearly', f"{t[0]:>6}")]
     print(i, len(titles))
     cols = [f"${f'{dlls[str(i)][str(n)][0]:.2f} ({dlls[str(i)][str(n)][1]:.2f})':>22}$" if n<i else f"${f'   ':>22}$" for n in range(len(titles))]
     #texcode += "\n"+" & ".join([])

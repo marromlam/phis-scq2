@@ -329,4 +329,94 @@ rule physics_params_tabular_binned_variables:
 # }}}
 
 
+rule physics_params_plot_systematics:
+  input:
+    "output/params/physics_params/run2/{mode}/{version}_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@magUp_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@magDown_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_vgc_amsrd_simul3_amsrd_biased.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_vgc_amsrd_simul3_amsrd_unbiased.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/2015/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2016/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2017/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2018/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_vgc_amsrd_simul3BuasBd_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/2015/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.json",
+    "output/params/physics_params/2016/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.json",
+    "output/params/physics_params/2017/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.json",
+    "output/params/physics_params/2018/Bs2JpsiPhi/v0r5_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@sigmat1_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@sigmat2_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@sigmat3_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@etaB1_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@etaB2_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@etaB3_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB1_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB2_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB3_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB4_run2_run2_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/2015/Bs2JpsiPhi/v0r5@pTB1_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2016/Bs2JpsiPhi/v0r5@pTB1_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2017/Bs2JpsiPhi/v0r5@pTB1_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2018/Bs2JpsiPhi/v0r5@pTB1_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/2015/Bs2JpsiPhi/v0r5@pTB2_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2016/Bs2JpsiPhi/v0r5@pTB2_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2017/Bs2JpsiPhi/v0r5@pTB2_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2018/Bs2JpsiPhi/v0r5@pTB2_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/2015/Bs2JpsiPhi/v0r5@pTB3_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2016/Bs2JpsiPhi/v0r5@pTB3_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2017/Bs2JpsiPhi/v0r5@pTB3_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2018/Bs2JpsiPhi/v0r5@pTB3_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/2015/Bs2JpsiPhi/v0r5@pTB4_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2016/Bs2JpsiPhi/v0r5@pTB4_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2017/Bs2JpsiPhi/v0r5@pTB4_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/params/physics_params/2018/Bs2JpsiPhi/v0r5@pTB4_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB1_run2_run2_vgc_amsrd_simul3_amsrd_unbiased.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB2_run2_run2_vgc_amsrd_simul3_amsrd_unbiased.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB3_run2_run2_vgc_amsrd_simul3_amsrd_unbiased.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB4_run2_run2_vgc_amsrd_simul3_amsrd_unbiased.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB1_run2_run2_vgc_amsrd_simul3_amsrd_biased.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB2_run2_run2_vgc_amsrd_simul3_amsrd_biased.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB3_run2_run2_vgc_amsrd_simul3_amsrd_biased.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB4_run2_run2_vgc_amsrd_simul3_amsrd_biased.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB1_run2_run2_vgc_amsrd_simul3LT_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB2_run2_run2_vgc_amsrd_simul3LT_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB3_run2_run2_vgc_amsrd_simul3LT_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB4_run2_run2_vgc_amsrd_simul3LT_amsrd_combined.json",
+    "output/tmp/splitter",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB1_run2_run2_vgc_amsrd_simul3UT_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB2_run2_run2_vgc_amsrd_simul3UT_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB3_run2_run2_vgc_amsrd_simul3UT_amsrd_combined.json",
+    "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@pTB4_run2_run2_vgc_amsrd_simul3UT_amsrd_combined.json",
+  output:
+    "output/figures/physics_params/all/{mode}/{version}_{param}.pdf"
+  log:
+    "output/log/physics_params_plot_systematics/all/{mode}/{version}_{param}.log"
+  run:
+    shell(f"""(time\
+    python packandgo/plot_all_syst.py\
+    --params {",".join(input)}\
+    --param {wildcards.param}\
+    --figure {output}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    ) #&> {log}""")
+
+
+
 # vim:foldmethod=marker
