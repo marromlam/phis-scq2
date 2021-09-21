@@ -64,10 +64,13 @@ if __name__ == '__main__':
   args = vars(p.parse_args())
 
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  print(args['version'])
   YEAR = args['year']
   MODE = 'Bs2JpsiPhi'
   TRIGGER = args['trigger']
   TIMEACC = timeacc_guesser(args['timeacc'])
+  TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
+  TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
   MINER = args['minimizer']
 
   # Get badjanak model and configure it
@@ -75,9 +78,9 @@ if __name__ == '__main__':
   import time_acceptance.fcn_functions as fcns
 
   if TIMEACC['use_upTime']:
-    tLL = 2
+    tLL = 0.89
   if TIMEACC['use_lowTime']:
-    tUL = 2
+    tUL = 0.89
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
   # Prepare the cuts
   CUT = trigger_scissors(TRIGGER)              # place cut attending to trigger
@@ -99,7 +102,8 @@ if __name__ == '__main__':
   knots = all_knots[str(TIMEACC['nknots'])]
   if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
     knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
-  knots = knots.tolist()
+    knots = knots.tolist()
+  print(knots)
   sWeight = "sw"
 
 
@@ -197,8 +201,9 @@ if __name__ == '__main__':
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
     cats[mode].allocate(time='time', lkhd='0*time', weight=weight)
+    print(np.min(cats[mode].time.get()), np.max(cats[mode].time.get()))
     cats[mode].weight = swnorm(cats[mode].weight)
-    print(cats[mode].df['veloWeight'])
+    # print(cats[mode].df['veloWeight'])
 
     # Add knots
     cats[mode].knots = Parameters()
@@ -228,7 +233,7 @@ if __name__ == '__main__':
     _sigma = np.mean(cats[mode].df['sigmat'].values)
     print(f"sigmat = {resolutions[m]['sigma']} -> {_sigma}")
     cats[mode].params.add({'name':f'sigma_{c}',
-                           'value':_sigma + 0*resolutions[m]['sigma'],
+                           'value':0*_sigma + 1*resolutions[m]['sigma'],
                            'latex':f'\sigma_{c}', 'free':False})
     print(cats[mode].knots)
     print(cats[mode].params)
