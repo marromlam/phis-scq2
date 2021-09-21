@@ -21,7 +21,7 @@ The instructions were wrapped under a bash script, so basically you clone this
 repository and then
 ```bash
 cd phis-scq
-bash analysis/utils/install.sh
+bash .ci/install.sh
 ```
 which will guide the installation by prompting some questions.
 
