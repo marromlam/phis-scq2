@@ -33,7 +33,7 @@ YEARS = settings.years
 
 wildcard_constraints:
   trigger = "(biased|unbiased|combined)",
-  year = "(2015|2016|run2a|2017|2018|run2b|run2|2020)"
+  year = "(2015|2016|run2a|2017|2018|run2b|run2|2020|2021)"
 
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
@@ -49,6 +49,7 @@ modes = ['Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi',
 
 # Including Snakefiles {{{
 
+include: 'selection/Snakefile'
 include: 'analysis/samples/Snakefile'
 include: 'analysis/reweightings/Snakefile'
 include: 'analysis/velo_weights/Snakefile'
