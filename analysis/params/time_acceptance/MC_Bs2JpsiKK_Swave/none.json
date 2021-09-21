@@ -1,0 +1,27 @@
+{
+  k0:
+  {
+    name: k0
+    value: 0.3
+    free: false
+    stdev: 0.0
+    latex: k_0
+  }
+  k1:
+  {
+    name: k1
+    value: 15.0
+    free: false
+    stdev: 0.0
+    latex: k_1
+  }
+  c0:
+  {
+    name: c0
+    value: 1.0
+    free: false
+    stdev: 0.0
+    latex: c_0
+  }
+}
+
