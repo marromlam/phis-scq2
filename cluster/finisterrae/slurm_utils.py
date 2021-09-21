@@ -236,7 +236,7 @@ def advanced_argument_conversion(arg_dict):
             "adjusting number of cpus down"
         )
         ncpus = min(int(max(config["CPUS"])), ncpus)
-    adjusted_args = {"mem": int(mem), "cpus-per-task": ncpus}
+    adjusted_args = {"mem": int(mem*10), "cpus-per-task": ncpus}
 
     # Update time. If requested time is larger than maximum allowed time, reset
     if runtime:
