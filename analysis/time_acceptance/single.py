@@ -105,7 +105,7 @@ if __name__ == '__main__':
   knots = all_knots[str(TIMEACC['nknots'])]
   if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
     knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
-  knots = knots.tolist()
+    knots = knots.tolist()
   sWeight = "sw"
 
 
