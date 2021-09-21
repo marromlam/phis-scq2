@@ -56,8 +56,14 @@ if __name__ == '__main__':
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   MODE = 'Bu2JpsiKplus'
+  TRIGGER = args['trigger']
   TIMEACC = timeacc_guesser(args['timeacc'])
   MINER = args['minimizer']
+
+  if TRIGGER == 'combined':
+    TRIGGER = ['biased', 'unbiased']
+  else:
+    TRIGGER = [TRIGGER]
 
   # }}}
 
@@ -91,7 +97,7 @@ if __name__ == '__main__':
   cats = {}
   for i, m in enumerate(YEAR.split(',')):
     cats[m] = {}
-    for t in ['biased', 'unbiased']:
+    for t in TRIGGER:
       cats[m][t] = Sample.from_root(args['sample'].split(',')[i], share=SHARE)
       cats[m][t].name = f"BdRD-{m}-{t}"
       cats[m][t].chop(trigger_scissors(t, CUT))
