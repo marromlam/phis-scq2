@@ -1,0 +1,35 @@
+rule brutality:
+  threads: 128,
+  wildcard_constraints:
+    mode = 'Bs2JpsiPhi'
+  input:
+    tupleBdRD = lambda wcs: tuples(wcs, mode="Bd2JpsiKstar"),
+    tupleBdMC = lambda wcs: tuples(wcs, mode="MC_Bd2JpsiKstar"),
+    tupleBsRD = lambda wcs: tuples(wcs, mode="Bs2JpsiPhi"),
+    tupleBsMC = lambda wcs: tuples(wcs, mode="MC_Bs2JpsiPhi"),
+    tupleBsMCdG0 = lambda wcs: tuples(wcs, mode="MC_Bs2JpsiPhi_dG0"),
+    bangaccBsRD = lambda wcs: angaccs(wcs, angacc='corrected', trigger='biased'),
+    uangaccBsRD = lambda wcs: angaccs(wcs, angacc='corrected', trigger='unbiased'),
+    btimeaccBsRD = lambda wcs: timeaccs(wcs, trigger='biased'),
+    utimeaccBsRD = lambda wcs: timeaccs(wcs, trigger='unbiased'),
+    # cspBdRD = lambda wcs: csps(wcs, mode="Bd2JpsiKstar", csp='none'),
+    # cspBdMC = lambda wcs: csps(wcs, mode="MC_Bd2JpsiKstar", csp='none'),
+    cspBsRD = lambda wcs: csps(wcs, mode="Bs2JpsiPhi"),
+    cspBsMC = lambda wcs: csps(wcs, mode="MC_Bs2JpsiPhi", csp='none'),
+    cspBsMCdG0 = lambda wcs: csps(wcs, mode="MC_Bs2JpsiPhi_dG0", csp='none'),
+    # resBdRD = lambda wcs: timeress(wcs, mode="Bd2JpsiKstar", timeres='none'),
+    # resBdMC = lambda wcs: timeress(wcs, mode="MC_Bd2JpsiKstar", timeres='none'),
+    resBsRD = lambda wcs: timeress(wcs, mode="Bs2JpsiPhi"),
+    resBsMC = lambda wcs: timeress(wcs, mode="MC_Bs2JpsiPhi", timeres='none'),
+    resBsMCdG0 = lambda wcs: timeress(wcs, mode="MC_Bs2JpsiPhi_dG0", timeres='none'),
+    # tagBdRD = lambda wcs: flavors(wcs, mode="Bd2JpsiKstar", flavor='none'),
+    # tagBdMC = lambda wcs: flavors(wcs, mode="MC_Bd2JpsiKstar", flavor='none'),
+    tagBsRD = lambda wcs: flavors(wcs, mode="Bs2JpsiPhi"),
+    tagBsMC = lambda wcs: flavors(wcs, mode="MC_Bs2JpsiPhi", flavor='none'),
+    tagBsMCdG0 = lambda wcs: flavors(wcs, mode="MC_Bs2JpsiPhi_dG0", flavor='none'),
+  output:
+    'output/params/brutality/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+  log:
+    'output/log/brutality/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+  script:
+    "analysis/WhatTheHell/simultaneous_acceptances.py"
