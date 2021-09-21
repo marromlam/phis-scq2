@@ -108,7 +108,7 @@ if __name__ == '__main__':
   if TIMEACC['corr']:
     # to be implemented
     0
-  if TIMEACC['use_veloweight']:
+  if TIMEACC['use_veloWeight']:
     sw = f'veloWeight*{sw}'
 
 
