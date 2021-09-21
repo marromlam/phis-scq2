@@ -43,7 +43,7 @@ from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and
-from utils.helpers import  version_guesser, timeacc_guesser, swnorm
+from utils.helpers import  YEARS, version_guesser, timeacc_guesser, swnorm
 
 import config
 # binned variables
@@ -490,8 +490,10 @@ if __name__ == '__main__':
 
   mix_timeacc = len(args['timeacc'].split('+')) > 1
   mix_version = len(args['version'].split('+')) > 1
+  mix_years = len(config.years[args['year']]) > 1
 
-  print(args['timeacc'],args['version'])
+  print(args['timeacc'], args['version'], args['year'])
+
   if mix_timeacc and mix_version:
     print('shit')
   elif mix_timeacc:
@@ -502,20 +504,34 @@ if __name__ == '__main__':
     print('no mix')
     mixers = False
   print(mixers)
+  
+  params = []
+  for iy, yy in enumerate(config.years[args['year']]):
+    __params = args['params'].split(',')[iy::4]
+    if mixers:
+      _params = []
+      for i,m in enumerate(mixers):
+        print(i,m, args['params'].split(',')[i::len(mixers)])
+        _params.append( args['params'].split(',')[i::len(mixers)] )
+    else:
+      _params = __params
+    params.append(_params)
 
-  if mixers:
-    params = []
-    for i,m in enumerate(mixers):
-      print(i,m, args['params'].split(',')[i::len(mixers)])
-      params.append( args['params'].split(',')[i::len(mixers)] )
-  else:
-    params = args['params'].split(',')
-  if mix_version:
-    samples = []
-    for i,m in enumerate(mixers):
-      j = 3*i
-      samples.append( args['samples'].split(',')[j:j+3] )
+  samples = []
+  for year in config.years[args['year']]:
+    if mix_version:
+      _samples = []
+      for i,m in enumerate(mixers):
+        j = 3*i
+        _samples.append( args['samples'].split(',')[j:j+3] )
+    else:
+      _samples = args['samples'].split(',')
+    samples.append(_samples)
 
+  print('PARAMS')
+  print(params)
+  print('TUPLES')
+  print(samples)
 
   # print("\n\n")
   # print(f"{args['params']}")
@@ -529,52 +545,53 @@ if __name__ == '__main__':
   else:
     axes = plotting.axes_plotpull()
 
-  if mix_timeacc:
-    for i,m in enumerate(mixers):
+  for iy, yy in enumerate(config.years[args['year']]):
+    if mix_timeacc:
+      for i,m in enumerate(mixers):
+        args = {
+          "samples": f"{args['samples']}",
+          "params":  f"{','.join(params[i])}",
+          "figure":  args["figure"],
+          "mode":    f"{args['mode']}",
+          "year":    f"{args['year']}",
+          "version": f"{args['version']}",
+          "trigger": f"{args['trigger']}",
+          "timeacc": f"{m}",
+          "plot":    f"{args['plot']}",
+          "labeled":  True
+        }
+        axes = plotter(args, axes )
+        axes[1].legend()
+    elif mix_version:
+      for i,m in enumerate(mixers):
+        args = {
+          "samples": f"{','.join(samples[i])}",
+          "params":  f"{','.join(params[i])}",
+          "figure":  args["figure"],
+          "mode":    f"{args['mode']}",
+          "year":    f"{args['year']}",
+          "version": f"{m}",
+          "trigger": f"{args['trigger']}",
+          "timeacc": f"{args['timeacc']}",
+          "plot":    f"{args['plot']}",
+          "labeled":  True
+        }
+        axes = plotter(args, axes=axes )
+        axes[1].legend()
+    else:
       args = {
-        "samples": f"{args['samples']}",
-        "params":  f"{','.join(params[i])}",
-        "figure":  args["figure"],
-        "mode":    f"{args['mode']}",
-        "year":    f"{args['year']}",
-        "version": f"{args['version']}",
-        "trigger": f"{args['trigger']}",
-        "timeacc": f"{m}",
-        "plot":    f"{args['plot']}",
-        "labeled":  True
+        "samples":  f"{','.join(samples[iy])}",
+        "params":   f"{','.join(params[iy])}",
+        "figure":   args["figure"],
+        "mode":     f"{args['mode']}",
+        "year":     f"{args['year']}",
+        "version":  f"{args['version']}",
+        "trigger":  f"{args['trigger']}",
+        "timeacc":  f"{args['timeacc']}",
+        "plot":     f"{args['plot']}",
+        "labeled":  False
       }
       axes = plotter(args, axes )
-      axes[1].legend()
-  elif mix_version:
-    for i,m in enumerate(mixers):
-      args = {
-        "samples": f"{','.join(samples[i])}",
-        "params":  f"{','.join(params[i])}",
-        "figure":  args["figure"],
-        "mode":    f"{args['mode']}",
-        "year":    f"{args['year']}",
-        "version": f"{m}",
-        "trigger": f"{args['trigger']}",
-        "timeacc": f"{args['timeacc']}",
-        "plot":    f"{args['plot']}",
-        "labeled":  True
-      }
-      axes = plotter(args, axes=axes )
-      axes[1].legend()
-  else:
-    args = {
-      "samples":  f"{args['samples']}",
-      "params":   f"{','.join(params)}",
-      "figure":   args["figure"],
-      "mode":     f"{args['mode']}",
-      "year":     f"{args['year']}",
-      "version":  f"{args['version']}",
-      "trigger":  f"{args['trigger']}",
-      "timeacc":  f"{args['timeacc']}",
-      "plot":     f"{args['plot']}",
-      "labeled":  False
-    }
-    axes = plotter(args, axes )
 
   VWATERMARK = version_guesser(args['version'])[0] # version to watermark plots
   if 'log' in args['plot'] and not 'spline' in args['plot']:

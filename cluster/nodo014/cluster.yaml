@@ -1,0 +1,4 @@
+__default__:
+  join: yes
+  output: logs/sge/snakejob.{rulename}.{jobid}.log
+  error: logs/sge/snakejob.{rulename}.{jobid}.log

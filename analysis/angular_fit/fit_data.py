@@ -34,7 +34,7 @@ badjanak.config['debug_evt'] = 774
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
-from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors
+from utils.helpers import parse_angacc, version_guesser, timeacc_guesser, trigger_scissors
 
 import config
 # binned variables
@@ -68,7 +68,9 @@ def argument_parser():
   # Configuration file ---------------------------------------------------------
   parser.add_argument('--year', help='Year of data-taking')
   parser.add_argument('--version', help='Year of data-taking')
-  parser.add_argument('--flag',help='Year of data-taking')
+  parser.add_argument('--fit',help='Year of data-taking')
+  parser.add_argument('--angacc',help='Year of data-taking')
+  parser.add_argument('--timeacc',help='Year of data-taking')
   parser.add_argument('--trigger',help='Year of data-taking')
   parser.add_argument('--blind', default=1, help='Year of data-taking')
   return parser
@@ -94,7 +96,13 @@ VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
 YEARS = args['year'].split(',')
 TRIGGER = args['trigger']
 MODE = 'Bs2JpsiPhi'
-FIT, ANGACC, TIMEACC = args['flag'].split('_')
+FIT = args['fit']
+TIMEACC = timeacc_guesser(args['timeacc'])
+
+if TIMEACC['use_upTime']:
+  tLL = 2
+if TIMEACC['use_lowTime']:
+  tUL = 2
 
 # Prepare the cuts -----------------------------------------------------------
 CUT = '' 
@@ -111,10 +119,9 @@ real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
 weight_rd='(sw)'
 
-if 'magUp' in FIT:
-  CUT = cuts_and("magnet>0", CUT)
-if 'magDown' in FIT:
-  CUT = cuts_and("magnet<0", CUT)
+if TIMEACC['use_veloWeight']:
+  weight_rd = f'veloWeight*{weight_rd}'
+
 
 if TRIGGER == 'combined':
   TRIGGER = ['biased', 'unbiased']
@@ -150,7 +157,7 @@ for i, y in enumerate(YEARS):
     sw = np.zeros_like(data[y][t].df['sw'])
     for l,h in zip(mass[:-1],mass[1:]):
       pos = data[y][t].df.eval(f'mHH>={l} & mHH<{h}')
-      this_sw = data[y][t].df.eval(f'sw*(mHH>={l} & mHH<{h})')
+      this_sw = data[y][t].df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
       sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
     data[y][t].df['sWeight'] = sw
     data[y][t].allocate(input=real,weight='sWeight',output='0*time')

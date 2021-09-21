@@ -94,6 +94,13 @@ TRIGGER = args['trigger']
 MODE = 'Bs2JpsiPhi'
 FIT, ANGACC, TIMEACC = args['flag'].split('_')
 
+TIMEACC = timeacc_guesser(TIMEACC)
+
+if TIMEACC['use_upTime']:
+  tLL = 2
+if TIMEACC['use_lowTime']:
+  tUL = 2
+
 # Prepare the cuts -----------------------------------------------------------
 CUT = ''
 CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')

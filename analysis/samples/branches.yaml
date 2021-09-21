@@ -8,6 +8,7 @@
 
 common: &common
   "time" : "time"
+  "timeT" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 ) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_PT*5.344286e-22))"
   "cosK" : "helcosthetaK"
   "cosL" : "helcosthetaL"
   "hphi" : "helphi"
@@ -33,7 +34,7 @@ common: &common
   "evtN" : "eventNumber"
   "runN" : "runNumber"
   "sw" : "sw"
-  "veloWeight" : "time/time"
+  "veloWeight" : "veloWeight"
   "docaz" : "doca_z"
   "sWeight" : "sw"
   "logIPchi2B" : "log_B_IPCHI2_mva" #From this point, added by Ramon
@@ -60,10 +61,12 @@ common: &common
 
 MC_common: &MC_common
   <<: *common
+  "truetimeT" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 ) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_PT*5.344286e-22))"
   "truetime" : "1000*B_TRUETAU"
   "truecosK" : "truehelcosthetaK"
   "truecosL" : "truehelcosthetaL"
   "truehphi" : "truehelphi"
+  "gentimeT" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 ) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_PT*5.344286e-22))"
   "gentime" : "1000*B_TRUETAU_GenLvl"
   "gencosK" : "truehelcosthetaK_GenLvl"
   "gencosL" : "truehelcosthetaL_GenLvl"
@@ -144,6 +147,13 @@ MC_Bd2JpsiKstar:
 
 Bu2JpsiKplus:
   <<: *common
+  "kinWeight" : "kinWeight"
+  "oddWeight" : "oddWeight"
+  "kbuWeight" : "kbuWeight"
+  "tagOSdec" : "0*time"
+  "tagSSdec" : "0*time"
+  "tagOSeta" : "0*time"
+  "tagSSeta" : "0*time"
 
 MC_Bu2JpsiKplus:
   <<: *MC_common

@@ -28,7 +28,7 @@ initialize(os.environ['IPANEMA_BACKEND'],1)
 import badjanak
 # kernel debugging handlers
 badjanak.config['debug_evt'] = 0#2930619
-badjanak.config['debug'] = 5
+badjanak.config['debug'] = 0
 # since HD-fitter always use faddeva for the pdf integral, let also do it here
 # this should impy identical pdf weights between us
 badjanak.config['fast_integral'] = 0
@@ -167,7 +167,10 @@ if __name__ == '__main__':
   print(f'Loading {ifile}')
   df = uproot.open(ifile)[itree].pandas.df()
   if weight == 'pdfWeight':
-    df['pdfWeight'] = pdf_weighting(df, tparams, oparams, args['mode'])
+    pdfW = pdf_weighting(df, tparams, oparams, args['mode'])
+    if args['mode'] == 'MC_BsJpsiPhi' or args['mode']=='MC_Bs2JpsiKK_Swave':
+      pdfW /= np.array(df['dg0Weight'])
+    df['pdfWeight'] = pdfW
     print('pdfWeight was succesfully calculated')
   elif weight == 'dg0Weight':
     df['dg0Weight'] = dg0_weighting(df, tparams, oparams, args['mode'])

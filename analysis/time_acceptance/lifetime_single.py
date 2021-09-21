@@ -25,6 +25,7 @@ from utils.plot import mode_tex
 from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
+from trash_can.knot_generator import create_time_bins
 
 import config
 # binned variables
@@ -65,6 +66,8 @@ if __name__ == '__main__':
   p.add_argument('--timeacc', help='Different flag to ... ')
   args = vars(p.parse_args())
 
+  printsec("Lifetime (single) determination")
+
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year'].split(',')
   MODE = args['mode']
@@ -76,12 +79,15 @@ if __name__ == '__main__':
   initialize(os.environ['IPANEMA_BACKEND'],1)
   import time_acceptance.fcn_functions as fcns
 
+  if TIMEACC['use_upTime']:
+    tLL = 2
+  if TIMEACC['use_lowTime']:
+    tUL = 2
   # Prepare the cuts
   CUT = cuts_and(f'time>={tLL} & time<={tUL}')
-  CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
 
   # Print settings
-  print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
+  printsubsec(f"Settings")
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
@@ -93,67 +99,25 @@ if __name__ == '__main__':
   else:
     TRIGGER = [TRIGGER]
 
+  sWeight = "sw"
+  if TIMEACC['use_veloWeight']:
+    sweight = f'veloWeight*{sWeight}'
+
   # }}}
 
 
   # Get data into categories {{{
 
-  print(f"\n{80*'='}\nLoading category\n{80*'='}\n")
-
-  # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(TIMEACC['nknots'])]
-  sWeight = "sw"
+  printsubsec(f"Loading samples")
 
   cats = {}
   for i, y in enumerate(YEAR):
     cats[y] = {}
     for t in TRIGGER:
-      # # Correctly apply weight and name for diffent samples
-      # if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
-      #   m = 'MC_Bs2JpsiPhi'
-      #   if CORRECT:
-      #     weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
-      #   else:
-      #     weight = f'dg0Weight*{sWeight}/gb_weights'
-      #   # apply oddWeight if evtOdd in filename
-      #   if EVT in ('evtEven', 'evtOdd'):
-      #     weight = weight.replace('pdfWeight', 'oddWeight')
-      #   mode = 'signalMC'; c = 'a'
-      # elif 'MC_Bs2JpsiPhi_dG0' in m:
-      #   m = 'MC_Bs2JpsiPhi_dG0'
-      #   if CORRECT:
-      #     weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
-      #   else:
-      #     weight = f'{sWeight}/gb_weights'
-      #   # apply oddWeight if evtOdd in filename
-      #   if EVT in ('evtEven', 'evtOdd'):
-      #     weight = weight.replace('pdfWeight', 'oddWeight')
-      #   mode = 'signalMC'; c = 'a'
-      # elif 'MC_Bd2JpsiKstar' in m:
-      #   m = 'MC_Bd2JpsiKstar'
-      #   if CORRECT:
-      #     weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
-      #   else:
-      #     weight = f'{sWeight}'
-      #   # apply oddWeight if evtOdd in filename
-      #   if EVT in ('evtEven', 'evtOdd'):
-      #     weight = weight.replace('pdfWeight', 'oddWeight')
-      #   mode = 'controlMC'; c = 'b'
-      # elif 'Bd2JpsiKstar' in m:
-      #   m = 'Bd2JpsiKstar'
-      #   if CORRECT:
-      #     weight = f'kinWeight*{sWeight}'
-      #   else:
-      #     weight = f'{sWeight}'
-      #   mode = 'controlRD'; c = 'c'
-      weight = sWeight
-      print(weight)
-
-      # Load the sample
       cats[y][t] = Sample.from_root(args['samples'].split(',')[i], share=SHARE)
-      cats[y][t].chop(CUT)
+      cats[y][t].chop( trigger_scissors(t, CUT) )
       cats[y][t].allocate(time='time', lkhd='0*time')
-      cats[y][t].allocate(weight=weight)
+      cats[y][t].allocate(weight=sWeight)
       cats[y][t].weight = swnorm(cats[y][t].weight)
       print(cats[y][t])
 
@@ -209,13 +173,13 @@ if __name__ == '__main__':
         else:
           lfpars.add({"name": p[:-2]})
           lfpars[p[:-2]] = par
-  #lfpars.lock(); lfpars.unlock('gamma')
+  lfpars.lock(); lfpars.unlock('gamma')
   print(lfpars)
 
   # lifetime fit
   if MINER.lower() in ("minuit","minos"):
     lifefit = optimize(fcn_call=fcns.splinexerfconstr_single, params=lfpars,
-                       fcn_kwgs={'cats':cats, 'weight':True},
+                       fcn_kwgs={'cats':cats, 'weight':True, 'tLL':tLL, 'tUL':tUL},
                        method=MINER, verbose=False, strategy=1, tol=0.05);
     print(lifefit)
   elif MINER.lower() in ('bfgs', 'lbfgsb'):

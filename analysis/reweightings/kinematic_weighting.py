@@ -27,6 +27,7 @@ simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 from hep_ml.reweight import GBReweighter
 
 from utils.strings import printsec
+from utils.helpers import trigger_scissors
 
 # }}}
 
@@ -65,7 +66,6 @@ def reweight(original, target, original_weight, target_weight,
   return kinWeight
 
 # }}}
-
 
 
 # MOVE THIS TO INIT {{{
@@ -120,11 +120,16 @@ def kinematic_weighting(original_file, original_treename, original_vars,
 
 
   # Reweighting ---------------------------------------------------------------
-  odf[weight] = reweight(odf.get(original_vars), tdf.get(target_vars),
-                         odf.eval(original_weight), tdf.eval(target_weight),
-                         n_estimators, learning_rate, max_depth,
-                         min_samples_leaf, trunc)
-
+  theWeight = np.zeros_like(list(odf.index)).astype(np.float64)
+  for trig in ['biased', 'unbiased']:
+    codf = odf.query(trigger_scissors(trig))
+    ctdf = tdf.query(trigger_scissors(trig))
+    cweight = reweight(codf.get(original_vars), ctdf.get(target_vars),
+                       codf.eval(original_weight), ctdf.eval(target_weight),
+                       n_estimators, learning_rate, max_depth,
+                       min_samples_leaf, trunc)
+    theWeight[list(codf.index)] = cweight
+  odf[weight] = theWeight
   # new_vars.append(np.array(ovars_df[f'{weight}'],dtype=[(f'{weight}',np.float64)]))
   # for var,vvar in binned_vars.items():
   #   kinWeight = np.zeros_like(ovars_df[f'{weight}'].values)

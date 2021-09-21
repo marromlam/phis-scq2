@@ -83,6 +83,7 @@ def argument_parser():
   # Configuration file ---------------------------------------------------------
   parser.add_argument('--year', help='Year of data-taking')
   parser.add_argument('--version', help='Year of data-taking')
+  parser.add_argument('--mode', help='Year of data-taking')
   parser.add_argument('--flag',help='Year of data-taking')
   parser.add_argument('--blind', default=1, help='Year of data-taking')
   return parser
@@ -119,7 +120,7 @@ weight_rd='(gentime/gentime)'
 
 
 data = {}
-badjanak.config['mHH'] = [990, 1050]
+# badjanak.config['mHH'] = [990, 1050]
 mass = badjanak.config['mHH']
 
 CUT = "time>0.3 & time<15"
@@ -127,42 +128,56 @@ CUT = "time>0.3 & time<15"
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
   data[y] = {}
-  # csp = Parameters.load(args['csp'].split(',')[i])
-  # mass = np.array(csp.build(csp, csp.find('mKK.*')))
-  # csp = csp.build(csp,csp.find('CSP.*'))
+  csp = Parameters.load(args['csp'].split(',')[i])
+  print(csp)
+  mass = np.array(csp.build(csp, csp.find('mKK.*')))
+  print(mass)
+  csp = csp.build(csp,csp.find('CSP.*'))
+  print(csp)
   # flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
   # resolution = Parameters.load(args['time_resolution'].split(',')[i])
-  # badjanak.config['mHH'] = mass.tolist()
+  badjanak.config['mHH'] = mass.tolist()
   for t in ['biased','unbiased']:
     tc = trigger_scissors(t, CUT)
     data[y][t] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
     data[y][t].name = f"Bs2JpsiPhi-{y}-{t}"
-    # data[y][t].csp = csp
+    print(data[y][t].df['mHH'])
+    data[y][t].csp = csp
     # data[y][t].flavor = flavor
     # data[y][t].resolution = resolution
+    #
+    #
     # Time acceptance
-    c = Parameters.load(args[f'timeacc_{t}'].split(',')[i])
-    knots = np.array(Parameters.build(c,c.fetch('k.*')))
-    print(knots)
-    badjanak.config['knots'] = knots.tolist()
+    # c = Parameters.load(args[f'timeacc_{t}'].split(',')[i])
+    # knots = np.array(Parameters.build(c,c.fetch('k.*')))
+    # print(knots)
+    # badjanak.config['knots'] = knots.tolist()
+    #
+    #
     # Angular acceptance
-    data[y][t].timeacc = Parameters.build(c,c.fetch('c.*'))
-    w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
-    data[y][t].angacc = Parameters.build(w,w.fetch('w.*'))
+    # data[y][t].timeacc = Parameters.build(c,c.fetch('c.*'))
+    # w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
+    # data[y][t].angacc = Parameters.build(w,w.fetch('w.*'))
     print(data[y][t])
     # Normalize sWeights per bin
-    sw = np.zeros_like(data[y][t].df['sw'])
-    for l,h in zip(mass[:-1],mass[1:]):
-      pos = data[y][t].df.eval(f'mHH>={l} & mHH<{h}')
-      this_sw = data[y][t].df.eval(f'sw*(mHH>={l} & mHH<{h})')
-      sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
-    data[y][t].df['sWeight'] = sw
-    print(sw)
+    if not 'sw' in list(data[y][t].df.keys()):
+      data[y][t].df['sw'] = np.zeros_like(data[y][t].df['time'])
+      data[y][t].df['sWeight'] = np.zeros_like(data[y][t].df['time'])
+    else:
+      sw = np.zeros_like(data[y][t].df['sw'])
+      for l,h in zip(mass[:-1], mass[1:]):
+        pos = data[y][t].df.eval(f'mHH>={l} & mHH<{h}')
+        print(pos)
+        this_sw = data[y][t].df.eval(f'sw*(mHH>={l} & mHH<{h})')
+        sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
+      data[y][t].df['sWeight'] = sw
+      print(sw)
     data[y][t].allocate(input=real,weight='sWeight',output='0*time')
 
 # Prepare parameters
-SWAVE = False
-DGZERO = True
+# TODO: add mode switcher
+SWAVE = True
+DGZERO = False
 POLDEP = False
 BLIND = False
 
@@ -204,17 +219,17 @@ Parameter(name="pPper", value= 0.00, min=-1.0, max=1.0,
           blindstr="BsPhisperpDelFullRun2",
           blind=BLIND, blindscale=2.0, blindengine="root"),
 # S wave strong phases
-Parameter(name='dSlon1', value=+np.pi/4*SWAVE, min=-0.0, max=+3.0,
+Parameter(name='dSlon1', value=2*SWAVE, min=-0.0, max=+3.0,
           free=SWAVE, latex="\delta_S^{1} - \delta_{\perp}"),
-Parameter(name='dSlon2', value=+np.pi/4*SWAVE, min=-0.0, max=+3.0,
+Parameter(name='dSlon2', value=1.5*SWAVE, min=-0.0, max=+3.0,
           free=SWAVE, latex="\delta_S^{2} - \delta_{\perp}"),
-Parameter(name='dSlon3', value=+np.pi/4*SWAVE, min=-0.0, max=+3.0,
+Parameter(name='dSlon3', value=0.5*SWAVE, min=-0.0, max=+3.0,
           free=SWAVE, latex="\delta_S^{3} - \delta_{\perp}"),
-Parameter(name='dSlon4', value=-np.pi/4*SWAVE, min=-3.0, max=+0.0,
+Parameter(name='dSlon4', value=-0.5*SWAVE, min=-3.0, max=+0.0,
           free=SWAVE, latex="\delta_S^{4} - \delta_{\perp}"),
-Parameter(name='dSlon5', value=-np.pi/4*SWAVE, min=-3.0, max=+0.0,
+Parameter(name='dSlon5', value=-1.5*SWAVE, min=-3.0, max=+0.0,
           free=SWAVE, latex="\delta_S^{5} - \delta_{\perp}"),
-Parameter(name='dSlon6', value=-np.pi/4*SWAVE, min=-3.0, max=+0.0,
+Parameter(name='dSlon6', value=-2*SWAVE, min=-3.0, max=+0.0,
           free=SWAVE, latex="\delta_S^{6} - \delta_{\perp}"),
 # P wave strong phases
 Parameter(name="dPlon", value=0.00, min=-2*3.14, max=2*3.14,
@@ -239,13 +254,22 @@ Parameter(name="DGs", value= (1-DGZERO)*0.08, min= 0.0, max= 1.7,
           free=1-DGZERO, latex=r"\Delta\Gamma_s",
           blindstr="BsDGsFullRun2",
           blind=BLIND, blindscale=1.0, blindengine="root"),
-Parameter(name="DGsd", value= 0.03,   min=-0.5, max= 0.5,
+Parameter(name="DGsd", value= -0.00,   min=-5, max= 5,
           free=True, latex=r"\Gamma_s - \Gamma_d"),
 Parameter(name="DM", value=17.757,   min=15.0, max=20.0,
           free=True, latex=r"\Delta m"),
 ]
 
 pars.add(*list_of_parameters);
+_pars = Parameters.load("analysis/params/generator/2015/MC_Bs2JpsiKK_Swave.json")
+_pars.lock()
+for p, v in _pars.items():
+  try:
+    pars[p].value = v.value
+    # pars[p].free = v.free
+  except:
+    0
+# pars.unlock('dPper')
 print(pars)
 
 # compile the kernel
@@ -262,8 +286,9 @@ def fcn_data(parameters, data):
   chi2 = []
   for y, dy in data.items():
     for t, dt in dy.items():
-      badjanak.delta_gamma5_data(dt.input, dt.output, **pars_dict,
-                                 use_timeacc=2, use_timeres=0, set_tagging=0, tLL=0.30, tUL=15.0)
+      badjanak.delta_gamma5_data(dt.input, dt.output, **pars_dict, **dt.csp.valuesdict(),
+                                 use_timeacc=0, use_timeres=0, use_angacc=0, 
+                                 set_tagging=0, tLL=0.30, tUL=15.0)
       chi2.append( -2.0 * (ristra.log(dt.output) * 1.0 ).get() );
   return np.concatenate(chi2)
 
@@ -281,9 +306,6 @@ print(result)
 
 # Dump json file
 result.params.dump(args['params'])
-# Write latex table
-with open(args['tables'], "w") as tex_file:
-  tex_file.write( result.params.dump_latex(caption="Physics parameters.") )
 
 ################################################################################
 

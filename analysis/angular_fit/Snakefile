@@ -9,7 +9,7 @@
 
 rule physics_params_data_Bs:
   wildcard_constraints:
-    fit = "(yearly|run2|run2a)(Poldep|magUp|magDown)?",
+    fit = "(yearly|run2|run2a)(Dual)?(Poldep|magUp|magDown)?",
     mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
   threads: 8
   input:
@@ -41,7 +41,9 @@ rule physics_params_data_Bs:
     --flavor-tagging {",".join(input.flavor)}\
     --params {output.params}\
     --year {",".join(YEARS[f'{wildcards.year}'])}\
-    --flag {wildcards.fit}_{wildcards.angacc}_{wildcards.timeacc}\
+    --fit {wildcards.fit}\
+    --angacc {wildcards.angacc}\
+    --timeacc {wildcards.timeacc}\
     --trigger {wildcards.trigger}\
     --version {wildcards.version}\
     --blind {settings.blinding['blind']}\
@@ -379,7 +381,7 @@ rule physics_params_mc:
 
 
 
-# Run2a angular acceptance {{{
+# fit toy data {{{
 #     This rule runs the iterative procedure for Run2a years (2015&2016) using
 #     both MC and MC_dG0 files.
 
@@ -391,23 +393,22 @@ rule physics_params_toy:
     samples = lambda wcs: [tuples(wcs)],
     # CSP
     csp_factors = lambda wcs: [
-      f'output/params/csp_factors/{wcs.year}/{wcs.mode}/{wcs.version.split("@")[0]}.json',
+      f'output/params/csp_factors/{wcs.year}/{wcs.mode}/{wcs.version}_{wcs.csp}.json',
     ],
   output:
-    params = 'output/params/physics_params/{year}/{mode}/{version}_base.json',
-    tables = 'output/tables/angular_fit/{year}/{mode}/{version}_base.tex'
+    params = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
   log:
-    'output/log/physics_params_mc/{year}/{mode}/{version}.log'
+    'output/log/physics_params_mc/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/angular_fit/fit_mc.py\
            --samples                 {",".join(input.samples)}\
            --csp                     {",".join(input.csp_factors)}\
            --params                  {output.params}\
-           --tables                  {output.tables}\
            --year                    {",".join([wildcards.year])}\
            --version                 {wildcards.version}\
-    ) &> {log}""")
+           --mode                    {wildcards.mode}\
+    ) #&> {log}""")
     send_mail(f"Physics Parameters Toy :: {wildcards}", f"{log}")
 
 # }}}

@@ -1,8 +1,17 @@
 import uproot3 as uproot
+import argparse
 
-input_file = "/scratch46/marcos.romero/Bu2JpsiKplus5.root"
-input_file = "/scratch46/marcos.romero/MC_Bu2JpsiKplus.root"
-output_file = input_file.split(".root")[0] + "r3.root"
+
+p = argparse.ArgumentParser()
+p.add_argument("--input-sample")
+p.add_argument("--output-sample")
+args = vars(p.parse_args())
+
+
+
+# input_file = "/scratch46/marcos.romero/Bu2JpsiKplus5.root"
+# input_file = "/scratch46/marcos.romero/MC_Bu2JpsiKplus.root"
+# output_file = input_file.split(".root")[0] + "r3.root"
 
 branches = [
   'Bu_M', 'Bu_LOKI_MASS_JpsiConstr_NoPVConstr',
@@ -40,16 +49,24 @@ jagged_branches = [
 ]
 
 # create dict of arrays
-sample = uproot.open(input_file)['Bu2JpsiKplus']['DecayTree']
+sample = uproot.open(args['input_sample'])
+ttree = sample.keys()[0]
+print(ttree)
+sample = sample[ttree]
+print(sample.keys())
+#['Bu2JpsiKplus']['DecayTree']
 arrs = sample.arrays(branches)
 
 # transform jagged array of DOCAZ to array geting only first element
 for b in jagged_branches:
-  arrs[b] = sample[b].array()[:, 0]
+  try:
+    arrs[b] = sample[b].array()[:, 0]
+  except:
+    arrs[b] = sample[b].array()
 arrs = {k.decode(): v for k, v in arrs.items()}
 
 # write reduce tuple
-with uproot.recreate(output_file,compression=None) as out_file:
+with uproot.recreate(args['output_sample'], compression=None) as out_file:
  out_file["DecayTree"] = uproot.newtree({var: 'float64' for var in arrs})
  out_file["DecayTree"].extend(arrs)
 out_file.close()

@@ -19,6 +19,8 @@ from ipanema import initialize, plotting
 from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 import numpy as np
 
+from trash_can.knot_generator import create_time_bins
+
 # import some phis-scq utils
 from utils.plot import mode_tex
 from utils.strings import cuts_and, printsec, printsubsec
@@ -78,6 +80,12 @@ if __name__ == '__main__':
     time = 'gentime'
   else:
     time = 'time'
+
+  if TIMEACC['use_upTime']:
+    tLL = 2
+  if TIMEACC['use_lowTime']:
+    tUL = 2
+
   CUT = f'{time}>={tLL} & {time}<={tUL}'
   CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
 
@@ -95,6 +103,9 @@ if __name__ == '__main__':
 
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(TIMEACC['nknots'])]
+  if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
+    knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
+    knots = knots.tolist()
   sWeight = "sw"
 
 
@@ -142,6 +153,8 @@ if __name__ == '__main__':
       # apply  dG0Weight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
@@ -155,6 +168,8 @@ if __name__ == '__main__':
       # apply  dG0Weight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}', 'time/time')
@@ -168,6 +183,8 @@ if __name__ == '__main__':
       # apply  dG0Weight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       #cut in bkgcat implies not to use sw/gb_weights
       if "bkgcat60" in args['version']:
         weight = weight.replace(f'{sWeight}', 'time/time')
@@ -178,6 +195,8 @@ if __name__ == '__main__':
         weight = f'kinWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'controlRD'; c = 'c'
     # }}}
     print(weight)
@@ -249,7 +268,9 @@ if __name__ == '__main__':
   fcn_kwgs = {
       'data': cats[mode].time,
       'prob': cats[mode].lkhd,
-      'weight': cats[mode].weight
+      'weight': cats[mode].weight,
+      'tLL': tLL,
+      'tUL': tUL
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
   result = mini.optimize(method=MINER, verbose=False, timeit=True, tol=0.05)

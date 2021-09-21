@@ -25,6 +25,7 @@ from utils.plot import mode_tex
 from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
+from trash_can.knot_generator import create_time_bins
 
 import config
 # binned variables
@@ -63,16 +64,24 @@ if __name__ == '__main__':
   args = vars(p.parse_args())
 
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
+  print(args['version'])
   YEAR = args['year']
   MODE = 'Bs2JpsiPhi'
   TRIGGER = args['trigger']
   TIMEACC = timeacc_guesser(args['timeacc'])
+  TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
+  TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
   MINER = args['minimizer']
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1)
   import time_acceptance.fcn_functions as fcns
 
+  if TIMEACC['use_upTime']:
+    tLL = 0.89
+  if TIMEACC['use_lowTime']:
+    tUL = 0.89
+  print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
   # Prepare the cuts
   CUT = trigger_scissors(TRIGGER)              # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')     # place decay-time cuts
@@ -91,6 +100,10 @@ if __name__ == '__main__':
 
   # Check timeacc flag to set knots and weights and place the final cut
   knots = all_knots[str(TIMEACC['nknots'])]
+  if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
+    knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
+    knots = knots.tolist()
+  print(knots)
   sWeight = "sw"
 
 
@@ -108,12 +121,14 @@ if __name__ == '__main__':
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
       m = 'MC_Bs2JpsiPhi'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
+        weight = f'kinWeight*polWeight*pdfWeight*dg0Weight*{sWeight}/gb_weights'
       else:
         weight = f'dg0Weight*{sWeight}/gb_weights'
       # apply oddWeight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'signalMC'; c = 'a'
     # }}}
     # MC_Bs2JpsiPhi_dG0 {{{
@@ -126,6 +141,8 @@ if __name__ == '__main__':
       # apply oddWeight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'signalMC'; c = 'a'
     # }}}
     # MC_Bd2JpsiKstar {{{
@@ -138,6 +155,8 @@ if __name__ == '__main__':
       # apply oddWeight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'controlMC'; c = 'b'
     # }}}
     # Bd2JpsiKstar {{{
@@ -147,6 +166,8 @@ if __name__ == '__main__':
         weight = f'kinWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'controlRD'; c = 'c'
     # }}}
     # MC_Bu2JpsiKplus {{{
@@ -156,6 +177,8 @@ if __name__ == '__main__':
         weight = f'kinWeight*polWeight*{sWeight}'
       else:
         weight = f'{sWeight}'
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       # apply oddWeight if evtOdd in filename
       if TIMEACC['use_oddWeight']:
         weight = f"oddWeight*{weight}"
@@ -166,9 +189,11 @@ if __name__ == '__main__':
       m = 'Bu2JpsiKplus'
       if TIMEACC['corr']:
         weight = f'kinWeight*{sWeight}'
-        weight = f'{sWeight}'  # TODO: fix kinWeight here, it should exist and be a reweight Bu -> Bs
+        # weight = f'{sWeight}'  # TODO: fix kinWeight here, it should exist and be a reweight Bu -> Bs
       else:
         weight = f'{sWeight}'
+      if TIMEACC['use_veloWeight']:
+        weight = f"veloWeight*{weight}"
       mode = 'controlRD'; c = 'c'
     # }}}
     print(weight)
@@ -176,7 +201,9 @@ if __name__ == '__main__':
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
     cats[mode].allocate(time='time', lkhd='0*time', weight=weight)
+    print(np.min(cats[mode].time.get()), np.max(cats[mode].time.get()))
     cats[mode].weight = swnorm(cats[mode].weight)
+    # print(cats[mode].df['veloWeight'])
 
     # Add knots
     cats[mode].knots = Parameters()
@@ -206,13 +233,12 @@ if __name__ == '__main__':
     _sigma = np.mean(cats[mode].df['sigmat'].values)
     print(f"sigmat = {resolutions[m]['sigma']} -> {_sigma}")
     cats[mode].params.add({'name':f'sigma_{c}',
-                           'value':_sigma + 0*resolutions[m]['sigma'],
+                           'value':0*_sigma + 1*resolutions[m]['sigma'],
                            'latex':f'\sigma_{c}', 'free':False})
     print(cats[mode].knots)
     print(cats[mode].params)
 
     # Attach labels and paths
-    cats[mode].label = mode_tex(mode)
     cats[mode].pars_path = oparams[i]
 
 
@@ -231,7 +257,9 @@ if __name__ == '__main__':
     'data': [cats['signalMC'].time, cats['controlMC'].time, cats['controlRD'].time],
     'prob': [cats['signalMC'].lkhd, cats['controlMC'].lkhd, cats['controlRD'].lkhd],
     'weight': [cats['signalMC'].weight, cats['controlMC'].weight, cats['controlRD'].weight],
-    'flatend': TIMEACC['use_flatend']
+    'flatend': TIMEACC['use_flatend'],
+    'tLL': tLL,
+    'tUL': tUL
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
 
