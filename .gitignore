@@ -29,6 +29,7 @@
 *#
 *~
 *.cache
+.ccls-cache/
 tmp/
 output_backups/
 cuda_testing_kernel/
