@@ -27,7 +27,7 @@ rule lifetime_single_Bx:
                                   year=YEARS[f'{wcs.year}'], version=f'{wcs.version}',
                                   mode = f"MC_{wcs.mode}_dG0" if "Bs" in f"{wcs.mode}" else f"MC_{wcs.mode}"),
   output:
-    params = 'output/params/lifetime/{year}/{mode}/{version}_life{timeacc}_{trigger}.json',
+    params = 'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   log:
     'output/log/lifetime_single/{year}/{mode}/{version}_life{timeacc}_{trigger}.log'
   run:
@@ -52,12 +52,12 @@ rule lifetime_single_Bx_disentangle:
   resources:
     mem_mb=4096,
   wildcard_constraints:
-    timeacc = "single.*",
+    #timeacc = "single.*",
     mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
   input:
     "output/params/physics_params/{year}/{mode}/{version}_yearly_yearly_vgc_amsrd_{timeacc}_amsrd_{trigger}.json"
   output:
-    params = 'output/params/lifetime/{year}/{mode}/{version}_life{timeacc}_{trigger}.json',
+    params = 'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   run:
     from ipanema import Parameters
     in_pars = Parameters.load(f"{input}")
@@ -75,16 +75,16 @@ rule lifetime_single_Bx_disentangle:
 rule lifetime_trend:
   threads: 128
   input:
-    biased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_biased.json',
+    biased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_biased.json',
                        year=YEARS[f'{wcs.year}']),
-    unbiased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_unbiased.json',
+    unbiased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_unbiased.json',
                        year=YEARS[f'{wcs.year}']),
-    combined = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_combined.json',
+    combined = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_combined.json',
                        year=YEARS[f'{wcs.year}']),
   output:
-    'output/figures/lifetime/{year}/{mode}/{version}_life{timeacc}_trend.pdf',
+    'output/figures/lifetime/{year}/{mode}/{version}_{timeacc}_trend.pdf',
   log:
-    'output/log/lifetime_trend/{year}/{mode}/{version}_life{timeacc}.log',
+    'output/log/lifetime_trend/{year}/{mode}/{version}_{timeacc}.log',
   run:
     shell(f"""(time\
     python analysis/lifetime/trend_plot.py\

@@ -23,7 +23,7 @@ tau['Bd'] = unc.ufloat(1.520, 0.004)  # PDG
 tau['Bu'] = unc.ufloat(1.076, 0.004)  # PDG
 tau['Bu'] = tau['Bu'] * tau['Bd']
 tau['Bs'] = unc.ufloat(1.515, 0.004)  # PDG
-
+print(tau)
 # }}}
 
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         res = ipanema.optimize(fcn, fpars, method='minuit', tol=0.01,
                                fcn_kwgs=dict(x=data[:,0], y=data[:,1],
                                              w=data[:,2]))
-        print(res)
+        #print(res)
         chi2.append(res.chi2)
 
         # plot

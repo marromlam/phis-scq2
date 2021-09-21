@@ -26,80 +26,106 @@ rule flavor_tagging_basics:
 #    Currently time resolution is only computed at NIKHEF, hence we need to sync
 #    it from there.
 
-rule flavor_tagging_from_git:
+rule flavor_tagging_basics_from_git:
   threads: 128
   wildcard_constraints:
-    flavor = "amsrd"
+    timeres = "ams(rd|mc|dg0)"
   params:
     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
     linker = "analysis/params/flavor_tagging/linker.json"
   output:
     "output/params/flavor_tagging/{year}/{mode}/{version}_{flavor}.json",
+  log:
+    "output/log/time_resolution_from_git/{year}/{mode}/{version}_{flavor}.log",
   run:
-    import os
-    import hjson
-    from ipanema import Parameters
-    from utils.strings import printsec
+    shell(f"""(time\
+    python analysis/flavor_tagging/download_from_git.py\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version v0r5\
+    --flavor {wildcards.flavor}\
+    --output {output}\
+    --repo {params.repo}\
+    --linker {params.linker}\
+    ) &> {log}""")
 
-    year = f"{wildcards.year}"
-    version = f"{wildcards.version}".split('@')[0]
-    version = version.split('bdt')[0]
-    flavor = f"{wildcards.flavor}"
-    repo = f"{params.repo}"
+# }}}
 
-    if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
-      params = Parameters.load(f'analysis/params/v0r0/time_resolution/time_resolution.json')
-      print(params)
-      params.dump(f"{output.params}")
-      print(f'Dumping parameters to {output.params}')
-    else:
-      printsec("Get flavor tagging from Bs2JpsiPhi-FullRun2 repository")
 
-      # get name for time resolution
-      _flavor = hjson.load(open(f'{params.linker}','r'))
-      _flavor = _flavor[flavor].format(year=f'{wildcards.year}')
-
-      # cook local and remote paths
-      out_path = f"{output}"
-      tmp_path = out_path.replace('output', 'tmp')
-      tmp_path = os.path.dirname(tmp_path)
-      git_path = f"fitinputs/{version}/tagging_calibration/{year}"
-      os.makedirs(tmp_path, exist_ok=True)
-
-      print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}')
-      os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
-
-      print(f"Loading Time Resolution {year}")
-      rawd = hjson.load(open(f"{tmp_path}/{_flavor}",'r'))['TaggingParameter']
-      outd = Parameters.load("analysis/params/flavor_tagging/Bs2JpsiPhi/none.json")
-
-      # parse parameters
-      print(f'Parsing parameters to match phis-scq sctructure')
-      for i, par in enumerate(list(outd.keys())):
-          for _i in range(len(rawd)):
-            if rawd[_i]['Name'][:5] == f'{par[:2]}_'+f'{par[3:]}'.upper():
-              outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
-              outd[par].correl = {}
-              for j in range(0,3):
-                pi = par[:2]; pj = f"p{j}"; tag = par[3:]
-                for k in range(len(rawd)):
-                  if rawd[k]['Name'][:12].lower() == f'rho_{pi}_{pj}_{tag}':
-                    outd[par].correl[f"{pj}_{tag}"] = rawd[k]['Value']
-                  elif rawd[k]['Name'][:12].lower() == f'rho_{pj}_{pi}_{tag}':
-                    outd[par].correl[f"{pj}_{tag}"] = rawd[k]['Value']
-            elif rawd[_i]['Name'][:6] == f'{par[:3]}_'+f'{par[4:]}'.upper():
-              outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
-            elif rawd[_i]['Name'][:10] == f'{par[:3]}_bar_'+f'{par[4:]}'.upper():
-              outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
-
-      print("\nParameter table")
-      print(outd)
-      print("Correlation matrix")
-      print(outd.corr())
-      print(f'\nDumping parameters to {output}')
-      outd.dump(f"{output}")
-      print(f'Clean up {tmp_path}/{_flavor}\n')
-      os.remove(f"{tmp_path}/{_flavor}")
+# rule flavor_tagging_from_git2:
+#   threads: 128
+#   wildcard_constraints:
+#     flavor = "amsrd"
+#   params:
+#     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
+#     linker = "analysis/params/flavor_tagging/linker.json"
+#   output:
+#     "outdddput/params/flavor_tagging/{year}/{mode}/{version}_{flavor}.json",
+#   run:
+#     import os
+#     import hjson
+#     from ipanema import Parameters
+#     from utils.strings import printsec
+# 
+#     year = f"{wildcards.year}"
+#     version = 'v0r5'
+#     version = version.split('bdt')[0]
+#     flavor = f"{wildcards.flavor}"
+#     repo = f"{params.repo}"
+# 
+#     if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
+#       params = Parameters.load(f'analysis/params/v0r0/time_resolution/time_resolution.json')
+#       print(params)
+#       params.dump(f"{output.params}")
+#       print(f'Dumping parameters to {output.params}')
+#     else:
+#       printsec("Get flavor tagging from Bs2JpsiPhi-FullRun2 repository")
+# 
+#       # get name for time resolution
+#       _flavor = hjson.load(open(f'{params.linker}','r'))
+#       _flavor = _flavor[flavor].format(year=f'{wildcards.year}')
+# 
+#       # cook local and remote paths
+#       out_path = f"{output}"
+#       tmp_path = out_path.replace('output', 'tmp')
+#       tmp_path = os.path.dirname(tmp_path)
+#       git_path = f"fitinputs/{version}/tagging_calibration/{year}"
+#       os.makedirs(tmp_path, exist_ok=True)
+# 
+#       print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}')
+#       os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
+# 
+#       print(f"Loading Time Resolution {year}")
+#       rawd = hjson.load(open(f"{tmp_path}/{_flavor}",'r'))['TaggingParameter']
+#       outd = Parameters.load("analysis/params/flavor_tagging/Bs2JpsiPhi/none.json")
+# 
+#       # parse parameters
+#       print(f'Parsing parameters to match phis-scq sctructure')
+#       for i, par in enumerate(list(outd.keys())):
+#           for _i in range(len(rawd)):
+#             if rawd[_i]['Name'][:5] == f'{par[:2]}_'+f'{par[3:]}'.upper():
+#               outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
+#               outd[par].correl = {}
+#               for j in range(0,3):
+#                 pi = par[:2]; pj = f"p{j}"; tag = par[3:]
+#                 for k in range(len(rawd)):
+#                   if rawd[k]['Name'][:12].lower() == f'rho_{pi}_{pj}_{tag}':
+#                     outd[par].correl[f"{pj}_{tag}"] = rawd[k]['Value']
+#                   elif rawd[k]['Name'][:12].lower() == f'rho_{pj}_{pi}_{tag}':
+#                     outd[par].correl[f"{pj}_{tag}"] = rawd[k]['Value']
+#             elif rawd[_i]['Name'][:6] == f'{par[:3]}_'+f'{par[4:]}'.upper():
+#               outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
+#             elif rawd[_i]['Name'][:10] == f'{par[:3]}_bar_'+f'{par[4:]}'.upper():
+#               outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
+# 
+#       print("\nParameter table")
+#       print(outd)
+#       print("Correlation matrix")
+#       print(outd.corr())
+#       print(f'\nDumping parameters to {output}')
+#       outd.dump(f"{output}")
+#       print(f'Clean up {tmp_path}/{_flavor}\n')
+#       os.remove(f"{tmp_path}/{_flavor}")
 
 # }}}
 
