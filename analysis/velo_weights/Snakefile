@@ -149,7 +149,7 @@ rule velo_weights_compute:
                   effmodel=config['velo_effmodel'], massmodel=config['velo_massmodel'],
                   mode="MC_Bu2JpsiKplus" if f'{wcs.mode}'[:2]=='MC' else "Bu2JpsiKplus")
   output:
-    temp(SAMPLES+'/{year}/{mode}/{version}_veloWeight.root')
+    SAMPLES+'/{year}/{mode}/{version}_veloWeight.root'
   log:
     'output/log/velo_weights_compute/{year}/{mode}/{version}.log'
   run:
