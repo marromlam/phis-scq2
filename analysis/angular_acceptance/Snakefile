@@ -230,7 +230,7 @@ rule angular_acceptance_corrected_dual:
   resources:
     mem_mb = 512
   wildcard_constraints:
-    step = "(naive|corrected|analytic).*",
+    step = "(naive|corrected|analytic)Dual.*",
     #version = "^((?!v0r1).)*$",
   input:
     weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{csp}_{trigger}.json',
@@ -313,8 +313,8 @@ rule angular_acceptance_iterative_dual_data_yearly:
     weights_std = lambda wcs: [tuples(wcs, mode='MC_Bs2JpsiPhi', csp='none', angacc='corrected', weight='angWeight')],
     weights_dG0 = lambda wcs: [tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', csp='none', angacc='corrected', weight='angWeight')],
     sample_data = lambda wcs: [tuples(wcs, mode='Bs2JpsiPhi')],
-    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', csp='none', angacc='corrected', trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', csp='none', angacc='corrected', trigger='unbiased'),
+    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', csp='none', angacc='correctedDual', trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', csp='none', angacc='correctedDual', trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', trigger='biased'),
     timeacc_unbiased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', trigger='unbiased'),
     csp_factors = lambda wcs: csps(wcs, mode='Bs2JpsiPhi'),
@@ -476,8 +476,8 @@ rule angular_acceptance_iterative_dual_data_run2:
     weights_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2', angacc='corrected', weight=f'angWeight'),
     weights_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2', angacc='corrected', weight=f'angWeight'),
     sample_data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', year='run2'),
-    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2', csp='none', angacc='corrected', trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2', csp='none', angacc='corrected', trigger='unbiased'),
+    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2', csp='none', angacc='correctedDual', trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2', csp='none', angacc='correctedDual', trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', year='run2', trigger='biased'),
     timeacc_unbiased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', year='run2', trigger='unbiased'),
     csp_factors = lambda wcs: csps(wcs, mode='Bs2JpsiPhi', year='run2'),
