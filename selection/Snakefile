@@ -1,0 +1,71 @@
+rule select_for_massfit_MC_Bd2JpsiKstar:
+  """
+  Select MC_Bd2JpsiKstar to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 events.
+  """
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='sWeight'),
+  params:
+    script = 'selection/tools/apply_selection.py',
+    cuts = 'selection/tools/time_acceptance_cuts.yml'
+  output:
+    sample = SAMPLES+'/{year}/{mode}/{version}_MCforMassFit.root'
+  run:
+    shell("""
+    python {params.script} --input-file {input.root_file} \
+                           --output-file {output.sample} \
+                           --mode {wildcards.mode} \
+                           --selection-files {params.cuts} \
+                           --year {wildcards.year}
+    """)
+
+
+rule select_for_timeacc_MC_Bd2JpsiKstar:
+  """
+  Select MC_Bd2JpsiKstar to determine Ipatia tail parameters for
+  the fit to data. It takes B_BKGCAT=0,50,60 events.
+  """
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='sWeight'),
+  params:
+    script = 'selection/tools/apply_selection.py',
+    cuts = 'selection/tools/time_acceptance_cuts.yml',
+    cut_keys = 'B_cuts_acc Kstar_cuts_acc'
+  output:
+    sample = SAMPLES+'/{year}/{mode}/{version}_MCforTimeAcc.root'
+  run:
+    shell("""
+    python {params.script} --input-file {input.root_file} \
+                           --output-file {output.sample} \
+                           --mode {wildcards.mode} \
+                           --selection-files {params.cuts} \
+                           --cut-keys {params.cut_keys} \
+                           --year {wildcards.year}
+    """)
+
+
+rule mass_prefit_jpsikstar_mc:
+  """
+  Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 candidates.
+  """
+  wildcard_constraints:
+    mode = 'MC_Bd2JpsiKstar'
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='MCforMassFit'),
+  output:
+    params = 'output/params/mass_prefit/{year}/{mode}/{version}_noghost.json',
+    plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_noghost/')
+  params:
+    script = 'selection/tools/mass_fit_ipatia.py',
+  log:
+    'output/log/mass_prefit/{year}/{mode}/{version}_noghost.json',
+  run:
+    shell(f"""(time\
+    python {params.script} \
+      --input-file {input.root_file} \
+      --output-params {output.params} \
+      --output-figures {output.plots} \
+      --mode MC_Bd2JpsiKstar \
+      --trigcat \
+    ) > {log}""")
