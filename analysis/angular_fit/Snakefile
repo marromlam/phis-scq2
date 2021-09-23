@@ -424,15 +424,19 @@ rule physics_params_mcfit_vs_mcgen:
   input:
     'output/params/physics_params/{year}/{mode}/{version}_{config}.json',
   params:
-    lambda wcs: expand('analysis/params/generator/{{year}}/{{mode}}.json')
+    lambda wcs: expand('analysis/params/generator/{year}/{mode}.json',
+                        year=min(2018, int(f"{wcs.year}")), mode=f"{wcs.mode}")
   output:
     'output/tables/physics_params/{year}/{mode}/{version}_{config}_compareGen.tex'
   log:
     'output/log/physics_params_mcfit_vs_mcgen/{year}/{mode}/{version}_{config}.log'
   run:
     from ipanema import Parameters
-    fit = Parameters.load(f'{input}')
-    gen = Parameters.load(f'{params}')
+    fit_parameters = f"{input}"
+    gen_parameters = f"{params}"[2:-2]
+    print(gen_parameters)
+    fit = Parameters.load(fit_parameters)
+    gen = Parameters.load(gen_parameters)
     table = []
     table.append(f' {"Parameter":>30}  &  {"Fitted":>25}  &  {"Generation":>7}  &  {"Pull":>4}')
     for par in fit.keys():
@@ -440,7 +444,7 @@ rule physics_params_mcfit_vs_mcgen:
         table.append(f'${fit[par].latex:>30} $&$ {f"{fit[par].uvalue:.2uL}":>25} $&$ {gen[par].value:+.4f} $&$ {(fit[par].value-gen[par].value)/fit[par].stdev if fit[par].stdev else 0:+.1f}')
       else:
         table.append(f'${fit[par].latex:>30} $&$ {f"{fit[par].uvalue:.2uL}":>25}')
-    # print(" \\\\ \n".join(table))
+    print(" \\\\ \n".join(table))
     with open(f'{output}','w') as f:
       f.write("\\begin{tabular}{lccc}\n")
       f.write("\n".join(table))
