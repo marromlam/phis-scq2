@@ -82,6 +82,12 @@ if __name__ == '__main__':
     time = 'gentime'
   else:
     time = 'time'
+  
+  if 'UT' in args['version']:
+    tLL = 0.89
+  if 'LT' in args['version']:
+    tUL = 0.89
+
   CUT = f'{time}>={tLL} & {time}<={tUL}'
 
   # if version has bdt in name, then lets change it
