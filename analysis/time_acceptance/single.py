@@ -69,6 +69,8 @@ if __name__ == '__main__':
   TRIGGER = args['trigger']
   print(args['timeacc'])
   TIMEACC = timeacc_guesser(args['timeacc'])
+  TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
+  TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
   MINER = args['minimizer']
 
   # Get badjanak model and configure it
@@ -82,9 +84,10 @@ if __name__ == '__main__':
     time = 'time'
 
   if TIMEACC['use_upTime']:
-    tLL = 2
+    tLL = 0.89
   if TIMEACC['use_lowTime']:
-    tUL = 2
+    tUL = 0.89
+  print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
   CUT = f'{time}>={tLL} & {time}<={tUL}'
   CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
