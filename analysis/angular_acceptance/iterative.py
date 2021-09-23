@@ -645,11 +645,14 @@ if __name__ == '__main__':
   ANGACC = parse_angacc(args['angacc'])
   print(args['timeacc'])
   TIMEACC = timeacc_guesser(args['timeacc'])
+  TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
+  TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
 
   if TIMEACC['use_upTime']:
-    tLL = 2
+    tLL = 0.89
   if TIMEACC['use_lowTime']:
-    tUL = 2
+    tUL = 0.89
+  print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
