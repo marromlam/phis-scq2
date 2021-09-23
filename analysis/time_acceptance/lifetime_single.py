@@ -73,18 +73,32 @@ if __name__ == '__main__':
   MODE = args['mode']
   TRIGGER = args['trigger']
   TIMEACC= timeacc_guesser(args['timeacc'])
+  TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
+  TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
   MINER = config.base['minimizer']
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
   import time_acceptance.fcn_functions as fcns
 
+  sWeight = "sw"
+  if TIMEACC['use_veloWeight']:
+    sweight = f'veloWeight*{sWeight}'
+
+  if TIMEACC['use_transvers_time']:
+    time = 'timeT'
+  else:
+    time = 'time'
+
   if TIMEACC['use_upTime']:
-    tLL = 2
+    tLL = 0.89
   if TIMEACC['use_lowTime']:
-    tUL = 2
+    tUL = 0.89
+  print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
+
   # Prepare the cuts
-  CUT = cuts_and(f'time>={tLL} & time<={tUL}')
+  CUT = trigger_scissors(TRIGGER)              # place cut attending to trigger
+  CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')     # place decay-time cuts
 
   # Print settings
   printsubsec(f"Settings")
@@ -99,9 +113,6 @@ if __name__ == '__main__':
   else:
     TRIGGER = [TRIGGER]
 
-  sWeight = "sw"
-  if TIMEACC['use_veloWeight']:
-    sweight = f'veloWeight*{sWeight}'
 
   # }}}
 
@@ -116,7 +127,7 @@ if __name__ == '__main__':
     for t in TRIGGER:
       cats[y][t] = Sample.from_root(args['samples'].split(',')[i], share=SHARE)
       cats[y][t].chop( trigger_scissors(t, CUT) )
-      cats[y][t].allocate(time='time', lkhd='0*time')
+      cats[y][t].allocate(time=time, lkhd='0*time')
       cats[y][t].allocate(weight=sWeight)
       cats[y][t].weight = swnorm(cats[y][t].weight)
       print(cats[y][t])
