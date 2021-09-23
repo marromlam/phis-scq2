@@ -190,13 +190,15 @@ def version_guesser(version):
         # split by magnet Up or Down: useful for crosschecks
         r"(magUp|magDown)?",
         # split in pTB, etaB and sigmat bins: for systematics
-        r"((pTB|etaB|sigmat)(\d{1}))?"
+        r"((pTB|etaB|sigmat)(\d{1}))?",
+        # cut in cosK
+        r"(LcosK|UcosK)?"
         ]
     pattern = rf"\A{''.join(pattern)}\Z"
     # print(pattern)
     p = re.compile(pattern)
     try:
-      share, evt, shit, time, runN, mag, fullcut, var, nbin = p.search(mod).groups()
+      share, evt, shit, time, runN, mag, fullcut, var, nbin, cosk = p.search(mod).groups()
       share = int(share) if share else 100
       evt = evt if evt else None
       nbin = int(nbin)-1 if nbin else None
