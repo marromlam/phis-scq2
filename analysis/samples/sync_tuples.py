@@ -53,7 +53,9 @@ vsub_dict = {
   "etaB3": "B_ETA >= 3.9 & B_ETA <= 6",
   "sigmat1": "sigmat >= 0 & sigmat <= 0.031",
   "sigmat2": "sigmat >= 0.031 & sigmat <= 0.042",
-  "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15"
+  "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15",
+  "LcosK": "helcosthetaK<=0",
+  "UcosK": "helcosthetaK>0"
 }
 
 # }}}
