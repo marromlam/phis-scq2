@@ -33,7 +33,7 @@ from utils.helpers import trigger_scissors
 
 
 # Some config {{{
-bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 binned_vars = {'etaB':'B_ETA', 'pTB':'B_PT', 'sigmat':'sigmat'}
 # }}}
 
