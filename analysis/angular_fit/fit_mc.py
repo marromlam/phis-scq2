@@ -108,22 +108,17 @@ for k,v in args.items():
 print(f"\n{80*'='}\n", "Loading samples", f"\n{80*'='}\n")
 
 # Lists of data variables to load and build arrays
-real  = ['cosK','cosL','hphi','time']                       # angular variables
-real += ['mHH','0*idB']                                      # mass and sigmat
-real += ['idB','idB', '0*idB', '0*idB']  # tagging
-
-real  = ['gencosK','gencosL','genhphi','gentime']                        # angular variables
-real += ['mHH','0*genidB']                                     # mass and sigmat
-real += ['genidB','genidB', '0*genidB', '0*genidB']  # tagging
-weight_rd='(gentime/gentime)'
-#real += ['tagOS_dec','tagSS_dec', 'tagOS_eta', 'tagSS_eta']  # tagging
-
+real = ['cosK','cosL','hphi','time', 'mHH','0*idB', 'idB','idB', '0*idB', '0*idB']
+real = ['gencosK','gencosL','genhphi','gentime', 'mHH','0*genidB', 'genidB','genidB', '0*genidB', '0*genidB']
 
 data = {}
 # badjanak.config['mHH'] = [990, 1050]
 mass = badjanak.config['mHH']
 
-CUT = "time>0.3 & time<15"
+
+TRIGGER = ['combined']
+
+
 
 for i, y in enumerate(YEARS):
   print(f'Fetching elements for {y}[{i}] data sample')
@@ -131,13 +126,15 @@ for i, y in enumerate(YEARS):
   csp = Parameters.load(args['csp'].split(',')[i])
   print(csp)
   mass = np.array(csp.build(csp, csp.find('mKK.*')))
-  print(mass)
+  badjanak.config['mHH'] = mass.tolist()
+  print(mass.tolist())
   csp = csp.build(csp,csp.find('CSP.*'))
   print(csp)
   # flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
   # resolution = Parameters.load(args['time_resolution'].split(',')[i])
   badjanak.config['mHH'] = mass.tolist()
-  for t in ['biased','unbiased']:
+  CUT = "time>0.3 & time<15 & mHH>{mass[0]} & mHH<{mass[-1]}"
+  for t in TRIGGER:
     tc = trigger_scissors(t, CUT)
     data[y][t] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
     data[y][t].name = f"Bs2JpsiPhi-{y}-{t}"

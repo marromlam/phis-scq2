@@ -98,11 +98,14 @@ TRIGGER = args['trigger']
 MODE = 'Bs2JpsiPhi'
 FIT = args['fit']
 TIMEACC = timeacc_guesser(args['timeacc'])
+TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
+TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
 
 if TIMEACC['use_upTime']:
-  tLL = 2
+  tLL = 0.89
 if TIMEACC['use_lowTime']:
-  tUL = 2
+  tUL = 0.89
+print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
 # Prepare the cuts -----------------------------------------------------------
 CUT = '' 
