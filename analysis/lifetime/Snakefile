@@ -46,6 +46,37 @@ rule lifetime_single_Bx:
     send_mail(f"Lifetime Bd fit :: {wildcards}", f"{log}")
 
 
+rule lifetime_crappy_Bx:
+  threads: 6
+  resources:
+    mem_mb=4096,
+  wildcard_constraints:
+    timeacc = "crappy.*",
+    mode = "(Bu2JpsiKplus|Bd2JpsiKstar)"
+  input:
+    mc = lambda wcs: expand('/scratch46/marcos.romero/sidecar/{year}/MC_{{mode}}/{{version}}_MCforMassFit.root', year=YEARS[f'{wcs.year}']),
+    data = lambda wcs: expand('/scratch46/marcos.romero/sidecar/{year}/{{mode}}/{{version}}_MCforMassFit.root', year=YEARS[f'{wcs.year}']),
+  output:
+    params = 'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
+    figures = directory('output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}')
+  log:
+    'output/log/lifetime_single/{year}/{mode}/{version}_{timeacc}_{trigger}.log'
+  run:
+    shell(f"""
+    (time\
+    python analysis/lifetime/new_shit.py\
+    --rd-sample {",".join(input.data)}\
+    --mc-sample {",".join(input.mc)}\
+    --output-params {output.params}\
+    --output-figures {output.figures}\
+    --year {",".join(YEARS[f'{wildcards.year}'])}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --timeacc {wildcards.timeacc}\
+    --trigger {wildcards.trigger}\
+    ) &> {log}""")
+    send_mail(f"Lifetime Bd fit :: {wildcards}", f"{log}")
+
 
 rule lifetime_single_Bx_disentangle:
   threads: 6
@@ -55,7 +86,7 @@ rule lifetime_single_Bx_disentangle:
     #timeacc = "single.*",
     mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
   input:
-    "output/params/physics_params/{year}/{mode}/{version}_yearly_yearly_vgc_amsrd_{timeacc}_amsrd_{trigger}.json"
+    "output/params/physics_params/{year}/{mode}/{version}_yearly_yearlyDual_vgc_amsrd_{timeacc}_amsrd_{trigger}.json"
   output:
     params = 'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   run:
