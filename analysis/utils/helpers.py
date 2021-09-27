@@ -171,7 +171,7 @@ def version_guesser(version):
   # Check if the tuple will be modified
   # print(version)
   version = version.split('@')
-  v, mod = version if len(version)>1 else [version[0],None]
+  v, mod = version if len(version)>1 else [version[0], None]
   # Dig in mod
   if mod:
     #pattern = r'\A(\d+)?(magUp|magDown)?(cut(B_PT|B_ETA|sigmat)(\d{1}))?\Z'
@@ -189,16 +189,15 @@ def version_guesser(version):
         r"(l210300|g210300)?",
         # split by magnet Up or Down: useful for crosschecks
         r"(magUp|magDown)?",
-        # split in pTB, etaB and sigmat bins: for systematics
-        r"((pTB|etaB|sigmat)(\d{1}))?",
         # cut in cosK
-        r"(LcosK|UcosK)?"
+        r"(LcosK|UcosK)?",
+        # split in pTB, etaB and sigmat bins: for systematics
+        r"((pTB|etaB|sigmat)(\d{1}))?"
         ]
     pattern = rf"\A{''.join(pattern)}\Z"
-    # print(pattern)
     p = re.compile(pattern)
     try:
-      share, evt, shit, time, runN, mag, fullcut, var, nbin, cosk = p.search(mod).groups()
+      share, evt, shit, time, runN, mag, cosk, fullcut, var, nbin = p.search(mod).groups()
       share = int(share) if share else 100
       evt = evt if evt else None
       nbin = int(nbin)-1 if nbin else None
