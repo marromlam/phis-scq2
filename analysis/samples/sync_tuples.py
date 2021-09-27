@@ -54,7 +54,7 @@ vsub_dict = {
   "sigmat1": "sigmat >= 0 & sigmat <= 0.031",
   "sigmat2": "sigmat >= 0.031 & sigmat <= 0.042",
   "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15",
-  "LcosK": "helcosthetaK<=0",
+  "LcosK": "helcosthetaK<=0.5",
   "UcosK": "helcosthetaK>0"
 }
 
@@ -184,6 +184,7 @@ if __name__ == "__main__":
 
   result = uproot.open(local_path)[tree].pandas.df(flatten=None)
   try:
+    print("sWeights using sw")
     result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
   except:
     print(result.keys())
@@ -205,6 +206,8 @@ if __name__ == "__main__":
           print("MCs are not cut in runNumber")
         elif (k in ("g210300", "l210300")) and ("2018" not in args['output']):
           print("Only 2018 is cut in runNumber")
+        elif (k in ("UcosK", "LcosK")) and 'Bd2JpsiKstar' not in m:
+          print("Cut in cosK was only planned in Bd")
         else:
           list_of_cuts.append(v)
         if noe == 0:
