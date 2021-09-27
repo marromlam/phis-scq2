@@ -1,4 +1,4 @@
-rule select_for_massfit_MC_Bd2JpsiKstar:
+rule select_for_massfit_bd_mc:
   """
   Select MC_Bd2JpsiKstar to determine Ipatia tail parameters for
   the fit to data. It only takes B_BKGCAT=0,50 events.
@@ -10,17 +10,19 @@ rule select_for_massfit_MC_Bd2JpsiKstar:
     cuts = 'selection/tools/time_acceptance_cuts.yml'
   output:
     sample = SAMPLES+'/{year}/{mode}/{version}_MCforMassFit.root'
+  log:
+    'output/log/select_for_massfit_bd_mc/{year}/{mode}/{version}.log',
   run:
-    shell("""
+    shell(f"""(time\
     python {params.script} --input-file {input.root_file} \
                            --output-file {output.sample} \
                            --mode {wildcards.mode} \
                            --selection-files {params.cuts} \
                            --year {wildcards.year}
-    """)
+    ) > {log}""")
 
 
-rule select_for_timeacc_MC_Bd2JpsiKstar:
+rule select_for_timeacc_bd_mc:
   """
   Select MC_Bd2JpsiKstar to determine Ipatia tail parameters for
   the fit to data. It takes B_BKGCAT=0,50,60 events.
@@ -33,18 +35,20 @@ rule select_for_timeacc_MC_Bd2JpsiKstar:
     cut_keys = 'B_cuts_acc Kstar_cuts_acc'
   output:
     sample = SAMPLES+'/{year}/{mode}/{version}_MCforTimeAcc.root'
+  log:
+    'output/log/select_for_timeacc_bd_mc/{year}/{mode}/{version}.log',
   run:
-    shell("""
+    shell(f"""(time\
     python {params.script} --input-file {input.root_file} \
                            --output-file {output.sample} \
                            --mode {wildcards.mode} \
                            --selection-files {params.cuts} \
                            --cut-keys {params.cut_keys} \
                            --year {wildcards.year}
-    """)
+    ) > {log}""")
 
 
-rule mass_prefit_jpsikstar_mc:
+rule mass_prefit_bd_mc:
   """
   Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
   the fit to data. It only takes B_BKGCAT=0,50 candidates.
