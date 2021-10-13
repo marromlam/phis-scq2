@@ -1,10 +1,11 @@
 DESCRIPTION = """
-
+  Kinematic reweighter
 """
 
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 __all__ = ['reweight']
+
 
 # Modules {{{
 
@@ -15,6 +16,7 @@ import ast
 from shutil import copyfile
 import math
 import hjson
+import yaml
 
 ROOT_PANDAS = False
 if ROOT_PANDAS:
@@ -28,13 +30,9 @@ from hep_ml.reweight import GBReweighter
 
 from utils.strings import printsec
 from utils.helpers import trigger_scissors
+from angular_acceptance.bdtconf_tester import bdtmesh
+from config import timeacc
 
-# }}}
-
-
-# Some config {{{
-# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-binned_vars = {'etaB':'B_ETA', 'pTB':'B_PT', 'sigmat':'sigmat'}
 # }}}
 
 
@@ -42,6 +40,35 @@ binned_vars = {'etaB':'B_ETA', 'pTB':'B_PT', 'sigmat':'sigmat'}
 
 def reweight(original, target, original_weight, target_weight,
              n_estimators, learning_rate, max_depth, min_samples_leaf, trunc):
+  """
+  This is the general reweighter for phis analysis.
+
+  Parameters
+  ----------
+  original : pandas.DataFrame
+  DataFrame for the original sample (the one which will be reweighted).
+  Should only include the variables that will be reweighted.
+  target : pandas.DataFrame
+  DataFrame for the target sample.
+  Should only include the variables that will be reweighted.
+  original_weight : str
+  String with the applied weight for the original sample.
+  target_weight : str
+  String with the applied weight for the target sample.
+  n_estimators : int
+  Number of estimators for the gb-reweighter.
+  learning_rate : float
+  Learning rate for the gb-reweighter.
+  max_depth : int
+  Maximum depth of the gb-reweighter tree.
+  min_samples_leaf : int
+  Minimum number of leaves for the gb-reweighter tree.
+
+  Returns
+  -------
+  np.ndarray
+  Array with the computed weights in order to original to be the same as target.
+  """
   # setup the reweighter
   reweighter = GBReweighter(n_estimators     = int(n_estimators),
                             learning_rate    = float(learning_rate),
@@ -72,14 +99,9 @@ def reweight(original, target, original_weight, target_weight,
 
 def kinematic_weighting(original_file, original_treename, original_vars,
                         original_weight, target_file, target_treename,
-                        target_vars, target_weight, output_file, output_name,
+                        target_vars, target_weight, output_file, weight_set,
                         n_estimators, learning_rate, max_depth,
-                        min_samples_leaf, trunc):
-
-  # Build pandas dataframes
-  original_vars = original_vars.split()
-  target_vars = target_vars.split()
-  # new_vars = []
+                        min_samples_leaf, gb_args, trunc=False):
 
   # find all needed branches
   # all_original_vars = original_vars + getStringVars(original_weight)
@@ -89,24 +111,14 @@ def kinematic_weighting(original_file, original_treename, original_vars,
   print('Loading branches for original_sample')
   odf = uproot.open(original_file)[original_treename].pandas.df()
   print(odf)
-  print(odf.keys())
   print('Loading branches for target_sample')
   tdf = uproot.open(target_file)[target_treename].pandas.df()
   print(tdf)
-  print(tdf.keys())
 
   print(f"Original weight = {original_weight}")
-  print(f"Target weight = {target_weight}")
   print(odf.eval(original_weight))
+  print(f"Target weight = {target_weight}")
   print(tdf.eval(target_weight))
-
-  # create branch according to file name
-  if 'kbuWeight' in output_file:
-    weight = 'kbuWeight'
-  elif 'oddWeight' in output_file:
-    weight = 'oddWeight'
-  else:
-    weight = 'kinWeight'
 
   # sws = ['sw'] + [f'sw_{var}' for var in binned_vars.keys()]
   # kws = [f'{weight}'] + [f'{weight}_{var}' for var in binned_vars.keys()]
@@ -129,7 +141,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
                        n_estimators, learning_rate, max_depth,
                        min_samples_leaf, trunc)
     theWeight[list(codf.index)] = cweight
-  odf[weight] = theWeight
+  odf[weight_set] = theWeight
   # new_vars.append(np.array(ovars_df[f'{weight}'],dtype=[(f'{weight}',np.float64)]))
   # for var,vvar in binned_vars.items():
   #   kinWeight = np.zeros_like(ovars_df[f'{weight}'].values)
@@ -159,7 +171,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
     copyfile(original_file, output_file)
     # for var in new_vars:
     #   root_numpy.array2root(var, output_file, original_treename, mode='update')
-    theWeight = np.array(odf[weight].values, dtype=[(weight, np.float64)])
+    theWeight = np.array(odf[weight_set].values, dtype=[(weight_set, np.float64)])
     root_numpy.array2root(theWeight, output_file, original_treename, mode='update')
     # root_pandas.to_root(odf, output_file, key=original_treename, mode='a')
   else:
@@ -167,45 +179,61 @@ def kinematic_weighting(original_file, original_treename, original_vars,
     f[original_treename] = uproot.newtree({var:'float64' for var in odf})
     f[original_treename].extend(odf.to_dict(orient='list'))
     f.close()
-  return odf[weight].values
+  return odf[weight_set].values
 
+# }}}
+
+
+# Command Line Interface {{{
 
 if __name__ == '__main__':
-
   # parse comandline arguments
   p = argparse.ArgumentParser()
-  p.add_argument('--original-file',
-                 help='File to correct')
-  p.add_argument('--original-treename', default='DecayTree',
-                 help='Name of the original tree')
-  p.add_argument('--original-vars',
-                 help='Branch names that will be used for the weighting')
-  p.add_argument('--original-weight',
-                 help='File to store the ntuple with weights')
-  p.add_argument('--target-file',
-                 help='File to reweight to')
-  p.add_argument('--target-treename', default='DecayTree',
-                 help='Name of the target tree')
-  p.add_argument('--target-vars',
-                 help='Branch names that will be used for the weighting')
-  p.add_argument('--target-weight',
-                 help='Branches string expression to calc the weight.')
-  p.add_argument('--output-file',
-                 help='Branches string expression to calc the weight.')
-  p.add_argument('--output-name', default='kinWeight',
-                 help='Branches string expression to calc the weight.')
-  p.add_argument('--n-estimators', default=20,
-                 help='Check hep_ml.reweight docs.')
-  p.add_argument('--learning-rate', default=0.3,
-                 help='Check hep_ml.reweight docs.')
-  p.add_argument('--max-depth', default=3,
-                 help='Check hep_ml.reweight docs.')
-  p.add_argument('--min-samples-leaf', default=1000,
-                 help='Check hep_ml.reweight docs.')
-  p.add_argument('--trunc', default=0,
-                 help='Cut value for kinWeight by flush-to-zero approach')
+  p.add_argument('--original-file', help='File to correct')
+  p.add_argument('--original-treename', default='DecayTree', help='Name of the original tree')
+  p.add_argument('--target-file', help='File to reweight to')
+  p.add_argument('--target-treename', default='DecayTree', help='Name of the target tree')
+  p.add_argument('--output-file', help='Branches string expression to calc the weight.')
+  p.add_argument('--weight-set', default='kbsWeight', help='Branches string expression to calc the weight.')
+  p.add_argument('--version', help='Branches string expression to calc the weight.')
+  p.add_argument('--year', help='Branches string expression to calc the weight.')
+  p.add_argument('--mode', help='Branches string expression to calc the weight.')
   args = vars(p.parse_args())
+
+  with open('analysis/reweightings/config.yml') as file:
+    reweight_config = yaml.load(file, Loader=yaml.FullLoader)
+  reweight_config = reweight_config[args["weight_set"]][args["mode"]]
+
+  with open('analysis/samples/branches.yaml') as file:
+    sWeight = yaml.load(file, Loader=yaml.FullLoader)
+  sWeight = sWeight[args['mode']]['sWeight']
+  print(sWeight)
+
+  args["original_vars"] = reweight_config["variables"]
+  args["target_vars"] = reweight_config["variables"]
+  args["original_weight"] = reweight_config["original"][0].format(sWeight=sWeight)
+  args["target_weight"] = reweight_config["target"][0]
+
+  # change bdt according to filename, if applies
+  bdtconfig = timeacc['bdtconfig']
+  if 'bdt' in args['version'].split('@')[0]:
+    bdtconfig = int(version.split('bdt')[1])
+    bdtconfig = bdtmesh(bdtconfig, settings.general['bdt_tests'], False)
+
+  # delete some keys and update with bdtconfig
+  del args['version']
+  del args['year']
+  del args['mode']
+  args.update(**bdtconfig)
+  args.update({"trunc": False})
 
   # run the kinematic weight
   printsec("Kinematic reweighting")
+  for k,v in args.items():
+    print(f"{k:>25} : {v}")
   kinematic_weighting(**args)
+
+# }}}
+
+
+#vim:foldmethod=marker
