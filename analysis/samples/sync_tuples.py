@@ -40,8 +40,8 @@ vsub_dict = {
   "magUp": "Polarity == 1",
   "magDown": "Polarity == -1",
   "bkgcat60": "B_BKGCAT != 60",
-  "LT": "time < 0.89",
-  "UT": "time > 0.89",
+  "LT": "time < 1.36",
+  "UT": "time > 1.36",
   "g210300": "runNumber > 210300",
   "l210300": "runNumber < 210300",
   "pTB1": "B_PT >= 0 & B_PT < 3.8e3",
@@ -54,8 +54,8 @@ vsub_dict = {
   "sigmat1": "sigmat >= 0 & sigmat <= 0.031",
   "sigmat2": "sigmat >= 0.031 & sigmat <= 0.042",
   "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15",
-  "LcosK": "helcosthetaK<=0.5",
-  "UcosK": "helcosthetaK>0"
+  "LcosK": "helcosthetaK<=0.0",
+  "UcosK": "helcosthetaK>0.0",
 }
 
 # }}}
@@ -119,14 +119,18 @@ if __name__ == "__main__":
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
   else:
     eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
+    # eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+    if status:
+      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw.root'
+      status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Could not found sw tuple. Downloading without sw...")
       # WARNING: eos tuples seem to do not have version anymore...
       eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
       if status:
-        print("WARNING: Could not found v1r0 tuple. Downloading without v0r5...")
+        print("WARNING: Could not found v1r0 tuple. Downloading v0r5...")
         # WARNING: eos tuples seem to do not have version anymore...
         eos_path = f'{EOSPATH}/v0r5/{m}/{y}/{m}_{y}_selected_bdt_sw_v0r5.root'
         status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
@@ -184,8 +188,13 @@ if __name__ == "__main__":
 
   result = uproot.open(local_path)[tree].pandas.df(flatten=None)
   try:
-    print("sWeights using sw")
-    result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
+    print("There are sWeights variables")
+    if 'sw_cosK_noGBw' in list(result.keys()):
+      print('Adding Peilian sWeight')
+      result.eval(f"sw = sw_cosK_noGBw", inplace=True)  # overwrite sw variable
+    else:
+      print("Adding standard sWeight")
+      result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
   except:
     print(result.keys())
     if 'B_BKGCAT' in list(result.keys()):
