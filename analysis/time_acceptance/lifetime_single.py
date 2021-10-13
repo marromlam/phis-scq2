@@ -85,20 +85,22 @@ if __name__ == '__main__':
   if TIMEACC['use_veloWeight']:
     sweight = f'veloWeight*{sWeight}'
 
-  if TIMEACC['use_transvers_time']:
+  # Prepare the cuts
+  if TIMEACC['use_transverse_time']:
     time = 'timeT'
   else:
     time = 'time'
+  if TIMEACC['use_truetime']:
+    time = f'gen{time}'
 
   if TIMEACC['use_upTime']:
-    tLL = 0.89
+    tLL = 1.36
   if TIMEACC['use_lowTime']:
-    tUL = 0.89
+    tUL = 1.36
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
-  # Prepare the cuts
-  CUT = trigger_scissors(TRIGGER)              # place cut attending to trigger
-  CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')     # place decay-time cuts
+  CUT = f'{time}>={tLL} & {time}<={tUL}'
+  CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
 
   # Print settings
   printsubsec(f"Settings")
@@ -191,7 +193,7 @@ if __name__ == '__main__':
   if MINER.lower() in ("minuit","minos"):
     lifefit = optimize(fcn_call=fcns.splinexerfconstr_single, params=lfpars,
                        fcn_kwgs={'cats':cats, 'weight':True, 'tLL':tLL, 'tUL':tUL},
-                       method=MINER, verbose=False, strategy=1, tol=0.05);
+                       method=MINER, verbose=False, strategy=2, tol=0.05);
     print(lifefit)
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     0 # fix me!
@@ -209,6 +211,9 @@ if __name__ == '__main__':
   print(f"\\tau(B_{q}) = {1/lifefit.params['gamma'].uvalue:.2uL}")
 
   print(f"Dumping json parameters to {args['output_params']}")
+  lifefit.params = knots + lifefit.params
+  lifefit.params.add(dict(name='tLL', value=tLL, init=tLL, free=False))
+  lifefit.params.add(dict(name='tUL', value=tUL, init=tUL, free=False))
   lifefit.params.dump(args['output_params'])
 
   # }}}
