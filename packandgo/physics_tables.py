@@ -130,16 +130,19 @@ def dump_joint_physics(pars, titles, dlls=False):
   texcode += ' \\\\ \n'.join(table)
   texcode += ' \\\\\n\\midrule\n\nAgreement [pull (pvalue)]\\\\\n'
   # Agreement
-  for i, t in enumerate(titles):
-    col0 = [f"{' '.join(t[1:]):<60}   "]
-    if 'yearly' in ''.join(col0):
-        print('yearly')
-        col0 = [col0[0].replace('yearly', f"{t[0]:>6}")]
-    print(i, len(titles))
-    cols = [f"${f'{dlls[str(i)][str(n)][0]:.2f} ({dlls[str(i)][str(n)][1]:.2f})':>22}$" if n<i else f"${f'   ':>22}$" for n in range(len(titles))]
-    #texcode += "\n"+" & ".join([])
-    texcode += f"\n {' & '.join(col0+cols)} \\\\"
-  texcode += '\n\\midrule\n'
+  try:
+    for i, t in enumerate(titles):
+      col0 = [f"{' '.join(t[1:]):<60}   "]
+      if 'yearly' in ''.join(col0):
+          print('yearly')
+          col0 = [col0[0].replace('yearly', f"{t[0]:>6}")]
+      print(i, len(titles))
+      cols = [f"${f'{dlls[str(i)][str(n)][0]:.2f} ({dlls[str(i)][str(n)][1]:.2f})':>22}$" if n<i else f"${f'   ':>22}$" for n in range(len(titles))]
+      #texcode += "\n"+" & ".join([])
+      texcode += f"\n {' & '.join(col0+cols)} \\\\"
+    texcode += '\n\\midrule\n'
+  except:
+    print("Most probably you have infinites in the agreement between measurements")
   texcode += rf"\multicolumn{{{len(titles)+1}}}{{c}}{{the averaged overall p-value is {pval:.4f}}}"
   texcode += '\\\\\n\\bottomrule\n'
   if len(titles) > 2:
