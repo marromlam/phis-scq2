@@ -60,6 +60,7 @@ def reduce(input_file, output_file, input_tree='DecayTree',
   in_branches = list(dict.fromkeys(in_branches)) # remove duplicated ones
   all_branches = [file.decode() for file in in_file.keys()]
   needed_branches = [b for b in in_branches if b in all_branches]
+  needed_branches = None
 
   # create df
   if uproot_kwargs:
