@@ -649,9 +649,9 @@ if __name__ == '__main__':
   TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
 
   if TIMEACC['use_upTime']:
-    tLL = 0.89
+    tLL = 1
   if TIMEACC['use_lowTime']:
-    tUL = 0.89
+    tUL = 1
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
   # Get badjanak model and configure it ----------------------------------------
@@ -721,8 +721,8 @@ if __name__ == '__main__':
   real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta'] 
   
   # sWeight variable
-  weight_rd = 'sw'
-  weight_mc = 'sw/gb_weights'
+  weight_rd = 'sWeight'
+  weight_mc = 'sWeight'
   if TIMEACC['use_veloWeight']:
     weight_rd = f'veloWeight*{weight_rd}'
     # weight_mc = f'veloWeight*{weight_mc}'
