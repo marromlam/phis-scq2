@@ -175,4 +175,46 @@ oddWeight:
 # }}}
 
 
+# phiHH reweightings {{{
+#    The oddWeight is a weight used for MC cross-validation of the baeline procedure.
+#    oddWeights try to introduce MC-RD differences in half o the MC sample.
+
+phiWeight:
+  # These are the general reweightings to be done. They are used in the 
+  # time acceptable pipeline. Everything is reweighted to Bs, and non=-Bs MC
+  # are also reweighted to a previopusly reweighted Bx sample.
+  MC_Bs2JpsiPhi: &oddWeight_MC_Bs2JpsiPhi
+    original: ["sw"]
+    target: ["sw"]
+    variables: ["phiHH"]
+  
+  MC_Bs2JpsiPhi_dG0:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+
+  MC_Bs2JpsiKK_Swave:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+  
+  MC_Bd2JpsiKstar:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+    original: ["{sWeight}"]
+    target: ["sw"]
+
+  MC_Bu2JpsiKplus:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+    original: ["{sWeight}"]
+    target: ["sw"]
+  
+  Bd2JpsiKstar:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+    original: ["sw"]
+    target: ["sw"]
+  
+  Bu2JpsiKplus:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+    original: ["sw"]
+    target: ["sw"]
+
+# }}}
+
+
 # vim:foldmethod=marker

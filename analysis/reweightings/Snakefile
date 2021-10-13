@@ -141,7 +141,7 @@ rule reweighting_kinematic_Bu:
   wildcard_constraints:
     mode = "(MC_)?Bd2JpsiKstar"
   input:
-    original = lambda wcs: tuples(wcs, weight='pdfWeight'),
+    original = lambda wcs: tuples(wcs, weight='phiWeight'),
     target = lambda wcs: tuples(wcs,
       mode='Bu2JpsiKplus' if f'{wcs.mode}'=='Bd2JpsiKstar' else 'Bd2JpsiKstar',
       weight='kbuWeight'),
@@ -217,6 +217,35 @@ rule reweighting_kinematic_odd:
     --year {wildcards.year}\
     --version {wildcards.version}\
     --weight-set oddWeight\
+    ) &> {log}""")
+    send_mail(f"Kinematic Odd weighting :: {wildcards}", f"{log}")
+
+
+rule reweighting_phi:
+  resources:
+    mem_mb=7168
+  wildcard_constraints:
+    # mode = "(MC_)?(Bs2JpsiPhi(_dG0)?)"
+    mode = "(MC_)?(Bd2JpsiKstar)"
+  input:
+    original = lambda wcs: tuples(wcs, weight='pdfWeight'),
+    target = lambda wcs: tuples(wcs, mode=f"{wcs.mode}".replace("Bd2JpsiKstar", "Bs2JpsiPhi"), weight='polWeight'),
+  output:
+    sample = (SAMPLES+'/{year}/{mode}/{version}_phiWeight.root')
+  log:
+    'output/log/reweighting_pdf/{year}/{mode}/{version}.log'
+  run:
+    shell(f"""(time\
+    python analysis/reweightings/kinematic_weighting.py\
+    --original-file {input.original}\
+    --original-treename DecayTree\
+    --target-file {input.target}\
+    --target-treename DecayTree\
+    --output-file {output.sample}\
+    --mode {wildcards.mode}\
+    --year {wildcards.year}\
+    --version {wildcards.version}\
+    --weight-set phiWeight\
     ) &> {log}""")
     send_mail(f"Kinematic Odd weighting :: {wildcards}", f"{log}")
 
