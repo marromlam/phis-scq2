@@ -1,7 +1,10 @@
 # REWEIGHTING
 #
+#   Description: Contains all rules related to the reweighting pipeline, both
+#                and plotting rules.
+#                * DESCRIPTION OF WILDCARDS NEEDED *
 #
-#
+#        Author: Marcos Romero Lamas (mromerol@cern.ch)
 
 
 # polarity weighting {{{
@@ -17,9 +20,9 @@ rule reweighting_polarity:
     original = lambda wcs: tuples(wcs, weight='veloWeight'),
     target   = lambda wcs: tuples(wcs, mode='data', weight='sWeight'),
   output:
-    sample   = temp(SAMPLES+'/{year}/{mode}/{version}_polWeight.root')
+    sample   = (SAMPLES+'/{year}/{mode}/{version}_polWeight.root')
   log:
-    'output/log/reweightings/polarity_weighting/{year}/{mode}/{version}.log'
+    'output/log/reweighting_polarity/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
     python analysis/reweightings/polarity_weighting.py\
@@ -36,7 +39,11 @@ rule reweighting_polarity:
 
 # p.d.f. weighting {{{
 #    Adds pdfWeight to MC tuples matching the corresponding data sample. This
-#    rule runs only over MC tuples.
+#    rule runs only over MC tuples. This rule works for Bs and Bd modes only 
+#    (pdfWeight does not exist for Bu samples).
+#    WARNING: This weight should not be used for the @evt(Even|Odd) check,
+#             unless you really wish MC to have Swave and other properties
+#             of Run 1 data
 
 rule reweighting_pdf:
   resources:
@@ -46,13 +53,12 @@ rule reweighting_pdf:
   input:
     sample = lambda wcs: tuples(wcs, weight='dg0Weight'),
   params:
-    # this weight should not be used if @evtEven or @evtOdd
     original = lambda wcs: f"{wcs.year}/{'Bs2JpsiPhi' if 'Bs' in f'{wcs.mode}' else 'Bd2JpsiKstar'}.json",
     target = lambda wcs: f"{wcs.year}/{wcs.mode}.json",
   output:
-    sample = temp(SAMPLES+'/{year}/{mode}/{version}_pdfWeight.root')
+    sample = (SAMPLES+'/{year}/{mode}/{version}_pdfWeight.root')
   log:
-    'output/log/reweightings/pdf_weighting/{year}/{mode}/{version}.log'
+    'output/log/reweighting_pdf/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
     python analysis/reweightings/pdf_weighting.py\
@@ -75,11 +81,11 @@ rule reweighting_dg0:
     sample = lambda wcs: tuples(wcs,weight='polWeight'),
   params:
     original = lambda wcs: f"{wcs.year}/MC_Bs2JpsiPhi_dG0.json",
-    target = lambda wcs: f"{wcs.year}/{wcs.mode}.json", #WARNING!
+    target = lambda wcs: f"{wcs.year}/{wcs.mode}.json",
   output:
-    sample = temp(SAMPLES+'/{year}/{mode}/{version}_dg0Weight.root')
+    sample = (SAMPLES+'/{year}/{mode}/{version}_dg0Weight.root')
   log:
-    'output/log/reweightings/pdf_weighting/{year}/{mode}/{version}.log'
+    'output/log/reweighting_dg0/{year}/{mode}/{version}.log'
   run:
     shell(f"""(time\
     python analysis/reweightings/pdf_weighting.py\
@@ -95,195 +101,38 @@ rule reweighting_dg0:
 # }}}
 
 
-# kinematic weighting {{{
+# kinematic Bs weighting {{{
 #    Adds kinWeight to MC_BsJpsiPhi*, MC_BdJpsiKstar and Bd2JpsiKstar tuples
 #    gb-weighting them to match kinematic distributions of their complementary
 #    sample.
 
-rule reweighting_kinematic:
+rule reweighting_kinematic_Bs:
   resources:
-    mem_mb=7168
+    mem_mb=7168,
+    threads=2
   wildcard_constraints:
     mode = "(MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)|Bd2JpsiKstar|Bu2JpsiKplus)"
   input:
     original = lambda wcs: tuples(wcs, weight='oddWeight'),
     target = lambda wcs: tuples(wcs, mode='cdata', weight='kinWeight'),
   output:
-    sample = temp(SAMPLES+'/{year}/{mode}/{version}_kinWeight.root')
+    sample = (SAMPLES+'/{year}/{mode}/{version}_kinWeight.root')
   log:
-    'output/log/reweighting_kinematic/{year}/{mode}/{version}.log'
+    'output/log/reweighting_kinematic_Bs/{year}/{mode}/{version}.log'
   run:
-    from angular_acceptance.bdtconf_tester import bdtmesh
-    bdconfig = settings.timeacc['bdtconfig']
-    # 
-    year = f'{wildcards.year}'
-    mode = f'{wildcards.mode}'
-    version = f'{wildcards.version}'
-
-    # change bdt according to filename, if applies
-    if 'bdt' in version:
-      bdtconfig = int(version.split('bdt')[1])
-      bdtconfig = bdtmesh(bdtconfig, settings.general['bdt_tests'], False)
-    #
-    if mode.startswith('MC_Bs2Jpsi'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "B_PT X_M" \
-      --original-weight "(sw/gb_weights)*polWeight*pdfWeight"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "B_PT X_M"\
-      --target-weight "sw"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log}""")
-    elif mode.startswith('MC_Bd2JpsiKstar'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "B_PT X_M" \
-      --original-weight "sw*polWeight*pdfWeight"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "B_PT X_M"\
-      --target-weight "sw*kinWeight"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log}""")
-    elif mode.startswith('Bd2JpsiKstar'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "B_PT B_P" \
-      --original-weight "sw"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "B_PT B_P"\
-      --target-weight "sw"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log}""")
-    elif mode.startswith('MC_Bu2JpsiKplus'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "B_PT" \
-      --original-weight "sw"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "B_PT"\
-      --target-weight "sw"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log}""")
-    elif mode.startswith('Bu2JpsiKplus'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "B_PT B_P" \
-      --original-weight "sw"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "B_PT B_P"\
-      --target-weight "sw"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log}""")
-    else:
-      shell(f"""(time\
-      cp {input.original} {output.sample}
-      ) &> {log}""")
-    send_mail(f"Kinematic weighting :: {wildcards}", f"{log}")
-
-
-rule reweighting_wisely:
-  resources:
-    mem_mb=7168
-  wildcard_constraints:
-    mode = "MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)"
-  input:
-    original = lambda wcs: tuples(wcs, weight='kbuWeight'),
-    target = lambda wcs: tuples(wcs, mode='cdata', weight='kinWeight'),
-  output:
-    sample = temp(SAMPLES+'/{year}/{mode}/{version}_oddWeight.root')
-  log:
-    'output/log/reweighting_wisely/{year}/{mode}/{version}.log'
-  run:
-    from angular_acceptance.bdtconf_tester import bdtmesh
-    bdconfig = settings.timeacc['bdtconfig']
-
-    # TODO: move this string to config.json at some point
-    WEIRD_ONES = 'log_B_IPCHI2_mva B_DTF_CHI2NDOF hplus_TRACK_CHI2NDOF hplus_PIDK hminus_TRACK_CHI2NDOF muplus_TRACK_CHI2NDOF muminus_TRACK_CHI2NDOF max_K_TRCHI2_mva max_mu_TRCHI2_mva'
-
-    year = f'{wildcards.year}'
-    mode = f'{wildcards.mode}'
-    version = f'{wildcards.version}'
-
-    # change bdt according to filename, if applies
-    if 'bdt' in version:
-      bdtconfig = int(version.split('bdt')[1])
-      bdtconfig = bdtmesh(bdtconfig, settings.general['bdt_tests'], False)
-
-    if mode.startswith('MC_Bs2Jpsi'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "{WEIRD_ONES}" \
-      --original-weight "(sw/gb_weights)*polWeight"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "{WEIRD_ONES}"\
-      --target-weight "sw"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log}""")
-    elif mode.startswith('MC_Bd2JpsiKstar'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "{WEIRD_ONES}" \
-      --original-weight "sw*polWeight*pdfWeight"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "{WEIRD_ONES}"\
-      --target-weight "sw"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}
-      ) &> {log}""")
-    else:
-      shell(f"""(time\
-      cp {input.original} {output.sample}
-      ) &> {log}""")
-    send_mail(f"Kinematic weighting :: {wildcards}", f"{log}")
+    shell(f"""(time\
+    python analysis/reweightings/kinematic_weighting.py\
+    --original-file {input.original}\
+    --original-treename DecayTree\
+    --target-file {input.target}\
+    --target-treename DecayTree\
+    --output-file {output.sample}\
+    --mode {wildcards.mode}\
+    --year {wildcards.year}\
+    --version {wildcards.version}\
+    --weight-set kbsWeight\
+    ) &> {log}""")
+    send_mail(f"Kinematic Bs weighting :: {wildcards}", f"{log}")
 
 
 rule reweighting_kinematic_Bu:
@@ -297,61 +146,81 @@ rule reweighting_kinematic_Bu:
       mode='Bu2JpsiKplus' if f'{wcs.mode}'=='Bd2JpsiKstar' else 'Bd2JpsiKstar',
       weight='kbuWeight'),
   output:
-    sample = temp(SAMPLES+'/{year}/{mode}/{version}_kbuWeight.root')
+    sample = (SAMPLES+'/{year}/{mode}/{version}_kbuWeight.root')
   log:
     'output/log/reweighting_kinematic_Bu/{year}/{mode}/{version}.log'
   run:
-    from angular_acceptance.bdtconf_tester import bdtmesh
-    bdconfig = settings.timeacc['bdtconfig']    
-    year = f'{wildcards.year}'
-    mode = f'{wildcards.mode}'
-    version = f'{wildcards.version}'
-    
-    # change bdt according to filename, if applies
-    if 'bdt' in version:
-      bdtconfig = int(version.split('bdt')[1])
-      bdtconfig = bdtmesh(bdtconfig, settings.general['bdt_tests'], False)
-    
-    if mode.startswith('MC_Bd2JpsiKstar'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "B_PT X_M" \
-      --original-weight "sw*polWeight*pdfWeight"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "B_PT X_M"\
-      --target-weight "sw*kbuWeight"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}\
-      ) &> {log}""")
-    elif mode.startswith('Bd2JpsiKstar'):
-      shell(f"""(time\
-      python analysis/reweightings/kinematic_weighting.py\
-      --original-file {input.original}\
-      --original-treename DecayTree\
-      --original-vars "B_PT B_P"\
-      --original-weight "sw"\
-      --target-file {input.target}\
-      --target-treename DecayTree\
-      --target-vars "B_PT B_P"\
-      --target-weight "sw"\
-      --output-file {output.sample}\
-      --n-estimators {bdconfig['n_estimators']}\
-      --learning-rate {bdconfig['learning_rate']}\
-      --max-depth {bdconfig['max_depth']}\
-      --min-samples-leaf {bdconfig['min_samples_leaf']}\
-      ) &> {log}""")
-    else:
-      shell(f"""(time\
-      cp {input.original} {output.sample}
-      ) &> {log}""")
+    shell(f"""(time\
+    python analysis/reweightings/kinematic_weighting.py\
+    --original-file {input.original}\
+    --original-treename DecayTree\
+    --target-file {input.target}\
+    --target-treename DecayTree\
+    --output-file {output.sample}\
+    --mode {wildcards.mode}\
+    --year {wildcards.year}\
+    --version {wildcards.version}\
+    --weight-set kbuWeight\
+    ) &> {log}""")
     send_mail(f"Kinematic Bu weighting :: {wildcards}", f"{log}")
 
+
+rule reweighting_kinematic_Bd:
+  resources:
+    mem_mb=7168
+  wildcard_constraints:
+    mode = "MC_Bd2JpsiKstar"
+  input:
+    original = lambda wcs: tuples(wcs, weight='pdfWeight'),
+    target = lambda wcs: tuples(wcs, mode='Bd2JpsiKstar', weight='kbdWeight'),
+  output:
+    sample = (SAMPLES+'/{year}/{mode}/{version}_kbdWeight.root')
+  log:
+    'output/log/reweighting_kinematic_Bd/{year}/{mode}/{version}.log'
+  run:
+    shell(f"""(time\
+    python analysis/reweightings/kinematic_weighting.py\
+    --original-file {input.original}\
+    --original-treename DecayTree\
+    --target-file {input.target}\
+    --target-treename DecayTree\
+    --output-file {output.sample}\
+    --mode {wildcards.mode}\
+    --year {wildcards.year}\
+    --version {wildcards.version}\
+    --weight-set kbdWeight\
+    ) &> {log}""")
+    send_mail(f"Kinematic Bd weighting :: {wildcards}", f"{log}")
+
+
+rule reweighting_kinematic_odd:
+  resources:
+    mem_mb=7168
+  wildcard_constraints:
+    mode = "MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)"
+  input:
+    original = lambda wcs: tuples(wcs, weight='kbuWeight'),
+    target = lambda wcs: tuples(wcs, mode='cdata', weight='kinWeight'),
+  output:
+    sample = (SAMPLES+'/{year}/{mode}/{version}_oddWeight.root')
+  log:
+    'output/log/reweighting_kinematic_odd/{year}/{mode}/{version}.log'
+  run:
+    shell(f"""(time\
+    python analysis/reweightings/kinematic_weighting.py\
+    --original-file {input.original}\
+    --original-treename DecayTree\
+    --target-file {input.target}\
+    --target-treename DecayTree\
+    --output-file {output.sample}\
+    --mode {wildcards.mode}\
+    --year {wildcards.year}\
+    --version {wildcards.version}\
+    --weight-set oddWeight\
+    ) &> {log}""")
+    send_mail(f"Kinematic Odd weighting :: {wildcards}", f"{log}")
+
+# }}}
 
 
 # reweighting plots {{{
@@ -361,17 +230,13 @@ rule reweighting_kinematic_Bu:
 rule reweightings_plot_time_acceptance:
   resources:
     mem_mb=1024
-  wildcard_constraints:
-    branch = "(p(T)?(B|Hp|Hm)|mHH)",
-    weight = "(s|kin|kkp)Weight"
   input:
     original = lambda wcs: tuples(wcs),
     target = lambda wcs: tuples(wcs,mode='cdata')
   output:
-    sweighted = 'output/figures/reweightings/{year}/{mode}/{version,[A-Za-z0-9]+}_{branch}_sWeight.pdf',
-    kinweighted = 'output/figures/reweightings/{year}/{mode}/{version}_{branch}_kinWeight.pdf',
+    'output/figures/reweightings/{year}/{mode}/{version,[A-Za-z0-9@]+}_{branch}_{trigger}.pdf'
   log:
-    'output/log/reweightings/plot_time_reweightings/{year}/{mode}/{version}_{branch}.log',
+    'output/log/reweightings/plot_time_reweightings/{year}/{mode}/{version}_{branch}_{trigger}.log',
   run:
     shell(f"""(time\
     python analysis/reweightings/reweighting_plots.py\
@@ -381,8 +246,8 @@ rule reweightings_plot_time_acceptance:
     --mode {wildcards.mode}\
     --version {wildcards.version}\
     --branch {wildcards.branch}\
-    --sweighted {output.sweighted}\
-    --kinweighted {output.kinweighted}\
+    --output {output}\
+    --trigger {wildcards.trigger}\
     ) &> {log}""")
     send_mail(f"Reweighting plots TA :: {wildcards}", f"{log}", f"{output}".split(' '))
 
@@ -443,5 +308,6 @@ rule reweightings_simon_comparisons:
     ) &> {log}""")
 
 # }}}
+
 
 # vim: foldmethod=marker
