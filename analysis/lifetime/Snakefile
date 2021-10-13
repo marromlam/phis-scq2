@@ -19,7 +19,7 @@ rule lifetime_single_Bx:
     timeacc = "single.*",
     mode = "(Bu2JpsiKplus|Bd2JpsiKstar)"
   input:
-    sample = lambda wcs: [tuples(wcs)],
+    sample = lambda wcs: tuples(wcs),
     biased = lambda wcs: expand('output/params/time_acceptance/{year}/{mode}/{version}_{{timeacc}}_biased.json',
                                 year=YEARS[f'{wcs.year}'], version=f'{wcs.version}',
                                 mode = f"MC_{wcs.mode}_dG0" if "Bs" in f"{wcs.mode}" else f"MC_{wcs.mode}"),
@@ -31,10 +31,12 @@ rule lifetime_single_Bx:
   log:
     'output/log/lifetime_single/{year}/{mode}/{version}_life{timeacc}_{trigger}.log'
   run:
+    samples = input.sample
+    samples = [samples] if isinstance(samples,str) else samples
     shell(f"""
     (time\
     python analysis/time_acceptance/lifetime_single.py\
-    --sample {",".join(input.sample)}\
+    --sample {",".join(samples)}\
     --biased-params {",".join(input.biased)}\
     --unbiased-params {",".join(input.unbiased)}\
     --output-params {output.params}\
@@ -106,12 +108,9 @@ rule lifetime_single_Bx_disentangle:
 rule lifetime_trend:
   threads: 128
   input:
-    biased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_biased.json',
-                       year=YEARS[f'{wcs.year}']),
-    unbiased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_unbiased.json',
-                       year=YEARS[f'{wcs.year}']),
-    combined = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_combined.json',
-                       year=YEARS[f'{wcs.year}']),
+    biased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_biased.json', year=YEARS[f'{wcs.year}']),
+    unbiased = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_unbiased.json', year=YEARS[f'{wcs.year}']),
+    combined = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_combined.json', year=YEARS[f'{wcs.year}']),
   output:
     'output/figures/lifetime/{year}/{mode}/{version}_{timeacc}_trend.pdf',
   log:
