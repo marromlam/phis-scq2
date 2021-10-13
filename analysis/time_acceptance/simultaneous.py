@@ -7,9 +7,7 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
-
-################################################################################
-# Modules ######################################################################
+# Modules {{{
 
 import argparse
 import os
@@ -42,15 +40,14 @@ tUL = config.general['tUL']
 if __name__ != '__main__':
   import badjanak
 
-################################################################################
+# }}}
 
 
-
-################################################################################
-# Run and get the job done #####################################################
+# Command Line Interface {{{
+    
 if __name__ == '__main__':
 
-  # Parse arguments ------------------------------------------------------------
+  # Parse arguments {{{
   printsec("Time acceptance procedure")
   p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
@@ -77,14 +74,23 @@ if __name__ == '__main__':
   initialize(os.environ['IPANEMA_BACKEND'], 1)
   import time_acceptance.fcn_functions as fcns
 
-  if TIMEACC['use_upTime']:
-    tLL = 0.89
-  if TIMEACC['use_lowTime']:
-    tUL = 0.89
-  print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
   # Prepare the cuts
-  CUT = trigger_scissors(TRIGGER)              # place cut attending to trigger
-  CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')     # place decay-time cuts
+  if TIMEACC['use_transverse_time']:
+    time = 'timeT'
+  else:
+    time = 'time'
+  if TIMEACC['use_truetime']:
+    time = f'gen{time}'
+
+  if TIMEACC['use_upTime']:
+    tLL = 1.36
+  if TIMEACC['use_lowTime']:
+    tUL = 1.36
+  print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
+
+  CUT = f'{time}>={tLL} & {time}<={tUL}'
+  CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
+
 
   # Print settings
   printsubsec("Settings")
@@ -103,11 +109,12 @@ if __name__ == '__main__':
   if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
     knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
     knots = knots.tolist()
-  print(knots)
-  sWeight = "sw"
+
+  # }}}
 
 
-  # Get data into categories ---------------------------------------------------
+  # Get data into categories {{{
+
   printsubsec(f"Loading categories")
 
   def samples_to_cats(samples, correct, oddity):
@@ -121,86 +128,71 @@ if __name__ == '__main__':
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
       m = 'MC_Bs2JpsiPhi'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*dg0Weight*{sWeight}/gb_weights'
+        weight = f'kbsWeight*polWeight*pdfWeight*dg0Weight*sWeight'
       else:
-        weight = f'dg0Weight*{sWeight}/gb_weights'
-      # apply oddWeight if evtOdd in filename
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
+        weight = f'dg0Weight*sWeight'
       mode = 'signalMC'; c = 'a'
     # }}}
     # MC_Bs2JpsiPhi_dG0 {{{
     elif 'MC_Bs2JpsiPhi_dG0' in m:
       m = 'MC_Bs2JpsiPhi_dG0'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
+        weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
-        weight = f'{sWeight}/gb_weights'
-      # apply oddWeight if evtOdd in filename
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
+        weight = f'sWeight'
       mode = 'signalMC'; c = 'a'
     # }}}
     # MC_Bd2JpsiKstar {{{
     elif 'MC_Bd2JpsiKstar' in m:
       m = 'MC_Bd2JpsiKstar'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
+        weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
-        weight = f'{sWeight}'
-      # apply oddWeight if evtOdd in filename
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
+        weight = f'sWeight'
       mode = 'controlMC'; c = 'b'
     # }}}
     # Bd2JpsiKstar {{{
     elif 'Bd2JpsiKstar' in m:
       m = 'Bd2JpsiKstar'
       if TIMEACC['corr']:
-        weight = f'kinWeight*{sWeight}'
+        weight = f'kbsWeight*sWeight'
       else:
-        weight = f'{sWeight}'
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
+        weight = f'sWeight'
       mode = 'controlRD'; c = 'c'
     # }}}
     # MC_Bu2JpsiKplus {{{
     elif 'MC_Bu2JpsiKplus' in m:
       m = 'MC_Bu2JpsiKplus'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*{sWeight}'
+        weight = f'kbsWeight*polWeight*sWeight'
       else:
-        weight = f'{sWeight}'
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
-      # apply oddWeight if evtOdd in filename
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
+        weight = f'sWeight'
       mode = 'controlMC'; c = 'b'
     # }}}
     # Bu2JpsiKplus {{{
     elif 'Bu2JpsiKplus' in m:
       m = 'Bu2JpsiKplus'
       if TIMEACC['corr']:
-        weight = f'kinWeight*{sWeight}'
-        # weight = f'{sWeight}'  # TODO: fix kinWeight here, it should exist and be a reweight Bu -> Bs
+        weight = f'kbsWeight*sWeight'
+        # weight = f'sWeight'  # TODO: fix kbsWeight here, it should exist and be a reweight Bu -> Bs
       else:
-        weight = f'{sWeight}'
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
+        weight = f'sWeight'
       mode = 'controlRD'; c = 'c'
     # }}}
-    print(weight)
+
+    # Final parsing time acceptance and version configurations {{{
+    if TIMEACC['use_oddWeight'] and "MC" in mode:
+      weight = f"oddWeight*{weight}"
+    if TIMEACC['use_veloWeight']:
+      weight = f"veloWeight*{weight}"
+    if "bkgcat60" in args['version']:
+      weight = weight.replace(f'sWeight', 'time/time')
+    print("Weight is set to: {weight}")
+    # }}}
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    cats[mode].allocate(time='time', lkhd='0*time', weight=weight)
+    cats[mode].allocate(time=time, lkhd='0*time', weight=weight)
     print(np.min(cats[mode].time.get()), np.max(cats[mode].time.get()))
     cats[mode].weight = swnorm(cats[mode].weight)
     # print(cats[mode].df['veloWeight'])
@@ -242,14 +234,15 @@ if __name__ == '__main__':
     cats[mode].pars_path = oparams[i]
 
 
-
-  # Configure kernel -----------------------------------------------------------
+  # Configure kernel
   fcns.badjanak.config['knots'] = knots[:-1]
   fcns.badjanak.get_kernels(True)
 
+  # }}}
 
 
-  # Time to fit ----------------------------------------------------------------
+  # Time to fit {{{
+
   printsubsec(f"Simultaneous minimization procedure")
   fcn_call = fcns.saxsbxscxerf
   fcn_pars = cats['signalMC'].params+cats['controlMC'].params+cats['controlRD'].params
@@ -276,7 +269,8 @@ if __name__ == '__main__':
                            steps=1000, nwalkers=100, behavior='chi2')
   print(result)
 
-  # Do contours or scans if asked ----------------------------------------------
+  # Do contours or scans if asked {{{
+
   if args['contour'] != "0":
     if len(args['contour'].split('vs')) > 1:
       fig, ax = plot_conf2d(
@@ -295,19 +289,26 @@ if __name__ == '__main__':
           args['contour'], bins=20, bound=3, subtract_min=True, band=True, text=True)
       plt.savefig(cats[mode].pars_path.replace('tables', 'figures').replace('.json', f"_contour{args['contour']}.pdf"))
 
+  # }}}
+
+  # }}}
 
 
-  # Writing results ------------------------------------------------------------
+  # Writing results {{{
+
   printsec(f"Dumping parameters")
 
   for name, cat in zip(cats.keys(),cats.values()):
     list_params = cat.params.find('(a|b|c)(\d{1})(u|b)')
-    print(list_params)
+    print("Dumping:", list_params)
     cat.params.add(*[result.params.get(par) for par in list_params])
-
-    print(f"Dumping json parameters to {cats[name].pars_path}")
+    print(f"to: {cats[name].pars_path}")
     cat.params = cat.knots + cat.params
     cat.params.dump(cats[name].pars_path)
+
+  # }}}
+
+# }}}
 
 
 # vim:foldmethod=marker

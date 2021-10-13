@@ -1,14 +1,12 @@
 DESCRIPTION = """
-    Lifetime shit shit shit
+    Compute decay time efficiency using only one single mode.
 """
 
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
-
-################################################################################
-# Modules ######################################################################
+# Modules {{{
 
 import argparse
 import os
@@ -41,16 +39,15 @@ if __name__ != '__main__':
   initialize(os.environ['IPANEMA_BACKEND'], 1)
   from time_acceptance.fcn_functions import splinexerf
 
-################################################################################
+# }}}
 
 
-
-################################################################################
-#%% Run and get the job done ###################################################
+# Run and get the job done {{{
 
 if __name__ == '__main__':
 
-  # Parse arguments ------------------------------------------------------------
+  # Parse arguments {{{
+
   p = argparse.ArgumentParser(description='Compute single decay-time acceptance.')
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
   p.add_argument('--params', help='Bs2JpsiPhi MC sample')
@@ -78,15 +75,17 @@ if __name__ == '__main__':
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  if TIMEACC['use_truetime']:
-    time = 'gentime'
+  if TIMEACC['use_transverse_time']:
+    time = 'timeT'
   else:
     time = 'time'
+  if TIMEACC['use_truetime']:
+    time = f'gen{time}'
 
   if TIMEACC['use_upTime']:
-    tLL = 0.89
+    tLL = 1.36
   if TIMEACC['use_lowTime']:
-    tUL = 0.89
+    tUL = 1.36
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
   CUT = f'{time}>={tLL} & {time}<={tUL}'
@@ -109,8 +108,8 @@ if __name__ == '__main__':
   if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
     knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
     knots = knots.tolist()
-  sWeight = "sw"
 
+  # }}}
 
 
   # Get data into categories {{{ 
@@ -120,91 +119,77 @@ if __name__ == '__main__':
   cats = {}
   for i, m in enumerate([MODE]):
     # Correctly apply weight and name for diffent samples
+    # MC_Bs2JpsiPhi {{{
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
-      # MC_Bs2JpsiPhi {{{
       m = 'MC_Bs2JpsiPhi'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
+        weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
-        weight = f'dg0Weight*{sWeight}/gb_weights'
-      # apply  dG0Weight if evtOdd in filename
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
-      #cut in bkgcat implies not to use sw/gb_weights
-      if "bkgcat60" in args['version']:
-        weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
+        weight = f'dg0Weight*sWeight'
       mode = 'signalMC'; c = 'a'
+    # }}}
+    # MC_Bs2JpsiKK_Swave {{{
     elif 'MC_Bs2JpsiKK_Swave' in m:
-      # MC_Bs2JpsiKK_Swave {{{
       m = 'MC_Bs2JpsiKK_Swave'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
+        weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
-        weight = f'dg0Weight*{sWeight}/gb_weights'
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
-      #cut in bkgcat implies not to use sw/gb_weights
-      if "bkgcat60" in args['version']:
-        weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
+        weight = f'dg0Weight*sWeight'
       mode = 'signalMC'; c = 'a'
+    # }}}
+    # MC_Bs2JpsiPhi_dG0 {{{ 
     elif 'MC_Bs2JpsiPhi_dG0' in m:
       m = 'MC_Bs2JpsiPhi_dG0'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}/gb_weights'
+        weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
-        weight = f'{sWeight}/gb_weights'
-      # apply  dG0Weight if evtOdd in filename
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
-      #cut in bkgcat implies not to use sw/gb_weights
-      if "bkgcat60" in args['version']:
-        weight = weight.replace(f'{sWeight}/gb_weights', 'time/time')
+        weight = f'sWeight'
       mode = 'signalMC'; c = 'a'
+    # }}}
+    # MC_Bd2JpsiKstar {{{
     elif 'MC_Bd2JpsiKstar' in m:
       m = 'MC_Bd2JpsiKstar'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*pdfWeight*{sWeight}'
+        weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
+        # TODO: Here we should be using kbdWeight !!!
+        # weight = f'kbdWeight*polWeight*pdfWeight*sWeight'
       else:
-        weight = f'{sWeight}'
-      # apply  dG0Weight if evtOdd in filename
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
-      #cut in bkgcat implies not to use sw/gb_weights
-      if "bkgcat60" in args['version']:
-        weight = weight.replace(f'{sWeight}', 'time/time')
+        weight = f'sWeight'
       mode = 'controlMC'; c = 'b'
+    # }}}
+    # MC_Bd2JpsiKstar {{{
     elif 'MC_Bu2JpsiKplus' in m:
       m = 'MC_Bu2JpsiKplus'
       if TIMEACC['corr']:
-        weight = f'kinWeight*polWeight*{sWeight}'
+        weight = f'kbsWeight*polWeight*sWeight'
       else:
-        weight = f'{sWeight}'
-      # apply  dG0Weight if evtOdd in filename
-      if TIMEACC['use_oddWeight']:
-        weight = f"oddWeight*{weight}"
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
-      #cut in bkgcat implies not to use sw/gb_weights
-      if "bkgcat60" in args['version']:
-        weight = weight.replace(f'{sWeight}', 'time/time')
+        weight = f'sWeight'
       mode = 'controlMC'; c = 'b'
+    # }}}
+    # Bd2JpsiKstar {{{
     elif 'Bd2JpsiKstar' in m:
       m = 'Bd2JpsiKstar'
       if TIMEACC['corr']:
-        weight = f'kinWeight*{sWeight}'
+        weight = f'kbsWeight*sWeight'
       else:
-        weight = f'{sWeight}'
-      if TIMEACC['use_veloWeight']:
-        weight = f"veloWeight*{weight}"
+        weight = f'sWeight'
       mode = 'controlRD'; c = 'c'
     # }}}
-    print(weight)
 
-    # Load the sample
+
+    # Final parsing time acceptance and version configurations {{{
+    if TIMEACC['use_oddWeight']:
+      weight = f"oddWeight*{weight}"
+    if TIMEACC['use_veloWeight']:
+      weight = f"veloWeight*{weight}"
+    if "bkgcat60" in args['version']:
+      weight = weight.replace(f'sWeight', 'time/time')
+    print("Weight is set to: {weight}")
+    # }}}
+
+
+
+    # Load the sample {{{
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
     if TIMEACC['use_pTWeight']=='pT':
       pTp = np.array(cats[mode].df['pTHp'])
@@ -220,6 +205,7 @@ if __name__ == '__main__':
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
     print(cats[mode])
+
 
     # Add knots
     cats[mode].knots = Parameters()
@@ -256,12 +242,14 @@ if __name__ == '__main__':
     cats[mode].label = mode_tex(mode)
     cats[mode].pars_path = oparams[i]
 
+  # }}}
 
 
   # Configure kernel -----------------------------------------------------------
   fcns.badjanak.config['knots'] = knots[:-1]
   fcns.badjanak.get_kernels(True)
 
+  # }}}
 
   # Time to fit {{{
 
@@ -312,6 +300,7 @@ if __name__ == '__main__':
 
 # }}}
 
+# }}}
+
 
 # vim:foldmethod=marker
-# that's all folks!
