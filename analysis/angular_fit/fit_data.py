@@ -102,9 +102,9 @@ TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version'])
 TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
 
 if TIMEACC['use_upTime']:
-  tLL = 0.89
+  tLL = 1.36
 if TIMEACC['use_lowTime']:
-  tUL = 0.89
+  tUL = 1.36
 print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
 # Prepare the cuts -----------------------------------------------------------
