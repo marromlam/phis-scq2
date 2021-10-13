@@ -84,9 +84,9 @@ if __name__ == '__main__':
     time = 'time'
   
   if 'UT' in args['version']:
-    tLL = 0.89
+    tLL = 1.36
   if 'LT' in args['version']:
-    tUL = 0.89
+    tUL = 1.36
 
   CUT = f'{time}>={tLL} & {time}<={tUL}'
 
@@ -125,14 +125,10 @@ if __name__ == '__main__':
   true = [f'gen{i}' for i in reco]
 
   # if not using bkgcat==60, then don't use sWeight
-  weight_rd = 'sw'
-  weight_mc = 'polWeight*sw'
+  weight_rd = 'sWeight'
+  weight_mc = 'polWeight*sWeight'
 
   # if mode is from Bs family, then use gb_weights
-  if 'Bs2Jpsi' in MODE:
-    weight_mc += '/gb_weights'
-    if 'evt' in args['version']:
-      weight_rd = f'{weight_rd}/gb_weights'
   if "bkgcat60" in args['version']:
     weight_mc = 'polWeight'
     weight_rd = 'time/time'
@@ -181,7 +177,7 @@ if __name__ == '__main__':
   print(f"{'idx':>3} | {'sw':>11} | {'polWeight':>11} | {'angWeight':>11} ")
   for i in range(0,100):
     if kinWeight[i] != 0:
-      print(f"{str(i):>3} | {mc.df.eval('sw/gb_weights')[i]:+.8f} |",
+      print(f"{str(i):>3} | {mc.df.eval('sWeight')[i]:+.8f} |",
             f"{mc.df['polWeight'][i]:+.8f} | {kinWeight[i]:+.8f} ")
 
   np.save(args['output_weights_file'], kinWeight)
