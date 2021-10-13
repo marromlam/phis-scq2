@@ -1,0 +1,8 @@
+Bd2JpsiKstar: &Bd2JpsiKstar
+    'B_cuts_acc': 'B_ConstJpsi_M_1 > 5210. & B_ConstJpsi_M_1 < 5350.'
+    'Kstar_cuts_acc': 'X_M > 826. & X_M < 966.'
+
+MC_Bd2JpsiKstar: &MC_Bd2JpsiKstar
+    <<: *Bd2JpsiKstar
+    'MC_specific_acc': 'B_BKGCAT == 0 | B_BKGCAT == 10 | (B_BKGCAT == 50 & B_TRUETAU > 0)'
+    
