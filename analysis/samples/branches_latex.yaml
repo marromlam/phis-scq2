@@ -208,7 +208,7 @@ Bs_common: &Bs_common
   'pTX' :
     peval : 'X_PT'
     latex: 'p_T (\phi)'
-    range: [0.0, 2.5e+4]
+    range: [0.0, 1.5e+4]
     units : ''
     descr : ''
   'KmaxTRchi2' :
@@ -499,7 +499,7 @@ Bd_common: &Bd_common
   'pTX' :
     peval: 'X_PT'
     latex: 'p_T (K\pi)'
-    range: [0, 2.5e+4]
+    range: [0, 1.5e+4]
     units: 'MeV'
     descr: ''
   'KmaxTRchi2' :
