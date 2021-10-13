@@ -53,12 +53,16 @@ if __name__ == "__main__":
   elif mode == 'MC_Bd2JpsiKstar':
     ncorr = ['sWeight', 'sWeight*kinWeight']
     wcorr = ['sWeight*kinWeight*pdfWeight*polWeight', 'sWeight*kinWeight']
+    # ncorr[0] = f'{ncorr[0]}*gb_weights'
+    # wcorr[0] = f'{wcorr[0]}*gb_weights'
   elif mode == 'MC_Bs2JpsiPhi':
-    ncorr = ['sWeight/gb_weights', 'sWeight']
-    wcorr = ['sWeight*kinWeight*dg0Weight*pdfWeight*polWeight/gb_weights', 'sWeight']
+    ncorr = ['sWeight', 'sWeight']
+    wcorr = ['sWeight*kinWeight*dg0Weight*pdfWeight*polWeight', 'sWeight']
   elif mode == 'MC_Bs2JpsiPhi_dG0':
-    ncorr = ['sWeight/gb_weights', 'sWeight']
-    wcorr = ['sWeight*kinWeight*pdfWeight*polWeight/gb_weights', 'sWeight']
+    ncorr = ['sWeight', 'sWeight']
+    wcorr = ['sWeight*kinWeight*pdfWeight*polWeight', 'sWeight']
+    # ncorr = [f'{corr}/gb_weights' for corr in ncorr]
+    # wcorr = [f'{corr}/gb_weights' for corr in wcorr]
   elif mode == 'MC_Bu2JpsiKplus':
     ncorr = ['sWeight', 'sWeight']
     wcorr = ['sWeight*kinWeight*polWeight', 'sWeight']
@@ -66,6 +70,9 @@ if __name__ == "__main__":
     ncorr = ['sWeight', 'sWeight']
     wcorr = ['sWeight', 'sWeight']
     print('to be developed')
+
+  print("Original weights:", ncorr[0], wcorr[0])
+  print("Target weights:", ncorr[1], wcorr[1])
 
   # Background-subtracted sample - not using kinWeight 
   xncorr, yncorr = histogram.compare_hist(data = [tdf[branch], odf[branch]],
