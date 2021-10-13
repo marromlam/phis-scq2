@@ -110,10 +110,19 @@ def kinematic_weighting(original_file, original_treename, original_vars,
   # fetch variables in original files
   print('Loading branches for original_sample')
   odf = uproot.open(original_file)[original_treename].pandas.df()
+  try:
+    odf['phiHH'] = odf.eval("arctan((hminus_PY+hplus_PY)/(hminus_PX+hplus_PX))")
+  except:
+    print(f'You cannot calculate the phi of the phi for {original_file}')
   print(odf)
   print('Loading branches for target_sample')
   tdf = uproot.open(target_file)[target_treename].pandas.df()
+  try:
+    tdf['phiHH'] = tdf.eval("arctan((hminus_PY+hplus_PY)/(hminus_PX+hplus_PX))")
+  except:
+    print(f'You cannot calculate the phi of the phi for {target_file}')
   print(tdf)
+
 
   print(f"Original weight = {original_weight}")
   print(odf.eval(original_weight))
@@ -207,7 +216,6 @@ if __name__ == '__main__':
   with open('analysis/samples/branches.yaml') as file:
     sWeight = yaml.load(file, Loader=yaml.FullLoader)
   sWeight = sWeight[args['mode']]['sWeight']
-  print(sWeight)
 
   args["original_vars"] = reweight_config["variables"]
   args["target_vars"] = reweight_config["variables"]
