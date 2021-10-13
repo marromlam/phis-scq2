@@ -1,0 +1,100 @@
+# REWEIGHTING CONF FILE
+# This file contains all reweighings...
+#
+# 
+# Marcos Romero Lamas (mromerol@cern.ch)
+
+kbsWeight:
+  # These are the general reweightings to be done. They are used in the 
+  # time acceptable pipeline. Everything is reweighted to Bs, and non=-Bs MC
+  # are also reweighted to a previopusly reweighted Bx sample.
+  MC_Bs2JpsiPhi:
+    original: ["sw", "polWeight", "pdfWeight"]
+    target: ["sw"]
+    variables: ["B_PT", "X_M"]
+  
+  MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi 
+
+  MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiPhi 
+  
+  MC_Bd2JpsiKstar: 
+    original: ["sw*gb_weights", "polWeight", "pdfWeight"]
+    target: ["sw * kbsWeight"]
+    variables: ["B_PT", "X_M"]
+
+  MC_Bu2JpsiKplus:
+    original: ["sw*gb_weights", "polWeight"]
+    target: ["sw * kbsWeight"]
+    variables: ["B_PT"]
+  
+  Bd2JpsiKstar:
+    weights: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+  
+  Bu2JpsiKplus:
+    weights: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+
+
+kbuWeight:
+  MC_Bs2JpsiPhi:
+    original: ["sw", "polWeight", "pdfWeight"]
+    target: ["sw * kbuWeight"]
+    variables: ["B_PT", "X_M"]
+  
+  MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi 
+
+  MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiPhi 
+  
+  MC_Bd2JpsiKstar: 
+    original: ["sw*gb_weights", "polWeight", "pdfWeight"]
+    target: ["sw * kbuWeight"]
+    variables: ["B_PT", "X_M"]
+
+  MC_Bu2JpsiKplus:
+    original: ["sw*gb_weights", "polWeight"]
+    target: ["sw"]
+    variables: ["B_PT"]
+  
+  Bd2JpsiKstar:
+    weights: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+  
+  Bs2JpsiPhi:
+    weights: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+
+
+kbdWeight:
+  MC_Bs2JpsiPhi:
+    original: ["sw", "polWeight", "pdfWeight"]
+    target: ["sw * kbdWeight"]
+    variables: ["B_PT", "X_M"]
+  
+  MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi 
+
+  MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiPhi 
+  
+  MC_Bd2JpsiKstar: 
+    original: ["sw*gb_weights", "polWeight", "pdfWeight"]
+    target: ["sw"]
+    variables: ["B_PT", "X_M"]
+
+  MC_Bu2JpsiKplus:
+    original: ["sw*gb_weights", "polWeight"]
+    target: ["sw * kbdWeight"]
+    variables: ["B_PT"]
+  
+  Bs2JpsiPhi:
+    weights: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+  
+  Bu2JpsiKplus:
+    weights: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
