@@ -124,10 +124,10 @@ if __name__ == "__main__":
         pipas.append(expr)
       pipas[-1] += f"& ${np.sqrt(chi2[0]-chi2[1]):.4f}$"
   # ax.set_title(" -- ".join(titles))
-  shit = "\\begin{tabular}{r|l|c|c|c}"
-  shit += "trigger. & fit & $\chi^2$ & p-value & significance \\\\ "
-  shit += "\\\\ ".join(pipas)
-  shit += " \\end{tabular}"
+  shit = r"\begin{tabular}{r|l|c|c|c}"
+  shit += r"trigger. & fit & $\chi^2$ & p-value & significance \\ "
+  shit += r"\\ ".join(pipas)
+  shit += r" \end{tabular}"
   print(shit)
   ax.set_title(shit, fontsize='x-small')
 
