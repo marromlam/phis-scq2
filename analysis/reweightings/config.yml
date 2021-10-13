@@ -4,97 +4,175 @@
 # 
 # Marcos Romero Lamas (mromerol@cern.ch)
 
+
+# Kinematic reweighings to Bs {{{
+#    These are the general reweightings to be done. They are used in the 
+#    time acceptable pipeline. Everything is reweighted to Bs, and non=-Bs MC
+#    are also reweighted to a previopusly reweighted Bx sample.
+
 kbsWeight:
+  MC_Bs2JpsiPhi: &kbsWeight_MC_Bs2JpsiPhi
+    # BsMC -> BsRD
+    original: ["{sWeight}*polWeight*pdfWeight"]
+    target: ["sw"]
+    variables: ["B_PT", "X_M"]
+  
+  MC_Bs2JpsiPhi_dG0: 
+    # BsMC -> BsRD
+    <<: *kbsWeight_MC_Bs2JpsiPhi 
+  
+  MC_Bs2JpsiKK_Swave: 
+    # BsMC -> BsRD
+    <<: *kbsWeight_MC_Bs2JpsiPhi 
+
+  MC_Bd2JpsiKstar: 
+    # BdMC -> BdRD
+    original: ["{sWeight}*polWeight*pdfWeight"]
+    target: ["sw*kbsWeight"]
+    variables: ["B_PT", "X_M"]
+
+  MC_Bu2JpsiKplus:
+    # BuMC -> BuRD
+    original: ["{sWeight}*polWeight"]
+    target: ["sw*kbsWeight"]
+    variables: ["B_PT"]
+  
+  Bd2JpsiKstar:
+    # BdRD -> BsRD
+    original: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+  
+  Bu2JpsiKplus:
+    # BuRD -> BsRD
+    original: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+
+# }}}
+
+
+# Kinematic reweighings to Bu {{{
+#    For some cross validation we use Bu as proxy for Bs, hence we need
+#    a set of weights computed the same way we do in Bs.
+
+kbuWeight:
+  MC_Bs2JpsiPhi: &kbuWeight_MC_Bs2JpsiPhi
+    original: ["sw*polWeight*pdfWeight"]
+    target: ["sw*kbuWeight"]
+    variables: ["B_PT", "X_M"]
+  
+  MC_Bs2JpsiPhi_dG0: 
+    <<: *kbuWeight_MC_Bs2JpsiPhi 
+  
+  MC_Bs2JpsiKK_Swave: 
+    <<: *kbuWeight_MC_Bs2JpsiPhi 
+  
+  MC_Bd2JpsiKstar: 
+    original: ["{sWeight}*polWeight*pdfWeight"]
+    target: ["sw*kbuWeight"]
+    variables: ["B_PT", "X_M"]
+
+  MC_Bu2JpsiKplus:
+    original: ["{sWeight}*polWeight"]
+    target: ["sw"]
+    variables: ["B_PT"]
+  
+  Bd2JpsiKstar:
+    original: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+  
+  Bs2JpsiPhi:
+    original: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+
+# }}}
+
+
+# Kinematic reweighings to Bd {{{
+#    For some cross validation Bd samples and we try to measure Bd lifetimes
+#    using Bd MC for the decay time efficiency. Hence, we need a set of 
+#    reweighs for Bd MC to Bd RD only.
+
+kbdWeight:
+  MC_Bs2JpsiPhi: &kbdWeight_MC_Bs2JpsiPhi
+    original: ["sw*polWeight*pdfWeight"]
+    target: ["sw*kbdWeight"]
+    variables: ["B_PT", "X_M"]
+  
+  MC_Bs2JpsiPhi_dG0:
+    <<: *kbdWeight_MC_Bs2JpsiPhi 
+
+  MC_Bs2JpsiKK_Swave:
+    <<: *kbdWeight_MC_Bs2JpsiPhi 
+  
+  MC_Bd2JpsiKstar: 
+    original: ["{sWeight}*polWeight*pdfWeight"]
+    target: ["sw"]
+    variables: ["B_PT", "X_M"]
+
+  MC_Bu2JpsiKplus:
+    original: ["{sWeight}*polWeight"]
+    target: ["sw*kbdWeight"]
+    variables: ["B_PT"]
+  
+  Bs2JpsiPhi:
+    original: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+  
+  Bu2JpsiKplus:
+    original: ["sw"]
+    target: ["sw"]
+    variables: ["B_PT", "B_P"]
+
+# }}}
+
+
+# Kinematic Odd reweightings {{{
+#    The oddWeight is a weight used for MC cross-validation of the baeline procedure.
+#    oddWeights try to introduce MC-RD differences in half o the MC sample.
+
+oddWeight:
   # These are the general reweightings to be done. They are used in the 
   # time acceptable pipeline. Everything is reweighted to Bs, and non=-Bs MC
   # are also reweighted to a previopusly reweighted Bx sample.
-  MC_Bs2JpsiPhi:
-    original: ["sw", "polWeight", "pdfWeight"]
+  MC_Bs2JpsiPhi: &oddWeight_MC_Bs2JpsiPhi
+    original: ["sw*polWeight*pdfWeight"]
     target: ["sw"]
-    variables: ["B_PT", "X_M"]
+    variables: ["log_B_IPCHI2_mva", "B_DTF_CHI2NDOF", "hplus_TRACK_CHI2NDOF",
+                "hplus_PIDK", "hminus_TRACK_CHI2NDOF", "muplus_TRACK_CHI2NDOF",
+                "muminus_TRACK_CHI2NDOF", "max_K_TRCHI2_mva", "max_mu_TRCHI2_mva"]
   
-  MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi 
+  MC_Bs2JpsiPhi_dG0:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
 
-  MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiPhi 
+  MC_Bs2JpsiKK_Swave:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
   
-  MC_Bd2JpsiKstar: 
-    original: ["sw*gb_weights", "polWeight", "pdfWeight"]
-    target: ["sw * kbsWeight"]
-    variables: ["B_PT", "X_M"]
+  MC_Bd2JpsiKstar:
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+    original: ["{sWeight}*polWeight*pdfWeight"]
+    target: ["sw*kbsWeight"]
 
   MC_Bu2JpsiKplus:
-    original: ["sw*gb_weights", "polWeight"]
-    target: ["sw * kbsWeight"]
-    variables: ["B_PT"]
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+    original: ["{sWeight}*polWeight"]
+    target: ["sw*kbsWeight"]
   
   Bd2JpsiKstar:
-    weights: ["sw"]
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+    original: ["sw"]
     target: ["sw"]
-    variables: ["B_PT", "B_P"]
   
   Bu2JpsiKplus:
-    weights: ["sw"]
+    <<: *oddWeight_MC_Bs2JpsiPhi 
+    original: ["sw"]
     target: ["sw"]
-    variables: ["B_PT", "B_P"]
+
+# }}}
 
 
-kbuWeight:
-  MC_Bs2JpsiPhi:
-    original: ["sw", "polWeight", "pdfWeight"]
-    target: ["sw * kbuWeight"]
-    variables: ["B_PT", "X_M"]
-  
-  MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi 
-
-  MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiPhi 
-  
-  MC_Bd2JpsiKstar: 
-    original: ["sw*gb_weights", "polWeight", "pdfWeight"]
-    target: ["sw * kbuWeight"]
-    variables: ["B_PT", "X_M"]
-
-  MC_Bu2JpsiKplus:
-    original: ["sw*gb_weights", "polWeight"]
-    target: ["sw"]
-    variables: ["B_PT"]
-  
-  Bd2JpsiKstar:
-    weights: ["sw"]
-    target: ["sw"]
-    variables: ["B_PT", "B_P"]
-  
-  Bs2JpsiPhi:
-    weights: ["sw"]
-    target: ["sw"]
-    variables: ["B_PT", "B_P"]
-
-
-kbdWeight:
-  MC_Bs2JpsiPhi:
-    original: ["sw", "polWeight", "pdfWeight"]
-    target: ["sw * kbdWeight"]
-    variables: ["B_PT", "X_M"]
-  
-  MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi 
-
-  MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiPhi 
-  
-  MC_Bd2JpsiKstar: 
-    original: ["sw*gb_weights", "polWeight", "pdfWeight"]
-    target: ["sw"]
-    variables: ["B_PT", "X_M"]
-
-  MC_Bu2JpsiKplus:
-    original: ["sw*gb_weights", "polWeight"]
-    target: ["sw * kbdWeight"]
-    variables: ["B_PT"]
-  
-  Bs2JpsiPhi:
-    weights: ["sw"]
-    target: ["sw"]
-    variables: ["B_PT", "B_P"]
-  
-  Bu2JpsiKplus:
-    weights: ["sw"]
-    target: ["sw"]
-    variables: ["B_PT", "B_P"]
+# vim:foldmethod=marker
