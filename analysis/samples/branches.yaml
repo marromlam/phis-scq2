@@ -1,7 +1,9 @@
 # BRANCHES
+# This file contains all branches that will be avaliable after the last
+# set of reweightings.
 #
-#
-#
+# 
+# Marcos Romero Lamas (mromerol@cern.ch)
 
 
 # Common branches for all samples {{{
@@ -9,6 +11,7 @@
 common: &common
   "time" : "time"
   "timeT" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 ) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_PT*5.344286e-22))"
+  "timeBis" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 + (B_SV_Z- B_BPV_Z)**2) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_P*5.344286e-22))"
   "cosK" : "helcosthetaK"
   "cosL" : "helcosthetaL"
   "hphi" : "helphi"
@@ -24,11 +27,9 @@ common: &common
   "pTLp" : "muplus_PT"
   "pLm" : "muminus_P"
   "pTLm" : "muminus_PT"
-  "B_PT" : "B_PT"
   "pTB" : "B_PT"
   "pB" : "B_P"
   "hlt1b" : "hlt1b"
-  "Jpsi_Hlt1DiMuonHighMassDecision_TOS" : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
   "magnet" : "Polarity"
   "etaB" : "B_ETA"
   "evtN" : "eventNumber"
@@ -36,23 +37,20 @@ common: &common
   "sw" : "sw"
   "veloWeight" : "veloWeight"
   "docaz" : "doca_z"
-  "sWeight" : "sw"
   "logIPchi2B" : "log_B_IPCHI2_mva" #From this point, added by Ramon
-  "BDTFchi2" : "B_DTF_CHI2NDOF"
+  "chi2dofB" : "B_DTF_CHI2NDOF"
   "logMINkPNNk" : "log_min_K_PNNk_mva"
-  "BVXchi2" : "B_VX_CHI2NDOF_mva"
+  "chi2Bvx" : "B_VX_CHI2NDOF_mva"
   "pTX" : "X_PT"
-  "KmaxTRchi2" : "max_K_TRCHI2_mva"
-  "MUmaxTRchi2" : "max_mu_TRCHI2_mva"
   "logJpsiVXchi2" : "log_Jpsi_VX_CHI2NDOF_mva"
   "logMINmuPNNmu" : "log_min_mu_PNNmu_mva"
-  "HpTrackchi2" : "hplus_TRACK_CHI2NDOF" #MC vs data differences to check with data weight ang acc
-  "HpPID" : "hplus_PIDK"
-  "HmTrackchi2" : "hminus_TRACK_CHI2NDOF"
-  "LmTrackchi2" : "muplus_TRACK_CHI2NDOF"
-  "LpTrackchi2" : "muminus_TRACK_CHI2NDOF"
-  "HTRchi2" : "max_K_TRCHI2_mva"
-  "LTRchi2" : "max_mu_TRCHI2_mva"
+  "pidHp" : "hplus_PIDK"
+  "chi2TrackHp" : "hplus_TRACK_CHI2NDOF"
+  "chi2TrackHm" : "hminus_TRACK_CHI2NDOF"
+  "chi2TrackLp" : "muplus_TRACK_CHI2NDOF"
+  "chi2TrackLm" : "muminus_TRACK_CHI2NDOF"
+  "maxChi2TrackH" : "max_K_TRCHI2_mva"
+  "maxChi2TrackL" : "max_mu_TRCHI2_mva"
 
 # }}}
 
@@ -71,12 +69,12 @@ MC_common: &MC_common
   "gencosK" : "truehelcosthetaK_GenLvl"
   "gencosL" : "truehelcosthetaL_GenLvl"
   "genhphi" : "truehelphi_GenLvl"
-  "kinWeight" : "kinWeight"
+  "kbsWeight" : "kbsWeight"
   "oddWeight" : "oddWeight"
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "bkgcatB" : "B_BKGCAT"
-  "gb_weights" : "gb_weights"
+  "gbweights" : "gb_weights"
 
 # }}}
 
@@ -85,6 +83,7 @@ MC_common: &MC_common
 
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
+  "sWeight" : "sw"
   "tagOSdec" : "OS_Combination_DEC"
   "tagSSdec" : "B_SSKaonLatest_TAGDEC"
   "tagOSeta" : "OS_Combination_ETA"
@@ -92,10 +91,12 @@ Bs2JpsiPhi: &Bs2JpsiPhi
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
+  "sWeight" : "sw"
   "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
+  "sWeight" : "sw"
   "dg0Weight" : "dg0Weight"
   "genidB" : "B_ID_GenLvl"
   "truemHH" : "sqrt(X_TRUEP_E*X_TRUEP_E-(X_TRUEP_X*X_TRUEP_X+X_TRUEP_Y*X_TRUEP_Y+X_TRUEP_Z*X_TRUEP_Z))"
@@ -105,6 +106,7 @@ MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_common
+  "sWeight" : "sw"
   "dg0Weight" : "dg0Weight"
   "genidB" : "B_ID_GenLvl"
   "truemHH" : "sqrt((hplus_TRUEP_E+hminus_TRUEP_E)*(hplus_TRUEP_E+hminus_TRUEP_E) - ((hplus_TRUEP_X+hminus_TRUEP_X)*(hplus_TRUEP_X+hminus_TRUEP_X)+(hplus_TRUEP_Y+hminus_TRUEP_Y)*(hplus_TRUEP_Y+hminus_TRUEP_Y)+(hplus_TRUEP_Z+hminus_TRUEP_Z)*(hplus_TRUEP_Z+hminus_TRUEP_Z)))"
@@ -113,10 +115,12 @@ MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
   <<: *MC_common
+  "sWeight" : "sw"
   "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiPhi_Prompt:
   <<: *MC_common
+  "sWeight" : "sw"
   "genidB" : "B_ID_GenLvl"
 
 # }}}
@@ -126,7 +130,8 @@ MC_Bs2JpsiPhi_Prompt:
 
 Bd2JpsiKstar: &Bd2JpsiKstar
   <<: *common
-  "kinWeight" : "kinWeight"
+  "sWeight" : "sw"
+  "kbsWeight" : "kbsWeight"
   "oddWeight" : "oddWeight"
   "kbuWeight" : "kbuWeight"
   "tagOSdec" : "0*time"
@@ -136,9 +141,10 @@ Bd2JpsiKstar: &Bd2JpsiKstar
 
 MC_Bd2JpsiKstar:
   <<: *MC_common
-  "dg0Weight" : "dg0Weight"
+  "sWeight" : "sw"
   "genidB" : "511*X_ID_GenLvl/311"
   "kbuWeight" : "kbuWeight"
+  "kbdWeight" : "kbdWeight"
 
 # }}}
 
@@ -147,9 +153,9 @@ MC_Bd2JpsiKstar:
 
 Bu2JpsiKplus:
   <<: *common
-  "kinWeight" : "kinWeight"
+  "sWeight" : "sw"
+  "kbsWeight" : "kbsWeight"
   "oddWeight" : "oddWeight"
-  "kbuWeight" : "kbuWeight"
   "tagOSdec" : "0*time"
   "tagSSdec" : "0*time"
   "tagOSeta" : "0*time"
@@ -157,6 +163,8 @@ Bu2JpsiKplus:
 
 MC_Bu2JpsiKplus:
   <<: *MC_common
+  "kbuWeight" : "kbuWeight"
+  "sWeight" : "sw"
   "genidB" : "B_ID_GenLvl"
 
 # }}}
