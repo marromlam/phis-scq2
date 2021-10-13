@@ -97,9 +97,9 @@ FIT, ANGACC, TIMEACC = args['flag'].split('_')
 TIMEACC = timeacc_guesser(TIMEACC)
 
 if TIMEACC['use_upTime']:
-  tLL = 2
+  tLL = 1.36
 if TIMEACC['use_lowTime']:
-  tUL = 2
+  tUL = 1.36
 
 # Prepare the cuts -----------------------------------------------------------
 CUT = ''
@@ -226,10 +226,10 @@ def taggingConstraints(data):
   print(corr)
   rhoOS = corr[1,0]
   print(rhoOS)
-  print(Parameters.load('output/params/flavor_tagging/2015/Bs2JpsiPhi/v0r5.json')['rho01_os'].value)
+  # print(Parameters.load('output/params/flavor_tagging/2015/Bs2JpsiPhi/v0r5.json')['rho01_os'].value)
   corr = data[str(YEARS[0])][TRIGGER[0]].flavor.corr(['p0_ss','p1_ss'])
   print(corr)
-  print(Parameters.load('output/params/flavor_tagging/2015/Bs2JpsiPhi/v0r5.json')['rho01_ss'].value)
+  # print(Parameters.load('output/params/flavor_tagging/2015/Bs2JpsiPhi/v0r5.json')['rho01_ss'].value)
   rhoSS = corr[1,0]#data[str(YEARS[0])][TRIGGER[0]].flavor['rho01_ss'].value
 
   pOS = np.matrix([
