@@ -51,6 +51,7 @@ common: &common
   "chi2TrackLm" : "muminus_TRACK_CHI2NDOF"
   "maxChi2TrackH" : "max_K_TRCHI2_mva"
   "maxChi2TrackL" : "max_mu_TRCHI2_mva"
+  "phiHH" : "phiHH"
 
 # }}}
 

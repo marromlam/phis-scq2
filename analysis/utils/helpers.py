@@ -197,7 +197,7 @@ def version_guesser(version):
     pattern = rf"\A{''.join(pattern)}\Z"
     p = re.compile(pattern)
     try:
-      share, evt, shit, time, runN, mag, cosk, pth, fullcut, var, nbin = p.search(mod).groups()
+      share, evt, shit, time, runN, mag, cosk, fullcut, var, nbin = p.search(mod).groups()
       share = int(share) if share else 100
       evt = evt if evt else None
       nbin = int(nbin)-1 if nbin else None
@@ -398,7 +398,9 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
     elif m == 'Bd2JpsiKstar':
       if weight == 'oddWeight': # kbuWeight needed for Bd RD
         weight = 'kbuWeight'
-      if weight not in ('sWeight', vw8s, 'kbuWeight', 'kinWeight'):
+      # elif weight == 'kbuWeight': # kbuWeight needed for Bd RD
+      #   weight = 'phiWeight'
+      if weight not in ('sWeight', vw8s, 'phiWeight', 'kbuWeight', 'kinWeight'):
         weight = vw8s
     # }}}
     # MC_Bu2JpsiKplus {{{
@@ -412,7 +414,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
     elif m == 'MC_Bd2JpsiKstar':
       if weight == 'veloWeight':
         weight = vw8s
-      elif weight not in ('sWeight', vw8s, 'polWeight', 'pdfWeight',
+      elif weight not in ('sWeight', vw8s, 'phiWeight', 'polWeight', 'pdfWeight',
                           'kbuWeight', 'oddWeight', 'angWeight', 'kinWeight', 'kkpWeight'):
         weight = 'polWeight'
     # }}}
