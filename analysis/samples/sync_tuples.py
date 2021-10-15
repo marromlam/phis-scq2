@@ -29,10 +29,6 @@ import config
 
 # Some config {{{
 
-# binned_vars = {'etaB': 'B_ETA', 'pTB': 'B_PT', 'sigmat': 'sigmat'}
-# binned_files = {'etaB': 'eta', 'pTB': 'pt', 'sigmat': 'sigmat'}
-# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-
 vsub_dict = {
   "evtOdd": "(eventNumber % 2) != 0",
   # "evtOdd": "(eventNumber % 2) != 0 & B_DTF_CHI2NDOF <= 1 & log_B_IPCHI2_mva <= 0",
@@ -90,42 +86,66 @@ if __name__ == "__main__":
   local_path = f'{path}/{v}.root'
 
   # some version substring imply using new sWeights (pTB, etaB and sigmat)
+  status = 1
+
   if "pTB" in V:
+    # version@pTB {{{
     eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_pt_{v}.root'
     sw = 'sw_pt'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
-      print("WARNING: Requested tuple with custon sw for given pTB bin does not exist")
-      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
-      sw = 'sw'
+      print("WARNING: Requested tuple with custon sw for given pTB bin does not exist.")
+      print("         Trying without the trailing version number.")
+      eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_pt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+    if status:
+      print("WARNING: Requested tuple with custon sw for given pTB bin does not exist")
+      print("         Downloading the standard tuple for this mode and year.")
+    # }}}
   elif "etaB" in V:
+    # version@etaB {{{
     eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_eta_{v}.root'
     sw = 'sw_eta'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
-      print("WARNING: Requested tuple with custon sw for given etaB bin does not exist")
-      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
-      sw = 'sw'
+      print("WARNING: Requested tuple with custon sw for given etaB bin does not exist.")
+      print("         Trying without the trailing version number.")
+      eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_eta.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
-  elif "sigmat" in V:
+    if status:
+      print("WARNING: Requested tuple with custon sw for given etaB bin does not exist")
+      print("         Downloading the standard tuple for this mode and year.")
+    # }}}
+  elif "sigmat" in V: 
+    # version@sigmat {{{
     eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_sigmat_{v}.root'
     sw = 'sw_sigmat'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
-      print("WARNING: Requested tuple with custon sw for given sigmat bin does not exist")
-      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
-      sw = 'sw'
+      print("WARNING: Requested tuple with custon sw for given sigmat bin does not exist.")
+      print("         Trying without the trailing version number.")
+      eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_sigmat.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
-  else:
+    if status:
+      print("WARNING: Requested tuple with custon sw for given sigmat bin does not exist")
+      print("         Downloading the standard tuple for this mode and year.")
+    # }}}
+
+  # version (baseline tuples) {{{
+
+  if status: 
     eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
+    sw = 'sw'
     # eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
+      print("WARNING: Requested tuple with sw does not exist")
+      print("         Trying without the trailing version number.")
       eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
-      print("WARNING: Could not found sw tuple. Downloading without sw...")
+      print("WARNING: Requested tuple with sw does not exist")
+      print("         Could not found sw tuple. Downloading without sw.")
       # WARNING: eos tuples seem to do not have version anymore...
       eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
@@ -134,12 +154,13 @@ if __name__ == "__main__":
         # WARNING: eos tuples seem to do not have version anymore...
         eos_path = f'{EOSPATH}/v0r5/{m}/{y}/{m}_{y}_selected_bdt_sw_v0r5.root'
         status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
-    sw = 'sw'
   if status:
     print("These tuples are not yet avaliable at root://eoslhcb.cern.ch/*.",
     'You may need to create those tuples yourself or ask B2CC people to'
     'produce them')
     exit()
+
+  # }}}
 
   # If we reached here, then all should be fine 
   print(f"Downloaded {eos_path}")
