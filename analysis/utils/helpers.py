@@ -51,12 +51,13 @@ def timeacc_guesser(timeacc):
   """
   # Define the pattern we use to regex-parse the time acceptance wildcard
   pattern = [
+    #0 main name
     r"(single|simul|lifeBd|lifeBu)",
-    # number of knots
+    #1 number of knots
     r"(1[0-2]|[2-9])?",
-    # whether to use Velo Weights or not
+    #2 whether to use Velo Weights or not
     r"(VW)?",
-    # whether to use Velo Weights or not
+    #3 whether to use Velo Weights or not
     r"(LT|UT)?",
     # whether to use reweightings or not
     r"(Noncorr)?",
@@ -73,7 +74,7 @@ def timeacc_guesser(timeacc):
     # custom variable cuts for lifetime test
     r"(deltat|alpha|mKstar)?",
     # use samples as others
-    r"(BuasBs|BdasBs|BuasBd)?"
+    r"(BuasBs|BdasBs|BuasBd|DGn0)?"
   ]
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
