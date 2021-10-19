@@ -29,7 +29,7 @@ rule flavor_tagging_basics:
 rule flavor_tagging_basics_from_git:
   threads: 128
   wildcard_constraints:
-    timeres = "ams(rd|mc|dg0)"
+    flavor = "ams(rd|mc|dg0)"
   params:
     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
     linker = "analysis/params/flavor_tagging/linker.json"
