@@ -174,8 +174,8 @@ rule angular_acceptance_corrected_dual:
     step = "(naive|corrected|analytic)Dual.*",
     #version = "^((?!v0r1).)*$",
   input:
-    weights_std = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi/{version}_{step}_{csp}_{trigger}.json',
-    weights_dg0 = 'output/params/angular_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{step}_{csp}_{trigger}.json',
+    weights_std = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/MC_Bs2JpsiPhi/{wcs.version}_{wcs.step.replace('Dual','')}_{wcs.csp}_{wcs.trigger}.json",
+    weights_dg0 = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/MC_Bs2JpsiPhi_dG0/{wcs.version}_{wcs.step}_{wcs.csp}_{wcs.trigger}.json",
   output:
     'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{csp}_{trigger}.json',
   log:
