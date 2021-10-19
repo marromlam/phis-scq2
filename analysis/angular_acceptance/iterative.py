@@ -648,18 +648,26 @@ if __name__ == '__main__':
   TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
   TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
 
+  # Prepare the cuts
+  if TIMEACC['use_transverse_time']:
+    time = 'timeT'
+  else:
+    time = 'time'
+  if TIMEACC['use_truetime']:
+    time = f'gen{time}'
+
   if TIMEACC['use_upTime']:
     tLL = 1.36
   if TIMEACC['use_lowTime']:
     tUL = 1.36
+
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
   # Get badjanak model and configure it ----------------------------------------
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
 
   # Prepare the cuts -----------------------------------------------------------
-  CUT = ''
-  CUT = cuts_and(CUT,f'time>={tLL} & time<={tUL}')
+  CUT = f'{time}>={tLL} & {time}<={tUL}'
 
   # List samples, params and tables --------------------------------------------
   samples_std   = args['sample_mc_std'].split(',')
@@ -711,13 +719,13 @@ if __name__ == '__main__':
   global mc, data, weight_rd, weight_mc
   
   # MC reconstructed and generator level variable names
-  reco  = ['cosK', 'cosL', 'hphi', 'time']
+  reco  = ['cosK', 'cosL', 'hphi', time]
   true  = [f'gen{i}' for i in reco]
   reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
   true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
   
   # RD variable names
-  real  = ['cosK','cosL','hphi','time']
+  real  = ['cosK','cosL','hphi', time]
   real += ['mHH','sigmat', 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta'] 
   
   # sWeight variable
@@ -878,11 +886,11 @@ if __name__ == '__main__':
             free=False, latex="\lambda_{\perp}/\lambda_0"))
   
   # life parameters
-  pars.add(dict(name="Gd", value= 0.65789,  # min= 0.0, max= 1.0,
+  pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
             free=False, latex=r"\Gamma_d"))
-  pars.add(dict(name="DGs", value= 0.0917,  # min= 0.03, max= 0.15,
+  pars.add(dict(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
             free=True, latex=r"\Delta\Gamma_s"))
-  pars.add(dict(name="DGsd", value= 0.03,  # min=-0.2, max= 0.2,
+  pars.add(dict(name="DGsd", value= 0.03, min=-0.2, max= 0.2,
             free=True, latex=r"\Gamma_s - \Gamma_d"))
   pars.add(dict(name="DM", value=17.768, min=16.0, max=20.0,
             free=True, latex=r"\Delta m"))
