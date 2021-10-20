@@ -12,7 +12,7 @@
     "n_estimators": 20,
     "learning_rate": 0.1,
     "max_depth": 3,
-    "min_samples_leaf": 1000,
+    "min_samples_leaf": 500,
     "gb_args": { "subsample": 1 }
   },
   "knots": {
