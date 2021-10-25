@@ -23,10 +23,15 @@ MAILS = config.user['mail']
 
 YEARS = config.years
 
+if config.user['compute_sweights']:
+  sw8s = 'sWeight'
+else:
+  sw8s = 'selected'
+
 if config.user['velo_weights']:
   vw8s = 'veloWeight'
 else:
-  vw8s = 'sWeight'
+  vw8s = sw8s
 
 # }}}
 
@@ -387,12 +392,12 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
   if weight:
     # Bs2JpsiPhi {{{
     if m == 'Bs2JpsiPhi':
-      if weight not in ('sWeight', vw8s):
+      if weight not in ('selected', sw8s, vw8s):
         weight = vw8s
     # }}}
     # Bu2JpsiKplus {{{
     elif m == 'Bu2JpsiKplus':
-      if weight not in ('sWeight', vw8s, 'kinWeight'):
+      if weight not in ('selected', sw8s, vw8s, 'kinWeight'):
         weight = vw8s
     # }}}
     # Bd2JpsiKstar {{{
@@ -401,21 +406,21 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         weight = 'kbuWeight'
       # elif weight == 'kbuWeight': # kbuWeight needed for Bd RD
       #   weight = 'phiWeight'
-      if weight not in ('sWeight', vw8s, 'phiWeight', 'kbuWeight', 'kinWeight'):
+      if weight not in ('selected', sw8s, vw8s, 'phiWeight', 'kbuWeight', 'kinWeight'):
         weight = vw8s
     # }}}
     # MC_Bu2JpsiKplus {{{
     elif m == 'MC_Bu2JpsiKplus':
       if weight == 'veloWeight':
         weight = vw8s
-      elif weight not in ('sWeight', vw8s, 'polWeight', 'kinWeight'):
+      elif weight not in ('selected', sw8s, vw8s, 'polWeight', 'kinWeight'):
         weight = 'polWeight'
     # }}}
     # MC_Bd2JpsiKstar {{{
     elif m == 'MC_Bd2JpsiKstar':
       if weight == 'veloWeight':
         weight = vw8s
-      elif weight not in ('sWeight', vw8s, 'phiWeight', 'polWeight', 'pdfWeight',
+      elif weight not in ('selected', sw8s, vw8s, 'phiWeight', 'polWeight', 'pdfWeight',
                           'kbuWeight', 'oddWeight', 'angWeight', 'kinWeight', 'kkpWeight'):
         weight = 'polWeight'
     # }}}
@@ -425,7 +430,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         weight = 'pdfWeight'
       elif weight == 'veloWeight':
         weight = vw8s
-      elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
+      elif weight not in ('selected', sw8s, vw8s, 'dg0Weight', 'polWeight',
                           'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight',
                           'kkpWeight'):
         weight = 'dg0Weight'
@@ -436,7 +441,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         weight = 'pdfWeight'
       elif weight == 'veloWeight':
         weight = vw8s
-      elif weight not in ('sWeight', vw8s, 'dg0Weight', 'polWeight',
+      elif weight not in ('selected', sw8s, vw8s, 'dg0Weight', 'polWeight',
                           'pdfWeight', 'oddWeight', 'kinWeight', 'angWeight',
                           'kkpWeight'):
         weight = 'dg0Weight'
@@ -447,7 +452,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         weight = 'pdfWeight'
       elif weight == 'veloWeight':
         weight = vw8s
-      elif weight not in ('sWeight', vw8s, 'polWeight', 'pdfWeight',
+      elif weight not in ('selected', sw8s, vw8s, 'polWeight', 'pdfWeight',
                           'oddWeight', 'kinWeight', 'angWeight', 'kkpWeight'):
         weight = 'polWeight'
     # }}}
