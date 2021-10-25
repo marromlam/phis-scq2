@@ -45,7 +45,7 @@ rule select_for_timeacc_bd_mc:
                            --selection-files {params.cuts} \
                            --cut-keys {params.cut_keys} \
                            --year {wildcards.year}
-    ) > {log}""")
+    ) &> {log}""")
 
 
 rule mass_prefit_bd_mc:
@@ -73,3 +73,130 @@ rule mass_prefit_bd_mc:
       --mode MC_Bd2JpsiKstar \
       --trigcat \
     ) > {log}""")
+
+
+rule mass_prefit_bs_mc:
+  """
+  Run mass fit on selected Bs0->J/psiPhi MC to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 candidates.
+  """
+  threads: 2
+  resources:
+    mem_mb=6000
+  wildcard_constraints:
+    mode = 'MC_Bs2JpsiPhi(_dG0)?'
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='sWeight'),
+  output:
+    params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{trigger}.json',
+    plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{trigger}/')
+  params:
+    script = 'selection/mass_fit/bs_rd.py',
+  log:
+    'output/log/mass_bs_mc/{year}/{mode}/{version}_{massmodel}_{trigger}.log',
+  run:
+    shell(f"""(time\
+    python {params.script} \
+    --sample {input.root_file} \
+    --output-params {output.params} \
+    --output-figures {output.plots} \
+    --mass-model {wildcards.massmodel} \
+    --trigger {wildcards.trigger}\
+    --mode {wildcards.mode} \
+    ) &> {log}""")
+
+
+rule mass_fit_bs_mc:
+  """
+  Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 candidates.
+  """
+  threads: 2
+  resources:
+    mem_mb=6000
+  wildcard_constraints:
+    mode = 'MC_Bs2JpsiPhi(_dG0)?'
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='sWeight'),
+    params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{trigger}.json',
+  output:
+    params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
+    plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
+  params:
+    script = 'selection/mass_fit/bs_rd.py',
+  log:
+    'output/log/mass_bs_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
+  run:
+    shell(f"""(time\
+    python {params.script} \
+    --sample {input.root_file} \
+    --input-params {input.params} \
+    --output-params {output.params} \
+    --output-figures {output.plots} \
+    --mass-model {wildcards.massmodel} \
+    --mass-bin {wildcards.massbin} \
+    --trigger {wildcards.trigger}\
+    --mode {wildcards.mode} \
+    ) &> {log}""")
+
+
+rule mass_fit_bs_rd:
+  """
+  Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 candidates.
+  """
+  threads: 2
+  resources:
+    mem_mb=6000
+  wildcard_constraints:
+    mode = 'Bs2JpsiPhi',
+    massbin = "(all|mX(1|2|3|4|5|6))"
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='sWeight'),
+    params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{trigger}.json',
+  output:
+    params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
+    plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
+  params:
+    script = 'selection/mass_fit/bs_rd.py',
+  log:
+    'output/log/mass_bs_rd/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
+  run:
+    shell(f"""(time\
+    python {params.script} \
+    --sample {input.root_file} \
+    --input-params {input.params} \
+    --output-params {output.params} \
+    --output-figures {output.plots} \
+    --mass-model {wildcards.massmodel} \
+    --mass-weight wLb \
+    --mass-bin {wildcards.massbin} \
+    --trigger {wildcards.trigger}\
+    --mode {wildcards.mode} \
+    ) &> {log}""")
+
+
+rule sweights_bs_rd:
+  """
+  Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 candidates.
+  """
+  threads: 2
+  resources:
+    mem_mb=6000
+  wildcard_constraints:
+    mode = 'Bs2JpsiPhi',
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='sWeight'),
+    biased = expand('output/params/mass_fit/{{year}}/{{mode}}/{{version}}_ipatia_mX{massbin}_{trigger}.json',
+                     massbin=(1,2,3,4,5,6), trigger=('biased')),
+    unbiased = expand('output/params/mass_fit/{{year}}/{{mode}}/{{version}}_ipatia_mX{massbin}_{trigger}.json',
+                     massbin=(1,2,3,4,5,6), trigger=('unbiased')),
+  output:
+    params = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_myWeight.root',
+  params:
+    script = 'selection/mass_fit/bs_rd.py',
+  log:
+    'output/log/sweights_bs_rd/{year}/{mode}/{version}_ipatia.log',
+  run:
+    print('ready for sWeights')

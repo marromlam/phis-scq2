@@ -92,6 +92,8 @@ if __name__ == "__main__":
     # version@pTB {{{
     eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_pt_{v}.root'
     sw = 'sw_pt'
+    if m in ('Bd2JpsiKstar'):
+      sw = 'sw_pt'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Requested tuple with custon sw for given pTB bin does not exist.")

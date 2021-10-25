@@ -14,6 +14,8 @@
   "randomize_flavor": false,
   "velo_effmodel": "francesca",
   "velo_massmodel": "cb",
+  "mass_model": "ipatia",
+  "faltame_algo": "ipatia",
   "minimizer": "minuit",
   "contour": 0
 }

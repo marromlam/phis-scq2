@@ -75,13 +75,11 @@ def argument_parser():
 
 
 
-def plot_timeacc_fit(params, data, weight,
-                     mode, axes=None, log=False, label=None, nob=100, nop=200, flatend=False):
+def plot_timeacc_fit(params, data, weight, mode, axes=None, log=False,
+                            label=None, nob=100, nop=200, flatend=False):
   # Look for axes
-  if not axes:
-    fig,axplot,axpull = plotting.axes_plotpull()
-  else:
-    fig,axplot,axpull = axes
+  if not axes: fig,axplot,axpull = plotting.axes_plotpull()
+  else: fig,axplot,axpull = axes
 
   # Get bins and counts for data histogram
   ref = histogram.hist(ristra.get(data), weights=ristra.get(weight), bins=nob,
@@ -96,12 +94,13 @@ def plot_timeacc_fit(params, data, weight,
   if   mode == 'MC_Bs2JpsiPhi_dG0': i = 0
   elif mode == 'MC_Bd2JpsiKstar': i = 1
   elif mode == 'Bd2JpsiKstar': i = 2
+
   if len(params.fetch('gamma.*')) > 1: # then is the simultaneous fit or similar
     y = saxsbxscxerf(params, [x, x, x] )[i]
     y_norm = saxsbxscxerf(params, [ref.bins, ref.bins, ref.bins], flatend=flatend )[i]
   else: # the single fit
     y = splinexerf(params, x )
-    y_norm = saxsbxscxerf(params, [ref.bins] , flatend=flatend)
+    y_norm = splinexerf(params, ref.bins , flatend=flatend)
 
   # normalize y to histogram counts     [[[I don't understand it completely...
   y *= np.trapz( ref.counts,ref.bins ) / np.trapz(y_norm,ref.bins)
@@ -173,16 +172,19 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=45,
   # try to guess what do you what to plot {{{
 
   kind = 'single'
-  if mode in ('MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0'):
-    list_coeffs = list(a.keys())
-    gamma = params['gamma_a'].value
-  elif mode == 'MC_Bd2JpsiKstar':
-    list_coeffs = list(b.keys())
-    gamma = params['gamma_b'].value
-  elif mode == 'Bd2JpsiKstar':
-    list_coeffs = list(c.keys())
-    gamma = params['gamma_c'].value
-
+  try:
+    if mode in ('MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0'):
+      list_coeffs = list(a.keys())
+      gamma = params['gamma_a'].value
+    elif mode == 'MC_Bd2JpsiKstar':
+      list_coeffs = list(b.keys())
+      gamma = params['gamma_b'].value
+    elif mode == 'Bd2JpsiKstar':
+      list_coeffs = list(c.keys())
+      gamma = params['gamma_c'].value
+  except:
+    gamma = params['gamma'].value
+    
   # }}}
 
   print(mode,kind)
@@ -357,8 +359,32 @@ def plotter(args,axes):
     for __y in (2015,2016,2017,2018):
       if str(__y) in samples[0]:
         thelabel += f'  ${__y}$'
-  # Check timeacc flag to set knots and weights and place the final cut
-  CUT = cuts_and(CUT,f'time>=0.3 & time<=15')
+  # Prepare the cuts
+  if TIMEACC['use_transverse_time']:
+      time = 'timeT'
+  else:
+      if TIMEACC['use_truetime']:
+        time = 'gentime'
+      else:
+        time = 'time'
+
+  if TIMEACC['use_upTime']:
+    tLL = 0.89
+  if TIMEACC['use_lowTime']:
+    tUL = 0.89
+  print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
+
+  # binned variables
+  # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
+  resolutions = config.timeacc['constants']
+  all_knots = config.timeacc['knots']
+  bdtconfig = config.timeacc['bdtconfig']
+  Gdvalue = config.general['Gd']
+  tLL = config.general['tLL']
+  tUL = config.general['tUL']
+  CUT = f'{time}>={tLL} & {time}<={tUL}'
+  CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
+  print(CUT)
 
 
   # Get data into categories ---------------------------------------------------
@@ -366,7 +392,7 @@ def plotter(args,axes):
 
   cats = {}
   sw = 'sw' #f'sw_{VAR}' if VAR else 'sw'
-  for i,m in enumerate(['MC_Bd2JpsiKstar']):
+  for i,m in enumerate(['MC_Bd2JpsiKstar', 'Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
       if TIMEACC['corr']:
@@ -394,11 +420,11 @@ def plotter(args,axes):
       mode = 'Bd2JpsiKstar'; c = 'c'
 
     # Load the sample
-    cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
-    cats[mode].allocate(time='time',lkhd='0*time')
+    cats[mode] = Sample.from_root(samples[0], cuts=CUT, share=SHARE, name=mode)
+    cats[mode].allocate(time=f'{time}',lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
-    cats[mode].assoc_params(params[i])
+    cats[mode].assoc_params(params[0])
 
     # Attach labels and paths
     if MODE==m or MODE=='Bs2JpsiPhi':
@@ -420,6 +446,7 @@ def plotter(args,axes):
   else:
     MMMODE = MMODE
   if PLOT=='fit':
+    print(pars)
     axes = plot_timeacc_fit(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           mode=MMMODE, log=LOGSCALE, axes=axes,
@@ -456,6 +483,7 @@ if __name__ == '__main__':
 
   mix_timeacc = len(args['timeacc'].split('+')) > 1
   mix_version = len(args['version'].split('+')) > 1
+  print(config.years[args['year']])
   mix_years = len(config.years[args['year']]) > 1
 
   print(args['timeacc'], args['version'], args['year'])
@@ -466,6 +494,8 @@ if __name__ == '__main__':
     mixers = f"{args['timeacc']}".split('+')
   elif mix_version:
     mixers = f"{args['version']}".split('+')
+  elif mix_years:
+    mixers = config.years[args['year']]
   elif not mix_timeacc and not mix_version:
     print('no mix')
     mixers = False
@@ -476,7 +506,7 @@ if __name__ == '__main__':
   params = []
   for iy, yy in enumerate(config.years[args['year']]):
     __params = args['params'].split(',')[iy::4]
-    if mixers:
+    if mixers and not mix_years:
       _params = []
       for i,m in enumerate(mixers):
         print(i,m, args['params'].split(',')[i::len(mixers)])

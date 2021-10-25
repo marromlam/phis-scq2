@@ -69,7 +69,7 @@ This pipeline can run
   - [x] Download tuples from eos
   - [x] Reduction of branches
   - [ ] Convert them to `.hdf5` format
-- [ ] *Subtract background*: computing sWeights for different samples
+- [x] *Subtract background*: computing sWeights for different samples
 - [x] *Reweighting*: compute different reweightings needed to attain other parts of the analysis (or computed in other parts of the pipeline)
   - [x] Compute `polWeight`, `pdfWeight`, `dg0Weight` and `kinWeight` for time acceptance.
   - [x] Compute `angWeight` and `kkpWeight` for angular acceptance.
@@ -79,8 +79,12 @@ This pipeline can run
   - [ ] Histogram method
   - [x] Plots
 - [ ] *CSP factors*: compute the interference between S-wave, P-wave and D-wave amplitudes
+  - [x] Download directly from git
+  - [ ] Compute CSP factors
 - [ ] *Time resolution*: ...
+  - [x] Download directly from git
 - [ ] *Flavor tagging*: ...
+  - [x] Download directly from git
 - [x] *Angular acceptance*: compute the dependence of the reconstruction and selection efficiency on the three helicity angles
   - [x] Angular weights method
   - [ ] Histogram method

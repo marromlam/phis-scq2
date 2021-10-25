@@ -187,7 +187,7 @@ if __name__ == '__main__':
       weight = f"veloWeight*{weight}"
     if "bkgcat60" in args['version']:
       weight = weight.replace(f'sWeight', 'time/time')
-    print("Weight is set to: {weight}")
+    print(f"Weight is set to: {weight}")
     # }}}
 
     # Load the sample

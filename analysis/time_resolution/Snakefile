@@ -42,7 +42,7 @@ rule time_resolution_from_git:
     python analysis/time_resolution/download_from_git.py\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
-    --version {wildcards.version}\
+    --version v0r5\
     --timeres {wildcards.timeres}\
     --output {output}\
     --repo {params.repo}\

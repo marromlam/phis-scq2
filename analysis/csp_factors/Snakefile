@@ -42,7 +42,7 @@ rule csp_factors_from_git:
     python analysis/csp_factors/download_from_git.py\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
-    --version {wildcards.version}\
+    --version v0r5\
     --csp {wildcards.csp}\
     --output {output}\
     --repo {params.repo}\

@@ -92,12 +92,12 @@ Bs2JpsiPhi: &Bs2JpsiPhi
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
-  "sWeight" : "sw"
+  "sWeight" : "sw/gb_weights"
   "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *MC_common
-  "sWeight" : "sw"
+  "sWeight" : "sw/gb_weights"
   "dg0Weight" : "dg0Weight"
   "genidB" : "B_ID_GenLvl"
   "truemHH" : "sqrt(X_TRUEP_E*X_TRUEP_E-(X_TRUEP_X*X_TRUEP_X+X_TRUEP_Y*X_TRUEP_Y+X_TRUEP_Z*X_TRUEP_Z))"
@@ -107,7 +107,7 @@ MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
   <<: *MC_common
-  "sWeight" : "sw"
+  "sWeight" : "sw/gb_weights"
   "dg0Weight" : "dg0Weight"
   "genidB" : "B_ID_GenLvl"
   "truemHH" : "sqrt((hplus_TRUEP_E+hminus_TRUEP_E)*(hplus_TRUEP_E+hminus_TRUEP_E) - ((hplus_TRUEP_X+hminus_TRUEP_X)*(hplus_TRUEP_X+hminus_TRUEP_X)+(hplus_TRUEP_Y+hminus_TRUEP_Y)*(hplus_TRUEP_Y+hminus_TRUEP_Y)+(hplus_TRUEP_Z+hminus_TRUEP_Z)*(hplus_TRUEP_Z+hminus_TRUEP_Z)))"

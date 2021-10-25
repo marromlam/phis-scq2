@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
+DESCRIPTION = """
+dfdfd
+"""
+
 
 __author__ = ['Marcos Romero']
 __email__  = ['mromerol@cern.ch']
+__all__ = ['plot_timeacc_simul_fit', 'plot_timeacc_simul_spline']
 
-__all__ = ['plot_timeacc_fit', 'plot_timeacc_spline']
 
-################################################################################
-# %% Modules ###################################################################
+# Model {{{
 
 import argparse
 import os
@@ -55,25 +58,10 @@ Gdvalue = config.general['Gd']
 tLL = config.general['tLL']
 tUL = config.general['tUL']
 
-
-# Parse arguments for this script
-def argument_parser():
-  p = argparse.ArgumentParser(description='Compute decay-time acceptance.')
-  p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--figure', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--mode', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--year', help='Year to fit')
-  p.add_argument('--version', help='Version of the tuples to use')
-  p.add_argument('--trigger', help='Trigger to fit')
-  p.add_argument('--timeacc', help='Different flag to ... ')
-  p.add_argument('--plot', help='Different flag to ... ')
-  return p
-
-################################################################################
+# }}}
 
 
-
+# Plot lifetime fit {{{
 
 def plot_timeacc_fit(params, data, weight,
                      mode, axes=None, log=False, label=None, nob=100, nop=200, flatend=False):
@@ -121,7 +109,10 @@ def plot_timeacc_fit(params, data, weight,
   axplot.set_ylabel(r'Weighted candidates')
   return fig, axplot, axpull
 
+# }}}
 
+
+# Plot one spline {{{
 
 def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
                         log=False, axes=False, modelabel=None, label=None,
@@ -302,6 +293,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
 
   # Actual ploting
   axplot.set_ylim(0.4, 1.5)
+  # axplot.set_xlim(0.3, 3)
   #axplot.set_ylim(0.96, 1.05)#0.96, 1.05
   #axplot.set_xlim(0.3, 3.05)#0.96, 1.05
   #axpull.set_ylim(-2, 2)  # 0.96, 1.05
@@ -333,16 +325,14 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=24,
 
   return fig, axplot, axpull
 
+# }}}
 
 
+# shi shi shit {{{
+# We need to create a plot abstraction so we can have different overlays.
 
 
-
-
-################################################################################
-#%% Run and get the job done ###################################################
-
-def plotter(args,axes):
+def plotter(args, axes):
 
   # Parse arguments ------------------------------------------------------------
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
@@ -432,7 +422,11 @@ def plotter(args,axes):
     cats[mode].allocate(time='time',lkhd='0*time')
     cats[mode].allocate(weight=weight)
     cats[mode].weight = swnorm(cats[mode].weight)
-    cats[mode].assoc_params(params[i])
+    print(params)
+    try:
+      cats[mode].assoc_params(params[i])
+    except:
+      cats[mode].assoc_params(params[0])
 
     # Attach labels and paths
     if MODE==m or MODE=='Bs2JpsiPhi':
@@ -467,21 +461,23 @@ def plotter(args,axes):
                                           label=thelabel, flatend=TIMEACC['use_flatend'])
   return axes
 
+# }}}
 
 
-
-
-
-
-
-
-
-
-
-
+# Shitty {{{
 
 if __name__ == '__main__':
-  args = vars(argument_parser().parse_args())
+  p = argparse.ArgumentParser(description=DESCRIPTION)
+  p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--params', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--figure', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--mode', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--year', help='Year to fit')
+  p.add_argument('--version', help='Version of the tuples to use')
+  p.add_argument('--trigger', help='Trigger to fit')
+  p.add_argument('--timeacc', help='Different flag to ... ')
+  p.add_argument('--plot', help='Different flag to ... ')
+  args = vars(p.parse_args())
   axes = plotting.axes_plotpull()
   print('hello')
 
@@ -606,13 +602,7 @@ if __name__ == '__main__':
   plotter(args, axes=(axes))
   fig.savefig(args['figure'])
 
+# }}}
 
 
-
-
-################################################################################
-
-
-
-
-################################################################################
+# vim:foldmethod=marker

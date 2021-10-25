@@ -113,6 +113,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
   try:
     odf['phiHH'] = odf.eval("arctan((hminus_PY+hplus_PY)/(hminus_PX+hplus_PX))")
   except:
+    odf['phiHH'] = odf.eval("time/time")
     print(f'You cannot calculate the phi of the phi for {original_file}')
   print(odf)
   print('Loading branches for target_sample')
@@ -120,6 +121,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
   try:
     tdf['phiHH'] = tdf.eval("arctan((hminus_PY+hplus_PY)/(hminus_PX+hplus_PX))")
   except:
+    tdf['phiHH'] = tdf.eval("time/time")
     print(f'You cannot calculate the phi of the phi for {target_file}')
   print(tdf)
 
@@ -142,9 +144,12 @@ def kinematic_weighting(original_file, original_treename, original_vars,
 
   # Reweighting ---------------------------------------------------------------
   theWeight = np.zeros_like(list(odf.index)).astype(np.float64)
-  for trig in ['biased', 'unbiased']:
-    codf = odf.query(trigger_scissors(trig))
-    ctdf = tdf.query(trigger_scissors(trig))
+  # for trig in ['biased', 'unbiased']:
+  for trig in ['combined']:
+    # codf = odf.query(trigger_scissors(trig))
+    # ctdf = tdf.query(trigger_scissors(trig))
+    codf = odf
+    ctdf = tdf
     cweight = reweight(codf.get(original_vars), ctdf.get(target_vars),
                        codf.eval(original_weight), ctdf.eval(target_weight),
                        n_estimators, learning_rate, max_depth,
