@@ -18,7 +18,7 @@ rule reweighting_polarity:
     mode = "MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)"
   input:
     original = lambda wcs: tuples(wcs, weight='veloWeight'),
-    target   = lambda wcs: tuples(wcs, mode='data', weight='sWeight'),
+    target = lambda wcs: tuples(wcs, mode='data', weight='sWeight'),
   output:
     sample   = (SAMPLES+'/{year}/{mode}/{version}_polWeight.root')
   log:
