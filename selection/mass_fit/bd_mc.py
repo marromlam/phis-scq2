@@ -6,7 +6,8 @@ import numpy as np
 from ipanema import (ristra, plotting, Sample)
 import matplotlib.pyplot as plt
 from utils.strings import printsec, printsubsec
-from utils.helpers import trigger_scissors
+from utils.helpers import trigger_scissors, cuts_and
+from ipanema import splot
 
 
 # initialize ipanema3 and compile lineshapes
@@ -15,6 +16,7 @@ prog = THREAD.compile("""
 #define USE_DOUBLE 1
 #include <ipanema/core.c>
 #include <ipanema/complex.c>
+#include <ipanema/stats.c>
 #include <ipanema/special.c>
 #include <ipanema/lineshapes.c>
 #include <exposed/kernels.ocl>
@@ -23,38 +25,39 @@ prog = THREAD.compile("""
 
 # ipatia + exponential {{{
 
-def ipatia_exponential(mass, signal, nsig, nbkg,
-           mu, sigma, lambd, zeta, beta, aL, nL, aR, nR,
-           b, norm=1):
+def ipatia_exponential(mass, signal, nsigBd, nexp,
+                       muBd, sigmaBd, lambd, zeta, beta, aL, nL, aR, nR,
+                       b, norm=1):
     # ipatia
-    prog.py_ipatia(signal, mass, np.float64(mu), np.float64(sigma),
+    prog.py_ipatia(signal, mass, np.float64(muBd), np.float64(sigmaBd),
                    np.float64(lambd), np.float64(zeta), np.float64(beta),
                    np.float64(aL), np.float64(nL), np.float64(aR),
                    np.float64(nR), global_size=(len(mass)))
-    backgr = ristra.exp(mass*b)
+    pdfBd = 1.0 * signal.get()
+    backgr = ristra.exp(mass*b).get()
     # normalize
     _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)
     _y = _x*0
-    prog.py_ipatia(_y, _x, np.float64(mu), np.float64(sigma),
+    prog.py_ipatia(_y, _x, np.float64(muBd), np.float64(sigmaBd),
                    np.float64(lambd), np.float64(zeta), np.float64(beta),
                    np.float64(aL), np.float64(nL), np.float64(aR),
                    np.float64(nR), global_size=(len(_x)))
-    nsignal = np.trapz(ristra.get(_y), ristra.get(_x))
+    nBd = np.trapz(ristra.get(_y), ristra.get(_x))
     nbackgr = np.trapz(ristra.get(ristra.exp(_x*b)), ristra.get(_x))
     # compute pdf value
-    ans = norm * ( nsig*signal/nsignal + (1.-nsig)*backgr/nbackgr )
-    return ans
+    ans = nsigBd*pdfBd/nBd + nexp*backgr/nbackgr
+    return ans * ans
 
 # }}}
 
 
 # crystal-ball + exponential {{{
 
-def cb_exponential(mass, signal, nsig, mu, sigma, aL, nL, aR, nR, b, norm=1):
+def cb_exponential(mass, signal, nsigBd, nexp, muBd, sigmaBd, aL, nL, aR, nR, b, norm=1):
   # compute backgrounds
   pexpo = ristra.get(ristra.exp(mass*b))
   # get signal
-  prog.py_double_crystal_ball(signal, mass, np.float64(mu), np.float64(sigma),
+  prog.py_double_crystal_ball(signal, mass, np.float64(muBd), np.float64(sigmaBd),
                       np.float64(aL), np.float64(nL), np.float64(aR),
                       np.float64(nR), global_size=(len(mass)))
   pcb = ristra.get(signal)
@@ -62,14 +65,14 @@ def cb_exponential(mass, signal, nsig, mu, sigma, aL, nL, aR, nR, b, norm=1):
   _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)
   _y = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)*0
   # normalize cb-shape
-  prog.py_double_crystal_ball(_y, _x, np.float64(mu), np.float64(sigma),
+  prog.py_double_crystal_ball(_y, _x, np.float64(muBd), np.float64(sigmaBd),
                       np.float64(aL), np.float64(nL), np.float64(aR),
                       np.float64(nR), global_size=(len(_x)))
   npb = np.trapz(ristra.get(_y), ristra.get(_x))
   # normalize exp
   nexpo = np.trapz(ristra.get(ristra.exp(_x*b)), ristra.get(_x))
   # compute pdf value
-  ans = nsig*(pcb/npb) + (1.-nsig)*(pexpo/nexpo)
+  ans = nsigBd*(pcb/npb) + nexp*(pexpo/nexpo)
   return norm*ans
 
 # }}}
@@ -77,8 +80,10 @@ def cb_exponential(mass, signal, nsig, mu, sigma, aL, nL, aR, nR, b, norm=1):
 
 def mass_fitter(odf,
                 mass_range=False, mass_branch='B_ConstJpsi_M_1',
-                figs = False, label=False,
-                trigger='combined', verbose=False):
+                mass_weight='B_ConstJpsi_M_1/B_ConstJpsi_M_1',
+                cut=False,
+                figs = False, model=False,
+                trigger='combined', input_pars=False, sweights=False, verbose=False):
 
     # mass range cut
     if not mass_range:
@@ -87,107 +92,93 @@ def mass_fitter(odf,
     # mass_cut = f'B_ConstJpsi_M_1 > 5220 & B_ConstJpsi_M_1 < 5330'
 
     # mass cut and trigger cut 
-    current_cut = trigger_scissors(trigger, mass_cut)
-
-    MODEL = "cb_noghost"
+    current_cut = trigger_scissors(trigger, cuts_and(mass_cut, cut))
 
 
     # Select model and set parameters {{{
     #    Select model from command-line arguments and create corresponding set of
     #    paramters
-    pars = ipanema.Parameters()
-    # Create common set of parameters (all models must have and use)
-    pars.add(dict(name='nsig', value=0.50, min=0.2, max=1, free=True,
-                  latex=r'N_{signal}'))
-    pars.add(dict(name='mu', value=5280, min=5200, max=5400,
-                  latex=r'\mu'))
-    pars.add(dict(name='sigma', value=8, min=5, max=100, free=True,
-                  latex=r'\sigma'))
 
-    if "cb" in MODEL.split('_'):  # {{{
-      # crystal ball tails
-      pars.add(dict(name='aL', value=1.4, latex=r'a_l',min=-50, max=50,
-                    free=True))
-      pars.add(dict(name='nL', value=1, latex=r'n_l',min=-500, max=500,
-                    free=True))
-      pars.add(dict(name='aR', value=1.5, latex=r'a_r',min=-50, max=500,
-                    free=True))
-      pars.add(dict(name='nR', value=1, latex=r'n_r',min=-500, max=500,
-                    free=True))
-      if "argus" in MODEL.split('_'):
-        pars.add(dict(name='nbkg', value=0.02, min=0, max=1, free=True,
-                      latex=r'N_{part.reco.}'))
-        pars.add(dict(name='c', value=20, min=-1000, max=100, free=True,
-                      latex=r'c'))
-        pars.add(dict(name='p', value=1, min=0.1, max=50, free=True,
-                      latex=r'p'))
-        pars.add(dict(name='m0', value=5155, min=5100, max=5220, free=True,
-                      latex=r'm_0'))
-        pdf = cb_argus
-        print("Using CB + argus pdf")
-      elif "physbkg" in MODEL.split('_'):
-        pars.add(dict(name='nbkg', value=0.02, min=0, max=1, free=True,
-                      latex=r'N_{background}'))
-        pars.add(dict(name='c', value=0.001, min=-1000, max=100, free=True,
-                      latex=r'c'))
-        pars.add(dict(name='p', value=1, min=0.01, max=50, free=True,
-                      latex=r'p'))
-        pars.add(dict(name='m0', value=5175, min=5150, max=5200, free=True,
-                      latex=r'm_0'))
-        pdf = cb_physbkg
-        print("Using CB + physbkg pdf")
-      else:
-        # pars.add(dict(name='nbkg', value=0.00, min=0, max=1, free=False,
-        #               latex=r'N_{background}'))
-        pdf = cb_exponential
-      # }}}
-    elif "ipatia" in MODEL.split('_'):
-      # ipatia tails {{{
-      pars.add(dict(name='lambd', value=-1, min=-20, max=0, free=True,
-                    latex=r'\lambda'))
-      pars.add(dict(name='zeta', value=0.0, latex=r'\zeta', free=False))
-      pars.add(dict(name='beta', value=0.0, latex=r'\beta', free=False))
-      pars.add(dict(name='aL', value=1, latex=r'a_l', free=True))
-      pars.add(dict(name='nL', value=30, latex=r'n_l', free=True))
-      pars.add(dict(name='aR', value=1, latex=r'a_r', free=True))
-      pars.add(dict(name='nR', value=30, latex=r'n_r', free=True))
-      pdf = ipatia
-      # }}}
+    if input_pars:
+      pars = ipanema.Parameters.clone(input_pars)
+      pars.lock()
+    else:
+      pars = ipanema.Parameters()
+      # Create common set of parameters (all models must have and use)
+      pars.add(dict(name='nsigBd',    value=0.99, min=0.2,  max=1,    free=True,  latex=r'N_{B_d}'))
+      pars.add(dict(name='muBd',      value=5280,  min=5200, max=5500,             latex=r'\mu_{B_d}'))
+      pars.add(dict(name='sigmaBd',   value=11,    min=5,    max=100,  free=True,  latex=r'\sigma_{B_d}'))
+      if 'ipatia' in model:
+        # Hypatia tails {{{
+        pars.add(dict(name='lambd',   value=-1.5,  min=-4,   max=-1.1, free=True,  latex=r'\lambda'))
+        pars.add(dict(name='zeta',    value=1e-5,                      free=False, latex=r'\zeta'))
+        pars.add(dict(name='beta',    value=0.0,                       free=False, latex=r'\beta'))
+        pars.add(dict(name='aL',      value=1.23,  min=0.5, max=3.5,   free=True,  latex=r'a_l'))
+        pars.add(dict(name='nL',      value=1.05,  min=0,   max=4,     free=True,  latex=r'n_l'))
+        pars.add(dict(name='aR',      value=1.03,  min=0.5, max=3.5,   free=True,  latex=r'a_r'))
+        pars.add(dict(name='nR',      value=1.02,  min=0,   max=4,     free=True,  latex=r'n_r'))
+        # }}}
+      elif "crystalball" in model:
+        # Crystal Ball tails {{{
+        pars.add(dict(name='aL',      value=1.4,  min=0.5, max=3.5,    free=True,  latex=r'a_l'))
+        pars.add(dict(name='nL',      value=1,     min=1,   max=500,   free=True,  latex=r'n_l'))
+        pars.add(dict(name='aR',      value=1.4,  min=0.5, max=3.5,    free=True,  latex=r'a_r'))
+        pars.add(dict(name='nR',      value=1,     min=1,   max=500,   free=True,  latex=r'n_r'))
+        # }}}
+      # Combinatorial background
+      pars.add(dict(name='b',         value=-4e-3, min=-1,  max=1,     free=True,  latex=r'b'))
+      pars.add(dict(name='nexp',      formula="1-nsigBd",                          latex=r'N_{comb}'))
+    pars.unlock('nsigBd', 'muBd', 'sigmaBd', 'b')
+    print(pars)
 
-    # EXPONENCIAL Parameters {{{
-    pars.add(dict(name='b', value=-0.005, min=-1, max=1, latex=r'b'))
-    # pars.add(dict(name='nexp', value=0.02, min=0, max=1, free=True,
-    #               formula=f"1-nsig{'-nbkg' if 'nbkg' in pars else ''}",
-    #               latex=r'N_{exp}'))
     # }}}
-    # print(pars)
-    # }}}
+
+    # Chose model {{{
+
+    if model == 'ipatia':
+      pdf = ipatia_exponential 
+    elif model == 'crystalball':
+      pdf = cb_exponential 
+
 
     def fcn(params, data):
         p = params.valuesdict()
         prob = pdf(data.mass, data.pdf, **p)
         return -2.0 * np.log(prob) * ristra.get(data.weight)
+
+    # }}}
     
-    print(current_cut)
+
+    # Allocate the sample variables {{{
+
+    print(f"Cut: {current_cut}")
+    print(f"Mass branch: {mass_branch}")
+    print(f"Mass weight: {mass_weight}")
     rd = Sample.from_pandas(odf)
+    _proxy = np.float64(rd.df[mass_branch]) * 0.0
     rd.chop(current_cut)
-    rd.allocate(mass=f'B_ConstJpsi_M_1', pdf=f'0*B_ConstJpsi_M_1', weight=f'B_ConstJpsi_M_1/B_ConstJpsi_M_1')
+    rd.allocate(mass=mass_branch, pdf=f'0*{mass_branch}', weight=mass_weight)
     # print(rd)
+
+    # }}}
 
     # res = ipanema.optimize(fcn, pars, fcn_kwgs={'data':rd}, method='nelder', verbose=verbose)
     # for name in ['nsig', 'mu', 'sigma']:
     #     pars[name].init = res.params[name].value
-    res = ipanema.optimize(fcn, pars, fcn_kwgs={'data':rd}, method='minuit', verbose=verbose, strategy=2, tol=0.05)
+    # res = False
+    res = ipanema.optimize(fcn, pars, fcn_kwgs={'data':rd}, method='minuit',
+                           verbose=verbose, strategy=1, tol=0.05)
     if res:
-      # print(res)
+      print(res)
       fpars = ipanema.Parameters.clone(res.params)
     else:
-      print("could not fit it!. Cloning pars to res")
+      print("Could not fit it!. Cloning pars to res")
       fpars = ipanema.Parameters.clone(pars)
+      print(fpars)
 
     fig, axplot, axpull = plotting.axes_plotpull()
     hdata = ipanema.histogram.hist(ristra.get(rd.mass), weights=None,
-                                   bins=50, density=False)
+                                   bins=60, density=False)
     axplot.errorbar(hdata.bins, hdata.counts,
                     yerr=[hdata.errh, hdata.errl],
                     xerr=2*[hdata.edges[1:]-hdata.bins], fmt='.k')
@@ -203,7 +194,7 @@ def mass_fitter(odf,
     if 'nexp' in _p:
       _p['nexp'].set(value=0)
     _x, _y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
-    axplot.plot(_x, _y, color="C1", label='signal')
+    axplot.plot(_x, _y, color="C1", label=rf'$B_d^0$ {model}')
 
     # plot backgrounds: nsig -> 0
     # _p = ipanema.Parameters.clone(fpars)
@@ -223,52 +214,109 @@ def mass_fitter(odf,
                                                    hdata.counts, hdata.errl,
                                                    hdata.errh),
                         0, facecolor="C0", alpha=0.5)
-    axpull.set_xlabel(r'$m(B_d^0)$ [MeV/$c^2$]')
-    axpull.set_ylim(-3.5, 3.5)
-    axpull.set_yticks([-2.5, 0, 2.5])
+    axpull.set_xlabel(r'$m(J/\psi K\pi)$ [MeV/$c^2$]')
+    axpull.set_ylim(-6.5, 6.5)
+    axpull.set_yticks([-5, 0, 5])
     axplot.set_ylabel(rf"Candidates")
     if figs:
-      fig.savefig(os.path.join(figs, f"mass_{label}.pdf"))
+      os.makedirs(figs, exist_ok=True)
+      fig.savefig(os.path.join(figs, f"fit.pdf"))
     axplot.set_yscale('log')
     axplot.set_ylim(1e0,1.5*np.max(y))
     if figs:
-      fig.savefig(os.path.join(figs, f"logmass_{label}.pdf"))
+      fig.savefig(os.path.join(figs, f"logfit.pdf"))
     plt.close()
 
-    # Dump parameters to json
-    number_of_events = len(rd.mass)
-    for par in ['nsig']:
-      _par = number_of_events * fpars[par].uvalue
-      fpars[par].set(value=_par.n, stdev=_par.s, min=-np.inf, max=+np.inf)
-    return fpars
+    # compute sWeights if asked {{{
+
+    if sweights:
+        # separate paramestes in yields and shape parameters
+        _yields = ipanema.Parameters.find(fpars, "nsig.*") + ["nexp"]
+        _pars = list(fpars)
+        [_pars.remove(_y) for _y in _yields]
+        _yields = ipanema.Parameters.build(fpars, _yields)
+        _pars = ipanema.Parameters.build(fpars, _pars)
+
+        sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.pdf, *x, **y), _pars, _yields)
+        for k,v in sw.items():
+          _sw = np.copy(_proxy)
+          _sw[list(rd.df.index)] = v
+          sw[k] = _sw
+          print(sw[k].shape)
+        print(sw)
+        return (fpars, sw)
+
+    # }}}
+
+    return (fpars, False)
 
 
+# command-line interface {{{
 
-#     if add_sweights:
-#         sdata = SData(Name='splot_'+trig_type, Pdf=pdf, Data=ds)
-#         addSWeightToTree(sdata.data('signal_'+trig_type), tree_with_sw, f'sw_{trig_type}', trigCut)
-#         sufixes.push_back(f'sw_{trig_type}')
-# 
-#     # write parameters to dictionary
-#     pars_dict.update({trig_type: [{'Name': param.GetName(),
-#                                    'Value': param.getVal(),
-#                                    'Error': param.getError()} for param in pdf_pars]})
-# 
-#     # save fit result to file
-#     if fit_result_file:
-#         with open(fit_result_file, 'w') as f:
-#             json.dump(pars_dict, f, indent=4)
-# 
-#     # Store n-tuple in ROOT file.
-#     if add_sweights:
-#         addProductToTree(tree_with_sw, sufixes, 'sw')
-#         for trig_type in types:
-#             tree_with_sw.SetBranchStatus(f'sw_{trig_type}', 0)
-#         output_reduced_file = TFile(output_file, 'recreate')
-#         tree_with_sw_reduced = tree_with_sw.CloneTree()
-#         tree_with_sw_reduced.Write(output_tree_name, TObject.kOverwrite)
-#         output_reduced_file.Close()
-#         print('sWeighted nTuple is saved: ', output_reduced_file)
+if __name__ == '__main__':
+  p = argparse.ArgumentParser(description="mass fit")
+  p.add_argument('--sample')
+  p.add_argument('--input-params', default=False)
+  p.add_argument('--output-params')
+  p.add_argument('--output-figures')
+  p.add_argument('--mass-model')
+  p.add_argument('--mass-weight')
+  p.add_argument('--mass-bin', default=False)
+  p.add_argument('--trigger')
+  p.add_argument('--mode')
+  p.add_argument('--sweights')
+  args = vars(p.parse_args())
+  
+  if args['sweights']:
+    sweights = True
+  else:
+    sweights = False
+
+  if args['input_params']:
+    input_pars = ipanema.Parameters.load(args['input_params'])
+  else:
+    input_pars = False
+  
+  branches = ['B_ConstJpsi_M_1', 'hlt1b', 'X_M']
+
+  if args['mass_weight']:
+    mass_weight = args['mass_weight']
+    branches += [mass_weight]
+  else:
+    mass_weight = 'B_ConstJpsi_M_1/B_ConstJpsi_M_1'
+
+  cut = False
+  if "prefit" in args['output_params']:
+    cut = "B_BKGCAT == 0 | B_BKGCAT == 10 | B_BKGCAT == 50"
+    branches += ['B_BKGCAT']
+  
+  sample = Sample.from_root(args['sample'], branches=branches)
+  print(sample.df.shape)
+
+  if args['mass_bin']:
+    if 'Bd2JpsiKstar' in args['mode']:
+      mass = [826, 861, 896, 931, 966]
+    elif 'Bs2JpsiPhi' in args['mode']:
+      mass = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    if args['mass_bin'] == 'all':
+      mLL = mass[0]
+      mUL = mass[-1]
+    else:
+      bin = int(args['mass_bin'][-1])
+      mLL = mass[bin-1]
+      mUL = mass[bin]
+    cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
+
+  pars, sw = mass_fitter(sample.df,
+                         # mass_range=(5210, 5350), mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
+                         mass_range=False, mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
+                         trigger=args['trigger'], cut=cut,
+                         figs = args['output_figures'], model=args['mass_model'],
+                         input_pars=input_pars, sweights=sweights, verbose=True)
+  pars.dump(args['output_params'])
+  if sw: np.save(args['sweights'], sw)
+
+# }}}
 
 
 # vim:foldmethod=marker
