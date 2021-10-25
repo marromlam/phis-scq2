@@ -15,7 +15,7 @@ rule samples_sync_tuple:
   params:
     settings.user['eos']
   output:
-    SAMPLES+'/{year}/{mode}/{version}_sWeight.root'
+    SAMPLES+'/{year}/{mode}/{version}_selected.root'
   log:
     'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
   run:
