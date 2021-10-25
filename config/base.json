@@ -14,8 +14,12 @@
   "randomize_flavor": false,
   "velo_effmodel": "francesca",
   "velo_massmodel": "cb",
-  "mass_model": "ipatia",
-  "faltame_algo": "ipatia",
+  "bs_mass_model": "ipatia",
+  "bd_mass_model": "crystalball",
+  "bu_mass_model": "crystalball",
+  "bs_mass_bins": ["mX1", "mX2", "mX3", "mX4", "mX5", "mX6"],
+  "bd_mass_bins": ["all"],
+  "bu_mass_bins": ["all"],
   "minimizer": "minuit",
   "contour": 0
 }
