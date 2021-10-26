@@ -210,7 +210,7 @@ def mass_fitter(odf,
     # res = ipanema.optimize(fcn, pars, fcn_kwgs={'data':rd}, method='nelder', verbose=verbose)
     # for name in ['nsig', 'mu', 'sigma']:
     #     pars[name].init = res.params[name].value
-    # res = False#ipanema.optimize(fcn, pars, fcn_kwgs={'data':rd}, method='minuit', verbose=True, strategy=2, tol=0.05)
+    # res = False
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data':rd}, method='minuit',
                            verbose=verbose, strategy=1, tol=0.05)
     if res:
@@ -357,9 +357,9 @@ if __name__ == '__main__':
       mLL = mass[bin-1]
       mUL = mass[bin]
     if "LSB" in args['mass_bin']:
-      mass_range=(5202, 5367+40)
+      mass_range=(5202, 5367+50)
     elif "RSB" in args['mass_bin']:
-      mass_range=(5367-40, 5548)
+      mass_range=(5367-50, 5548)
     cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
   print(f"Cut:", cut)
   # sample.chop(cut)
