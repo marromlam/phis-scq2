@@ -139,9 +139,9 @@ def mass_fitter(odf,
     else:
       pars = ipanema.Parameters()
       # Create common set of Bs parameters (all models must have and use)
-      pars.add(dict(name='nsigBs',    value=0.9, min=0.2,  max=1,    free=True,  latex=r'N_{B_s}'))
+      pars.add(dict(name='nsigBs',    value=0.8, min=0.2,  max=1,    free=True,  latex=r'N_{B_s}'))
       pars.add(dict(name='muBs',      value=5367,  min=5200, max=5500,             latex=r'\mu_{B_s}'))
-      pars.add(dict(name='sigmaBs',   value=8,    min=5,    max=100,  free=True,  latex=r'\sigma_{B_s}'))
+      pars.add(dict(name='sigmaBs',   value=5,    min=5,    max=100,  free=True,  latex=r'\sigma_{B_s}'))
       if 'ipatia' in model:
         # Hypatia tails {{{
         pars.add(dict(name='lambd',   value=-1.5,  min=-4,   max=-1.1, free=True,  latex=r'\lambda'))
@@ -164,14 +164,14 @@ def mass_fitter(odf,
       pars.add(dict(name='nexp',      formula="1-nsigBs",                          latex=r'N_{comb}'))
     if has_bd:
       # Create common set of Bd parameters
-      DMsd =-5279.63+5366.89
+      DMsd = 5366.89 - 5279.63
       pars.add(dict(name='nsigBd',    value=0.01,  min=0.,  max=1,     free=True,  latex=r'N_{B_d}'))
       pars.add(dict(name='muBd',      formula=f"muBs-{DMsd}",                      latex=r'\mu_{B_d}'))
       # pars.add(dict(name='sigmaBd',   value=1,    min=5,    max=20,    free=True,  latex=r'\sigma_{B_d}'))
       pars.add(dict(name='sigmaBd', formula="sigmaBs",                           latex=r'\sigma_{B_d}'))
       # Combinatorial background
       pars.pop('nexp')
-      pars.add(dict(name='nexp', value=0.001, formula="1-nsigBs-nsigBd", latex=r'N_{comb}'))
+      pars.add(dict(name='nexp',     formula="1-nsigBs-nsigBd", latex=r'N_{comb}'))
     pars.unlock('nsigBs', 'muBs', 'sigmaBs', 'b')
     print(pars)
 
@@ -222,7 +222,7 @@ def mass_fitter(odf,
       print(fpars)
 
     fig, axplot, axpull = plotting.axes_plotpull()
-    hdata = ipanema.histogram.hist(ristra.get(rd.mass), weights=None,
+    hdata = ipanema.histogram.hist(ristra.get(rd.mass), weights=rd.df.eval(mass_weight),
                                    bins=60, density=False)
     axplot.errorbar(hdata.bins, hdata.counts,
                     yerr=[hdata.errh, hdata.errl],
@@ -357,15 +357,15 @@ if __name__ == '__main__':
       mLL = mass[bin-1]
       mUL = mass[bin]
     if "LSB" in args['mass_bin']:
-      mass_range=(5202, 5367+30)
+      mass_range=(5202, 5367+40)
     elif "RSB" in args['mass_bin']:
-      mass_range=(5367-30, 5548)
+      mass_range=(5367-40, 5548)
     cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
   print(f"Cut:", cut)
   # sample.chop(cut)
 
   pars, sw = mass_fitter(sample.df,
-                     mass_range=(5202, 5548), mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
+                     mass_range=mass_range, mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
                      # mass_range=False, mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
                      figs = args['output_figures'], model=args['mass_model'],
                      cut=cut, sweights=sweights,
