@@ -1,0 +1,8 @@
+{
+  "path": "sidecar",
+  "note": "phis_ananote/latex",
+  "eos": "/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2",
+  "mail": [],
+  "velo_weights": false,
+  "compute_sweights": false
+}
