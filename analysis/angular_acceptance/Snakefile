@@ -126,7 +126,7 @@ rule angular_acceptance_naive_analytical:
 # Correcting MC with kinematic weights {{{
 #     Correcting MC sample with kinematic weighting in B_P, B_PT and X_M helps
 #     to better match MC to RD.
-
+ruleorder: angular_acceptance_corrected > mass_fit_bs_mc
 rule angular_acceptance_corrected:
   resources:
     mem_mb = 4096
