@@ -366,7 +366,6 @@ if __name__ == '__main__':
 
   pars, sw = mass_fitter(sample.df,
                      mass_range=mass_range, mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
-                     # mass_range=False, mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
                      figs = args['output_figures'], model=args['mass_model'],
                      cut=cut, sweights=sweights,
                      has_bd=True if args['mode']=='Bs2JpsiPhi' else False,
