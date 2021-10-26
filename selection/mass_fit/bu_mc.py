@@ -294,7 +294,6 @@ if __name__ == '__main__':
   print(sample.df.shape)
 
   pars, sw = mass_fitter(sample.df,
-                         # mass_range=(5210, 5350), mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
                          mass_range=False, mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
                          trigger=args['trigger'], cut=False,
                          figs = args['output_figures'], model=args['mass_model'],

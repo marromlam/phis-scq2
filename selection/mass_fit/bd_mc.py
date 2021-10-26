@@ -308,8 +308,7 @@ if __name__ == '__main__':
     cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
 
   pars, sw = mass_fitter(sample.df,
-                         # mass_range=(5210, 5350), mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
-                         mass_range=False, mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
+                         mass_range=(5210, 5350), mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
                          trigger=args['trigger'], cut=cut,
                          figs = args['output_figures'], model=args['mass_model'],
                          input_pars=input_pars, sweights=sweights, verbose=True)
