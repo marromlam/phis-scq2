@@ -289,7 +289,7 @@ def mass_fitter(odf,
         sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.pdf, *x, **y), _pars, _yields)
         for k,v in sw.items():
           _sw = np.copy(_proxy)
-          _sw[list(rd.df.index)] = v
+          _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
           sw[k] = _sw
           print(sw[k].shape)
         print(sw)
@@ -341,7 +341,9 @@ if __name__ == '__main__':
     branches += ['B_BKGCAT']
   
   sample = Sample.from_root(args['sample'], branches=branches)
+  
 
+  mass_range=(5202, 5548)
   if args['mass_bin']:
     if 'Bd2JpsiKstar' in args['mode']:
       mass = [826, 861, 896, 931, 966]
@@ -354,6 +356,10 @@ if __name__ == '__main__':
       bin = int(args['mass_bin'][-1])
       mLL = mass[bin-1]
       mUL = mass[bin]
+    if "LSB" in args['mass_bin']:
+      mass_range=(5202, 5367+30)
+    elif "RSB" in args['mass_bin']:
+      mass_range=(5367-30, 5548)
     cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
   print(f"Cut:", cut)
   # sample.chop(cut)
