@@ -445,7 +445,7 @@ rule sweights_add:
   output:
     root_file = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_sWeight.root',
   params:
-    script = 'selection/sweighter.py',
+    script = 'selection/sweights/sweighter.py',
   log:
     'output/log/sweights_bs_rd/{year}/{mode}/{version}.log',
   run:
