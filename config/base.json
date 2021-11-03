@@ -17,7 +17,7 @@
   "bs_mass_model": "ipatia",
   "bd_mass_model": "crystalball",
   "bu_mass_model": "crystalball",
-  "bs_mass_bins": ["LSBmX1", "LSBmX2", "LSBmX3", "LSBmX4", "LSBmX5", "LSBmX6"],
+  "bs_mass_bins": ["mX1", "mX2", "mX3", "mX4", "mX5", "mX6"],
   "bd_mass_bins": ["all"],
   "bu_mass_bins": ["all"],
   "minimizer": "minuit",
