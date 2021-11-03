@@ -12,8 +12,11 @@
 #include "angular_acceptance.h"
 
 
-  WITHIN_KERNEL
-void angWeightsToMoments(ftype *tijk, GLOBAL_MEM const ftype *nw)
+// Angular efficiency from weights {{{
+// ...
+
+WITHIN_KERNEL
+void wiehgts_to_moments(ftype *tijk, GLOBAL_MEM const ftype *nw)
 {
   //c0000
   tijk[0]  =   1./3.                  * (nw[0] + nw[1] + nw[2]);
@@ -38,15 +41,14 @@ void angWeightsToMoments(ftype *tijk, GLOBAL_MEM const ftype *nw)
 }
 
 
-
-  WITHIN_KERNEL
-ftype angular_wefficiency(const ftype cosK, const ftype cosL, const ftype phi,
+WITHIN_KERNEL
+ftype angular_efficiency_weights(const ftype cosK, const ftype cosL, const ftype phi,
     GLOBAL_MEM const ftype *nw)
 {
   ftype eff = 0.;
   ftype tijk[10];
 
-  angWeightsToMoments(tijk, nw);
+  wiehgts_to_moments(tijk, nw);
 
   // correct for (-1) wrt Veronika's Ylm implementation --------------*
   eff += tijk[0] * lpmv(0, 0, cosK) * sph_harm(0, 0, cosL, phi);
@@ -65,7 +67,11 @@ ftype angular_wefficiency(const ftype cosK, const ftype cosL, const ftype phi,
   return eff;
 }
 
+// }}}
 
+
+// to be deleted {{{
+//
 /*
    ================================================================================ 
 
@@ -209,8 +215,12 @@ __device__ double ang_eff(double helcosthetaK, double helcosthetaL, double helph
 }
 */
 
+// }}}
 
-  WITHIN_KERNEL
+
+// Angular analytical efficiency {{{
+
+WITHIN_KERNEL
 ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype hphi,
     const int order_cosK, const int order_cosL, const int order_hphi,
     GLOBAL_MEM const ftype *cijk)
@@ -224,11 +234,11 @@ ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype hphi,
     {
       for( int n=0; n<order_cosK+1; n++ )
       {
-#ifdef CUDA
-        lbin = int(n + (order_cosK+1)*o + (order_cosK+1)*(order_hphi+1)*p);
-#else
-        lbin = convert_int(n + (order_cosL+1)*o + (order_cosL+1)*(order_hphi+1)*p);
-#endif
+        #ifdef CUDA
+          lbin = int(n + (order_cosK+1)*o + (order_cosK+1)*(order_hphi+1)*p);
+        #else
+          lbin = convert_int(n + (order_cosL+1)*o + (order_cosL+1)*(order_hphi+1)*p);
+        #endif
         eff += cijk[lbin] * pow(cosL,p) * pow(hphi,o) * pow(cosK,n);
       }
     }
@@ -238,7 +248,7 @@ ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype hphi,
 }
 
 
-  WITHIN_KERNEL
+WITHIN_KERNEL
 void tijk2weights(GLOBAL_MEM ftype *w, GLOBAL_MEM const ftype *tijk,
     const int order_cosK, const int order_cosL, const int order_hphi)
 {
@@ -273,6 +283,8 @@ void tijk2weights(GLOBAL_MEM ftype *w, GLOBAL_MEM const ftype *tijk,
   }
 
 }
+
+// }}}
 
 
 // vim:foldmethod=marker

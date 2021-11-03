@@ -25,17 +25,25 @@
   changed. This may be caused because she was not using a proper implementation for
   the Ylm
   */
-  WITHIN_KERNEL
-void angWeightsToMoments(ftype *tijk, GLOBAL_MEM const ftype *nw);
+WITHIN_KERNEL
+void weights_to_moments(ftype *tijk, GLOBAL_MEM const ftype *nw);
 
 
-  WITHIN_KERNEL
-ftype angular_wefficiency(const ftype cosK, const ftype cosL, const ftype phi,
-    GLOBAL_MEM const ftype *nw);
+/**
+ * Translates tijk, the analylical coefficients fitted to data/theory and 
+ * described by legendre polynomials
+ */
+WITHIN_KERNEL
+ftype angular_efficiency_weights(const ftype cosK, const ftype cosL,
+    const ftype phi, GLOBAL_MEM const ftype *nw);
 
 
-  WITHIN_KERNEL
+/**
+ * Translates tijk, the analylical coefficients fitted to data/theory and 
+ * described by legendre polynomials
+ */
 ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype hphi,
+    WITHIN_KERNEL
     const int order_cosK, const int order_cosL, const int order_hphi,
     GLOBAL_MEM const ftype *cijk);
 
@@ -44,10 +52,9 @@ ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype hphi,
  * Translates tijk, the analylical coefficients fitted to data/theory and 
  * described by legendre polynomials
  */
-  WITHIN_KERNEL
+WITHIN_KERNEL
 void tijk2weights(GLOBAL_MEM ftype *w, GLOBAL_MEM const ftype *tijk,
     const int order_cosK, const int order_cosL, const int order_hphi);
-
 
 
 #endif // _ANGULARACCEPTANCE_H_

@@ -12,6 +12,16 @@
 // }
 
 
+KERNEL
+void kangular_wefficiency(GLOBAL_MEM ftype *eff, GLOBAL_MEM const ftype *cosK,
+        GLOBAL_MEM const ftype *cosL, GLOBAL_MEM const ftype *phi,
+        GLOBAL_MEM const ftype *nw)
+{
+  int idx = get_global_id(0);
+  eff[idx] = angular_wefficiency(cosK[idx], cosL[idx], phi[idx], nw);
+}
+
+
 /**
   this function wants cijk already translated to a polynomial basis. Not legendre
 
