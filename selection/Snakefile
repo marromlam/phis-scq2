@@ -142,7 +142,7 @@ rule mass_fit_bd_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bd_mc.py',
@@ -178,7 +178,7 @@ rule mass_fit_bd_rd:
     params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bd_mc.py',
@@ -250,7 +250,7 @@ rule mass_fit_bu_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bu_mc.py',
@@ -286,7 +286,7 @@ rule mass_fit_bu_rd:
     params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bu_mc.py',
@@ -358,7 +358,7 @@ rule mass_fit_bs_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bs_rd.py',
@@ -394,7 +394,7 @@ rule mass_fit_bs_rd:
     params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bs_rd.py',
@@ -432,18 +432,18 @@ rule sweights_add:
     mem_mb=6000
   input:
     root_file = lambda wcs: tuples(wcs, weight='selected'),
-    biased = lambda wcs: expand('/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_{massmodel}_{massbin}_biased.npy',
+    biased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_biased.npy',
                                 year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
                                 massbin=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_bins"],
                                 massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
                                ),
-    unbiased = lambda wcs: expand('/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_{massmodel}_{massbin}_unbiased.npy',
+    unbiased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_unbiased.npy',
                                 year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
                                 massbin=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_bins"],
                                 massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
                                ),
   output:
-    root_file = '/scratch46/marcos.romero/sidecar/{year}/{mode}/{version}_sWeight.root',
+    root_file = SAMPLES+'/{year}/{mode}/{version}_sWeight.root',
   params:
     script = 'selection/sweights/sweighter.py',
   log:
