@@ -389,32 +389,31 @@ def plotter(args, axes):
   print(f"\n{80*'='}\n", "Loading categories", f"\n{80*'='}\n")
 
   cats = {}
-  sw = 'sw' #f'sw_{VAR}' if VAR else 'sw'
   for i,m in enumerate(['MC_Bs2JpsiPhi_dG0','MC_Bd2JpsiKstar','Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
       if TIMEACC['corr']:
-        weight = f'dg0Weight*{sw}/gb_weights'
+        weight = f'dg0Weight*sWeight'
       else:
-        weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*{sw}/gb_weights'
+        weight = f'{kinWeight}polWeight*pdfWeight*dg0Weight*sWeight'
       mode = 'MC_Bs2JpsiPhi'; c = 'a'
     elif m=='MC_Bs2JpsiPhi_dG0':
       if TIMEACC['corr']:
-        weight = f'{sw}/gb_weights'
+        weight = f'sWeight'
       else:
-        weight = f'{kinWeight}polWeight*pdfWeight*{sw}/gb_weights'
+        weight = f'{kinWeight}polWeight*pdfWeight*sWeight'
       mode = 'MC_Bs2JpsiPhi_dG0'; c = 'a'
     elif m=='MC_Bd2JpsiKstar':
       if TIMEACC['corr']:
-        weight = f'{sw}'
+        weight = f'sWeight'
       else:
-        weight = f'{kinWeight}polWeight*pdfWeight*{sw}'
+        weight = f'{kinWeight}polWeight*pdfWeight*sWeight'
       mode = 'MC_Bd2JpsiKstar'; c = 'b'
     elif m=='Bd2JpsiKstar':
       if TIMEACC['corr']:
-        weight = f'{sw}'
+        weight = f'sWeight'
       else:
-        weight = f'{kinWeight}{sw}'
+        weight = f'{kinWeight}sWeight'
       mode = 'Bd2JpsiKstar'; c = 'c'
 
     # Load the sample
