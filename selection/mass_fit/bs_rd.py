@@ -133,15 +133,19 @@ def mass_fitter(odf,
     #    Select model from command-line arguments and create corresponding set of
     #    paramters
 
+    pars = ipanema.Parameters()
+    # Create common set of Bs parameters (all models must have and use)
+    pars.add(dict(name='nsigBs',    value=0.8, min=0.2,  max=1,    free=True,  latex=r'N_{B_s}'))
+    pars.add(dict(name='muBs',      value=5367,  min=5200, max=5500,             latex=r'\mu_{B_s}'))
+    pars.add(dict(name='sigmaBs',   value=5,    min=5,    max=100,  free=True,  latex=r'\sigma_{B_s}'))
+
     if input_pars:
-      pars = ipanema.Parameters.clone(input_pars)
-      pars.lock()
+      _pars = ipanema.Parameters.clone(input_pars)
+      _pars.lock()
+      _pars.remove('nsigBs', 'muBs', 'sigmaBs')
+      _pars.unlock('b')
+      pars = pars + _pars
     else:
-      pars = ipanema.Parameters()
-      # Create common set of Bs parameters (all models must have and use)
-      pars.add(dict(name='nsigBs',    value=0.8, min=0.2,  max=1,    free=True,  latex=r'N_{B_s}'))
-      pars.add(dict(name='muBs',      value=5367,  min=5200, max=5500,             latex=r'\mu_{B_s}'))
-      pars.add(dict(name='sigmaBs',   value=5,    min=5,    max=100,  free=True,  latex=r'\sigma_{B_s}'))
       if 'ipatia' in model:
         # Hypatia tails {{{
         pars.add(dict(name='lambd',   value=-1.5,  min=-4,   max=-1.1, free=True,  latex=r'\lambda'))
@@ -162,6 +166,7 @@ def mass_fitter(odf,
       # Combinatorial background
       pars.add(dict(name='b',         value=-4e-3, min=-1,  max=1,     free=True,  latex=r'b'))
       pars.add(dict(name='nexp',      formula="1-nsigBs",                          latex=r'N_{comb}'))
+
     if has_bd:
       # Create common set of Bd parameters
       DMsd = 5366.89 - 5279.63
@@ -172,7 +177,6 @@ def mass_fitter(odf,
       # Combinatorial background
       pars.pop('nexp')
       pars.add(dict(name='nexp',     formula="1-nsigBs-nsigBd", latex=r'N_{comb}'))
-    pars.unlock('nsigBs', 'muBs', 'sigmaBs', 'b')
     print(pars)
 
     # }}}
@@ -275,7 +279,8 @@ def mass_fitter(odf,
       fig.savefig(os.path.join(figs, f"logfit.pdf"))
       fig.savefig(f"logfit.pdf")
     plt.close()
-    print("sweights HOSTIA", sweights)
+
+
     # compute sWeights if asked {{{
 
     if sweights:
@@ -291,11 +296,11 @@ def mass_fitter(odf,
           _sw = np.copy(_proxy)
           _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
           sw[k] = _sw
-          print(sw[k].shape)
         print(sw)
         return (fpars, sw)
 
     # }}}
+
     return (fpars, False)
 
 # }}}
@@ -359,7 +364,7 @@ if __name__ == '__main__':
     if "LSB" in args['mass_bin']:
       mass_range=(5202, 5367+50)
     elif "RSB" in args['mass_bin']:
-      mass_range=(5367-50, 5548)
+      mass_range=(5367-80, 5548)
     cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
   print(f"Cut:", cut)
   # sample.chop(cut)
