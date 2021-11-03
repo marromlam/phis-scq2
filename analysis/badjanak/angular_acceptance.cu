@@ -13,12 +13,12 @@
 
 
 KERNEL
-void kangular_wefficiency(GLOBAL_MEM ftype *eff, GLOBAL_MEM const ftype *cosK,
+void kangular_efficiency_weights(GLOBAL_MEM ftype *eff, GLOBAL_MEM const ftype *cosK,
         GLOBAL_MEM const ftype *cosL, GLOBAL_MEM const ftype *phi,
         GLOBAL_MEM const ftype *nw)
 {
   int idx = get_global_id(0);
-  eff[idx] = angular_wefficiency(cosK[idx], cosL[idx], phi[idx], nw);
+  eff[idx] = angular_efficiency_weights(cosK[idx], cosL[idx], phi[idx], nw);
 }
 
 
@@ -26,7 +26,7 @@ void kangular_wefficiency(GLOBAL_MEM ftype *eff, GLOBAL_MEM const ftype *cosK,
   this function wants cijk already translated to a polynomial basis. Not legendre
 
 */
-  KERNEL
+KERNEL
 void pyangular_efficiency(GLOBAL_MEM ftype *out, GLOBAL_MEM const ftype *cijk,
     GLOBAL_MEM const ftype *cosK, GLOBAL_MEM const ftype *cosL, GLOBAL_MEM const ftype *hphi,
     const int bin_cosK, const int bin_cosL, const int bin_hphi,

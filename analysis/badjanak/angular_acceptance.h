@@ -42,8 +42,8 @@ ftype angular_efficiency_weights(const ftype cosK, const ftype cosL,
  * Translates tijk, the analylical coefficients fitted to data/theory and 
  * described by legendre polynomials
  */
+WITHIN_KERNEL
 ftype angular_efficiency(const ftype cosK, const ftype cosL, const ftype hphi,
-    WITHIN_KERNEL
     const int order_cosK, const int order_cosL, const int order_hphi,
     GLOBAL_MEM const ftype *cijk);
 

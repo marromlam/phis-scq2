@@ -191,7 +191,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
       {
         //angacc = ang_eff(data[0], data[1], data[2], tijk);
         //if (evt  == 0){ printf("angacc = %f    ", angacc);}
-        angacc = angular_wefficiency(data[0], data[1], data[2], tijk);
+        angacc = angular_efficiency_weights(data[0], data[1], data[2], tijk);
         //if (evt  == 0){ printf("angacc = %f\n ", angacc);}
       }
 
