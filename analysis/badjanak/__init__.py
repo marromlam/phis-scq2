@@ -170,7 +170,7 @@ def parser_rateBs(
       cosLLL = -1.0, cosLUL = 1.0,
       hphiLL = -np.pi, hphiUL = +np.pi,
       # Time resolution
-      sigma_offset = 0.00, sigma_slope = 0.00, sigma_curvature = 0.00,
+      sigma_offset = 0.00, sigma_slope = 1.00, sigma_curvature = 0.00,
       mu = 0.00,
       # Flavor tagging
       eta_os = 0.00, eta_ss = 0.00,
@@ -713,6 +713,23 @@ def analytical_angular_efficiency(angacc, cosK, cosL, hphi, project=None, order_
   return res
 
 
+def angular_efficiency_weights(angacc, cosK, cosL, hphi, project=None):
+  eff = ristra.zeros_like(cosK)
+  try:
+    _angacc = ristra.allocate(np.array(angacc))
+  except:
+    _angacc = ristra.allocate(np.array([a.n for a in angacc]))
+  __KERNELS__.kangular_efficiency_weights(eff, cosK, cosL, hphi, _angacc, global_size=(eff.shape[0],))
+  n = round(eff.shape[0]**(1/3))
+  res = ristra.get(eff).reshape(n,n,n)
+  if project==1:
+    return np.sum(res,(1,0))
+  if project==2:
+    return np.sum(res,(1,2))
+  if project==3:
+    return np.sum(res,(2,0))
+  return res
+
 
 def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **parameters):
   # Filter some warnings
@@ -863,7 +880,7 @@ def saxsbxscxerf(
   )
 
 
-def bspline(time, *coeffs, flatend=False, BLOCK_SIZE=32):
+def bspline(time, coeffs, flatend=False, BLOCK_SIZE=32):
   if isinstance(time, np.ndarray):
     time_d = THREAD.to_device(time).astype(np.float64)
     spline_d = THREAD.to_device(0*time).astype(np.float64)
