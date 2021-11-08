@@ -274,7 +274,10 @@ def mass_fitter(odf,
       fig.savefig(os.path.join(figs, f"fit.pdf"))
       fig.savefig(f"fit.pdf")
     axplot.set_yscale('log')
-    axplot.set_ylim(1e0,1.5*np.max(y))
+    try:
+      axplot.set_ylim(1e0,1.5*np.max(y))
+    except:
+      print('axes not scaled')
     if figs:
       fig.savefig(os.path.join(figs, f"logfit.pdf"))
       fig.savefig(f"logfit.pdf")
