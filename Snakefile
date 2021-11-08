@@ -62,7 +62,7 @@ include: 'analysis/angular_acceptance/Snakefile'
 include: 'analysis/angular_fit/Snakefile'
 # include: 'analysis/bundle/Snakefile'
 include: 'analysis/params/Snakefile'
-# include: 'analysis/sportpalastrede/Snakefile'
+include: 'analysis/what_the_hell/Snakefile'
 include: 'analysis/toys/Snakefile'
 include: 'packandgo/Snakefile'
 
