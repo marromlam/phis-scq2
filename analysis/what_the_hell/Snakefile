@@ -1,7 +1,8 @@
 rule brutality:
   threads: 128,
   wildcard_constraints:
-    mode = 'Bs2JpsiPhi'
+    mode = 'Bs2JpsiPhi',
+    angacc = '.*Insieme'
   input:
     tupleBdRD = lambda wcs: tuples(wcs, mode="Bd2JpsiKstar"),
     tupleBdMC = lambda wcs: tuples(wcs, mode="MC_Bd2JpsiKstar"),
@@ -47,9 +48,9 @@ rule brutality:
       'analysis/params/generator/2018/MC_Bs2JpsiPhi_dG0.json'
     ],
   output:
-    params = 'output/params/brutality/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+    params = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
   log:
-    'output/log/brutality/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+    'output/log/brutality/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
   run:
     def concatenater(x):
        x = [x] if isinstance(x,str) else x
