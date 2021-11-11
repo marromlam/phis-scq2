@@ -682,7 +682,7 @@ if __name__ == '__main__':
 
 
 
-    for iteration in range(10):
+    for iteration in range(20):
       # print experimental effects
       for ky, vy in samples['Bs2JpsiPhi'].items():
         for kt, vt in vy.items():
@@ -709,12 +709,15 @@ if __name__ == '__main__':
       do_angular_weights(samples, mc_list=angacc_list, verbose=False)
 
       print(f"\n[#{iteration}] CHECK FOR CONVERGENCE")
-      if len(angacc_sample_list)>1:
+      if len(angacc_list)>1:
         checker = do_mc_combination(samples, verbose=False)
         print(checker)
       if all(checker):
           print(checker)
-          print("This is a small step for the iterative procedure, but a huge step for future analyses")
+          print("\n\n    This is a small step for the iterative procedure,")
+          print("    but a huge step for future analyses.")
+          print("    --- Marcosito.")
+          pars.dump(args['params'])
           break
 
       print(f"\n[#{iteration}] TIME ACCEPTANCE DETERMINATION")
