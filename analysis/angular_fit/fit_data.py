@@ -5,21 +5,15 @@ DESCRIPTION = """
 
 __author__ = ['Marcos Romero Lamas']
 __email__  = ['mromerol@cern.ch']
+__all__ = []
 
 
-
-
-################################################################################
-# %% Modules ###################################################################
+# Modules {{{
 
 import argparse
 import numpy as np
-import pandas as pd
 # import uproot
 import os
-import sys
-import hjson
-import pandas
 
 from ipanema import initialize
 initialize(os.environ['IPANEMA_BACKEND'],1)
@@ -37,7 +31,6 @@ from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
 from utils.helpers import parse_angacc, version_guesser, timeacc_guesser, trigger_scissors
 
 import config
-# binned variables
 resolutions = config.timeacc['constants']
 all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
@@ -45,7 +38,7 @@ Gdvalue = config.general['Gd']
 tLL = config.general['tLL']
 tUL = config.general['tUL']
 
-################################################################################
+# }}}
 
 
 
@@ -101,6 +94,8 @@ TIMEACC = timeacc_guesser(args['timeacc'])
 TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
 TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
 
+MINER = 'minuit'
+
 if TIMEACC['use_upTime']:
   tLL = 1.36
 if TIMEACC['use_lowTime']:
@@ -117,13 +112,17 @@ for k,v in args.items():
 # %% Load samples --------------------------------------------------------------
 printsubsec(f"Loading samples")
 
+branches_to_load = ['hlt1b']
 # Lists of data variables to load and build arrays
 real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
-weight_rd='(sw)'
+weight = 'sWeight'
+branches_to_load += real 
+branches_to_load += [weight]
 
 if TIMEACC['use_veloWeight']:
-  weight_rd = f'veloWeight*{weight_rd}'
+  weight = f'veloWeight*sWeight'
+  branches_to_load += ["veloWeight"]
 
 
 if TRIGGER == 'combined':
@@ -143,7 +142,7 @@ for i, y in enumerate(YEARS):
   badjanak.config['mHH'] = mass.tolist()
   for t in TRIGGER:
     tc = trigger_scissors(t, CUT)
-    data[y][t] = Sample.from_root(args['samples'].split(',')[i], cuts=tc)
+    data[y][t] = Sample.from_root(args['samples'].split(',')[i], branches=branches_to_load, cuts=tc)
     data[y][t].name = f"Bs2JpsiPhi-{y}-{t}"
     data[y][t].csp = csp
     data[y][t].flavor = flavor
@@ -157,13 +156,13 @@ for i, y in enumerate(YEARS):
     w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
     data[y][t].angacc = Parameters.build(w,w.fetch('w.*'))
     # Normalize sWeights per bin
-    sw = np.zeros_like(data[y][t].df['sw'])
+    sw = np.zeros_like(data[y][t].df['sWeight'])
     for l,h in zip(mass[:-1],mass[1:]):
       pos = data[y][t].df.eval(f'mHH>={l} & mHH<{h}')
-      this_sw = data[y][t].df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
-      sw = np.where(pos, this_sw * ( sum(this_sw)/sum(this_sw*this_sw) ),sw)
+      _sw = data[y][t].df.eval(f'{weight}*(mHH>={l} & mHH<{h})')
+      sw = np.where(pos, _sw * ( sum(_sw)/sum(_sw*_sw) ), sw)
     data[y][t].df['sWeight'] = sw
-    data[y][t].allocate(input=real,weight='sWeight',output='0*time')
+    data[y][t].allocate(data=real, weight='sWeight', prob='0*time')
 
 # Compile the kernel
 #    so if knots change when importing parameters, the kernel is compiled
@@ -264,8 +263,7 @@ Parameter(name="DGsd", value= 0.03*0,  # min=-0.1, max= 0.1,
           free=True, latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps]}^{-1}"),
 Parameter(name="DM", value=17.757,   min=15.0, max=20.0,
           free=True, latex=r"\Delta m_s \, \mathrm{[ps]}^{-1}"),
-Parameter("eta_os", value = data[str(YEARS[0])][TRIGGER[0]].flavor['eta_os'].value,
-          free = False),
+Parameter("eta_os", value = data[str(YEARS[0])][TRIGGER[0]].flavor['eta_os'].value, free = False),
 Parameter("eta_ss", value = data[str(YEARS[0])][TRIGGER[0]].flavor['eta_ss'].value, free = False),
 Parameter("p0_os",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p0_os'].value,  free = True, min =  0.0, max = 1.0, latex = "p^{\rm OS}_{0}"),
 Parameter("p1_os",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p1_os'].value,  free = True, min =  0.5, max = 1.5, latex = "p^{\rm OS}_{1}"),
@@ -382,11 +380,27 @@ tagConstr = taggingConstraints(data)
 # define fcn function {{{
 
 #@profile
-def fcn_data(parameters, data):
-  # here we are going to unblind the parameters to the fcn caller, thats why
-  # we call parameters.valuesdict(blind=False), by default
-  # parameters.valuesdict() has blind=True
-  pars_dict = parameters.valuesdict(blind=False)
+def fcn_tag_constr_data(parameters:Parameters, data:dict)->np.ndarray:
+  """
+  Cost function to fit real data. Data is a dictionary of years, and each 
+  year should be a dictionary of trigger categories. This function loops over
+  years and trigger categories.  Here we are going to unblind the parameters
+  to the p.d.f., thats why we call parameters.valuesdict(blind=False), by
+  default `parameters.valuesdict()` has blind=True.
+
+  Parameters
+  ----------
+  parameters : `ipanema.Parameters`
+  Parameters object with paramaters to be fitted.
+  data : dict
+
+  Returns
+  -------
+  np.ndarray
+  Array containing the weighted likelihoods
+
+  """
+  pars_dict = parameters.valuesdict(blind=True)
   chi2TagConstr = 0.
 
   chi2TagConstr += (pars_dict['dp0_os']-data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].value)**2/data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].stdev**2
@@ -398,20 +412,7 @@ def fcn_data(parameters, data):
   tagcvSS = np.matrix([pars_dict['p0_ss'], pars_dict['p1_ss']]) - tagConstr['pSS']
 
   Y_OS = np.dot(tagcvOS, tagConstr['covOSInv'])
-  '''
-  print("Inputs:")
-  print(Y_OS)
-  print('----')
-  print(tagcvOS.T)
-  '''
-
   chi2TagConstr += np.dot(Y_OS, tagcvOS.T)
-
-  '''
-  print("Result:")
-  print(np.dot(Y_OS, tagcvOS.T))
-  '''
-
   Y_SS = np.dot(tagcvSS, tagConstr['covSSInv'])
   chi2TagConstr += np.dot(Y_SS, tagcvSS.T)
 
@@ -419,16 +420,16 @@ def fcn_data(parameters, data):
   for y, dy in data.items():
     for t, dt in dy.items():
       badjanak.delta_gamma5_data(
-          dt.input, dt.output, **pars_dict,
+          dt.data, dt.prob, **pars_dict,
           **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
           **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-          #**dt.flavor.valuesdict(),
+          # **dt.flavor.valuesdict(),
           tLL=tLL, tUL=tUL,
           use_fk=1, use_angacc=1, use_timeacc=1,
           use_timeoffset=0, set_tagging=1, use_timeres=1,
           BLOCK_SIZE=256
       )
-      chi2.append( -2.0 * (ristra.log(dt.output) * dt.weight).get() );
+      chi2.append( -2.0 * (ristra.log(dt.prob) * dt.weight).get() );
 
   chi2conc =  np.concatenate(chi2)
   #chi2conc = chi2conc + np.array(len(chi2conc)*[chi2TagConstr[0][0]/float(len(chi2conc))])
@@ -440,6 +441,47 @@ def fcn_data(parameters, data):
   #print( np.nan_to_num(chi2conc + chi2TagConstr, 0, 100, 100).sum() )
   return chi2conc + chi2TagConstr #np.concatenate(chi2)
 
+
+#@profile
+def fcn_data(parameters:Parameters, data:dict)->np.ndarray:
+  """
+  Cost function to fit real data. Data is a dictionary of years, and each 
+  year should be a dictionary of trigger categories. This function loops over
+  years and trigger categories.  Here we are going to unblind the parameters
+  to the p.d.f., thats why we call parameters.valuesdict(blind=False), by
+  default `parameters.valuesdict()` has blind=True.
+
+  Parameters
+  ----------
+  parameters : `ipanema.Parameters`
+  Parameters object with paramaters to be fitted.
+  data : dict
+
+  Returns
+  -------
+  np.ndarray
+  Array containing the weighted likelihoods
+
+  """
+  pars_dict = parameters.valuesdict(blind=False)
+  chi2 = []
+
+  for y, dy in data.items():
+    for dt in dy.values():
+      badjanak.delta_gamma5_data(dt.data, dt.prob, **pars_dict,
+         **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
+         **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
+         **dt.flavor.valuesdict(),
+         use_fk=1, use_angacc=1, use_timeacc=1,
+         use_timeoffset=0, set_tagging=1, use_timeres=1,
+         tLL=tLL, tUL=tUL)
+      chi2.append( -2.0 * (ristra.log(dt.prob) * dt.weight).get() );
+
+  return np.concatenate(chi2)
+
+# cost_function = fcn_data
+cost_function = fcn_tag_constr_data
+
 # }}}
 
 
@@ -447,36 +489,37 @@ def fcn_data(parameters, data):
 
 printsubsec("Simultaneous minimization procedure")
 
-MINER = 'minuit'
 
 if MINER in ('minuit', 'minos'):
-  result = optimize(fcn_data, method=MINER, params=pars,
+  result = optimize(cost_function, method=MINER, params=pars,
                     fcn_kwgs={'data':data},
-                    verbose=False, timeit=True, tol=0.1, strategy=2,
+                    verbose=True, timeit=True, tol=0.1, strategy=1,
                     policy='filter')
 elif MINER in ('nelder'):
-  result = optimize(fcn_data, method=MINER, params=pars,
+  result = optimize(cost_function, method=MINER, params=pars,
                     fcn_kwgs={'data':data},
                     verbose=False, timeit=True, tol=0.1, strategy=2,
                     policy='omit')
 elif MINER in ('bfgs', 'lbfgsb'):
-  result = optimize(fcn_data, method='minuit', params=pars,
+  result = optimize(cost_function, method='minuit', params=pars,
                     fcn_kwgs={'data':data},
                     verbose=False, timeit=True, tol=0.1, strategy=2,
                     policy='omit')
-  result = optimize(fcn_data, method=MINER, params=result.pars,
+  result = optimize(cost_function, method=MINER, params=result.pars,
                     fcn_kwgs={'data':data},
                     verbose=False, timeit=True, tol=0.1, strategy=2,
                     policy='filter')
 elif MINER in ('emcee'):
-  result = optimize(fcn_data, method='nelder', params=pars,
+  result = optimize(cost_function, method='nelder', params=pars,
                     fcn_kwgs={'data':data},
                     verbose=False, timeit=True, tol=0.1, strategy=2,
                     policy='omit')
-  result = optimize(fcn_data, method='emcee', params=result.params,
+  result = optimize(cost_function, method='emcee', params=result.params,
                     fcn_kwgs={'data':data},
                     verbose=False, timeit=True,
                     policy='omit', steps=5000, nwalkers=1000, burn=2, workers=8)
+else:
+  raise ValueError(f"{MINER} is now a optimizer method from ipanema")
 
 print(result)
 
@@ -496,9 +539,6 @@ for p in  ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs',
 
 print("Dump parameters")
 result.params.dump(args['params'])
-# Write latex table
-# with open(args['tables'], "w") as tex_file:
-  # tex_file.write( result.params.dump_latex(caption="Physics parameters.") )
 
 # }}}
 
