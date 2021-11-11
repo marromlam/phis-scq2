@@ -207,6 +207,7 @@ def mass_fitter(odf,
     _proxy = np.float64(rd.df[mass_branch]) * 0.0
     rd.chop(current_cut)
     rd.allocate(mass=mass_branch, pdf=f'0*{mass_branch}', weight=mass_weight)
+    print(f"The dataframe has the following shape: {rd.shape}")
     # print(rd)
 
     # }}}
@@ -274,10 +275,10 @@ def mass_fitter(odf,
       fig.savefig(os.path.join(figs, f"fit.pdf"))
       fig.savefig(f"fit.pdf")
     axplot.set_yscale('log')
-    try:
-      axplot.set_ylim(1e0,1.5*np.max(y))
-    except:
-      print('axes not scaled')
+    axplot.set_ylim(1e0,1.5*np.max(y))
+    # try:
+    # except:
+    #   print('axes not scaled')
     if figs:
       fig.savefig(os.path.join(figs, f"logfit.pdf"))
       fig.savefig(f"logfit.pdf")
