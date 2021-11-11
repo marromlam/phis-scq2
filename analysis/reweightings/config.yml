@@ -14,7 +14,7 @@ kbsWeight:
   MC_Bs2JpsiPhi: &kbsWeight_MC_Bs2JpsiPhi
     # BsMC -> BsRD
     original: ["{sWeight}*polWeight*pdfWeight"]
-    target: ["sw"]
+    target: ["{sWeight}"]
     variables: ["B_PT", "X_M"]
   
   MC_Bs2JpsiPhi_dG0: 
@@ -28,25 +28,25 @@ kbsWeight:
   MC_Bd2JpsiKstar: 
     # BdMC -> BdRD
     original: ["{sWeight}*polWeight*pdfWeight"]
-    target: ["sw*kbsWeight"]
+    target: ["{sWeight}*kbsWeight"]
     variables: ["B_PT", "X_M"]
 
   MC_Bu2JpsiKplus:
     # BuMC -> BuRD
     original: ["{sWeight}*polWeight"]
-    target: ["sw*kbsWeight"]
+    target: ["{sWeight}*kbsWeight"]
     variables: ["B_PT"]
   
   Bd2JpsiKstar:
     # BdRD -> BsRD
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
     variables: ["B_PT", "B_P"]
   
   Bu2JpsiKplus:
     # BuRD -> BsRD
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
     variables: ["B_PT", "B_P"]
 
 # }}}
@@ -58,8 +58,8 @@ kbsWeight:
 
 kbuWeight:
   MC_Bs2JpsiPhi: &kbuWeight_MC_Bs2JpsiPhi
-    original: ["sw*polWeight*pdfWeight"]
-    target: ["sw*kbuWeight"]
+    original: ["{sWeight}*polWeight*pdfWeight"]
+    target: ["{sWeight}*kbuWeight"]
     variables: ["B_PT", "X_M"]
   
   MC_Bs2JpsiPhi_dG0: 
@@ -70,22 +70,22 @@ kbuWeight:
   
   MC_Bd2JpsiKstar: 
     original: ["{sWeight}*polWeight*pdfWeight"]
-    target: ["sw*kbuWeight"]
+    target: ["{sWeight}*kbuWeight"]
     variables: ["B_PT", "X_M"]
 
   MC_Bu2JpsiKplus:
     original: ["{sWeight}*polWeight"]
-    target: ["sw"]
+    target: ["{sWeight}"]
     variables: ["B_PT"]
   
   Bd2JpsiKstar:
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
     variables: ["B_PT", "B_P"]
   
   Bs2JpsiPhi:
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
     variables: ["B_PT", "B_P"]
 
 # }}}
@@ -98,8 +98,8 @@ kbuWeight:
 
 kbdWeight:
   MC_Bs2JpsiPhi: &kbdWeight_MC_Bs2JpsiPhi
-    original: ["sw*polWeight*pdfWeight"]
-    target: ["sw*kbdWeight"]
+    original: ["{sWeight}*polWeight*pdfWeight"]
+    target: ["{sWeight}*kbdWeight"]
     variables: ["B_PT", "X_M"]
   
   MC_Bs2JpsiPhi_dG0:
@@ -110,22 +110,22 @@ kbdWeight:
   
   MC_Bd2JpsiKstar: 
     original: ["{sWeight}*polWeight*pdfWeight"]
-    target: ["sw"]
+    target: ["{sWeight}"]
     variables: ["B_PT", "X_M"]
 
   MC_Bu2JpsiKplus:
     original: ["{sWeight}*polWeight"]
-    target: ["sw*kbdWeight"]
+    target: ["{sWeight}*kbdWeight"]
     variables: ["B_PT"]
   
   Bs2JpsiPhi:
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
     variables: ["B_PT", "B_P"]
   
   Bu2JpsiKplus:
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
     variables: ["B_PT", "B_P"]
 
 # }}}
@@ -140,8 +140,8 @@ oddWeight:
   # time acceptable pipeline. Everything is reweighted to Bs, and non=-Bs MC
   # are also reweighted to a previopusly reweighted Bx sample.
   MC_Bs2JpsiPhi: &oddWeight_MC_Bs2JpsiPhi
-    original: ["sw*polWeight*pdfWeight"]
-    target: ["sw"]
+    original: ["{sWeight}*polWeight*pdfWeight"]
+    target: ["{sWeight}"]
     variables: ["log_B_IPCHI2_mva", "B_DTF_CHI2NDOF", "hplus_TRACK_CHI2NDOF",
                 "hplus_PIDK", "hminus_TRACK_CHI2NDOF", "muplus_TRACK_CHI2NDOF",
                 "muminus_TRACK_CHI2NDOF", "max_K_TRCHI2_mva", "max_mu_TRCHI2_mva"]
@@ -155,22 +155,22 @@ oddWeight:
   MC_Bd2JpsiKstar:
     <<: *oddWeight_MC_Bs2JpsiPhi 
     original: ["{sWeight}*polWeight*pdfWeight"]
-    target: ["sw*kbsWeight"]
+    target: ["{sWeight}*kbsWeight"]
 
   MC_Bu2JpsiKplus:
     <<: *oddWeight_MC_Bs2JpsiPhi 
     original: ["{sWeight}*polWeight"]
-    target: ["sw*kbsWeight"]
+    target: ["{sWeight}*kbsWeight"]
   
   Bd2JpsiKstar:
     <<: *oddWeight_MC_Bs2JpsiPhi 
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
   
   Bu2JpsiKplus:
     <<: *oddWeight_MC_Bs2JpsiPhi 
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
 
 # }}}
 
@@ -184,8 +184,8 @@ phiWeight:
   # time acceptable pipeline. Everything is reweighted to Bs, and non=-Bs MC
   # are also reweighted to a previopusly reweighted Bx sample.
   MC_Bs2JpsiPhi: &phiWeight_MC_Bs2JpsiPhi
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
     variables: ["phiHH"]
   
   MC_Bs2JpsiPhi_dG0:
@@ -197,22 +197,22 @@ phiWeight:
   MC_Bd2JpsiKstar:
     <<: *phiWeight_MC_Bs2JpsiPhi 
     original: ["{sWeight}"]
-    target: ["sw"]
+    target: ["{sWeight}"]
 
   MC_Bu2JpsiKplus:
     <<: *phiWeight_MC_Bs2JpsiPhi 
     original: ["{sWeight}"]
-    target: ["sw"]
+    target: ["{sWeight}"]
   
   Bd2JpsiKstar:
     <<: *phiWeight_MC_Bs2JpsiPhi 
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
   
   Bu2JpsiKplus:
     <<: *phiWeight_MC_Bs2JpsiPhi 
-    original: ["sw"]
-    target: ["sw"]
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
 
 # }}}
 

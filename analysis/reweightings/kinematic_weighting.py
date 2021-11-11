@@ -218,14 +218,20 @@ if __name__ == '__main__':
     reweight_config = yaml.load(file, Loader=yaml.FullLoader)
   reweight_config = reweight_config[args["weight_set"]][args["mode"]]
 
+  original_mode = args['original_file'].split('/')[-2]
+  target_mode = args['target_file'].split('/')[-2]
+  if original_mode != args['mode']:
+    raise ValueError(f"Original mode does not match {args['mode']}")
+
   with open('analysis/samples/branches.yaml') as file:
     sWeight = yaml.load(file, Loader=yaml.FullLoader)
-  sWeight = sWeight[args['mode']]['sWeight']
+  oSW = sWeight[original_mode]['sWeight']
+  tSW = sWeight[target_mode]['sWeight']
 
   args["original_vars"] = reweight_config["variables"]
   args["target_vars"] = reweight_config["variables"]
-  args["original_weight"] = reweight_config["original"][0].format(sWeight=sWeight)
-  args["target_weight"] = reweight_config["target"][0]
+  args["original_weight"] = reweight_config["original"][0].format(sWeight=oSW)
+  args["target_weight"] = reweight_config["target"][0].format(sWeight=tSW)
 
   # change bdt according to filename, if applies
   bdtconfig = timeacc['bdtconfig']
@@ -244,6 +250,8 @@ if __name__ == '__main__':
   printsec("Kinematic reweighting")
   for k,v in args.items():
     print(f"{k:>25} : {v}")
+  print(f"{'Original mode':>25} : {original_mode}")
+  print(f"{'Target mode':>25} : {target_mode}")
   kinematic_weighting(**args)
 
 # }}}
