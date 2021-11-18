@@ -400,7 +400,7 @@ def fcn_tag_constr_data(parameters:Parameters, data:dict)->np.ndarray:
   Array containing the weighted likelihoods
 
   """
-  pars_dict = parameters.valuesdict(blind=True)
+  pars_dict = parameters.valuesdict(blind=False)
   chi2TagConstr = 0.
 
   chi2TagConstr += (pars_dict['dp0_os']-data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].value)**2/data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].stdev**2
