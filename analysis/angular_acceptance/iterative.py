@@ -890,7 +890,7 @@ if __name__ == '__main__':
             free=False, latex=r"\Gamma_d"))
   pars.add(dict(name="DGs", value= 0.0917, min= 0.03, max= 0.15,
             free=True, latex=r"\Delta\Gamma_s"))
-  pars.add(dict(name="DGsd", value= -0.0, min=-0.2, max= 0.2,
+  pars.add(dict(name="DGsd", value= -0.001, min=-0.2, max= 0.2,
             free=True, latex=r"\Gamma_s - \Gamma_d"))
   pars.add(dict(name="DM", value=17.768, min=16.0, max=20.0,
             free=True, latex=r"\Delta m"))

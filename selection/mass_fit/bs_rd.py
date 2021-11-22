@@ -170,7 +170,7 @@ def mass_fitter(odf,
     if has_bd:
       # Create common set of Bd parameters
       DMsd = 5366.89 - 5279.63
-      pars.add(dict(name='nsigBd',    value=0.01,  min=0.,  max=1,     free=True,  latex=r'N_{B_d}'))
+      pars.add(dict(name='nsigBd',    value=0.00,  min=0.,  max=0.05,   free=True,  latex=r'N_{B_d}'))
       pars.add(dict(name='muBd',      formula=f"muBs-{DMsd}",                      latex=r'\mu_{B_d}'))
       # pars.add(dict(name='sigmaBd',   value=1,    min=5,    max=20,    free=True,  latex=r'\sigma_{B_d}'))
       pars.add(dict(name='sigmaBd', formula="sigmaBs",                           latex=r'\sigma_{B_d}'))
