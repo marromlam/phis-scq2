@@ -198,7 +198,7 @@ def version_guesser(version):
         # cut in cosK
         r"(LcosK|UcosK)?",
         # split in pTB, etaB and sigmat bins: for systematics
-        r"((pTB|pTBX|pTBY|etaB|sigmat)(\d{1}))?"
+        r"((pTB|pXB|pYB|etaB|sigmat)(\d{1}))?"
         ]
     pattern = rf"\A{''.join(pattern)}\Z"
     p = re.compile(pattern)

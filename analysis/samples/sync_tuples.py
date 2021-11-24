@@ -52,6 +52,15 @@ vsub_dict = {
   "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15",
   "LcosK": "helcosthetaK<=0.0",
   "UcosK": "helcosthetaK>0.0",
+  # pXB and pYB cuts
+  "pXB1": "B_PX >= 0 & B_PY < 3.8e3",
+  "pXB2": "B_PX >= 3.8e3 & B_PY < 6e3",
+  "pXB3": "B_PX >= 6e3 & B_PY <= 9e3",
+  "pXB4": "B_PX >= 9e3",
+  "pYB1": "B_PY >= 0 & B_PY < 3.8e3",
+  "pYB2": "B_PY >= 3.8e3 & B_PY < 6e3",
+  "pYB3": "B_PY >= 6e3 & B_PY <= 9e3",
+  "pYB4": "B_PY >= 9e3",
 }
 
 # }}}
