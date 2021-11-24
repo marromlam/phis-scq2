@@ -28,6 +28,8 @@ common: &common
   "pLm" : "muminus_P"
   "pTLm" : "muminus_PT"
   "pTB" : "B_PT"
+  "pXB" : "B_PT"
+  "pYB" : "B_PT"
   "pB" : "B_P"
   "hlt1b" : "hlt1b"
   "magnet" : "Polarity"
