@@ -53,14 +53,14 @@ vsub_dict = {
   "LcosK": "helcosthetaK<=0.0",
   "UcosK": "helcosthetaK>0.0",
   # pXB and pYB cuts
-  "pXB1": "B_PX >= 0 & B_PY < 3.8e3",
-  "pXB2": "B_PX >= 3.8e3 & B_PY < 6e3",
-  "pXB3": "B_PX >= 6e3 & B_PY <= 9e3",
-  "pXB4": "B_PX >= 9e3",
-  "pYB1": "B_PY >= 0 & B_PY < 3.8e3",
-  "pYB2": "B_PY >= 3.8e3 & B_PY < 6e3",
-  "pYB3": "B_PY >= 6e3 & B_PY <= 9e3",
-  "pYB4": "B_PY >= 9e3",
+  "pXB1": "B_PX >= 0 & B_PX < 2.7e3",
+  "pXB2": "B_PX >= 2.7e3 & B_PX < 4.2e3",
+  "pXB3": "B_PX >= 4.2e3 & B_PX <= 6.3e3",
+  "pXB4": "B_PX >= 6.3e3",
+  "pYB1": "B_PY >= 0 & B_PY < 2.7e3",
+  "pYB2": "B_PY >= 2.7e3 & B_PY < 4.2e3",
+  "pYB3": "B_PY >= 4.2e3 & B_PY <= 6.3e3",
+  "pYB4": "B_PY >= 6.3e3",
 }
 
 # }}}
@@ -139,7 +139,7 @@ if __name__ == "__main__":
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Requested tuple with custon sw for given sigmat bin does not exist")
-      print("         Downloading the standard tuple for this mode and year.")
+      print("         Downloading the standard tuple for this mode and year.")                                            
     # }}}
 
   # version (baseline tuples) {{{
