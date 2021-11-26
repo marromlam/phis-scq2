@@ -219,7 +219,7 @@ def version_guesser(version):
 
 
 # Cuts and @ modifiers {{{
-
+"""
 def cut_translate(version_substring):
   vsub_dict = {
     # "evtOdd": "( (evt % 2) != 0 ) & logIPchi2B>=0 & log(BDTFchi2)>=0",
@@ -248,7 +248,7 @@ def cut_translate(version_substring):
     if k in version_substring:
       list_of_cuts.append(v)
   return f"( {' ) & ( '.join(list_of_cuts)} )"
-
+"""
 # }}}
 
 
