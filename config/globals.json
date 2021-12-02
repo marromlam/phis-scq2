@@ -1,8 +1,10 @@
 {
   "Gd": 0.65789,
   "bdt_tests": 100,
-  "tLL": 0.3,
-  "tUL": 15,
+  "time_lower_limit": 0.3,
+  "time_upper_limit": 15,
+  "lower_time_upper_limit": 1.36,
+  "upper_time_lower_limit": 1.36,
   "ntoys": 4000,
   "oddWeight": "hplus_TRACK_CHI2NDOF hplus_PIDK hminus_TRACK_CHI2NDOF muplus_TRACK_CHI2NDOF muminus_TRACK_CHI2NDOF max_K_TRCHI2_mva max_mu_TRCHI2_mva"
 }
