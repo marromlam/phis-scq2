@@ -63,6 +63,8 @@ knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
 mHH =             [990, 1008, 1016, 1020, 1024, 1032, 1050],
 tristan =         [1,1,1,0,0,0,1,0,0,0],
 precision =       'double',
+flat_end =        False,
+final_extrap =    True
 )
 
 
@@ -79,9 +81,9 @@ def flagger(verbose=False):
       dict_flags['nmassbins'.upper()] = len(value)-1
       dict_flags['nmassknots'.upper()] = len(value)
     if key == 'knots':
-      dict_flags['nknots'.upper()] = len(value)
-      dict_flags['spl_bins'.upper()] = len(value)
-      dict_flags['ntimebins'.upper()] = len(value)+1
+      dict_flags['nknots'.upper()] = len(value) if config['final_extrap'] else len(value)
+      dict_flags['spl_bins'.upper()] = len(value) if config['final_extrap'] else len(value)
+      dict_flags['ntimebins'.upper()] = len(value)+1 if config['final_extrap'] else len(value)
     if key == 'tristan':
       dict_flags['nterms'.upper()] = len(value)
     if key != 'precision':
@@ -268,7 +270,7 @@ def parser_rateBs(
   # Time acceptance
   timeacc = [ p[k] for k in p.keys() if re.compile('(a|b|c)([0-9])([0-9])?(u|b)?').match(k)]
   if timeacc:
-    r['timeacc'] = THREAD.to_device(get_4cs(timeacc, flatend))
+    r['timeacc'] = THREAD.to_device(coeffs_to_poly(timeacc, flatend))
   else:
     r['timeacc'] = THREAD.to_device(np.float64([1]))
 
@@ -379,7 +381,7 @@ def parser_rateBd(
    # Time acceptance
    timeacc = [ p[k] for k in p.keys() if re.compile('c([0-9])([0-9])?(u|b)?').match(k)]
    if timeacc:
-     r['timeacc'] = THREAD.to_device(get_4cs(timeacc))
+     r['timeacc'] = THREAD.to_device(coeffs_to_poly(timeacc))
    else:
      r['timeacc'] = THREAD.to_device(np.float64([1]))
 
@@ -631,7 +633,7 @@ def delta_gamma5_mc_Bd(input, output, use_fk=1, use_angacc=0, **pars):
 #    time_acceptance, which computes the spline coefficients of the
 #    Bs2JpsiPhi acceptance.
 
-def get_angular_acceptance_weights(true, reco, weight, BLOCK_SIZE=256,
+def get_angular_acceptance_weights(true, reco, weight, tLL, tUL,
                                    **parameters):
   # Filter some warnings
   warnings.filterwarnings('ignore')
@@ -642,9 +644,9 @@ def get_angular_acceptance_weights(true, reco, weight, BLOCK_SIZE=256,
   # Define the computation core function
   def get_weights(true, reco, weight):
       pdf = THREAD.to_device(np.zeros(true.shape[0]))
-      delta_gamma5_mc(true, pdf, use_fk=0, **parameters); num = pdf.get()
+      delta_gamma5_mc(true, pdf, use_fk=0, **parameters, tLL=tLL, tUL=tUL); num = pdf.get()
       pdf = THREAD.to_device(np.zeros(true.shape[0]))
-      delta_gamma5_mc(true, pdf, use_fk=1, **parameters); den = pdf.get()
+      delta_gamma5_mc(true, pdf, use_fk=1, **parameters, tLL=tLL, tUL=tUL); den = pdf.get()
       fk = get_fk(reco.get()[:,0:3])
       ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
       return ang_acc
@@ -801,7 +803,7 @@ def splinexerf(time, lkhd, coeffs, mu=0.0, sigma=0.04, gamma=0.6, tLL=0.3,
 
   __KERNELS__.SingleTimeAcc(
     time, lkhd, # input, output
-    THREAD.to_device(get_4cs(coeffs, flatend)).astype(np.float64),
+    THREAD.to_device(coeffs_to_poly(coeffs, flatend)).astype(np.float64),
     np.float64(mu), np.float64(sigma), np.float64(gamma),
     np.float64(tLL),np.float64(tUL),
     np.int32(lkhd.shape[0]),
@@ -830,8 +832,8 @@ def sbxscxerf(time_a, time_b, lkhd_a, lkhd_b, coeffs_a, coeffs_b, mu_a=0.0,
   size_max = max(size_a,size_b)
   __KERNELS__.RatioTimeAcc(
     time_a, time_b, lkhd_a, lkhd_b,
-    THREAD.to_device(get_4cs(coeffs_a, flatend)).astype(np.float64),
-    THREAD.to_device(get_4cs(coeffs_b, flatend)).astype(np.float64),
+    THREAD.to_device(coeffs_to_poly(coeffs_a, flatend)).astype(np.float64),
+    THREAD.to_device(coeffs_to_poly(coeffs_b, flatend)).astype(np.float64),
     np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
     np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(tLL),np.float64(tUL),
@@ -868,9 +870,9 @@ def saxsbxscxerf(
   g_size, l_size = get_sizes(size_max,BLOCK_SIZE)
   __KERNELS__.FullTimeAcc(
     time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-    THREAD.to_device(get_4cs(coeffs_a, flatend)).astype(np.float64),
-    THREAD.to_device(get_4cs(coeffs_b, flatend)).astype(np.float64),
-    THREAD.to_device(get_4cs(coeffs_c, flatend)).astype(np.float64),
+    THREAD.to_device(coeffs_to_poly(coeffs_a, flatend)).astype(np.float64),
+    THREAD.to_device(coeffs_to_poly(coeffs_b, flatend)).astype(np.float64),
+    THREAD.to_device(coeffs_to_poly(coeffs_c, flatend)).astype(np.float64),
     np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
     np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(mu_c), np.float64(sigma_c), np.float64(gamma_c),
@@ -889,7 +891,7 @@ def bspline(time, coeffs, flatend=False, BLOCK_SIZE=32):
     time_d = time
     spline_d = THREAD.to_device(0*time).astype(np.float64)
     deallocate = False
-  coeffs_d = THREAD.to_device(get_4cs(coeffs,flatend)).astype(np.float64)
+  coeffs_d = THREAD.to_device(coeffs_to_poly(coeffs,flatend)).astype(np.float64)
   __KERNELS__.Spline(
     time_d, spline_d, coeffs_d, np.int32(len(time)),
     global_size=(len(time),)
@@ -907,12 +909,13 @@ def get_knot(i, knots, n):
   return knots[i]
 
 
-def get_4cs(listcoeffs, flatend=False):
-  n = len(config['knots'])
-  flatend = False
-  result = []                                           # list of bin coeffs C
-  def u(j): return get_knot(j,config['knots'],len(config['knots'])-1)
-  for i in range(0,len(config['knots'])-1):
+def coeffs_to_poly(listcoeffs:list) -> np.ndarray:
+  n = config['nknots']
+  result = []  # list of bin coeffs C
+  n_time_bins = int(config['config']) - 1
+  def u(j):
+    return get_knot(j, config['knots'], n_time_bins)
+  for i in range(0, n_time_bins):
     a, b, c, d = listcoeffs[i:i+4]                    # bspline coeffs b_i
     C = []                                   # each bin 4 coeffs c_{bin,i}
     C.append(-((b*u(-2+i)*pow(u(1+i),2))/
@@ -989,13 +992,20 @@ def get_4cs(listcoeffs, flatend=False):
         c/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
         d/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
     result.append(C)
-  # linear extrapolation in the last bin till tUL
-  m = C[1] + 2*C[2]*u(n) + 3*C[3]*u(n)**2
-  if flatend:
-    # *flat* acceptance since last bin 
-    m = 0 
-  C = [C[0] + C[1]*u(n) + C[2]*u(n)**2 + C[3]*u(n)**3 - m*u(n),m,0,0]
-  result.append(C)
+
+  # usually we do a linear extrapolation from out last knot to the final tUL
+  # If we *do not* want this to be done, we just need to diable the linear
+  # extrapolation in the general badjanak.config
+  if config['final_extrap']:
+    if config['flat_end']:
+      # if insead fo a liear extrapolation we just want the extrapolation to
+      # be completely flat (no slope at all)
+      m = 0 
+    else:
+      # linear extrapolation in the last bin till tUL
+      m = C[1] + 2 * C[2] * u(n) + 3 * C[3] * u(n)**2
+    C = [C[0] + C[1]*u(n) + C[2]*u(n)**2 + C[3]*u(n)**3 - m*u(n), m, 0, 0]
+    result.append(C)
   return np.array(result)
 
 # }}}
@@ -1086,7 +1096,7 @@ def dG5toys(output,
 
 # Duplicates {{{
 
-def get_4cs(listcoeffs, flatend=False):
+def coeffs_to_poly(listcoeffs, flatend=False):
   n = len(config['knots'])
   flatend = False
   result = []                                           # list of bin coeffs C

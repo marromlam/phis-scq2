@@ -31,12 +31,6 @@ from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
 from utils.helpers import parse_angacc, version_guesser, timeacc_guesser, trigger_scissors
 
 import config
-resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
-bdtconfig = config.timeacc['bdtconfig']
-Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
 
 # }}}
 
@@ -97,9 +91,13 @@ TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version'])
 MINER = 'minuit'
 
 if TIMEACC['use_upTime']:
-  tLL = 1.36
+  tLL = config.general['upper_time_lower_limit']
+else:
+  tLL = config.general['time_lower_limit']
 if TIMEACC['use_lowTime']:
-  tUL = 1.36
+  tUL = config.general['lower_time_upper_limit']
+else:
+  tUL = config.general['time_upper_limit']
 print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
 # Prepare the cuts -----------------------------------------------------------
@@ -149,6 +147,7 @@ for i, y in enumerate(YEARS):
     data[y][t].resolution = resolution
     # Time acceptance
     c = Parameters.load(args[f'timeacc_{t}'].split(',')[i])
+    tLL, tUL = c['tLL'].value, c['tUL'].value
     knots = np.array(Parameters.build(c,c.fetch('k.*')))
     badjanak.config['knots'] = knots.tolist()
     # Angular acceptance
