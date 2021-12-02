@@ -13,7 +13,6 @@ __all__ = []
 import argparse
 import os
 import numpy as np
-import hjson
 
 # load ipanema
 from ipanema import initialize
@@ -24,18 +23,10 @@ initialize(os.environ['IPANEMA_BACKEND'],1)
 from utils.helpers import version_guesser, trigger_scissors, parse_angacc
 from utils.strings import printsec
 from utils.plot import mode_tex
-from iterative_mc import acceptance_effect
+# from iterative_mc import acceptance_effect
 from angular_acceptance.bdtconf_tester import bdtmesh
 
 import config
-# binned variables
-# bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
-bdtconfig = config.timeacc['bdtconfig']
-Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
 
 # get badjanak and compile it with corresponding flags
 import badjanak
@@ -83,10 +74,19 @@ if __name__ == '__main__':
   else:
     time = 'time'
   
+  # setting upper and lower time limits {{{
+
   if 'UT' in args['version']:
-    tLL = 1.36
+    tLL = config.general['upper_time_lower_limit']
+  else:
+    tLL = config.general['time_lower_limit']
+
   if 'LT' in args['version']:
-    tUL = 1.36
+    tUL = config.general['lower_time_upper_limit']
+  else:
+    tUL = config.general['time_upper_limit']
+
+  # }}}
 
   CUT = f'{time}>={tLL} & {time}<={tUL}'
 
@@ -94,6 +94,8 @@ if __name__ == '__main__':
   if 'bdt' in VERSION:
     bdtconfig = int(VERSION.split('bdt')[1])
     bdtconfig = bdtmesh(bdtconfig, config.general['bdt_tests'], False)
+  else:
+    bdtconfig = config.angacc['bdtconfig']
   reweighter = reweight.GBReweighter(**bdtconfig)
 
   # Print settings
@@ -191,7 +193,7 @@ if __name__ == '__main__':
   if 'Bs2Jpsi' in MODE:
     angacc = badjanak.get_angular_acceptance_weights(mc.true, mc.reco,
                                      mc.weight*ristra.allocate(angWeight),
-                                     **mc.params.valuesdict())
+                                     **mc.params.valuesdict(), tLL=tLL, tUL=tUL)
   elif 'Bd2JpsiKstar' in MODE:
     angacc = badjanak.get_angular_acceptance_weights_Bd(mc.true, mc.reco,
                                      mc.weight*ristra.allocate(angWeight),

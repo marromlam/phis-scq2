@@ -55,12 +55,7 @@ from angular_acceptance.bdtconf_tester import bdtmesh
 
 # binned variables
 import config
-resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
-bdtconfig = config.timeacc['bdtconfig']
-Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
+bdtconfig = config.angacc['bdtconfig']
 
 # reweighting config
 from warnings import simplefilter
@@ -82,7 +77,7 @@ def check_for_convergence(a,b):
 # core functions
 #     They work for a given category only.
 
-def pdf_reweighting(mcsample, mcparams, rdparams):
+def pdf_reweighting(mcsample, mcparams, rdparams, tLL, tUL):
   badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h = mcsample.pdf.get()
@@ -142,7 +137,7 @@ def kkp_weighting_bins(original_v, original_w, target_v, target_w, path, y,m,t,i
   print(f" * GB-weighting {m}-{y}-{trigger} sample\n  {kkpWeight[:10]}")
 """
 
-def get_angular_acceptance(mc, kkpWeight=False):
+def get_angular_acceptance(mc, tLL, tUL, kkpWeight=False):
   """
   Compute angular acceptance
   """
@@ -155,7 +150,7 @@ def get_angular_acceptance(mc, kkpWeight=False):
   weight = ristra.allocate(weight)
 
   # compute angular acceptance
-  ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
+  ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict(), tLL=tLL, tUL=tUL)
 
   # create ipanema.Parameters
   w, uw, cov, corr = ans
@@ -170,7 +165,7 @@ def get_angular_acceptance(mc, kkpWeight=False):
 
 
 # this one should be moved
-def fcn_data(parameters, data):
+def fcn_data(parameters, data, tLL, tUL):
   # here we are going to unblind the parameters to the fcn caller, thats why
   # we call parameters.valuesdict(blind=False), by default
   # parameters.valuesdict() has blind=True
@@ -259,7 +254,7 @@ def merge_std_dg0(std, dg0, verbose=True, label=''):
 # Multiple categories functions 
 #     They run over multiple categories
 
-def do_fit(verbose=False):
+def do_fit(tLL, tUL, verbose=False):
   """
   Fit
   """
@@ -272,7 +267,7 @@ def do_fit(verbose=False):
   
   # do the fit
   result = optimize(fcn_data, method='minuit', params=pars, 
-                    fcn_kwgs={'data':data}, verbose=True, timeit=True, 
+                    fcn_kwgs=dict(data=data, tLL=tLL, tUL=tUL), verbose=True, timeit=True, 
                     tol=0.05, strategy=2)
   print(result.params) 
   #print fit results
@@ -299,7 +294,7 @@ def do_fit(verbose=False):
   return result.chi2
 
 
-def do_pdf_weighting(verbose):
+def do_pdf_weighting(tLL, tUL, verbose):
   """
   We need to change badjanak to handle MC samples and then we compute the
   desired pdf weights for a given set of fitted pars in step 1. This
@@ -313,7 +308,7 @@ def do_pdf_weighting(verbose):
         if verbose:
           print(f' * Calculating pdfWeight for {m}-{y}-{t} sample')
         j = len(v.pdfWeight.keys())+1
-        v.pdfWeight[j] = pdf_reweighting(v, v.params,pars+data[y][t].csp)
+        v.pdfWeight[j] = pdf_reweighting(v, v.params,pars+data[y][t].csp, tLL=tLL, tUL=tUL)
   if verbose:
     for y, dy in mc.items(): # loop over years
       print(f'Show 10 fist pdfWeight[{i}] for {y}')
@@ -367,7 +362,7 @@ def do_kkp_weighting(verbose):
 
 
 
-def do_angular_weights(verbose):
+def do_angular_weights(tLL, tUL, verbose):
   """
   dddd
   """
@@ -380,7 +375,7 @@ def do_angular_weights(verbose):
         path_to_weights = v.path_to_weights.replace('.root',f'_{t}.npy')
         v.kkpWeight[i] = np.load(path_to_weights)
         os.remove(path_to_weights)
-        get_angular_acceptance(v, kkpWeight=True)
+        get_angular_acceptance(v, tLL, tUL, kkpWeight=True)
     if verbose:
       print(f'Show 10 fist kkpWeight[{i}] for {y}')
       print(f"{'MC_Bs2JpsiPhi':<24} | {'MC_Bs2JpsiPhi_dG0':<24}")
@@ -425,7 +420,7 @@ def do_mc_combination(verbose):
 
 
 
-def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
+def angular_acceptance_iterative_procedure(tLL, tUL, verbose=False, iteration=0):
   global pars
   
   itstr = f"[iteration #{iteration}]"
@@ -433,12 +428,12 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
 
   #1 fit RD sample obtaining pars
   print(f'{itstr} Simultaneous fit Bs2JpsiPhi {"&".join(list(mc.keys()))}')
-  likelihood = do_fit(verbose=verbose)
+  likelihood = do_fit(tLL, tUL, verbose=verbose)
   
   #2 pdfWeight MC to RD using pars
   print(f'\n{itstr} PDF weighting MC samples to match Bs2JpsiPhi RD')
   t0 = timer()
-  do_pdf_weighting(verbose=verbose)
+  do_pdf_weighting(tLL, tUL, verbose=verbose)
   tf = timer()-t0
   print(f'PDF weighting took {tf:.3f} seconds.')
   
@@ -452,7 +447,7 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
   # 4th step: angular weights
   print(f'\n{itstr} Extract angular normalisation weights')
   t0 = timer()
-  do_angular_weights(verbose)
+  do_angular_weights(tLL, tUL, verbose)
   tf = timer()-t0
   print(f'Extract angular normalisation weights took {tf:.3f} seconds.')
   
@@ -469,13 +464,13 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
 
 
 
-def lipschitz_iteration(max_iter=30, verbose=True):
+def lipschitz_iteration(tLL, tUL, max_iter=30, verbose=True):
   global pars
   likelihoods = []
   
   for i in range(1,max_iter):
 
-    ans = angular_acceptance_iterative_procedure(verbose, i)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, i)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
     
@@ -509,19 +504,19 @@ def lipschitz_iteration(max_iter=30, verbose=True):
 
 
 
-def aitken_iteration(max_iter=30, verbose=True):
+def aitken_iteration(tLL, tUL, max_iter=30, verbose=True):
   global pars
   likelihoods = []
   
   for i in range(1,max_iter):
     
     # x1 = angular_acceptance_iterative_procedure <- x0
-    ans = angular_acceptance_iterative_procedure(verbose, 2*i-1)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, 2*i-1)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
     
     # x2 = angular_acceptance_iterative_procedure <- x1
-    ans = angular_acceptance_iterative_procedure(verbose, 2*i)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, 2*i)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
     
@@ -657,9 +652,13 @@ if __name__ == '__main__':
     time = f'gen{time}'
 
   if TIMEACC['use_upTime']:
-    tLL = 1.36
+    tLL = config.general['upper_time_lower_limit']
+  else:
+    tLL = config.general['time_lower_limit']
   if TIMEACC['use_lowTime']:
-    tUL = 1.36
+    tUL = config.general['lower_time_upper_limit']
+  else:
+    tUL = config.general['time_upper_limit']
 
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
@@ -946,10 +945,10 @@ if __name__ == '__main__':
   # run the procedure!
   
   
-  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True)
+  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True, tLL=tLL, tUL=tUL)
   
   if not ok:
-    ok, likelihoods = aitken_iteration(max_iter=30, verbose=True)
+    ok, likelihoods = aitken_iteration(max_iter=30, verbose=True, tLL=tLL, tUL=tUL)
   
   if not ok:
     print('WARNING: Convergence was not achieved!')
