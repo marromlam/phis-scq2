@@ -29,11 +29,8 @@ import config
 # binned variables
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
 Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
 
 
 
@@ -83,11 +80,20 @@ if __name__ == '__main__':
     time = f'gen{time}'
 
   if TIMEACC['use_upTime']:
-    tLL = 1.36
+    tLL = config.general['upper_time_lower_limit']
+  else:
+    tLL = config.general['time_lower_limit']
   if TIMEACC['use_lowTime']:
-    tUL = 1.36
+    tUL = config.general['lower_time_upper_limit']
+  else:
+    tUL = config.general['time_upper_limit']
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
+  # Check timeacc flag to set knots and weights and place the final cut
+  knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL).tolist()
+  tLL, tUL = knots[0], knots[-1]
+  
+  # Cut is ready
   CUT = f'{time}>={tLL} & {time}<={tUL}'
   CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
 
@@ -104,11 +110,6 @@ if __name__ == '__main__':
   samples = args['samples'].split(',')
   oparams = args['params'].split(',')
 
-  # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(TIMEACC['nknots'])]
-  if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
-    knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
-    knots = knots.tolist()
 
   # }}}
 
