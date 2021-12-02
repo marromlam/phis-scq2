@@ -1,99 +1,20 @@
 # SWEIGHTS
 #
-#   Description: Contains all time acceptance-related rules. phis-scq has some
-#                set of rules to compute single-mode time accepntaces and also
-#                simultaneous-mode ones. Each one of the rules accepts different
-#                genomic variants, and also the modes can be swiched.
-#                The time acceptance wildcard can be a bit complex to understand
-#                but is now briefly described:
-#                * single/simul: It always starts by one of these, which 
+#   Description: Background subtracted samples are required to perfrom fits to
+#                the time-angular distribution of Bq mesons if the background
+#                is not modelled. Within the whole phis-scq pipeline all fits
+#                asume the samples are background subtracted. This set of rules
+#                allow the user to compute sWeights for all the involved modes.
+#                TODO: complete the following description:
+#                * massmodel: This wildcard allows to use different mass models
+#                      for any of the Bq modes.
+#                * massbin: If 
 #                      basically tell which kind of rules are run.
 #
 #        Author: Marcos Romero Lamas (mromerol@cern.ch)
 
 
-# rules from the selection pipeline I DO NOT USE THEM {{{
-
-rule select_for_massfit_bd_mc:
-  """
-  Select MC_Bd2JpsiKstar to determine Ipatia tail parameters for
-  the fit to data. It only takes B_BKGCAT=0,50 events.
-  """
-  input:
-    root_file = lambda wcs: tuples(wcs, weight='selected'),
-  params:
-    script = 'selection/tools/apply_selection.py',
-    cuts = 'selection/tools/time_acceptance_cuts.yml'
-  output:
-    sample = SAMPLES+'/{year}/{mode}/{version}_MCforMassFit.root'
-  log:
-    'output/log/select_for_massfit_bd_mc/{year}/{mode}/{version}.log',
-  run:
-    shell(f"""(time\
-    python {params.script} --input-file {input.root_file} \
-                           --output-file {output.sample} \
-                           --mode {wildcards.mode} \
-                           --selection-files {params.cuts} \
-                           --year {wildcards.year}
-    ) > {log}""")
-
-
-rule select_for_timeacc_bd_mc:
-  """
-  Select MC_Bd2JpsiKstar to determine Ipatia tail parameters for
-  the fit to data. It takes B_BKGCAT=0,50,60 events.
-  """
-  input:
-    root_file = lambda wcs: tuples(wcs, weight='selected'),
-  params:
-    script = 'selection/tools/apply_selection.py',
-    cuts = 'selection/tools/time_acceptance_cuts.yml',
-    cut_keys = 'B_cuts_acc Kstar_cuts_acc'
-  output:
-    sample = SAMPLES+'/{year}/{mode}/{version}_MCforTimeAcc.root'
-  log:
-    'output/log/select_for_timeacc_bd_mc/{year}/{mode}/{version}.log',
-  run:
-    shell(f"""(time\
-    python {params.script} --input-file {input.root_file} \
-                           --output-file {output.sample} \
-                           --mode {wildcards.mode} \
-                           --selection-files {params.cuts} \
-                           --cut-keys {params.cut_keys} \
-                           --year {wildcards.year}
-    ) &> {log}""")
-
-# }}}
-
-
 # mass fitters for Bd {{{
-
-# rule mass_prefit_bd_mc:
-#   """
-#   Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
-#   the fit to data. It only takes B_BKGCAT=0,50 candidates.
-#   """
-#   wildcard_constraints:
-#     mode = 'MC_Bd2JpsiKstar'
-#   input:
-#     root_file = lambda wcs: tuples(wcs, weight='MCforMassFit'),
-#   output:
-#     params = 'output/params/mass_prefit/{year}/{mode}/{version}_noghost.json',
-#     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_noghost/')
-#   params:
-#     script = 'selection/tools/mass_fit_ipatia.py',
-#   log:
-#     'output/log/mass_prefit/{year}/{mode}/{version}_noghost.json',
-#   run:
-#     shell(f"""(time\
-#     python {params.script} \
-#       --input-file {input.root_file} \
-#       --output-params {output.params} \
-#       --output-figures {output.plots} \
-#       --mode MC_Bd2JpsiKstar \
-#       --trigcat \
-#     ) > {log}""")
-
 
 rule mass_prefit_bd_mc:
   """
@@ -113,7 +34,7 @@ rule mass_prefit_bd_mc:
   params:
     script = 'selection/mass_fit/bd_mc.py',
   log:
-    'output/log/mass_prefi_bd_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
+    'output/log/mass_prefit_bd_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
     shell(f"""(time\
     python {params.script} \
@@ -142,7 +63,7 @@ rule mass_fit_bd_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bd_mc.py',
@@ -178,7 +99,7 @@ rule mass_fit_bd_rd:
     params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bd_mc.py',
@@ -221,7 +142,7 @@ rule mass_prefit_bu_mc:
   params:
     script = 'selection/mass_fit/bu_mc.py',
   log:
-    'output/log/mass_bu_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
+    'output/log/mass_prefit_bu_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
     shell(f"""(time\
     python {params.script} \
@@ -250,7 +171,7 @@ rule mass_fit_bu_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bu_mc.py',
@@ -286,7 +207,7 @@ rule mass_fit_bu_rd:
     params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bu_mc.py',
@@ -358,7 +279,7 @@ rule mass_fit_bs_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bs_rd.py',
@@ -394,7 +315,7 @@ rule mass_fit_bs_rd:
     params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
-    sweights = SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy',
+    sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/mass_fit/bs_rd.py',
@@ -443,7 +364,7 @@ rule sweights_add:
                                 massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
                                ),
   output:
-    root_file = SAMPLES+'/{year}/{mode}/{version}_sWeight.root',
+    root_file = temp(SAMPLES+'/{year}/{mode}/{version}_sWeight.root'),
   params:
     script = 'selection/sweights/sweighter.py',
   log:
