@@ -36,8 +36,9 @@ vsub_dict = {
   "magUp": "Polarity == 1",
   "magDown": "Polarity == -1",
   "bkgcat60": "B_BKGCAT != 60",
-  "LT": "time < 1.36",
-  "UT": "time > 1.36",
+  # lower and upper time cuts
+  "LT": f"time < {config.general['lower_time_upper_limit']}",
+  "UT": f"time > {config.general['upper_time_lower_limit']}",
   "g210300": "runNumber > 210300",
   "l210300": "runNumber < 210300",
   "pTB1": "B_PT >= 0 & B_PT < 3.8e3",
@@ -169,6 +170,7 @@ if __name__ == "__main__":
     print("These tuples are not yet avaliable at root://eoslhcb.cern.ch/*.",
     'You may need to create those tuples yourself or ask B2CC people to'
     'produce them')
+    shutil.rmtree(path, ignore_errors=True)
     exit()
 
   # }}}
@@ -265,7 +267,6 @@ if __name__ == "__main__":
   if vsub_cut:
     result = result.query(vsub_cut)
   print(result)
-
 
   # write
   print(f"\nStarting to write {os.path.basename(args['output'])} file.")
