@@ -68,6 +68,40 @@ rule time_acceptance_single:
 
 # Plot acceptance {{{
 
+rule time_acceptance_single_plot:
+  threads: 128
+  resources:
+    mem_mb=16384
+  wildcard_constraints:
+    timeacc = 'single.*',
+    plot = "(fit|fitlog|spline|splinelog)",
+  input:
+    # should try to rephrase this statement
+    samples = lambda wcs: sum(sum([[[
+      tuples(wcs,version=v, year=y)]
+      for v in f"{wcs.version}".split('+')] for y in YEARS[f'{wcs.year}']], []), []),
+    params = lambda wcs: expand([
+      'output/params/time_acceptance/{year}/{{mode}}/{version}_{timeacc}_{{trigger}}.json',
+    ], timeacc=f"{wcs.timeacc}".split('+'), version=f"{wcs.version}".split('+'), year=YEARS[f'{wcs.year}'])
+  output:
+    'output/figures/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.pdf',
+  log:
+    'output/log/time_acceptance_plot/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.log'
+  run:
+    shell(f"""(time\
+    python analysis/time_acceptance/plot_functions_single.py\
+    --samples {",".join(input.samples)}\
+    --params {",".join(input.params)}\
+    --figure {output}\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --trigger {wildcards.trigger}\
+    --timeacc {wildcards.timeacc}\
+    --plot {wildcards.plot}\
+    ) &> {log}""")
+    send_mail(f"Simultaneous Time Acceptance", f" ", output)
+
 # }}}
 
 # }}}
@@ -437,39 +471,6 @@ rule time_acceptance_simultaneous_plot:
     send_mail(f"Simultaneous Time Acceptance", f" ", output)
 
 
-rule time_acceptance_single_plot:
-  threads: 128
-  resources:
-    mem_mb=16384
-  wildcard_constraints:
-    timeacc = 'single.*',
-    plot = "(fit|fitlog|spline|splinelog)",
-  input:
-    # should try to rephrase this statement
-    samples = lambda wcs: sum(sum([[[
-      tuples(wcs,version=v, year=y)]
-      for v in f"{wcs.version}".split('+')] for y in YEARS[f'{wcs.year}']], []), []),
-    params = lambda wcs: expand([
-      'output/params/time_acceptance/{year}/{{mode}}/{version}_{timeacc}_{{trigger}}.json',
-    ], timeacc=f"{wcs.timeacc}".split('+'), version=f"{wcs.version}".split('+'), year=YEARS[f'{wcs.year}'])
-  output:
-    'output/figures/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.pdf',
-  log:
-    'output/log/time_acceptance_plot/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.log'
-  run:
-    shell(f"""(time\
-    python analysis/time_acceptance/plot_functions_single.py\
-    --samples {",".join(input.samples)}\
-    --params {",".join(input.params)}\
-    --figure {output}\
-    --year {wildcards.year}\
-    --mode {wildcards.mode}\
-    --version {wildcards.version}\
-    --trigger {wildcards.trigger}\
-    --timeacc {wildcards.timeacc}\
-    --plot {wildcards.plot}\
-    ) #&> {log}""")
-    send_mail(f"Simultaneous Time Acceptance", f" ", output)
 
 
 rule lifetime_single_plot:
