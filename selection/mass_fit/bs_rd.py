@@ -151,10 +151,10 @@ def mass_fitter(odf,
         pars.add(dict(name='lambd',   value=-1.5,  min=-4,   max=-1.1, free=True,  latex=r'\lambda'))
         pars.add(dict(name='zeta',    value=1e-5,                      free=False, latex=r'\zeta'))
         pars.add(dict(name='beta',    value=0.0,                       free=False, latex=r'\beta'))
-        pars.add(dict(name='aL',      value=1.23,  min=0.5, max=3.5,   free=True,  latex=r'a_l'))
-        pars.add(dict(name='nL',      value=1.05,  min=0,   max=4,     free=True,  latex=r'n_l'))
-        pars.add(dict(name='aR',      value=1.03,  min=0.5, max=3.5,   free=True,  latex=r'a_r'))
-        pars.add(dict(name='nR',      value=1.02,  min=0,   max=4,     free=True,  latex=r'n_r'))
+        pars.add(dict(name='aL',      value=1.23,  min=0.5, max=5.5,   free=True,  latex=r'a_l'))
+        pars.add(dict(name='nL',      value=1.05,  min=0,   max=6,     free=True,  latex=r'n_l'))
+        pars.add(dict(name='aR',      value=1.03,  min=0.5, max=5.5,   free=True,  latex=r'a_r'))
+        pars.add(dict(name='nR',      value=1.02,  min=0,   max=6,     free=True,  latex=r'n_r'))
         # }}}
       elif "crystalball" in model:
         # Crystal Ball tails {{{
@@ -228,7 +228,7 @@ def mass_fitter(odf,
 
     fig, axplot, axpull = plotting.axes_plotpull()
     hdata = ipanema.histogram.hist(ristra.get(rd.mass), weights=rd.df.eval(mass_weight),
-                                   bins=60, density=False)
+                                   bins=40, density=False)
     axplot.errorbar(hdata.bins, hdata.counts,
                     yerr=[hdata.errh, hdata.errl],
                     xerr=2*[hdata.edges[1:]-hdata.bins], fmt='.k')
@@ -275,10 +275,10 @@ def mass_fitter(odf,
       fig.savefig(os.path.join(figs, f"fit.pdf"))
       fig.savefig(f"fit.pdf")
     axplot.set_yscale('log')
-    axplot.set_ylim(1e0,1.5*np.max(y))
-    # try:
-    # except:
-    #   print('axes not scaled')
+    try:
+      axplot.set_ylim(1e0,1.5*np.max(y))
+    except:
+      print('axes not scaled')
     if figs:
       fig.savefig(os.path.join(figs, f"logfit.pdf"))
       fig.savefig(f"logfit.pdf")
@@ -300,7 +300,6 @@ def mass_fitter(odf,
           _sw = np.copy(_proxy)
           _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
           sw[k] = _sw
-        print(sw)
         return (fpars, sw)
 
     # }}}
