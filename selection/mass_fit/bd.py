@@ -102,6 +102,7 @@ def mass_fitter(odf,
     if input_pars:
       pars = ipanema.Parameters.clone(input_pars)
       pars.lock()
+      pars.unlock('nsigBd', 'muBd', 'sigmaBd', 'b')
     else:
       pars = ipanema.Parameters()
       # Create common set of parameters (all models must have and use)
@@ -126,9 +127,11 @@ def mass_fitter(odf,
         pars.add(dict(name='nR',      value=1,     min=1,   max=500,   free=True,  latex=r'n_r'))
         # }}}
       # Combinatorial background
-      pars.add(dict(name='b',         value=-4e-3, min=-1,  max=1,     free=True,  latex=r'b'))
+      pars.add(dict(name='b',         value=-4e-3, min=-1,  max=1,     free=False,  latex=r'b'))
       pars.add(dict(name='nexp',      formula="1-nsigBd",                          latex=r'N_{comb}'))
-    pars.unlock('nsigBd', 'muBd', 'sigmaBd', 'b')
+      # This is the prefit stage. Here we will lock the nsig to be 1 and we
+      # will not use combinatorial background.
+      pars['nsigBd'].value = 1; pars['nsigBd'].free = False
     print(pars)
 
     # }}}
