@@ -13,7 +13,7 @@ This repository contains the code for running different parts of $`B_s \rightar
 ### 🛠 Set environment
 _phis-scq_ relies on basic python libraries and _ipanema3_ (it is not in pypy yet),
 and so requires to have a properly working environment to run. One can run
-this package on both __linux__ and __macos__ against cpu or gpu,
+this package on both __linux__ and __macOS__ (also with the new M1 processors) against cpu or gpu,
 but if you have a nVidia device it may worth it to install cuda binaries and
 libraries and hence speeding up the execution.
 
@@ -21,18 +21,20 @@ The instructions were wrapped under a bash script, so basically you clone this
 repository and then
 ```bash
 cd phis-scq
-bash analysis/utils/install.sh
+bash .ci/install.sh
 ```
 which will guide the installation by prompting some questions.
 
 After the bash script finishes, you simply need to activate your environment.
 The installer will ask you whether you want to write in you bash profile
 an `activatephisscq` function too.
-> Finally, under `config.json`, you should write a proper path under
+> Finally, under `config/user.json`, you should write a proper path under
 the sidecar key where tuples will be placed. Make sure there is enough space
-there to allocate 20 GiB of files, at least.
+there to allocate 20 GiB of files, at least. There is a template under `.ci/user.json`
+which would be a good example on how this file should look like. This file
+is not tracked by git.
 
-That's it! 🎉
+That's all folks! 🎉
 
 
 ### 🐍 The pipeline
@@ -65,11 +67,13 @@ snakemake output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_vgc_amsrd_
 read before running any of the related rules concerning that part
 
 This pipeline can run
-- [x] *Tuples syncronization:* automatically download files from eos and correctly sync them locally
-  - [x] Download tuples from eos
-  - [x] Reduction of branches
-  - [ ] Convert them to `.hdf5` format
-- [x] *Subtract background*: computing sWeights for different samples
+- [x] *Tuples syncronization:* automatically download files from eos and correctly sync them locally.
+  - [x] Download tuples from eos.
+  - [x] Reduction of branches.
+  - [ ] Convert them to `.hdf5` format.
+- [x] *Background subtaction*: computing sWeights for different samples.
+  - [x] $`B_u^+`$, $`B_d^0`$ and $`B_s^0`$ sWeights.
+  - [x] Possiblitly to skip sWeight computation in `config/user.json`.
 - [x] *Reweighting*: compute different reweightings needed to attain other parts of the analysis (or computed in other parts of the pipeline)
   - [x] Compute `polWeight`, `pdfWeight`, `dg0Weight` and `kinWeight` for time acceptance.
   - [x] Compute `angWeight` and `kkpWeight` for angular acceptance.
