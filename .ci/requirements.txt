@@ -16,3 +16,4 @@ matplotlib
 tqdm
 corner
 termplotlib
+ipanema3
