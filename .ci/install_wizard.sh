@@ -167,7 +167,7 @@ fi
 
 echo "      ! source $condapath/bin/activate"
 # echo "      ! conda env create -f .ci/environment.yaml"
-echo "      ! conda create --name $myenv --file .ci/environment.txt"
+echo "      ! conda create --name $myenv --file .ci/environment.yaml"
 echo "      ! conda activate phisscq"
 
 echo "      ! git clone ssh://git@gitlab.cern.ch:7999/mromerol/ipanema3.git ${ipapath}"
