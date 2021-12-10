@@ -1,26 +1,31 @@
+__author__ = ['Marcos Romero']
+__email__  = ['mromerol@cern.ch']
+__all__ = ['mass_fitter']
+
+
+# Modules {{{
+
 import os
 import ipanema
 import argparse
 import uproot3 as uproot
 import numpy as np
-from ipanema import (ristra, plotting, Sample)
+from ipanema import (ristra, Sample, splot)
 import matplotlib.pyplot as plt
 from utils.strings import printsec, printsubsec
 from utils.helpers import trigger_scissors, cuts_and
-from ipanema import splot
+
+import complot
 
 
 # initialize ipanema3 and compile lineshapes
 ipanema.initialize(os.environ['IPANEMA_BACKEND'], 1)
-prog = THREAD.compile("""
+prog = ipanema.compile("""
 #define USE_DOUBLE 1
-#include <ipanema/core.c>
-#include <ipanema/complex.c>
-#include <ipanema/stats.c>
-#include <ipanema/special.c>
-#include <ipanema/lineshapes.c>
 #include <exposed/kernels.ocl>
-""", compiler_options=[f"-I{ipanema.IPANEMALIB}"])
+""")
+
+# }}}
 
 
 # ipatia + exponential {{{
@@ -78,6 +83,8 @@ def cb_exponential(mass, signal, nsigBd, nexp, muBd, sigmaBd, aL, nL, aR, nR, b,
 # }}}
 
 
+# Bu mass fit function {{{
+
 def mass_fitter(odf,
                 mass_range=False, mass_branch='B_ConstJpsi_M_1',
                 mass_weight='B_ConstJpsi_M_1/B_ConstJpsi_M_1',
@@ -93,6 +100,7 @@ def mass_fitter(odf,
 
     # mass cut and trigger cut 
     current_cut = trigger_scissors(trigger, cuts_and(mass_cut, cut))
+    print(current_cut)
 
 
     # Select model and set parameters {{{
@@ -135,6 +143,7 @@ def mass_fitter(odf,
     print(pars)
 
     # }}}
+
 
     # Chose model {{{
 
@@ -179,23 +188,21 @@ def mass_fitter(odf,
       fpars = ipanema.Parameters.clone(pars)
       print(fpars)
 
-    fig, axplot, axpull = plotting.axes_plotpull()
-    hdata = ipanema.histogram.hist(ristra.get(rd.mass), weights=None,
+    fig, axplot, axpull = complot.axes_plotpull()
+    hdata = complot.hist(ristra.get(rd.mass), weights=rd.df.eval(mass_weight),
                                    bins=60, density=False)
-    axplot.errorbar(hdata.bins, hdata.counts,
-                    yerr=[hdata.errh, hdata.errl],
-                    xerr=2*[hdata.edges[1:]-hdata.bins], fmt='.k')
+    axplot.errorbar(hdata.bins, hdata.counts, yerr=hdata.yerr, xerr=hdata.xerr,
+                    fmt='.k')
 
-    norm = hdata.norm*(hdata.bins[1]-hdata.bins[0])
     mass = ristra.linspace(ristra.min(rd.mass), ristra.max(rd.mass), 1000)
     signal = 0*mass
 
     # plot signal: nbkg -> 0 and nexp -> 0
     _p = ipanema.Parameters.clone(fpars)
-    if 'nbkg' in _p:
-      _p['nbkg'].set(value=0)
+    if 'nsigBd' in _p:
+      _p['nsigBd'].set(value=0, min=-np.inf, max=np.inf)
     if 'nexp' in _p:
-      _p['nexp'].set(value=0)
+      _p['nexp'].set(value=0, min=-np.inf, max=np.inf)
     _x, _y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
     axplot.plot(_x, _y, color="C1", label=rf'$B_d^0$ {model}')
 
@@ -209,18 +216,14 @@ def mass_fitter(odf,
 
     # plot fit with all components and data
     _p = ipanema.Parameters.clone(fpars)
-    x, y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(),
-                                            norm=hdata.norm))
+    x, y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
     axplot.plot(x, y, color='C0')
-    axpull.fill_between(hdata.bins,
-                        ipanema.histogram.pull_pdf(x, y, hdata.bins,
-                                                   hdata.counts, hdata.errl,
-                                                   hdata.errh),
-                        0, facecolor="C0", alpha=0.5)
+    axpull.fill_between(hdata.bins, complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts, *hdata.yerr), 0, facecolor="C0", alpha=0.5)
     axpull.set_xlabel(r'$m(J/\psi K\pi)$ [MeV/$c^2$]')
     axpull.set_ylim(-6.5, 6.5)
     axpull.set_yticks([-5, 0, 5])
     axplot.set_ylabel(rf"Candidates")
+    axplot.legend(loc="upper left")
     if figs:
       os.makedirs(figs, exist_ok=True)
       fig.savefig(os.path.join(figs, f"fit.pdf"))
@@ -229,6 +232,7 @@ def mass_fitter(odf,
     if figs:
       fig.savefig(os.path.join(figs, f"logfit.pdf"))
     plt.close()
+
 
     # compute sWeights if asked {{{
 
@@ -243,15 +247,16 @@ def mass_fitter(odf,
         sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.pdf, *x, **y), _pars, _yields)
         for k,v in sw.items():
           _sw = np.copy(_proxy)
-          _sw[list(rd.df.index)] = v
+          _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
           sw[k] = _sw
-          print(sw[k].shape)
         print(sw)
         return (fpars, sw)
 
     # }}}
 
     return (fpars, False)
+
+# }}}
 
 
 # command-line interface {{{
@@ -266,8 +271,8 @@ if __name__ == '__main__':
   p.add_argument('--mass-weight')
   p.add_argument('--mass-bin', default=False)
   p.add_argument('--trigger')
-  p.add_argument('--mode')
   p.add_argument('--sweights')
+  p.add_argument('--mode')
   args = vars(p.parse_args())
   
   if args['sweights']:
@@ -294,8 +299,9 @@ if __name__ == '__main__':
     branches += ['B_BKGCAT']
   
   sample = Sample.from_root(args['sample'], branches=branches)
-  print(sample.df.shape)
+  
 
+  mass_range=(5210, 5350)
   if args['mass_bin']:
     if 'Bd2JpsiKstar' in args['mode']:
       mass = [826, 861, 896, 931, 966]
@@ -311,10 +317,11 @@ if __name__ == '__main__':
     cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
 
   pars, sw = mass_fitter(sample.df,
-                         mass_range=(5210, 5350), mass_branch='B_ConstJpsi_M_1', mass_weight=mass_weight,
-                         trigger=args['trigger'], cut=cut,
+                         mass_range=mass_range, mass_branch='B_ConstJpsi_M_1',
+                         mass_weight=mass_weight, trigger=args['trigger'],
                          figs = args['output_figures'], model=args['mass_model'],
-                         input_pars=input_pars, sweights=sweights, verbose=True)
+                         cut=cut, sweights=sweights,
+                         input_pars=input_pars, verbose=False)
   pars.dump(args['output_params'])
   if sw: np.save(args['sweights'], sw)
 

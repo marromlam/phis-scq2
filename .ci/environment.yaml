@@ -3,9 +3,8 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python
+  - python 3.8.12
   - pocl
   - pyopencl
-  - ROOT
-  - root_pandas
+  - ROOT 6.24.6
   - reikna
