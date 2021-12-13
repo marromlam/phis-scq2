@@ -17,6 +17,20 @@ from utils.helpers import trigger_scissors, cuts_and
 
 import complot
 
+def get_sizes(size, BLOCK_SIZE=256):
+    '''
+    i need to check if this worls for 3d size and 3d block
+    '''
+    a = size % BLOCK_SIZE
+    if a == 0:
+      gs, ls = size, BLOCK_SIZE
+    elif size < BLOCK_SIZE:
+      gs, ls = size, 1
+    else:
+      a = np.ceil(size/BLOCK_SIZE)
+      gs, ls = a*BLOCK_SIZE, BLOCK_SIZE
+    return int(gs), int(ls)
+
 
 # initialize ipanema3 and compile lineshapes
 ipanema.initialize(os.environ['IPANEMA_BACKEND'], 1)
@@ -192,6 +206,16 @@ void DoubleCrystallBallWithCalibration(
 }
 
 
+KERNEL
+void DoubleCrystallBallPerEventSigma(
+    GLOBAL_MEM ftype *prob, GLOBAL_MEM ftype *mass,
+    const ftype muBs, GLOBAL_MEM const ftype *sigmaBs,
+    const ftype aL, const ftype nL, const ftype aR, const ftype nR)
+{
+  const int idx = get_global_id(0);
+
+  prob[idx] = double_crystal_ball(mass[idx], muBs, sigmaBs[idx], aL, nL, aR, nR);
+}
 
 """)
 
@@ -240,13 +264,47 @@ def ipatia_exponential(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
 
 # CB Bs2JpsiPhi mass model {{{
 
-def cb_exponential(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
-                   muBs=0, sigmaBs=10, muBd=5000, sigmaBd=50, aL=0, nL=0, aR=0, nR=0,
+def cb_exponential(mass, merr, signal, nsigbs=0, nsigbd=0, nexp=0,
+                   mubs=0, sigmabs=10, mubd=5000, sigmabd=50, al=0, nl=0, ar=0, nr=0,
+                   b=0, norm=1, mLL=None, mUL=None):
+  # compute backgrounds
+  pexp = ristra.get(ristra.exp(mass*b))
+  # get signal
+  prog.py_double_crystal_ball(signal, mass, np.float64(mubs), np.float64(sigmabs),
+                              np.float64(al), np.float64(nl), np.float64(ar),
+                              np.float64(nr), global_size=(len(mass)))
+  pbs = ristra.get(signal)
+  prog.py_double_crystal_ball(signal, mass, np.float64(mubd), np.float64(sigmabd),
+                              np.float64(al), np.float64(nl), np.float64(ar),
+                              np.float64(nr), global_size=(len(mass)))
+  pbd = ristra.get(signal)
+  # normalize arrays
+  _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)
+  _y = _x*0
+  # normalize cb-shape
+  prog.py_double_crystal_ball(_y, _x, np.float64(mubs), np.float64(sigmabs),
+                              np.float64(al), np.float64(nl), np.float64(ar),
+                              np.float64(nr), global_size=(len(_x)))
+  nbs = np.trapz(ristra.get(_y), ristra.get(_x))
+  prog.py_double_crystal_ball(_y, _x, np.float64(mubd), np.float64(sigmabd),
+                              np.float64(al), np.float64(nl), np.float64(ar),
+                              np.float64(nr), global_size=(len(_x)))
+  nbd = np.trapz(ristra.get(_y), ristra.get(_x))
+  # normalize exp
+  nexp = np.trapz(ristra.get(ristra.exp(_x*b)), ristra.get(_x))
+  # compute pdf value
+  ans = nsigbs*pbs/nbs + nsigbd*pbd/nbd + nexp*pexp/nexp
+  return norm*ans
+
+
+def cb_exponential2(mass, merr, signal, nsigBs=0, nsigBd=0, nexp=0,
+                   muBs=0, s0=0, s1=1, s2=1, muBd=5200, sigmaBd=50, aL=0, nL=0, aR=0, nR=0,
                    b=0, norm=1, mLL=None, mUL=None):
   # compute backgrounds
   pExp = ristra.get(ristra.exp(mass*b))
   # get signal
-  prog.py_double_crystal_ball(signal, mass, np.float64(muBs), np.float64(sigmaBs),
+  sigmaBs = s0 + merr * (s1 + merr * s2)
+  prog.DoubleCrystallBallPerEventSigma(signal, mass, np.float64(muBs), sigmaBs,
                               np.float64(aL), np.float64(nL), np.float64(aR),
                               np.float64(nR), global_size=(len(mass)))
   pBs = ristra.get(signal)
@@ -258,7 +316,7 @@ def cb_exponential(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
   _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)
   _y = _x*0
   # normalize cb-shape
-  prog.py_double_crystal_ball(_y, _x, np.float64(muBs), np.float64(sigmaBs),
+  prog.py_double_crystal_ball(_y, _x, np.float64(muBs), np.float64(np.mean(sigmaBs.get())),
                               np.float64(aL), np.float64(nL), np.float64(aR),
                               np.float64(nR), global_size=(len(_x)))
   nBs = np.trapz(ristra.get(_y), ristra.get(_x))
@@ -269,12 +327,14 @@ def cb_exponential(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
   # normalize exp
   nExp = np.trapz(ristra.get(ristra.exp(_x*b)), ristra.get(_x))
   # compute pdf value
-  ans = nsigBs*pBs/nBs + nsigBd*pBd/nBd + nexp*pExp/nExp
+  ans = nsigBs*pBs/nBs + nsigBd*pBd/nBd + nExp*pExp/nExp
   return norm*ans
+
 
 def cb_exponential_withcalib(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
                    muBs=0, s0=0, s1=1, s2=1, muBd=5000, sigmaBd=50, aL=0, nL=0, aR=0, nR=0,
                    b=0, norm=1, mLL=None, mUL=None):
+  g_size, l_size = get_sizes(len(signal), 128)
   prog.DoubleCrystallBallWithCalibration(
     signal, mass,
     np.float64(nsigBs), np.float64(nsigBd),
@@ -282,7 +342,7 @@ def cb_exponential_withcalib(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
     np.float64(muBd), np.float64(sigmaBd),
     np.float64(aL), np.float64(nL), np.float64(aR), np.float64(nR),
     np.float64(b),
-    np.float64(mLL), np.float64(mUL), global_size=(len(signal)))
+    np.float64(mLL), np.float64(mUL), global_size=g_size, local_size=l_size )
   print(signal)
   return norm * ristra.get(signal)
 # }}}
@@ -320,13 +380,13 @@ def mass_fitter(odf,
     elif model == 'crystalball':
       pdf = cb_exponential 
     elif model == 'cbcalib':
-      pdf = cb_exponential_withcalib
+      pdf = cb_exponential2
       with_calib = True
 
 
     def fcn(params, data):
         p = params.valuesdict()
-        prob = pdf(data.mass, data.pdf, **p)
+        prob = pdf(mass=data.mass, merr=data.merr, signal=data.pdf, **p)
         return -2.0 * np.log(prob) * ristra.get(data.weight)
 
     # }}}
@@ -337,8 +397,8 @@ def mass_fitter(odf,
     pars.add(dict(name='muBs',      value=5367,  min=5200, max=5500,             latex=r'\mu_{B_s}'))
     if with_calib:
       pars.add(dict(name='s0',   value=0,    min=0,    max=100,  free=False,  latex=r'\sigma_{B_s}'))
-      pars.add(dict(name='s1',   value=0.5,    min=-10,    max=10,  free=True,  latex=r'\sigma_{B_s}'))
-      pars.add(dict(name='s2',   value=0.5,    min=-10,    max=10,  free=True,  latex=r'\sigma_{B_s}'))
+      pars.add(dict(name='s1',   value=0.5,    min=0,    max=10,  free=True,  latex=r'\sigma_{B_s}'))
+      pars.add(dict(name='s2',   value=0.5,    min=0,    max=10,  free=True,  latex=r'\sigma_{B_s}'))
     else:
       pars.add(dict(name='sigmaBs',   value=5,    min=5,    max=100,  free=True,  latex=r'\sigma_{B_s}'))
 
@@ -368,15 +428,15 @@ def mass_fitter(odf,
       elif "crystalball" in model:
         # Crystal Ball tails {{{
         pars.add(dict(name='aL',      value=1.4,  min=0.5, max=3.5,    free=True,  latex=r'a_l'))
-        pars.add(dict(name='nL',      value=20,     min=1,   max=500,   free=True,  latex=r'n_l'))
+        pars.add(dict(name='nL',      value=20,     min=0,   max=500,   free=True,  latex=r'n_l'))
         pars.add(dict(name='aR',      value=1.4,  min=0.5, max=3.5,    free=True,  latex=r'a_r'))
-        pars.add(dict(name='nR',      value=20,     min=1,   max=500,   free=True,  latex=r'n_r'))
+        pars.add(dict(name='nR',      value=20,     min=0,   max=500,   free=True,  latex=r'n_r'))
       elif "cbcalib" in model:
         # Crystal Ball tails {{{
-        pars.add(dict(name='aL',      value=0.4,  min=0.5, max=3.5,    free=True,  latex=r'a_l'))
-        pars.add(dict(name='nL',      value=2,     min=1,   max=50,   free=True,  latex=r'n_l'))
-        pars.add(dict(name='aR',      value=0.4,  min=0.5, max=3.5,    free=True,  latex=r'a_r'))
-        pars.add(dict(name='nR',      value=2,     min=1,   max=50,   free=True,  latex=r'n_r'))
+        pars.add(dict(name='aL',      value=0.4,  min=0.1, max=3.5,    free=True,  latex=r'a_l'))
+        pars.add(dict(name='nL',      value=2,     min=0,   max=50,   free=True,  latex=r'n_l'))
+        pars.add(dict(name='aR',      value=0.4,  min=0.1, max=3.5,    free=True,  latex=r'a_r'))
+        pars.add(dict(name='nR',      value=2,     min=0,   max=50,   free=True,  latex=r'n_r'))
         # }}}
       # Combinatorial background
       pars.add(dict(name='b',         value=-4e-3, min=-1,  max=1,     free=False,  latex=r'b'))
@@ -412,10 +472,7 @@ def mass_fitter(odf,
     rd = Sample.from_pandas(odf)
     _proxy = np.float64(rd.df[mass_branch]) * 0.0
     rd.chop(current_cut)
-    if with_calib:
-      rd.allocate(mass=[mass_branch, 'B_ConstJpsi_MERR_1'])
-    else:
-      rd.allocate(mass=mass_branch)
+    rd.allocate(mass=mass_branch, merr='B_ConstJpsi_MERR_1')
     rd.allocate(pdf=f'0*{mass_branch}', weight=mass_weight)
     # print(rd)
 
@@ -437,19 +494,21 @@ def mass_fitter(odf,
 
     # plot the fit result {{{
 
-    fig, axplot, axpull = complot.axes_plotpull()
+    # fall back to averaged resolution when plotting
     if with_calib:
-      hdata = complot.hist(ristra.get(rd.mass[:,0]), weights=rd.df.eval(mass_weight),
-                           bins=60, density=False)
-    else:
-      hdata = complot.hist(ristra.get(rd.mass), weights=rd.df.eval(mass_weight),
-                           bins=60, density=False)
+      _p = fpars.valuesdict()
+      merr = _p['s0'] + _p['s1'] * rd.merr + _p['s2'] * rd.merr * rd.merr
+      merr = np.median(ristra.get(rd.merr)) 
+
+    fig, axplot, axpull = complot.axes_plotpull()
+    hdata = complot.hist(ristra.get(rd.mass), weights=rd.df.eval(mass_weight),
+                           bins=50, density=False)
     axplot.errorbar(hdata.bins, hdata.counts, yerr=hdata.yerr, xerr=hdata.xerr,
                     fmt='.k')
 
-    if not with_calib:
-      mass = ristra.linspace(ristra.min(rd.mass), ristra.max(rd.mass), 1000)
-      signal = 0*mass
+    mass = ristra.linspace(ristra.min(rd.mass), ristra.max(rd.mass), 1000)
+    signal = 0*mass
+    merr = ristra.allocate(np.ones_like(mass.get()) * merr)
 
     # plot signal: nbkg -> 0 and nexp -> 0
     _p = ipanema.Parameters.clone(fpars)
@@ -457,26 +516,23 @@ def mass_fitter(odf,
       _p['nsigBd'].set(value=0, min=-np.inf, max=np.inf)
     if 'nexp' in _p:
       _p['nexp'].set(value=0, min=-np.inf, max=np.inf)
-    if not with_calib:
-      _x, _y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
-      axplot.plot(_x, _y, color="C1", label=rf'$B_s^0$ {model}')
+    _x, _y = ristra.get(mass), ristra.get(pdf(mass, merr, signal, **_p.valuesdict(), norm=hdata.norm))
+    axplot.plot(_x, _y, color="C1", label=rf'$B_s^0$ {model}')
 
     # plot backgrounds: nsig -> 0
     if has_bd:
       _p = ipanema.Parameters.clone(fpars)
-      if not with_calib:
-        if 'nsigBs' in _p: _p['nsigBs'].set(value=0,min=-np.inf, max=np.inf )
-        if 'nexp' in _p:   _p['nexp'].set(value=0, min=-np.inf, max=np.inf)
-        _x, _y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(),
-                                                  norm=hdata.norm))
-        axplot.plot(_x, _y, '-.', color="C2", label='Bd')
+      if 'nsigBs' in _p: _p['nsigBs'].set(value=0,min=-np.inf, max=np.inf )
+      if 'nexp' in _p:   _p['nexp'].set(value=0, min=-np.inf, max=np.inf)
+      _x, _y = ristra.get(mass), ristra.get(pdf(mass, merr, signal, **_p.valuesdict(),
+                                                norm=hdata.norm))
+      axplot.plot(_x, _y, '-.', color="C2", label='Bd')
 
     # plot fit with all components and data
     _p = ipanema.Parameters.clone(fpars)
-    if not with_calib:
-      x, y = ristra.get(mass), ristra.get(pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
-      axplot.plot(x, y, color='C0')
-      axpull.fill_between(hdata.bins, complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts, *hdata.yerr), 0, facecolor="C0", alpha=0.5)
+    x, y = ristra.get(mass), ristra.get(pdf(mass, merr, signal, **_p.valuesdict(), norm=hdata.norm))
+    axplot.plot(x, y, color='C0')
+    axpull.fill_between(hdata.bins, complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts, *hdata.yerr), 0, facecolor="C0", alpha=0.5)
 
     # label and save the plot
     axpull.set_xlabel(r'$m(J/\psi KK)$ [MeV/$c^2$]')
@@ -509,7 +565,7 @@ def mass_fitter(odf,
         _yields = ipanema.Parameters.build(fpars, _yields)
         _pars = ipanema.Parameters.build(fpars, _pars)
 
-        sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.pdf, *x, **y), _pars, _yields)
+        sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y), _pars, _yields)
         for k,v in sw.items():
           _sw = np.copy(_proxy)
           _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
