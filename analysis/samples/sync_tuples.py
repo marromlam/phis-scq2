@@ -228,6 +228,7 @@ if __name__ == "__main__":
       result.eval(f"sw = sw_cosK_noGBw", inplace=True)  # overwrite sw variable
     else:
       print("Adding standard sWeight")
+      print(f"Written sw -> {sw}")
       result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
   except:
     print(result.keys())
