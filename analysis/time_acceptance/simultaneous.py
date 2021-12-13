@@ -13,9 +13,10 @@ import argparse
 import os
 import hjson
 import numpy as np
+import complot
 
 # load ipanema
-from ipanema import initialize, plotting
+from ipanema import initialize
 from ipanema import ristra, Parameters, Sample, plot_conf2d, Optimizer
 
 # import some phis-scq utils
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'], 1)
-  import time_acceptance.fcn_functions as fcns
+  import analysis.time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
   if TIMEACC['use_transverse_time']:

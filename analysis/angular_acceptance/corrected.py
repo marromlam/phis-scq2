@@ -24,8 +24,8 @@ initialize(os.environ['IPANEMA_BACKEND'],1)
 from utils.helpers import version_guesser, trigger_scissors, parse_angacc
 from utils.strings import printsec
 from utils.plot import mode_tex
-from iterative_mc import acceptance_effect
-from angular_acceptance.bdtconf_tester import bdtmesh
+from analysis.angular_acceptance.iterative_mc import acceptance_effect
+from analysis.angular_acceptance.bdtconf_tester import bdtmesh
 
 import config
 # binned variables
@@ -38,7 +38,7 @@ tLL = config.general['tLL']
 tUL = config.general['tUL']
 
 # get badjanak and compile it with corresponding flags
-import badjanak
+from analysis import badjanak
 badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
