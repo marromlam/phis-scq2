@@ -17,6 +17,20 @@ from utils.helpers import trigger_scissors, cuts_and
 
 import complot
 
+def get_sizes(size, BLOCK_SIZE=256):
+    '''
+    i need to check if this worls for 3d size and 3d block
+    '''
+    a = size % BLOCK_SIZE
+    if a == 0:
+      gs, ls = size, BLOCK_SIZE
+    elif size < BLOCK_SIZE:
+      gs, ls = size, 1
+    else:
+      a = np.ceil(size/BLOCK_SIZE)
+      gs, ls = a*BLOCK_SIZE, BLOCK_SIZE
+    return int(gs), int(ls)
+
 
 # initialize ipanema3 and compile lineshapes
 ipanema.initialize(os.environ['IPANEMA_BACKEND'], 1)
@@ -275,6 +289,7 @@ def cb_exponential(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
 def cb_exponential_withcalib(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
                    muBs=0, s0=0, s1=1, s2=1, muBd=5000, sigmaBd=50, aL=0, nL=0, aR=0, nR=0,
                    b=0, norm=1, mLL=None, mUL=None):
+  g_size, l_size = get_sizes(len(signal), 128)
   prog.DoubleCrystallBallWithCalibration(
     signal, mass,
     np.float64(nsigBs), np.float64(nsigBd),
@@ -282,7 +297,7 @@ def cb_exponential_withcalib(mass, signal, nsigBs=0, nsigBd=0, nexp=0,
     np.float64(muBd), np.float64(sigmaBd),
     np.float64(aL), np.float64(nL), np.float64(aR), np.float64(nR),
     np.float64(b),
-    np.float64(mLL), np.float64(mUL), global_size=(len(signal)))
+    np.float64(mLL), np.float64(mUL), global_size=g_size, local_size=l_size )
   print(signal)
   return norm * ristra.get(signal)
 # }}}
