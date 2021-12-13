@@ -13,8 +13,8 @@
 #define _ANGULARACCEPTANCE_H_
 
 
-#include <ipanema/core.h>
-#include <ipanema/special.h>
+#include <lib99ocl/core.h>
+#include <lib99ocl/special.h>
 
 #include "fk_helpers.h"
 

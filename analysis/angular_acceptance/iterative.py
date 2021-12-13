@@ -11,7 +11,7 @@ __email__ = ['mromerol@cern.ch']
 # Modules ######################################################################
 
 # ignore all future warnings
-from analysis.utils.helpers import parse_angacc
+from utils.helpers import parse_angacc
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -37,11 +37,11 @@ import multiprocessing
 
 # load ipanema
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],1)
+initialize(os.environ['IPANEMA_BACKEND'], 1, real='double')
 from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # get badjanak and compile it with corresponding flags
-import badjanak
+from analysis import badjanak
 badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
@@ -51,7 +51,7 @@ badjanak.get_kernels(True)
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
 from utils.helpers import  version_guesser, parse_angacc, timeacc_guesser, trigger_scissors
-from angular_acceptance.bdtconf_tester import bdtmesh
+from analysis.angular_acceptance.bdtconf_tester import bdtmesh
 
 # binned variables
 import config
@@ -77,7 +77,7 @@ def check_for_convergence(a,b):
 # core functions
 #     They work for a given category only.
 
-def pdf_reweighting(mcsample, mcparams, rdparams, tLL, tUL):
+def compute_pdf_ratio_weight(mcsample, mcparams, rdparams, tLL, tUL):
   badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
                            **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
   original_pdf_h = mcsample.pdf.get()
@@ -93,19 +93,6 @@ def pdf_reweighting(mcsample, mcparams, rdparams, tLL, tUL):
   return np.nan_to_num(target_pdf_h/original_pdf_h)
 
 
-# Komogorov test
-
-def KS_test(original, target, original_weight, target_weight):
-  """
-  Kolmogorov test
-  """
-  vars = ['pTHm','pTHp','pHm','pHp']
-  for i in range(0,4):
-    xlim = np.percentile(np.hstack([target[:,i]]), [0.01, 99.99])
-    print(f'   KS({vars[i]:>10}) =',
-          ks_2samp_weighted(original[:,i], target[:,i],
-                            weights1=original_weight, weights2=target_weight))
-
 
 
 
@@ -114,6 +101,7 @@ def kkp_weighting(original_v, original_w, target_v, target_w, path, year, mode,
   """
   Kinematic reweighting
   """
+  reweighter = reweight.GBReweighter(**bdtconfig)
   # do reweighting
   reweighter.fit(original=original_v, target=target_v,
                  original_weight=original_w, target_weight=target_w);
@@ -123,26 +111,22 @@ def kkp_weighting(original_v, original_w, target_v, target_w, path, year, mode,
   np.save(path.replace('.root',f'_{trigger}.npy'),kkpWeight)
   # some prints
   if verbose:
-    print(f" * GB-weighting {mode}-{year}-{trigger} sample is done")
-    KS_test(original_v, target_v, original_w*kkpWeight, target_w)
+    probs = []
+    for i in range(0,4):
+      _prob = ks_2samp_weighted(original_v[:,i], target_v[:,i],
+                                weights1=original_w*kkpWeight,
+                                weights2=target_w)
+      probs.append(_prob)
+    print(f" * GB-weighting {mode}-{year}-{trigger} sample is done", "\n",
+          f"  KS test : {probs}")
 
-"""
-def kkp_weighting_bins(original_v, original_w, target_v, target_w, path, y,m,t,i):
-  reweighter_bin.fit(original = original_v, target = target_v,
-                     original_weight = original_w, target_weight = target_w );
-  kkpWeight = np.where(original_w!=0, reweighter_bin.predict_weights(original_v), 0)
-  # kkpWeight = np.where(original_w!=0, np.ones_like(original_w), 0)
-  np.save(os.path.dirname(path)+f'/kkpWeight_{trigger}.npy',kkpWeight)
-  #print(f" * GB-weighting {m}-{y}-{trigger} sample is done")
-  print(f" * GB-weighting {m}-{y}-{trigger} sample\n  {kkpWeight[:10]}")
-"""
 
 def get_angular_acceptance(mc, tLL, tUL, kkpWeight=False):
   """
   Compute angular acceptance
   """
   # cook weight for angular acceptance
-  weight  = mc.df.eval(f'angWeight*polWeight*{weight_mc}').values
+  weight  = mc.df.eval(f'angWeight*polWeight*sWeight').values
   i = len(mc.kkpWeight.keys())
 
   if kkpWeight:
@@ -177,7 +161,7 @@ def fcn_data(parameters, data, tLL, tUL):
       badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc = 1)
+                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc=1, BLOCK_SIZE=128)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)
@@ -308,7 +292,7 @@ def do_pdf_weighting(tLL, tUL, verbose):
         if verbose:
           print(f' * Calculating pdfWeight for {m}-{y}-{t} sample')
         j = len(v.pdfWeight.keys())+1
-        v.pdfWeight[j] = pdf_reweighting(v, v.params,pars+data[y][t].csp, tLL=tLL, tUL=tUL)
+        v.pdfWeight[j] = compute_pdf_ratio_weight(v, v.params,pars+data[y][t].csp, tLL=tLL, tUL=tUL)
   if verbose:
     for y, dy in mc.items(): # loop over years
       print(f'Show 10 fist pdfWeight[{i}] for {y}')
@@ -717,6 +701,14 @@ if __name__ == '__main__':
   
   global mc, data, weight_rd, weight_mc
   
+  # only load the branches that are actually used
+  mc_branches = ['cosK','cosL','hphi', time, 'mHH', 'sigmat', 'idB',
+                 'gencosK','gencosL','genhphi', f'gen{time}', 'genidB',
+                 'pHm','pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'polWeight']
+  rd_branches = ['cosK','cosL','hphi', time, 'mHH', 'sigmat', 'idB',
+                 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta',
+                 'pHm','pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b']
+
   # MC reconstructed and generator level variable names
   reco  = ['cosK', 'cosL', 'hphi', time]
   true  = [f'gen{i}' for i in reco]
@@ -731,19 +723,22 @@ if __name__ == '__main__':
   weight_rd = 'sWeight'
   weight_mc = 'sWeight'
   if TIMEACC['use_veloWeight']:
-    weight_rd = f'veloWeight*{weight_rd}'
-    # weight_mc = f'veloWeight*{weight_mc}'
+    mc_branches += ['veloWeight']
+    rd_branches += ['veloWeight']
+    weight_rd = f'veloWeight*sWeight'
+    weight_mc = f'veloWeight*sWeight'
 
   # Load Monte Carlo samples
   mc = {}
   mcmodes = ['MC_BsJpsiPhi', 'MC_BsJpsiPhi_dG0']
 
+
   printsubsec('Loading MC samples')
   for i, y in enumerate(YEARS):
     mc[y] = {}
     for m, v in zip(mcmodes,[samples_std,samples_dg0]):
-      mc[y][m] = {'biased':   Sample.from_root(v[i], share=SHARE),
-                  'unbiased': Sample.from_root(v[i], share=SHARE)}
+      mc[y][m] = {'biased':   Sample.from_root(v[i], branches=mc_branches, share=SHARE),
+                  'unbiased': Sample.from_root(v[i], branches=mc_branches, share=SHARE)}
       mc[y][m]['biased'].name = f"{m}-{y}-biased"
       mc[y][m]['unbiased'].name = f"{m}-{y}-unbiased"
 
@@ -783,7 +778,7 @@ if __name__ == '__main__':
     mass = np.array( csp.build(csp, csp.find('mKK.*')) ).tolist()
 
     for t, T in zip(['biased','unbiased'],[0,1]):
-      data[y][t] = Sample.from_root(samples_data[i], share=SHARE)
+      data[y][t] = Sample.from_root(samples_data[i], branches=rd_branches, share=SHARE)
       data[y][t].name = f"{m}-{y}-{t}"
       data[y][t].csp = csp.build(csp, csp.find('CSP.*'))
       data[y][t].flavor = flavor
@@ -956,10 +951,10 @@ if __name__ == '__main__':
   # plot likelihood evolution
   ld_x = [i+1 for i, j in enumerate(likelihoods)]
   ld_y = [j+0 for i, j in enumerate(likelihoods)]
-  import termplotlib
-  ld_p = termplotlib.figure()
-  ld_p.plot(ld_x, ld_y, xlabel='iteration', label='likelihood',xlim=(0,30))
-  ld_p.show()
+  # import termplotlib
+  # ld_p = termplotlib.figure()
+  # ld_p.plot(ld_x, ld_y, xlabel='iteration', label='likelihood',xlim=(0,30))
+  # ld_p.show()
 
 
 

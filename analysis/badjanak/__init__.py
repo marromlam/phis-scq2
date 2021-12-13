@@ -53,7 +53,7 @@ def get_sizes(size, BLOCK_SIZE=256):
 #     The compile_flags is a dict where each key substitutes a same-named
 #     string in the kernel file by its value: #define KEY {KEY} <-- value
 
-global config
+global config, real_type
 config = dict(
 debug =           0, # no prints
 debug_evt =       0, # number of events to debug
@@ -62,10 +62,10 @@ sigma_t =         0.15,
 knots =           [0.30, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00],
 mHH =             [990, 1008, 1016, 1020, 1024, 1032, 1050],
 tristan =         [1,1,1,0,0,0,1,0,0,0],
-precision =       'double',
 flat_end =        False,
 final_extrap =    True
 )
+real_type = np.float64
 
 
 def flagger(verbose=False):
@@ -99,6 +99,7 @@ def flagger(verbose=False):
 # Compiler {{{
 
 def compile(verbose=False, pedantic=False):
+  global real_type
   kstrg = open(os.path.join(PATH, 'kernel.cu'), "r").read()
   # some custom compiling options {{{
   opts = ''
@@ -106,16 +107,18 @@ def compile(verbose=False, pedantic=False):
     opts = "-Xptxas -suppress-stack-size-warning"
     opts = ''
   # }}}
-  if config['precision'] == 'double':
-    prog = THREAD.compile(kstrg,
+  if builtins.REAL == 'double':
+    prog = ipanema.compile(kstrg,
               render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
               compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH} {opts}"],
               keep=False)
+    real_type = np.float64
   else:
-    prog = THREAD.compile(kstrg,
+    prog = ipanema.compile(kstrg,
               render_kwds={**{"USE_DOUBLE":"0"},**flagger(verbose)},
               compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH} {opts}"],
               keep=False)
+    real_type = np.float32
   if pedantic:
     print(prog.source)
   if verbose:
@@ -138,7 +141,7 @@ def get_kernels(verbose=False, pedantic=False):
   items = ['pyrateBs', 'pyrateBd',
            'pyFcoeffs',
            'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
-           'dG5toy',
+           # 'dG5toy',
            #'integral_ijk_fx'
            ]
   for item in items:
@@ -191,15 +194,15 @@ def parser_rateBs(
   # Get all binned parameters and put them in ristras
   if r['mass_bins'] >= 1:
     CSP = [ p[k] for k in p.keys() if re.compile('CSP.*').match(k) ]
-    r['CSP'] = THREAD.to_device(np.float64(CSP)).astype(np.float64)
+    r['CSP'] = THREAD.to_device(real_type(CSP)).astype(real_type)
     fSlon = [ p[k] for k in p.keys() if re.compile('fSlon.*').match(k) ]
-    fSlon = THREAD.to_device(np.float64(fSlon)).astype(np.float64)
+    fSlon = THREAD.to_device(real_type(fSlon)).astype(real_type)
     dSlon = [ p[k] for k in p.keys() if re.compile('dSlon.*').match(k) ]
-    dSlon = THREAD.to_device(np.float64(dSlon)).astype(np.float64)
+    dSlon = THREAD.to_device(real_type(dSlon)).astype(real_type)
   else:
-    r['CSP'] = THREAD.to_device(np.float64([CSP])).astype(np.float64)
-    fSlon = THREAD.to_device(np.float64([fSlon])).astype(np.float64)
-    dSlon = THREAD.to_device(np.float64([dSlon])).astype(np.float64)
+    r['CSP'] = THREAD.to_device(real_type([CSP])).astype(real_type)
+    fSlon = THREAD.to_device(real_type([fSlon])).astype(real_type)
+    dSlon = THREAD.to_device(real_type([dSlon])).astype(real_type)
 
   # Parameters and parse Gs value
   r['DG'] = DGs
@@ -272,14 +275,14 @@ def parser_rateBs(
   if timeacc:
     r['timeacc'] = THREAD.to_device(coeffs_to_poly(timeacc, flatend))
   else:
-    r['timeacc'] = THREAD.to_device(np.float64([1]))
+    r['timeacc'] = THREAD.to_device(real_type([1]))
 
   # Angular acceptance
   angacc = [ p[k] for k in p.keys() if re.compile('w([0-9])([0-9])?(u|b)?').match(k)]
   if angacc:
-    r['angacc'] = THREAD.to_device(np.float64(angacc))
+    r['angacc'] = THREAD.to_device(real_type(angacc))
   else:
-    r['angacc'] = THREAD.to_device(np.float64(config['tristan']))
+    r['angacc'] = THREAD.to_device(real_type(config['tristan']))
 
   return r
 
@@ -313,15 +316,15 @@ def parser_rateBd(
    # Get all binned parameters and put them in ristras
    if r['mass_bins'] >= 1:
      CSP = [ p[k] for k in p.keys() if re.compile('CSP.*').match(k) ]
-     r['CSP'] = THREAD.to_device(np.float64(CSP)).astype(np.float64)
+     r['CSP'] = THREAD.to_device(real_type(CSP)).astype(real_type)
      fSlon = [ p[k] for k in p.keys() if re.compile('fSlon.*').match(k) ]
-     fSlon = THREAD.to_device(np.float64(fSlon)).astype(np.float64)
+     fSlon = THREAD.to_device(real_type(fSlon)).astype(real_type)
      dSlon = [ p[k] for k in p.keys() if re.compile('dSlon.*').match(k) ]
-     dSlon = THREAD.to_device(np.float64(dSlon)).astype(np.float64)
+     dSlon = THREAD.to_device(real_type(dSlon)).astype(real_type)
    else:
-     r['CSP'] = THREAD.to_device(np.float64([CSP])).astype(np.float64)
-     fSlon = THREAD.to_device(np.float64([fSlon])).astype(np.float64)
-     dSlon = THREAD.to_device(np.float64([dSlon])).astype(np.float64)
+     r['CSP'] = THREAD.to_device(real_type([CSP])).astype(real_type)
+     fSlon = THREAD.to_device(real_type([fSlon])).astype(real_type)
+     dSlon = THREAD.to_device(real_type([dSlon])).astype(real_type)
 
    # Parameters and parse Gs value
    r['DG'] = DGs
@@ -383,14 +386,14 @@ def parser_rateBd(
    if timeacc:
      r['timeacc'] = THREAD.to_device(coeffs_to_poly(timeacc))
    else:
-     r['timeacc'] = THREAD.to_device(np.float64([1]))
+     r['timeacc'] = THREAD.to_device(real_type([1]))
 
    # Angular acceptance
    angacc = [ p[k] for k in p.keys() if re.compile('w([0-9])([0-9])?(u|b)?').match(k)]
    if angacc:
-     r['angacc'] = THREAD.to_device(np.float64(angacc))
+     r['angacc'] = THREAD.to_device(real_type(angacc))
    else:
-     r['angacc'] = THREAD.to_device(np.float64(config['tristan']))
+     r['angacc'] = THREAD.to_device(real_type(config['tristan']))
 
    return r
 
@@ -426,35 +429,35 @@ def delta_gamma5(input, output,
                   use_fk=1, use_angacc = 0, use_timeacc = 0,
                   use_timeoffset = 0, set_tagging = 0, use_timeres = 0,
                   BLOCK_SIZE=256, **crap):
-  g_size, l_size = get_sizes(output.shape[0],BLOCK_SIZE)
+  g_size, l_size = get_sizes(output.shape[0], BLOCK_SIZE)
   __KERNELS__.rateBs(
     # Input and output arrays
     input, output,
     # Differential cross-rate parameters
-    np.float64(G), np.float64(DG), np.float64(DM),
-    CSP.astype(np.float64),
-    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
-    np.float64(pSlon),                 np.float64(pPlon),                 np.float64(pPpar),                 np.float64(pPper),
-    dSlon.astype(np.float64),          np.float64(dPlon),                 np.float64(dPpar),                 np.float64(dPper),
-    np.float64(lSlon),                 np.float64(lPlon),                 np.float64(lPpar),                 np.float64(lPper),
+    real_type(G), real_type(DG), real_type(DM),
+    CSP.astype(real_type),
+    ASlon.astype(real_type), APlon.astype(real_type), APpar.astype(real_type), APper.astype(real_type),
+    real_type(pSlon),                 real_type(pPlon),                 real_type(pPpar),                 real_type(pPper),
+    dSlon.astype(real_type),          real_type(dPlon),                 real_type(dPpar),                 real_type(dPper),
+    real_type(lSlon),                 real_type(lPlon),                 real_type(lPpar),                 real_type(lPper),
     # Time range
-    np.float64(tLL), np.float64(tUL),
-    np.float64(cosKLL), np.float64(cosKUL),
-    np.float64(cosLLL), np.float64(cosLUL),
-    np.float64(hphiLL), np.float64(hphiUL),
+    real_type(tLL), real_type(tUL),
+    real_type(cosKLL), real_type(cosKUL),
+    real_type(cosLLL), real_type(cosLUL),
+    real_type(hphiLL), real_type(hphiUL),
     # Time resolution
-    np.float64(sigma_offset), np.float64(sigma_slope), np.float64(sigma_curvature),
-    np.float64(mu),
+    real_type(sigma_offset), real_type(sigma_slope), real_type(sigma_curvature),
+    real_type(mu),
     # Flavor tagging
-    np.float64(eta_os), np.float64(eta_ss),
-    np.float64(p0_os), np.float64(p1_os), np.float64(p2_os),
-    np.float64(p0_ss), np.float64(p1_ss), np.float64(p2_ss),
-    np.float64(dp0_os), np.float64(dp1_os), np.float64(dp2_os),
-    np.float64(dp0_ss), np.float64(dp1_ss), np.float64(dp2_ss),
+    real_type(eta_os), real_type(eta_ss),
+    real_type(p0_os), real_type(p1_os), real_type(p2_os),
+    real_type(p0_ss), real_type(p1_ss), real_type(p2_ss),
+    real_type(dp0_os), real_type(dp1_os), real_type(dp2_os),
+    real_type(dp0_ss), real_type(dp1_ss), real_type(dp2_ss),
     # Decay-time acceptance
-    timeacc.astype(np.float64),
+    timeacc.astype(real_type),
     # Angular acceptance
-    angacc.astype(np.float64),
+    angacc.astype(real_type),
     # Flags
     np.int32(use_fk), np.int32(len(CSP)), np.int32(use_angacc), np.int32(use_timeacc),
     np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
@@ -554,13 +557,13 @@ def delta_gamma5Bd(input, output,
     # Input and output arrays
     input, output,
     # Differential cross-rate parameters
-    np.float64(G), CSP.astype(np.float64),
-    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
-    dSlon.astype(np.float64),          np.float64(dPlon),                 np.float64(dPpar),                 np.float64(dPper),
+    real_type(G), CSP.astype(real_type),
+    ASlon.astype(real_type), APlon.astype(real_type), APpar.astype(real_type), APper.astype(real_type),
+    dSlon.astype(real_type),          real_type(dPlon),                 real_type(dPpar),                 real_type(dPper),
     # Time range
-    np.float64(tLL), np.float64(tUL),
+    real_type(tLL), real_type(tUL),
     # Angular acceptance
-    angacc.astype(np.float64),
+    angacc.astype(real_type),
     # Flags
     np.int32(use_fk),
     # BINS
@@ -651,7 +654,7 @@ def get_angular_acceptance_weights(true, reco, weight, tLL, tUL,
       ang_acc = fk*(weight.get()*num/den).T[::,np.newaxis]
       return ang_acc
 
-  ones = THREAD.to_device(np.ones(weight.shape[0]).astype(np.float64))
+  ones = THREAD.to_device(np.ones(weight.shape[0]).astype(real_type))
   w = get_weights(true, reco, weight).sum(axis=0)
   w10 = get_weights(true, reco, ones)
 
@@ -695,8 +698,8 @@ def analytical_angular_efficiency(angacc, cosK, cosL, hphi, project=None, order_
     _angacc = ristra.allocate(np.array(angacc))
   except:
     _angacc = ristra.allocate(np.array([a.n for a in angacc]))
-  __KERNELS__.pyangular_efficiency(eff, _angacc.astype(np.float64),
-                            cosK.astype(np.float64), cosL.astype(np.float64), hphi.astype(np.float64),
+  __KERNELS__.pyangular_efficiency(eff, _angacc.astype(real_type),
+                            cosK.astype(real_type), cosL.astype(real_type), hphi.astype(real_type),
                             np.int32(cosK_l), np.int32(cosL_l), np.int32(hphi_l),
                             np.int32(order_cosK), np.int32(order_cosL), np.int32(order_hphi),
                             global_size=(cosL_l, hphi_l, cosK_l))
@@ -753,7 +756,7 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
   # Get angular weights with weight applied and sum all events
   w = get_weights_Bd(true, reco, weight).sum(axis=0)
   # Get angular weights without weight
-  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=np.float64))
+  ones = THREAD.to_device(np.ascontiguousarray(np.ones(weight.shape[0]), dtype=real_type))
   w10 = get_weights_Bd(true, reco, ones)
 
   # Get covariance matrix
@@ -803,9 +806,9 @@ def splinexerf(time, lkhd, coeffs, mu=0.0, sigma=0.04, gamma=0.6, tLL=0.3,
 
   __KERNELS__.SingleTimeAcc(
     time, lkhd, # input, output
-    THREAD.to_device(coeffs_to_poly(coeffs, flatend)).astype(np.float64),
-    np.float64(mu), np.float64(sigma), np.float64(gamma),
-    np.float64(tLL),np.float64(tUL),
+    THREAD.to_device(get_4cs(coeffs, flatend)).astype(real_type),
+    real_type(mu), real_type(sigma), real_type(gamma),
+    real_type(tLL),real_type(tUL),
     np.int32(lkhd.shape[0]),
     global_size=g_size, local_size=l_size
   )
@@ -832,11 +835,12 @@ def sbxscxerf(time_a, time_b, lkhd_a, lkhd_b, coeffs_a, coeffs_b, mu_a=0.0,
   size_max = max(size_a,size_b)
   __KERNELS__.RatioTimeAcc(
     time_a, time_b, lkhd_a, lkhd_b,
-    THREAD.to_device(coeffs_to_poly(coeffs_a, flatend)).astype(np.float64),
-    THREAD.to_device(coeffs_to_poly(coeffs_b, flatend)).astype(np.float64),
-    np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
-    np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
     np.float64(tLL),np.float64(tUL),
+    THREAD.to_device(get_4cs(coeffs_a, flatend)).astype(real_type),
+    THREAD.to_device(get_4cs(coeffs_b, flatend)).astype(real_type),
+    real_type(mu_a), real_type(sigma_a), real_type(gamma_a),
+    real_type(mu_b), real_type(sigma_b), real_type(gamma_b),
+    real_type(tLL),real_type(tUL),
     size_a, size_b,
     global_size=(len(output),)
   )
@@ -870,13 +874,13 @@ def saxsbxscxerf(
   g_size, l_size = get_sizes(size_max,BLOCK_SIZE)
   __KERNELS__.FullTimeAcc(
     time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-    THREAD.to_device(coeffs_to_poly(coeffs_a, flatend)).astype(np.float64),
-    THREAD.to_device(coeffs_to_poly(coeffs_b, flatend)).astype(np.float64),
-    THREAD.to_device(coeffs_to_poly(coeffs_c, flatend)).astype(np.float64),
-    np.float64(mu_a), np.float64(sigma_a), np.float64(gamma_a),
-    np.float64(mu_b), np.float64(sigma_b), np.float64(gamma_b),
-    np.float64(mu_c), np.float64(sigma_c), np.float64(gamma_c),
-    np.float64(tLL),np.float64(tUL),
+    THREAD.to_device(get_4cs(coeffs_a, flatend)).astype(real_type),
+    THREAD.to_device(get_4cs(coeffs_b, flatend)).astype(real_type),
+    THREAD.to_device(get_4cs(coeffs_c, flatend)).astype(real_type),
+    real_type(mu_a), real_type(sigma_a), real_type(gamma_a),
+    real_type(mu_b), real_type(sigma_b), real_type(gamma_b),
+    real_type(mu_c), real_type(sigma_c), real_type(gamma_c),
+    real_type(tLL),real_type(tUL),
     size_a, size_b, size_c,
     global_size=g_size, local_size=l_size
   )
@@ -884,14 +888,14 @@ def saxsbxscxerf(
 
 def bspline(time, coeffs, flatend=False, BLOCK_SIZE=32):
   if isinstance(time, np.ndarray):
-    time_d = THREAD.to_device(time).astype(np.float64)
-    spline_d = THREAD.to_device(0*time).astype(np.float64)
+    time_d = THREAD.to_device(time).astype(real_type)
+    spline_d = THREAD.to_device(0*time).astype(real_type)
     deallocate = True
   else:
     time_d = time
-    spline_d = THREAD.to_device(0*time).astype(np.float64)
+    spline_d = THREAD.to_device(0*time).astype(real_type)
     deallocate = False
-  coeffs_d = THREAD.to_device(coeffs_to_poly(coeffs,flatend)).astype(np.float64)
+  coeffs_d = THREAD.to_device(coeffs_to_poly(coeffs)).astype(np.float64)
   __KERNELS__.Spline(
     time_d, spline_d, coeffs_d, np.int32(len(time)),
     global_size=(len(time),)
@@ -1051,44 +1055,44 @@ def dG5toys(output,
     # Input and output arrays
     output,
     # Differential cross-rate parameters
-    np.float64(G), np.float64(DG), np.float64(DM),
-    CSP.astype(np.float64),
-    ASlon.astype(np.float64),
-    APlon.astype(np.float64),
-    APpar.astype(np.float64),
-    APper.astype(np.float64),
-    np.float64(pSlon),
-    np.float64(pPlon), np.float64(pPpar), np.float64(pPper),
-    dSlon.astype(np.float64),
-    np.float64(dPlon), np.float64(dPpar), np.float64(dPper),
-    np.float64(lSlon),
-    np.float64(lPlon), np.float64(lPpar), np.float64(lPper),
+    real_type(G), real_type(DG), real_type(DM),
+    CSP.astype(real_type),
+    ASlon.astype(real_type),
+    APlon.astype(real_type),
+    APpar.astype(real_type),
+    APper.astype(real_type),
+    real_type(pSlon),
+    real_type(pPlon), real_type(pPpar), real_type(pPper),
+    dSlon.astype(real_type),
+    real_type(dPlon), real_type(dPpar), real_type(dPper),
+    real_type(lSlon),
+    real_type(lPlon), real_type(lPpar), real_type(lPper),
     # Time range
-    np.float64(tLL), np.float64(tUL),
-    np.float64(cosKLL), np.float64(cosKUL),
-    np.float64(cosLLL), np.float64(cosLUL),
-    np.float64(hphiLL), np.float64(hphiUL),
+    real_type(tLL), real_type(tUL),
+    real_type(cosKLL), real_type(cosKUL),
+    real_type(cosLLL), real_type(cosLUL),
+    real_type(hphiLL), real_type(hphiUL),
     # Time resolution
-    np.float64(sigma_offset),
-    np.float64(sigma_slope),
-    np.float64(sigma_curvature),
-    np.float64(mu),
+    real_type(sigma_offset),
+    real_type(sigma_slope),
+    real_type(sigma_curvature),
+    real_type(mu),
     # Flavor tagging
-    np.float64(eta_os), np.float64(eta_ss),
-    np.float64(p0_os), np.float64(p1_os), np.float64(p2_os),
-    np.float64(p0_ss), np.float64(p1_ss), np.float64(p2_ss),
-    np.float64(dp0_os), np.float64(dp1_os), np.float64(dp2_os),
-    np.float64(dp0_ss), np.float64(dp1_ss), np.float64(dp2_ss),
+    real_type(eta_os), real_type(eta_ss),
+    real_type(p0_os), real_type(p1_os), real_type(p2_os),
+    real_type(p0_ss), real_type(p1_ss), real_type(p2_ss),
+    real_type(dp0_os), real_type(dp1_os), real_type(dp2_os),
+    real_type(dp0_ss), real_type(dp1_ss), real_type(dp2_ss),
     # Decay-time acceptance
-    timeacc.astype(np.float64),
+    timeacc.astype(real_type),
     # Angular acceptance
-    angacc.astype(np.float64),
+    angacc.astype(real_type),
     np.int32(order_cosK), np.int32(order_cosL), np.int32(order_hphi),
     # Flags
     np.int32(use_fk), np.int32(len(CSP)),
     np.int32(use_angacc), np.int32(use_timeacc),
     np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
-    np.float64(prob_max), np.int32(seed),  np.int32(len(output)),
+    real_type(prob_max), np.int32(seed),  np.int32(len(output)),
     global_size=g_size, local_size=l_size)
 
 # }}}
@@ -1226,31 +1230,31 @@ def dG5toys(output,
     # Input and output arrays
     output,
     # Differential cross-rate parameters
-    np.float64(G), np.float64(DG), np.float64(DM),
-    CSP.astype(np.float64),
-    ASlon.astype(np.float64), APlon.astype(np.float64), APpar.astype(np.float64), APper.astype(np.float64),
-    np.float64(pSlon), np.float64(pPlon), np.float64(pPpar), np.float64(pPper),
-    dSlon.astype(np.float64), np.float64(dPlon), np.float64(dPpar), np.float64(dPper),
-    np.float64(lSlon), np.float64(lPlon), np.float64(lPpar), np.float64(lPper),
+    real_type(G), real_type(DG), real_type(DM),
+    CSP.astype(real_type),
+    ASlon.astype(real_type), APlon.astype(real_type), APpar.astype(real_type), APper.astype(real_type),
+    real_type(pSlon), real_type(pPlon), real_type(pPpar), real_type(pPper),
+    dSlon.astype(real_type), real_type(dPlon), real_type(dPpar), real_type(dPper),
+    real_type(lSlon), real_type(lPlon), real_type(lPpar), real_type(lPper),
     # Time range
-    np.float64(tLL), np.float64(tUL),
+    real_type(tLL), real_type(tUL),
     # Time resolution
-    np.float64(sigma_offset), np.float64(sigma_slope), np.float64(sigma_curvature),
-    np.float64(mu),
+    real_type(sigma_offset), real_type(sigma_slope), real_type(sigma_curvature),
+    real_type(mu),
     # Flavor tagging
-    np.float64(eta_os), np.float64(eta_ss),
-    np.float64(p0_os), np.float64(p1_os), np.float64(p2_os),
-    np.float64(p0_ss), np.float64(p1_ss), np.float64(p2_ss),
-    np.float64(dp0_os), np.float64(dp1_os), np.float64(dp2_os),
-    np.float64(dp0_ss), np.float64(dp1_ss), np.float64(dp2_ss),
+    real_type(eta_os), real_type(eta_ss),
+    real_type(p0_os), real_type(p1_os), real_type(p2_os),
+    real_type(p0_ss), real_type(p1_ss), real_type(p2_ss),
+    real_type(dp0_os), real_type(dp1_os), real_type(dp2_os),
+    real_type(dp0_ss), real_type(dp1_ss), real_type(dp2_ss),
     # Decay-time acceptance
-    timeacc.astype(np.float64),
+    timeacc.astype(real_type),
     # Angular acceptance
-    angacc.astype(np.float64),
+    angacc.astype(real_type),
     # Flags
     np.int32(use_fk), np.int32(len(CSP)), np.int32(use_angacc), np.int32(use_timeacc),
     np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
-    np.float64(prob_max), np.int32(seed),  np.int32(len(output)),
+    real_type(prob_max), np.int32(seed),  np.int32(len(output)),
     global_size=g_size, local_size=l_size)
     #grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
 
@@ -1260,9 +1264,9 @@ def dG5toys(output,
 # Other useful bindings {{{
 
 def get_fk(z):
-  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=np.float64))
+  z_dev = THREAD.to_device(np.ascontiguousarray(z, dtype=real_type))
   w = np.zeros((z.shape[0],len(config['tristan'])))
-  w_dev = THREAD.to_device(np.ascontiguousarray(w, dtype=np.float64))
+  w_dev = THREAD.to_device(np.ascontiguousarray(w, dtype=real_type))
   __KERNELS__.Fcoeffs(z_dev, w_dev, np.int32(len(z)), global_size=(len(z)))
   return ristra.get(w_dev)
 

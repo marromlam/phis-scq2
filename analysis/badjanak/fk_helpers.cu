@@ -16,9 +16,9 @@ void integral_ijk_fx(const ftype cosKs, const ftype cosKe, const ftype cosLs, co
 
 KERNEL
 void pyEff(
-    GLOBAL_MEM const double *cosK, GLOBAL_MEM const double *cosL, GLOBAL_MEM const double *hphi,
-    GLOBAL_MEM const double *data_3d, GLOBAL_MEM const double *prediction_3d,
-    GLOBAL_MEM const double *pars,
+    GLOBAL_MEM const ftype *cosK, GLOBAL_MEM const ftype *cosL, GLOBAL_MEM const ftype *hphi,
+    GLOBAL_MEM const ftype *data_3d, GLOBAL_MEM const ftype *prediction_3d,
+    GLOBAL_MEM const ftype *pars,
     const int bin_cosK, const int bin_cosL, const int bin_hphi,
     const int order_cosK, const int order_cosL, const int order_hphi,
     const int NEVT
@@ -63,7 +63,7 @@ void pyEff(
       }
     }
   }
-    // double scale = 1.0;//(f1_analytic.value + f2_analytic.value + f3_analytic.value)/3.0;
+    // ftype scale = 1.0;//(f1_analytic.value + f2_analytic.value + f3_analytic.value)/3.0;
     // f1_analytic /= entry(scale, 0.0);
     // f2_analytic /= entry(scale, 0.0);
     // f3_analytic /= entry(scale, 0.0);

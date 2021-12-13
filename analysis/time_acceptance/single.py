@@ -13,9 +13,12 @@ import os
 import hjson
 
 # load ipanema
-from ipanema import initialize, plotting
+from ipanema import initialize
 from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 import numpy as np
+
+
+from complot import axes_plot
 
 from trash_can.knot_generator import create_time_bins
 

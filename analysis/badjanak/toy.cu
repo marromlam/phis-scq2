@@ -9,8 +9,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include <ipanema/core.h>
-#include <ipanema/random.h>
+#include <lib99ocl/core.h>
+#include <lib99ocl/random.h>
 
 #include "time_angular_distribution.h"
 #include "decay_time_acceptance.h"

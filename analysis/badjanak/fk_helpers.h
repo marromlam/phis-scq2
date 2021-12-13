@@ -1,6 +1,6 @@
-#include <ipanema/core.h>
-#include <ipanema/complex.h>
-#include <ipanema/special.h>
+#include <lib99ocl/core.h>
+#include <lib99ocl/complex.h>
+#include <lib99ocl/special.h>
 
 
 #ifndef _FKHELPERS_H_
