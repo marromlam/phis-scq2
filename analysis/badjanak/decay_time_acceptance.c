@@ -11,9 +11,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include <ipanema/core.h>
-#include <ipanema/complex.h>
-#include <ipanema/special.h>
+#include <lib99ocl/core.h>
+#include <lib99ocl/complex.h>
+#include <lib99ocl/special.h>
 
 #include "decay_time_acceptance.h"
 
@@ -368,7 +368,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
         if(i+j < 4)
         {
           S[bin][i][j] = getCoeff(coeffs,bin,i+j)
-            *factorial(i+j)/factorial(j)/factorial(i)/pow(2.0,i+j);
+            *factorial(i+j)/factorial(j)/factorial(i)/rpow(2.0,i+j);
         }
         else
         {
@@ -430,7 +430,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
   ftype delta_t_fact[4];
   for (int i=0; i<4; ++i)
   {
-    delta_t_fact[i] = pow(delta_t*sqrt(2.), i+1)/sqrt(2.);
+    delta_t_fact[i] = rpow(delta_t*sqrt(2.), i+1)/sqrt(2.);
   }
 
   // Integral calculation for cosh, expm, cos, sin terms
@@ -539,15 +539,15 @@ WITHIN_KERNEL ftype get_int_ta_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ft
   ftype t_1_cub = t_1_sq*t_1;
 
   return -0.5*sqrt(2.)*sqrt(delta_t)
-    *(-2*a*pow(DG - 2*G, 4.)*pow(DG + 2*G, 3.)*(-exp(-0.5*t_1*(DG + 2*G)) + exp(-0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq)
-        + 2*a*pow(DG - 2*G, 3.)*pow(DG + 2*G, 4.)*(exp(0.5*t_0*(DG - 2*G)) - exp(0.5*t_1*(DG - 2*G)))
-        + b*pow(DG - 2*G, 4.)*pow(DG + 2*G, 2.)*(-2*(DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*t_1*(DG + 2*G)) + 2*(DG*t_1 + 2*G*t_1 + 2.)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
-        - 2*b*pow(DG - 2*G, 2.)*pow(DG + 2*G, 4.)*((-DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*DG*t_0 + G*t_1) + (DG*t_1 - 2*G*t_1 - 2.)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
-        + 2*c*pow(DG - 2*G, 4.)*(DG + 2*G)*(-(DG_sq*t_0_sq + 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*t_1*(DG + 2*G)) + (DG_sq*t_1_sq + 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
-        - 2*c*(DG - 2*G)*pow(DG + 2*G, 4.)*(-(DG_sq*t_0_sq - 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*DG*t_0 + G*t_1) + (DG_sq*t_1_sq - 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
-        + 2*d*pow(DG - 2*G, 4.)*((-DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) - 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 + 48*exp(0.5*t_0*(DG + 2*G)) - 48)*exp(-0.5*t_0*(DG + 2*G)) + (DG_cub*t_1_cub + 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) + 8*G_cub*t_1_cub + 24*G_sq*t_1_sq + 48*G*t_1 - 48*exp(0.5*t_1*(DG + 2*G)) + 48)*exp(-0.5*t_1*(DG + 2*G)))*exp(DG*G*delta_t_sq)
-        + 2*d*pow(DG + 2*G, 4.)*(((DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) + 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 - 48)*exp(0.5*DG*t_0) + 48*exp(G*t_0))*exp(-G*t_0) - ((DG_cub*t_1_cub - 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) - 8*G_cub*t_1_cub - 24*G_sq*t_1_sq - 48*G*t_1 - 48)*exp(0.5*DG*t_1) + 48*exp(G*t_1))*exp(-G*t_1)))
-    *exp(0.125*delta_t_sq*pow(DG - 2*G, 2.))/pow(DG_sq - 4*G_sq, 4.);
+    *(-2*a*rpow(DG - 2*G, 4.)*rpow(DG + 2*G, 3.)*(-exp(-0.5*t_1*(DG + 2*G)) + exp(-0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq)
+        + 2*a*rpow(DG - 2*G, 3.)*rpow(DG + 2*G, 4.)*(exp(0.5*t_0*(DG - 2*G)) - exp(0.5*t_1*(DG - 2*G)))
+        + b*rpow(DG - 2*G, 4.)*rpow(DG + 2*G, 2.)*(-2*(DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*t_1*(DG + 2*G)) + 2*(DG*t_1 + 2*G*t_1 + 2.)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
+        - 2*b*rpow(DG - 2*G, 2.)*rpow(DG + 2*G, 4.)*((-DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*DG*t_0 + G*t_1) + (DG*t_1 - 2*G*t_1 - 2.)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
+        + 2*c*rpow(DG - 2*G, 4.)*(DG + 2*G)*(-(DG_sq*t_0_sq + 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*t_1*(DG + 2*G)) + (DG_sq*t_1_sq + 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
+        - 2*c*(DG - 2*G)*rpow(DG + 2*G, 4.)*(-(DG_sq*t_0_sq - 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*DG*t_0 + G*t_1) + (DG_sq*t_1_sq - 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
+        + 2*d*rpow(DG - 2*G, 4.)*((-DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) - 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 + 48*exp(0.5*t_0*(DG + 2*G)) - 48)*exp(-0.5*t_0*(DG + 2*G)) + (DG_cub*t_1_cub + 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) + 8*G_cub*t_1_cub + 24*G_sq*t_1_sq + 48*G*t_1 - 48*exp(0.5*t_1*(DG + 2*G)) + 48)*exp(-0.5*t_1*(DG + 2*G)))*exp(DG*G*delta_t_sq)
+        + 2*d*rpow(DG + 2*G, 4.)*(((DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) + 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 - 48)*exp(0.5*DG*t_0) + 48*exp(G*t_0))*exp(-G*t_0) - ((DG_cub*t_1_cub - 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) - 8*G_cub*t_1_cub - 24*G_sq*t_1_sq - 48*G*t_1 - 48)*exp(0.5*DG*t_1) + 48*exp(G*t_1))*exp(-G*t_1)))
+    *exp(0.125*delta_t_sq*rpow(DG - 2*G, 2.))/rpow(DG_sq - 4*G_sq, 4.);
 }
 
 WITHIN_KERNEL ftype get_int_tb_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ftype a,ftype b,ftype c,ftype d,ftype t_0,ftype t_1)
@@ -563,14 +563,14 @@ WITHIN_KERNEL ftype get_int_tb_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ft
   ftype t_1_cub = t_1_sq*t_1;
 
   return 0.5*sqrt(2.)*sqrt(delta_t)
-    *(-2*a*pow(DG - 2*G, 4.)*pow(DG + 2*G, 3.)*(-exp(-0.5*t_1*(DG + 2*G)) + exp(-0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq)
-        - 2*a*pow(DG - 2*G, 3.)*pow(DG + 2*G, 4.)*(exp(0.5*t_0*(DG - 2*G)) - exp(0.5*t_1*(DG - 2*G))) + b*pow(DG - 2*G, 4.)*pow(DG + 2*G, 2.)*(-2*(DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*t_1*(DG + 2*G)) + 2*(DG*t_1 + 2*G*t_1 + 2.)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
-        + 2*b*pow(DG - 2*G, 2.)*pow(DG + 2*G, 4.)*((-DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*DG*t_0 + G*t_1) + (DG*t_1 - 2*G*t_1 - 2.)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
-        + 2*c*pow(DG - 2*G, 4.)*(DG + 2*G)*(-(DG_sq*t_0_sq + 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*t_1*(DG + 2*G)) + (DG_sq*t_1_sq + 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
-        + 2*c*(DG - 2*G)*pow(DG + 2*G, 4.)*(-(DG_sq*t_0_sq - 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*DG*t_0 + G*t_1) + (DG_sq*t_1_sq - 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
-        + 2*d*pow(DG - 2*G, 4.)*((-DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) - 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 + 48*exp(0.5*t_0*(DG + 2*G)) - 48)*exp(-0.5*t_0*(DG + 2*G)) + (DG_cub*t_1_cub + 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) + 8*G_cub*t_1_cub + 24*G_sq*t_1_sq + 48*G*t_1 - 48*exp(0.5*t_1*(DG + 2*G)) + 48)*exp(-0.5*t_1*(DG + 2*G)))*exp(DG*G*delta_t_sq)
-        - 2*d*pow(DG + 2*G, 4.)*(((DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) + 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 - 48)*exp(0.5*DG*t_0) + 48*exp(G*t_0))*exp(-G*t_0) - ((DG_cub*t_1_cub - 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) - 8*G_cub*t_1_cub - 24*G_sq*t_1_sq - 48*G*t_1 - 48)*exp(0.5*DG*t_1) + 48*exp(G*t_1))*exp(-G*t_1)))
-    *exp(0.125*delta_t_sq*pow(DG - 2*G, 2.))/pow(DG_sq - 4*G_sq, 4.);
+    *(-2*a*rpow(DG - 2*G, 4.)*rpow(DG + 2*G, 3.)*(-exp(-0.5*t_1*(DG + 2*G)) + exp(-0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq)
+        - 2*a*rpow(DG - 2*G, 3.)*rpow(DG + 2*G, 4.)*(exp(0.5*t_0*(DG - 2*G)) - exp(0.5*t_1*(DG - 2*G))) + b*rpow(DG - 2*G, 4.)*rpow(DG + 2*G, 2.)*(-2*(DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*t_1*(DG + 2*G)) + 2*(DG*t_1 + 2*G*t_1 + 2.)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
+        + 2*b*rpow(DG - 2*G, 2.)*rpow(DG + 2*G, 4.)*((-DG*t_0 + 2*G*t_0 + 2.)*exp(0.5*DG*t_0 + G*t_1) + (DG*t_1 - 2*G*t_1 - 2.)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
+        + 2*c*rpow(DG - 2*G, 4.)*(DG + 2*G)*(-(DG_sq*t_0_sq + 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*t_1*(DG + 2*G)) + (DG_sq*t_1_sq + 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*t_0*(DG + 2*G)))*exp(DG*G*delta_t_sq - 0.5*(DG + 2*G)*(t_0 + t_1))
+        + 2*c*(DG - 2*G)*rpow(DG + 2*G, 4.)*(-(DG_sq*t_0_sq - 4*DG*t_0*(G*t_0 + 1) + 4*G_sq*t_0_sq + 8*G*t_0 + 8)*exp(0.5*DG*t_0 + G*t_1) + (DG_sq*t_1_sq - 4*DG*t_1*(G*t_1 + 1) + 4*G_sq*t_1_sq + 8*G*t_1 + 8)*exp(0.5*DG*t_1 + G*t_0))*exp(-G*(t_0 + t_1))
+        + 2*d*rpow(DG - 2*G, 4.)*((-DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) - 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 + 48*exp(0.5*t_0*(DG + 2*G)) - 48)*exp(-0.5*t_0*(DG + 2*G)) + (DG_cub*t_1_cub + 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) + 8*G_cub*t_1_cub + 24*G_sq*t_1_sq + 48*G*t_1 - 48*exp(0.5*t_1*(DG + 2*G)) + 48)*exp(-0.5*t_1*(DG + 2*G)))*exp(DG*G*delta_t_sq)
+        - 2*d*rpow(DG + 2*G, 4.)*(((DG_cub*t_0_cub - 6*DG_sq*t_0_sq*(G*t_0 + 1) + 12*DG*t_0*(G_sq*t_0_sq + 2*G*t_0 + 2.) - 8*G_cub*t_0_cub - 24*G_sq*t_0_sq - 48*G*t_0 - 48)*exp(0.5*DG*t_0) + 48*exp(G*t_0))*exp(-G*t_0) - ((DG_cub*t_1_cub - 6*DG_sq*t_1_sq*(G*t_1 + 1) + 12*DG*t_1*(G_sq*t_1_sq + 2*G*t_1 + 2.) - 8*G_cub*t_1_cub - 24*G_sq*t_1_sq - 48*G*t_1 - 48)*exp(0.5*DG*t_1) + 48*exp(G*t_1))*exp(-G*t_1)))
+    *exp(0.125*delta_t_sq*rpow(DG - 2*G, 2.))/rpow(DG_sq - 4*G_sq, 4.);
 }
 
 WITHIN_KERNEL ftype get_int_tc_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ftype a,ftype b,ftype c,ftype d,ftype t_0,ftype t_1)
@@ -591,10 +591,10 @@ WITHIN_KERNEL ftype get_int_tc_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ft
   ftype exp_0_cos_1_term = exp(G*t_0)*cos(DM*G*delta_t_sq - DM*t_1);
   ftype exp_1_cos_0_term = exp(G*t_1)*cos(DM*G*delta_t_sq - DM*t_0);
 
-  return (a*pow(DM_sq + G_sq, 3.)*(-DM*exp_0_sin_1_term + DM*exp_1_sin_0_term - G*exp_0_cos_1_term + G*exp_1_cos_0_term)
-      + b*pow(DM_sq + G_sq, 2.)*(DM*((DM_sq*t_0 + G_sq*t_0 + 2*G)*exp_1_sin_0_term - (DM_sq*t_1 + G_sq*t_1 + 2*G)*exp_0_sin_1_term) + (DM_sq*(G*t_0 - 1) + G_sq*(G*t_0 + 1))*exp_1_cos_0_term - (DM_sq*(G*t_1 - 1) + G_sq*(G*t_1 + 1))*exp_0_cos_1_term)
+  return (a*rpow(DM_sq + G_sq, 3.)*(-DM*exp_0_sin_1_term + DM*exp_1_sin_0_term - G*exp_0_cos_1_term + G*exp_1_cos_0_term)
+      + b*rpow(DM_sq + G_sq, 2.)*(DM*((DM_sq*t_0 + G_sq*t_0 + 2*G)*exp_1_sin_0_term - (DM_sq*t_1 + G_sq*t_1 + 2*G)*exp_0_sin_1_term) + (DM_sq*(G*t_0 - 1) + G_sq*(G*t_0 + 1))*exp_1_cos_0_term - (DM_sq*(G*t_1 - 1) + G_sq*(G*t_1 + 1))*exp_0_cos_1_term)
       + c*(DM_sq + G_sq)*(DM*((DM_fr*t_0_sq + 2*DM_sq*(G_sq*t_0_sq + 2*G*t_0 - 1) + G_sq*(G_sq*t_0_sq + 4*G*t_0 + 6))*exp_1_sin_0_term - (DM_fr*t_1_sq + 2*DM_sq*(G_sq*t_1_sq + 2*G*t_1 - 1) + G_sq*(G_sq*t_1_sq + 4*G*t_1 + 6))*exp_0_sin_1_term) + (DM_fr*t_0*(G*t_0 - 2.) + 2*DM_sq*G*(G_sq*t_0_sq - 3.) + G_cub*(G_sq*t_0_sq + 2*G*t_0 + 2.))*exp_1_cos_0_term - (DM_fr*t_1*(G*t_1 - 2.) + 2*DM_sq*G*(G_sq*t_1_sq - 3.) + G_cub*(G_sq*t_1_sq + 2*G*t_1 + 2.))*exp_0_cos_1_term)
-      + d*(DM*((DM_sx*t_0_cub + 3*DM_fr*t_0*(G_sq*t_0_sq + 2*G*t_0 - 2.) + 3*DM_sq*G*(G_cub*t_0_cub + 4*G_sq*t_0_sq + 4*G*t_0 - 8) + G_cub*(G_cub*t_0_cub + 6*G_sq*t_0_sq + 18*G*t_0 + 24.))*exp_1_sin_0_term - (DM_sx*t_1_cub + 3*DM_fr*t_1*(G_sq*t_1_sq + 2*G*t_1 - 2.) + 3*DM_sq*G*(G_cub*t_1_cub + 4*G_sq*t_1_sq + 4*G*t_1 - 8) + G_cub*(G_cub*t_1_cub + 6*G_sq*t_1_sq + 18*G*t_1 + 24.))*exp_0_sin_1_term) + (DM_sx*t_0_sq*(G*t_0 - 3.) + 3*DM_fr*(G_cub*t_0_cub - G_sq*t_0_sq - 6*G*t_0 + 2.) + 3*DM_sq*G_sq*(G_cub*t_0_cub + G_sq*t_0_sq - 4*G*t_0 - 12.) + G_fr*(G_cub*t_0_cub + 3*G_sq*t_0_sq + 6*G*t_0 + 6))*exp_1_cos_0_term - (DM_sx*t_1_sq*(G*t_1 - 3.) + 3*DM_fr*(G_cub*t_1_cub - G_sq*t_1_sq - 6*G*t_1 + 2.) + 3*DM_sq*G_sq*(G_cub*t_1_cub + G_sq*t_1_sq - 4*G*t_1 - 12.) + G_fr*(G_cub*t_1_cub + 3*G_sq*t_1_sq + 6*G*t_1 + 6))*exp_0_cos_1_term))*sqrt(2.)*sqrt(delta_t)*exp(-G*(t_0 + t_1) + 0.5*delta_t_sq*(-DM_sq + G_sq))/pow(DM_sq + G_sq, 4.);
+      + d*(DM*((DM_sx*t_0_cub + 3*DM_fr*t_0*(G_sq*t_0_sq + 2*G*t_0 - 2.) + 3*DM_sq*G*(G_cub*t_0_cub + 4*G_sq*t_0_sq + 4*G*t_0 - 8) + G_cub*(G_cub*t_0_cub + 6*G_sq*t_0_sq + 18*G*t_0 + 24.))*exp_1_sin_0_term - (DM_sx*t_1_cub + 3*DM_fr*t_1*(G_sq*t_1_sq + 2*G*t_1 - 2.) + 3*DM_sq*G*(G_cub*t_1_cub + 4*G_sq*t_1_sq + 4*G*t_1 - 8) + G_cub*(G_cub*t_1_cub + 6*G_sq*t_1_sq + 18*G*t_1 + 24.))*exp_0_sin_1_term) + (DM_sx*t_0_sq*(G*t_0 - 3.) + 3*DM_fr*(G_cub*t_0_cub - G_sq*t_0_sq - 6*G*t_0 + 2.) + 3*DM_sq*G_sq*(G_cub*t_0_cub + G_sq*t_0_sq - 4*G*t_0 - 12.) + G_fr*(G_cub*t_0_cub + 3*G_sq*t_0_sq + 6*G*t_0 + 6))*exp_1_cos_0_term - (DM_sx*t_1_sq*(G*t_1 - 3.) + 3*DM_fr*(G_cub*t_1_cub - G_sq*t_1_sq - 6*G*t_1 + 2.) + 3*DM_sq*G_sq*(G_cub*t_1_cub + G_sq*t_1_sq - 4*G*t_1 - 12.) + G_fr*(G_cub*t_1_cub + 3*G_sq*t_1_sq + 6*G*t_1 + 6))*exp_0_cos_1_term))*sqrt(2.)*sqrt(delta_t)*exp(-G*(t_0 + t_1) + 0.5*delta_t_sq*(-DM_sq + G_sq))/rpow(DM_sq + G_sq, 4.);
 }
 
 WITHIN_KERNEL ftype get_int_td_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ftype a,ftype b,ftype c,ftype d,ftype t_0,ftype t_1)
@@ -617,11 +617,11 @@ WITHIN_KERNEL ftype get_int_td_spline(ftype delta_t,ftype G,ftype DM,ftype DG,ft
   ftype exp_1_cos_0_term = exp(G*t_1)*cos(DM*G*delta_t_sq - DM*t_0);
 
 
-  return -(a*pow(DM_sq + G_sq, 3.)*(DM*exp_0_cos_1_term - DM*exp_1_cos_0_term - G*exp_0_sin_1_term + G*exp_1_sin_0_term)
-      + b*pow(DM_sq + G_sq, 2.)*(DM_sq*G*t_0*exp_1_sin_0_term - DM_sq*G*t_1*exp_0_sin_1_term + DM_sq*exp_0_sin_1_term - DM_sq*exp_1_sin_0_term - DM*(DM_sq*t_0 + G_sq*t_0 + 2*G)*exp_1_cos_0_term + DM*(DM_sq*t_1 + G_sq*t_1 + 2*G)*exp_0_cos_1_term + G_cub*t_0*exp_1_sin_0_term - G_cub*t_1*exp_0_sin_1_term - G_sq*exp_0_sin_1_term + G_sq*exp_1_sin_0_term)
+  return -(a*rpow(DM_sq + G_sq, 3.)*(DM*exp_0_cos_1_term - DM*exp_1_cos_0_term - G*exp_0_sin_1_term + G*exp_1_sin_0_term)
+      + b*rpow(DM_sq + G_sq, 2.)*(DM_sq*G*t_0*exp_1_sin_0_term - DM_sq*G*t_1*exp_0_sin_1_term + DM_sq*exp_0_sin_1_term - DM_sq*exp_1_sin_0_term - DM*(DM_sq*t_0 + G_sq*t_0 + 2*G)*exp_1_cos_0_term + DM*(DM_sq*t_1 + G_sq*t_1 + 2*G)*exp_0_cos_1_term + G_cub*t_0*exp_1_sin_0_term - G_cub*t_1*exp_0_sin_1_term - G_sq*exp_0_sin_1_term + G_sq*exp_1_sin_0_term)
       + c*(DM_sq + G_sq)*(DM_fr*G*t_0_sq*exp_1_sin_0_term - DM_fr*G*t_1_sq*exp_0_sin_1_term - 2*DM_fr*t_0*exp_1_sin_0_term + 2*DM_fr*t_1*exp_0_sin_1_term + 2*DM_sq*G_cub*t_0_sq*exp_1_sin_0_term - 2*DM_sq*G_cub*t_1_sq*exp_0_sin_1_term + 6*DM_sq*G*exp_0_sin_1_term - 6*DM_sq*G*exp_1_sin_0_term - DM*(DM_fr*t_0_sq + 2*DM_sq*(G_sq*t_0_sq + 2*G*t_0 - 1) + G_sq*(G_sq*t_0_sq + 4*G*t_0 + 6))*exp_1_cos_0_term + DM*(DM_fr*t_1_sq + 2*DM_sq*(G_sq*t_1_sq + 2*G*t_1 - 1) + G_sq*(G_sq*t_1_sq + 4*G*t_1 + 6))*exp_0_cos_1_term + G_fv*t_0_sq*exp_1_sin_0_term - G_fv*t_1_sq*exp_0_sin_1_term + 2*G_fr*t_0*exp_1_sin_0_term - 2*G_fr*t_1*exp_0_sin_1_term - 2*G_cub*exp_0_sin_1_term + 2*G_cub*exp_1_sin_0_term)
-      + d*(DM_sx*G*t_0_cub*exp_1_sin_0_term - DM_sx*G*t_1_cub*exp_0_sin_1_term - 3*DM_sx*t_0_sq*exp_1_sin_0_term + 3*DM_sx*t_1_sq*exp_0_sin_1_term + 3*DM_fr*G_cub*t_0_cub*exp_1_sin_0_term - 3*DM_fr*G_cub*t_1_cub*exp_0_sin_1_term - 3*DM_fr*G_sq*t_0_sq*exp_1_sin_0_term + 3*DM_fr*G_sq*t_1_sq*exp_0_sin_1_term - 18*DM_fr*G*t_0*exp_1_sin_0_term + 18*DM_fr*G*t_1*exp_0_sin_1_term - 6*DM_fr*exp_0_sin_1_term + 6*DM_fr*exp_1_sin_0_term + 3*DM_sq*G_fv*t_0_cub*exp_1_sin_0_term - 3*DM_sq*G_fv*t_1_cub*exp_0_sin_1_term + 3*DM_sq*G_fr*t_0_sq*exp_1_sin_0_term - 3*DM_sq*G_fr*t_1_sq*exp_0_sin_1_term - 12*DM_sq*G_cub*t_0*exp_1_sin_0_term + 12*DM_sq*G_cub*t_1*exp_0_sin_1_term + 36*DM_sq*G_sq*exp_0_sin_1_term - 36*DM_sq*G_sq*exp_1_sin_0_term - DM*(DM_sx*t_0_cub + 3*DM_fr*t_0*(G_sq*t_0_sq + 2*G*t_0 - 2.) + 3*DM_sq*G*(G_cub*t_0_cub + 4*G_sq*t_0_sq + 4*G*t_0 - 8) + G_cub*(G_cub*t_0_cub + 6*G_sq*t_0_sq + 18*G*t_0 + 24.))*exp_1_cos_0_term + DM*(DM_sx*t_1_cub + 3*DM_fr*t_1*(G_sq*t_1_sq + 2*G*t_1 - 2.) + 3*DM_sq*G*(G_cub*t_1_cub + 4*G_sq*t_1_sq + 4*G*t_1 - 8) + G_cub*(G_cub*t_1_cub + 6*G_sq*t_1_sq + 18*G*t_1 + 24.))*exp_0_cos_1_term + pow(G, 7)*t_0_cub*exp_1_sin_0_term - pow(G, 7)*t_1_cub*exp_0_sin_1_term + 3*pow(G, 6)*t_0_sq*exp_1_sin_0_term - 3*pow(G, 6)*t_1_sq*exp_0_sin_1_term + 6*G_fv*t_0*exp_1_sin_0_term - 6*G_fv*t_1*exp_0_sin_1_term - 6*G_fr*exp_0_sin_1_term + 6*G_fr*exp_1_sin_0_term))
-    *sqrt(2.)*sqrt(delta_t)*exp(-G*(t_0 + t_1) + 0.5*delta_t_sq*(-DM_sq + G_sq))/pow(DM_sq + G_sq, 4.);
+      + d*(DM_sx*G*t_0_cub*exp_1_sin_0_term - DM_sx*G*t_1_cub*exp_0_sin_1_term - 3*DM_sx*t_0_sq*exp_1_sin_0_term + 3*DM_sx*t_1_sq*exp_0_sin_1_term + 3*DM_fr*G_cub*t_0_cub*exp_1_sin_0_term - 3*DM_fr*G_cub*t_1_cub*exp_0_sin_1_term - 3*DM_fr*G_sq*t_0_sq*exp_1_sin_0_term + 3*DM_fr*G_sq*t_1_sq*exp_0_sin_1_term - 18*DM_fr*G*t_0*exp_1_sin_0_term + 18*DM_fr*G*t_1*exp_0_sin_1_term - 6*DM_fr*exp_0_sin_1_term + 6*DM_fr*exp_1_sin_0_term + 3*DM_sq*G_fv*t_0_cub*exp_1_sin_0_term - 3*DM_sq*G_fv*t_1_cub*exp_0_sin_1_term + 3*DM_sq*G_fr*t_0_sq*exp_1_sin_0_term - 3*DM_sq*G_fr*t_1_sq*exp_0_sin_1_term - 12*DM_sq*G_cub*t_0*exp_1_sin_0_term + 12*DM_sq*G_cub*t_1*exp_0_sin_1_term + 36*DM_sq*G_sq*exp_0_sin_1_term - 36*DM_sq*G_sq*exp_1_sin_0_term - DM*(DM_sx*t_0_cub + 3*DM_fr*t_0*(G_sq*t_0_sq + 2*G*t_0 - 2.) + 3*DM_sq*G*(G_cub*t_0_cub + 4*G_sq*t_0_sq + 4*G*t_0 - 8) + G_cub*(G_cub*t_0_cub + 6*G_sq*t_0_sq + 18*G*t_0 + 24.))*exp_1_cos_0_term + DM*(DM_sx*t_1_cub + 3*DM_fr*t_1*(G_sq*t_1_sq + 2*G*t_1 - 2.) + 3*DM_sq*G*(G_cub*t_1_cub + 4*G_sq*t_1_sq + 4*G*t_1 - 8) + G_cub*(G_cub*t_1_cub + 6*G_sq*t_1_sq + 18*G*t_1 + 24.))*exp_0_cos_1_term + rpow(G, 7)*t_0_cub*exp_1_sin_0_term - rpow(G, 7)*t_1_cub*exp_0_sin_1_term + 3*rpow(G, 6)*t_0_sq*exp_1_sin_0_term - 3*rpow(G, 6)*t_1_sq*exp_0_sin_1_term + 6*G_fv*t_0*exp_1_sin_0_term - 6*G_fv*t_1*exp_0_sin_1_term - 6*G_fr*exp_0_sin_1_term + 6*G_fr*exp_1_sin_0_term))
+    *sqrt(2.)*sqrt(delta_t)*exp(-G*(t_0 + t_1) + 0.5*delta_t_sq*(-DM_sq + G_sq))/rpow(DM_sq + G_sq, 4.);
 }
 
 
@@ -858,82 +858,82 @@ ftype getOneSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs,
     c2 = getCoeff(coeffs,k,2);
     c3 = getCoeff(coeffs,k,3);
 
-    ipdf += (exp((pow(gamma,2)*pow(sigma,2))/2.)*((c1*(-exp(-(gamma*tf))
+    ipdf += (exp((rpow(gamma,2)*rpow(sigma,2))/2.)*((c1*(-exp(-(gamma*tf))
               + exp(-(gamma*ti)) -
-              (gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
-                  pow(tf,2))/(2.*pow(sigma,2))) +
-              (gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
-                  pow(ti,2))/(2.*pow(sigma,2))) - (gamma*tf)/exp(gamma*tf) +
+              (gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                  rpow(tf,2))/(2.*rpow(sigma,2))) +
+              (gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                  rpow(ti,2))/(2.*rpow(sigma,2))) - (gamma*tf)/exp(gamma*tf) +
               (gamma*ti)/exp(gamma*ti) +
-              erf(tf/(sqrt(2.0)*sigma))/exp((pow(gamma,2)*pow(sigma,2))/2.) + ((1 +
+              erf(tf/(sqrt(2.0)*sigma))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) + ((1 +
                   gamma*tf)*erf((gamma*sigma)/sqrt(2.0) -
                     tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) -
-              erf(ti/(sqrt(2.0)*sigma))/exp((pow(gamma,2)*pow(sigma,2))/2.) -
+              erf(ti/(sqrt(2.0)*sigma))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) -
               erf((gamma*sigma)/sqrt(2.0) - ti/(sqrt(2.0)*sigma))/exp(gamma*ti) -
               (gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
-                            ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/pow(gamma,2) -
+                            ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/rpow(gamma,2) -
           (c2*(2/exp(gamma*tf) - 2/exp(gamma*ti) +
-               (2*gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
-                   pow(tf,2))/(2.*pow(sigma,2))) -
-               (2*gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
-                   pow(ti,2))/(2.*pow(sigma,2))) + (2*gamma*tf)/exp(gamma*tf) +
-               (pow(gamma,2)*sqrt(2/M_PI)*sigma*tf)/exp((pow(gamma,2)*pow(sigma,4) +
-                   pow(tf,2))/(2.*pow(sigma,2))) +
-               (pow(gamma,2)*pow(tf,2))/exp(gamma*tf) - (2*gamma*ti)/exp(gamma*ti) -
-               (pow(gamma,2)*sqrt(2/M_PI)*sigma*ti)/exp((pow(gamma,2)*pow(sigma,4) +
-                   pow(ti,2))/(2.*pow(sigma,2))) -
-               (pow(gamma,2)*pow(ti,2))/exp(gamma*ti) - ((2 +
-                   pow(gamma,2)*pow(sigma,2))*erf(tf/(sqrt(2.0)*sigma)))/exp((pow(gamma,
-                     2)*pow(sigma,2))/2.) - ((2 + 2*gamma*tf +
-                     pow(gamma,2)*pow(tf,2))*erf((gamma*sigma)/sqrt(2.0) -
+               (2*gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                   rpow(tf,2))/(2.*rpow(sigma,2))) -
+               (2*gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                   rpow(ti,2))/(2.*rpow(sigma,2))) + (2*gamma*tf)/exp(gamma*tf) +
+               (rpow(gamma,2)*sqrt(2/M_PI)*sigma*tf)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                   rpow(tf,2))/(2.*rpow(sigma,2))) +
+               (rpow(gamma,2)*rpow(tf,2))/exp(gamma*tf) - (2*gamma*ti)/exp(gamma*ti) -
+               (rpow(gamma,2)*sqrt(2/M_PI)*sigma*ti)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                   rpow(ti,2))/(2.*rpow(sigma,2))) -
+               (rpow(gamma,2)*rpow(ti,2))/exp(gamma*ti) - ((2 +
+                   rpow(gamma,2)*rpow(sigma,2))*erf(tf/(sqrt(2.0)*sigma)))/exp((rpow(gamma,
+                     2)*rpow(sigma,2))/2.) - ((2 + 2*gamma*tf +
+                     rpow(gamma,2)*rpow(tf,2))*erf((gamma*sigma)/sqrt(2.0) -
                      tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) +
-               (2*erf(ti/(sqrt(2.0)*sigma)))/exp((pow(gamma,2)*pow(sigma,2))/2.) +
-               (pow(gamma,2)*pow(sigma,2)*erf(ti/(sqrt(2.0)*sigma)))/exp((pow(gamma,
-                     2)*pow(sigma,2))/2.) + (2*erf((gamma*sigma)/sqrt(2.0) -
+               (2*erf(ti/(sqrt(2.0)*sigma)))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) +
+               (rpow(gamma,2)*rpow(sigma,2)*erf(ti/(sqrt(2.0)*sigma)))/exp((rpow(gamma,
+                     2)*rpow(sigma,2))/2.) + (2*erf((gamma*sigma)/sqrt(2.0) -
                      ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
                (2*gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
                                ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
-               (pow(gamma,2)*pow(ti,2)*erf((gamma*sigma)/sqrt(2.0) -
-                                           ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/pow(gamma,3) -
+               (rpow(gamma,2)*rpow(ti,2)*erf((gamma*sigma)/sqrt(2.0) -
+                                           ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/rpow(gamma,3) -
                                            (c3*(6/exp(gamma*tf) - 6/exp(gamma*ti) +
-                                                (6*gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
-                                                    pow(tf,2))/(2.*pow(sigma,2))) -
-                                                (6*gamma*sqrt(2/M_PI)*sigma)/exp((pow(gamma,2)*pow(sigma,4) +
-                                                    pow(ti,2))/(2.*pow(sigma,2))) +
-                                                (2*pow(gamma,3)*sqrt(2/M_PI)*pow(sigma,3))/exp((pow(gamma,2)*pow(sigma,
-                                                      4) + pow(tf,2))/(2.*pow(sigma,2))) -
-                                                (2*pow(gamma,3)*sqrt(2/M_PI)*pow(sigma,3))/exp((pow(gamma,2)*pow(sigma,
-                                                      4) + pow(ti,2))/(2.*pow(sigma,2))) + (6*gamma*tf)/exp(gamma*tf) +
-                                                (3*pow(gamma,2)*sqrt(2/M_PI)*sigma*tf)/exp((pow(gamma,2)*pow(sigma,4) +
-                                                    pow(tf,2))/(2.*pow(sigma,2))) +
-                                                (3*pow(gamma,2)*pow(tf,2))/exp(gamma*tf) +
-                                                (pow(gamma,3)*sqrt(2/M_PI)*sigma*pow(tf,2))/exp((pow(gamma,2)*pow(sigma,
-                                                      4) + pow(tf,2))/(2.*pow(sigma,2))) +
-                                                (pow(gamma,3)*pow(tf,3))/exp(gamma*tf) - (6*gamma*ti)/exp(gamma*ti) -
-                                                (3*pow(gamma,2)*sqrt(2/M_PI)*sigma*ti)/exp((pow(gamma,2)*pow(sigma,4) +
-                                                    pow(ti,2))/(2.*pow(sigma,2))) -
-                                                (3*pow(gamma,2)*pow(ti,2))/exp(gamma*ti) -
-                                                (pow(gamma,3)*sqrt(2/M_PI)*sigma*pow(ti,2))/exp((pow(gamma,2)*pow(sigma,
-                                                      4) + pow(ti,2))/(2.*pow(sigma,2))) -
-                                                (pow(gamma,3)*pow(ti,3))/exp(gamma*ti) - (3*(2 +
-                                                    pow(gamma,2)*pow(sigma,2))*erf(tf/(sqrt(2.0)*sigma)))/exp((pow(gamma,
-                                                      2)*pow(sigma,2))/2.) - ((6 + 6*gamma*tf + 3*pow(gamma,2)*pow(tf,2) +
-                                                      pow(gamma,3)*pow(tf,3))*erf((gamma*sigma)/sqrt(2.0) -
+                                                (6*gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                                                    rpow(tf,2))/(2.*rpow(sigma,2))) -
+                                                (6*gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                                                    rpow(ti,2))/(2.*rpow(sigma,2))) +
+                                                (2*rpow(gamma,3)*sqrt(2/M_PI)*rpow(sigma,3))/exp((rpow(gamma,2)*rpow(sigma,
+                                                      4) + rpow(tf,2))/(2.*rpow(sigma,2))) -
+                                                (2*rpow(gamma,3)*sqrt(2/M_PI)*rpow(sigma,3))/exp((rpow(gamma,2)*rpow(sigma,
+                                                      4) + rpow(ti,2))/(2.*rpow(sigma,2))) + (6*gamma*tf)/exp(gamma*tf) +
+                                                (3*rpow(gamma,2)*sqrt(2/M_PI)*sigma*tf)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                                                    rpow(tf,2))/(2.*rpow(sigma,2))) +
+                                                (3*rpow(gamma,2)*rpow(tf,2))/exp(gamma*tf) +
+                                                (rpow(gamma,3)*sqrt(2/M_PI)*sigma*rpow(tf,2))/exp((rpow(gamma,2)*rpow(sigma,
+                                                      4) + rpow(tf,2))/(2.*rpow(sigma,2))) +
+                                                (rpow(gamma,3)*rpow(tf,3))/exp(gamma*tf) - (6*gamma*ti)/exp(gamma*ti) -
+                                                (3*rpow(gamma,2)*sqrt(2/M_PI)*sigma*ti)/exp((rpow(gamma,2)*rpow(sigma,4) +
+                                                    rpow(ti,2))/(2.*rpow(sigma,2))) -
+                                                (3*rpow(gamma,2)*rpow(ti,2))/exp(gamma*ti) -
+                                                (rpow(gamma,3)*sqrt(2/M_PI)*sigma*rpow(ti,2))/exp((rpow(gamma,2)*rpow(sigma,
+                                                      4) + rpow(ti,2))/(2.*rpow(sigma,2))) -
+                                                (rpow(gamma,3)*rpow(ti,3))/exp(gamma*ti) - (3*(2 +
+                                                    rpow(gamma,2)*rpow(sigma,2))*erf(tf/(sqrt(2.0)*sigma)))/exp((rpow(gamma,
+                                                      2)*rpow(sigma,2))/2.) - ((6 + 6*gamma*tf + 3*rpow(gamma,2)*rpow(tf,2) +
+                                                      rpow(gamma,3)*rpow(tf,3))*erf((gamma*sigma)/sqrt(2.0) -
                                                       tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) +
-                                                        (6*erf(ti/(sqrt(2.0)*sigma)))/exp((pow(gamma,2)*pow(sigma,2))/2.) +
-                                                        (3*pow(gamma,2)*pow(sigma,2)*erf(ti/(sqrt(2.0)*sigma)))/exp((pow(
-                                                                gamma,2)*pow(sigma,2))/2.) + (6*erf((gamma*sigma)/sqrt(2.0) -
+                                                        (6*erf(ti/(sqrt(2.0)*sigma)))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) +
+                                                        (3*rpow(gamma,2)*rpow(sigma,2)*erf(ti/(sqrt(2.0)*sigma)))/exp((rpow(
+                                                                gamma,2)*rpow(sigma,2))/2.) + (6*erf((gamma*sigma)/sqrt(2.0) -
                                                                 ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
                                                                 (6*gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
                                                                                 ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
-                                                                (3*pow(gamma,2)*pow(ti,2)*erf((gamma*sigma)/sqrt(2.0) -
+                                                                (3*rpow(gamma,2)*rpow(ti,2)*erf((gamma*sigma)/sqrt(2.0) -
                                                                                               ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
-                                                                (pow(gamma,3)*pow(ti,3)*erf((gamma*sigma)/sqrt(2.0) -
-                                                                                            ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/pow(gamma,4) +
-                                                                                            (c0*(erf(tf/(sqrt(2.0)*sigma))/exp((pow(gamma,2)*pow(sigma,2))/2.) -
-                                                                                                 erf(ti/(sqrt(2.0)*sigma))/exp((pow(gamma,2)*pow(sigma,2))/2.) -
-                                                                                                 erfc((gamma*pow(sigma,2) - tf)/(sqrt(2.0)*sigma))/exp(gamma*tf) +
-                                                                                                 erfc((gamma*pow(sigma,2) -
+                                                                (rpow(gamma,3)*rpow(ti,3)*erf((gamma*sigma)/sqrt(2.0) -
+                                                                                            ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/rpow(gamma,4) +
+                                                                                            (c0*(erf(tf/(sqrt(2.0)*sigma))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) -
+                                                                                                 erf(ti/(sqrt(2.0)*sigma))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) -
+                                                                                                 erfc((gamma*rpow(sigma,2) - tf)/(sqrt(2.0)*sigma))/exp(gamma*tf) +
+                                                                                                 erfc((gamma*rpow(sigma,2) -
                                                                                                      ti)/(sqrt(2.0)*sigma))/exp(gamma*ti)))/gamma))/2.;
   }
 
@@ -985,110 +985,110 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
     b2 = getCoeff(coeffs2,k,2);
     b3 = getCoeff(coeffs2,k,3);
 
-    term1i = -((exp(gamma*ti - (ti*(2*gamma*pow(sigma,2) +
-                ti))/(2.*pow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*ti)
-                + 12*pow(gamma,2)*(2*r1 + 5*r2*ti + 10*r3*(2*pow(sigma,2) +
-                    pow(ti,2))) + 2*pow(gamma,3)*(3*r0 + 6*r1*ti + 10*r2*(2*pow(sigma,2)
-                    + pow(ti,2)) + 15*r3*ti*(3*pow(sigma,2) + pow(ti,2))) +
-                pow(gamma,5)*(3*pow(sigma,2)*(r1 + 5*r3*pow(sigma,2))*ti + (r1 +
-                    5*r3*pow(sigma,2))*pow(ti,3) + r3*pow(ti,5) + r0*(2*pow(sigma,2) +
-                    pow(ti,2)) + r2*(8*pow(sigma,4) + 4*pow(sigma,2)*pow(ti,2) +
-                    pow(ti,4))) + pow(gamma,4)*(3*(r0 + 5*r2*pow(sigma,2))*ti +
-                  5*r2*pow(ti,3) + 4*r1*(2*pow(sigma,2) + pow(ti,2)) +
-                  6*r3*(8*pow(sigma,4) + 4*pow(sigma,2)*pow(ti,2) + pow(ti,4)))) +
+    term1i = -((exp(gamma*ti - (ti*(2*gamma*rpow(sigma,2) +
+                ti))/(2.*rpow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*ti)
+                + 12*rpow(gamma,2)*(2*r1 + 5*r2*ti + 10*r3*(2*rpow(sigma,2) +
+                    rpow(ti,2))) + 2*rpow(gamma,3)*(3*r0 + 6*r1*ti + 10*r2*(2*rpow(sigma,2)
+                    + rpow(ti,2)) + 15*r3*ti*(3*rpow(sigma,2) + rpow(ti,2))) +
+                rpow(gamma,5)*(3*rpow(sigma,2)*(r1 + 5*r3*rpow(sigma,2))*ti + (r1 +
+                    5*r3*rpow(sigma,2))*rpow(ti,3) + r3*rpow(ti,5) + r0*(2*rpow(sigma,2) +
+                    rpow(ti,2)) + r2*(8*rpow(sigma,4) + 4*rpow(sigma,2)*rpow(ti,2) +
+                    rpow(ti,4))) + rpow(gamma,4)*(3*(r0 + 5*r2*rpow(sigma,2))*ti +
+                  5*r2*rpow(ti,3) + 4*r1*(2*rpow(sigma,2) + rpow(ti,2)) +
+                  6*r3*(8*rpow(sigma,4) + 4*rpow(sigma,2)*rpow(ti,2) + rpow(ti,4)))) +
               gamma*(120*b2*r3 + b1*gamma*(24*r3 + 6*gamma*(r2 + 2*r3*ti) +
-                  pow(gamma,2)*(2*r1 + 8*r3*pow(sigma,2) + 3*r2*ti + 4*r3*pow(ti,2)) +
-                  pow(gamma,3)*(r0 + 2*r2*pow(sigma,2) + r1*ti + 3*r3*pow(sigma,2)*ti +
-                    r2*pow(ti,2) + r3*pow(ti,3))) + b2*gamma*(24*r2 + 60*r3*ti +
-                  pow(gamma,2)*(2*r0 + 8*r2*pow(sigma,2) + 3*(r1 +
-                      5*r3*pow(sigma,2))*ti + 4*r2*pow(ti,2) + 5*r3*pow(ti,3)) +
-                  pow(gamma,3)*(2*pow(sigma,2)*(r1 + 4*r3*pow(sigma,2)) + (r0 +
-                      3*r2*pow(sigma,2))*ti + (r1 + 4*r3*pow(sigma,2))*pow(ti,2) +
-                    r2*pow(ti,3) + r3*pow(ti,4)) + 2*gamma*(3*r1 + 6*r2*ti +
-                    10*r3*(2*pow(sigma,2) + pow(ti,2)))) + b0*pow(gamma,2)*(6*r3 +
-                  gamma*(2*r2 + 3*r3*ti + gamma*(r1 + 2*r3*pow(sigma,2) + r2*ti +
-                      r3*pow(ti,2)))))))/(pow(gamma,6)*sqrt(2*M_PI)));
-    term1f = -((exp(gamma*tf - (tf*(2*gamma*pow(sigma,2) +
-                tf))/(2.*pow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*tf)
-                + 12*pow(gamma,2)*(2*r1 + 5*r2*tf + 10*r3*(2*pow(sigma,2) +
-                    pow(tf,2))) + 2*pow(gamma,3)*(3*r0 + 6*r1*tf + 10*r2*(2*pow(sigma,2)
-                    + pow(tf,2)) + 15*r3*tf*(3*pow(sigma,2) + pow(tf,2))) +
-                pow(gamma,5)*(3*pow(sigma,2)*(r1 + 5*r3*pow(sigma,2))*tf + (r1 +
-                    5*r3*pow(sigma,2))*pow(tf,3) + r3*pow(tf,5) + r0*(2*pow(sigma,2) +
-                    pow(tf,2)) + r2*(8*pow(sigma,4) + 4*pow(sigma,2)*pow(tf,2) +
-                    pow(tf,4))) + pow(gamma,4)*(3*(r0 + 5*r2*pow(sigma,2))*tf +
-                  5*r2*pow(tf,3) + 4*r1*(2*pow(sigma,2) + pow(tf,2)) +
-                  6*r3*(8*pow(sigma,4) + 4*pow(sigma,2)*pow(tf,2) + pow(tf,4)))) +
+                  rpow(gamma,2)*(2*r1 + 8*r3*rpow(sigma,2) + 3*r2*ti + 4*r3*rpow(ti,2)) +
+                  rpow(gamma,3)*(r0 + 2*r2*rpow(sigma,2) + r1*ti + 3*r3*rpow(sigma,2)*ti +
+                    r2*rpow(ti,2) + r3*rpow(ti,3))) + b2*gamma*(24*r2 + 60*r3*ti +
+                  rpow(gamma,2)*(2*r0 + 8*r2*rpow(sigma,2) + 3*(r1 +
+                      5*r3*rpow(sigma,2))*ti + 4*r2*rpow(ti,2) + 5*r3*rpow(ti,3)) +
+                  rpow(gamma,3)*(2*rpow(sigma,2)*(r1 + 4*r3*rpow(sigma,2)) + (r0 +
+                      3*r2*rpow(sigma,2))*ti + (r1 + 4*r3*rpow(sigma,2))*rpow(ti,2) +
+                    r2*rpow(ti,3) + r3*rpow(ti,4)) + 2*gamma*(3*r1 + 6*r2*ti +
+                    10*r3*(2*rpow(sigma,2) + rpow(ti,2)))) + b0*rpow(gamma,2)*(6*r3 +
+                  gamma*(2*r2 + 3*r3*ti + gamma*(r1 + 2*r3*rpow(sigma,2) + r2*ti +
+                      r3*rpow(ti,2)))))))/(rpow(gamma,6)*sqrt(2*M_PI)));
+    term1f = -((exp(gamma*tf - (tf*(2*gamma*rpow(sigma,2) +
+                tf))/(2.*rpow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*tf)
+                + 12*rpow(gamma,2)*(2*r1 + 5*r2*tf + 10*r3*(2*rpow(sigma,2) +
+                    rpow(tf,2))) + 2*rpow(gamma,3)*(3*r0 + 6*r1*tf + 10*r2*(2*rpow(sigma,2)
+                    + rpow(tf,2)) + 15*r3*tf*(3*rpow(sigma,2) + rpow(tf,2))) +
+                rpow(gamma,5)*(3*rpow(sigma,2)*(r1 + 5*r3*rpow(sigma,2))*tf + (r1 +
+                    5*r3*rpow(sigma,2))*rpow(tf,3) + r3*rpow(tf,5) + r0*(2*rpow(sigma,2) +
+                    rpow(tf,2)) + r2*(8*rpow(sigma,4) + 4*rpow(sigma,2)*rpow(tf,2) +
+                    rpow(tf,4))) + rpow(gamma,4)*(3*(r0 + 5*r2*rpow(sigma,2))*tf +
+                  5*r2*rpow(tf,3) + 4*r1*(2*rpow(sigma,2) + rpow(tf,2)) +
+                  6*r3*(8*rpow(sigma,4) + 4*rpow(sigma,2)*rpow(tf,2) + rpow(tf,4)))) +
               gamma*(120*b2*r3 + b1*gamma*(24*r3 + 6*gamma*(r2 + 2*r3*tf) +
-                  pow(gamma,2)*(2*r1 + 8*r3*pow(sigma,2) + 3*r2*tf + 4*r3*pow(tf,2)) +
-                  pow(gamma,3)*(r0 + 2*r2*pow(sigma,2) + r1*tf + 3*r3*pow(sigma,2)*tf +
-                    r2*pow(tf,2) + r3*pow(tf,3))) + b2*gamma*(24*r2 + 60*r3*tf +
-                  pow(gamma,2)*(2*r0 + 8*r2*pow(sigma,2) + 3*(r1 +
-                      5*r3*pow(sigma,2))*tf + 4*r2*pow(tf,2) + 5*r3*pow(tf,3)) +
-                  pow(gamma,3)*(2*pow(sigma,2)*(r1 + 4*r3*pow(sigma,2)) + (r0 +
-                      3*r2*pow(sigma,2))*tf + (r1 + 4*r3*pow(sigma,2))*pow(tf,2) +
-                    r2*pow(tf,3) + r3*pow(tf,4)) + 2*gamma*(3*r1 + 6*r2*tf +
-                    10*r3*(2*pow(sigma,2) + pow(tf,2)))) + b0*pow(gamma,2)*(6*r3 +
-                  gamma*(2*r2 + 3*r3*tf + gamma*(r1 + 2*r3*pow(sigma,2) + r2*tf +
-                      r3*pow(tf,2)))))))/(pow(gamma,6)*sqrt(2*M_PI)));
-    term2i = (exp(gamma*ti)*(3*b3*(240*r3 + gamma*(2*pow(gamma,2)*r0 +
-              8*gamma*r1 + 40*r2 + gamma*(pow(gamma,3)*r0 + 4*pow(gamma,2)*r1 +
-                20*gamma*r2 + 120*r3)*pow(sigma,2) + pow(gamma,3)*(pow(gamma,2)*r1 +
-                  5*gamma*r2 + 30*r3)*pow(sigma,4) + 5*pow(gamma,5)*r3*pow(sigma,6))) +
-          gamma*(120*b2*r3 + b2*gamma*(2*pow(gamma,2)*r0 + 6*gamma*r1 + 24*r2 +
-              gamma*(pow(gamma,3)*r0 + 3*pow(gamma,2)*r1 + 12*gamma*r2 +
-                60*r3)*pow(sigma,2) + 3*pow(gamma,3)*(gamma*r2 + 5*r3)*pow(sigma,4))
-            + b0*pow(gamma,2)*(6*r3 + gamma*(2*r2 + gamma*(gamma*r0 + r1 +
-                  (gamma*r2 + 3*r3)*pow(sigma,2)))) + b1*gamma*(24*r3 + gamma*(6*r2 +
-                gamma*(gamma*r0 + 2*r1 + (pow(gamma,2)*r1 + 3*gamma*r2 +
-                    12*r3)*pow(sigma,2) +
-                  3*pow(gamma,2)*r3*pow(sigma,4))))))*erf(ti/(sqrt(2.0)*sigma)) -
-        exp((pow(gamma,2)*pow(sigma,2))/2.)*(b3*(720*r3 + 120*gamma*(r2 +
-              6*r3*ti) + pow(gamma,5)*pow(ti,2)*(3*r0 + 4*r1*ti + 5*r2*pow(ti,2) +
-                6*r3*pow(ti,3)) + 24*pow(gamma,2)*(r1 + 5*ti*(r2 + 3*r3*ti)) +
-            pow(gamma,6)*pow(ti,3)*(r0 + ti*(r1 + ti*(r2 + r3*ti))) +
-            6*pow(gamma,3)*(r0 + 2*ti*(2*r1 + 5*ti*(r2 + 2*r3*ti))) +
-            2*pow(gamma,4)*ti*(3*r0 + ti*(6*r1 + 5*ti*(2*r2 + 3*r3*ti)))) +
-          gamma*(b2*(120*r3 + 24*gamma*(r2 + 5*r3*ti) + 6*pow(gamma,2)*(r1 +
-                4*r2*ti + 10*r3*pow(ti,2)) + pow(gamma,4)*ti*(2*r0 + 3*r1*ti +
-                4*r2*pow(ti,2) + 5*r3*pow(ti,3)) + 2*pow(gamma,3)*(r0 + 3*r1*ti +
-                6*r2*pow(ti,2) + 10*r3*pow(ti,3)) + pow(gamma,5)*pow(ti,2)*(r0 +
+                  rpow(gamma,2)*(2*r1 + 8*r3*rpow(sigma,2) + 3*r2*tf + 4*r3*rpow(tf,2)) +
+                  rpow(gamma,3)*(r0 + 2*r2*rpow(sigma,2) + r1*tf + 3*r3*rpow(sigma,2)*tf +
+                    r2*rpow(tf,2) + r3*rpow(tf,3))) + b2*gamma*(24*r2 + 60*r3*tf +
+                  rpow(gamma,2)*(2*r0 + 8*r2*rpow(sigma,2) + 3*(r1 +
+                      5*r3*rpow(sigma,2))*tf + 4*r2*rpow(tf,2) + 5*r3*rpow(tf,3)) +
+                  rpow(gamma,3)*(2*rpow(sigma,2)*(r1 + 4*r3*rpow(sigma,2)) + (r0 +
+                      3*r2*rpow(sigma,2))*tf + (r1 + 4*r3*rpow(sigma,2))*rpow(tf,2) +
+                    r2*rpow(tf,3) + r3*rpow(tf,4)) + 2*gamma*(3*r1 + 6*r2*tf +
+                    10*r3*(2*rpow(sigma,2) + rpow(tf,2)))) + b0*rpow(gamma,2)*(6*r3 +
+                  gamma*(2*r2 + 3*r3*tf + gamma*(r1 + 2*r3*rpow(sigma,2) + r2*tf +
+                      r3*rpow(tf,2)))))))/(rpow(gamma,6)*sqrt(2*M_PI)));
+    term2i = (exp(gamma*ti)*(3*b3*(240*r3 + gamma*(2*rpow(gamma,2)*r0 +
+              8*gamma*r1 + 40*r2 + gamma*(rpow(gamma,3)*r0 + 4*rpow(gamma,2)*r1 +
+                20*gamma*r2 + 120*r3)*rpow(sigma,2) + rpow(gamma,3)*(rpow(gamma,2)*r1 +
+                  5*gamma*r2 + 30*r3)*rpow(sigma,4) + 5*rpow(gamma,5)*r3*rpow(sigma,6))) +
+          gamma*(120*b2*r3 + b2*gamma*(2*rpow(gamma,2)*r0 + 6*gamma*r1 + 24*r2 +
+              gamma*(rpow(gamma,3)*r0 + 3*rpow(gamma,2)*r1 + 12*gamma*r2 +
+                60*r3)*rpow(sigma,2) + 3*rpow(gamma,3)*(gamma*r2 + 5*r3)*rpow(sigma,4))
+            + b0*rpow(gamma,2)*(6*r3 + gamma*(2*r2 + gamma*(gamma*r0 + r1 +
+                  (gamma*r2 + 3*r3)*rpow(sigma,2)))) + b1*gamma*(24*r3 + gamma*(6*r2 +
+                gamma*(gamma*r0 + 2*r1 + (rpow(gamma,2)*r1 + 3*gamma*r2 +
+                    12*r3)*rpow(sigma,2) +
+                  3*rpow(gamma,2)*r3*rpow(sigma,4))))))*erf(ti/(sqrt(2.0)*sigma)) -
+        exp((rpow(gamma,2)*rpow(sigma,2))/2.)*(b3*(720*r3 + 120*gamma*(r2 +
+              6*r3*ti) + rpow(gamma,5)*rpow(ti,2)*(3*r0 + 4*r1*ti + 5*r2*rpow(ti,2) +
+                6*r3*rpow(ti,3)) + 24*rpow(gamma,2)*(r1 + 5*ti*(r2 + 3*r3*ti)) +
+            rpow(gamma,6)*rpow(ti,3)*(r0 + ti*(r1 + ti*(r2 + r3*ti))) +
+            6*rpow(gamma,3)*(r0 + 2*ti*(2*r1 + 5*ti*(r2 + 2*r3*ti))) +
+            2*rpow(gamma,4)*ti*(3*r0 + ti*(6*r1 + 5*ti*(2*r2 + 3*r3*ti)))) +
+          gamma*(b2*(120*r3 + 24*gamma*(r2 + 5*r3*ti) + 6*rpow(gamma,2)*(r1 +
+                4*r2*ti + 10*r3*rpow(ti,2)) + rpow(gamma,4)*ti*(2*r0 + 3*r1*ti +
+                4*r2*rpow(ti,2) + 5*r3*rpow(ti,3)) + 2*rpow(gamma,3)*(r0 + 3*r1*ti +
+                6*r2*rpow(ti,2) + 10*r3*rpow(ti,3)) + rpow(gamma,5)*rpow(ti,2)*(r0 +
                 ti*(r1 + ti*(r2 + r3*ti)))) + gamma*(b1*(24*r3 + 6*gamma*(r2 +
-                  4*r3*ti) + pow(gamma,3)*(r0 + 2*r1*ti + 3*r2*pow(ti,2) +
-                    4*r3*pow(ti,3)) + 2*pow(gamma,2)*(r1 + 3*ti*(r2 + 2*r3*ti)) +
-                pow(gamma,4)*ti*(r0 + ti*(r1 + ti*(r2 + r3*ti)))) + b0*gamma*(6*r3 +
+                  4*r3*ti) + rpow(gamma,3)*(r0 + 2*r1*ti + 3*r2*rpow(ti,2) +
+                    4*r3*rpow(ti,3)) + 2*rpow(gamma,2)*(r1 + 3*ti*(r2 + 2*r3*ti)) +
+                rpow(gamma,4)*ti*(r0 + ti*(r1 + ti*(r2 + r3*ti)))) + b0*gamma*(6*r3 +
                 gamma*(2*r2 + 6*r3*ti + gamma*(r1 + ti*(2*r2 + 3*r3*ti)) +
-                  pow(gamma,2)*(r0 + ti*(r1 + ti*(r2 + r3*ti))))))))*erfc((gamma*sigma
-            - ti/sigma)/sqrt(2.0)))/(2.*exp(gamma*ti)*pow(gamma,7));
-    term2f = (exp(gamma*tf)*(3*b3*(240*r3 + gamma*(2*pow(gamma,2)*r0 +
-              8*gamma*r1 + 40*r2 + gamma*(pow(gamma,3)*r0 + 4*pow(gamma,2)*r1 +
-                20*gamma*r2 + 120*r3)*pow(sigma,2) + pow(gamma,3)*(pow(gamma,2)*r1 +
-                  5*gamma*r2 + 30*r3)*pow(sigma,4) + 5*pow(gamma,5)*r3*pow(sigma,6))) +
-          gamma*(120*b2*r3 + b2*gamma*(2*pow(gamma,2)*r0 + 6*gamma*r1 + 24*r2 +
-              gamma*(pow(gamma,3)*r0 + 3*pow(gamma,2)*r1 + 12*gamma*r2 +
-                60*r3)*pow(sigma,2) + 3*pow(gamma,3)*(gamma*r2 + 5*r3)*pow(sigma,4))
-            + b0*pow(gamma,2)*(6*r3 + gamma*(2*r2 + gamma*(gamma*r0 + r1 +
-                  (gamma*r2 + 3*r3)*pow(sigma,2)))) + b1*gamma*(24*r3 + gamma*(6*r2 +
-                gamma*(gamma*r0 + 2*r1 + (pow(gamma,2)*r1 + 3*gamma*r2 +
-                    12*r3)*pow(sigma,2) +
-                  3*pow(gamma,2)*r3*pow(sigma,4))))))*erf(tf/(sqrt(2.0)*sigma)) -
-        exp((pow(gamma,2)*pow(sigma,2))/2.)*(b3*(720*r3 + 120*gamma*(r2 +
-              6*r3*tf) + pow(gamma,5)*pow(tf,2)*(3*r0 + 4*r1*tf + 5*r2*pow(tf,2) +
-                6*r3*pow(tf,3)) + 24*pow(gamma,2)*(r1 + 5*tf*(r2 + 3*r3*tf)) +
-            pow(gamma,6)*pow(tf,3)*(r0 + tf*(r1 + tf*(r2 + r3*tf))) +
-            6*pow(gamma,3)*(r0 + 2*tf*(2*r1 + 5*tf*(r2 + 2*r3*tf))) +
-            2*pow(gamma,4)*tf*(3*r0 + tf*(6*r1 + 5*tf*(2*r2 + 3*r3*tf)))) +
-          gamma*(b2*(120*r3 + 24*gamma*(r2 + 5*r3*tf) + 6*pow(gamma,2)*(r1 +
-                4*r2*tf + 10*r3*pow(tf,2)) + pow(gamma,4)*tf*(2*r0 + 3*r1*tf +
-                4*r2*pow(tf,2) + 5*r3*pow(tf,3)) + 2*pow(gamma,3)*(r0 + 3*r1*tf +
-                6*r2*pow(tf,2) + 10*r3*pow(tf,3)) + pow(gamma,5)*pow(tf,2)*(r0 +
+                  rpow(gamma,2)*(r0 + ti*(r1 + ti*(r2 + r3*ti))))))))*erfc((gamma*sigma
+            - ti/sigma)/sqrt(2.0)))/(2.*exp(gamma*ti)*rpow(gamma,7));
+    term2f = (exp(gamma*tf)*(3*b3*(240*r3 + gamma*(2*rpow(gamma,2)*r0 +
+              8*gamma*r1 + 40*r2 + gamma*(rpow(gamma,3)*r0 + 4*rpow(gamma,2)*r1 +
+                20*gamma*r2 + 120*r3)*rpow(sigma,2) + rpow(gamma,3)*(rpow(gamma,2)*r1 +
+                  5*gamma*r2 + 30*r3)*rpow(sigma,4) + 5*rpow(gamma,5)*r3*rpow(sigma,6))) +
+          gamma*(120*b2*r3 + b2*gamma*(2*rpow(gamma,2)*r0 + 6*gamma*r1 + 24*r2 +
+              gamma*(rpow(gamma,3)*r0 + 3*rpow(gamma,2)*r1 + 12*gamma*r2 +
+                60*r3)*rpow(sigma,2) + 3*rpow(gamma,3)*(gamma*r2 + 5*r3)*rpow(sigma,4))
+            + b0*rpow(gamma,2)*(6*r3 + gamma*(2*r2 + gamma*(gamma*r0 + r1 +
+                  (gamma*r2 + 3*r3)*rpow(sigma,2)))) + b1*gamma*(24*r3 + gamma*(6*r2 +
+                gamma*(gamma*r0 + 2*r1 + (rpow(gamma,2)*r1 + 3*gamma*r2 +
+                    12*r3)*rpow(sigma,2) +
+                  3*rpow(gamma,2)*r3*rpow(sigma,4))))))*erf(tf/(sqrt(2.0)*sigma)) -
+        exp((rpow(gamma,2)*rpow(sigma,2))/2.)*(b3*(720*r3 + 120*gamma*(r2 +
+              6*r3*tf) + rpow(gamma,5)*rpow(tf,2)*(3*r0 + 4*r1*tf + 5*r2*rpow(tf,2) +
+                6*r3*rpow(tf,3)) + 24*rpow(gamma,2)*(r1 + 5*tf*(r2 + 3*r3*tf)) +
+            rpow(gamma,6)*rpow(tf,3)*(r0 + tf*(r1 + tf*(r2 + r3*tf))) +
+            6*rpow(gamma,3)*(r0 + 2*tf*(2*r1 + 5*tf*(r2 + 2*r3*tf))) +
+            2*rpow(gamma,4)*tf*(3*r0 + tf*(6*r1 + 5*tf*(2*r2 + 3*r3*tf)))) +
+          gamma*(b2*(120*r3 + 24*gamma*(r2 + 5*r3*tf) + 6*rpow(gamma,2)*(r1 +
+                4*r2*tf + 10*r3*rpow(tf,2)) + rpow(gamma,4)*tf*(2*r0 + 3*r1*tf +
+                4*r2*rpow(tf,2) + 5*r3*rpow(tf,3)) + 2*rpow(gamma,3)*(r0 + 3*r1*tf +
+                6*r2*rpow(tf,2) + 10*r3*rpow(tf,3)) + rpow(gamma,5)*rpow(tf,2)*(r0 +
                 tf*(r1 + tf*(r2 + r3*tf)))) + gamma*(b1*(24*r3 + 6*gamma*(r2 +
-                  4*r3*tf) + pow(gamma,3)*(r0 + 2*r1*tf + 3*r2*pow(tf,2) +
-                    4*r3*pow(tf,3)) + 2*pow(gamma,2)*(r1 + 3*tf*(r2 + 2*r3*tf)) +
-                pow(gamma,4)*tf*(r0 + tf*(r1 + tf*(r2 + r3*tf)))) + b0*gamma*(6*r3 +
+                  4*r3*tf) + rpow(gamma,3)*(r0 + 2*r1*tf + 3*r2*rpow(tf,2) +
+                    4*r3*rpow(tf,3)) + 2*rpow(gamma,2)*(r1 + 3*tf*(r2 + 2*r3*tf)) +
+                rpow(gamma,4)*tf*(r0 + tf*(r1 + tf*(r2 + r3*tf)))) + b0*gamma*(6*r3 +
                 gamma*(2*r2 + 6*r3*tf + gamma*(r1 + tf*(2*r2 + 3*r3*tf)) +
-                  pow(gamma,2)*(r0 + tf*(r1 + tf*(r2 + r3*tf))))))))*erfc((gamma*sigma
-            - tf/sigma)/sqrt(2.0)))/(2.*exp(gamma*tf)*pow(gamma,7));
+                  rpow(gamma,2)*(r0 + tf*(r1 + tf*(r2 + r3*tf))))))))*erfc((gamma*sigma
+            - tf/sigma)/sqrt(2.0)))/(2.*exp(gamma*tf)*rpow(gamma,7));
 
     ipdf += (term1f + term2f) - (term1i + term2i);
 

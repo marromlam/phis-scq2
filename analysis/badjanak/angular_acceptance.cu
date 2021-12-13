@@ -53,14 +53,14 @@ out[hbin] = angular_efficiency(cosK[j], cosL[l], M_PI*hphi[k],
 
   KERNEL
 void magia_borras(
-    GLOBAL_MEM double *chi2,
-    GLOBAL_MEM const double *cosK, GLOBAL_MEM const double *cosL, GLOBAL_MEM const double *hphi,
-    GLOBAL_MEM const double *data_3d, GLOBAL_MEM const double *prediction_3d,
-    GLOBAL_MEM const double *pars,
+    GLOBAL_MEM ftype *chi2,
+    GLOBAL_MEM const ftype *cosK, GLOBAL_MEM const ftype *cosL, GLOBAL_MEM const ftype *hphi,
+    GLOBAL_MEM const ftype *data_3d, GLOBAL_MEM const ftype *prediction_3d,
+    GLOBAL_MEM const ftype *pars,
     const int bin_cosK, const int bin_cosL, const int bin_hphi,
     const int order_cosK, const int order_cosL, const int order_hphi)
 {
-  double fitted = 0.0; double pred = 0.0; double value = 0.0;
+  ftype fitted = 0.0; ftype pred = 0.0; ftype value = 0.0;
   int hbin = 0; int lbin = 0;
 
   const int l = get_global_id(0); //if (l >= bin_cosK) {return;}
