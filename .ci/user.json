@@ -4,5 +4,6 @@
   "eos": "/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2",
   "mail": [],
   "velo_weights": false,
-  "compute_sweights": false
+  "compute_sweights": false,
+  "reweightings_per_trigger": true
 }
