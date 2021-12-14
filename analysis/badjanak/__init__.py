@@ -806,7 +806,7 @@ def splinexerf(time, lkhd, coeffs, mu=0.0, sigma=0.04, gamma=0.6, tLL=0.3,
 
   __KERNELS__.SingleTimeAcc(
     time, lkhd, # input, output
-    THREAD.to_device(get_4cs(coeffs, flatend)).astype(real_type),
+    THREAD.to_device(coeffs_to_poly(coeffs, flatend)).astype(real_type),
     real_type(mu), real_type(sigma), real_type(gamma),
     real_type(tLL),real_type(tUL),
     np.int32(lkhd.shape[0]),
@@ -836,8 +836,8 @@ def sbxscxerf(time_a, time_b, lkhd_a, lkhd_b, coeffs_a, coeffs_b, mu_a=0.0,
   __KERNELS__.RatioTimeAcc(
     time_a, time_b, lkhd_a, lkhd_b,
     np.float64(tLL),np.float64(tUL),
-    THREAD.to_device(get_4cs(coeffs_a, flatend)).astype(real_type),
-    THREAD.to_device(get_4cs(coeffs_b, flatend)).astype(real_type),
+    THREAD.to_device(coeffs_to_poly(coeffs_a, flatend)).astype(real_type),
+    THREAD.to_device(coeffs_to_poly(coeffs_b, flatend)).astype(real_type),
     real_type(mu_a), real_type(sigma_a), real_type(gamma_a),
     real_type(mu_b), real_type(sigma_b), real_type(gamma_b),
     real_type(tLL),real_type(tUL),
@@ -874,9 +874,9 @@ def saxsbxscxerf(
   g_size, l_size = get_sizes(size_max,BLOCK_SIZE)
   __KERNELS__.FullTimeAcc(
     time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-    THREAD.to_device(get_4cs(coeffs_a, flatend)).astype(real_type),
-    THREAD.to_device(get_4cs(coeffs_b, flatend)).astype(real_type),
-    THREAD.to_device(get_4cs(coeffs_c, flatend)).astype(real_type),
+    THREAD.to_device(coeffs_to_poly(coeffs_a, flatend)).astype(real_type),
+    THREAD.to_device(coeffs_to_poly(coeffs_b, flatend)).astype(real_type),
+    THREAD.to_device(coeffs_to_poly(coeffs_c, flatend)).astype(real_type),
     real_type(mu_a), real_type(sigma_a), real_type(gamma_a),
     real_type(mu_b), real_type(sigma_b), real_type(gamma_b),
     real_type(mu_c), real_type(sigma_c), real_type(gamma_c),

@@ -23,7 +23,7 @@ initialize(os.environ['IPANEMA_BACKEND'],1)
 from utils.helpers import version_guesser, trigger_scissors, parse_angacc
 from utils.strings import printsec
 from utils.plot import mode_tex
-from analysis.angular_acceptance.iterative_mc import acceptance_effect
+# from analysis.angular_acceptance.iterative_mc import acceptance_effect
 from analysis.angular_acceptance.bdtconf_tester import bdtmesh
 
 import config
