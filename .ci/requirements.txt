@@ -19,3 +19,4 @@ termplotlib
 complot
 lib99ocl
 ipanema3
+hep_ml
