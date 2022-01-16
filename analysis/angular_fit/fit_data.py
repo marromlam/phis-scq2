@@ -119,7 +119,7 @@ branches_to_load += real
 branches_to_load += [weight]
 
 if TIMEACC['use_veloWeight']:
-  weight = f'veloWeight*sWeight'
+  weight = f'veloWeight*{weight}'
   branches_to_load += ["veloWeight"]
 
 
@@ -155,7 +155,7 @@ for i, y in enumerate(YEARS):
     w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
     data[y][t].angacc = Parameters.build(w,w.fetch('w.*'))
     # Normalize sWeights per bin
-    sw = np.zeros_like(data[y][t].df['sWeight'])
+    sw = np.zeros_like(data[y][t].df['time'])
     for l,h in zip(mass[:-1],mass[1:]):
       pos = data[y][t].df.eval(f'mHH>={l} & mHH<{h}')
       _sw = data[y][t].df.eval(f'{weight}*(mHH>={l} & mHH<{h})')
