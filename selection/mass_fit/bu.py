@@ -21,19 +21,9 @@ import complot
 # initialize ipanema3 and compile lineshapes
 ipanema.initialize(os.environ['IPANEMA_BACKEND'], 1)
 # prog = ipanema.compile("""
-# #define USE_DOUBLE 1
-# #include <lib99ocl/core.c>
-# #include <lib99ocl/complex.c>
-# #include <lib99ocl/stats.c>
-# #include <lib99ocl/special.c>
-# #include <lib99ocl/lineshapes.c>
 # #include <exposed/kernels.ocl>
 # """)
-
-prog = ipanema.compile("""
-#define USE_DOUBLE 1
-#include <exposed/kernels.ocl>
-""")
+from bs import cb_exponential3
 
 # }}}
 
@@ -69,26 +59,15 @@ def ipatia_exponential(mass, signal, nsigBd, nexp,
 # crystal-ball + exponential {{{
 
 def cb_exponential(mass, signal, nsigBd, nexp, muBd, sigmaBd, aL, nL, aR, nR, b, norm=1):
-  # compute backgrounds
-  pexpo = ristra.get(ristra.exp(mass*b))
-  # get signal
-  prog.py_double_crystal_ball(signal, mass, np.float64(muBd), np.float64(sigmaBd),
-                      np.float64(aL), np.float64(nL), np.float64(aR),
-                      np.float64(nR), global_size=(len(mass)))
-  pcb = ristra.get(signal)
-  # normalize arrays
-  _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)
-  _y = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)*0
-  # normalize cb-shape
-  prog.py_double_crystal_ball(_y, _x, np.float64(muBd), np.float64(sigmaBd),
-                      np.float64(aL), np.float64(nL), np.float64(aR),
-                      np.float64(nR), global_size=(len(_x)))
-  npb = np.trapz(ristra.get(_y), ristra.get(_x))
-  # normalize exp
-  nexpo = np.trapz(ristra.get(ristra.exp(_x*b)), ristra.get(_x))
-  # compute pdf value
-  ans = nsigBd*(pcb/npb) + nexp*(pexpo/nexpo)
-  return norm*ans
+  # merr = ristra.allocate(np.zeros_like(mass))
+  mLL, mUL = ristra.min(mass), ristra.max(mass)
+  ans = cb_exponential3(mass, mass, signal,
+                    fsigBs=nsigBd, fsigBd=0, fcomb=nexp,
+                    muBs=muBd, s0Bs=sigmaBd, s1Bs=0, s2Bs=0, 
+                    muBd=5300, s0Bd=1, s1Bd=0, s2Bd=0,
+                    aL=aL, nL=nL, aR=aR, nR=nR,
+                    b=b, norm=norm, mLL=mLL, mUL=mUL)
+  return ans
 
 # }}}
 
