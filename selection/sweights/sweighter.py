@@ -14,7 +14,7 @@ if __name__ == '__main__':
   args = vars(p.parse_args())
 
   # Load full dataset and creae prxoy to store new sWeights
-  sample = Sample.from_root(args['input_sample'])
+  sample = Sample.from_root(args['input_sample'], flatten=None)
   _proxy = np.float64(sample.df['time']) * 0.0
 
   # List all set of sWeights to be merged
