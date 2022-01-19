@@ -43,6 +43,7 @@ bsjpsikk
 analysis/bundle/tex/main_*
 bundle/tex/.fuse*
 shit_params.py
+dist/*
 
 # Logs and databases #
 ######################
