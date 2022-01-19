@@ -106,9 +106,19 @@ if __name__ == "__main__":
       sw = 'sw_pt'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
+      print("WARNING: Requested tuple with custon sw for given pTB bin does ")
+      print("         not exist. Trying without the trailing version number.")
+      eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_pt.root'
+      status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+    if status:
       print("WARNING: Requested tuple with custon sw for given pTB bin does not exist.")
       print("         Trying without the trailing version number.")
-      eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_pt.root'
+      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_pt_{v}.root'
+      status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+    if status:
+      print("WARNING: Requested tuple with custon sw for given pTB bin does not exist.")
+      print("         Trying without the trailing version number.")
+      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_pt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Requested tuple with custon sw for given pTB bin does not exist")
@@ -162,7 +172,13 @@ if __name__ == "__main__":
       eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
       if status:
-        print("WARNING: Could not found v1r0 tuple. Downloading v0r5...")
+        print(f"WARNING: Could not found {v} tuple. Downloading noveto...")
+        # WARNING: eos tuples seem to do not have version anymore...
+        #          Bs2JpsiPhi_Lb_2015_selected_bdt_noveto.root  
+        eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_noveto_tag.root'
+        status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+      if status:
+        print(f"WARNING: Could not found {v} tuple. Downloading v0r5...")
         # WARNING: eos tuples seem to do not have version anymore...
         eos_path = f'{EOSPATH}/v0r5/{m}/{y}/{m}_{y}_selected_bdt_sw_v0r5.root'
         status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
@@ -176,61 +192,25 @@ if __name__ == "__main__":
   # }}}
 
   # If we reached here, then all should be fine 
+  print(f"\n\n{80*'='}")
   print(f"Downloaded {eos_path}")
+  print(f"{80*'='}\n\n")
 
-  """
-  # download main file
-  if status == 0:
-    all_files.append([f"{m}_{y}_selected_bdt_sw_{v}.root", None])
-  else:
-    print(f"- File {m}_{y}_selected_bdt_sw_{v}.root does not exist on server.")
+  try:
+    result = uproot.open(local_path)[tree].pandas.df(flatten=None)
+  except:
+    result = uproot.open(local_path)['DVTuple'][tree].pandas.df(flatten=None)
 
-  # donwload binned variable files
-  for name, var in binned_files.items():
-    print(f"Downloading {m}_{y}_selected_bdt_sw_{var}_{v}.root")
-    _eos_path = eos_path.replace('selected_bdt_sw',f'selected_bdt_sw_{var}')
-    status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{_eos_path} {path}")
-    print(status)
-    if status == 0:
-      all_files.append([f"{m}_{y}_selected_bdt_sw_{var}_{v}.root", f"{var}"])
-    else:
-      print(f"- File {m}_{y}_selected_bdt_sw_{var}_{v}.root does not exist",
-            "on server.")
-
-  # Load and convert to pandas dfs
-  for f, b in all_files:
-    print(f, b)
-    fp = f"{path}/{f}"
-    if b:
-      b = f"sw_{b}"
-    all_dfs.append(uproot.open(fp)[tree].pandas.df(branches=b, flatten=None))
-    print(uproot.open(fp)[tree].pandas.df(branches=b, flatten=None))
-
-  # concatenate all columns
-  result = pd.concat(all_dfs, axis=1)
-  if "nsig_sw" in result.keys():
-    result.eval("sw=nsig_sw", inplace=True)
-  for var in binned_vars.keys():
-    if not f'sw_{var}' in list(result.keys()):
-      sw = np.zeros_like(result[f'sw'])
-      for cut in bin_vars[var]:
-        pos = result.eval(cut.replace(var, binned_vars[var]))
-        this_sw = result.eval(f'sw*({cut.replace(var,binned_vars[var])})')
-        sw = np.where(pos, this_sw * (sum(this_sw)/sum(this_sw*this_sw)), sw)
-      result[f'sw_{var}'] = result[f'sw']  # sw
-  """
-
-  result = uproot.open(local_path)[tree].pandas.df(flatten=None)
   try:
     print("There are sWeights variables")
     if 'sw_cosK_noGBw' in list(result.keys()):
       print('Adding Peilian sWeight')
       result.eval(f"sw = sw_cosK_noGBw", inplace=True)  # overwrite sw variable
     else:
-      print("Adding standard sWeight")
+      print(f"Adding standard sWeight: {sw}")
       result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
   except:
-    print(result.keys())
+    # print(result.keys())
     if 'B_BKGCAT' in list(result.keys()):
       print("sWeight is set to zero for B_BKGCAT==60")
       result['sw'] = np.where(result['B_BKGCAT'].values!=60,1,0)
@@ -274,7 +254,19 @@ if __name__ == "__main__":
     root_pandas.to_root(result, args['output'], key=tree)
   else:
     f = uproot.recreate(args['output'])
-    f[tree] = uproot.newtree({var: 'float64' for var in result})
+    _branches = {}
+    for k, v in result.items():
+        if 'int' in v.dtype.name:
+            _v = np.int32
+        elif 'bool' in v.dtype.name:
+            _v = np.int32
+        else:
+            _v = np.float64
+        _branches[k] = _v
+    mylist = list(dict.fromkeys(_branches.values()))
+    # print(mylist)
+    # print(_branches)
+    f[tree] = uproot.newtree(_branches)
     f[tree].extend(result.to_dict(orient='list'))
     f.close()
   print(f'    Succesfully written.')
@@ -285,4 +277,4 @@ if __name__ == "__main__":
 # }}}
 
 
-# vim: foldmethod=marker
+# vim: ts=4 sw=4 sts=4 et
