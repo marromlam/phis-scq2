@@ -221,4 +221,4 @@ rule IFT_plot:
 
 
 
-# vim: foldmethod=marker
+# vim: fdm=marker ft=snakemake
