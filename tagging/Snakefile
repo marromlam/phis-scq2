@@ -1,0 +1,87 @@
+
+
+rule tagging_combination_calibration:
+  """
+  Runs the calibration.
+  aka Kechen step 3
+  """
+  input:
+    sample = lambda wcs: tuples(wcs, weight='selected')
+  output:
+    sandbox = directory("tmp/tagging_combination_combination/{year}/{mode}/{version}_{weight}"),
+    calibration = "output/tagging_combination_calibration/{year}/{mode}/{version}_{weight}.py",
+  log:
+    option = temp("tmp/tagging_combination_calibration/{year}/{mode}/{version}_{weight}.py"),
+    job = temp("tmp/tagging_combination_calibration/{year}/{mode}/{version}_{weight}.sh"),
+    log = "output/log/taggin_combination_calibration/{year}/{mode}/{version}_{weight}.log"
+  run:
+    # first, create options file from template
+    t = Template(open('tagging/templates/calibration/bu.py').read())
+    with open(f"{log.option}", "w") as job:
+      job.write(t.substitute(dict(
+        input_tuple=f'{input.sample}',
+        sweight=f"sw",
+        idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
+      )))
+    # second, write down a bash script to run the EPM
+    job_cmds = [
+      f"THE_PATH=`pwd`",
+      f"mkdir -p {output.sandbox}",
+      f"cd {output.sandbox}",
+      f"$THE_PATH/dist/EspressoPerformanceMonitor/build/bin/SimpleEvaluator " +
+      f"$THE_PATH/{log.option}",
+      f"cd $THE_PATH"
+    ]
+    with open(f"{log.job}", "w") as job:
+      job.write("\n".join(job_cmds))
+    # run EPM -- takes 5 min or so
+    shell(f"(time bash {log.job}) &> {log.log}")
+    # copy calibration to know output
+    shell(f"cp {output.sandbox}/EspressoCalibrations.py {output.calibration}")
+
+
+rule tagging_combination:
+  """
+  Runs the calibration.
+  aka Kechen step 4
+  """
+  input:
+    sample = lambda wcs: tuples(wcs, weight='selected'),
+    calibration = "output/tagging_combination_calibration/{year}/{mode}/{version}_{weight}.py",
+  params:
+    config = 'tagging/comb_bsjpsiphi/config/Config_tagger_new.py'
+  output:
+    sandbox = directory("tmp/tagging_combination/{year}/{mode}/{version}_{weight}"),
+    sample = SAMPLES+"/{year}/{mode}/{version}_{weight}Tag.root",
+  log:
+    option = temp("tmp/tagging_combination/{year}/{mode}/{version}_{weight}.py"),
+    job = temp("tmp/tagging_combination/{year}/{mode}/{version}_{weight}.sh"),
+    log = "output/log/taggin_combination/{year}/{mode}/{version}_{weight}.log"
+  run:
+    # first, create options file from template
+    t = Template(open('tagging/templates/combination/bu.py').read())
+    with open(f"{log.option}", "w") as job:
+      job.write(open(f"{params.config}", 'r').read())
+      job.write(open(f"{input.calibration}", 'r').read())
+      job.write(t.substitute(dict(
+        input_tuple=f'{input.sample}',
+        output_tuple=f'{output.sample}',
+        sweight=f"sw",
+        idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
+      )))
+    # second, write down a bash script to run the EPM
+    job_cmds = [
+      f"THE_PATH=`pwd`",
+      f"mkdir -p {output.sandbox}",
+      f"cd {output.sandbox}",
+      f"$THE_PATH/dist/EspressoPerformanceMonitor/build/bin/SimpleEvaluator " +
+      f"$THE_PATH/{log.option}",
+      f"cd $THE_PATH"
+    ]
+    with open(f"{log.job}", "w") as job:
+      job.write("\n".join(job_cmds))
+    # run EPM -- takes 5 min or so
+    shell(f"(time bash {log.job}) &> {log.log}")
+    # copy calibration to know output
+    # shell(f"cp {output.sandbox}/EspressoCalibrations.py {output.calibration}")
+
