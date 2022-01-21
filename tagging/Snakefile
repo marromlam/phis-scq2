@@ -17,7 +17,7 @@ rule tagging_combination_calibration:
   log:
     option = temp("tmp/tagging_combination_calibration/{year}/{mode}/{version}.py"),
     job = temp("tmp/tagging_combination_calibration/{year}/{mode}/{version}.sh"),
-    log = "output/log/taggin_combination_calibration/{year}/{mode}/{version}.log"
+    log = "output/log/tagging_combination_calibration/{year}/{mode}/{version}.log"
   run:
     # first, create options file from template
     t = Template(open('tagging/templates/calibration/bu.py').read())
