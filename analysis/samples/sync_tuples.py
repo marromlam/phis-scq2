@@ -74,6 +74,7 @@ if __name__ == "__main__":
   p.add_argument('--year', help='Full root file with huge amount of branches.')
   p.add_argument('--mode', help='Full root file with huge amount of branches.')
   p.add_argument('--version', help='Full root file with huge amount of branches.')
+  p.add_argument('--weight', help='Full root file with huge amount of branches.')
   p.add_argument('--tree', help='Input file tree name.')
   p.add_argument('--output', help='Input file tree name.')
   p.add_argument('--eos', help='Input file tree name.')
@@ -156,14 +157,14 @@ if __name__ == "__main__":
   # version (baseline tuples) {{{
 
   if status: 
-    eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
+    eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_{v}.root'
     sw = 'sw'
     # eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Requested tuple with sw does not exist")
       print("         Trying without the trailing version number.")
-      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw.root'
+      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Requested tuple with sw does not exist")
@@ -175,12 +176,17 @@ if __name__ == "__main__":
         print(f"WARNING: Could not found {v} tuple. Downloading noveto...")
         # WARNING: eos tuples seem to do not have version anymore...
         #          Bs2JpsiPhi_Lb_2015_selected_bdt_noveto.root  
-        eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_noveto_tag.root'
+        eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_noveto.root'
         status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
       if status:
         print(f"WARNING: Could not found {v} tuple. Downloading v0r5...")
         # WARNING: eos tuples seem to do not have version anymore...
         eos_path = f'{EOSPATH}/v0r5/{m}/{y}/{m}_{y}_selected_bdt_sw_v0r5.root'
+        status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+      if status:
+        print(f"WARNING: Could not found {v} tuple. Downloading v0r5...")
+        # WARNING: eos tuples seem to do not have version anymore...
+        eos_path = f'{EOSPATH}/v0r5/{m}/{y}/{m}_{y}_selected_bdt_v0r5.root'
         status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
   if status:
     print("These tuples are not yet avaliable at root://eoslhcb.cern.ch/*.",
@@ -191,88 +197,93 @@ if __name__ == "__main__":
 
   # }}}
 
+
   # If we reached here, then all should be fine 
   print(f"\n\n{80*'='}")
   print(f"Downloaded {eos_path}")
   print(f"{80*'='}\n\n")
 
-  try:
-    result = uproot.open(local_path)[tree].pandas.df(flatten=None)
-  except:
-    result = uproot.open(local_path)['DVTuple'][tree].pandas.df(flatten=None)
+  if args['weight'] == 'ready':
+    try:
+      result = uproot.open(local_path)[tree].pandas.df(flatten=None)
+    except:
+      result = uproot.open(local_path)['DVTuple'][tree].pandas.df(flatten=None)
 
-  try:
-    print("There are sWeights variables")
-    if 'sw_cosK_noGBw' in list(result.keys()):
-      print('Adding Peilian sWeight')
-      result.eval(f"sw = sw_cosK_noGBw", inplace=True)  # overwrite sw variable
+    try:
+      print("There are sWeights variables")
+      if 'sw_cosK_noGBw' in list(result.keys()):
+        print('Adding Peilian sWeight')
+        result.eval(f"sw = sw_cosK_noGBw", inplace=True)  # overwrite sw variable
+      else:
+        print(f"Adding standard sWeight: {sw}")
+        result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
+    except:
+      # print(result.keys())
+      if 'B_BKGCAT' in list(result.keys()):
+        print("sWeight is set to zero for B_BKGCAT==60")
+        result['sw'] = np.where(result['B_BKGCAT'].values!=60,1,0)
+      else:
+        print("sWeight variable was not found. Set sw = 1")
+        result['sw'] = np.ones_like(result[result.keys()[0]])
+
+
+    # place cuts according to version substring
+    list_of_cuts = []; vsub_cut = None
+    for k,v in vsub_dict.items():
+      if k in V:
+        try:
+          noe = len(result.query(v))
+          if (k in ("g210300", "l210300")) and ("MC" in args['output']):
+            print("MCs are not cut in runNumber")
+          elif (k in ("g210300", "l210300")) and ("2018" not in args['output']):
+            print("Only 2018 is cut in runNumber")
+          elif (k in ("UcosK", "LcosK")) and 'Bd2JpsiKstar' not in m:
+            print("Cut in cosK was only planned in Bd")
+          else:
+            list_of_cuts.append(v)
+          if noe == 0:
+            print(f"ERROR: This cut leaves df empty. {v}")
+            print(f"       Query halted.")
+        except:
+          print(f"non hai variable para o corte {v}")
+    if list_of_cuts:
+      vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
+
+
+    # place the cut
+    print(f"{80*'-'}\nApplied cut: {vsub_cut}\n{80*'-'}")
+    if vsub_cut:
+      result = result.query(vsub_cut)
+    print(result)
+
+    # write
+    print(f"\nStarting to write {os.path.basename(args['output'])} file.")
+    if ROOT_PANDAS:
+      root_pandas.to_root(result, args['output'], key=tree)
     else:
-      print(f"Adding standard sWeight: {sw}")
-      result.eval(f"sw = {sw}", inplace=True)  # overwrite sw variable
-  except:
-    # print(result.keys())
-    if 'B_BKGCAT' in list(result.keys()):
-      print("sWeight is set to zero for B_BKGCAT==60")
-      result['sw'] = np.where(result['B_BKGCAT'].values!=60,1,0)
-    else:
-      print("sWeight variable was not found. Set sw = 1")
-      result['sw'] = np.ones_like(result[result.keys()[0]])
+      f = uproot.recreate(args['output'])
+      _branches = {}
+      for k, v in result.items():
+          if 'int' in v.dtype.name:
+              _v = np.int32
+          elif 'bool' in v.dtype.name:
+              _v = np.int32
+          else:
+              _v = np.float64
+          _branches[k] = _v
+      mylist = list(dict.fromkeys(_branches.values()))
+      # print(mylist)
+      # print(_branches)
+      f[tree] = uproot.newtree(_branches)
+      f[tree].extend(result.to_dict(orient='list'))
+      f.close()
+    print(f'    Succesfully written.')
 
-
-  # place cuts according to version substring
-  list_of_cuts = []; vsub_cut = None
-  for k,v in vsub_dict.items():
-    if k in V:
-      try:
-        noe = len(result.query(v))
-        if (k in ("g210300", "l210300")) and ("MC" in args['output']):
-          print("MCs are not cut in runNumber")
-        elif (k in ("g210300", "l210300")) and ("2018" not in args['output']):
-          print("Only 2018 is cut in runNumber")
-        elif (k in ("UcosK", "LcosK")) and 'Bd2JpsiKstar' not in m:
-          print("Cut in cosK was only planned in Bd")
-        else:
-          list_of_cuts.append(v)
-        if noe == 0:
-          print(f"ERROR: This cut leaves df empty. {v}")
-          print(f"       Query halted.")
-      except:
-        print(f"non hai variable para o corte {v}")
-  if list_of_cuts:
-    vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
-
-
-  # place the cut
-  print(f"{80*'-'}\nApplied cut: {vsub_cut}\n{80*'-'}")
-  if vsub_cut:
-    result = result.query(vsub_cut)
-  print(result)
-
-  # write
-  print(f"\nStarting to write {os.path.basename(args['output'])} file.")
-  if ROOT_PANDAS:
-    root_pandas.to_root(result, args['output'], key=tree)
+    # delete donwloaded files
+    shutil.rmtree(path, ignore_errors=True)
   else:
-    f = uproot.recreate(args['output'])
-    _branches = {}
-    for k, v in result.items():
-        if 'int' in v.dtype.name:
-            _v = np.int32
-        elif 'bool' in v.dtype.name:
-            _v = np.int32
-        else:
-            _v = np.float64
-        _branches[k] = _v
-    mylist = list(dict.fromkeys(_branches.values()))
-    # print(mylist)
-    # print(_branches)
-    f[tree] = uproot.newtree(_branches)
-    f[tree].extend(result.to_dict(orient='list'))
-    f.close()
-  print(f'    Succesfully written.')
-
-  # delete donwloaded files
-  shutil.rmtree(path, ignore_errors=True)
+    shutil.copy(local_path, args['output'])
+    shutil.rmtree(path, ignore_errors=True)
 
 # }}}
 
