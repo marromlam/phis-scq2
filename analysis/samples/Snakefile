@@ -8,26 +8,58 @@
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
 #    and then it worka automatically.
 
-rule samples_sync_tuple:
+rule samples_download_tuple:
+  wildcard_constraints:
+    weight = "(selected|ready)"
   threads: 2
   resources:
     mem_mb=6144
   params:
     settings.user['eos']
   output:
-    SAMPLES+'/{year}/{mode}/{version}_selected.root'
+    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}_{weight}.root'
   log:
-    'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
+    'output/log/samples_download_tuple/{year}/{mode}/{version}_{weight}.log'
   run:
     shell(f"""(time\
-    python analysis/samples/sync_tuples.py\
+    python analysis/samples/download_tuples.py\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
+    --weight {wildcards.weight}\
     --tree DecayTree\
     --output {output}\
     --eos {params}\
     ) &> {log}""")
+
+
+rule samples_upload_tuple:
+  wildcard_constraints:
+    # surname = "(lbWeight|tagged)"
+    weight = "(selected|sWeight|lbWeight|tagged)"
+  threads: 2
+  resources:
+    mem_mb=6144
+  params:
+    os.path.join(settings.user['eos'], 'tuples')
+  input:
+    lambda wcs: tuples(wcs, year=f'{wcs.year}', weight=f'{wcs.weight}')
+  output:
+    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9]+}_{weight,[A-Za-z0-9]+}.eos'
+  run:
+    m = f'{wildcards.mode}'
+    w = f'{wildcards.weight}'
+    y = f'{wildcards.year}'
+    v = f'{wildcards.version}'
+    local = f'{input}'
+    eos = os.path.join(f"{params}", v, m, y, f"{v}_{m}_{y}_{w}.root")
+    # eos = f'{input}'.replace(SAMPLES, f"{params}")
+    # if s == 'lbWeight':
+    #     eos.replace('_lbWeight.root', '_ready.root')
+    # elif m != 'Bs2JpsiPhi' and s == 'tagged':
+    #     eos.replace('_tagged.root', '_ready.root')
+    # shell(f"{}")
+    shell(f"(time xrdcp -f {local} root://eoslhcb.cern.ch/{eos}) &> {output}")
 
 # }}}
 
