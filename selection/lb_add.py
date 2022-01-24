@@ -203,9 +203,9 @@ if __name__ == '__main__':
     # parse arguments
     args = vars(p.parse_args())
     nLb = ipanema.Parameters.load(args['number_of_lb'])['nLb'].value
-    mcLbIn = uproot.open(args['mc_lb_input'])['DecayTree'].pandas.df()
-    rdLbIn = uproot.open(args['rd_lb_input'])['DecayTree'].pandas.df()
-    rdIn = uproot.open(args['rd_input'])['DecayTree'].pandas.df()
+    mcLbIn = uproot.open(args['mc_lb_input'])['DecayTree'].pandas.df(flatten=None)
+    rdLbIn = uproot.open(args['rd_lb_input'])['DecayTree'].pandas.df(flatten=None)
+    rdIn = uproot.open(args['rd_input'])['DecayTree'].pandas.df(flatten=None)
 
     # update tuples with wLb
     mcLbOut, rdLbOut, rdOut = merge_lb(nLb, mcLbIn, rdLbIn, rdIn)
