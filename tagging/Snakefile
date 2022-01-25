@@ -23,7 +23,7 @@ rule tagging_combination_calibration:
     t = Template(open('tagging/templates/calibration/bu.py').read())
     with open(f"{log.option}", "w") as job:
       job.write(t.substitute(dict(
-        input_tuple=f'{input.sample}',
+        input_tuple=os.path.abspath(f'{input.sample}'),
         sweight=f"sw",
         idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
       )))
@@ -68,8 +68,8 @@ rule tagging_combination:
       job.write(open(f"{params.config}", 'r').read())
       job.write(open(f"{input.calibration}", 'r').read())
       job.write(t.substitute(dict(
-        input_tuple=f'{input.sample}',
-        output_tuple=f'{output.sample}',
+        input_tuple=os.path.abspath(f'{input.sample}'),
+        output_tuple=os.path.abspath(f'{output.sample}'),
         sweight=f"sw",
         idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
       )))
