@@ -48,10 +48,16 @@ rule samples_upload_tuple:
     SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9]+}_{weight,[A-Za-z0-9]+}.eos'
   run:
     m = f'{wildcards.mode}'
-    w = f'{wildcards.weight}'
     y = f'{wildcards.year}'
     v = f'{wildcards.version}'
     local = f'{input}'
+    # phi-scq tuple handler is smarter than the user, and it knows which is the
+    # actual last tuple the user wants if she/he asks for some tuple that do
+    # not exist
+    # w = f'{wildcards.weight}'
+    w = os.path.basename(local).replace('.root', '')
+    w = w.split('_')[-1]  # remove version
+    # jan22, we decided the following naming convention for eos tuples
     eos = os.path.join(f"{params}", v, m, y, f"{v}_{m}_{y}_{w}.root")
     # eos = f'{input}'.replace(SAMPLES, f"{params}")
     # if s == 'lbWeight':
