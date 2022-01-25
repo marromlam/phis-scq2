@@ -4,6 +4,7 @@ CURRENT_PATH=`pwd`
 
 # delete any previous code
 rm -rf dist/EspressoPerformanceMonitor
+mkdir -p dist
 cd dist
 
 # clone the EPM repository
