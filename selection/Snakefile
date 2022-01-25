@@ -481,22 +481,21 @@ rule lbweights_add:
         # BUG: TODO: WARNING: year and version are hardcoded
         nLb = "analysis/params/lambda_b/2015/v1r0.json"
     output:
-        mcLb = SAMPLES+"/{year}/MC_Bs2JpsiPhi_fromLb/{version}_tagged.root",
-        rdLb = SAMPLES+"/{year}/Bs2JpsiPhi_Lb/{version}_prepared.root",
+        # mcLb = SAMPLES+"/{year}/MC_Bs2JpsiPhi_fromLb/{version}_tagged.root",
+        # rdLb = SAMPLES+"/{year}/Bs2JpsiPhi_Lb/{version}_prepared.root",
         rd = SAMPLES+"/{year}/Bs2JpsiPhi/{version}_lbWeight.root",
     params:
         script = 'selection/lb_add.py'
     log:
         'output/log/lbweights_add/{year}/Bs2JpsiPhi/{version}.log',
     run:
+        print(f"{output}")
         shell(f"""(time\
         python {params.script} \
         --mc-lb-input {input.mcLb} \
         --rd-lb-input {input.rdLb} \
         --rd-input {input.rd} \
         --number-of-lb {input.nLb} \
-        --mc-lb-output {output.mcLb} \
-        --rd-lb-output {output.rdLb} \
         --rd-output {output.rd} \
         --year {wildcards.year} \
         --version {wildcards.version} \
