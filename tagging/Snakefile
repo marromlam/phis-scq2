@@ -13,7 +13,7 @@ rule tagging_combination_calibration:
     sample = lambda wcs: tuples(wcs, weight='sWeight')
   output:
     sandbox = directory("tmp/tagging_combination_combination/{year}/{mode}/{version}"),
-    calibration = "output/tagging_combination_calibration/{year}/{mode}/{version}.py",
+    calibration = "output/params/tagging_combination_calibration/{year}/{mode}/{version}.py",
   log:
     option = temp("tmp/tagging_combination_calibration/{year}/{mode}/{version}.py"),
     job = temp("tmp/tagging_combination_calibration/{year}/{mode}/{version}.sh"),
@@ -51,7 +51,7 @@ rule tagging_combination:
   """
   input:
     sample = lambda wcs: tuples(wcs, weight='sWeight' if 'Bu' in f"{wcs.mode}" else 'selected'),
-    calibration = lambda wcs: f"output/tagging_combination_calibration/{wcs.year}/{'MC_Bu2JpsiKplus' if 'MC' in f'{wcs.mode}' else 'Bu2JpsiKplus'}/{wcs.version}.py",
+    calibration = lambda wcs: f"output/params/tagging_combination_calibration/{wcs.year}/{'MC_Bu2JpsiKplus' if 'MC' in f'{wcs.mode}' else 'Bu2JpsiKplus'}/{wcs.version}.py",
   params:
     config = 'tagging/comb_bsjpsiphi/config/Config_tagger_new.py'
   output:
