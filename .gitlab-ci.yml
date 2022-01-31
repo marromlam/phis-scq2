@@ -188,7 +188,7 @@ pages:
   stage: build
   script:
   - ls -larth
-  - pip install sphinx
+  - pip install sphinx furo sphinx-automodapi sphinx-autoapi nbsphinx
   - cd docs && make clean && make html
   artifacts:
     paths:
