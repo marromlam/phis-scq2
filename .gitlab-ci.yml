@@ -12,17 +12,17 @@ stages:
 
 before_script:
     # Copy original utils/default.json as will be done by utils/install.sh
-    - cp .ci/default.json config.json
+    - cp .ci/user.json config/user.json
     # Activate conda phisscq environment
     - source .ccache/conda3/bin/activate
-    - conda activate phisscq
-    - export PYTHONPATH=$PWD/analysis:$PYTHONPATH # add phi-scq folder to $PYTHONPATH
+    - conda activate phisscqNew
+    - export PYTHONPATH=$PWD:$PYTHONPATH # add phi-scq folder to $PYTHONPATH
     # Use opencl as default (it's slower than cuda, but it runs on more devices)
     - export IPANEMA_BACKEND='opencl'
     - export PYOPENCL_COMPILER_OUTPUT=1
     - export PYOPENCL_NO_CACHE=1
     # provide kerberos conf file
-    - export KRB5_CONFIG="$PWD/krb5.conf"
+    - export KRB5_CONFIG="$PWD/.ci/krb5.conf"
     # bypass kerberos sending password
     - echo "$SERVICE_PASS" | base64 -d | kinit mromerol@CERN.CH
     # bypass kerberos sending keytab
