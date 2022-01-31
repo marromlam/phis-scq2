@@ -183,3 +183,13 @@ Run Analysis:
 
 
 ################################################################################
+
+
+pages:
+  stage: build
+  script:
+  - cd docs && make clean && make html
+  artifacts:
+    paths:
+    - public
+
