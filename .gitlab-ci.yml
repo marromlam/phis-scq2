@@ -186,9 +186,9 @@ Run Analysis:
 
 pages:
   stage: build
-  before_script:
-    - ls -larth
   script:
+  - ls -larth
+  - pip install sphinx
   - cd docs && make clean && make html
   artifacts:
     paths:
