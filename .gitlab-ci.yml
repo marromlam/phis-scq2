@@ -190,9 +190,10 @@ pages:
   - ls -larth
   - pip install sphinx furo sphinx-automodapi sphinx-autoapi nbsphinx
   - cd docs && make clean && make html
+  - cd .. && mv docs/build/html public
   artifacts:
     paths:
-    - docs/build
+    - public
     expire_in: 1 year
     when: always
   cache:
