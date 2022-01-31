@@ -1,13 +1,14 @@
-# 1. Samples
+Samples
+-------
 
 This repository aims to use are the tuples produced by the
 _Bs2JpsiPhi-FullRun2_ pipeline. It the user wants to use others than those,
 then is his/her job to copy them to the correct `sidecar` path.
 
 The main samples in phis-scq follow the following structure:
-```bash
+::
 /path/to/sidecar/year/mode/version.root
-```
+
 where `version` should be matched with the version of the _Bs2JpsiPhi-FullRun2_
 pipeline user to produce the tuples, `year` and `mode` are the corresponding 
 year and mode of tuple
@@ -31,16 +32,15 @@ a different name.
 Basically to handle the tuple sync and reduction one needs to run two rules
 * samples_sync_tuples: This rules directly dowloads from esos the asked version of tuples
 to run it one ask for
-```bash
+::
 snakemake /path/to/sidecar/year/mode/version_sWeight.root
-```
+
 * samples_reduce_tuples: This rule takes the last step of the reweightings 
 and applies different renamings to the branches (see §1.1 below).
 Afterwards, the tuples is saved in disk using less space and previous root files
 deleted.
-```bash
+::
 snakemake /path/to/sidecar/year/mode/version.root
-```
 
 Tuples are first named with flag being `dateflag_selected_bdt` or 
 `dateflag_selected_bdt_sw` as those are the final steps of _Bs2JpsiPhi-FullRun2_
@@ -49,7 +49,8 @@ where the numbers correspond tho the date when the tuple was copied  to the host
 where phis-scq pipeline is running and the letter's purpose is to avoid 
 overwriting tuples if within the same day the user is copying two versions of the same tuple.
 
-## 1.1 Branches
+Branches
+^^^^^^^^
 
 The `branches.yaml` file contains all branches that will remain after running
 `samples_reduce_tuple`, that is, in the soon-to-be analysed `version.root` tuples.

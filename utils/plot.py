@@ -7,13 +7,15 @@
 # Modules {{{
 
 import yaml
+import os
 
 # }}}
 
 
 # Load branches {{{
 
-with open("analysis/samples/branches_latex.yaml") as file:
+PHISSCQ = os.environ['PHISSCQ']
+with open(rf"{PHISSCQ}/analysis/samples/branches_latex.yaml") as file:
     BRANCHES = yaml.load(file, Loader=yaml.FullLoader)
 
 # }}}
