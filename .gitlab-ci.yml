@@ -61,7 +61,7 @@ Setup Environment:
     changes:
       - .ci/user.json
       - .ci/install_wizard.sh
-      - .gitlab-ci.yml
+      # - .gitlab-ci.yml
   artifacts:
     paths:
       - sidecar
@@ -193,4 +193,9 @@ pages:
   artifacts:
     paths:
     - public
+  cache:
+    key: build_cache_${CI_COMMIT_REF_SLUG}
+    paths:
+      - .ccache
+    policy: pull
 
