@@ -8,29 +8,29 @@
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
 #    and then it worka automatically.
 
-rule samples_download_tuple:
-  wildcard_constraints:
-    weight = "(selected|ready)"
-  threads: 2
-  resources:
-    mem_mb=6144
-  params:
-    settings.user['eos']
-  output:
-    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}_{weight}.root'
-  log:
-    'output/log/samples_download_tuple/{year}/{mode}/{version}_{weight}.log'
-  run:
-    shell(f"""(time\
-    python analysis/samples/download_tuples.py\
-    --year {wildcards.year}\
-    --mode {wildcards.mode}\
-    --version {wildcards.version}\
-    --weight {wildcards.weight}\
-    --tree DecayTree\
-    --output {output}\
-    --eos {params}\
-    ) &> {log}""")
+# rule samples_download_tuple:
+#   wildcard_constraints:
+#     weight = "(selected|ready)"
+#   threads: 2
+#   resources:
+#     mem_mb=6144
+#   params:
+#     settings.user['eos']
+#   output:
+#     SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}_{weight}.root'
+#   log:
+#     'output/log/samples_download_tuple/{year}/{mode}/{version}_{weight}.log'
+#   run:
+#     shell(f"""(time\
+#     python analysis/samples/download_tuples.py\
+#     --year {wildcards.year}\
+#     --mode {wildcards.mode}\
+#     --version {wildcards.version}\
+#     --weight {wildcards.weight}\
+#     --tree DecayTree\
+#     --output {output}\
+#     --eos {params}\
+#     ) &> {log}""")
 
 
 rule samples_upload_tuple:
