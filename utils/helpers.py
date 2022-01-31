@@ -454,7 +454,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
                 # if we dont plan to run the whole reweighting pipeline, then
                 # the kbuWeight=pdfWeight, and BdRD does not have such weight
                 # here we skip it to selected/ready
-                weight = ready
+                weight = vw8s
             if weight == 'lbWeight':
                 # skip tagging
                 weight = 'selected'
@@ -477,8 +477,9 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         # MC_Bd2JpsiKstar {{{
         elif m == 'MC_Bd2JpsiKstar':
             if weight == 'lbWeight':
-                # skip tagging
                 weight = 'selected'
+            if weight == 'oddWeight':
+                weight = oddWeight
             elif weight == 'veloWeight':
                 weight = vw8s
             elif weight not in ['selected', 'ready', sw8s, vw8s, 'phiWeight',
@@ -491,6 +492,8 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         elif m == 'MC_Bs2JpsiPhi':
             if weight == 'lbWeight':
                 weight = 'tagged'
+            if weight == 'oddWeight':
+                weight = oddWeight
             elif weight == 'kbuWeight':
                 weight = 'pdfWeight'
             elif weight == 'veloWeight':
@@ -505,6 +508,8 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         elif m == 'MC_Bs2JpsiKK_Swave':
             if weight == 'lbWeight':
                 weight = 'tagged'
+            if weight == 'oddWeight':
+                weight = oddWeight
             elif weight == 'kbuWeight':
                 weight = 'pdfWeight'
             elif weight == 'veloWeight':
@@ -519,7 +524,9 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         elif m == 'MC_Bs2JpsiPhi_dG0':
             if weight == 'lbWeight':
                 weight = 'tagged'
-            elif weight == 'kbuWeight':
+            if weight == 'oddWeight':
+                weight = oddWeight
+            if weight == 'kbuWeight':
                 weight = 'pdfWeight'
             elif weight == 'veloWeight':
                 weight = vw8s
