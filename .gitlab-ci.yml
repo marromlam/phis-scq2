@@ -63,6 +63,7 @@ Setup Environment:
     changes:
       #- utils/default.json
       - utils/install.sh
+      - .gitlab-ci.yml
   artifacts:
     paths:
       - sidecar
