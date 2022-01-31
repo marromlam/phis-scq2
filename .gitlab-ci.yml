@@ -192,7 +192,9 @@ pages:
   - cd docs && make clean && make html
   artifacts:
     paths:
-    - public
+    - docs/build
+    expire_in: 1 year
+    when: always
   cache:
     key: build_cache_${CI_COMMIT_REF_SLUG}
     paths:
