@@ -50,10 +50,8 @@ Setup Environment:
     - wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O .ccache/miniconda.sh
     - bash .ccache/miniconda.sh -b -s -f -p .ccache/conda3
     - source .ccache/conda3/bin/activate
-    - conda env create -f .ci/environment.yaml
-    - conda activate phisscq
-    - git clone https://gitlab.cern.ch/mromerol/ipanema3.git .ccache/ipanema3
-    - pip install -e .ccache/ipanema3
+    - conda env create -f .ci/environment.yml
+    - conda activate phisscqNew
     - pip install -r .ci/requirements.txt
   cache:
     key: build_cache_${CI_COMMIT_REF_SLUG}
@@ -188,6 +186,8 @@ Run Analysis:
 
 pages:
   stage: build
+  before_script:
+    - ls -larth
   script:
   - cd docs && make clean && make html
   artifacts:
