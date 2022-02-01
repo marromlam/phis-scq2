@@ -1,6 +1,7 @@
-# Angular acceptance
+Angular acceptance
+------------------
 
-The effects of the angular acceptance are modelled with the __normalization weights__.
+The effects of the angular acceptance are modelled with the *normalization weights*.
 These are obtained from fully simulated signal events as will be described next.
 
 The normalization weights are refined as the MC is iteratively weighted to match
@@ -9,9 +10,9 @@ the physics parameters obtained from data, in order to correct for imperfections
 in the detector simulation.
 
 The pipeline to run angular aceptance computations is quite simple
-```
-snakemake output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}.json
-```
+.. ::
+  snakemake output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}.json
+
 where:
 * `year`: The year corresponding to the set of normalization weights one is looking for.
 * `mode`: Refers to the mode of the angular acceptance to be computed. It can be `MC_Bs2JpsiPhi`, `MC_Bs2JpsiPhi_dG0` or `Bs2JpsiPhi`, but be aware not all rules run for all modes. The `Bs2JpsiPhi` corresponds (when MC modes exist) to the weighted average of the MCs.
@@ -20,7 +21,8 @@ where:
 * `timeacc`: This is the flag to specify the time acceptance configuration. See the time accetance README for more information.
 * `trigger`: As always, it is the trigger configuration, biased or unbiased. For the naive rule one can also run with combined.
 
-## Normalization weights from the full simulation
+Normalization weights from the full simulation
+----------------------------------------------
 
 For each year from 2015 to 2018 there are differente samples of fully simulated events,
 generated with the parameters in $`\mathtt{angular\_acceptance/parameters/}`$`year`$`\mathtt{/}`$`mode`$`\mathtt{.json}`$. For
@@ -28,16 +30,15 @@ the evatuoation of the generator level p.d.f. of the MC events, true variables a
 In constras to data, reconstructe helicuty angle are used when evaluating the angular
 functions. As matter of fact, the normalization weights are computed as follows
 
-```math
-\tilde{w}_k =
-\sum_{i=1}^{\# \mathrm{events}} \omega_i
-f_k({\theta_K}_i^{\mathrm{reco}},{\theta_{\mu}}_i^{\mathrm{reco}},{\phi}_{i}^{\mathrm{reco}})
-\frac
-{ \frac{d\Gamma}{dt}(t_i^{\mathrm{true}})}
-{ \frac{d\Gamma^4}{dtd\Omega}  (t_i^{\mathrm{true}},{\theta_K}_i^{\mathrm{true}},{\theta_{\mu}}_i^{\mathrm{true}},{\phi}_{i}^{\mathrm{true}})}
-```
+.. math::
+  \tilde{w}_k =
+  \sum_{i=1}^{\# \mathrm{events}} \omega_i
+  f_k({\theta_K}_i^{\mathrm{reco}},{\theta_{\mu}}_i^{\mathrm{reco}},{\phi}_{i}^{\mathrm{reco}})
+  \frac
+  { \frac{d\Gamma}{dt}(t_i^{\mathrm{true}})}
+  { \frac{d\Gamma^4}{dtd\Omega}  (t_i^{\mathrm{true}},{\theta_K}_i^{\mathrm{true}},{\theta_{\mu}}_i^{\mathrm{true}},{\phi}_{i}^{\mathrm{true}})}
 
-where $`\omega_i`$ stands for a per event weight, and finally the _normalization weights_ are
+where $`\omega_i`$ stands for a per event weight, and finally the *normalization weights* are
 
 ```math
 {w}_k = \frac{1}{\tilde{w}_0} \tilde{w}_k
@@ -65,7 +66,9 @@ snakemake output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_naive_{tr
 ```
 
 
-## Correcting MC and refining the normalization weights
+Correcting MC and refining the normalization weights
+----------------------------------------------------
+
 
 We must ensure the distributions of the helicity angles in MC and data
 correspond to the same distributions of kinematics in the laboratory frame.
@@ -80,7 +83,8 @@ which will run first the corrected normalization weights for each MC sample and
 finally average them to create the `Bs2JpsiPhi` one.
 
 
-## Iterative procedure
+Iterative procedure
+-------------------
 
 During the iterative procedure, we will correct the mismodeled acceptance in MC
 using GB-weighting in $p_{K^{\pm}}$, $p_{K^{\pm}}^T$ ($p_{\mu^{\pm}}$,
@@ -104,7 +108,8 @@ snakemake output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_yearly_ba
 Each of these rules will compute both trigger sets.
 
 
-## Systematics
+Systematics
+-----------
 
 ...
 

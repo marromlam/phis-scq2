@@ -339,7 +339,7 @@ def cb_exponential2(mass, merr, signal, nsigBs=0, nsigBd=0, nexp=0,
 
 # TODO: THIS IS THE FINAL ONE
 def cb_exponential3(mass, merr, signal, fsigBs=0, fsigBd=0, fcomb=0,
-                    muBs=5400, s0Bs=1, s1Bs=0, s2Bs=0, 
+                    muBs=5400, s0Bs=1, s1Bs=0, s2Bs=0,
                     muBd=5300, s0Bd=1, s1Bd=0, s2Bd=0,
                     aL=0, nL=0, aR=0, nR=0,
                     b=0, norm=1, mLL=None, mUL=None):
@@ -472,6 +472,7 @@ def mass_fitter(odf,
       if with_calib:
         _pars.remove('fsigBs', 'muBs')
         pars.remove('s1Bs', 's2Bs')
+        _pars.unlock('s1Bs', 's2Bs')
       else:
         _pars.remove('fsigBs', 'muBs', 's0Bs')
       _pars.unlock('b')
@@ -689,6 +690,7 @@ if __name__ == '__main__':
   
 
   mass_range=(5202, 5548)
+  mass_range=(5200, 5550)
   if args['mass_bin']:
     if 'Bd2JpsiKstar' in args['mode']:
       mass = [826, 861, 896, 931, 966]
