@@ -1,4 +1,4 @@
-# MC_Bu2JpsiKplus
+# template for Bu2JpsiKplus tagging calibration
 #
 #
 

@@ -8,7 +8,7 @@ __email__ = ["email"]
 
 
 import argparse
-from ROOT import TFile, TObject, gROOT, TList, TTree
+# from ROOT import TFile, TObject, gROOT, TList, TTree
 # from prepare_tree import add_year_wlb_lb, add_wlb_jpsiphi
 
 from selection.lb_prepare import tagging_fractions
@@ -192,9 +192,9 @@ if __name__ == '__main__':
     p.add_argument('--hist-loc', help='Where to save?')
     p.add_argument('--plot-loc', help='Where to save?')
     p.add_argument('--mc-lb-input', help='Lb tuple to be merged to data')
-    p.add_argument('--mc-lb-output', help='Intermediate file with reduced number of vars')
+    # p.add_argument('--mc-lb-output', help='Intermediate file with reduced number of vars')
     p.add_argument('--rd-lb-input', help='To which data file merge the Lb')
-    p.add_argument('--rd-lb-output', help='Intermediate file with reduced number of vars')
+    # p.add_argument('--rd-lb-output', help='Intermediate file with reduced number of vars')
     p.add_argument('--rd-input', help='Intermediate file with reduced number of vars')
     p.add_argument('--rd-output', help='Intermediate file with reduced number of vars')
     p.add_argument('--ntuple-no-veto', help='Data tuple w/o Lb veto applied')
@@ -203,20 +203,20 @@ if __name__ == '__main__':
     # parse arguments
     args = vars(p.parse_args())
     nLb = ipanema.Parameters.load(args['number_of_lb'])['nLb'].value
-    mcLbIn = uproot.open(args['mc_lb_input'])['DecayTree'].pandas.df()
-    rdLbIn = uproot.open(args['rd_lb_input'])['DecayTree'].pandas.df()
-    rdIn = uproot.open(args['rd_input'])['DecayTree'].pandas.df()
+    mcLbIn = uproot.open(args['mc_lb_input'])['DecayTree'].pandas.df(flatten=None)
+    rdLbIn = uproot.open(args['rd_lb_input'])['DecayTree'].pandas.df(flatten=None)
+    rdIn = uproot.open(args['rd_input'])['DecayTree'].pandas.df(flatten=None)
 
     # update tuples with wLb
     mcLbOut, rdLbOut, rdOut = merge_lb(nLb, mcLbIn, rdLbIn, rdIn)
 
     # save merged tree if we want
-    with uproot.recreate(args['mc_lb_output']) as rf:
-        rf['DecayTree'] = uproot.newtree({var: 'float64' for var in mcLbOut})
-        rf['DecayTree'].extend(mcLbOut.to_dict(orient='list'))
-    with uproot.recreate(args['rd_lb_output']) as rf:
-        rf['DecayTree'] = uproot.newtree({var: 'float64' for var in rdLbOut})
-        rf['DecayTree'].extend(rdLbOut.to_dict(orient='list'))
+    # with uproot.recreate(args['mc_lb_output']) as rf:
+    #     rf['DecayTree'] = uproot.newtree({var: 'float64' for var in mcLbOut})
+    #     rf['DecayTree'].extend(mcLbOut.to_dict(orient='list'))
+    # with uproot.recreate(args['rd_lb_output']) as rf:
+    #     rf['DecayTree'] = uproot.newtree({var: 'float64' for var in rdLbOut})
+    #     rf['DecayTree'].extend(rdLbOut.to_dict(orient='list'))
     with uproot.recreate(args['rd_output']) as rf:
         rf['DecayTree'] = uproot.newtree({var: 'float64' for var in rdOut})
         rf['DecayTree'].extend(rdOut.to_dict(orient='list'))

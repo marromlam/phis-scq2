@@ -41,7 +41,7 @@ import config
 
 def reweight(original, target, original_weight, target_weight,
              n_estimators, learning_rate, max_depth, min_samples_leaf, trunc):
-  """
+  r"""
   This is the general reweighter for phis analysis.
 
   Parameters
@@ -110,7 +110,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
 
   # fetch variables in original files
   print('Loading branches for original_sample')
-  odf = uproot.open(original_file)[original_treename].pandas.df()
+  odf = uproot.open(original_file)[original_treename].pandas.df(flatten=None)
   try:
     odf['phiHH'] = odf.eval("arctan((hminus_PY+hplus_PY)/(hminus_PX+hplus_PX))")
   except:
@@ -118,7 +118,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
     print(f'You cannot calculate the phi of the phi for {original_file}')
   print(odf)
   print('Loading branches for target_sample')
-  tdf = uproot.open(target_file)[target_treename].pandas.df()
+  tdf = uproot.open(target_file)[target_treename].pandas.df(flatten=None)
   try:
     tdf['phiHH'] = tdf.eval("arctan((hminus_PY+hplus_PY)/(hminus_PX+hplus_PX))")
   except:

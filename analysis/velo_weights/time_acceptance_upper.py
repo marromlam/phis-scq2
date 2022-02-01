@@ -53,3 +53,6 @@ if __name__ == '__main__':
                  verbose=True)
   print(res)
   res.params.dump(args['timeacc'])
+
+
+# vim: ts=2 sw=2 sts=2 et

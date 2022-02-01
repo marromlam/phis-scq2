@@ -4,6 +4,7 @@ DESCRIPTION = """
 
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
+__all__ = ['fcn_data', 'get_angular_acceptance', 'kkp_weighting', 'compute_pdf_ratio_weight', 'check_for_convergence']
 
 
 

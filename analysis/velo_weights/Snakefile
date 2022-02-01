@@ -43,12 +43,12 @@ rule velo_weights_reduce_downstream:
   resources:
     mem_mb = 15000
   wildcard_constraints:
-    version = 'downstream',
+    # version = 'downstream',
     mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)",
   input:
-    ancient(SAMPLES+'/{year}/{mode}/{version}_full.root')
+    ancient(SAMPLES+'/2016/{mode}/downstream_full.root')
   output:
-    SAMPLES+'/{year}/{mode}/{version}.root'
+    SAMPLES+'/{year}/{mode}/{version}_downstream.root'
   log:
     'output/log/velo_weights_reduce_downstream/{year}/{mode}/{version}.log'
   run:
@@ -56,6 +56,9 @@ rule velo_weights_reduce_downstream:
     python analysis/velo_weights/reduce_tuple.py\
     --input-sample {input}\
     --output-sample {output}\
+    --year 2016\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
     ) &> {log}""")
 
 # }}}
@@ -71,10 +74,10 @@ rule velo_weights_mass_fit_Bu:
     bin = "(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)",
     model = "(cb|dgauss|ipatia)",
     particle = "(muplus|muminus|hplus|hminus)",
-    version = 'downstream',
+    # version = 'downstream',
     mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)"
   input:
-    sample = SAMPLES+"/{year}/{mode}/{version}.root",
+    sample = SAMPLES+"/{year}/{mode}/{version}_downstream.root",
   output:
     pars = "output/params/velo_weights/{year}/{mode}/{version}_{model}_{particle}_docaz{bin}.json",
     pars_match = "output/params/velo_weights/{year}/{mode}/{version}_{model}_{particle}_docaz{bin}_match.json",
@@ -105,19 +108,17 @@ rule velo_weights_mass_fit_Bu:
 
 # compute efficiency shape and velo weights {{{
 
-# WARNING: 2016 only
-
 rule velo_weights_efficiency_Bu:
   threads: 6
   resources:
     mem_mb = 4000
   wildcard_constraints:
-    version = 'downstream',
+    # version = 'downstream',
     mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)"
   input:
-    sample = SAMPLES+"/2016/{mode}/{version}.root",
-    pars = expand("output/params/velo_weights/2016/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}.json", bin=range(1,15)),
-    pars_match = expand("output/params/velo_weights/2016/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}_match.json", bin=range(1,15)),
+    sample = SAMPLES+"/{year}/{mode}/{version}_downstream.root",
+    pars = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}.json", bin=range(1,14)),
+    pars_match = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}_match.json", bin=range(1,14)),
   output:
     pars = "output/params/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}.json",
     plot = "output/figures/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}_fit.pdf",
@@ -145,7 +146,7 @@ rule velo_weights_compute:
     mem_mb=5000
   input:
     original = lambda wcs: tuples(wcs, weight='sWeight'),
-    pars = lambda wcs: expand("output/params/velo_weights/{{year}}/{mode}/downstream_{effmodel}_{massmodel}_hplus.json",
+    pars = lambda wcs: expand("output/params/velo_weights/{{year}}/{mode}/{{version}}_{effmodel}_{massmodel}_hplus.json",
                   effmodel=config['velo_effmodel'], massmodel=config['velo_massmodel'],
                   mode="MC_Bu2JpsiKplus" if f'{wcs.mode}'[:2]=='MC' else "Bu2JpsiKplus")
   output:

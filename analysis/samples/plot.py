@@ -9,7 +9,8 @@ import numpy as np
 import argparse
 from utils.plot import watermark, mode_tex
 
-with open(r"analysis/samples/branches_latex.yaml") as file:
+PHISSCQ = os.environ['PHISSCQ']
+with open(rf"{PHISSCQ}/analysis/samples/branches_latex.yaml") as file:
     BRANCHES = yaml.load(file, Loader=yaml.FullLoader)
 
 
