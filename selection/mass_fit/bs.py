@@ -454,12 +454,12 @@ def mass_fitter(odf,
 
     pars = ipanema.Parameters()
     # Create common set of Bs parameters (all models must have and use)
-    pars.add(dict(name='fsigBs', value=0.9, min=0.1, max=1, free=True, latex=r'N_{B_s}'))
+    pars.add(dict(name='fsigBs', value=0.9, min=0.01, max=1, free=True, latex=r'N_{B_s}'))
     pars.add(dict(name='muBs', value=5367, min=5200, max=5500, latex=r'\mu_{B_s}'))
     if with_calib:
       # if not input_pars:
       pars.add(dict(name='s0Bs', value=0,    min=0, max=50,  free=False, latex=r'p_0^{B_s}'))
-      pars.add(dict(name='s1Bs', value=0.7,  min=0, max=2,  free=True,  latex=r'p_1^{B_s}'))
+      pars.add(dict(name='s1Bs', value=0.7,  min=-5, max=10,  free=True,  latex=r'p_1^{B_s}'))
       pars.add(dict(name='s2Bs', value=0.00, min=-1, max=1,  free=True,  latex=r'p_2^{B_s}'))
     else:
       pars.add(dict(name='s0Bs', value=5,    min=1, max=100, free=True,  latex=r'p_0^{B_s}'))
@@ -500,13 +500,13 @@ def mass_fitter(odf,
         # }}}
       elif "cbcalib" in model:
         # Crystal Ball with per event resolution tails {{{
-        pars.add(dict(name='aL', value=1.4, min=0.1, max=10.5, free=True,  latex=r'a_l'))
-        pars.add(dict(name='nL', value=1,   min=0.1,   max=50,   free=True,  latex=r'n_l'))
-        pars.add(dict(name='aR', value=1.4, min=0.1, max=10.5, free=True,  latex=r'a_r'))
-        pars.add(dict(name='nR', value=1,   min=0.1,   max=50,   free=True,  latex=r'n_r'))
+        pars.add(dict(name='aL', value=1.4, min=-1, max=10.5, free=True,  latex=r'a_l'))
+        pars.add(dict(name='nL', value=1,   min=-1,   max=50,   free=True,  latex=r'n_l'))
+        pars.add(dict(name='aR', value=1.4, min=-1, max=10.5, free=True,  latex=r'a_r'))
+        pars.add(dict(name='nR', value=1,   min=-1,   max=50,   free=True,  latex=r'n_r'))
         # }}}
       # Combinatorial background
-      pars.add(dict(name='b',         value=-0.05, min=-1,  max=0,     free=False,  latex=r'b'))
+      pars.add(dict(name='b',         value=-0.05, min=-1,  max=1,     free=False,  latex=r'b'))
       pars.add(dict(name='fcomb',      formula="1-fsigBs",                          latex=r'N_{comb}'))
 
     if has_bd:
@@ -550,7 +550,14 @@ def mass_fitter(odf,
     # for name in ['nsig', 'mu', 'sigma']:
     #     pars[name].init = res.params[name].value
     # res = False
-    res = ipanema.optimize(fcn, pars, fcn_kwgs={'data':rd}, method='minuit', verbose=True, strategy=1, tol=0.05)
+    try:
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd}, method='minuit', verbose=True, strategy=1, tol=0.05)
+    except:
+        print("There was a problem with the fit. Let's try again.")
+        pars['s1Bs'].set(value=0.1, init=0.1, max=5)
+        pars['s2Bs'].set(value=0.0, init=.0, max=1)
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd}, method='minuit', verbose=True, strategy=1, tol=0.05)
+
     if res:
       print(res)
       fpars = ipanema.Parameters.clone(res.params)
@@ -609,7 +616,6 @@ def mass_fitter(odf,
     if figs:
       os.makedirs(figs, exist_ok=True)
       fig.savefig(os.path.join(figs, f"fit.pdf"))
-      fig.savefig(f"fit.pdf")
     axplot.set_yscale('log')
     try:
       axplot.set_ylim(1e0,1.5*np.max(y))
@@ -617,7 +623,6 @@ def mass_fitter(odf,
       print('axes not scaled')
     if figs:
       fig.savefig(os.path.join(figs, f"logfit.pdf"))
-      fig.savefig(f"logfit.pdf")
     plt.close()
 
     # }}}
@@ -633,11 +638,18 @@ def mass_fitter(odf,
         _yields = ipanema.Parameters.build(fpars, _yields)
         _pars = ipanema.Parameters.build(fpars, _pars)
 
+        # WARNING: Breaking change!  -- February 4th
+        #          sw(p, y, len(data)) * wLb != sw(p, y, wLb.sum())
+        #          which one is correct? Lera does the RS and I did LS
+        # sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y), _pars, _yields, ristra.get(rd.weight).sum())
         sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y), _pars, _yields)
         for k,v in sw.items():
           _sw = np.copy(_proxy)
           _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
           sw[k] = _sw
+        # for i in range(60, 152):
+        #     print(i, sw['fsigBs'][i])
+        # print("sum of wLb", np.sum( rd.df.eval(mass_weight).values ))
         return (fpars, sw)
 
     # }}}
