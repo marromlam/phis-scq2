@@ -18,5 +18,5 @@ corner
 termplotlib
 hep_ml
 complot==0.0.2.dev2
-lib99ocl==0.0.0.dev8
-ipanema3==1.0.0
+lib99ocl
+ipanema3
