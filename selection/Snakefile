@@ -355,7 +355,7 @@ rule mass_fit_bs_lb:
     mode = ".*(_fromLb|_Lb)",
     trigger = 'k(plus|minus)'
   input:
-    root_file = lambda wcs: tuples(wcs, weight='tagged'),  # TODO: fix 
+    root_file = lambda wcs: tuples(wcs, weight='tagged'),
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
     sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
@@ -478,11 +478,9 @@ rule lbweights_add:
         mcLb = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_fromLb', weight='sWeight'),
         rdLb = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Lb', weight='sWeight'),
         rd = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', weight='tagged'),
-        # BUG: TODO: WARNING: year and version are hardcoded
-        nLb = "analysis/params/lambda_b/2015/v1r0.json"
+        # WARNING: version is hardcoded
+        nLb = "analysis/params/lambda_b/{year}/v1r0.json"
     output:
-        # mcLb = SAMPLES+"/{year}/MC_Bs2JpsiPhi_fromLb/{version}_tagged.root",
-        # rdLb = SAMPLES+"/{year}/Bs2JpsiPhi_Lb/{version}_prepared.root",
         rd = SAMPLES+"/{year}/Bs2JpsiPhi/{version}_lbWeight.root",
     params:
         script = 'selection/lb_add.py'
