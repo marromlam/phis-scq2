@@ -642,10 +642,10 @@ def mass_fitter(odf,
         #          sw(p, y, len(data)) * wLb != sw(p, y, wLb.sum())
         #          which one is correct? Lera does the RS and I did LS
         # sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y), _pars, _yields, ristra.get(rd.weight).sum())
-        sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y), _pars, _yields)
+        sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y), _pars, _yields, rd.weight)
         for k,v in sw.items():
           _sw = np.copy(_proxy)
-          _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
+          _sw[list(rd.df.index)] = v
           sw[k] = _sw
         # for i in range(60, 152):
         #     print(i, sw['fsigBs'][i])
