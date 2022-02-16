@@ -17,6 +17,7 @@ common: &common
   "hphi" : "helphi"
   "idB" : "B_ID"
   "mHH" : "X_M"
+  "mB" : "B_ConstJpsi_M_1"
   "idHH" : "X_ID"
   "sigmat" : "sigmat"
   "pHp" : "hplus_P"
@@ -77,7 +78,7 @@ MC_common: &MC_common
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "bkgcatB" : "B_BKGCAT"
-  "gbweights" : "gb_weights"
+  "gbWeights" : "gb_weights"
 
 # }}}
 
@@ -87,10 +88,13 @@ MC_common: &MC_common
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
   "sWeight" : "sigBsSW"
+  "sWeightBd" : "sigBdSW"
+  "sWeightComb" : "combSW"
   "tagOSdec" : "OS_Combination_DEC"
   "tagSSdec" : "B_SSKaonLatest_TAGDEC"
   "tagOSeta" : "OS_Combination_ETA"
   "tagSSeta" : "B_SSKaonLatest_TAGETA"
+  "lbWeight" : "wLb"
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
