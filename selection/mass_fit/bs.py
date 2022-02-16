@@ -454,8 +454,8 @@ def mass_fitter(odf,
 
     pars = ipanema.Parameters()
     # Create common set of Bs parameters (all models must have and use)
-    pars.add(dict(name='fsigBs', value=0.9, min=0.01, max=1, free=True, latex=r'N_{B_s}'))
-    pars.add(dict(name='muBs', value=5367, min=5200, max=5500, latex=r'\mu_{B_s}'))
+    pars.add(dict(name='fsigBs', value=0.9, min=0.0, max=1, free=True, latex=r'N_{B_s}'))
+    pars.add(dict(name='muBs', value=5367, min=5350, max=5400, latex=r'\mu_{B_s}'))
     if with_calib:
       # if not input_pars:
       pars.add(dict(name='s0Bs', value=0,    min=0, max=50,  free=False, latex=r'p_0^{B_s}'))
@@ -551,12 +551,33 @@ def mass_fitter(odf,
     #     pars[name].init = res.params[name].value
     # res = False
     try:
-        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd}, method='minuit', verbose=True, strategy=1, tol=0.05)
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                               method='minuit', verbose=True, strategy=1,
+                               tol=0.05)
     except:
         print("There was a problem with the fit. Let's try again.")
-        pars['s1Bs'].set(value=0.1, init=0.1, max=5)
-        pars['s2Bs'].set(value=0.0, init=.0, max=1)
-        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd}, method='minuit', verbose=True, strategy=1, tol=0.05)
+        pars['fsigBs'].set(value=0.0, min=0.0, max=1)
+        pars['s1Bs'].set(value=0.0, init=0.0, min=-20, max=20, free=False)
+        pars['s2Bs'].set(value=0.0, init=0.0, min=-1, max=1, free=False)
+        pars['s0Bs'].set(value=1.0, init=1.0, free=True)
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                               method='minuit', verbose=True, strategy=1,
+                               tol=0.05)
+        pars = ipanema.Parameters.clone(res.params)
+        pars.lock()
+        pars['s1Bs'].set(value=0.0, init=0.0, min=-20, max=20, free=True)
+        pars['s2Bs'].set(value=0.0, init=0.0, min=-1, max=1, free=True)
+        pars['s0Bs'].set(value=0.0, init=1.0, free=False)
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                               method='minuit', verbose=True, strategy=1,
+                               tol=0.05)
+        pars = ipanema.Parameters.clone(res.params)
+        for k,v in pars.items():
+          v.init = v.value
+        pars.unlock('fsigBs', 'muBs', 'b', 'fsigBd')
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                               method='minuit', verbose=True, strategy=1,
+                               tol=0.05)
 
     if res:
       print(res)
