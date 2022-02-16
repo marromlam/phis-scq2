@@ -116,7 +116,7 @@ real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
 weight = 'sWeight'
 branches_to_load += real 
-branches_to_load += [weight]
+branches_to_load += ['sw', 'sWeight', 'lbWeight']
 
 if TIMEACC['use_veloWeight']:
   weight = f'veloWeight*{weight}'
@@ -141,6 +141,9 @@ for i, y in enumerate(YEARS):
   for t in TRIGGER:
     tc = trigger_scissors(t, CUT)
     data[y][t] = Sample.from_root(args['samples'].split(',')[i], branches=branches_to_load, cuts=tc)
+    print(data[y][t].df)
+    print("sum Lera:", np.sum(data[y][t].df['sw'].values))
+    print("sum me:", np.sum(data[y][t].df['sWeight'].values))
     data[y][t].name = f"Bs2JpsiPhi-{y}-{t}"
     data[y][t].csp = csp
     data[y][t].flavor = flavor
