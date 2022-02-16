@@ -1,40 +1,36 @@
-from hep_ml import reweight
-from warnings import simplefilter
-from analysis import badjanak
-import config
-from analysis.angular_acceptance.bdtconf_tester import bdtmesh
-from utils.strings import printsec
-from utils.helpers import version_guesser, trigger_scissors, parse_angacc
-from ipanema import ristra, Sample, Parameters
-from ipanema import initialize
-import numpy as np
-import os
-import argparse
-
-
+__all__ = []
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
-__all__ = []
 
 
 # Modules {{{
 
+import numpy as np
+import os
+import argparse
+
 # load ipanema
+from ipanema import (ristra, Sample, Parameters, initialize)
 initialize(os.environ['IPANEMA_BACKEND'], 1)
 
-# import some phis-scq utils
-# from analysis.angular_acceptance.iterative_mc import acceptance_effect
-
-
 # get badjanak and compile it with corresponding flags
+from analysis.angular_acceptance.bdtconf_tester import bdtmesh
+from analysis import badjanak
 badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
-badjanak.get_kernels(True)
 
-# reweighting config
-# ignore future warnings
+# reweighting config -- ignore future warnings
+from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)
+from hep_ml import reweight
+
+import config
+
+# import some phis-scq utils
+# from analysis.angular_acceptance.iterative_mc import acceptance_effect
+from utils.strings import printsec
+from utils.helpers import version_guesser, trigger_scissors, parse_angacc
 # 40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
 # }}}
@@ -199,6 +195,7 @@ if __name__ == '__main__':
     # Compute angWeights correcting with kinematic weights {{{
     #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
     #     variables
+    badjanak.get_kernels(True)
     if 'Bs2Jpsi' in MODE:
         angacc = badjanak.get_angular_acceptance_weights(
             mc.true, mc.reco, mc.weight * ristra.allocate(angWeight),

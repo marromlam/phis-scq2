@@ -30,7 +30,8 @@ from hep_ml.reweight import GBReweighter
 
 from utils.strings import printsec
 from utils.helpers import trigger_scissors
-from analysis.angular_acceptance.bdtconf_tester import bdtmesh
+# TODO: create resimplement this
+# from analysis.angular_acceptance.bdtconf_tester import bdtmesh
 from config import timeacc
 import config
 
