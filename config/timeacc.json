@@ -1,18 +1,48 @@
 {
   "constants": {
-    "MC_Bs2JpsiPhi": { "mu": 0, "sigma": 0.0417, "DGsd": 0.003486 },
-    "MC_Bs2JpsiKK_Swave": { "mu": 0, "sigma": 0.0417, "DGsd": 0.00351 },
-    "MC_Bs2JpsiPhi_dG0": { "mu": 0, "sigma": 0.0417, "DGsd": 0.003486 },
-    "MC_Bd2JpsiKstar": { "mu": 0, "sigma": 0.03864, "DGsd": 0.00044 },
-    "Bd2JpsiKstar": { "mu": 0, "sigma": 0.04244, "DGsd": 0.0 },
-    "MC_Bu2JpsiKplus": { "mu": 0, "sigma": 0.03864, "DGsd": -0.04739 },
-    "Bu2JpsiKplus": { "mu": 0, "sigma": 0.04244, "DGsd": -0.04739 }
+    "MC_Bs2JpsiPhi": {
+      "mu": 0,
+      "sigma": 0.0417,
+      "DGsd": 0.003486
+    },
+    "MC_Bs2JpsiKK_Swave": {
+      "mu": 0,
+      "sigma": 0.0417,
+      "DGsd": 0.00351
+    },
+    "MC_Bs2JpsiPhi_dG0": {
+      "mu": 0,
+      "sigma": 0.0417,
+      "DGsd": 0.003486
+    },
+    "MC_Bd2JpsiKstar": {
+      "mu": 0,
+      "sigma": 0.03864,
+      "DGsd": 0.00044
+    },
+    "Bd2JpsiKstar": {
+      "mu": 0,
+      "sigma": 0.04244,
+      "DGsd": 0.0
+    },
+    "MC_Bu2JpsiKplus": {
+      "mu": 0,
+      "sigma": 0.03864,
+      "DGsd": -0.04739
+    },
+    "Bu2JpsiKplus": {
+      "mu": 0,
+      "sigma": 0.04244,
+      "DGsd": -0.04739
+    }
   },
   "bdtconfig": {
     "n_estimators": 20,
     "learning_rate": 0.1,
     "max_depth": 3,
     "min_samples_leaf": 1000,
-    "gb_args": { "subsample": 1 }
-  },
+    "gb_args": {
+      "subsample": 1
+    }
+  }
 }

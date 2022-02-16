@@ -9,7 +9,11 @@
 
 # Modules {{{
 
+import os, shutil
+import time
+import yaml
 import config as settings
+from string import Template
 from utils.helpers import (tuples, angaccs, csps, flavors, timeaccs, timeress,
                            version_guesser, send_mail)
 configfile: "config/base.json"
@@ -50,6 +54,7 @@ modes = ['Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi',
 # Including Snakefiles {{{
 
 include: 'selection/Snakefile'
+include: 'tagging/Snakefile'
 include: 'analysis/samples/Snakefile'
 include: 'analysis/reweightings/Snakefile'
 include: 'analysis/velo_weights/Snakefile'

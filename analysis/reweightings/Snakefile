@@ -339,4 +339,4 @@ rule reweightings_simon_comparisons:
 # }}}
 
 
-# vim: foldmethod=marker
+# vim: fdm=marker

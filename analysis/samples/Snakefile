@@ -8,26 +8,64 @@
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
 #    and then it worka automatically.
 
-rule samples_sync_tuple:
+rule samples_download_tuple:
+  wildcard_constraints:
+    weight = "(selected|ready)"
   threads: 2
   resources:
     mem_mb=6144
   params:
     settings.user['eos']
   output:
-    SAMPLES+'/{year}/{mode}/{version}_selected.root'
+    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}_{weight}.root'
   log:
-    'output/log/samples_sync_tuple/{year}/{mode}/{version}.log'
+    'output/log/samples_download_tuple/{year}/{mode}/{version}_{weight}.log'
   run:
     shell(f"""(time\
-    python analysis/samples/sync_tuples.py\
+    python analysis/samples/download_tuples.py\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
+    --weight {wildcards.weight}\
     --tree DecayTree\
     --output {output}\
     --eos {params}\
     ) &> {log}""")
+
+
+rule samples_upload_tuple:
+  wildcard_constraints:
+    # surname = "(lbWeight|tagged)"
+    weight = "(selected|sWeight|lbWeight|tagged)"
+  threads: 2
+  resources:
+    mem_mb=6144
+  params:
+    os.path.join(settings.user['eos'], 'tuples')
+  input:
+    lambda wcs: tuples(wcs, year=f'{wcs.year}', weight=f'{wcs.weight}')
+  output:
+    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9]+}_{weight,[A-Za-z0-9]+}.eos'
+  run:
+    m = f'{wildcards.mode}'
+    y = f'{wildcards.year}'
+    v = f'{wildcards.version}'
+    local = f'{input}'
+    # phi-scq tuple handler is smarter than the user, and it knows which is the
+    # actual last tuple the user wants if she/he asks for some tuple that do
+    # not exist
+    # w = f'{wildcards.weight}'
+    w = os.path.basename(local).replace('.root', '')
+    w = w.split('_')[-1]  # remove version
+    # jan22, we decided the following naming convention for eos tuples
+    eos = os.path.join(f"{params}", v, m, y, f"{v}_{m}_{y}_{w}.root")
+    # eos = f'{input}'.replace(SAMPLES, f"{params}")
+    # if s == 'lbWeight':
+    #     eos.replace('_lbWeight.root', '_ready.root')
+    # elif m != 'Bs2JpsiPhi' and s == 'tagged':
+    #     eos.replace('_tagged.root', '_ready.root')
+    # shell(f"{}")
+    shell(f"(time xrdcp -f {local} root://eoslhcb.cern.ch/{eos}) &> {output}")
 
 # }}}
 
@@ -60,6 +98,29 @@ rule samples_stat_tuple:
 # Reduce branches in tuples {{{
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package.
+
+rule samples_chop_tuple:
+  threads: 2
+  resources:
+    mem_mb=6144
+  input:
+    lambda wcs: tuples(wcs, version=f'{wcs.version}'.split('@')[0], year=f'{wcs.year}', weight=f'ready')
+  output:
+    SAMPLES+'/{year}/{mode}/{version}_chopped.root'
+  log:
+    'output/log/samples_chop_tuple/{year}/{mode}/{version}_chopped.log'
+  run:
+    shell(f"""(time\
+    python analysis/samples/chop_tuples.py\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --weight chopped\
+    --tree DecayTree\
+    --output {output}\
+    --input {input}\
+    ) &> {log}""")
+
 
 rule samples_reduce_tuple:
   threads: 2
@@ -221,4 +282,4 @@ rule IFT_plot:
 
 
 
-# vim: foldmethod=marker
+# vim: fdm=marker ft=snakemake

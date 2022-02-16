@@ -25,7 +25,7 @@ from ipanema import ristra, Parameters
 
 initialize(os.environ['IPANEMA_BACKEND'],1)
 
-import badjanak
+from analysis import badjanak
 # kernel debugging handlers
 badjanak.config['debug_evt'] = 0#2930619
 badjanak.config['debug'] = 0

@@ -1,0 +1,118 @@
+
+
+rule tagging_combination_calibration:
+  """
+  Runs the calibration.
+  aka Kechen step 3
+
+  NOTE: Currently I dont allow this rule to run on other modes than Bu
+  """
+  wildcard_constraints:
+    mode = "(MC_)?Bu2JpsiKplus"
+  input:
+    sample = lambda wcs: tuples(wcs, weight='sWeight')
+  output:
+    sandbox = directory("tmp/tagging_combination_combination/{year}/{mode}/{version}"),
+    calibration = "output/params/tagging_combination_calibration/{year}/{mode}/{version}.py",
+  log:
+    option = temp("tmp/tagging_combination_calibration/{year}/{mode}/{version}.py"),
+    job = temp("tmp/tagging_combination_calibration/{year}/{mode}/{version}.sh"),
+    log = "output/log/tagging_combination_calibration/{year}/{mode}/{version}.log"
+  run:
+    # first, create options file from template
+    t = Template(open('tagging/templates/calibration/bu.py').read())
+    with open(f"{log.option}", "w") as job:
+      job.write(t.substitute(dict(
+        input_tuple=os.path.abspath(f'{input.sample}'),
+        sweight=f"sigBuSW",  # sw if you want to use Piera's
+        idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
+      )))
+    # second, write down a bash script to run the EPM
+    job_cmds = [
+      f"THE_PATH=`pwd`",
+      f"mkdir -p {output.sandbox}",
+      f"cd {output.sandbox}",
+      f"$THE_PATH/dist/EspressoPerformanceMonitor/build/bin/SimpleEvaluator " +
+      f"$THE_PATH/{log.option}",
+      f"cd $THE_PATH"
+    ]
+    with open(f"{log.job}", "w") as job:
+      job.write("\n".join(job_cmds))
+    # run EPM -- takes 5 min or so
+    shell(f"(time bash {log.job}) &> {log.log}")
+    # copy calibration to know output
+    shell(f"cp {output.sandbox}/EspressoCalibrations.py {output.calibration}")
+
+
+rule tagging_combination:
+  """
+  Runs the calibration.
+  aka Kechen step 4
+  """
+  input:
+    sample = lambda wcs: tuples(wcs, weight='sWeight' if 'Bu' in f"{wcs.mode}" else 'selected'),
+    calibration = lambda wcs: f"output/params/tagging_combination_calibration/{wcs.year}/{'MC_Bu2JpsiKplus' if 'MC' in f'{wcs.mode}' else 'Bu2JpsiKplus'}/{wcs.version}.py",
+  params:
+    config = 'tagging/comb_bsjpsiphi/config/Config_tagger_new.py'
+  output:
+    sandbox = directory("tmp/tagging_combination/{year}/{mode}/{version}"),
+    sample = SAMPLES+"/{year}/{mode}/{version}_tagged.root",
+  log:
+    option = temp("tmp/tagging_combination/{year}/{mode}/{version}.py"),
+    job = temp("tmp/tagging_combination/{year}/{mode}/{version}.sh"),
+    log = "output/log/tagging_combination/{year}/{mode}/{version}.log"
+  run:
+    # first, create options file from template
+    t = Template(open('tagging/templates/combination/bu.py').read())
+    with open(f"{log.option}", "w") as job:
+      job.write(open(f"{params.config}", 'r').read())
+      job.write(open(f"{input.calibration}", 'r').read())
+      job.write(t.substitute(dict(
+        input_tuple=os.path.abspath(f'{input.sample}'),
+        output_tuple=os.path.abspath(f'{output.sample}'),
+        sweight=f"sw",
+        idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
+      )))
+    # second, write down a bash script to run the EPM
+    job_cmds = [
+      f"THE_PATH=`pwd`",
+      f"mkdir -p {output.sandbox}",
+      f"cd {output.sandbox}",
+      f"$THE_PATH/dist/EspressoPerformanceMonitor/build/bin/SimpleEvaluator " +
+      f"$THE_PATH/{log.option}",
+      f"cd $THE_PATH"
+    ]
+    with open(f"{log.job}", "w") as job:
+      job.write("\n".join(job_cmds))
+    # run EPM -- takes 5 min or so
+    shell(f"(time bash {log.job}) &> {log.log}")
+
+    # this should be a script itself {{{
+    import uproot3 as uproot
+    import numpy as np
+    import pandas as pd
+    odf = uproot.open(f'{input.sample}')
+    odf = odf[list(odf.keys())[0]].pandas.df(flatten=None)
+    tdf = uproot.open(f'{output.sample}')
+    tdf = tdf[list(tdf.keys())[0]].pandas.df(flatten=None)
+    result = pd.concat([odf, tdf], axis=1)
+    del odf
+    del tdf
+
+    with uproot.recreate(f"{output.sample}") as f:
+      _branches = {}
+      for k, v in result.items():
+          if 'int' in v.dtype.name:
+              _v = np.int32
+          elif 'bool' in v.dtype.name:
+              _v = np.int32
+          else:
+              _v = np.float64
+          _branches[k] = _v
+      mylist = list(dict.fromkeys(_branches.values()))
+      # print(mylist)
+      # print(_branches)
+      f['DecayTree'] = uproot.newtree(_branches)
+      f['DecayTree'].extend(result.to_dict(orient='list'))
+    # }}}
+

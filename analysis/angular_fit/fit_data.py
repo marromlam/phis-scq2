@@ -20,7 +20,7 @@ initialize(os.environ['IPANEMA_BACKEND'],1)
 from ipanema import Sample, Parameters, Parameter, ristra, optimize
 
 # get bsjpsikk and compile it with corresponding flags
-import badjanak
+from analysis import badjanak
 badjanak.config['debug'] = 0
 badjanak.config['fast_integral'] = 1
 badjanak.config['debug_evt'] = 774
@@ -116,10 +116,10 @@ real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
 weight = 'sWeight'
 branches_to_load += real 
-branches_to_load += [weight]
+branches_to_load += ['sw', 'sWeight', 'lbWeight']
 
 if TIMEACC['use_veloWeight']:
-  weight = f'veloWeight*sWeight'
+  weight = f'veloWeight*{weight}'
   branches_to_load += ["veloWeight"]
 
 
@@ -141,6 +141,9 @@ for i, y in enumerate(YEARS):
   for t in TRIGGER:
     tc = trigger_scissors(t, CUT)
     data[y][t] = Sample.from_root(args['samples'].split(',')[i], branches=branches_to_load, cuts=tc)
+    print(data[y][t].df)
+    print("sum Lera:", np.sum(data[y][t].df['sw'].values))
+    print("sum me:", np.sum(data[y][t].df['sWeight'].values))
     data[y][t].name = f"Bs2JpsiPhi-{y}-{t}"
     data[y][t].csp = csp
     data[y][t].flavor = flavor
@@ -155,7 +158,7 @@ for i, y in enumerate(YEARS):
     w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
     data[y][t].angacc = Parameters.build(w,w.fetch('w.*'))
     # Normalize sWeights per bin
-    sw = np.zeros_like(data[y][t].df['sWeight'])
+    sw = np.zeros_like(data[y][t].df['time'])
     for l,h in zip(mass[:-1],mass[1:]):
       pos = data[y][t].df.eval(f'mHH>={l} & mHH<{h}')
       _sw = data[y][t].df.eval(f'{weight}*(mHH>={l} & mHH<{h})')

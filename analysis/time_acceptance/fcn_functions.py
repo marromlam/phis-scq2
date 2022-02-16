@@ -10,7 +10,7 @@ __all__ = ['splinexerf', 'saxsbxscxerf', 'splinexerfconstr']
 
 from ipanema import ristra, Parameters
 import numpy as np
-import badjanak
+from analysis import badjanak
 
 def splinexerf(params, data, weight = None, prob = None, flatend=False, tLL=0.3, tUL=15):
   # do lists of coeffs

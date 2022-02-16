@@ -74,6 +74,7 @@ if __name__ == "__main__":
   p.add_argument('--year', help='Full root file with huge amount of branches.')
   p.add_argument('--mode', help='Full root file with huge amount of branches.')
   p.add_argument('--version', help='Full root file with huge amount of branches.')
+  p.add_argument('--weight', help='Full root file with huge amount of branches.')
   p.add_argument('--tree', help='Input file tree name.')
   p.add_argument('--output', help='Input file tree name.')
   p.add_argument('--eos', help='Input file tree name.')
@@ -106,9 +107,19 @@ if __name__ == "__main__":
       sw = 'sw_pt'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
+      print("WARNING: Requested tuple with custon sw for given pTB bin does ")
+      print("         not exist. Trying without the trailing version number.")
+      eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_pt.root'
+      status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+    if status:
       print("WARNING: Requested tuple with custon sw for given pTB bin does not exist.")
       print("         Trying without the trailing version number.")
-      eos_path = f'{EOSPATH}/{v}/fit_check/{m}/{y}/{m}_{y}_selected_bdt_sw_pt.root'
+      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_pt_{v}.root'
+      status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+    if status:
+      print("WARNING: Requested tuple with custon sw for given pTB bin does not exist.")
+      print("         Trying without the trailing version number.")
+      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_pt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Requested tuple with custon sw for given pTB bin does not exist")
@@ -146,14 +157,14 @@ if __name__ == "__main__":
   # version (baseline tuples) {{{
 
   if status: 
-    eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw_{v}.root'
+    eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_{v}.root'
     sw = 'sw'
     # eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
     status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Requested tuple with sw does not exist")
       print("         Trying without the trailing version number.")
-      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_sw.root'
+      eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
     if status:
       print("WARNING: Requested tuple with sw does not exist")
@@ -162,9 +173,20 @@ if __name__ == "__main__":
       eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt.root'
       status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
       if status:
-        print("WARNING: Could not found v1r0 tuple. Downloading v0r5...")
+        print(f"WARNING: Could not found {v} tuple. Downloading noveto...")
+        # WARNING: eos tuples seem to do not have version anymore...
+        #          Bs2JpsiPhi_Lb_2015_selected_bdt_noveto.root  
+        eos_path = f'{EOSPATH}/{v}/{m}/{y}/{m}_{y}_selected_bdt_noveto.root'
+        status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+      if status:
+        print(f"WARNING: Could not found {v} tuple. Downloading v0r5...")
         # WARNING: eos tuples seem to do not have version anymore...
         eos_path = f'{EOSPATH}/v0r5/{m}/{y}/{m}_{y}_selected_bdt_sw_v0r5.root'
+        status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
+      if status:
+        print(f"WARNING: Could not found {v} tuple. Downloading v0r5...")
+        # WARNING: eos tuples seem to do not have version anymore...
+        eos_path = f'{EOSPATH}/v0r5/{m}/{y}/{m}_{y}_selected_bdt_v0r5.root'
         status = os.system(f"xrdcp -f root://eoslhcb.cern.ch/{eos_path} {local_path}")
   if status:
     print("These tuples are not yet avaliable at root://eoslhcb.cern.ch/*.",
@@ -175,8 +197,6 @@ if __name__ == "__main__":
 
   # }}}
 
-  # If we reached here, then all should be fine 
-  print(f"Downloaded {eos_path}")
 
   """
   # download main file
@@ -286,4 +306,4 @@ if __name__ == "__main__":
 # }}}
 
 
-# vim: foldmethod=marker
+# vim: ts=4 sw=4 sts=4 et

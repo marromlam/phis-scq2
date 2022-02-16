@@ -15,7 +15,7 @@
 // Include headers /////////////////////////////////////////////////////////////
 
 #define USE_DOUBLE ${USE_DOUBLE}
-#include <ipanema/core.c>
+#include <lib99ocl/core.c>
 
 // Debugging 0 [0,1,2,3,>3]
 #define DEBUG ${DEBUG}
@@ -40,9 +40,9 @@ const CONSTANT_MEM ftype MHH[MKNOTS] = ${MHH};
 const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 
 // Include ipanema
-#include <ipanema/complex.c>
-#include <ipanema/special.c>
-#include <ipanema/random.c>
+#include <lib99ocl/complex.c>
+#include <lib99ocl/special.c>
+#include <lib99ocl/random.c>
 
 // Include analysis parts implementation
 #include "fk_helpers.c"
