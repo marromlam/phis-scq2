@@ -22,7 +22,7 @@
   "bd_mass_bins": ["all"],
   "bd_mass_mX_bins": 1,
   "bd_mass_sigmam_bins": 1,
-  "bu_mass_model": "crystalball",
+  "bu_mass_model": "ipatia",
   "bu_mass_bins": ["all"],
   "bu_mass_mX_bins": 1,
   "bu_mass_sigmam_bins": 1,
