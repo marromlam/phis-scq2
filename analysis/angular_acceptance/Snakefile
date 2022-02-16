@@ -175,7 +175,7 @@ rule angular_acceptance_corrected_dual:
     #version = "^((?!v0r1).)*$",
   input:
     weights_std = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/MC_Bs2JpsiPhi/{wcs.version}_{wcs.step.replace('Dual','')}_{wcs.csp}_{wcs.trigger}.json",
-    weights_dg0 = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/MC_Bs2JpsiPhi_dG0/{wcs.version}_{wcs.step}_{wcs.csp}_{wcs.trigger}.json",
+    weights_dg0 = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/MC_Bs2JpsiPhi_dG0/{wcs.version}_{wcs.step.replace('Dual','')}_{wcs.csp}_{wcs.trigger}.json",
   output:
     'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{step}_{csp}_{trigger}.json',
   log:
@@ -379,8 +379,8 @@ rule angular_acceptance_iterative_dual_data_run2a:
     weights_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2a', angacc='corrected', weight=f'angWeight'),
     weights_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2a', angacc='corrected', weight=f'angWeight'),
     sample_data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', year='run2a'),
-    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2a', csp='none', angacc='corrected', trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2a', csp='none', angacc='corrected', trigger='unbiased'),
+    angacc_biased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2a', csp='none', angacc='correctedDual', trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, mode='Bs2JpsiPhi', year='run2a', csp='none', angacc='correctedDual', trigger='unbiased'),
     timeacc_biased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', year='run2a', trigger='biased'),
     timeacc_unbiased = lambda wcs: timeaccs(wcs, mode='Bs2JpsiPhi', year='run2a', trigger='unbiased'),
     csp_factors = lambda wcs: csps(wcs, mode='Bs2JpsiPhi', year='run2a'),
@@ -431,8 +431,6 @@ rule angular_acceptance_iterative_dual_data_run2a:
     --input-flavor-tagging    {",".join(input.flavor)}\
     --output-weights-biased   {",".join(output.angacc_biased)}\
     --output-weights-unbiased {",".join(output.angacc_unbiased)}\
-    --output-tables-biased    {",".join(output.tables_biased)}\
-    --output-tables-unbiased  {",".join(output.tables_unbiased)}\
     --output-angular-weights-mc-std  {",".join(output.weights_std)}\
     --output-angular-weights-mc-dg0  {",".join(output.weights_dg0)}\
     --year                    {",".join(YEARS['Run2a'])}\

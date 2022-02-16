@@ -2,20 +2,18 @@
 #
 #
 
-__all__ = []
-__author__ = ["name"]
-__email__ = ["email"]
+__all__ = ['add_tagging', 'add_lambdab_weight']
+__author__ = ["Marcos Romero Lamas"]
+__email__ = ["mromerol@cern.ch"]
 
 
 import argparse
-# from ROOT import TFile, TObject, gROOT, TList, TTree
-# from prepare_tree import add_year_wlb_lb, add_wlb_jpsiphi
-
 from selection.lb_prepare import tagging_fractions
 import numpy as np
 import ipanema
 import uproot3 as uproot
 import pandas as pd
+
 
 # specify as values the actual name of taggers in the nTuples
 TAGS = {
@@ -42,9 +40,11 @@ def add_tagging(mcLb, rdLb, tag_type='run2'):
     """
     Add tagging branches to the Lb sample
 
+    Notes
+    -----
     TODO: This function is written in sucha a way there is a very direct
           equivalent in P2VV repo. For the future it requires a speed up. The
-          hOS and hSS are also slow generations because they are ment to run 
+          hOS and hSS are also slow generations because they are ment to run
     """
     # get fraction of each of the taggers
     os, ss, ss_os, hOS, hSS = tagging_fractions(rdLb, tag_type)
@@ -105,14 +105,14 @@ def add_lambdab_weight(df, nLb=1):
     Parameters
     ----------
     df : pandas.DataFrame
-    Original dataframe where we want to add wLb.
+      Original dataframe where we want to add wLb.
     nLB : int or float
-    Number of Lb events to be added
+      Number of Lb events to be added
 
     Returns
     -------
     pandas.DataFrame
-    Original dataframe with the added weights.
+      Original dataframe with the added weights.
     """
 
     sum_weight = np.sum(df.eval('wdp * wppt').values)
@@ -126,23 +126,6 @@ def add_lambdab_weight(df, nLb=1):
     sum_wLb = np.sum(dfOut['wLb'].values)
     print('New sum of weights: {}'.format(sum_wLb))
     return dfOut
-
-
-# a hack to force the branch to not be deleted while merging because of the absence in on of the files
-def add_wlb_jpsiphi(df_in):
-    f_in = TFile.Open(name_in)
-    t = f_in.Get(tree_name)
-    f_out = TFile.Open(name_out, "recreate")
-    newTree = t.CopyTree("1")
-
-    value = tagging()  # structure from the C++ code above
-    branch_wLb = newTree.Branch("wLb", AddressOf(value, "wLb"), "wLb/D")
-
-    for entry in newTree:
-        value.wLb = 1.0
-        branch_wLb.Fill()
-    newTree.Write("", TObject.kOverwrite)
-    f_out.Close()
 
 
 def merge_lb(nLb, mcLbIn, rdLbIn, data_in):
@@ -192,20 +175,21 @@ if __name__ == '__main__':
     p.add_argument('--hist-loc', help='Where to save?')
     p.add_argument('--plot-loc', help='Where to save?')
     p.add_argument('--mc-lb-input', help='Lb tuple to be merged to data')
-    # p.add_argument('--mc-lb-output', help='Intermediate file with reduced number of vars')
     p.add_argument('--rd-lb-input', help='To which data file merge the Lb')
-    # p.add_argument('--rd-lb-output', help='Intermediate file with reduced number of vars')
-    p.add_argument('--rd-input', help='Intermediate file with reduced number of vars')
-    p.add_argument('--rd-output', help='Intermediate file with reduced number of vars')
+    p.add_argument('--rd-input', help='Data to be add lbWeight')
+    p.add_argument('--rd-output', help='Data with lbWeight added')
     p.add_argument('--ntuple-no-veto', help='Data tuple w/o Lb veto applied')
     p.add_argument('--version', help='Data tuple w/o Lb veto applied')
 
     # parse arguments
     args = vars(p.parse_args())
     nLb = ipanema.Parameters.load(args['number_of_lb'])['nLb'].value
-    mcLbIn = uproot.open(args['mc_lb_input'])['DecayTree'].pandas.df(flatten=None)
-    rdLbIn = uproot.open(args['rd_lb_input'])['DecayTree'].pandas.df(flatten=None)
-    rdIn = uproot.open(args['rd_input'])['DecayTree'].pandas.df(flatten=None)
+    mcLbIn = uproot.open(args['mc_lb_input'])['DecayTree']
+    mcLbIn = mcLbIn.pandas.df(flatten=None)
+    rdLbIn = uproot.open(args['rd_lb_input'])['DecayTree']
+    rdLbIn = rdLbIn.pandas.df(flatten=None)
+    rdIn = uproot.open(args['rd_input'])['DecayTree']
+    rdIn = rdIn.pandas.df(flatten=None)
 
     # update tuples with wLb
     mcLbOut, rdLbOut, rdOut = merge_lb(nLb, mcLbIn, rdLbIn, rdIn)

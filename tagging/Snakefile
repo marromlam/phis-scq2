@@ -24,7 +24,7 @@ rule tagging_combination_calibration:
     with open(f"{log.option}", "w") as job:
       job.write(t.substitute(dict(
         input_tuple=os.path.abspath(f'{input.sample}'),
-        sweight=f"sw",
+        sweight=f"sigBuSW",  # sw if you want to use Piera's
         idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
       )))
     # second, write down a bash script to run the EPM

@@ -8,29 +8,29 @@
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
 #    and then it worka automatically.
 
-# rule samples_download_tuple:
-#   wildcard_constraints:
-#     weight = "(selected|ready)"
-#   threads: 2
-#   resources:
-#     mem_mb=6144
-#   params:
-#     settings.user['eos']
-#   output:
-#     SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}_{weight}.root'
-#   log:
-#     'output/log/samples_download_tuple/{year}/{mode}/{version}_{weight}.log'
-#   run:
-#     shell(f"""(time\
-#     python analysis/samples/download_tuples.py\
-#     --year {wildcards.year}\
-#     --mode {wildcards.mode}\
-#     --version {wildcards.version}\
-#     --weight {wildcards.weight}\
-#     --tree DecayTree\
-#     --output {output}\
-#     --eos {params}\
-#     ) &> {log}""")
+rule samples_download_tuple:
+  wildcard_constraints:
+    weight = "(selected|ready)"
+  threads: 2
+  resources:
+    mem_mb=6144
+  params:
+    settings.user['eos']
+  output:
+    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}_{weight}.root'
+  log:
+    'output/log/samples_download_tuple/{year}/{mode}/{version}_{weight}.log'
+  run:
+    shell(f"""(time\
+    python analysis/samples/download_tuples.py\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --weight {wildcards.weight}\
+    --tree DecayTree\
+    --output {output}\
+    --eos {params}\
+    ) &> {log}""")
 
 
 rule samples_upload_tuple:
@@ -98,6 +98,29 @@ rule samples_stat_tuple:
 # Reduce branches in tuples {{{
 #    Reduces the amount of branches in the original ntuples. This rule builds
 #    the ntuples that will actually be used for phis-scq analysis package.
+
+rule samples_chop_tuple:
+  threads: 2
+  resources:
+    mem_mb=6144
+  input:
+    lambda wcs: tuples(wcs, version=f'{wcs.version}'.split('@')[0], year=f'{wcs.year}', weight=f'ready')
+  output:
+    SAMPLES+'/{year}/{mode}/{version}_chopped.root'
+  log:
+    'output/log/samples_chop_tuple/{year}/{mode}/{version}_chopped.log'
+  run:
+    shell(f"""(time\
+    python analysis/samples/chop_tuples.py\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --weight chopped\
+    --tree DecayTree\
+    --output {output}\
+    --input {input}\
+    ) &> {log}""")
+
 
 rule samples_reduce_tuple:
   threads: 2

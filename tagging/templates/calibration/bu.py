@@ -70,7 +70,7 @@ UseNewtonRaphson = 0
 # branch names and types {{{
 
 BranchID = "${idvar}"
-UseWeight = 0
+UseWeight = 1
 WeightFormula = "${sweight}"
 
 # }}}

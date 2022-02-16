@@ -245,49 +245,39 @@ def version_guesser(version):
 # }}}
 
 
-# Cuts and @ modifiers {{{
-"""
-def cut_translate(version_substring):
-  vsub_dict = {
-    # "evtOdd": "( (evt % 2) != 0 ) & logIPchi2B>=0 & log(BDTFchi2)>=0",
-    "evtOdd": "(evt % 2) != 0",
-    "evtEven": "(evt % 2) == 0",
-    "magUp": "magnet == 1",
-    "magDown": "magnet == 0",
-    "bkgcat60": "bkgcat != 60",
-    "LT": "time < 2",
-    "UT": "time > 2",
-    "g210300": "runN > 210300",
-    "l210300": "runN < 210300",
-    "pTB1": "pTB >= 0 & pTB < 3.8e3",
-    "pTB2": "pTB >= 3.8e3 & pTB < 6e3",
-    "pTB3": "pTB >= 6e3 & pTB <= 9e3",
-    "pTB4": "pTB >= 9e3",
-    "etaB1": "etaB >= 0 & etaB <= 3.3",
-    "etaB2": "etaB >= 3.3 & etaB <= 3.9",
-    "etaB3": "etaB >= 3.9 & etaB <= 6",
-    "sigmat1": "sigmat >= 0 & sigmat <= 0.031",
-    "sigmat2": "sigmat >= 0.031 & sigmat <= 0.042",
-    "sigmat3": "sigmat >= 0.042 & sigmat <= 0.15"
-  }
-  list_of_cuts = []
-  for k,v in vsub_dict.items():
-    if k in version_substring:
-      list_of_cuts.append(v)
-  return f"( {' ) & ( '.join(list_of_cuts)} )"
-"""
-# }}}
-
-
 # Snakemake helpers {{{
 
 def tuples(wcs, version=False, year=False, mode=False, weight=False,
-           angacc=False, csp=False, flavor=False, timeacc=False, timeres=False):
+           angacc=False, csp=False, flavor=False, timeacc=False,
+           timeres=False):
     """
     Snakemake tuple helper returns tuple path once some set of wildcards is
     properly provided.
 
-    IMPROVE
+    Parameters
+    ----------
+    wcs : snakemake.wildcards
+      Wildcards from the snakemake rule
+    version : string
+      Overrider for wcs.version
+    year : int
+      Overrider for wcs.year
+    mode : string
+      Overrider for wcs.mode
+    weight : string
+      Override for wcs.weight
+
+    Returns
+    -------
+    string or list of strings
+      Paths to tuples satisfying the input requirements
+
+    Notes
+    -----
+    This function is the core for the Snakemake pipeline. This helper functions
+    allows to trigger only the rules we want for each fi the input of this
+    function, and build the paths to tuples from them. Be aware that
+    modifications in this function may break the whole pipeline.
     """
 
     # parse version {{{
@@ -417,7 +407,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
 
     # Model handler when asking for weights {{{
     __weight = weight
-    _general = ['selected', 'tagged', ready, sw8s, vw8s]
+    _general = ['selected', 'tagged', 'chopped', ready, sw8s, vw8s]
 
     # If we want to run the whole weighting pipeline, we just skip the set of
     # `ready` tuples and we call for `lbWeight` or `tagged` ones. This allows
@@ -482,9 +472,9 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
                 weight = oddWeight
             elif weight == 'veloWeight':
                 weight = vw8s
-            elif weight not in ['selected', 'ready', sw8s, vw8s, 'phiWeight',
-                                'polWeight', 'pdfWeight', kbuWeight,
-                                oddWeight, 'angWeight', 'kinWeight',
+            elif weight not in ['selected', 'ready', 'chopped', sw8s, vw8s,
+                                'phiWeight', 'polWeight', 'pdfWeight',
+                                kbuWeight, oddWeight, 'angWeight', 'kinWeight',
                                 'kkpWeight']:
                 weight = 'polWeight'
         # }}}
@@ -537,12 +527,12 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         # }}}
         # MC_Bs2JpsiPhi_fromLb {{{
         elif m == 'MC_Bs2JpsiPhi_fromLb':
-            if weight not in ['selected', 'tagged', 'ready']:
+            if weight not in ['selected', 'tagged', 'ready', 'chopped']:
                 weight = 'selected'
         # }}}
         # Bs2JpsiPhi_Lb {{{
         elif m == 'Bs2JpsiPhi_Lb':
-            if weight not in ['selected', 'tagged', 'sWeight', 'ready']:
+            if weight not in ['selected', 'tagged', 'sWeight', 'ready', 'chopped']:
                 weight = 'sWeight'
         # }}}
     # print(f"{m} weight was transformed {__weight}->{weight}")
@@ -714,8 +704,10 @@ def angaccs(wcs, version=False, year=False, mode=False, timeacc=False,
         m = mode
         ans = []
         for y in YEARS[year]:
+            # WARNING: This is set to none, but actually I do not know what is
+            #          the best way to proceed here
             ans.append(
-                f'output/params/angular_acceptance/{y}/{m}/{version}_{angacc}_{csp}_{trigger}.json')
+                f'output/params/angular_acceptance/{y}/{m}/{version}_{angacc}_none_{trigger}.json')
     elif angacc.startswith('analytic'):
         print("To be implemented!!")
     else:

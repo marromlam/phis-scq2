@@ -1,6 +1,14 @@
-from __future__ import print_function, division
-import uproot3 as uproot
+# create tagging branches from a RD sample to be sampled and then added to
+# MC sample
+
+
+__all__ = ['tagging_fractions']
+__author__ = ["Marcos Romero Lamas"]
+__email__ = ["mromerol@cern.ch"]
+
+
 import numpy as np
+
 
 # specify as values the actual name of taggers in the nTuples
 TAGS = {
@@ -36,23 +44,26 @@ def tagging_fractions(df, tag_type='run2'):
     Parameters
     ----------
     df : pandas.Dataframe
-    Dataframe with data
+        Dataframe with data
     tag_type : str
-    String containing the family of run of LHCb: run1 or run2
+        String containing the family of run of LHCb: run1 or run2
 
     Returns
     -------
-    lot of stuff
+    pandas.Dataframe
+        Dataframe with tagging fractions incorporated
 
+    Notes
+    -----
     TODO: clean this function
     """
     # TODO: automate creation of binning
     # binning is chosen to have similar stats in each bin
-    eOS_10 = np.array([0.00, 0.27, 0.33, 0.36, 0.39,
-                      0.42, 0.44, 0.46, 0.48, 0.50])
+    # eOS_10 = np.array([0.00, 0.27, 0.33, 0.36, 0.39,
+    #                   0.42, 0.44, 0.46, 0.48, 0.50])
     eOS_18 = np.array([0.0, 0.22, 0.27, 0.31, 0.33, 0.35, 0.36, 0.38, 0.39,
                        0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.5])
-    eSS_9 = np.array([0.00, 0.35, 0.41, 0.44, 0.45, 0.46, 0.47, 0.48, 0.50])
+    # eSS_9 = np.array([0.00, 0.35, 0.41, 0.44, 0.45, 0.46, 0.47, 0.48, 0.50])
     eSS_12 = np.array([0.0, 0.30, 0.35, 0.38, 0.41, 0.42,
                       0.44, 0.45, 0.46, 0.47, 0.48, 0.5])
 
@@ -129,28 +140,6 @@ def tagging_fractions(df, tag_type='run2'):
     print(f"{'Fraction of -1 SS tagged events':>50} : {ss_m1:.4f}")
 
     return os_tagged, ss_tagged, both_tagged, generateOS, generateSS
-
-
-if __name__ == "__main__":
-    branches = [
-        'tagdecision_os',
-        'tagdecision_ss',
-        'tagomega_os',
-        'tagomega_ss',
-        'eventResolution',
-        'alpha',
-        'year',
-        'hlt1b',
-        'bdtg3',
-        'tagos_dec_new',
-        'tagos_eta_new',
-        'tagos_dec_old',
-        'tagos_eta_old',
-        'peakSW',
-        'combSW']
-    df = uproot.open('/scratch46/marcos.romero/sidecar14/2015/Bs2JpsiPhi_Lb/v0r0_sWeight.root')[
-        'DecayTree'].pandas.df(branches, flatten=None)
-    tagging_fractions(df, 'run2Old')
 
 
 # vim: fdm=marker ts=2 sw=2 sts=2 sr et
