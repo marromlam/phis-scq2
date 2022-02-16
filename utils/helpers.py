@@ -705,7 +705,7 @@ def angaccs(wcs, version=False, year=False, mode=False, timeacc=False,
         ans = []
         for y in YEARS[year]:
             # WARNING: This is set to none, but actually I do not know what is
-            the best way to proceed here
+            #          the best way to proceed here
             ans.append(
                 f'output/params/angular_acceptance/{y}/{m}/{version}_{angacc}_none_{trigger}.json')
     elif angacc.startswith('analytic'):
