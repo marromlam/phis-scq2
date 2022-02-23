@@ -6,6 +6,9 @@ import complot
 
 DOCAz_BINS = 14
 BuM = 'Bu_LOKI_MASS_JpsiConstr_NoPVConstr'
+
+# different docaz binning schemes {{{
+
 # 10
 docaz = [0.000e+00, 8.700e-03, 1.770e-02, 2.730e-02, 3.800e-02, 5.050e-02,
          6.660e-02, 8.990e-02, 1.317e-01, 2.402e-01, 1.000e+01]
@@ -15,14 +18,31 @@ docaz = [0.,     0.0291, 0.0651, 0.1265, 0.3032, 10.]
 docaz = [0.0, 0.0179, 0.0372, 0.0598, 0.0903, 0.1386, 0.2359, 0.4714, 5.0]
 # 7 bins expo
 docaz = [0.0, 0.3, 0.58, 0.91, 1.35, 1.96, 3.01, 7.0]
+
 # 14 bins francesca
 docaz = [0.01909757, 0.02995095, 0.04697244, 0.07366745, 0.11553356,
          0.1811927, 0.28416671, 0.44566212, 0.69893733, 1.09615194,
          1.71910844, 2.69609871, 4.22832446, 6.63133278]
-docaz = [0, 0.01652674, 0.02591909, 0.04064923, 0.06375068, 0.09998097,
-         0.15680137, 0.2459135, 0.38566914, 0.60484961, 0.94859302,
-         1.48768999, 2.33316235, 3.65912694, 6]
-docaz = np.array(docaz)[:-1]
+
+# Francesca-like binning scheme
+docaz = [
+    0, 0.01652674, 0.02591909, 0.04064923, 0.06375068, 0.09998097,
+    0.15680137, 0.2459135, 0.38566914, 0.60484961, 0.94859302,
+    1.48768999, 2.33316235, 3.65912694, 6
+]
+
+# a set of 15 equially populated bins
+docaz = [
+    0.00000e+00, 7.80000e-03, 1.57000e-02, 2.40000e-02, 3.30000e-02,
+    4.29000e-02, 5.43000e-02, 6.81000e-02, 8.57000e-02, 1.09600e-01,
+    1.43700e-01, 1.94400e-01, 2.73500e-01, 4.09000e-01, 7.00300e-01,
+    # 3.37956e+01
+]
+
+docaz = np.array(docaz)
+# docaz = np.array(docaz)[:-1]
+
+# }}}
 
 
 cuts = ['Jpsi_LOKI_ETA>2 & Jpsi_LOKI_ETA<4.5',
@@ -63,8 +83,15 @@ cut = "(" + ") & (".join(cuts) + ")"
 cut = f"({cut}) & ({BuM}>5170 & {BuM}<5400)"
 
 
+
+
+
+
+# Command line interface {{{
+
 if __name__ == '__main__':
-    # Parse command line arguments ----------------------------------------------
+    # Parse command line arguments {{{
+
     p = argparse.ArgumentParser(description='Get efficiency in DOCAz bin.')
     p.add_argument('--params', help='Mass fit parameters')
     p.add_argument('--params-match', help='Mass fit parameters VELO matching')
@@ -78,6 +105,8 @@ if __name__ == '__main__':
     p.add_argument('--trigger', help='Trigger to fit')
     p.add_argument('--mass-model', help='Different flag to ... ')
     args = vars(p.parse_args())
+
+    # }}}
 
     #
     TRIGGER = args["trigger"]
@@ -109,12 +138,16 @@ if __name__ == '__main__':
     x = []
     ux_low = []
     ux_upp = []
+
+    print("Load sample")
+    sample = Sample.from_root(SAMPLE, cuts=cut)
+    print(sample.df)
     for bin in range(0, len(docaz)-1):
         doca_cut = [f"(Bu_PVConst_Kplus_DOCAz>={docaz[bin]})",
                     f"(Bu_PVConst_Kplus_DOCAz<{docaz[bin+1]})"]
         doca_cut = f"({' & '.join(doca_cut)})"
-        sample = Sample.from_root(SAMPLE, cuts=f"({doca_cut}) & ({cut})")
-        x.append(np.median(sample.df['Bu_PVConst_Kplus_DOCAz'].values))
+        _df = sample.df.query(doca_cut)
+        x.append(np.median(_df['Bu_PVConst_Kplus_DOCAz'].values))
         ux_low.append(x[-1] - docaz[bin])
         ux_upp.append(docaz[bin+1] - x[-1])
     x = np.array(x)
@@ -151,11 +184,11 @@ if __name__ == '__main__':
     print(res)
     res.params.dump(args['eff_pars'])
 
-    # %% plot eff vs. docaz -----------------------------------------------------
+    # plot eff vs. docaz
     fig, axplot, axpull = complot.axes_providers.axes_plotpull()
     axplot.errorbar(x, y, yerr=[uy, uy], xerr=[ux_low, ux_upp], fmt='.',
                     label="+".join(MODEL.split('_')))
-    #ax.set_xlim(0, max(docaz))
+    # ax.set_xlim(0, max(docaz))
     _x = np.linspace(0, 6)
     _y = fcn(res.params, _x)
     axplot.plot(_x, _y)
@@ -166,7 +199,7 @@ if __name__ == '__main__':
     _ylow, _yupp = get_confidence_bands(_y)
     axplot.fill_between(_x, _yupp, _ylow, facecolor="C0", alpha=0.2)
     axplot.set_ylim(0.85, 1.05)
-    #ax.set_ylim(0.4, 0.6)
+    # ax.set_ylim(0.4, 0.6)
     axpull.set_xlabel("DOCAz [mm]")
     axplot.set_ylabel("Efficiency")
     axplot.legend()
@@ -174,3 +207,8 @@ if __name__ == '__main__':
     axplot.set_xscale('log')
     axpull.set_xscale('log')
     fig.savefig(args["plot_log"])
+
+# }}}
+
+
+# vim: fdm=marker

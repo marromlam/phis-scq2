@@ -13,29 +13,29 @@ ruleorder: velo_weights_reduce_downstream > samples_reduce_tuple
 
 # Sync downstream {{{
 
-rule velo_weights_sync_downstream:
-  threads: 2
-  resources:
-    mem_mb = 15000
-  wildcard_constraints:
-    version = 'downstream',
-    mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)"
-  params:
-    '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'
-  output:
-    SAMPLES+'/{year}/{mode}/{version}_full.root'
-  log:
-    'output/log/velo_weights_sync_downstream/{year}/{mode}/{version}.log'
-  run:
-    shell(f"""(time\
-    python analysis/samples/sync_tuples.py\
-    --year {wildcards.year}\
-    --mode {wildcards.mode}\
-    --version {wildcards.version}\
-    --tree DecayTree\
-    --output {output}\
-    --eos {params}\
-    ) &> {log}""")
+# rule velo_weights_sync_downstream:
+#   threads: 2
+#   resources:
+#     mem_mb = 15000
+#   wildcard_constraints:
+#     version = 'downstream',
+#     mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)"
+#   params:
+#     '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'
+#   output:
+#     SAMPLES+'/{year}/{mode}/{version}_full.root'
+#   log:
+#     'output/log/velo_weights_sync_downstream/{year}/{mode}/{version}.log'
+#   run:
+#     shell(f"""(time\
+#     python analysis/samples/sync_tuples.py\
+#     --year {wildcards.year}\
+#     --mode {wildcards.mode}\
+#     --version {wildcards.version}\
+#     --tree DecayTree\
+#     --output {output}\
+#     --eos {params}\
+#     ) &> {log}""")
 
 
 rule velo_weights_reduce_downstream:
@@ -56,7 +56,7 @@ rule velo_weights_reduce_downstream:
     python analysis/velo_weights/reduce_tuple.py\
     --input-sample {input}\
     --output-sample {output}\
-    --year 2016\
+    --year {wildcards.year}\
     --mode {wildcards.mode}\
     --version {wildcards.version}\
     ) &> {log}""")
@@ -69,7 +69,7 @@ rule velo_weights_reduce_downstream:
 rule velo_weights_mass_fit_Bu:
   threads: 6
   resources:
-    mem_mb = 16000
+    mem_mb = 20000
   wildcard_constraints:
     bin = "(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)",
     model = "(cb|dgauss|ipatia)",
@@ -117,8 +117,8 @@ rule velo_weights_efficiency_Bu:
     mode = "(Bu2JpsiKplus|MC_Bu2JpsiKplus)"
   input:
     sample = SAMPLES+"/{year}/{mode}/{version}_downstream.root",
-    pars = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}.json", bin=range(1,14)),
-    pars_match = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}_match.json", bin=range(1,14)),
+    pars = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}.json", bin=range(1,15)),
+    pars_match = expand("output/params/velo_weights/{{year}}/{{mode}}/{{version}}_{{massmodel}}_{{particle}}_docaz{bin}_match.json", bin=range(1,15)),
   output:
     pars = "output/params/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}.json",
     plot = "output/figures/velo_weights/{year}/{mode}/{version}_{effmodel}_{massmodel}_{particle}_fit.pdf",

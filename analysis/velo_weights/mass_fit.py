@@ -619,8 +619,6 @@ if __name__ == '__main__':
     # sample = ipanema.Sample.from_root(args["sample"])
 
     # Get DOCAz bins
-    # docaz = np.round(equibins1d(sample.df['DOCAz'],
-    #                             DOCAz_BINS)*1e4)/1e4
     # docaz = [0., 0.0119, 0.0247, 0.0394, 0.0584, 0.0875, 0.1427, 0.2767, 5.]
     docaz = [0.0, 0.3, 0.58, 0.91, 1.35, 1.96, 3.01, 7.0]
     docaz = [0.01909757, 0.02995095, 0.04697244, 0.07366745, 0.11553356,
@@ -631,6 +629,7 @@ if __name__ == '__main__':
     docaz = [0, 0.01652674, 0.02591909, 0.04064923, 0.06375068, 0.09998097,
              0.15680137, 0.2459135, 0.38566914, 0.60484961, 0.94859302,
              1.48768999, 2.33316235, 3.65912694, 6, 10]
+    docaz = np.round(equibins1d(sample.df['DOCAz'], 15)*1e4)/1e4
     print(docaz)
     docaz = docaz[DOCAZ_BIN-1:DOCAZ_BIN+1]
     print(docaz)

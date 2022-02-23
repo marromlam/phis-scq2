@@ -1,10 +1,12 @@
 import argparse
-import yaml
-from ROOT import *
-from SomeUtils.numericFunctionClass import NF
-import cPickle
+# import yaml
+# from ROOT import *
 
-import uproot3 as uproot
+from numericFunctionClass import NF
+import pickle as cPickle
+import ROOT
+
+# import uproot3 as uproot
 
 def argument_parser():
     parser = argparse.ArgumentParser()
@@ -20,16 +22,33 @@ def argument_parser():
 
 
 def epsmKK(input_file1, input_file2, input_tree_name_file1, input_tree_name_file2, output_dir, mode, year):
+    """
+    Get efficiency
+
+    Parameters
+    ----------
+    input_file : pandas.DataFrame
+      Sample from the selection pipeline
+    output_file : pandas.DataFrame
+      EvtGen standalone sample
+    """
     SWAVE = ('Swave' in mode)
 
     print(mode, input_file1, input_file2)
 
     # t1 is the root file from the selection pipeline 
-    t1 = uproot.open(input_file1)[input_tree_name_file1]
+    # df1 = uproot.open(input_file1)[input_tree_name_file1].pandas.df()
     # t2 is the EvtGen standalone root file
-    t2 = uproot.open(input_file2)[input_tree_name_file2]
+    # df2 = uproot.open(input_file2)[input_tree_name_file2].pandas.df()
 
-    # build this list out of none.json parameters
+    print(mode, input_file1, input_file2)
+
+    f1 = ROOT.TFile(input_file1)
+    t1 = f1.Get(input_tree_name_file1)
+
+    f2 = ROOT.TFile(input_file2)
+    t2 = f2.Get(input_tree_name_file2)
+
     mkk_bins = [[ 990 , 1008 ],[ 1008 , 1016 ],[ 1016 , 1020 ],[ 1020 , 1024 ], [ 1024 , 1032 ],[ 1032 , 1050 ]]
     mkk_histos = []
 
@@ -38,6 +57,7 @@ def epsmKK(input_file1, input_file2, input_tree_name_file1, input_tree_name_file
 
     ll = str(980.0)
     ul = str(1060.0+140.0*SWAVE)
+
 
     mKK = "X_M"
     
@@ -70,10 +90,8 @@ def epsmKK(input_file1, input_file2, input_tree_name_file1, input_tree_name_file
         #t2.Draw(mKK_true+" >> "+hname_str_NARROW, mKK_true_mass_cut+"&&"+truth_match)
         t2.Draw("1000*MKK >> "+hname_str_NARROW)
 
-    # }}}
-
-    hmkk_WIDE = (gROOT.FindObject("hmkk_WIDE"))
-    hmkk_NARROW = (gROOT.FindObject("hmkk_NARROW"))
+    hmkk_WIDE = (ROOT.gROOT.FindObject("hmkk_WIDE"))
+    hmkk_NARROW = (ROOT.gROOT.FindObject("hmkk_NARROW"))
 
     for i in range(len(mkk_bins)):
         hname = 'epsmKK_'+str(i)
@@ -93,9 +111,9 @@ def epsmKK(input_file1, input_file2, input_tree_name_file1, input_tree_name_file
             t1.Draw(mKK_true + " >>" + hname_str,cut)
         else:
             t1.Draw(mKK_true_Swave + " >>" + hname_str,"gb_weights*("+cut+")")        
-        mkk_histos.append(gROOT.FindObject(hname))
+        mkk_histos.append(ROOT.gROOT.FindObject(hname))
 
-    graphs = [TGraph(),TGraph(),TGraph(),TGraph(),TGraph(),TGraph()]
+    graphs = [ROOT.TGraph(),ROOT.TGraph(),ROOT.TGraph(),ROOT.TGraph(),ROOT.TGraph(),ROOT.TGraph()]
     ratios = [[],[],[],[],[],[],[]]
     masses = [[],[],[],[],[],[],[]]
     ratiosid = []
@@ -177,8 +195,17 @@ def epsmKK(input_file1, input_file2, input_tree_name_file1, input_tree_name_file
         functions.append(NF(masses[i],ratios[i]))
         cPickle.dump(functions[i],file(output_dir+"eff_hist_"+str(mkk_bins[i][0])+"_"+str(mkk_bins[i][1]),"w"))    
 
-if __name__ == '__main__':
-    parser = argument_parser()
-    args = parser.parse_args()
-    epsmKK(**vars(args))
 
+if __name__ == '__main__':
+    # parser = argument_parser()
+    # args = parser.parse_args()
+
+    input_file1 = "/scratch46/marcos.romero/sidecar14/2016/MC_Bs2JpsiPhi_dG0/v0r5@pTB3_pdfWeight.root"
+    input_file2 = "/scratch46/marcos.romero/sidecar14/2016/MC_Bs2JpsiPhi_dG0/v0r5@pTB4_pdfWeight.root"
+    input_tree_name_file1 = "DecayTree"
+    input_tree_name_file2 = "DecayTree"
+    output_dir = "merda.root" 
+    mode = "MC_Bs2JpsiPhi"
+    year= 2016
+    # epsmKK(**vars(args))
+    epsmKK(input_file1, input_file2, input_tree_name_file1, input_tree_name_file2, output_dir, mode, year)
