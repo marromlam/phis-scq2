@@ -1,0 +1,16 @@
+name: phisscqNew
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python 3.8.12
+  - ROOT
+  - pocl 1.6
+  - pyopencl
+  - reikna
+  - boost
+  - scipy 1.7.1
+  - numpy
+  - matplotlib
+  - pandas
+
