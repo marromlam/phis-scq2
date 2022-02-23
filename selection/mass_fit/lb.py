@@ -1,8 +1,9 @@
-# lb
-#
-#
+"""
+Lb weight
+"""
 
-__all__ = []
+
+__all__ = ['ipatia_chebyshev']
 __author__ = ["name"]
 __email__ = ["email"]
 
@@ -15,21 +16,21 @@ import argparse
 import numpy as np
 from ipanema import (ristra, Sample, splot)
 import matplotlib.pyplot as plt
-from utils.strings import printsec, printsubsec
+# from utils.strings import printsec, printsubsec
 from utils.helpers import trigger_scissors, cuts_and
-
+import config
 import complot
 
 
-clight = 0.29979245
-
-CUT_KMINUS = f'((hminus_ProbNNp>0.7) & (hminus_ProbNNp>hplus_ProbNNp)) & ((B_LOKI_DTF_CTAU/{clight})>0.3)'
-CUT_KPLUS =  f'( (hplus_ProbNNp>0.7) & (hplus_ProbNNp>hminus_ProbNNp)) & ((B_LOKI_DTF_CTAU/{clight})>0.3)'
-
+TIME_CUT = "(B_LOKI_DTF_CTAU/0.29979245)>0.3"
+CUT_KMINUS = '((hminus_ProbNNp>0.7) & (hminus_ProbNNp>hplus_ProbNNp))'
+CUT_KPLUS = '( (hplus_ProbNNp>0.7) & (hplus_ProbNNp>hminus_ProbNNp))'
+CUT_KMINUS = f"({CUT_KMINUS}) & ({TIME_CUT})"
+CUT_KPLUS = f"({CUT_KPLUS}) & ({TIME_CUT})"
 
 
 # initialize ipanema3 and compile lineshapes
-ipanema.initialize(os.environ['IPANEMA_BACKEND'], 1)
+ipanema.initialize(config.user['backend'], 1)
 prog = ipanema.compile("""
 #define USE_DOUBLE 1
 #include <exposed/kernels.ocl>
@@ -37,21 +38,21 @@ prog = ipanema.compile("""
 
 # }}}
 
-# mass models {{{
 
-# ipatia + exponential {{{
-
+# ipatia as signal and chebyshev for background {{{
 
 def ipatia_chebyshev(mass, signal, fpeak=0, fcomb=0, mu=0, sigma=10, lambd=0,
                      zeta=0, beta=0, aL=0, nL=0, aR=0, nR=0, b=0, t0=1, t1=1,
-	                   t2=0, t3=0, t4=0, t5=0, t6=0, t7=0, mLL=False, mUL=False,
+                     t2=0, t3=0, t4=0, t5=0, t6=0, t7=0, mLL=False, mUL=False,
                      norm=1):
-    if not mLL: mLL = ipanema.ristra.min(mass)
-    if not mUL: mUL = ipanema.ristra.min(mass)
+    if not mLL:
+        mLL = ipanema.ristra.min(mass)
+    if not mUL:
+        mUL = ipanema.ristra.min(mass)
     t = np.float64([t0, t1, t2, t3, t4, t5, t6, t7])
     deg = len(t) - 1
     t = ipanema.ristra.allocate(t)
-    
+
     # ipatia
     # prog.kernel_ipatia(signal, mass, np.float64(mu), np.float64(sigma),
     #                    np.float64(lambd), np.float64(zeta), np.float64(beta),
@@ -60,10 +61,13 @@ def ipatia_chebyshev(mass, signal, fpeak=0, fcomb=0, mu=0, sigma=10, lambd=0,
     #                    global_size=(len(mass)))
     prog.py_ipatia(signal, mass, np.float64(mu), np.float64(sigma),
                    np.float64(lambd), np.float64(zeta), np.float64(beta),
-                   np.float64(aL), np.float64(nL), np.float64(aR), np.float64(nR),
+                   np.float64(aL), np.float64(
+                       nL), np.float64(aR), np.float64(nR),
                    global_size=(len(mass)))
-    pPeak = 1.0 * signal.get(); signal = 0*signal
-    _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000); _y = _x*0
+    pPeak = 1.0 * signal.get()
+    signal = 0*signal
+    _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)
+    _y = _x*0
     prog.py_ipatia(_y, _x, np.float64(mu), np.float64(sigma),
                    np.float64(lambd), np.float64(zeta), np.float64(beta),
                    np.float64(aL), np.float64(nL), np.float64(aR),
@@ -78,12 +82,13 @@ def ipatia_chebyshev(mass, signal, fpeak=0, fcomb=0, mu=0, sigma=10, lambd=0,
 # }}}
 
 
-def mass_fitter(odf,
-                mass_range=False, mass_branch='B_ConstJpsi_M_1',
+# mass fitters {{{
+
+def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
                 mass_weight='B_ConstJpsi_M_1/B_ConstJpsi_M_1',
-                extra_cut=False,
-                figs=False, model=False, shift_peak=False,
-                trigger='combined', input_pars=False, sweights=False, verbose=False):
+                extra_cut=False, figs=False, model=False, shift_peak=False,
+                trigger='combined', input_pars=False, sweights=False,
+                verbose=False):
 
     # mass range cut
     if not mass_range:
@@ -98,10 +103,10 @@ def mass_fitter(odf,
     # Select model and set parameters {{{
     #    Select model from command-line arguments and create corresponding set
     #    of paramters
- 
+
     pars = ipanema.Parameters()
     # Create common set of Bs parameters (all models must have and use)
-    pars.add(dict(name='fpeak', value=0.8, min=0.05, max=1, free=True, 
+    pars.add(dict(name='fpeak', value=0.8, min=0.05, max=1, free=True,
              latex=r'N_{B_s}'))
     pars.add(dict(name='mu', value=5620, min=5500, max=5700,
              latex=r'\mu_{B_s}'))
@@ -117,7 +122,8 @@ def mass_fitter(odf,
     else:
         if 'ipatia' in model:
             # Hypatia tails {{{
-            pars.add(dict(name='lambd', value=-1.63529, free=False, latex=r'\lambda'))
+            pars.add(dict(name='lambd', value=-1.63529,
+                     free=False, latex=r'\lambda'))
             pars.add(dict(name='zeta', value=0.0, free=False, latex=r'\zeta'))
             pars.add(dict(name='beta', value=0.0, free=False, latex=r'\beta'))
             pars.add(dict(name='aL', value=2.0958, free=False, latex=r'a_l'))
@@ -142,21 +148,6 @@ def mass_fitter(odf,
         pars.add(dict(name='t2', value=-0.03, min=-1, max=1, free=True,
                       latex=r't_2'))
         pars.add(dict(name='fcomb', formula="1-fpeak", latex=r'f_{comb}'))
-
-    if shift_peak:
-        # Create common set of Bd parameters
-        DMsd = 5366.89 - 5279.63
-        pars.add(dict(name='nsigBd',    value=0.01,  min=0.,
-                 max=1,     free=True,  latex=r'N_{B_d}'))
-        pars.add(dict(name='muBd',
-                 formula=f"muBs-{DMsd}",                      latex=r'\mu_{B_d}'))
-        # pars.add(dict(name='sigmaBd',   value=1,    min=5,    max=20,    free=True,  latex=r'\sigma_{B_d}'))
-        pars.add(dict(name='sigmaBd', formula="sigmaBs",
-                 latex=r'\sigma_{B_d}'))
-        # Combinatorial background
-        pars.pop('nexp')
-        pars.add(
-            dict(name='nexp',     formula="1-nsigBs-nsigBd", latex=r'N_{comb}'))
     print(pars)
 
     # }}}
@@ -164,11 +155,11 @@ def mass_fitter(odf,
     # Chose model {{{
 
     if model == 'ipatia':
-        pdf = ipatia_exponential
+        pdf = ipatia_chebyshev
     elif model == 'ipatiaChebyshev':
         pdf = ipatia_chebyshev
     elif model == 'crystalball':
-        pdf = cb_exponential
+        pdf = ipatia_chebyshev
 
     def fcn(params, data):
         p = params.valuesdict()
@@ -190,10 +181,6 @@ def mass_fitter(odf,
 
     # }}}
 
-    # res = ipanema.optimize(fcn, pars, fcn_kwgs={'data':rd}, method='nelder', verbose=verbose)
-    # for name in ['nsig', 'mu', 'sigma']:
-    #     pars[name].init = res.params[name].value
-    # res = False
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd}, method='minuit',
                            verbose=verbose, strategy=1, tol=0.05)
     if res:
@@ -219,15 +206,16 @@ def mass_fitter(odf,
     if 'fcomb' in _p:
         _p['fcomb'].set(value=0, min=-np.inf, max=np.inf)
     _x = ristra.get(mass)
-    _y = ristra.get(pdf(mass, signal, **_p.valuesdict(), mLL=mLL, mUL=mUL, norm=norm))
-    print(_y)
+    _y = ristra.get(pdf(mass, signal, **_p.valuesdict(),
+                    mLL=mLL, mUL=mUL, norm=norm))
+    # print(_y)
     axplot.plot(_x, _y, color="C1", label=rf'{model}')
-
 
     # plot fit with all components and data
     _p = ipanema.Parameters.clone(fpars)
     x = ristra.get(mass)
-    y = ristra.get(pdf(mass, signal, **_p.valuesdict(), mLL=mLL, mUL=mUL, norm=norm))
+    y = ristra.get(pdf(mass, signal, **_p.valuesdict(),
+                   mLL=mLL, mUL=mUL, norm=norm))
     axplot.plot(x, y, color='C0')
     _pulls = complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts,
                                       *hdata.yerr)
@@ -236,20 +224,17 @@ def mass_fitter(odf,
     axpull.set_ylim(-6.5, 6.5)
     axpull.set_yticks([-5, 0, 5])
     if mass_weight:
-      axplot.set_ylabel(rf"Weighted candidates")
+        axplot.set_ylabel("Weighted candidates")
     else:
-      axplot.set_ylabel(rf"Candidates")
+        axplot.set_ylabel("Candidates")
     axplot.legend(loc="upper left")
     if figs:
         os.makedirs(figs, exist_ok=True)
-        fig.savefig(os.path.join(figs, f"fit.pdf"))
-        fig.savefig(f"fit.pdf")
-    axplot.set_yscale('log')
-    axplot.set_ylim(1e0, 1.5*np.max(y))
-    if figs:
-        fig.savefig(os.path.join(figs, f"logfit.pdf"))
-        fig.savefig(f"logfit.pdf")
-    plt.close()
+        fig.savefig(os.path.join(figs, "fit.pdf"))
+        axplot.set_yscale('log')
+        axplot.set_ylim(1e0, 1.5*np.max(y))
+        fig.savefig(os.path.join(figs, "logfit.pdf"))
+        plt.close()
 
     # compute sWeights if asked {{{
 
@@ -262,7 +247,8 @@ def mass_fitter(odf,
         _pars = ipanema.Parameters.build(fpars, _pars)
         print(_yields, _pars)
 
-        def __pdf(*x, **y): return pdf(rd.mass, rd.pdf, mLL=mLL, mUL=mUL, *x, **y)
+        def __pdf(*x, **y): return pdf(rd.mass,
+                                       rd.pdf, mLL=mLL, mUL=mUL, *x, **y)
         sw = splot.compute_sweights(__pdf, _pars, _yields)
         for k, v in sw.items():
             _sw = np.copy(_proxy)
@@ -278,8 +264,9 @@ def mass_fitter(odf,
 # }}}
 
 
+# command line interface {{{
+
 if __name__ == "__main__":
-    # command line parser {{{
     p = argparse.ArgumentParser()
     p.add_argument('--sample')
     p.add_argument('--input-params', default=False)
@@ -288,7 +275,6 @@ if __name__ == "__main__":
     p.add_argument('--mass-model')
     p.add_argument('--mass-weight')
     p.add_argument('--mass-bin', default=False)
-    # p.add_argument('--trigger')
     p.add_argument('--nosep')
     p.add_argument('--sweights')
     p.add_argument('--mode')
@@ -332,13 +318,6 @@ if __name__ == "__main__":
     else:
         mass_weight = f'{mass_branch}/{mass_branch}'
 
-    # for k, v in TAGS[family].items():
-    #     # branches.append(v)
-    #     # if 'tag' in k:
-    #     #   observables.append( Category(v, States={'B':+1,'Bbar':-1,'Untagged':0}) )
-    #     # elif 'eta' in k:
-    #     #   observables.append( RealVar(v, MinMax=(0, 0.55)) )
-
     sample = Sample.from_root(args['sample'], branches=branches)
     print(sample.df)
 
@@ -350,6 +329,8 @@ if __name__ == "__main__":
     pars.dump(args['output_params'])
     if sw:
         np.save(args['sweights'], sw)
-    # }}}
+
+# }}}
+
 
 # vim: fdm=marker ts=2 sw=2 sts=2 sr et

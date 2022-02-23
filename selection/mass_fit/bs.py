@@ -3,9 +3,9 @@ Macro to compute sWeights for Bs RD and Bs MC samples.
 """
 
 
+__all__ = ['cb_exponential3']
 __author__ = ['Marcos Romero']
 __email__  = ['mromerol@cern.ch']
-__all__ = ['mass_fitter']
 
 
 # Modules {{{
@@ -19,7 +19,7 @@ from ipanema import (ristra, Sample, splot)
 import matplotlib.pyplot as plt
 from utils.strings import printsec, printsubsec
 from utils.helpers import trigger_scissors, cuts_and
-
+import config
 import complot
 
 def get_sizes(size, BLOCK_SIZE=256):
@@ -38,7 +38,7 @@ def get_sizes(size, BLOCK_SIZE=256):
 
 
 # initialize ipanema3 and compile lineshapes
-ipanema.initialize(os.environ['IPANEMA_BACKEND'], 1)
+ipanema.initialize(config.user['backend'], 1)
 # prog = ipanema.compile("""
 # #define USE_DOUBLE 1
 # #include <lib99ocl/core.c>
