@@ -16,7 +16,7 @@ class NF:
         for i in range(N):
             p = l[i]
             if not i%self.binSize: self.DataBase[p[0]]=p[1]
-        self.References = self.DataBase.keys()
+        self.References = list(self.DataBase.keys())
         self.References.sort()
         self.refSize = len(self.References)
         self.lowValue = self.References[0]
