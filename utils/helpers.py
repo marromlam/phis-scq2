@@ -534,6 +534,10 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         elif m == 'Bs2JpsiPhi_Lb':
             if weight not in ['selected', 'tagged', 'sWeight', 'ready', 'chopped']:
                 weight = 'sWeight'
+        elif m == 'GUN_Bs2JpsiPhi':
+            # WARNING: We dont chop this tuple with the @
+            if weight not in ['ready']:
+                weight = 'ready'
         # }}}
     # print(f"{m} weight was transformed {__weight}->{weight}")
     # }}}
