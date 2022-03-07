@@ -126,6 +126,12 @@ MC_Bs2JpsiPhi_Prompt:
   "sWeight" : "sw"
   "genidB" : "B_ID_GenLvl"
 
+GUN_Bs2JpsiPhi:
+  <<: *MC_common
+  "sWeight" : "sw"
+  "genidB" : "B_ID_GenLvl"
+  "mHH" : "1000*MKK"
+
 # }}}
 
 
