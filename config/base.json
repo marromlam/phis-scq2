@@ -27,5 +27,6 @@
   "bu_mass_mX_bins": 1,
   "bu_mass_sigmam_bins": 1,
   "minimizer": "minuit",
-  "contour": 0
+  "contour": 0,
+  "allow_downloads": false
 }
