@@ -15,6 +15,7 @@ import ipanema
 import argparse
 import uproot3 as uproot
 import numpy as np
+import re
 from ipanema import (ristra, Sample, splot)
 import matplotlib.pyplot as plt
 from utils.strings import printsec, printsubsec
@@ -36,6 +37,65 @@ def get_sizes(size, BLOCK_SIZE=256):
       gs, ls = a*BLOCK_SIZE, BLOCK_SIZE
     return int(gs), int(ls)
 
+from analysis.csp_factors.efficiency import (create_mass_bins,
+                                             create_time_bins,
+                                             create_sigmam_bins)
+
+
+def get_bin_from_version(version, subbin):
+    v = version.split('@')
+    if len(v) > 1:
+        v, c = v
+    else:
+        v, c = v[0], None
+    v = v.split('~')
+    if len(v) > 1:
+        v, w = v
+    else:
+        v, w = v[0], None
+    print(v, w, c)
+
+    pattern = [
+        "(mX(1|2|3|4|5|6))?",
+        "(time(1|2|3|4))?",
+        "(sigmam(1|2|3|4))?",
+    ]
+    pattern = rf"\A{''.join(pattern)}\Z"
+    p = re.compile(pattern)
+    if subbin != 'all':
+        try:
+            q = p.search(w).groups()
+            mX_bins = int(q[1]) if q[0] else 1
+            time_bins = int(q[3]) if q[2] else 1
+            sigmam_bins = int(q[5]) if q[4] else 1
+        except:
+            raise ValueError(f'Cannot interpret {w} as a sWeight config')
+    pattern = rf"\A{''.join(pattern)}\Z"
+    print(pattern, subbin)
+    p = re.compile(pattern)
+    if subbin != 'all':
+        try:
+            q = p.search(subbin).groups()
+            mX = int(q[1]) if q[0] else 1
+            time = int(q[3]) if q[2] else 1
+            sigmam = int(q[5]) if q[4] else 1
+        except:
+            raise ValueError(f'Cannot interpret {w} as a subbin')
+    print("bines -->", mX_bins, time_bins, sigmam_bins)
+    print("bines -->", mX, time, sigmam)
+    # create bins limits
+    mXLL, mXUL = create_mass_bins(int(mX_bins))[mX-1:mX+1]
+    # timeLL, timeUL = create_time_bins(int(time_bins))[time-1:time+1]
+    timeLL, timeUL, = 0.3, 15  # TODO: fix this
+    sigmamLL, sigmamUL = create_sigmam_bins(int(sigmam_bins))[sigmam-1:sigmam+1]
+    # list of cuts
+    list_of_cuts = [
+        f"X_M > {mXLL} & X_M < {mXUL}",
+        f"time > {timeLL} & time < {timeUL}",
+        f"B_ConstJpsi_MERR_1 > {sigmamLL} & B_ConstJpsi_MERR_1 < {sigmamUL}",
+    ]
+    cuts = f"( {' ) & ( '.join(list_of_cuts)} )"
+    return cuts
 
 # initialize ipanema3 and compile lineshapes
 ipanema.initialize(os.environ['IPANEMA_BACKEND'], 1)
@@ -440,6 +500,8 @@ def mass_fitter(odf,
       pdf = ipatia_exponential 
     elif model == 'crystalball':
       pdf = cb_exponential3
+    elif model == 'dscb':
+      pdf = cb_exponential3
     elif model == 'cbcalib':
       pdf = cb_exponential3
       with_calib = True
@@ -491,7 +553,7 @@ def mass_fitter(odf,
         pars.add(dict(name='aR',      value=1.03,  min=0.5, max=5.5,   free=True,  latex=r'a_r'))
         pars.add(dict(name='nR',      value=1.02,  min=0,   max=6,     free=True,  latex=r'n_r'))
         # }}}
-      elif "crystalball" in model:
+      elif "crystalball" in model or "dscb" in model:
         # Crystal Ball tails {{{
         pars.add(dict(name='aL',      value=1.4,  min=0.5, max=3.5,    free=True,  latex=r'a_l'))
         pars.add(dict(name='nL',      value=20,     min=0,   max=500,   free=True,  latex=r'n_l'))
@@ -668,8 +730,8 @@ def mass_fitter(odf,
           _sw = np.copy(_proxy)
           _sw[list(rd.df.index)] = v
           sw[k] = _sw
-        # for i in range(60, 152):
-        #     print(i, sw['fsigBs'][i])
+        for i in range(0, 100):
+            print(i, sw['fsigBs'][i])
         # print("sum of wLb", np.sum( rd.df.eval(mass_weight).values ))
         return (fpars, sw)
 
@@ -694,6 +756,7 @@ if __name__ == '__main__':
   p.add_argument('--trigger')
   p.add_argument('--sweights')
   p.add_argument('--mode')
+  p.add_argument('--version')
   args = vars(p.parse_args())
   
   if args['sweights']:
@@ -706,7 +769,8 @@ if __name__ == '__main__':
   else:
     input_pars = False
   
-  branches = ['B_ConstJpsi_M_1', 'B_ConstJpsi_MERR_1', 'hlt1b', 'X_M']
+  branches = ['B_ConstJpsi_M_1', 'B_ConstJpsi_MERR_1', 'hlt1b', 'X_M',
+              'time']
 
   if args['mass_weight']:
     mass_weight = args['mass_weight']
@@ -725,22 +789,16 @@ if __name__ == '__main__':
   mass_range=(5202, 5548)
   mass_range=(5200, 5550)
   if args['mass_bin']:
-    if 'Bd2JpsiKstar' in args['mode']:
-      mass = [826, 861, 896, 931, 966]
-    elif 'Bs2JpsiPhi' in args['mode']:
-      mass = [990, 1008, 1016, 1020, 1024, 1032, 1050]
-    if args['mass_bin'] == 'all':
-      mLL = mass[0]
-      mUL = mass[-1]
-    else:
-      bin = int(args['mass_bin'][-1])
-      mLL = mass[bin-1]
-      mUL = mass[bin]
+    bin_cut = get_bin_from_version(args['version'], args['mass_bin'])
+    print(bin_cut)
+    # bin = int(args['mass_bin'][-1])
+    # mLL = mass[bin-1]
+    # mUL = mass[bin]
     if "LSB" in args['mass_bin']:
       mass_range=(5202, 5367+50)
     elif "RSB" in args['mass_bin']:
       mass_range=(5367-80, 5548)
-    cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
+    cut = f"({cut}) & {bin_cut}" if cut else bin_cut
 
   pars, sw = mass_fitter(sample.df,
                          mass_range=mass_range, mass_branch='B_ConstJpsi_M_1',
