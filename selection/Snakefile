@@ -262,6 +262,7 @@ rule mass_prefit_bs_mc:
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 
@@ -298,6 +299,7 @@ rule mass_fit_bs_mc:
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
+    --version {wildcards.version} \
     --sweights {output.sweights} \
     ) &> {log}""")
 
@@ -335,6 +337,7 @@ rule mass_fit_bs_rd:
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
+    --version {wildcards.version} \
     --sweights {output.sweights} \
     ) &> {log}""")
 
@@ -385,6 +388,70 @@ rule mass_fit_bs_lb:
 
 # TODO: Theseset of rules can be *obviously* be merged
 
+def guess_massbins(wcs, version=False, mode=False):
+    if not version:
+        version = f"{wcs.version}"
+    if not mode:
+        mode = f"{wcs.mode}"
+
+    if not 'MC' in mode:
+        _mode = f'{wcs.mode}'.lower()[:2]
+    else:
+        _mode = f'{wcs.mode}'.split('_')[1].lower()[:2]
+    # _mode = f'{wcs.mode}'.lower()[:2]
+
+    mass_model = config[_mode  + "_mass_model"]
+    v = version.split('@')
+    if len(v) > 1:
+        v, c = v
+    else:
+        v, c = v[0], None
+    v = v.split('~')
+    if len(v) > 1:
+        v, w = v
+    else:
+        v, w = v[0], None
+    # print(v, w, c)
+
+    pattern = [
+        "(mX(1|2|3|4|5|6))?",
+        "(time(1|2|3|4))?",
+        "(sigmam(1|2|3|4))?",
+    ]
+    pattern = rf"\A{''.join(pattern)}\Z"
+    p = re.compile(pattern)
+    try:
+        q = p.search(w).groups()
+        mX = int(q[1]) if q[0] else False
+        time = int(q[3]) if q[2] else False
+        sigmam = int(q[5]) if q[4] else False
+
+        if mX:
+            mX = [f'mX{i}' for i in range(1, mX+1)]
+        else:
+            mX = ['all']
+
+        if time:
+            time = [f'time{i}' for i in range(1, time+1)]
+        else:
+            time = ['']
+
+
+        if sigmam:
+            sigmam = [f'sigmam{i}' for i in range(1, sigmam+1)]
+        else:
+            sigmam = ['']
+
+        caca = []
+        for b1 in mX:
+            for b2 in time:
+                for b3 in sigmam:
+                    caca.append(f"{b1}{b2}{b3}")
+    except:
+        raise ValueError(f'Cannot interpret {w} as a sWeight config')
+    return caca
+
+
 rule sweights_add:
   """
   Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
@@ -399,12 +466,13 @@ rule sweights_add:
     root_file = lambda wcs: tuples(wcs, weight='chopped' if 'Bu' not in f'{wcs.mode}' else 'selected'),
     biased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_biased.npy',
                                 year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
-                                massbin=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_bins"],
+                                massbin=guess_massbins(wcs),
                                 massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
                                ),
     unbiased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_unbiased.npy',
                                 year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
-                                massbin=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_bins"],
+                                massbin=guess_massbins(wcs),
+                                # massbin=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_bins"],
                                 massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
                                ),
   output:
