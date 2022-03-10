@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     # Get the flags and that stuff
     # pipeline tuple version
-    v = args['version'].split("@")[0].split("bdt")[0]
+    v = args['version'].split("@")[0].split("~")[0].split("bdt")[0]
     V = args['version'].replace('bdt', '')  #  full version for phis-scq
     y = args['year']
     m = args['mode']

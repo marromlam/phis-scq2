@@ -91,6 +91,7 @@ if __name__ == "__main__":
     w = args['weight']
     tree = args['tree']
     is_mc = True if 'MC' in m else False
+    is_gun = True if 'GUN' in m else False
 
     # choose sWeight varaible name {{{
 
@@ -163,7 +164,7 @@ if __name__ == "__main__":
         vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
 
     # place the cut
-    if vsub_cut:
+    if vsub_cut and not is_gun:
         result = result.query(vsub_cut)
     print("Showing the final dataframe:")
     print(result)
