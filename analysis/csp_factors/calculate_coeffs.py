@@ -8,6 +8,7 @@ import argparse
 from scipy import interpolate
 from ipanema import Parameters
 
+from analysis.csp_factors.efficiency import create_mass_bins
 
 lo = 2*493.677  # EvtGen table
 hi = 1060.
@@ -285,8 +286,8 @@ def calculate_csp_factors(mKK_knots, histos=False, as_params=False,
     # Start the computation
     coeffs = []
     print("Calculating coefficients")
-    for i in range(len(mass_knots)-1):
-        mLL, mUL = mass_knots[i], mass_knots[i+1]
+    for i in range(len(mKK_knots)-1):
+        mLL, mUL = mKK_knots[i], mKK_knots[i+1]
         coeffs.append(evCsp(mLL, mUL, threshold, cut_off, eff[i], f0_Syr))
 
     # cook results
@@ -335,9 +336,13 @@ if __name__ == '__main__':
     histos = np.load(args['histos'], allow_pickle=True)
     histos = False
 
-    mKK_knots = [990, 1008, 1016, 1020, 1024, 1032, 1050]
-    mass_knots = [990, 1008, 1016, 1020, 1024, 1032, 1050]
-    csp = calculate_csp_factors(mKK_knots, histos, as_params=True)
+    nbins = int(args['nbins'])
+    # mKK_knots = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    # b                           1020   
+    # mKK_knots = [990, 1014.78, 1018.41, 1020, 10223.42, 1032, 1050]
+    mKK = create_mass_bins(nbins)
+    print(mKK)
+    csp = calculate_csp_factors(mKK, histos, as_params=True)
     csp.dump(output)
 
 

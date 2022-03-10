@@ -52,18 +52,13 @@ rule csp_factors_from_git:
 # }}}
 
 
-# THESE RULES ARE TO COMPUTE CSP FACTORS WITHIN PHIS-SCQ {{{
-#
-# #files_Csp_den = {'MC_Bs2JpsiPhi': '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsjpsiphi_CPLH_10M.root', 'MC_Bs2JpsiKK_Swave': '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsmumukk_RunI_new.root'}
-# trees_Csp_den = {'MC_Bs2JpsiPhi': 'bsjpsikk',
-#                  'MC_Bs2JpsiKK_Swave': 'bsmumukk'}
-#
+# rules to compute csp factors {{{
+
 rule csp_factors_efficiency_hist_yearly:
     """
     Efficiency histograms in m(KK) for Csp factors.
     """
     input:
-        # mc = "{SAMPLES}/{year}/MC_{mode}/{version}.root",
         mc = SAMPLES+"/{year}/{mode}/{version}.root",
         pgun = SAMPLES+"/{year}/GUN_Bs2JpsiPhi/{version}.root",
     output:
@@ -72,7 +67,7 @@ rule csp_factors_efficiency_hist_yearly:
     params:
         script = 'analysis/csp_factors/efficiency.py',
     log:
-        "output/log/csp_factors_efficiency/{year}/{mode}/{version}_yearly{nbins}.json"
+        "output/log/csp_factors_efficiency/{year}/{mode}/{version}_yearly{nbins}.log"
     run:
         shell(f"""(time\
         python {params.script} \
@@ -90,17 +85,16 @@ rule csp_factors_calculate_yearly:
     """
     Calculate Csp factors and save them in a json file.
     """
+    wildcard_constraints:
+        mode = "MC_.*"
     input:
         histos = 'output/params/mass_efficiencies/{year}/{mode}/{version}_yearly{nbins}.npy',
-        # dir1 = expand(rules.Csp_eff_hist.output, mode='MC_Bs2JpsiPhi', year='{year}'),
-        # dir2 = expand(rules.Csp_eff_hist.output, mode='MC_Bs2JpsiKK_Swave', year='{year}')
     output:
         csp = 'output/params/csp_factors/{year}/{mode}/{version}_yearly{nbins}.json',
-        # tuples_path('Csp/{year}/CspFactors{year}.json').replace('selection/output/tuples','fitinputs/'+config['version'])
     params:
         script = 'analysis/csp_factors/calculate_coeffs.py',
     log:
-        "output/log/csp_factors_calculate/{year}/{mode}/{version}_yearly{nbins}.json"
+        "output/log/csp_factors_calculate/{year}/{mode}/{version}_yearly{nbins}.log"
     run:
         shell(f"""(time\
         python {params.script}\
@@ -112,6 +106,20 @@ rule csp_factors_calculate_yearly:
         ) &> {log}""")
 
 
+rule csp_factors_merge:
+    """
+    Calculate Csp factors and save them in a json file.
+    """
+    wildcard_constraints:
+        mode = "(Bs2JpsiPhi)"
+    input:
+        'output/params/csp_factors/{year}/MC_Bs2JpsiPhi/{version}_yearly{nbins}.json',
+    output:
+        'output/params/csp_factors/{year}/{mode}/{version}_yearly{nbins}.json',
+    log:
+        "output/log/csp_factors_calculate/{year}/{mode}/{version}_yearly{nbins}.log"
+    run:
+        shell(f"cp {input} {output}")
 
 # rule csp_factors_merge_files_for_Csp:
 #     params:

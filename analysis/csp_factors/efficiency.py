@@ -11,7 +11,75 @@ import numpy as np
 import complot
 
 
+
 def create_mass_bins(nob):
+    """
+    Creates a set of bins
+
+    Parameters
+    ----------
+    nob: int
+      Number of mass bins to be created.
+
+    Returns
+    -------
+    mass_bins: list
+      List with the edges for the required number of bins.
+    """
+
+    if int(nob) == 1:
+        mass_bins = [990, 1050]
+    elif int(nob) == 2:
+        mass_bins = [990, 1020, 1050]
+    # elif int(nob) == 3:
+    #     mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    elif int(nob) == 4:
+        # mass_bins = [990, 1017, 1020, 1027, 1050]  # equipoblado
+        # mass_bins = [990, 1013, 1020, 1027, 1050]  # 1st -- best
+        # mass_bins = [990, 1011, 1020, 1027, 1050]  # 2nd
+        # mass_bins = [990, 1018, 1020, 1027, 1050]  # 3rd -- nada
+        mass_bins = [990, 1012, 1020, 1027, 1050]  # 4nd -- definitive !!!!!
+    elif int(nob) == 5:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    elif int(nob) == 6:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+        mass_bins = [990, 1014.78, 1018.41, 1020, 10223.42, 1033, 1050]
+    else:
+        raise ValueError("Number of bins cannot be higher than 6")
+    return mass_bins
+
+
+def create_sigmam_bins(nob):
+    """
+    Creates a set of bins
+
+    Parameters
+    ----------
+    nob: int
+      Number of mass bins to be created.
+
+    Returns
+    -------
+    mass_bins: list
+      List with the edges for the required number of bins.
+    """
+
+    if int(nob) == 1:
+        mass_bins = [0, 20]
+    elif int(nob) == 2:
+        mass_bins = [0, 5.66, 20]
+    elif int(nob) == 3:
+        mass_bins = [0, 5.22, 6.13, 20]
+    elif int(nob) == 4:
+        mass_bins = [0, 4.97, 5.66, 6.42, 20]
+    elif int(nob) == 5:
+        mass_bins = [0, 4.80, 5.40, 5.93, 6.62, 20]
+    else:
+        raise ValueError("Number of bins cannot be higher than 5")
+    return mass_bins
+
+
+def create_time_bins(nob):
     """
     Creates a set of bins
 
@@ -41,7 +109,6 @@ def create_mass_bins(nob):
     else:
         raise ValueError("Number of bins cannot be higher than 6")
     return mass_bins
-
 
 def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
     r"""
@@ -82,7 +149,7 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
     if not weight:
         weight = f'{mass_branch}/{mass_branch}'
 
-    mass_knots = create_mass_bins(6)
+    mass_knots = create_mass_bins(int(nbins))
     mLL, mUL = mass_knots[0]-10, mass_knots[-1]+10+140*has_swave
 
     nwide = 100 + 150*has_swave
@@ -101,7 +168,7 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
     # histogram true mass of the MC {{{
 
     hb = []
-    for i, ll, ul in zip(range(6), mass_knots[:-1], mass_knots[1:]):
+    for i, ll, ul in zip(range(int(nbins)), mass_knots[:-1], mass_knots[1:]):
         if ll == mass_knots[0] or ul == mass_knots[-1]:
             _nbins = nwide
         else:
@@ -125,7 +192,7 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
     for j in range(len(hb)):
         _ratios = []
         _masses = []
-        if(j == 0 or j == 5):
+        if(j == 0 or j == int(nbins)-1):
             NBINS = nwide
             # print("NBINS WIDE=",NBINS)
             for i in range(NBINS):
@@ -200,13 +267,14 @@ if __name__ == '__main__':
     else:
         weight = False
 
+    print(args['nbins'])
     masses, ratios = epsmKK(sim, gun, mode=args['mode'], year=args['year'],
                             nbins=args['nbins'], mass_branch=mass_branch,
                             weight=False)
 
     # create efficiency plot
     fig, axplot = complot.axes_providers.axes_plot()
-    for i in range(6):
+    for i in range(int(args['nbins'])):
         axplot.fill_between(masses[i], ratios[i], 0, alpha=0.5)
     axplot.set_xlabel(r"$m(K^+K^-)$")
     axplot.set_ylabel(r"Efficiency, $\epsilon$")
@@ -216,9 +284,9 @@ if __name__ == '__main__':
     np.save(os.path.join(args['output_histos']), [masses, ratios],
             allow_pickle=True)
 
-    _masses, _ratios = np.load(os.path.join(args['output_histos']), allow_pickle=True)
-    print(_masses, masses)
-    print(_ratios, ratios)
+    # _masses, _ratios = np.load(os.path.join(args['output_histos']), allow_pickle=True)
+    # print(_masses, masses)
+    # print(_ratios, ratios)
 
 # }}}
 
