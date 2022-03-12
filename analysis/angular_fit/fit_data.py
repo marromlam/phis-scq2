@@ -1,8 +1,3 @@
-#!/home3/marcos.romero/conda3/envs/phisscq/bin/python
-DESCRIPTION = """
-    fit data
-"""
-
 __author__ = ['Marcos Romero Lamas']
 __email__  = ['mromerol@cern.ch']
 __all__ = []
@@ -39,7 +34,10 @@ import config
 
 
 def argument_parser():
-  parser = argparse.ArgumentParser(description='Compute decay-time acceptance.')
+  DESCRIPTION = """
+      fit data
+  """
+  parser = argparse.ArgumentParser(description=DESCRIPTION)
   # Samples
   parser.add_argument('--samples', help='Bs2JpsiPhi data sample')
   # Input parameters
@@ -115,6 +113,7 @@ branches_to_load = ['hlt1b']
 real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
 weight = 'sWeight'
+weight = 'sw'
 branches_to_load += real 
 branches_to_load += ['sw', 'sWeight', 'lbWeight']
 
@@ -138,6 +137,8 @@ for i, y in enumerate(YEARS):
   flavor = Parameters.load(args['flavor_tagging'].split(',')[i])
   resolution = Parameters.load(args['time_resolution'].split(',')[i])
   badjanak.config['mHH'] = mass.tolist()
+  # print(mass)
+  # exit()
   for t in TRIGGER:
     tc = trigger_scissors(t, CUT)
     data[y][t] = Sample.from_root(args['samples'].split(',')[i], branches=branches_to_load, cuts=tc)
@@ -190,93 +191,74 @@ print(BLIND)
 
 
 pars = Parameters()
-list_of_parameters = [#
 # S wave fractions
-Parameter(name='fSlon1', value=SWAVE*0.5, min=0.00, max=0.90,
-          free=SWAVE, latex=r'|A_S^{1}|'),
-Parameter(name='fSlon2', value=SWAVE*0.0, min=0.00, max=0.90,
-          free=SWAVE, latex=r'|A_S^{2}|'),
-Parameter(name='fSlon3', value=SWAVE*0.0, min=0.00, max=0.90,
-          free=SWAVE, latex=r'|A_S^{3}|'),
-Parameter(name='fSlon4', value=SWAVE*0.0, min=0.00, max=0.90,
-          free=SWAVE, latex=r'|A_S^{4}|'),
-Parameter(name='fSlon5', value=SWAVE*0.0, min=0.00, max=0.90,
-          free=SWAVE, latex=r'|A_S^{5}|'),
-Parameter(name='fSlon6', value=SWAVE*0.0, min=0.00, max=0.90,
-          free=SWAVE, latex=r'|A_S^{6}|'),
-# P wave fractions
-Parameter(name="fPlon", value=0.5241, min=0.4, max=0.6,
-          free=True, latex=r'|A_0|^2'),
-Parameter(name="fPper", value=0.25, min=0.1, max=0.3,
-          free=True, latex=r'|A_{\perp}|^2'),
+for i in range(len(mass)-1):
+    pars.add(dict(
+        name=f'fSlon{i}', value=SWAVE*0, min=0.00, max=0.90,
+        free=SWAVE, latex=rf'|A_S^{{{i}}}|'))
+# P wave 
+pars.add(dict(name="fPlon", value=0.5241, min=0.4, max=0.6,
+          free=True, latex=r'|A_0|^2'))
+pars.add(dict(name="fPper", value=0.25, min=0.1, max=0.3,
+          free=True, latex=r'|A_{\perp}|^2'))
 # Weak phases
-Parameter(name="pSlon", value= 0.00, min=-5.0, max=5.0,
-          free=POLDEP, latex=r"\phi_S - \phi_0 \, \mathrm{[rad]}",
-          blindstr="BsPhisSDelFullRun2",
-          blind=BLIND, blindscale=2.0, blindengine="root"),
-Parameter(name="pPlon", value=0.3, min=-5.0, max=5.0,
-          free=True, latex=r"\phi_0 \, \mathrm{[rad]}",
-          blindstr="BsPhiszeroFullRun2" if POLDEP else "BsPhisFullRun2",
-          blind=BLIND, blindscale=2.0 if POLDEP else 1.0, blindengine="root"),
-Parameter(name="pPpar", value= 0.00, min=-5.0, max=5.0,
-          free=POLDEP, latex=r"\phi_{\parallel} - \phi_0 \, \mathrm{[rad]}",
-          blindstr="BsPhisparaDelFullRun2",
-          blind=BLIND, blindscale=2.0, blindengine="root"),
-Parameter(name="pPper", value= 0.00, min=-5.0, max=5.0,
-          free=POLDEP, blindstr="BsPhisperpDelFullRun2", blind=BLIND,
-          blindscale=2.0, blindengine="root", latex=r"\phi_{\perp} - \phi_0 \, \mathrm{[rad]}"),
+pars.add(dict(
+    name="pSlon", value= 0.00, min=-5.0, max=5.0,
+    free=POLDEP, latex=r"\phi_S - \phi_0 \, \mathrm{[rad]}",
+    blindstr="BsPhisSDelFullRun2",
+    blind=BLIND, blindscale=2.0, blindengine="root"))
+pars.add(dict(
+    name="pPlon", value=0.3, min=-5.0, max=5.0,
+    free=True, latex=r"\phi_0 \, \mathrm{[rad]}",
+    blindstr="BsPhiszeroFullRun2" if POLDEP else "BsPhisFullRun2",
+    blind=BLIND, blindscale=2.0 if POLDEP else 1.0, blindengine="root"))
+pars.add(dict(
+    name="pPpar", value= 0.00, min=-5.0, max=5.0,
+    free=POLDEP, latex=r"\phi_{\parallel} - \phi_0 \, \mathrm{[rad]}",
+    blindstr="BsPhisparaDelFullRun2",
+    blind=BLIND, blindscale=2.0, blindengine="root"))
+pars.add(dict(
+    name="pPper", value= 0.00, min=-5.0, max=5.0,
+    free=POLDEP, blindstr="BsPhisperpDelFullRun2", blind=BLIND,
+    blindscale=2.0, blindengine="root", latex=r"\phi_{\perp} - \phi_0 \, \mathrm{[rad]}"))
+
 # S wave strong phases
-Parameter(name='dSlon1', value=+2.5*SWAVE, min=-0.0, max=+3.0,
-          free=SWAVE, latex="\delta_S^{1} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon2', value=+1.5*SWAVE, min=-0.0, max=+3.0,
-          free=SWAVE, latex="\delta_S^{2} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon3', value=+0.0*SWAVE, min=-0.0, max=+3.0,
-          free=SWAVE, latex="\delta_S^{3} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon4', value=-0.0*SWAVE, min=-3.0, max=+0.0,
-          free=SWAVE, latex="\delta_S^{4} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon5', value=-1.2*SWAVE, min=-3.0, max=+0.0,
-          free=SWAVE, latex="\delta_S^{5} - \delta_{\perp} \, \mathrm{[rad]}"),
-Parameter(name='dSlon6', value=-2.5*SWAVE, min=-3.0, max=+0.0,
-          free=SWAVE, latex="\delta_S^{6} - \delta_{\perp} \, \mathrm{[rad]}"),
+for i in range(len(mass)-1):
+    phase = np.linspace(-2.5, 2.5, len(mass)-1)[i]
+    pars.add(dict(
+        name=f'dSlon{i}', value=SWAVE*phase,  # min=-np.pi, max=0.90,
+        free=SWAVE, latex=rf"\delta_S^{{{i}}} - \delta_{{\perp}} \, \mathrm{{[rad]}}"))
+
 # P wave strong phases
-Parameter(name="dPlon", value=0.00, min=-2*3.14*0, max=2*3.14,
-          free=False, latex="\delta_0 \, \mathrm{[rad]}"),
-Parameter(name="dPpar", value=3.26, min=-2*3.14*0, max=2*3.14,
-          free=True, latex="\delta_{\parallel} - \delta_0 \, \mathrm{[rad]}"),
-Parameter(name="dPper", value=3.1, min=-2*3.14*0, max=2*3.14,
-          free=True, latex="\delta_{\perp} - \delta_0 \, \mathrm{[rad]}"),
+pars.add(dict(name="dPlon", value=0.00, min=-2*3.14*0, max=2*3.14, free=False, latex="\delta_0 \, \mathrm{[rad]}"))
+pars.add(dict(name="dPpar", value=3.26, min=-2*3.14*0, max=2*3.14, free=True, latex="\delta_{\parallel} - \delta_0 \, \mathrm{[rad]}"))
+pars.add(dict(name="dPper", value=3.1, min=-2*3.14*0, max=2*3.14, free=True, latex="\delta_{\perp} - \delta_0 \, \mathrm{[rad]}"))
+
 # lambdas
-Parameter(name="lSlon", value=1., min=0.4, max=1.6,
-          free=POLDEP, latex="|\lambda_S|/|\lambda_0|"),
-Parameter(name="lPlon", value=1., min=0.4, max=1.6,
-          free=True,  latex="|\lambda_0|"),
-Parameter(name="lPpar", value=1., min=0.4, max=1.6,
-          free=POLDEP, latex="|\lambda_{\parallel}|/|\lambda_0|"),
-Parameter(name="lPper", value=1., min=0.4, max=1.6,
-          free=POLDEP, latex="|\lambda_{\perp}|/|\lambda_0|"),
+pars.add(dict(name="lSlon", value=1., min=0.4, max=1.6, free=POLDEP, latex="|\lambda_S|/|\lambda_0|"))
+pars.add(dict(name="lPlon", value=1., min=0.4, max=1.6, free=True,  latex="|\lambda_0|"))
+pars.add(dict(name="lPpar", value=1., min=0.4, max=1.6, free=POLDEP, latex="|\lambda_{\parallel}|/|\lambda_0|"))
+pars.add(dict(name="lPper", value=1., min=0.4, max=1.6, free=POLDEP, latex="|\lambda_{\perp}|/|\lambda_0|"))
+
 # lifetime parameters
-Parameter(name="Gd", value= 0.65789, min= 0.0, max= 1.0,
-          free=False, latex=r"\Gamma_d \, \mathrm{[ps]}^{-1}"),
-Parameter(name="DGs", value= (1-DGZERO)*0.3, min= 0.0, max= 1.7,
-          free=1-DGZERO,  latex=r"\Delta\Gamma_s \, \mathrm{[ps]}^{-1}",
-          blindstr="BsDGsFullRun2",
-          blind=BLIND, blindscale=1.0, blindengine="root"),
-Parameter(name="DGsd", value= 0.03*0,  # min=-0.1, max= 0.1,
-          free=True, latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps]}^{-1}"),
-Parameter(name="DM", value=17.757,   min=15.0, max=20.0,
-          free=True, latex=r"\Delta m_s \, \mathrm{[ps]}^{-1}"),
-Parameter("eta_os", value = data[str(YEARS[0])][TRIGGER[0]].flavor['eta_os'].value, free = False),
-Parameter("eta_ss", value = data[str(YEARS[0])][TRIGGER[0]].flavor['eta_ss'].value, free = False),
-Parameter("p0_os",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p0_os'].value,  free = True, min =  0.0, max = 1.0, latex = "p^{\rm OS}_{0}"),
-Parameter("p1_os",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p1_os'].value,  free = True, min =  0.5, max = 1.5, latex = "p^{\rm OS}_{1}"),
-Parameter("p0_ss",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p0_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{0}"),
-Parameter("p1_ss",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p1_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{1}"),
-Parameter("dp0_os", value = data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{0}"),
-Parameter("dp1_os", value = data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{1}"),
-Parameter("dp0_ss", value = data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{0}"),
-Parameter("dp1_ss", value = data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"),
-]
-pars.add(*list_of_parameters);
+pars.add(dict(name="Gd", value= 0.65789, min= 0.0, max= 1.0, free=False, latex=r"\Gamma_d \, \mathrm{[ps]}^{-1}"))
+pars.add(dict(name="DGs", value= (1-DGZERO)*0.3, min= 0.0, max= 1.7, free=1-DGZERO,  latex=r"\Delta\Gamma_s \, \mathrm{[ps]}^{-1}", blindstr="BsDGsFullRun2", blind=BLIND, blindscale=1.0, blindengine="root"))
+pars.add(dict(name="DGsd", value= 0.03*0, min=-0.1, max= 0.1, free=True, latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps]}^{-1}"))
+pars.add(dict(name="DM", value=17.757, min=15.0, max=20.0, free=True, latex=r"\Delta m_s \, \mathrm{[ps]}^{-1}"))
+
+# tagging
+pars.add(dict(name="eta_os", value = data[str(YEARS[0])][TRIGGER[0]].flavor['eta_os'].value, free = False))
+pars.add(dict(name="eta_ss", value = data[str(YEARS[0])][TRIGGER[0]].flavor['eta_ss'].value, free = False))
+pars.add(dict(name="p0_os",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p0_os'].value,  free = True, min =  0.0, max = 1.0, latex = "p^{\rm OS}_{0}"))
+pars.add(dict(name="p1_os",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p1_os'].value,  free = True, min =  0.5, max = 1.5, latex = "p^{\rm OS}_{1}"))
+pars.add(dict(name="p0_ss",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p0_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{0}"))
+pars.add(dict(name="p1_ss",  value = data[str(YEARS[0])][TRIGGER[0]].flavor['p1_ss'].value,  free = True, min =  0.0, max = 2.0, latex = "p^{\rm SS}_{1}"))
+pars.add(dict(name="dp0_os", value = data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{0}"))
+pars.add(dict(name="dp1_os", value = data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_os'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm OS}_{1}"))
+pars.add(dict(name="dp0_ss", value = data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{0}"))
+pars.add(dict(name="dp1_ss", value = data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_ss'].value, free = True, min = -0.1, max = 0.1, latex = "\Delta p^{\rm SS}_{1}"))
+# ]
+# pars.add(*list_of_parameters);
 
 # }}}
 
@@ -525,14 +507,12 @@ else:
 
 print(result)
 
-for p in  ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs',
-           'DM', 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
-           'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6']:
-  if args['year'] == '2015,2016':
-    #print(f"{p:>12} : {result.params[p].value:+.4f}  {result.params[p]._getval(False):+.4f}")
-    print(f"{p:>12} : {result.params[p]._getval(False):+.4f} +/- {result.params[p].stdev:+.4f}")
-  else:
-    print(f"{p:>12} : {result.params[p].value:+.4f} +/- {result.params[p].stdev:+.4f}")
+for kp, vp in result.params.items():
+    if vp.free:
+        if args['year'] == '2015,2016':
+            print(f"{p:>12} : {vp._getval(False):+.4f} +/- {vp.stdev:+.4f}")
+        else:
+            print(f"{p:>12} : {vp.value:+.4f} +/- {vp.stdev:+.4f}")
 
 # }}}
 

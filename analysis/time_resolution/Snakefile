@@ -52,4 +52,111 @@ rule time_resolution_from_git:
 # }}}
 
 
+# for the future
+# es el modo: Bs2JpsiPhi_Prompt_mixPV
+# en teoria solo tiene WPV
+rule time_resolution_wpv_shape:
+    input:
+        data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Prompt_mixPV', weight='chopped')
+    output:
+        plots = directory('output/figures/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}'),
+        json = 'output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}.json'
+    params:
+        script = 'analysis/time_resolution/wrong_pv_component.py',
+    log:
+        'output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}.log'
+    run:
+        shell(f"""(time\
+        python {params.script} \
+        --data-in {input.data} \
+        --wpv {wildcards.wpv} \
+        --wpv-out {output.json} \
+        --plots-out {output.plots} \
+        ) &> {log}""")
+
+
+rule time_resolution_calculate_gb_weights:
+    input:
+        mc = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_Prompt', weight='chopped'),
+        rd = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Prompt', weight='chopped'),
+        # target_file = lambda wildcards: XRootD.remote(expand(files_from_configuration('{}'.format( 'Bs_sw' if wildcards.label == 'MC_Bs' else 'Bs_prompt')), year = '{year}')),
+        # files = lambda wildcards: XRootD.remote(expand(files_from_configuration('{}'.format(wildcards.label)), year = '{year}'))
+    output:
+        SAMPLES+'/{year}/MC_Bs2JpsiPhi_Prompt/{version}_gbWeight.root'
+    params:
+        script = 'analysis/time_resolution/reweighter.py',
+    run:
+        shell('python {params.script} --original-file {input.mc} \
+                               --target-file {input.rd} \
+                               --mode MC_Bs2JpsiPhi_Prompt \
+                               --output-file {output}')
+
+
+rule time_resolution_prompt:
+    wildcard_constraints:
+        mode = '(MC_)?Bs2JpsiPhi_Prompt'
+    input:
+        # TODO: create a wpv_shape guesser
+        wpv_shape = 'output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_classical10_{trigger}.json',
+        data = lambda wcs: tuples(wcs, weight='chopped'),
+    output:
+        plots = directory('output/figures/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}'),
+        json = 'output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.json',
+        #       output/params/time_resolution/Bs2JpsiPhi_Prompt/v0r5_doubleClassical10_combined.json
+        data_ll = SAMPLES+'/{year}/{mode}/{version}_llComponent~{timeres}~{trigger}.npy'
+    params:
+        script = 'analysis/time_resolution/script1.py',
+    run:
+        shell(f'python {params.script} --data-in {input.data} \
+                               --timeres {wildcards.timeres} \
+                               --wpv-shape {input.wpv_shape} \
+                               --json-out {output.json} \
+                               --plots-out {output.plots} \
+                               --data-out {output.data_ll}')
+
+
+rule time_resolution_compute_dilution:
+    wildcard_constraints:
+        mode = '(MC_)?Bs2JpsiPhi_Prompt'
+    input:
+        # TODO: create a time_resolution_fit
+        data = lambda wcs: tuples(wcs, weight='gbWeight'),
+        json = expand('output/params/time_resolution_fit/{{year}}/{{mode}}/{{version}}_{{timeres}}bin{ibin}_{{trigger}}.json', ibin=range(1,10+1)),
+        data_ll =                       expand(SAMPLES+'/{{year}}/{{mode}}/{{version}}_llComponent~{{timeres}}bin{ibin}~{{trigger}}.npy', ibin=range(1,10+1))
+        #               /scratch46/marcos.romero/sidecar14/2015/Bs2JpsiPhi_Prompt/v0r5_llComponent~doubleClassical10bin3~combined.root
+    output:
+        json = 'output/params/time_resolution_dilution/{year}/{mode}/{version}_{timeres}_{trigger}.json',
+        #       output/params/time_resolution_dilution/2015/Bs2JpsiPhi_Prompt/v0r5_doubleClassical10_combined.json
+    params:
+        script = 'analysis/time_resolution/compute_dilution.py',
+    run:
+        shell(f'python {input.script} --data-in {input.data} \
+                               --data-ll {input.data_ll} \
+                               --timeres {wildcards.timeres} \
+                               --json-in "{input.json}" \
+                               --json-out "{output.json}"')
+
+
+# rule calibration_numerical:
+#    input:
+#        data = lambda wildcards : expand(rules.apply_gb_weights.output, label = '{label}', year = '{year}') if wildcards.label == 'MC_Bs_prompt' 
+#                                   else XRootD.remote(expand(files_from_configuration('{}'.format(wildcards.label)),  label = '{label}', year = '{year}')),
+#        json_binned = expand(rules.time_resolution_prompt_data_double_classical.output.json_out, label = '{label}', year = '{year}', bins = '{bins}', cut_name = 'None'),
+#        json_numerical = expand(rules.compute_dilution.output.json, label = '{label}',year='{year}', time = '{time}', bins = '{bins}', bias = '{bias}', delta = '{delta}', cut = '{cut}')
+#    output:
+#         plots = directory(output_path('time_resolution/calibration/prompt/{label}/{year}/calibration_plots_numerical/time_{time}/bias_{bias}/binning_{bins}/delta_{delta}/cut_{cut}/')),
+#         json_out = output_path('time_resolution/calibration/prompt/{label}/{year}/calibration_fit_numerical_time_{time}_bias_{bias}_binning_{bins}_delta_{delta}_cut_{cut}.json')
+#    params:
+#         script = 'time_resolution/calibrate_numerical.py',
+#    shell:
+#         'mkdir {output.plots} | python {input.script} --data-in {input.data} \
+#                                --json-in-binned {input.json_binned} \
+#                                --json-in-num {input.json_numerical} \
+#                                --weight {params.weight} \
+#                                --offset {params.offset} \
+#                                --time-error-bins {params.binning_scheme}\
+#                                --bin-fit-out {output.json_out} \
+#                                --plot-out {output.plots}'
+
+
 # vim:foldmethod=marker
