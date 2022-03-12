@@ -553,6 +553,11 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
             if weight not in ['ready', 'gbWeight']:
                 weight = 'chopped'
         # }}}
+        elif m == 'Bs2JpsiPhi_Prompt_mixPV':
+            # WARNING: We dont chop this tuple with the @
+            if weight not in ['ready']:
+                weight = 'chopped'
+        # }}}
     # print(f"{m} weight was transformed {__weight}->{weight}")
     # }}}
 
