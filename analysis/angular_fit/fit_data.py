@@ -113,7 +113,7 @@ branches_to_load = ['hlt1b']
 real  = ['cosK','cosL','hphi','time','mHH','sigmat']
 real += ['tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta']
 weight = 'sWeight'
-weight = 'sw'
+# weight = 'sw'
 branches_to_load += real 
 branches_to_load += ['sw', 'sWeight', 'lbWeight']
 
