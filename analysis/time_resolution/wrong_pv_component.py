@@ -31,12 +31,13 @@ ftype wrong_pv_component(const ftype x, const ftype tau1, const ftype tau2,
     ftype num = 0.0;
     ftype den = 1.0;
 
-    // ftype exp1 = exp(-fabs(x)/tau1) / (2-exp(-(xmax/tau1))-exp(xmin/tau1))*tau1;
-    // ftype exp2 = exp(-fabs(x)/tau2) / (2-exp(-(xmax/tau2))-exp(xmin/tau2))*tau2;
-    // num = share * exp1 + (1-share) * exp2;
+    ftype exp1 = exp(-fabs(x)/tau1) / (2-exp(-(xmax/tau1))-exp(xmin/tau1))/tau1;
+    ftype exp2 = exp(-fabs(x)/tau2) / (2-exp(-(xmax/tau2))-exp(xmin/tau2))/tau2;
+    num = exp1 + (1-share) * exp2/share;
+    den = 1 + (1-share)/share;
 
-    num = share * exp( -fabs(x)/tau1 ) + (1-share) * exp( -fabs(x)/tau2 );
-    den = (2 - exp(-(xmax/tau1)) - exp(xmin/tau1))*share*tau1 + (2 - exp(-(xmax/tau2)) - exp(xmin/tau2))*tau2 + (-2 + exp(-(xmax/tau2)) + exp(xmin/tau2))*share*tau2;
+    // num = share * exp( -fabs(x)/tau1 ) + (1-share) * exp( -fabs(x)/tau2 );
+    // den = (2 - exp(-(xmax/tau1)) - exp(xmin/tau1))*share*tau1 + (2 - exp(-(xmax/tau2)) - exp(xmin/tau2))*tau2 + (-2 + exp(-(xmax/tau2)) + exp(xmin/tau2))*share*tau2;
 
     // num +=     exp( -fabs(x)/tau1 );
     // num += (1-share) * exp( -fabs(x)/tau2 );
@@ -96,27 +97,6 @@ def wpv_component_pdf(time, tau1, tau2, share, tLL=-10, tUL=10, prob=False):
     return prob
 
 
-#### pars = ipanema.Parameters()
-####
-#### pars.add(dict(name="fract1", value=0.5, min=0, max=1))
-#### pars.add(dict(name="DM", value=17.74, free=False))
-####
-#### pars.add(dict(name="sigmap", value=1, min=1, max=100))
-#### pars.add(dict(name="sigmapp", value=1, min=1, max=100))
-####
-#### pars.add(dict(name="sigma1", formula="sigmap - sigmapp * sqrt((f)/(1-f))"))
-#### pars.add(dict(name="sigma2", formula="sigmap + sigmapp * sqrt((1-f)/(f))"))
-####
-#### pars.add(dict(name="fprompt", value=0.5, min=0, max=1))
-#### pars.add(dict(name="fphys2", value=0.5, min=0, max=1))
-#### pars.add(dict(name="fwpv", formula="(1-fprompt)*(1-fphys2)"))
-####
-# pars.add(dict(name="part1",
-# formula="(1-fract1) * exp(-(1/2.) * (sigma1*sigma1) * (DM*DM))"))
-# pars.add(dict(name="part2",
-# formula="   fract1  * exp(-(1/2.) * (sigma2*sigma2) * (DM*DM))"))
-#### pars.add(dict(name="dilution", formula="part1 + part2"))
-#### pars.add(dict(name="sigmaeff", formula="sqrt(-2*log(part1*part2)/2"))
 
 
 def extract_wpv_shape(df, wpv='classical', bin_sigmat=False,
@@ -196,14 +176,15 @@ def extract_wpv_shape(df, wpv='classical', bin_sigmat=False,
                               share=share)
             num = ipanema.ristra.get(prob)
             den = 1
-            # # normalization
-            # _x = np.linspace(ipanema.ristra.min(time), ipanema.ristra.max(time), 10000)
+            # normalization
+            # _x = np.linspace(ipanema.ristra.min(time), ipanema.ristra.max(time), 100000)
             # _y = 0 * _x
             # _x = ipanema.ristra.allocate(_x)
             # _y = ipanema.ristra.allocate(_y)
             # wpv_component_pdf(time=_x, prob=_y, tau1=tau1, tau2=tau2,
             #                   share=share)
-            # den = 1 # np.trapz(ipanema.ristra.get(_y), ipanema.ristra.get(_x))
+            # den = np.trapz(ipanema.ristra.get(_y), ipanema.ristra.get(_x))
+            # print(den)
             return -2 * np.log(num/den)
         # minimize
         pars.lock()

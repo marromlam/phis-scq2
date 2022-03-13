@@ -106,13 +106,18 @@ rule time_resolution_prompt:
         data_ll = SAMPLES+'/{year}/{mode}/{version}_llComponent~{timeres}~{trigger}.npy'
     params:
         script = 'analysis/time_resolution/script1.py',
+    log:
+        'output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.log'
     run:
-        shell(f'python {params.script} --data-in {input.data} \
-                               --timeres {wildcards.timeres} \
-                               --wpv-shape {input.wpv_shape} \
-                               --json-out {output.json} \
-                               --plots-out {output.plots} \
-                               --data-out {output.data_ll}')
+        shell(f"""(time\
+        python {params.script}\
+        --in-data {input.data} \
+        --timeres {wildcards.timeres} \
+        --in-wpv {input.wpv_shape} \
+        --out-json {output.json} \
+        --out-plots {output.plots} \
+        --out-data {output.data_ll} \
+        ) &> {log}""")
 
 
 rule time_resolution_compute_dilution:
