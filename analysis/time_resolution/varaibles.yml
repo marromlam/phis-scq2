@@ -1,0 +1,19 @@
+common: &common
+    'B_PT': 'B_PT'
+    'muminus_PT': 'muminus_PT'
+    'muplus_PT': 'muplus_PT'
+    'B_ETA' : 'B_ETA'
+    'hminus_PT': 'hminus_PT'
+    'hplus_PT' : 'hplus_PT'
+Bs:
+    <<: *common
+
+Bs_prompt:
+    <<: *common
+
+MC_Bs:
+    <<: *common   
+
+MC_Bs_prompt:
+    <<: *common   
+
