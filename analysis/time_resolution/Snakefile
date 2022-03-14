@@ -122,12 +122,13 @@ rule time_resolution_prompt:
 
 rule time_resolution_compute_dilution:
     wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_Prompt'
+        mode = '(MC_)?Bs2JpsiPhi_Prompt',
+        timeres = "(double)"
     input:
         # TODO: create a time_resolution_fit
         data = lambda wcs: tuples(wcs, weight='gbWeight'),
-        json = expand('output/params/time_resolution_fit/{{year}}/{{mode}}/{{version}}_{{timeres}}bin{ibin}_{{trigger}}.json', ibin=range(1,10+1)),
-        data_ll =                       expand(SAMPLES+'/{{year}}/{{mode}}/{{version}}_llComponent~{{timeres}}bin{ibin}~{{trigger}}.npy', ibin=range(1,10+1))
+        json = expand('output/params/time_resolution_fit/{{year}}/{{mode}}/{{version}}_{{timeres}}{ibin}_{{trigger}}.json', ibin=range(1,10+1)),
+        data_ll =                       expand(SAMPLES+'/{{year}}/{{mode}}/{{version}}_llComponent~{{timeres}}{ibin}~{{trigger}}.npy', ibin=range(1,10+1))
         #               /scratch46/marcos.romero/sidecar14/2015/Bs2JpsiPhi_Prompt/v0r5_llComponent~doubleClassical10bin3~combined.root
     output:
         json = 'output/params/time_resolution_dilution/{year}/{mode}/{version}_{timeres}_{trigger}.json',
@@ -135,33 +136,45 @@ rule time_resolution_compute_dilution:
     params:
         script = 'analysis/time_resolution/compute_dilution.py',
     run:
-        shell(f'python {input.script} --data-in {input.data} \
-                               --data-ll {input.data_ll} \
+        fpars = input.json
+        fpars = [fpars] if isinstance(fpars,str) else fpars
+        dlongl = input.json
+        dlongl = [dlongl] if isinstance(dlongl,str) else dlongl
+        # _in_json = ",".join(fpars)
+        # print(_in_json)
+        shell(f'python {params.script} --data-in {input.data} \
+                               --data-ll {",".join(dlongl)} \
                                --timeres {wildcards.timeres} \
-                               --json-in "{input.json}" \
+                               --mode {wildcards.mode} \
+                               --json-in {",".join(fpars)} \
                                --json-out "{output.json}"')
 
 
-# rule calibration_numerical:
-#    input:
-#        data = lambda wildcards : expand(rules.apply_gb_weights.output, label = '{label}', year = '{year}') if wildcards.label == 'MC_Bs_prompt' 
-#                                   else XRootD.remote(expand(files_from_configuration('{}'.format(wildcards.label)),  label = '{label}', year = '{year}')),
-#        json_binned = expand(rules.time_resolution_prompt_data_double_classical.output.json_out, label = '{label}', year = '{year}', bins = '{bins}', cut_name = 'None'),
-#        json_numerical = expand(rules.compute_dilution.output.json, label = '{label}',year='{year}', time = '{time}', bins = '{bins}', bias = '{bias}', delta = '{delta}', cut = '{cut}')
-#    output:
-#         plots = directory(output_path('time_resolution/calibration/prompt/{label}/{year}/calibration_plots_numerical/time_{time}/bias_{bias}/binning_{bins}/delta_{delta}/cut_{cut}/')),
-#         json_out = output_path('time_resolution/calibration/prompt/{label}/{year}/calibration_fit_numerical_time_{time}_bias_{bias}_binning_{bins}_delta_{delta}_cut_{cut}.json')
-#    params:
-#         script = 'time_resolution/calibrate_numerical.py',
-#    shell:
-#         'mkdir {output.plots} | python {input.script} --data-in {input.data} \
-#                                --json-in-binned {input.json_binned} \
-#                                --json-in-num {input.json_numerical} \
-#                                --weight {params.weight} \
-#                                --offset {params.offset} \
-#                                --time-error-bins {params.binning_scheme}\
-#                                --bin-fit-out {output.json_out} \
-#                                --plot-out {output.plots}'
+rule calibration_numerical:
+    input:
+        data = lambda wcs: tuples(wcs, weight='gbWeight'),
+        json_bin = expand('output/params/time_resolution_fit/{{year}}/{{mode}}/{{version}}_{{timeres}}{ibin}_combined.json', ibin=range(1,10+1)),
+        json_num = 'output/params/time_resolution_dilution/{year}/{mode}/{version}_{timeres}_combined.json',
+    output:
+        plots = directory('output/figures/time_resolution/{year}/{mode}/{version}_{timeres}'),
+        json = 'output/params/time_resolution/{year}/{mode}/{version}_{timeres}.json'
+    params:
+        script = 'time_resolution/calibrate_numerical.py',
+    log:
+        'output/params/time_resolution/{year}/{mode}/{version}_{timeres}.log'
+    run:
+        fpars = input.json_bin
+        fpars = [fpars] if isinstance(fpars,str) else fpars
+        shell(f"""(time\
+        python {params.script}\
+        --in-data {input.data} \
+        --timeres {wildcards.timeres}\
+        --mode {wildcards.mode}\
+        --json-in-bin {",".join(fpars)}\
+        --json-in-num {input.json_num}\
+        --out-json {output.json}\
+        --out-plots {output.plots}\
+        ) &> {log}""")
 
 
 # vim:foldmethod=marker
