@@ -33,7 +33,7 @@ __all__ = ['mass_fitter']
 
 # ipatia + exponential {{{
 
-def ipatia_exponential(mass, signal, nsigBu, nexp,
+def ipatia_exponential(mass, signal, fsigBu, nexp,
                        muBu, sigmaBu, lambd, zeta, beta, aL, nL, aR, nR,
                        b, norm=1):
     # ipatia
@@ -53,22 +53,22 @@ def ipatia_exponential(mass, signal, nsigBu, nexp,
     nBu = np.trapz(ristra.get(_y), ristra.get(_x))
     nbackgr = np.trapz(ristra.get(ristra.exp(_x*b)), ristra.get(_x))
     # compute pdf value
-    ans = nsigBu*pdfBu/nBu + nexp*backgr/nbackgr
-    return ans * ans
+    ans = fsigBu*pdfBu/nBu + nexp*backgr/nbackgr
+    return norm * ans
 
 # }}}
 
 
 # crystal-ball + exponential {{{
 
-def cb_exponential(mass, signal, nsigBu, nexp, muBu, sigmaBu, aL, nL, aR, nR,
+def cb_exponential(mass, signal, fsigBu, nexp, muBu, sigmaBu, aL, nL, aR, nR,
                    b, norm=1):
     # merr = ristra.allocate(np.zeros_like(mass))
     mLL, mUL = ristra.min(mass), ristra.max(mass)
     ans = cb_exponential3(mass, mass, signal,
-                          fsigBs=nsigBu, fsigBu=0, fcomb=nexp,
+                          fsigBs=fsigBu, fsigBd=0, fcomb=nexp,
                           muBs=muBu, s0Bs=sigmaBu, s1Bs=0, s2Bs=0,
-                          muBu=5300, s0Bu=1, s1Bu=0, s2Bu=0,
+                          muBd=5300, s0Bd=1, s1Bd=0, s2Bd=0,
                           aL=aL, nL=nL, aR=aR, nR=nR,
                           b=b, norm=norm, mLL=mLL, mUL=mUL)
     return ans
@@ -103,7 +103,7 @@ def mass_fitter(odf,
     else:
         pars = ipanema.Parameters()
         # Create common set of parameters (all models must have and use)
-        pars.add(dict(name='nsigBu',    value=0.99, min=0.2,
+        pars.add(dict(name='fsigBu',    value=0.99, min=0.2,
                  max=1,    free=True,  latex=r'N_{B_d}'))
         pars.add(dict(name='muBu',      value=5280,  min=5200,
                  max=5500,             latex=r'\mu_{B_d}'))
@@ -113,7 +113,7 @@ def mass_fitter(odf,
             # Hypatia tails {{{
             pars.add(dict(name='lambd',   value=-1.5,  min=-4,
                      max=-1.1, free=True,  latex=r'\lambda'))
-            pars.add(dict(name='zeta',    value=1e-5,
+            pars.add(dict(name='zeta',    value=1e-5, min=1e-5,
                      free=False, latex=r'\zeta'))
             pars.add(dict(name='beta',    value=0.0,
                      free=False, latex=r'\beta'))
@@ -140,9 +140,11 @@ def mass_fitter(odf,
         # Combinatorial background
         pars.add(dict(name='b',         value=-4e-3, min=-
                  1,  max=1,     free=True,  latex=r'b'))
-        pars.add(dict(name='nexp',      formula="1-nsigBu",
+        pars.add(dict(name='nexp',      formula="1-fsigBu",
                  latex=r'N_{comb}'))
-    pars.unlock('nsigBu', 'muBu', 'sigmaBu', 'b')
+    pars.unlock('fsigBu', 'muBu', 'sigmaBu', 'b')
+    # if 'ipatia' in model:
+    #     pars.unlock('zeta', 'beta')
     print(pars)
 
     # }}}
@@ -177,6 +179,10 @@ def mass_fitter(odf,
 
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd}, method='minuit',
                            verbose=verbose, strategy=1, tol=0.05)
+    # pars = ipanema.Parameters.clone(res.params)
+    # pars.unlock('beta', 'zeta')
+    # res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd}, method='minuit',
+    #                        verbose=verbose, strategy=1, tol=0.05)
     if res:
         print(res)
         fpars = ipanema.Parameters.clone(res.params)
@@ -200,8 +206,8 @@ def mass_fitter(odf,
 
     # plot signal: nbkg -> 0 and nexp -> 0
     _p = ipanema.Parameters.clone(fpars)
-    if 'nsigBu' in _p:
-        _p['nsigBu'].set(value=0, min=-np.inf, max=np.inf)
+    if 'fsigBd' in _p:
+        _p['fsigBd'].set(value=0, min=-np.inf, max=np.inf)
     if 'nexp' in _p:
         _p['nexp'].set(value=0, min=-np.inf, max=np.inf)
     _x, _y = ristra.get(mass), ristra.get(
@@ -237,7 +243,7 @@ def mass_fitter(odf,
 
     if sweights:
         # separate paramestes in yields and shape parameters
-        _yields = ipanema.Parameters.find(fpars, "nsig.*") + ["nexp"]
+        _yields = ipanema.Parameters.find(fpars, "fsig.*") + ["nexp"]
         _pars = list(fpars)
         [_pars.remove(_y) for _y in _yields]
         _yields = ipanema.Parameters.build(fpars, _yields)
