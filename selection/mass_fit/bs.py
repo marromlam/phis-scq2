@@ -4,7 +4,7 @@ Macro to compute sWeights for Bs RD and Bs MC samples.
 
 
 __author__ = ['Marcos Romero']
-__email__  = ['mromerol@cern.ch']
+__email__ = ['mromerol@cern.ch']
 __all__ = ['mass_fitter']
 
 
@@ -455,14 +455,14 @@ def mass_fitter(odf,
     pars = ipanema.Parameters()
     # Create common set of Bs parameters (all models must have and use)
     pars.add(dict(name='fsigBs', value=0.9, min=0.0, max=1, free=True, latex=r'N_{B_s}'))
-    pars.add(dict(name='muBs', value=5367, min=5350, max=5400, latex=r'\mu_{B_s}'))
+    pars.add(dict(name='muBs', value=5367, min=5350, max=5390, latex=r'\mu_{B_s}'))
     if with_calib:
       # if not input_pars:
       pars.add(dict(name='s0Bs', value=0,    min=0, max=50,  free=False, latex=r'p_0^{B_s}'))
       pars.add(dict(name='s1Bs', value=0.7,  min=-5, max=10,  free=True,  latex=r'p_1^{B_s}'))
       pars.add(dict(name='s2Bs', value=0.00, min=-1, max=1,  free=True,  latex=r'p_2^{B_s}'))
     else:
-      pars.add(dict(name='s0Bs', value=5,    min=1, max=100, free=True,  latex=r'p_0^{B_s}'))
+      pars.add(dict(name='s0Bs', value=2,    min=0.1, max=20, free=True,  latex=r'p_0^{B_s}'))
       pars.add(dict(name='s1Bs', value=0.,   min=0, max=10,  free=False, latex=r'p_1^{B_s}'))
       pars.add(dict(name='s2Bs', value=0.,   min=-1, max=1,  free=False, latex=r'p_2^{B_s}'))
 
@@ -519,7 +519,8 @@ def mass_fitter(odf,
       if with_calib:
         pars.add(dict(name='s0Bd',   value=7,    min=5,    max=20,    free=False,  latex=r'\sigma_{B_d}'))
       else:
-        pars.add(dict(name='s0Bd', formula="s0Bs",                           latex=r'\sigma_{B_d}'))
+        pars.add(dict(name='s0Bd',   value=7,    min=5,    max=20,    free=False,  latex=r'\sigma_{B_d}'))
+        # pars.add(dict(name='s0Bd', formula="s0Bs",                           latex=r'\sigma_{B_d}'))
       # Combinatorial background
       pars.pop('fcomb')
       pars.add(dict(name='fcomb',     formula="1-fsigBs-fsigBd", latex=r'N_{comb}'))
@@ -554,7 +555,13 @@ def mass_fitter(odf,
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
                                method='minuit', verbose=True, strategy=1,
                                tol=0.05)
+        if res.params['fsigBs'] < 1e-4:
+            print("fsigBs was fitted to be zero! this is not ")
+            res = False
     except:
+        res = False
+    # res = False
+    if not res:
         print("There was a problem with the fit. Let's try again.")
         pars['fsigBs'].set(value=0.0, min=0.0, max=1)
         pars['s1Bs'].set(value=0.0, init=0.0, min=-20, max=20, free=False)
@@ -563,21 +570,22 @@ def mass_fitter(odf,
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
                                method='minuit', verbose=True, strategy=1,
                                tol=0.05)
-        pars = ipanema.Parameters.clone(res.params)
-        pars.lock()
-        pars['s1Bs'].set(value=0.0, init=0.0, min=-20, max=20, free=True)
-        pars['s2Bs'].set(value=0.0, init=0.0, min=-1, max=1, free=True)
-        pars['s0Bs'].set(value=0.0, init=1.0, free=False)
-        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                               method='minuit', verbose=True, strategy=1,
-                               tol=0.05)
-        pars = ipanema.Parameters.clone(res.params)
-        for k,v in pars.items():
-          v.init = v.value
-        pars.unlock('fsigBs', 'muBs', 'b', 'fsigBd')
-        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                               method='minuit', verbose=True, strategy=1,
-                               tol=0.05)
+        if with_calib:
+            pars = ipanema.Parameters.clone(res.params)
+            pars.lock()
+            pars['s1Bs'].set(value=0.0, init=0.0, min=-20, max=20, free=True)
+            pars['s2Bs'].set(value=0.0, init=0.0, min=-1, max=1, free=True)
+            pars['s0Bs'].set(value=0.0, init=1.0, free=False)
+            res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                                method='minuit', verbose=True, strategy=1,
+                                tol=0.05)
+            pars = ipanema.Parameters.clone(res.params)
+            for k,v in pars.items():
+                v.init = v.value
+            pars.unlock('fsigBs', 'muBs', 'b', 'fsigBd')
+            res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                                method='minuit', verbose=True, strategy=1,
+                                tol=0.05)
 
     if res:
       print(res)
@@ -596,7 +604,7 @@ def mass_fitter(odf,
 
     fig, axplot, axpull = complot.axes_plotpull()
     hdata = complot.hist(ristra.get(rd.mass), weights=rd.df.eval(mass_weight),
-                           bins=30, density=False)
+                           bins=60, density=False)
     axplot.errorbar(hdata.bins, hdata.counts, yerr=hdata.yerr, xerr=hdata.xerr,
                     fmt='.k')
 
