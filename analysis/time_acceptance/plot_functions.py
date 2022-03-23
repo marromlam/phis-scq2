@@ -28,20 +28,21 @@ import platform
 import hjson
 import pandas
 import importlib
-from scipy.interpolate import interp1d
+# from scipy.interpolate import interp1d
 import uncertainties as unc
 from uncertainties import unumpy as unp
 
 from ipanema import ristra
 from ipanema import Parameters, fit_report, optimize
-from ipanema import histogram
+# from ipanema import histogram
 from ipanema import Sample
-from ipanema import plotting
-from ipanema import wrap_unc
+# from ipanema import plotting
+# from ipanema import wrap_unc
 from ipanema.confidence import get_confidence_bands
 
 import matplotlib.pyplot as plt
 from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
+import complot
 
 # import some phis-scq utils
 from utils.plot import mode_tex
@@ -52,7 +53,7 @@ import config
 # binned variables
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
+# all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
 Gdvalue = config.general['Gd']
 tLL = config.general['tLL']
@@ -75,7 +76,8 @@ def plot_timeacc_fit(params, data, weight,
   ref = histogram.hist(ristra.get(data), weights=ristra.get(weight), bins=nob,
                        range=(params['tLL'].value, params['tUL'].value))
 
-  knots = np.array(params.build(params, params.find('k.*'))).tolist()
+  knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL).tolist()
+  tLL, tUL = knots[0], knots[-1]
   badjanak.config['knots'] = knots
   badjanak.get_kernels(True)
 
