@@ -43,7 +43,7 @@ def create_mass_bins(nob):
         mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
     elif int(nob) == 6:
         mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
-        mass_bins = [990, 1014.78, 1018.41, 1020, 10223.42, 1033, 1050]
+        # mass_bins = [990, 1014.78, 1018.41, 1020, 10223.42, 1033, 1050]
     else:
         raise ValueError("Number of bins cannot be higher than 6")
     return mass_bins
