@@ -19,7 +19,8 @@ def compute_dilution(df, data_ll, time_range, sigma_edges, mode, pdf_pars):
     """
     Compute dilution
     """
-    if 'MC' in mode:
+    print(mode)
+    if mode == 'MC_Bs2JpsiPhi':
         time = "time - 1000*B_TRUETAU_GenLvl"
     else:
         time = 'time'
@@ -61,7 +62,7 @@ def compute_dilution(df, data_ll, time_range, sigma_edges, mode, pdf_pars):
 
         # correct time with the measured bias
         tcorr = f"{time} - {tbias[i].n}"
-        tcorr = f"{time} - -0.0014090904634665863"
+        # tcorr = f"{time} - -0.0014090904634665863"
         cdf.eval(f"tcorr = {tcorr}", inplace=True)
         cdf_ll.eval(f"tcorr = {tcorr}", inplace=True)
 
@@ -80,6 +81,7 @@ def compute_dilution(df, data_ll, time_range, sigma_edges, mode, pdf_pars):
         # now we place a cut for tcorr < 0
         tdf = cdf.query("tcorr < 0")
         tdf_ll = cdf_ll.query("tcorr < 0")
+        print(tdf)
 
         # get number of events
         if weight:
@@ -144,12 +146,15 @@ def compute_dilution(df, data_ll, time_range, sigma_edges, mode, pdf_pars):
 
         # }}}
 
-    arr_num = np.array([pars[f'neff{i}'].uvalue for i in range(NBin)])
+    arr_num = np.array([pars[f'neff{i}'].value for i in range(NBin)])
     arr_dil = np.array([pars[f'dcorr{i}'].uvalue for i in range(NBin)])
-    # __n = [pars[f'neff{i}'].value for i in range(NBin)]
-    # __d = [pars[f'dcorr{i}'].value for i in range(NBin)]
-    # __e = [pars[f'dcorr{i}'].stdev for i in range(NBin)]
-
+    __n = [pars[f'neff{i}'].value for i in range(NBin)]
+    __d = [pars[f'dcorr{i}'].value for i in range(NBin)]
+    __e = [pars[f'dcorr{i}'].stdev for i in range(NBin)]
+    from math import sqrt, log, exp
+    D_eff = sqrt(sum([i*j*j for i, j in zip(__n, __d)])/sum(__n))
+    D_eff_err = sqrt(pow(1./(2.*D_eff*sum(__n)), 2)*(pow(D_eff, 2)/sum(__n) + sum([pow(i, 2)/j for i, j in zip( __d, __n)]) + 2*sum([pow(i*j*k, 2) for i, j, k in zip(__d, __n, __e)])))
+    print(D_eff, D_eff_err)
     davg = unc.wrap(np.sqrt)(np.sum(arr_num*arr_dil**2)/np.sum(arr_num))
     print(f"Dilution Effective: {davg:.2uPp}")
     pars.add(dict(name="Deff", value=davg.n, stdev=davg.s))
@@ -171,6 +176,9 @@ if __name__ == '__main__':
 
     mode = args['mode']
     branches = ['time', 'sigmat', 'B_PT']
+    if "MC" in mode:
+        branches.append('B_ID_GenLvl')
+        branches.append('B_TRUETAU_GenLvl')
 
     timeres_binning = [0.010, 0.021, 0.026, 0.032,
                        0.038, 0.044, 0.049, 0.054, 0.059, 0.064, 0.08]
