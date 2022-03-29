@@ -85,18 +85,36 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
     if weight:
         print("time resolution: using the weight ", weight)
 
+    # diego suggests not to use this if
+    LONG_LIVED = True
+    if mode == 'MC_Bs2JpsiPhi':
+        LONG_LIVED = False
+        print("LONG_LIVED was disabled")
+
     tLL, tUL = time_range
     sLL, sUL = sigma_range
     time = 'time'
+    if mode == 'MC_Bs2JpsiPhi':
+        gentime = 'B_TRUETAU_GenLvl'
     sigmat = 'sigmat'
 
     list_of_cuts = [
         f"{time}>{tLL} & {time}<{tUL}",
         f"{sigmat}>{sLL} & {sigmat}<{sUL}"
     ]
+    if mode == 'MC_Bs2JpsiPhi':
+        list_of_cuts.append(
+            '~(abs(B_MC_MOTHER_ID)>=541 | abs(B_MC_GD_MOTHER_ID)>=541 | abs(B_MC_GD_GD_MOTHER_ID)>=541)'
+        )
+        list_of_cuts.append(f"{gentime}>{tLL} & {gentime}<{tUL}")
 
     cut = "(" + ") & (".join(list_of_cuts) + ")"
+    print(cut)
     cdf = df.query(cut)
+    if mode == 'MC_Bs2JpsiPhi':
+        cdf.eval(f'dt = {time} - 1000*{gentime}', inplace=True)
+        time = 'dt'
+        cdf = cdf.query(f"dt>-1 & dt<1")
     print(cdf)
     # sLL, sUL = time_error_bins[0], time_error_bins[-1]
     # n_of_bins = len(time_error_bins) - 1
@@ -144,11 +162,10 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
     # LERA{'Name': 'frac_wpv_b0_', 'Value': 0.00969235558699772, 'Error': 0.00196963374798581}
     # LERA{'Name': 'D_eff', 'Value': 0.8959930513214064, 'Error': 0.0025510382287676717}
 
-    LONG_LIVED = True
     # combData = Data[0]
     pars = ipanema.Parameters()
     pars.add(dict(name="fprompt", value=0.99, min=0.1, max=1, free=True))
-    pars.add(dict(name="f", value=0.2, min=0, max=1, free=True))
+    pars.add(dict(name="f", value=0.73, min=0, max=1, free=True))
     pars.add(dict(name="DM", value=17.74, free=False))
     pars.add(dict(name="mu", value=0, min=-10, max=10, free=True))
     pars.add(dict(name="sigmap", value=0.025, min=0.001, max=2))
@@ -159,10 +176,10 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
     # pars.add(dict(name="sigma2", value=0.10, min=0.001, max=2000))
     pars.add(dict(name="fphys2", value=0.5*LONG_LIVED,
              min=0, max=1, free=LONG_LIVED))
-    pars.add(dict(name="fsl", value=0.74, min=0, max=1, free=LONG_LIVED))
+    pars.add(dict(name="fsl", value=0.74*LONG_LIVED, min=0, max=1, free=LONG_LIVED))
     pars.add(dict(name="fll", formula="(1-fprompt)*fphys2"))
-    pars.add(dict(name="taus", value=0.11, min=0, max=10, free=LONG_LIVED))
-    pars.add(dict(name="taul", value=1.3, min=0, max=10, free=LONG_LIVED))
+    pars.add(dict(name="taul", value=0.1, min=0, max=1, free=LONG_LIVED))
+    pars.add(dict(name="taus", value=1.5, min=0.2, max=2.75, free=LONG_LIVED))
     pars.add(dict(name="fwpv", formula="(1-fprompt)*(1-fphys2)"))
     # pars.add(dict(name="fwpv", formula="(1-fprompt)"))
     # add wpv parameters
@@ -298,7 +315,14 @@ if __name__ == '__main__':
     current_bin = int(args['timeres'][6:])
     print(current_bin)
     branches = ['time', 'sigmat', 'B_PT']
+
     mode = args['mode']
+    if mode == 'MC_Bs2JpsiPhi':
+        branches.append('B_MC_MOTHER_ID')
+        branches.append('B_MC_GD_MOTHER_ID')
+        branches.append('B_MC_GD_GD_MOTHER_ID')
+        branches.append('B_TRUETAU')
+        branches.append('B_TRUETAU_GenLvl')
     wpv = ipanema.Parameters.load(args['in_wpv'])
     print(wpv)
     weight = False
@@ -311,6 +335,7 @@ if __name__ == '__main__':
     time_range = [-4, 10]
     sigma_range = timeres_binning[current_bin-1:current_bin+1]
     print(sigma_range)
+    print(mode)
     # exit()
 
     # fit time in sigmat bin
