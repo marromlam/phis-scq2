@@ -52,7 +52,9 @@ def get_bin_from_version(version, subbin):
     if len(v) > 1:
         v, w = v
     else:
-        v, w = v[0], None
+        v, w = v[0], False
+    # WARNING if not w:
+    # WARNING     w = 'mX6'
     print(v, w, c)
 
     pattern = [
@@ -70,7 +72,7 @@ def get_bin_from_version(version, subbin):
             sigmam_bins = int(q[5]) if q[4] else 1
         except:
             raise ValueError(f'Cannot interpret {w} as a sWeight config')
-    pattern = rf"\A{''.join(pattern)}\Z"
+    # pattern = rf"\A{''.join(pattern)}\Z"
     print(pattern, subbin)
     p = re.compile(pattern)
     if subbin != 'all':

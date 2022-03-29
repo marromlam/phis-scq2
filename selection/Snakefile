@@ -405,14 +405,18 @@ def guess_massbins(wcs, version=False, mode=False):
     if len(v) > 1:
         v, c = v
     else:
-        v, c = v[0], None
+        v, c = v[0], False
     v = v.split('~')
+    # print(v)
     if len(v) > 1:
         v, w = v
     else:
-        v, w = v[0], None
+        v, w = v[0], False
     # print(v, w, c)
+    if not w:
+        w = 'mX6'
 
+    print(v, w, c)
     pattern = [
         "(mX(1|2|3|4|5|6))?",
         "(time(1|2|3|4))?",
@@ -476,7 +480,7 @@ rule sweights_add:
                                 massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
                                ),
   output:
-    root_file = temp(SAMPLES+'/{year}/{mode}/{version}_sWeight.root'),
+    root_file = SAMPLES+'/{year}/{mode}/{version}_sWeight.root',
   params:
     script = 'selection/sweights/sweighter.py',
   log:
