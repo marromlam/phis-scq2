@@ -1,0 +1,4 @@
+code to reweight Lb->Jpsi p K resonance strucutre
+1) make foo=genMCPhisNew
+2) go to FitRes5
+3) check run.csh

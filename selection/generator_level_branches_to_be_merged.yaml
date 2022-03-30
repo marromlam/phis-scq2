@@ -1,0 +1,51 @@
+common: &common
+    'runNumber': 'runNumber'
+    'eventNumber': 'eventNumber'
+    'Polarity': 'Polarity'
+    'B_ID': 'B_ID'
+    'Jpsi_ID': 'Jpsi_ID'
+    'muplus_ID': 'muplus_ID'
+    'muminus_ID': 'muminus_ID'
+    'hplus_ID': 'hplus_ID'
+    'B_MC_MOTHER_ID': 'B_MC_MOTHER_ID'
+    'B_MC_MOTHER_KEY': 'B_MC_MOTHER_KEY'
+    'B_MC_GD_MOTHER_ID': 'B_MC_GD_MOTHER_ID'
+    'B_MC_GD_MOTHER_KEY': 'B_MC_GD_MOTHER_KEY'
+    'B_MC_GD_GD_MOTHER_ID': 'B_MC_GD_GD_MOTHER_ID'
+    'B_MC_GD_GD_MOTHER_KEY': 'B_MC_GD_GD_MOTHER_KEY'
+    'B_TRUETAU': 'B_TRUETAU'
+    'B_TRUEPT': 'B_TRUEPT'
+    'muplus_TRUEPT': 'muplus_TRUEPT'
+    'muminus_TRUEPT': 'muminus_TRUEPT'
+    'hplus_TRUEPT': 'hplus_TRUEPT'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+    <<: *common
+    'X_ID': 'X_ID'
+    'hminus_ID': 'hminus_ID'
+    'hminus_TRUEPT': 'hminus_TRUEPT'
+    'truehelcosthetaK': 'truehelcosthetaK'
+    'truehelcosthetaL': 'truehelcosthetaL'
+    'truehelphi': 'truehelphi'
+
+MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+    <<: *MC_Bs2JpsiPhi_dG0
+
+MC_Bs2JpsiPhi_Prompt:
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bd2JpsiKstar:
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bu2JpsiKplus:
+    <<: *common
+
+MC_Bs2DsPi: {}
+
+MC_Bs2JpsiPhi_fromLb: {}

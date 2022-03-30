@@ -1,0 +1,42 @@
+common: &common
+    'B_PT': 'B_PT'
+    'B_ETA': 'B_ETA'
+    'nLongTracks': 'nLongTracks'
+    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+
+Bs2JpsiPhi:
+    <<: *common
+
+Bs2JpsiPhi_Prompt:
+    <<: *common
+
+Bd2JpsiKstar:
+    <<: *common
+
+Bu2JpsiKplus: &Bu2JpsiKplus
+    'B_PT': 'B_PT'
+    'B_ETA': 'B_ETA'
+    'nTracks': 'nTracks'
+    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+
+MC_Bs2JpsiPhi:
+    <<: *common   
+MC_Bs2JpsiPhi_Prompt:
+    <<: *common   
+
+MC_Bs2JpsiPhi_dG0:
+    <<: *common
+    
+MC_Bs2JpsiKK_Swave:
+    <<: *common    
+
+MC_Bd2JpsiKstar:
+    <<: *common    
+
+MC_Bu2JpsiKplus:
+    <<: *Bu2JpsiKplus

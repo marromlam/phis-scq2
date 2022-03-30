@@ -1,0 +1,56 @@
+Bs2JpsiPhi: &Bs2JpsiPhi
+    'max_K_TRCHI2_mva': 'max(hplus_TRACK_CHI2NDOF, hminus_TRACK_CHI2NDOF)'
+    'log_min_K_PNNk_mva': 'min(hplus_ProbNNk_corr, hminus_ProbNNk_corr) <= 0.0 ? -25.0 : log(min(hplus_ProbNNk_corr, hminus_ProbNNk_corr))'
+    'max_mu_TRCHI2_mva': 'max(muplus_TRACK_CHI2NDOF, muminus_TRACK_CHI2NDOF)'
+    'log_min_mu_PNNmu_mva': 'min(muplus_ProbNNmu_corr, muminus_ProbNNmu_corr) <= 0.0 ? -25.0 : log(min(muplus_ProbNNmu_corr, muminus_ProbNNmu_corr))'
+    'log_Jpsi_VX_CHI2NDOF_mva': 'Jpsi_ENDVERTEX_CHI2/Jpsi_ENDVERTEX_NDOF <= 0.0 ? -25.0 : log(Jpsi_ENDVERTEX_CHI2/Jpsi_ENDVERTEX_NDOF)'
+    'X_PT_mva': 'X_PT'
+    'B_VX_CHI2NDOF_mva': 'B_ENDVERTEX_CHI2/B_ENDVERTEX_NDOF > 0.0 ? B_ENDVERTEX_CHI2/B_ENDVERTEX_NDOF : 0.0'
+    'log_B_DTF_CHI2NDOF_mva': 'B_DTF_CHI2NDOF <= 0.0 ? -25.0 : log((double)B_DTF_CHI2NDOF)'
+    'log_B_IPCHI2_mva': 'B_IPCHI2_OWNPV <= 0.0 ? -25.0 : log(B_IPCHI2_OWNPV)'
+    'B_PT_mva': 'B_PT'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+    <<: *Bs2JpsiPhi
+
+MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+    <<: *MC_Bs2JpsiPhi_dG0
+
+Bs2JpsiPhi_Lb: &Bs2JpsiPhi_Lb
+    <<: *Bs2JpsiPhi
+
+Bs2JpsiPhi_Prompt:
+    <<: *Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_Prompt:
+    <<: *MC_Bs2JpsiPhi
+
+Bd2JpsiKstar: &Bd2JpsiKstar
+    <<: *Bs2JpsiPhi
+    'log_min_K_PNNk_mva': 'min(hplus_ProbNNk_corr, hminus_ProbNNpi_corr) <= 0.0 ? -25.0 : log(min(hplus_ProbNNk_corr, hminus_ProbNNpi_corr))'
+
+MC_Bd2JpsiKstar:
+    <<: *Bd2JpsiKstar
+
+Bu2JpsiKplus: &Bu2JpsiKplus
+    'max_K_TRCHI2_mva': 'hplus_TRACK_CHI2NDOF'
+    'log_min_K_PNNk_mva': 'hplus_ProbNNk_corr<= 0.0 ? -25.0 : log(hplus_ProbNNk_corr)'
+    'max_mu_TRCHI2_mva': 'max(muplus_TRACK_CHI2NDOF, muminus_TRACK_CHI2NDOF)'
+    'log_min_mu_PNNmu_mva': 'min(muplus_ProbNNmu_corr, muminus_ProbNNmu_corr) <= 0.0 ? -25.0 : log(min(muplus_ProbNNmu_corr, muminus_ProbNNmu_corr))'
+    'log_Jpsi_VX_CHI2NDOF_mva': 'Jpsi_ENDVERTEX_CHI2/Jpsi_ENDVERTEX_NDOF <= 0.0 ? -25.0 : log(Jpsi_ENDVERTEX_CHI2/Jpsi_ENDVERTEX_NDOF)'
+    'B_VX_CHI2NDOF_mva': 'B_ENDVERTEX_CHI2/B_ENDVERTEX_NDOF > 0.0 ? B_ENDVERTEX_CHI2/B_ENDVERTEX_NDOF : 0.0'
+    'log_B_DTF_CHI2NDOF_mva': 'B_DTF_CHI2NDOF <= 0.0 ? -25.0 : log(B_DTF_CHI2NDOF)'
+    'log_B_IPCHI2_mva': 'B_IPCHI2_OWNPV <= 0.0 ? -25.0 : log(B_IPCHI2_OWNPV)'
+    'B_PT_mva': 'B_PT'
+
+MC_Bu2JpsiKplus:
+    <<: *Bu2JpsiKplus
+
+MC_Bs2JpsiPhi_fromLb:
+    <<: *Bs2JpsiPhi

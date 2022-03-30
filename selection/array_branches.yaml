@@ -1,0 +1,17 @@
+Bs2JpsiPhi: &Bs2JpsiPhi
+    'PVsX' : 'copy_array(PVX)'
+    'PVsY' : 'copy_array(PVY)'
+    'PVsZ' : 'copy_array(PVZ)'  
+    'PVsXERR' : 'copy_array(PVXERR)'
+    'PVsYERR' : 'copy_array(PVYERR)'
+    'PVsZERR' : 'copy_array(PVZERR)'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+    <<: *Bs2JpsiPhi
+
+Bs2JpsiPhi_Prompt:
+    <<: *Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_Prompt:
+    <<: *Bs2JpsiPhi
+
