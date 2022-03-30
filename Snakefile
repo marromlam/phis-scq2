@@ -40,7 +40,9 @@ YEARS = settings.years
 
 wildcard_constraints:
   trigger = "(biased|unbiased|combined)",
-  year = "(2015|2016|run2a|2017|2018|run2b|run2|2020|2021)"
+  year = "(2015|2016|run2a|2017|2018|run2b|run2|2020|2021)",
+  strip_sim = "str.*",
+  version = '[A-Za-z0-9@~]+'
 
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
@@ -57,6 +59,7 @@ modes = ['Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi',
 # Including Snakefiles {{{
 
 include: 'selection/Snakefile'
+include: 'selection/sweights/Snakefile'
 include: 'tagging/Snakefile'
 include: 'analysis/samples/Snakefile'
 include: 'analysis/reweightings/Snakefile'
@@ -78,6 +81,16 @@ include: 'packandgo/Snakefile'
 
 
 # Final rule (compile slides) {{{
+
+rule help:
+    """
+    Print list of all targets with help.
+    """
+    run:
+        for rule in workflow.rules:
+            print(rule.name)
+            print(rule.docstring)
+
 
 rule all:
   input:
