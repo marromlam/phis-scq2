@@ -5,7 +5,7 @@ Selection pipeline
 		This module contains the selection pipeline.
 """
 
-from . import mass_fit
+from . import sweights
 from . import lb_add
 from . import lb_prepare
 
