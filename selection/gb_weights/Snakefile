@@ -106,6 +106,7 @@ rule sweight_GBW_data_ntuples:
         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
         'output/selection_data_background_subtraction/{year}/{mode}/{version}.log',
     run:
+        shell('mkdir -p {output.plots}')
         shell('(time python {input.script} \
         --input-file {input.tuple_file} \
         --output-file {output.sample} \
