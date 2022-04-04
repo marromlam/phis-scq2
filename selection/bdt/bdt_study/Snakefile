@@ -1,78 +1,78 @@
-rule fit_for_bdtcut_optimization:
-    """
-    Generic rule.
-    Fit to B_ConstJpsi_M_1 with different cut on bdtg3 to obtain the rough sweight
-    to define FOM=(sum_w)^2/sum_(w^2) and find the best bdtg3 cut with largest FOM 
-    """
-    input:
-        script = 'tools/fit_for_bdtcut_FOM.py',
-        tuple_file = expand(rules.add_bdt_response.output, year='{year}',
-                                                           mode='{mode}'),
-    params:
-        branch_name = 'B_ConstJpsi_M_1',
-        plot_dir = tuples_path('{mode}/{year}/')
-    output:
-        tuples_path('{mode}/{year}/FOM_{mode}_{year}.pdf')
-    shell:
-        'python {input.script} --input-file {input.tuple_file} \
-                               --input-branch {params.branch_name} \
-                               --plot-dir {params.plot_dir} \
-                               --output-file {output} \
-                               --mode {wildcards.mode} \
-                               --year {wildcards.year} '
-
-rule fit_for_bdtcut_optimization_Bu:
-    """
-    Generic rule.
-    Fit to B_ConstJpsi_M_1 with different cut on bdtg3 to obtain the rough sweight
-    to define FOM=(sum_w)^2/sum_(w^2) and find the best bdtg3 cut with largest FOM
-    for the Bu2JpsiKplus decay mode 
-    """
-    input:
-        script = 'tools/fit_for_bdtcut_FOM_Bu.py',
-        tuple_file = expand(rules.add_bdt_response.output, year='{year}',
-                                                           mode='{mode}'),
-        params_file = lambda wildcards: expand(rules.mass_prefit_GBW_mc.output.params_file, year='{year}', mode= '{mode}', strip_sim = selconfig['gbw_input_MC_mode']['MC_'+ wildcards.mode][wildcards.year]['strip_sim'])
-    params:
-        branch_name = 'B_ConstJpsi_M_1',
-        plot_dir = tuples_path('{mode}/{year}/'),
-        params_to_fix = ['alpha1_', 'alpha2_', 'n1_', 'n2_', 'm_sig_lambda_']
-    output:
-        tuples_path('{mode}/{year}/FOM_{mode}_{year}.pdf')
-    shell:
-        'python {input.script} --input-file {input.tuple_file} \
-                               --input-branch {params.branch_name} \
-                               --plot-dir {params.plot_dir} \
-                               --params-to-fix-file {input.params_file} \
-                               --params-to-fix-list {params.params_to_fix} \
-                               --output-file {output} \
-                               --mode {wildcards.mode} \
-                               --year {wildcards.year} '
-
-
-rule add_bdt_response:
-    """
-    Generic rule.
-    Read tmva weights from given file and fill in response for a given tree.
-    NO cut on the bdt response applied yet. 
-    NOTE the name of the bdt is hard coded in the script to be bdtg3
-
-    """
-    input:
-        script = 'tools/apply_bdt_selection.py',
-        tuple_file = tuples_path('{mode}/{mode}_{year}_selected_with_bdt_branches.root'),
-        bdt_cut = 'bdt/bdt_study/bdtcut_off.yaml',
-        branches = 'bdt/branches.yaml',
-        tmva_weight_dir = tmva_weights_file,
-    output:
-        tuples_path('{mode}/{mode}_{year}_bdt_response.root')
-    shell:
-        'python {input.script} --input-file {input.tuple_file} \
-                               --output-file {output} \
-                               --mode {wildcards.mode} \
-                               --year {wildcards.year} \
-                               --bdt-branches {input.branches} \
-                               --bdt-cut-file {input.bdt_cut} \
-                               --tmva-weight-dir {input.tmva_weight_dir}'
-
-
+# rule fit_for_bdtcut_optimization:
+#     """
+#     Generic rule.
+#     Fit to B_ConstJpsi_M_1 with different cut on bdtg3 to obtain the rough sweight
+#     to define FOM=(sum_w)^2/sum_(w^2) and find the best bdtg3 cut with largest FOM 
+#     """
+#     input:
+#         script = 'tools/fit_for_bdtcut_FOM.py',
+#         tuple_file = expand(rules.add_bdt_response.output, year='{year}',
+#                                                            mode='{mode}'),
+#     params:
+#         branch_name = 'B_ConstJpsi_M_1',
+#         plot_dir = tuples_path('{mode}/{year}/')
+#     output:
+#         tuples_path('{mode}/{year}/FOM_{mode}_{year}.pdf')
+#     shell:
+#         'python {input.script} --input-file {input.tuple_file} \
+#                                --input-branch {params.branch_name} \
+#                                --plot-dir {params.plot_dir} \
+#                                --output-file {output} \
+#                                --mode {wildcards.mode} \
+#                                --year {wildcards.year} '
+#
+# rule fit_for_bdtcut_optimization_Bu:
+#     """
+#     Generic rule.
+#     Fit to B_ConstJpsi_M_1 with different cut on bdtg3 to obtain the rough sweight
+#     to define FOM=(sum_w)^2/sum_(w^2) and find the best bdtg3 cut with largest FOM
+#     for the Bu2JpsiKplus decay mode 
+#     """
+#     input:
+#         script = 'tools/fit_for_bdtcut_FOM_Bu.py',
+#         tuple_file = expand(rules.add_bdt_response.output, year='{year}',
+#                                                            mode='{mode}'),
+#         params_file = lambda wildcards: expand(rules.mass_prefit_GBW_mc.output.params_file, year='{year}', mode= '{mode}', strip_sim = selconfig['gbw_input_MC_mode']['MC_'+ wildcards.mode][wildcards.year]['strip_sim'])
+#     params:
+#         branch_name = 'B_ConstJpsi_M_1',
+#         plot_dir = tuples_path('{mode}/{year}/'),
+#         params_to_fix = ['alpha1_', 'alpha2_', 'n1_', 'n2_', 'm_sig_lambda_']
+#     output:
+#         tuples_path('{mode}/{year}/FOM_{mode}_{year}.pdf')
+#     shell:
+#         'python {input.script} --input-file {input.tuple_file} \
+#                                --input-branch {params.branch_name} \
+#                                --plot-dir {params.plot_dir} \
+#                                --params-to-fix-file {input.params_file} \
+#                                --params-to-fix-list {params.params_to_fix} \
+#                                --output-file {output} \
+#                                --mode {wildcards.mode} \
+#                                --year {wildcards.year} '
+#
+#
+# rule add_bdt_response:
+#     """
+#     Generic rule.
+#     Read tmva weights from given file and fill in response for a given tree.
+#     NO cut on the bdt response applied yet. 
+#     NOTE the name of the bdt is hard coded in the script to be bdtg3
+#
+#     """
+#     input:
+#         script = 'tools/apply_bdt_selection.py',
+#         tuple_file = tuples_path('{mode}/{mode}_{year}_selected_with_bdt_branches.root'),
+#         bdt_cut = 'bdt/bdt_study/bdtcut_off.yaml',
+#         branches = 'bdt/branches.yaml',
+#         tmva_weight_dir = tmva_weights_file,
+#     output:
+#         tuples_path('{mode}/{mode}_{year}_bdt_response.root')
+#     shell:
+#         'python {input.script} --input-file {input.tuple_file} \
+#                                --output-file {output} \
+#                                --mode {wildcards.mode} \
+#                                --year {wildcards.year} \
+#                                --bdt-branches {input.branches} \
+#                                --bdt-cut-file {input.bdt_cut} \
+#                                --tmva-weight-dir {input.tmva_weight_dir}'
+#
+#

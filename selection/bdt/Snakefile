@@ -4,17 +4,13 @@
 # rules for proxy signal and background for bdt {{{
 
 def input_to_add_bdt_branches(wildcards):
-    # print(wildcards)
-    # WARNING :: hardcoded version here
-    version='b3r4'
-    # version=wildcards.version
     if not wildcards.mode.startswith('MC_'):
         return expand(rules.apply_preselection_data.output,
-                      version=version, mode=wildcards.mode,
+                      version=wildcards.version, mode=wildcards.mode,
                       year=wildcards.year)
     else:
         return expand(rules.merge_strippings.output,
-                      version=version, mode=wildcards.mode,
+                      version=wildcards.version, mode=wildcards.mode,
                       year=wildcards.year)
 	
 
@@ -84,13 +80,13 @@ rule select_signal_for_bdt:
 def signal_proxy_for_bdt(wildcards):
     signal_mode = wildcards.mode if wildcards.mode.startswith('MC_') else 'MC_'+ wildcards.mode
     return expand(rules.select_signal_for_bdt.output, mode=signal_mode,
-                  year=wildcards.year)
+                  year=wildcards.year, version=wildcards.version)
 
 
 def background_proxy_for_bdt(wildcards):
     background_mode = wildcards.mode if not wildcards.mode.startswith('MC_') else wildcards.mode.replace('MC_', '')
     return expand(rules.select_background_for_bdt.output, mode=background_mode,
-                  year=wildcards.year)
+                  year=wildcards.year, version=wildcards.version)
 
 
 def signal_weight_for_bdt(wildcards):
@@ -169,8 +165,9 @@ def tmva_weights_file(wildcards):
     bdt_year_for_weights = selconfig['bdt_year'][wildcards.year]
     bdt_mode_for_weights = selconfig['bdt_mode'][wildcards.mode]
 
-    return expand(rules.train_bdt.output, year=bdt_year_for_weights,
-                                          mode=bdt_mode_for_weights)
+    return expand(rules.train_bdt.output,
+                  year=bdt_year_for_weights, mode=bdt_mode_for_weights,
+                  version=wildcards.version)
 
 
 def input_to_apply_bdt_selection(wildcards):
@@ -185,19 +182,19 @@ def input_to_apply_bdt_selection(wildcards):
                       year=wildcards.year)
 
 
-rule cp_tmva_dir_local:
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-       script = 'selection/tools/cp_from_eos.py',
-    params:
-       directory = lambda wildcards: selconfig['eos'] + '/' + selconfig['version']+ '/BDT/{}/{}/'.format(selconfig['bdt_mode'][wildcards.mode], selconfig['bdt_year'][wildcards.year])
-    output:
-       directory(tuples_path('BDT/{mode}/{year}/'))
-    shell:
-        'python {input.script} --input-directory {params.directory} \
-                               --output-directory {output} '
+# rule cp_tmva_dir_local:
+#     threads: 2
+#     resources:
+#         mem_mb = 12000
+#     input:
+#        script = 'selection/tools/cp_from_eos.py',
+#     params:
+#        directory = lambda wildcards: selconfig['eos'] + '/' + selconfig['version']+ '/BDT/{}/{}/'.format(selconfig['bdt_mode'][wildcards.mode], selconfig['bdt_year'][wildcards.year])
+#     output:
+#        directory(tuples_path('BDT/{mode}/{year}/'))
+#     shell:
+#         'python {input.script} --input-directory {params.directory} \
+#                                --output-directory {output} '
 
 
 # WARNING :  Modified this rule NOT to use EOS PID
@@ -240,23 +237,23 @@ rule apply_bdt_selection:
 
 # rule to compare distributions {{{
 
-rule compare_distributions:
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        script = 'selection/tools/compare_distributions.py',
-        variables = 'bdt/branches.yaml',
-        file1 = tuples_path('MC_Bs2JpsiPhi/MC_Bs2JpsiPhi_2015_selected_bdt.root'),
-        file2 = tuples_path('MC_Bs2JpsiPhi/MC_Bs2JpsiPhi_2016_selected_bdt.root')
-    output:
-        plots = directory('output/plots/bdt_vars/')
-    shell:
-        'python {input.script} --dataset {input.file1} DecayTree none MC_2015 \
-                               --dataset {input.file2} DecayTree none MC_2016 \
-                               --compare-vars {input.variables} \
-                               --mode Bs2JpsiPhi \
-                               --plot-dir {output.plots}'
+# rule compare_distributions:
+#     threads: 2
+#     resources:
+#         mem_mb = 12000
+#     input:
+#         script = 'selection/tools/compare_distributions.py',
+#         variables = 'bdt/branches.yaml',
+#         file1 = tuples_path('MC_Bs2JpsiPhi/MC_Bs2JpsiPhi_2015_selected_bdt.root'),
+#         file2 = tuples_path('MC_Bs2JpsiPhi/MC_Bs2JpsiPhi_2016_selected_bdt.root')
+#     output:
+#         plots = directory('output/plots/bdt_vars/')
+#     shell:
+#         'python {input.script} --dataset {input.file1} DecayTree none MC_2015 \
+#                                --dataset {input.file2} DecayTree none MC_2016 \
+#                                --compare-vars {input.variables} \
+#                                --mode Bs2JpsiPhi \
+#                                --plot-dir {output.plots}'
 
 # }}}
 
