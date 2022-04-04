@@ -414,7 +414,10 @@ def guess_massbins(wcs, version=False, mode=False):
         v, w = v[0], False
     # print(v, w, c)
     if not w:
-        w = 'mX6'
+        if 'Bs' in mode:
+            w = 'mX6'
+        else:
+            w = ''
 
     # print(v, w, c)
     pattern = [
