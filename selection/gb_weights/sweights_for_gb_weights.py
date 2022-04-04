@@ -171,3 +171,4 @@ if __name__ == '__main__':
     parser = argument_parser()
     args = parser.parse_args()
     fit_branch(**vars(args))
+    #### -- cook here a CB fit_branch2(**vars(args))
