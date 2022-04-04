@@ -1,3 +1,14 @@
+# Rules for PID correction
+# These sets of rules are very slow to run, so we should try to avoid
+# reruning them
+#
+# TODO: create a set of rules to uplotad PID
+# TODO: create some if-else structure to swicht runin/donwloading the PID
+#       tuples -- should be quite easy
+
+
+# correct the PID {{{
+
 rule correct_pid:
     """
     Generic rule.
@@ -13,11 +24,11 @@ rule correct_pid:
         script = 'selection/tools/PIDCorr.py',
         tracks = 'selection/pid/pidcorr.yaml',
         file = lambda wildcards: expand(rules.correct_muonpid.output.file if wildcards.mode != 'MC_Bs2DsPi' else rules.prepare_mc.output,
-                                                                  version='{version}',
-                                                                  mode='{mode}',
-                                                                  strip_sim='{strip_sim}',
-                                                                  year='{year}',
-                                                                  polarity='{polarity}'),
+                                        version='{version}',
+                                        mode='{mode}',
+                                        strip_sim='{strip_sim}',
+                                        year='{year}',
+                                        polarity='{polarity}'),
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp1.root',
@@ -35,6 +46,11 @@ rule correct_pid:
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2} &> {log}'
 
+# }}}
+
+
+# run gen PID {{{
+
 rule correct_muonpid:
     threads: 2
     resources:
@@ -46,11 +62,12 @@ rule correct_muonpid:
     input:
         script = 'selection/tools/PIDGen.py',
         tracks = 'selection/pid/pidgen.yaml',
-        file = expand(rules.add_generator_level_info.output.file, mode='{mode}',
-                                                                  version='{version}',
-                                                     strip_sim='{strip_sim}',
-                                                     year='{year}',
-                                                     polarity='{polarity}'),
+        file = expand(rules.add_generator_level_info.output.file,
+                      mode='{mode}',
+                      version='{version}',
+                      strip_sim='{strip_sim}',
+                      year='{year}',
+                      polarity='{polarity}'),
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp1.root',
@@ -68,4 +85,7 @@ rule correct_muonpid:
                               --tmp1 {output.tmp1} \
                               --tmp2 {output.tmp2} &> {log}'
 
+# }}}
 
+
+# vim: fdm=marker
