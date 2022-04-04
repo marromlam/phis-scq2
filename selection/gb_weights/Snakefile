@@ -96,7 +96,7 @@ rule sweight_GBW_data_ntuples:
         plot_dir = tuples_path('{mode}')
     output:
         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
-        SAMPLES + '/{year}/{mode}/{version}_GBWpreliminar.root'
+        SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root'
     shell:
         'python {input.script} --input-file {input.tuple_file} \
                                --output-file {output} \
@@ -168,7 +168,9 @@ def sweighted_data_for_gb_weights(wildcards):
         return expand(rules.sweight_GBW_data_ntuples.output, mode=wildcards.data_mode, version=version, year=wildcards.data_year)
 
     else:
-        return expand(rules.sweight_GBW_data_ntuple_Ipatia.output.root_file,mode=wildcards.data_mode, version=version, year=wildcards.data_year) 
+        # WARNING: Now we use DSCB instead of Hypatia
+        return expand(rules.sweight_GBW_data_ntuples.output, mode=wildcards.data_mode, version=version, year=wildcards.data_year)
+        # return expand(rules.sweight_GBW_data_ntuple_Ipatia.output.root_file,mode=wildcards.data_mode, version=version, year=wildcards.data_year) 
 
 ################################################################################
 ################################################################################
@@ -239,7 +241,7 @@ rule apply_gb_weights:
         # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_GB_weighted.root'))
         SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_gbWeight.root'
     params:
-        variables_file = 'gb_weights/weighting_variables.yaml',
+        variables_file = 'selection/gb_weights/weighting_variables.yaml',
         weight_method = 'gb',
         output_weight_name = 'gb_weights'
     shell:
@@ -291,3 +293,5 @@ rule apply_gb_weights_prompt:
                                --output-file {output} \
                                --output-weight-name {params.output_weight_name}'
 
+
+# vim: fdm:marker
