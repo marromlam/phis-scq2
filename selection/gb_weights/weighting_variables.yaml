@@ -1,42 +1,43 @@
 common: &common
-    'B_PT': 'B_PT'
-    'B_ETA': 'B_ETA'
-    'nLongTracks': 'nLongTracks'
-    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
-    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
-    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
-    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+  'B_PT': 'B_PT'
+  'B_ETA': 'B_ETA'
+  'nLongTracks': 'nLongTracks'
+  'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+  'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+  'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
 
 Bs2JpsiPhi:
-    <<: *common
+  <<: *common
 
 Bs2JpsiPhi_Prompt:
-    <<: *common
+  <<: *common
 
 Bd2JpsiKstar:
-    <<: *common
+  <<: *common
 
 Bu2JpsiKplus: &Bu2JpsiKplus
-    'B_PT': 'B_PT'
-    'B_ETA': 'B_ETA'
-    'nTracks': 'nTracks'
-    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
-    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
-    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+  'B_PT': 'B_PT'
+  'B_ETA': 'B_ETA'
+  'nTracks': 'nTracks'
+  'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+  'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+  'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
 
 MC_Bs2JpsiPhi:
-    <<: *common   
+  <<: *common
+
 MC_Bs2JpsiPhi_Prompt:
-    <<: *common   
+  <<: *common
 
 MC_Bs2JpsiPhi_dG0:
-    <<: *common
-    
+  <<: *common
+
 MC_Bs2JpsiKK_Swave:
-    <<: *common    
+  <<: *common
 
 MC_Bd2JpsiKstar:
-    <<: *common    
+  <<: *common
 
 MC_Bu2JpsiKplus:
-    <<: *Bu2JpsiKplus
+  <<: *Bu2JpsiKplus
