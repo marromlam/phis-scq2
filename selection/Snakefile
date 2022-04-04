@@ -67,8 +67,8 @@ if config['run_preselection'] and config['run_pid']:
         threads: 2
         resources:
             mem_mb = 6000
-        # wildcard_constraints:
-        #     mode = "(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)"
+        wildcard_constraints:
+            mode = "(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiPhi_Lb)"
         input:
             # files = lambda wcs: grid_tuples(wcs)
             # files = '/scratch46/marcos.romero/sidecar14/{year}/{mode}_{strip_sim}_pidcorrected.root'
