@@ -70,7 +70,7 @@ if config['run_preselection'] and config['run_pid']:
         # wildcard_constraints:
         #     mode = "(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)"
         input:
-            files = lambda wcs: grid_tuples(wcs)
+            # files = lambda wcs: grid_tuples(wcs)
             # files = '/scratch46/marcos.romero/sidecar14/{year}/{mode}_{strip_sim}_pidcorrected.root'
         output:
             SAMPLES + '/{year}/{mode}/{version}_preselected.root'
@@ -81,11 +81,11 @@ if config['run_preselection'] and config['run_pid']:
             cuts = 'selection/cuts.yaml',
             branches = 'selection/branches.yaml',
             cut_keys = cut_keys_mode,
-            # files = lambda wildcards: selconfig['eos_data'][selconfig['streams'][wildcards.mode]][int(wildcards.year)],
+            files = lambda wildcards: selconfig['eos_data'][selconfig['streams'][wildcards.mode]][int(wildcards.year)],
             treename = lambda wildcards: selconfig['treenames'][wildcards.mode]
         run:
             shell('(time python {params.script}\
-            --input-file {input.files} \
+            --input-file {params.files} \
             --input-tree-name {params.treename} \
             --output-file {output} \
             --mode {wildcards.mode} \
