@@ -57,7 +57,7 @@ def add_arrays(input_file, input_tree_name, input_file_arrays, variables_files, 
     # export tree with friend to RDataFrame
     dataframe = RDataFrame(norm_tree)
     # read branches that should be added from all input files
-    gInterpreter.LoadMacro('tools/copy_array.cpp')
+    gInterpreter.LoadMacro('selection/tools/copy_array.cpp')
  
     branches_to_add = read_from_yaml(mode, variables_files)
     # add generator level info branches from MC tree
