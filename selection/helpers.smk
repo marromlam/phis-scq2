@@ -1,25 +1,28 @@
-"""Helper functions for defining inputs and outputs for rules."""
+# Helper functions for defining inputs and outputs for rules.
+#
+#
+
 import os
 from os.path import isfile, join
 import yaml
 
+# xrootd config
 from snakemake.remote.XRootD import RemoteProvider as XRootDRemoteProvider
-
 XRootD = XRootDRemoteProvider(stay_on_remote=True)
 
-OUTPUT_DIR = os.path.join(os.path.dirname(workflow.snakefile), 'output')
-TUPLES_DIR = os.path.join(OUTPUT_DIR, 'tuples')
-OUTPUT_DIR = "output"
-TUPLES_DIR = "/scratch46/marcos.romero/sidecar14"
-
-def output_path(path):
-    assert not path.startswith('/')
-    return os.path.join(OUTPUT_DIR, path)
-
-
-def tuples_path(path):
-    assert not path.startswith('/')
-    return os.path.join(TUPLES_DIR, path)
+# OUTPUT_DIR = os.path.join(os.path.dirname(workflow.snakefile), 'output')
+# TUPLES_DIR = os.path.join(OUTPUT_DIR, 'tuples')
+# OUTPUT_DIR = "output"
+# TUPLES_DIR = "/scratch46/marcos.romero/sidecar14"
+#
+# def output_path(path):
+#     assert not path.startswith('/')
+#     return os.path.join(OUTPUT_DIR, path)
+#
+#
+# def tuples_path(path):
+#     assert not path.startswith('/')
+#     return os.path.join(TUPLES_DIR, path)
 
 
 def eos_path(path):
