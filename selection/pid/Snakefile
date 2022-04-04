@@ -3,6 +3,9 @@ rule correct_pid:
     Generic rule.
     Adds corrected PID variables to the given MC tuple
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     wildcard_constraints:
         strip_sim = "str.*",
         polarity = "(Up|Down)",
@@ -33,6 +36,9 @@ rule correct_pid:
                                --tmp2 {output.tmp2} &> {log}'
 
 rule correct_muonpid:
+    threads: 2
+    resources:
+        mem_mb = 12000
     """
     Generic rule.
     Adds corrected muon PID variables to the given MC tuple

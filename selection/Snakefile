@@ -106,6 +106,9 @@ if config['run_preselection']:
         Do not apply cuts, only add branches specified in the corresponding yaml
         file and save new tree in the requested location
         """
+        threads: 2
+        resources:
+            mem_mb = 6000
         input:
             script = 'selection/tools/apply_selection.py',
             branches = ['selection/branches.yaml', 'selection/generator_level_branches_to_be_merged.yaml']
@@ -134,6 +137,9 @@ if config['run_preselection']:
         Create tuple with generator level information, that contains only specified
         branches
         """
+        threads: 2
+        resources:
+            mem_mb = 6000
         input:
             script = 'selection/tools/apply_selection.py',
             branches = 'selection/generator_level_branches_to_be_created.yaml'
@@ -162,6 +168,9 @@ if config['run_preselection']:
         Add generator level information to specified MC tuple from given tuple with
         generator level information (produced by `prepare_generator_level_tuple`)
         """
+        threads: 2
+        resources:
+            mem_mb = 6000
         input:
             input_file = expand(rules.prepare_mc.output,
                                 mode='{mode}', version='{version}', year='{year}',
@@ -208,6 +217,9 @@ if config['run_pid'] and config['run_preselection']:
         Merges input root files using hadd command and saves the output to the
         given path.
         """
+        threads: 2
+        resources:
+            mem_mb = 6000
         input:
             expand(rules.correct_pid.output.file,
                 version='{version}', mode='{mode}', strip_sim='{strip_sim}',
@@ -226,6 +238,9 @@ if config['run_pid'] and config['run_preselection']:
         Apply cuts specified in input yaml files on the given tree and adds branches
         specified jin the corresponding yaml file. Saves new tree in the requested location
         """
+        threads: 2
+        resources:
+            mem_mb = 12000
         wildcard_constraints:
             mode = "MC_.*"
         input:
@@ -258,6 +273,9 @@ include: 'gb_weights/Snakefile'
 # Merge strippings {{{
 
 rule add_arrays:
+    threads: 2
+    resources:
+        mem_mb = 6000
     input:
         script  = 'selection/tools/add_arrays.py',
         files = lambda wildcards: expand(rules.apply_gb_weights.output if wildcards.mode != 'MC_Bs2JpsiPhi_Prompt'
@@ -289,6 +307,9 @@ rule add_arrays:
 # modes = ['MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_Prompt']
 
 rule merge_strippings:
+    threads: 2
+    resources:
+        mem_mb = 6000
     input:
         script = 'selection/tools/file_merger.py',
         input_files = lambda wildcards: expand(
@@ -329,6 +350,9 @@ rule merge_pid_corrected:
     Merges input root files after applying PID correction using hadd command and saves the output to the
     given path.
     """
+    threads: 2
+    resources:
+        mem_mb = 6000
     input:
         files = all_strippings
     output:
@@ -343,14 +367,19 @@ rule merge_pid_corrected:
 # Apply VETO {{{
 
 def input_to_background_veto(wildcards):
-    return expand(rules.apply_bdt_selection.output, version=wildcards.version, mode=wildcards.mode,
-                                                      year=wildcards.year)
+    return expand(rules.apply_bdt_selection.output,
+                  version=wildcards.version, mode=wildcards.mode,
+                  year=wildcards.year)
+
 rule selection_apply_veto:
     """
     Generic rule.
     Apply cuts in `cuts.yaml` to veto peaking background
     Saves new tree in the requested location
     """
+    threads: 2
+    resources:
+        mem_mb = 6000
     input:
         files = input_to_background_veto,
         script = 'selection/tools/apply_selection.py',

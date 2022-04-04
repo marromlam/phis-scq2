@@ -86,6 +86,9 @@ rule sweight_GBW_data_ntuples:
     Rule for sweighting data for GB weights.
     Performs fit to Bs mass. Saves new tree with sweights in the requested location
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/gb_weights/sweights_for_gb_weights.py',
         tuple_file = expand(rules.select_GBW_data_ntuples.output, year='{year}',
@@ -110,6 +113,9 @@ rule mass_prefit_GBW_mc:
     Run mass fit on selected Bu->J/psiKplus or Bd->J/psiKstar MC to determine Ipatia tail parameters for
     the fit to data. It only takes B_BKGCAT=0,50 candidates.
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/mass_fit_ipatia.py',
         root_file =  expand(rules.select_GBW_MC_ntuples.output, mode ='MC_{mode}', 
@@ -133,6 +139,9 @@ rule sweight_GBW_data_ntuple_Ipatia:
     Performs fit to Bu or Bd mass fixing Ipatia tail parameters to mc with B_BKGCAT=0,50. 
     Saves new tree with sweights in the requested location
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/mass_fit_ipatia.py',
         root_file = expand(rules.select_GBW_data_ntuples.output, mode='{mode}',version='{version}',year='{year}'),
@@ -185,6 +194,9 @@ rule selection_calculate_gb_weights:
     """
     Rule to calculate GB weights on MC using sweighted data.
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/reweighting.py',
         target_file = sweighted_data_for_gb_weights,
@@ -230,6 +242,9 @@ rule apply_gb_weights:
     """
     Rule to apply GB weights on MC reading from a pickle file where these have been stored.
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/apply_weights.py',
         files = expand(rules.apply_preselection_mc.output, year='{year}',
@@ -266,6 +281,9 @@ rule apply_gb_weights_prompt:
     Rule to apply GB weights on MC reading from a pickle file where these have been stored.
     For MC_Bs2JpsiPhi_Prompt weighted to Bs2JpsiPhi_Prompt data only
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/apply_weights.py',
         files = expand(rules.apply_gb_weights.output, year='{year}',

@@ -23,6 +23,9 @@ rule select_background_for_bdt:
     Generic rule.
     Apply cuts specified to provide signal/background proxy for BDT training
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/apply_selection.py',
         cuts = 'selection/bdt/cuts.yaml',
@@ -51,6 +54,9 @@ rule select_signal_for_bdt:
     Generic rule.
     Apply cuts specified to provide signal/background proxy for BDT training
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/apply_selection.py',
         cuts = 'selection/bdt/cuts.yaml',
@@ -98,6 +104,9 @@ rule train_bdt:
     Evaluate MVA on the specified input files. Saves MVA response in
     the requested location.
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/train_tmva.py',
         signal_file = signal_proxy_for_bdt,
@@ -130,6 +139,9 @@ rule add_bdt_branches:
     Adds branches that BDT will be evaluated on. Has to do it now because
     PID variables in MC first have to be corrected.
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/apply_selection.py',
         file = input_to_add_bdt_branches,
@@ -174,6 +186,9 @@ def input_to_apply_bdt_selection(wildcards):
 
 
 rule cp_tmva_dir_local:
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
        script = 'selection/tools/cp_from_eos.py',
     params:
@@ -193,6 +208,9 @@ rule apply_bdt_selection:
     Then the cut on bdt response which is specified in the input file is
     applied. NOTE the name of the bdt is hard coded in the script to be bdtg3
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/apply_bdt_selection.py',
         tuple_file = input_to_apply_bdt_selection,
@@ -223,6 +241,9 @@ rule apply_bdt_selection:
 # rule to compare distributions {{{
 
 rule compare_distributions:
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         script = 'selection/tools/compare_distributions.py',
         variables = 'bdt/branches.yaml',
