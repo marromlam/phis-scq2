@@ -42,7 +42,8 @@ wildcard_constraints:
   trigger = "(biased|unbiased|combined)",
   year = "(2015|2016|run2a|2017|2018|run2b|run2|2020|2021)",
   strip_sim = "str.*",
-  version = '[A-Za-z0-9@~]+'
+  version = '[A-Za-z0-9@~]+',
+  polarity = '(Up|Down)'
 
 MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 
