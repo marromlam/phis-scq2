@@ -32,7 +32,7 @@ rule mass_prefit_bd_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bd.py',
+    script = 'selection/sweights/mass_fit/bd.py',
   log:
     'output/log/mass_prefit_bd_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -66,7 +66,7 @@ rule mass_fit_bd_mc:
     sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bd.py',
+    script = 'selection/sweights/mass_fit/bd.py',
   log:
     'output/log/mass_fit_bd_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -102,7 +102,7 @@ rule mass_fit_bd_rd:
     sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bd.py',
+    script = 'selection/sweights/mass_fit/bd.py',
   log:
     'output/log/mass_fit_bd_rd/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -140,7 +140,7 @@ rule mass_prefit_bu_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bu.py',
+    script = 'selection/sweights/mass_fit/bu.py',
   log:
     'output/log/mass_prefit_bu_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -174,7 +174,7 @@ rule mass_fit_bu_mc:
     sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bu.py',
+    script = 'selection/sweights/mass_fit/bu.py',
   log:
     'output/log/mass_fit_bu_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -210,7 +210,7 @@ rule mass_fit_bu_rd:
     sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bu.py',
+    script = 'selection/sweights/mass_fit/bu.py',
   log:
     'output/log/mass_fit_bu_rd/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -248,7 +248,7 @@ rule mass_prefit_bs_mc:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bs.py',
+    script = 'selection/sweights/mass_fit/bs.py',
   log:
     'output/log/mass_prefit_bs_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -284,7 +284,7 @@ rule mass_fit_bs_mc:
     sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bs.py',
+    script = 'selection/sweights/mass_fit/bs.py',
   log:
     'output/log/mass_fit_bs_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -322,7 +322,7 @@ rule mass_fit_bs_rd:
     sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/bs.py',
+    script = 'selection/sweights/mass_fit/bs.py',
   log:
     'output/log/mass_bs_fit_rd/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -364,7 +364,7 @@ rule mass_fit_bs_lb:
     sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
-    script = 'selection/mass_fit/lb.py',
+    script = 'selection/sweights/mass_fit/lb.py',
   log:
     'output/log/mass_bs_lb/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -442,7 +442,6 @@ def guess_massbins(wcs, version=False, mode=False):
             time = [f'time{i}' for i in range(1, time+1)]
         else:
             time = ['']
-
 
         if sigmam:
             sigmam = [f'sigmam{i}' for i in range(1, sigmam+1)]
