@@ -223,11 +223,13 @@ rule add_dalitz_weight_Lb:
     output:
         # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_Lb.root'))
         SAMPLES + '/{year}/{mode}/{version}_dalitzWeight.root'
-    shell:
-        'cd selection/LbBKG/WeightLb/; mkdir -p bin;'
-        'make foo=genMCPhisNew;'
-        'cd -;'
-        'LbBKG/WeightLb/bin/genMCPhisNew {output} {input.files} {input.rootfile} {input.funcfile}'
+    run:
+        # WARNING :: this needs to be compiled on old ROOT
+        # 'cd selection/LbBKG/WeightLb/; mkdir -p bin;'
+        # 'make foo=genMCPhisNew;'
+        # 'cd -;'
+        shell(f'selection/LbBKG/WeightLb/bin/genMCPhisNew {output} {input.files} {input.rootfile} {input.funcfile}')
+
 
 rule add_ppt_weight_Lb:
     """
