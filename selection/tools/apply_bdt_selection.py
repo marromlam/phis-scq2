@@ -64,24 +64,26 @@ def apply_bdt_selection(input_file, input_tree_name, output_file, output_tree_na
         reader.AddVariable(var, mva_vars[var])
     
     # ////////////////////////////////////////////
-    status, listing = eos.dirlist(tmva_weight_dir, DirListFlags.STAT)
-    print(listing.parent)
-    for entry in listing:
-        print(f"{entry.statinfo.modtimestr} {entry.statinfo.size:>10} {entry.name}")
+    # status, listing = eos.dirlist(tmva_weight_dir, DirListFlags.STAT)
+    # print(listing.parent)
+    # for entry in listing:
+    #     print(f"{entry.statinfo.modtimestr} {entry.statinfo.size:>10} {entry.name}")
     # filesystem.dirlist('/tmp', DirListFlags.STAT)
 
     # ////////////////////////////////////////////
+    # GENERALIZE ME !!!!
 
-    tmva_file = output_file.replace('.root', '.xml')
-    status = False
-    for cf in listing:
-        if cf.name.endswith(".xml"):
-            tmva_weight_file = os.path.join(tmva_weight_dir, cf.name)
-            print(tmva_weight_file, tmva_file)
-            # status = eos.copy(tmva_weight_file, tmva_file, force=True)
-            status = os.system(f"xrdcp -f 'root://eoslhcb.cern.ch/'{tmva_weight_file} {tmva_file}")
-            print(status)
-            status = True if not status else False
+    # tmva_file = output_file.replace('.root', '.xml')
+    # status = False
+    # for cf in listing:
+    #     if cf.name.endswith(".xml"):
+    #         tmva_weight_file = os.path.join(tmva_weight_dir, cf.name)
+    #         print(tmva_weight_file, tmva_file)
+    #         # status = eos.copy(tmva_weight_file, tmva_file, force=True)
+    #         status = os.system(f"xrdcp -f 'root://eoslhcb.cern.ch/'{tmva_weight_file} {tmva_file}")
+    #         print(status)
+    #         status = True if not status else False
+    tmva_file = os.path.join(tmva_weight_dir, 'TMVAClassification_BDTG3.weights.xml')
 
 
     print(tmva_file)
