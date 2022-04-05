@@ -42,19 +42,24 @@ from analysis.csp_factors.efficiency import (create_mass_bins,
                                              create_sigmam_bins)
 
 
-def get_bin_from_version(version, subbin):
+def get_bin_from_version(version, subbin, mode):
+    # parse tuple version name first {{{
     v = version.split('@')
     if len(v) > 1:
         v, c = v
     else:
-        v, c = v[0], None
+        v, c = v[0], ''
     v = v.split('~')
     if len(v) > 1:
         v, w = v
     else:
         v, w = v[0], False
-    # WARNING if not w:
-    # WARNING     w = 'mX6'
+
+    if not w:
+        if 'Bs' in mode:
+            w = 'mX6'
+        else:
+            w = ''
     print(v, w, c)
 
     pattern = [
@@ -73,7 +78,10 @@ def get_bin_from_version(version, subbin):
         except:
             raise ValueError(f'Cannot interpret {w} as a sWeight config')
     # pattern = rf"\A{''.join(pattern)}\Z"
-    print(pattern, subbin)
+    print(f"from version = {version} :: {mX_bins}, {time_bins}, {sigmam_bins}")
+    # }}}
+
+    # extract current subbin {{{
     p = re.compile(pattern)
     if subbin != 'all':
         try:
@@ -83,8 +91,7 @@ def get_bin_from_version(version, subbin):
             sigmam = int(q[5]) if q[4] else 1
         except:
             raise ValueError(f'Cannot interpret {w} as a subbin')
-    print("bines -->", mX_bins, time_bins, sigmam_bins)
-    print("bines -->", mX, time, sigmam)
+    print(f"from subbin = {subbin} :: {mX}, {time}, {sigmam}")
     # create bins limits
     mXLL, mXUL = create_mass_bins(int(mX_bins))[mX-1:mX+1]
     # timeLL, timeUL = create_time_bins(int(time_bins))[time-1:time+1]
@@ -616,7 +623,7 @@ def mass_fitter(odf,
     # res = False
     try:
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                               method='minuit', verbose=True, strategy=1,
+                               method='minuit', verbose=False, strategy=1,
                                tol=0.05)
     except:
         print("There was a problem with the fit. Let's try again.")
@@ -625,7 +632,7 @@ def mass_fitter(odf,
         pars['s2Bs'].set(value=0.0, init=0.0, min=-1, max=1, free=False)
         pars['s0Bs'].set(value=1.0, init=1.0, free=True)
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                               method='minuit', verbose=True, strategy=1,
+                               method='minuit', verbose=False, strategy=1,
                                tol=0.05)
         pars = ipanema.Parameters.clone(res.params)
         pars.lock()
@@ -633,14 +640,14 @@ def mass_fitter(odf,
         pars['s2Bs'].set(value=0.0, init=0.0, min=-1, max=1, free=True)
         pars['s0Bs'].set(value=0.0, init=1.0, free=False)
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                               method='minuit', verbose=True, strategy=1,
+                               method='minuit', verbose=False, strategy=1,
                                tol=0.05)
         pars = ipanema.Parameters.clone(res.params)
         for k,v in pars.items():
           v.init = v.value
         pars.unlock('fsigBs', 'muBs', 'b', 'fsigBd')
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                               method='minuit', verbose=True, strategy=1,
+                               method='minuit', verbose=False, strategy=1,
                                tol=0.05)
 
     if res:
@@ -791,7 +798,7 @@ if __name__ == '__main__':
   mass_range=(5202, 5548)
   mass_range=(5200, 5550)
   if args['mass_bin']:
-    bin_cut = get_bin_from_version(args['version'], args['mass_bin'])
+    bin_cut = get_bin_from_version(args['version'], args['mass_bin'], args['mode'])
     print(bin_cut)
     # bin = int(args['mass_bin'][-1])
     # mLL = mass[bin-1]
