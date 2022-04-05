@@ -181,11 +181,11 @@ def sweighted_data_for_gb_weights(wildcards):
         return expand(rules.select_GBW_data_ntuples.output, year=wildcards.data_year, version=version, mode=wildcards.data_mode)
 
     elif ('Bs2JpsiPhi' in wildcards.data_mode and wildcards.data_mode != 'Bs2JpsiPhi_Prompt'):
-        return expand(rules.sweight_GBW_data_ntuples.output, mode=wildcards.data_mode, version=version, year=wildcards.data_year)
+        return expand(rules.sweight_GBW_data_ntuples.output.sample, mode=wildcards.data_mode, version=version, year=wildcards.data_year)
 
     else:
         # WARNING: Now we use DSCB instead of Hypatia
-        return expand(rules.sweight_GBW_data_ntuples.output, mode=wildcards.data_mode, version=version, year=wildcards.data_year)
+        return expand(rules.sweight_GBW_data_ntuples.output.sample, mode=wildcards.data_mode, version=version, year=wildcards.data_year)
         # return expand(rules.sweight_GBW_data_ntuple_Ipatia.output.root_file,mode=wildcards.data_mode, version=version, year=wildcards.data_year) 
 
 # }}}
