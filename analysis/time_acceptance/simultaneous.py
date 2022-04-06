@@ -3,6 +3,7 @@ DESCRIPTION = """
     those functions are, actually functions of badjanak kernels.
 """
 
+__all__ = []
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
@@ -32,11 +33,6 @@ import config
 resolutions = config.timeacc['constants']
 bdtconfig = config.timeacc['bdtconfig']
 Gdvalue = config.general['Gd']
-
-
-
-if __name__ != '__main__':
-  import badjanak
 
 # }}}
 
@@ -69,7 +65,7 @@ if __name__ == '__main__':
   MINER = args['minimizer']
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], 1)
+  initialize(config.user['backend'], 1)
   import analysis.time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
@@ -101,7 +97,7 @@ if __name__ == '__main__':
 
   # Print settings
   printsubsec("Settings")
-  print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
+  print(f"{'backend':>15}: {config.user['backend']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")

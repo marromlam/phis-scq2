@@ -6,7 +6,7 @@ dfdfd
 
 __author__ = ['Marcos Romero']
 __email__  = ['mromerol@cern.ch']
-__all__ = ['plot_timeacc_simul_fit', 'plot_timeacc_simul_spline']
+__all__ = ['plot_timeacc_fit', 'plot_timeacc_spline']
 
 
 # Model {{{

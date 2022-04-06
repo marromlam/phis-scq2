@@ -3,6 +3,7 @@ DESCRIPTION = """
     and half BdRD sample as BdRD.
 """
 
+__all__ = []
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 

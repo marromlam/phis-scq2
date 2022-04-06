@@ -2,6 +2,7 @@ DESCRIPTION = """
     Compute decay time efficiency using only one single mode.
 """
 
+__all__ = []
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
@@ -14,6 +15,8 @@ import hjson
 
 # load ipanema
 from ipanema import initialize
+import config
+initialize(config.user['backend'], 1)
 from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 import numpy as np
 
@@ -27,20 +30,17 @@ from utils.plot import mode_tex
 from utils.strings import cuts_and, printsec, printsubsec
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.helpers import swnorm, trigger_scissors
-from angular_acceptance.iterative_mc import acceptance_effect
-import config
+from analysis.angular_acceptance.iterative_mc import acceptance_effect
+
+from trash_can.knot_generator import create_time_bins
 # binned variables
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
+# all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
 Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
-
-if __name__ != '__main__':
-  initialize(os.environ['IPANEMA_BACKEND'], 1)
-  from time_acceptance.fcn_functions import splinexerf
+tLL = config.general['time_lower_limit']
+tUL = config.general['time_upper_limit']
 
 # }}}
 
@@ -74,8 +74,7 @@ if __name__ == '__main__':
   MINER = args['minimizer']
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'],1)
-  import time_acceptance.fcn_functions as fcns
+  import analysis.time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
   if TIMEACC['use_transverse_time']:
@@ -96,7 +95,6 @@ if __name__ == '__main__':
 
   # Print settings
   print(f"\n{80*'='}\n", "Settings", f"\n{80*'='}\n")
-  print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
@@ -107,10 +105,12 @@ if __name__ == '__main__':
   oparams = args['params'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(TIMEACC['nknots'])]
-  if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
-    knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
-    knots = knots.tolist()
+  knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL).tolist()
+  tLL, tUL = knots[0], knots[-1]
+  # knots = all_knots[str(TIMEACC['nknots'])]
+  # if TIMEACC['use_lowTime'] or TIMEACC['use_upTime']:
+  #   knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL)
+  #   knots = knots.tolist()
 
   # }}}
 

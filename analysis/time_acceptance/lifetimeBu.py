@@ -4,6 +4,7 @@ DESCRIPTION = """
 """
 
 __author__ = ['Marcos Romero Lamas']
+__all__ = []
 __email__ = ['mromerol@cern.ch']
 
 
