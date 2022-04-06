@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 
 
+__all__ = []
 
 p0 = ipanema.Parameters.load("output/params/time_acceptance/2015/Bd2JpsiKstar/v0r5_simul3_biased.json")
 
