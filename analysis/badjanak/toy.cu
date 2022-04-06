@@ -21,7 +21,7 @@
 // Generate toy {{{
 
 KERNEL
-void dG5toy(GLOBAL_MEM ftype * out,
+void dG5toy(/* args {{{ */GLOBAL_MEM ftype * out,
     const ftype G, const ftype DG, const ftype DM,
     GLOBAL_MEM const ftype * CSP,
     //GLOBAL_MEM const ftype * CSD,
@@ -61,35 +61,41 @@ void dG5toy(GLOBAL_MEM ftype * out,
     const int order_cosK, const int order_cosL, const int order_hphi,
     const int USE_FK, const int BINS, const int USE_ANGACC, const int USE_TIMEACC,
     const int USE_TIMEOFFSET, const int SET_TAGGING, const int USE_TIMERES,
-    const ftype PROB_MAX, const int SEED, const int NEVT)
+    const ftype PROB_MAX, const int SEED, const int NEVT /*}}}*/)
 {
   int evt = get_global_id(0);
   if (evt >= NEVT) { return; }
 
-  // auxiliar variables 
+  // auxiliar variables
   ftype threshold = 0.0;
   ftype iter = 0.0;
 
-  // Prepare rng
-#ifdef CUDA
-  curandState state;
-  curand_init((unsigned long long)clock(), evt, 0, &state);
-#else
-  int _seed = SEED;
-  int *state = &_seed;
-#endif
+  // Prepare random number generation {{{
+
+  #ifdef CUDA
+    curandState state;
+    curand_init((unsigned long long)clock(), evt, 0, &state);
+  #else
+    int _seed = SEED;
+    int *state = &_seed;
+  #endif
+
+  // }}}
 
 
+  // Decay time resolution {{{
 
-  // Decay time resolution ----------------------------------------------------
   ftype sigmat = 0.0;
   if (USE_TIMERES)
   {
     sigmat = rng_log_normal(-3.22, 0.309, &state);
   }
 
+  // }}}
 
-  // Flavor tagging -----------------------------------------------------------
+
+  // Flavor tagging {{{
+
   ftype qOS = 0;
   ftype qSS = 0;
   ftype etaOS = 0.5;
@@ -149,7 +155,11 @@ void dG5toy(GLOBAL_MEM ftype * out,
   qOS *= 531; // put same number used in EvtGen 
   qSS *= 531; // put same number used in EvtGen
 
-  // Loop and generate ---------------------------------------------------------
+  // }}}
+
+
+  // Loop and generate {{{
+
   ftype cosK, cosL, hphi, time, pdf, angacc;
   const ftype mass = out[evt*10+4];
   const unsigned int bin = BINS>1 ? getMassBin(mass) : 0;
@@ -168,7 +178,7 @@ void dG5toy(GLOBAL_MEM ftype * out,
     //hphi=-0.00354153;
     //time=+3.2032610199999998;
     //sigmat=0.04120890;
-    //printf("cosK=%lf cosL=%lf hphi=%lf time=%lf sigmat=%lf qOS=%lf qSS=%lf etaOS=%lf etaSS=%lf", cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS);
+      /* printf("cosK=%lf cosL=%lf hphi=%lf time=%lf sigmat=%lf qOS=%lf qSS=%lf etaOS=%lf etaSS=%lf", cosK, cosL, hphi, time, sigmat, qOS, qSS, etaOS, etaSS); */
 
     // PDF threshold
     threshold = PROB_MAX * rng_uniform(&state);
@@ -216,7 +226,10 @@ void dG5toy(GLOBAL_MEM ftype * out,
       pdf *= (G-0.5*DG) * (1 - exp((G-0.5*DG)*(-tUL+tLL)));
     }
 
-    // final checks -----------------------------------------------------------
+    // }}}
+
+
+    // final checks {{{
 
     // check if probability is greater than the PROB_MAX
     if ( (pdf > PROB_MAX) && (get_global_id(0)<100) ) 
@@ -232,7 +245,11 @@ void dG5toy(GLOBAL_MEM ftype * out,
       return;
     }
 
-    // Store generated values -------------------------------------------------
+    // }}}
+
+
+    // Store generated and accepted values in array {{{
+
     if (pdf >= threshold)
     {
       out[evt*10+0] = data[0]; // cosK
@@ -248,6 +265,8 @@ void dG5toy(GLOBAL_MEM ftype * out,
       return;
     }
 
+    // }}}
+
   }
 
 }
@@ -255,4 +274,4 @@ void dG5toy(GLOBAL_MEM ftype * out,
 // }}}
 
 
-// vim:foldmethod=marker
+// vim: fdm=marker 

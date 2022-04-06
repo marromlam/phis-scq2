@@ -7,6 +7,10 @@ rule tagging_combination_calibration:
 
   NOTE: Currently I dont allow this rule to run on other modes than Bu
   """
+  threads: 2
+  resources:
+    mem_mb=20000,
+    time=6000
   wildcard_constraints:
     mode = "(MC_)?Bu2JpsiKplus"
   input:
@@ -24,7 +28,7 @@ rule tagging_combination_calibration:
     with open(f"{log.option}", "w") as job:
       job.write(t.substitute(dict(
         input_tuple=os.path.abspath(f'{input.sample}'),
-        sweight=f"sw",
+        sweight=f"sigBuSW",  # sw if you want to use Piera's
         idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
       )))
     # second, write down a bash script to run the EPM
@@ -49,6 +53,9 @@ rule tagging_combination:
   Runs the calibration.
   aka Kechen step 4
   """
+  threads: 2
+  resources:
+    mem_mb=6000
   input:
     sample = lambda wcs: tuples(wcs, weight='sWeight' if 'Bu' in f"{wcs.mode}" else 'selected'),
     calibration = lambda wcs: f"output/params/tagging_combination_calibration/{wcs.year}/{'MC_Bu2JpsiKplus' if 'MC' in f'{wcs.mode}' else 'Bu2JpsiKplus'}/{wcs.version}.py",
@@ -95,6 +102,8 @@ rule tagging_combination:
     odf = odf[list(odf.keys())[0]].pandas.df(flatten=None)
     tdf = uproot.open(f'{output.sample}')
     tdf = tdf[list(tdf.keys())[0]].pandas.df(flatten=None)
+    # TODO: change concat to merge, because if the branches exist in the
+    #       original dataframe
     result = pd.concat([odf, tdf], axis=1)
     del odf
     del tdf
