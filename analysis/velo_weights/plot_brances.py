@@ -10,6 +10,7 @@ from utils.strings import printsec, printsubsec
 
 DOCAz_BINS = 8
 
+__all__ = []
 
 
 f = uproot.open("/scratch46/marcos.romero/Bu2JpsiKplus5r3.root")["DecayTree"]

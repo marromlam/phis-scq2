@@ -1,3 +1,5 @@
+__all__ = ['cb', 'cb_argus', 'cb_physbkg']
+
 from timeit import main
 import os
 import ipanema

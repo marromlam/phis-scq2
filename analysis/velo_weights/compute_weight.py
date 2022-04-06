@@ -6,6 +6,7 @@ DESCRIPTION = """
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 __all__ = ['polarity_weighting']
+__all__ = []
 
 
 # Modules {{{

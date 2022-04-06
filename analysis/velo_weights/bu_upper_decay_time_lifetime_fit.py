@@ -2,7 +2,7 @@ from ipanema import (initialize, Parameters, optimize, Sample)
 import uproot3 as uproot
 
 
-
+__all__ = []
 
 if __name__ == "__main__":
   # ---
@@ -39,5 +39,5 @@ if __name__ == "__main__":
     p = pars.valuesdict()
     pdf = ristra.exp(-p['gamma']*data.time) 
     pdf *= (1 + p['a']*data.time + p['b']*data.time*data.time)
-    lkhd =  
+    lkhd = 0
     return ristra.get(-2*lkhd)
