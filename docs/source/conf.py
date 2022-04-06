@@ -12,16 +12,18 @@
 #
 import os
 import sys
+import time
+
 sys.path.insert(0, os.path.abspath('../..'))
-sys.path.insert(0, os.path.abspath('../analysis'))
-sys.path.insert(0, os.path.abspath('../selection'))
+# sys.path.insert(1, os.path.abspath('../analysis'))
+# sys.path.insert(2, os.path.abspath('../selection'))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'phis-scq'
-copyright = '2022, Marcos Romero Lamas'
 author = 'Marcos Romero Lamas'
+copyright = time.strftime('%Y, Marcos Romero Lamas')
 
 
 # -- General configuration ---------------------------------------------------
@@ -47,6 +49,12 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
+    # from kovid
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.extlinks',
+    'sphinx_copybutton',
+    'sphinx_inline_tabs',
+    "sphinxext.opengraph",
     # 'sphinx_automodapi.automodapi',
     # 'sphinx_automodapi.smart_resolver',
     # 'sphinx_rtd_theme',
@@ -55,11 +63,15 @@ extensions = [
 numpydoc_show_class_members = False
 
 # generate autosummary even if no references
-autosummary_generate = True
+autosummary_generate = False
 autosummary_imported_members = False
-
+autoapi_keep_file = False
 autoapi_type = 'python'
-autoapi_dirs = ['../../selection']
+autoapi_dirs = [
+    '../../selection',
+    '../../analysis',
+    '../../utils',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -76,8 +88,21 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'furo'
+html_title = 'phis-scq'
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+#
+# html_theme_options: Dict[str, Any] = {
+#     'sidebar_hide_name': True,
+#     'navigation_with_keys': True,
+# }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_favicon = html_logo = '../../.logo/pelegrin_phis_square.png'
+html_css_files = ['custom.css']
+html_js_files = ['custom.js']
