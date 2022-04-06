@@ -1,3 +1,4 @@
+__all__ = []
 import json
 from string import Template
 from ipanema import Parameters
