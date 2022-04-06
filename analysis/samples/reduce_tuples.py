@@ -1,3 +1,4 @@
+__all__ = []
 DESCRIPTION = """
     This script reduces original tuples from eos acording to branches.yaml.
     It plays the role of a translating-layer between the selection pipeline

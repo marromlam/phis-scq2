@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__all__ = []
 __author__ = ['Ramon Ruiz']
 __email__  = ['rruizfer@cern.ch']
 

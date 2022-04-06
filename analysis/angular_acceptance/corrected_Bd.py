@@ -1,3 +1,4 @@
+__all__ = []
 # -*- coding: utf-8 -*-
 
 __author__ = ['Marcos Romero']

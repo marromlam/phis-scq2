@@ -1,3 +1,4 @@
+__all__ = []
 DESCRIPTION = """
     Computes the legendre-based angular acceptance with corrections in mHH, pB,
     pTB variables using an a reweight.
@@ -24,9 +25,9 @@ import argparse
 
 
 
-initialize('cuda',1)
-import badjanak
-badjanak.get_kernels()
+# initialize('cuda',1)
+# import badjanak
+# badjanak.get_kernels()
 
 from scipy.special import comb
 from scipy.integrate import romb, simpson

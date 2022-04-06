@@ -2,17 +2,17 @@ Samples
 -------
 
 This repository aims to use are the tuples produced by the
-_Bs2JpsiPhi-FullRun2_ pipeline. It the user wants to use others than those,
+*Bs2JpsiPhi-FullRun2* pipeline. It the user wants to use others than those,
 then is his/her job to copy them to the correct `sidecar` path.
 
 The main samples in phis-scq follow the following structure:
 ::
 /path/to/sidecar/year/mode/version.root
 
-where `version` should be matched with the version of the _Bs2JpsiPhi-FullRun2_
+where `version` should be matched with the version of the *Bs2JpsiPhi-FullRun2*
 pipeline user to produce the tuples, `year` and `mode` are the corresponding 
 year and mode of tuple
-(which follows the same names as in _Bs2JpsiPhi-FullRun2_) 
+(which follows the same names as in *Bs2JpsiPhi-FullRun2*) 
 and last `flag` which is a string
 that identifies the nature of the tuple.
 
@@ -23,7 +23,7 @@ and becomes fixed to the nominal one with the reduction of the tuples.
 
 The tuples that are automatically synced from eos do follow the pattern `v#r#(p#)`
 so they will of course be properly handled. However, if you want to use your custom 
-tuples they must follow two rules: 
+tuples they must follow two rules:
 * They cannot be named as any version of the eos ones. ohis-scq will first try
 to download this kind of named tuples from eos. Therefore, custom tuples should
 a different name.
@@ -32,18 +32,15 @@ a different name.
 Basically to handle the tuple sync and reduction one needs to run two rules
 * samples_sync_tuples: This rules directly dowloads from esos the asked version of tuples
 to run it one ask for
-::
-snakemake /path/to/sidecar/year/mode/version_sWeight.root
-
+:: snakemake /path/to/sidecar/year/mode/version_sWeight.root
 * samples_reduce_tuples: This rule takes the last step of the reweightings 
 and applies different renamings to the branches (see §1.1 below).
 Afterwards, the tuples is saved in disk using less space and previous root files
 deleted.
-::
-snakemake /path/to/sidecar/year/mode/version.root
+:: snakemake /path/to/sidecar/year/mode/version.root
 
 Tuples are first named with flag being `dateflag_selected_bdt` or 
-`dateflag_selected_bdt_sw` as those are the final steps of _Bs2JpsiPhi-FullRun2_
+`dateflag_selected_bdt_sw` as those are the final steps of *Bs2JpsiPhi-FullRun2*
 pipeline. The `dateflag` always consist in 6 digit number and an alphabet letter,
 where the numbers correspond tho the date when the tuple was copied  to the host
 where phis-scq pipeline is running and the letter's purpose is to avoid 

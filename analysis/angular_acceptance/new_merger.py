@@ -2,7 +2,11 @@ import numpy as np
 from scipy.stats import chi2
 from ipanema import Parameters
 
+
 __all__ = ['merge_std_dg0']
+__author__ = ['Marcos Romero Lamas']
+__email__ = ['mromerol@cern.ch']
+
 
 def merge_std_dg0(std, dg0, verbose=True):
     """
@@ -56,3 +60,6 @@ def merge_std_dg0(std, dg0, verbose=True):
             print(f"{np.array(dg0)[k]:+1.5f}", end=' | ')
             print(f"{out[f'{wk}'].uvalue:+1.2uP}")
     return out
+
+
+# vim: fdm=marker

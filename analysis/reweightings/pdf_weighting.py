@@ -22,8 +22,8 @@ if ROOT_PANDAS:
 
 from ipanema import initialize
 from ipanema import ristra, Parameters
-
-initialize(os.environ['IPANEMA_BACKEND'],1)
+import config
+initialize(config.user['backend'],1)
 
 from analysis import badjanak
 # kernel debugging handlers

@@ -1,5 +1,5 @@
 # plot kinweights
-
+__all__ = []
 
 import os
 import matplotlib.pyplot as plt

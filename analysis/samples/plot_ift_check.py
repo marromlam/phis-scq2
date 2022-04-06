@@ -1,3 +1,4 @@
+__all__ = []
 # Plot branches with noweight, sweight and rweight (all)
 import ipanema
 import uproot

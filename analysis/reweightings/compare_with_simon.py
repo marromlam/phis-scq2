@@ -1,5 +1,6 @@
 # The main purpose of this file is to compare old Run2 weightings done by
 # Simon with the ones phis-scq produces.
+__all__ = []
 
 #%matplotlib inline
 import os

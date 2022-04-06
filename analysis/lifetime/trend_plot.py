@@ -2,6 +2,7 @@ DESCRIPTION = """
     plot lifetime trend
 """
 
+__all__ = []
 
 # Modules {{{
 

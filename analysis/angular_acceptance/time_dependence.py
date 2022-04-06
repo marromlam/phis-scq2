@@ -2,6 +2,7 @@ DESCRIPTION = """
     adfghjghkgfdgdhfjgghfgfdgsdhfjhgfdgh
 """
 
+__all__ = []
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 

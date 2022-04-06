@@ -1,3 +1,4 @@
+__all__ = []
 import matplotlib.pyplot as plt
 import ipanema
 from utils.plot import get_range, watermark, mode_tex, get_var_in_latex
