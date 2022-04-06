@@ -1,3 +1,4 @@
+__all__ = []
 import os, sys
 import argparse
 import numpy as np
