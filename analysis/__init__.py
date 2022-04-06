@@ -1,15 +1,22 @@
 """
-===============
-Analysis module
-===============
+Analisis main module
 """
 
-import os
-BACKEND = os.environ.get('BACKEND')
 
-from . import angular_acceptance
-from . import time_acceptance
-from . import reweightings
+__all__ = ['badjanak', 'reweightings', 'time_resolution', 'time_acceptance',
+           'angular_fit', 'what_the_hell', 'toys', 'flavor_tagging',
+           'angular_acceptance']
+
+
 from . import badjanak
+from . import reweightings
+from . import time_resolution
+from . import time_acceptance
+from . import flavor_tagging
+from . import angular_acceptance
+from . import angular_fit
+from . import what_the_hell
+from . import toys
 
-__all__ = ["angular_acceptance", "badjanak", "time_acceptance", "reweightings"]
+
+# vim: fdm=marker ts=2 sw=2 sts=2 sr et
