@@ -198,39 +198,42 @@ def input_to_apply_bdt_selection(wildcards):
 
 
 # WARNING :  Modified this rule NOT to use EOS PID
-rule apply_bdt_selection:
-    """
-    Generic rule.
-    Read tmva weights from given file and fill in response for a given tree.
-    Then the cut on bdt response which is specified in the input file is
-    applied. NOTE the name of the bdt is hard coded in the script to be bdtg3
-    """
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        script = 'selection/tools/apply_bdt_selection.py',
-        tuple_file = input_to_apply_bdt_selection,
-        bdt_cut = 'selection/bdt/bdtcut.yaml',
-        branches = 'selection/bdt/branches.yaml',
-        tmva_weight_dir = tmva_weights_file,
-        #tmva_weight_dir = directory(tuples_path('BDT/{mode}/{year}/')), 
-    # params:
-    #    tmva_weight_dir = lambda wildcards: selconfig['localeos'] + '/' + selconfig['version']+ '/BDT/{}/{}'.format(selconfig['bdt_mode'][wildcards.mode], selconfig['bdt_year'][wildcards.year])
-    output:
-        # tuples_path('{mode}/{mode}_{year}_selected_bdt_noveto.root')
-        SAMPLES + '/{year}/{mode}/{version}_elected.root'
-    log:
-        'output/log/selection_apply_bdt/{year}/{mode}/{version}_elected.log'
-    run:
-        shell('(time python {input.script} \
-        --input-file {input.tuple_file} \
-        --output-file {output} \
-        --mode {wildcards.mode} \
-        --year {wildcards.year} \
-        --bdt-branches {input.branches} \
-        --bdt-cut-file {input.bdt_cut} \
-        --tmva-weight-dir {input.tmva_weight_dir} ) &> {log}')
+if config['selection_mode'] == 'run2':
+    rule selection_run2_apply_bdt:
+        """
+        Generic rule.
+        Read tmva weights from given file and fill in response for a given tree.
+        Then the cut on bdt response which is specified in the input file is
+        applied. NOTE the name of the bdt is hard coded in the script to be bdtg3
+        """
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            script = 'selection/tools/apply_bdt_selection.py',
+            tuple_file = input_to_apply_bdt_selection,
+            bdt_cut = 'selection/bdt/bdtcut.yaml',
+            branches = 'selection/bdt/branches.yaml',
+            tmva_weight_dir = tmva_weights_file,
+            #tmva_weight_dir = directory(tuples_path('BDT/{mode}/{year}/')), 
+        # params:
+        #    tmva_weight_dir = lambda wildcards: selconfig['localeos'] + '/' + selconfig['version']+ '/BDT/{}/{}'.format(selconfig['bdt_mode'][wildcards.mode], selconfig['bdt_year'][wildcards.year])
+        output:
+            # tuples_path('{mode}/{mode}_{year}_selected_bdt_noveto.root')
+            SAMPLES + '/{year}/{mode}/{version}_elected.root'
+        log:
+            'output/log/selection_apply_bdt/{year}/{mode}/{version}_elected.log'
+        run:
+            shell('(time python {input.script} \
+            --input-file {input.tuple_file} \
+            --output-file {output} \
+            --mode {wildcards.mode} \
+            --year {wildcards.year} \
+            --bdt-branches {input.branches} \
+            --bdt-cut-file {input.bdt_cut} \
+            --tmva-weight-dir {input.tmva_weight_dir} ) &> {log}')
+elif config['selection_mode'] == 'run1':
+    print("rule for run1")
 
 # }}}
 
