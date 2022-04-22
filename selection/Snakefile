@@ -285,10 +285,12 @@ rule add_arrays:
                                                                              strip_sim=wildcards.strip_sim, 
                                                            version=wildcards.version,
                                                                              year=wildcards.year),
-        files_arrays = expand(rules.apply_preselection_mc.output, year='{year}',
-                                                           mode='{mode}',
-                                                           version='{version}',
-                                                           strip_sim='{strip_sim}'), 
+
+        files_arrays = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_preselected.root',
+        # files_arrays = expand(rules.apply_preselection_mc.output, year='{year}',
+        #                                                    mode='{mode}',
+        #                                                    version='{version}',
+        #                                                    strip_sim='{strip_sim}'), 
         variables = 'selection/array_branches.yaml' 
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_witharrs.root',

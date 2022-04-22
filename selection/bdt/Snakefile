@@ -5,9 +5,10 @@
 
 def input_to_add_bdt_branches(wildcards):
     if not wildcards.mode.startswith('MC_'):
-        return expand(rules.apply_preselection_data.output,
-                      version=wildcards.version, mode=wildcards.mode,
-                      year=wildcards.year)
+        return SAMPLES + '/{year}/{mode}/{version}_preselected.root'
+        # return expand(rules.apply_preselection_data.output,
+        #               version=wildcards.version, mode=wildcards.mode,
+        #               year=wildcards.year)
     else:
         return expand(rules.merge_strippings.output,
                       version=wildcards.version, mode=wildcards.mode,
@@ -171,7 +172,6 @@ def tmva_weights_file(wildcards):
 
 
 def input_to_apply_bdt_selection(wildcards):
-    
     if not "MC_Bs2JpsiPhi_fromLb" in wildcards.mode:
         return expand(rules.add_bdt_branches.output,
                       version=wildcards.version, mode=wildcards.mode,
@@ -195,6 +195,9 @@ def input_to_apply_bdt_selection(wildcards):
 #     shell:
 #         'python {input.script} --input-directory {params.directory} \
 #                                --output-directory {output} '
+
+
+include: 'bdt_study/Snakefile'
 
 
 # WARNING :  Modified this rule NOT to use EOS PID

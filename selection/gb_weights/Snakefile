@@ -256,10 +256,11 @@ rule apply_gb_weights:
         mem_mb = 12000
     input:
         script = 'selection/tools/apply_weights.py',
-        files = expand(rules.apply_preselection_mc.output, year='{year}',
-                                                           mode='{mode}',
-                                                           version='{version}',
-                                                           strip_sim='{strip_sim}'),
+        files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_preselected.root',
+        # files = expand(rules.apply_preselection_mc.output, year='{year}',
+        #                                                    mode='{mode}',
+        #                                                    version='{version}',
+        #                                                    strip_sim='{strip_sim}'),
         weights_file = weights_for_GBW
     output:
         # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_GB_weighted.root'))

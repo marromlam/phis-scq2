@@ -16,6 +16,7 @@ import config as settings
 from string import Template
 from utils.helpers import (tuples, angaccs, csps, flavors, timeaccs, timeress,
                            version_guesser, send_mail)
+
 configfile: "config/base.json"
 
 from snakemake.remote.XRootD import RemoteProvider as XRootDRemoteProvider
