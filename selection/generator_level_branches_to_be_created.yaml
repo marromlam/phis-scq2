@@ -1,0 +1,85 @@
+common: &common
+    'runNumber': 'runNumber'
+    'eventNumber': 'eventNumber'
+    'Polarity': 'Polarity'
+    'B_ID': 'B_ID'
+    'Jpsi_ID': 'Jpsi_ID'
+    'muplus_ID': 'muplus_ID'
+    'muminus_ID': 'muminus_ID'
+    'hplus_ID': 'hplus_ID'
+    'B_MC_MOTHER_ID': 'B_MC_MOTHER_ID'
+    'B_MC_MOTHER_KEY': 'B_MC_MOTHER_KEY'
+    'B_MC_GD_MOTHER_ID': 'B_MC_GD_MOTHER_ID'
+    'B_MC_GD_MOTHER_KEY': 'B_MC_GD_MOTHER_KEY'
+    'B_MC_GD_GD_MOTHER_ID': 'B_MC_GD_GD_MOTHER_ID'
+    'B_MC_GD_GD_MOTHER_KEY': 'B_MC_GD_GD_MOTHER_KEY'
+    'B_TRUETAU': 'B_TRUETAU'
+    'B_TRUEPT': 'B_TRUEPT'
+    'muplus_TRUEPT': 'muplus_TRUEPT'
+    'muminus_TRUEPT': 'muminus_TRUEPT'
+    'hplus_TRUEPT': 'hplus_TRUEPT'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+    <<: *common
+    'X_ID': 'X_ID'
+    'hminus_ID': 'hminus_ID'
+    'hminus_TRUEPT': 'hminus_TRUEPT'
+    'TrueHelicityAngles': 'HelicityAngles(TLorentzVector(hplus_TRUEP_X/1000.,
+                                                             hplus_TRUEP_Y/1000.,
+                                                             hplus_TRUEP_Z/1000.,
+                                                             hplus_TRUEP_E/1000.),
+                                              TLorentzVector(hminus_TRUEP_X/1000.,
+                                                             hminus_TRUEP_Y/1000.,
+                                                             hminus_TRUEP_Z/1000.,
+                                                             hminus_TRUEP_E/1000.),
+                                              TLorentzVector(muplus_TRUEP_X/1000.,
+                                                             muplus_TRUEP_Y/1000.,
+                                                             muplus_TRUEP_Z/1000.,
+                                                             muplus_TRUEP_E/1000.),
+                                              TLorentzVector(muminus_TRUEP_X/1000.,
+                                                             muminus_TRUEP_Y/1000.,
+                                                             muminus_TRUEP_Z/1000.,
+                                                             muminus_TRUEP_E/1000.))'
+    'truehelcosthetaK': 'TrueHelicityAngles[0]'
+    'truehelcosthetaL': 'TrueHelicityAngles[1]'
+    'truehelphi': 'TrueHelicityAngles[2]'
+
+MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+    <<: *MC_Bs2JpsiPhi_dG0
+
+MC_Bs2JpsiPhi_Prompt:
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bd2JpsiKstar:
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bu2JpsiKplus:
+    <<: *common
+    'TrueHelicityAngles': 'HelicityAngles(TLorentzVector(hplus_TRUEP_X/1000.,
+                                                             hplus_TRUEP_Y/1000.,
+                                                             hplus_TRUEP_Z/1000.,
+                                                             hplus_TRUEP_E/1000.),
+                                              TLorentzVector(hplus_TRUEP_X/1000.,
+                                                             hplus_TRUEP_Y/1000.,
+                                                             hplus_TRUEP_Z/1000.,
+                                                             hplus_TRUEP_E/1000.),
+                                              TLorentzVector(muplus_TRUEP_X/1000.,
+                                                             muplus_TRUEP_Y/1000.,
+                                                             muplus_TRUEP_Z/1000.,
+                                                             muplus_TRUEP_E/1000.),
+                                              TLorentzVector(muminus_TRUEP_X/1000.,
+                                                             muminus_TRUEP_Y/1000.,
+                                                             muminus_TRUEP_Z/1000.,
+                                                             muminus_TRUEP_E/1000.))'
+    'truehelcosthetaL': 'TrueHelicityAngles[1]'
+
+
+MC_Bs2DsPi: {}
+
+MC_Bs2JpsiPhi_fromLb: {}

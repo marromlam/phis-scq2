@@ -1,0 +1,10 @@
+#This is a script to do pt reweight
+# the first parameter is the position of macro we want to run, in this case LbBKG/pptw/addpptw.C 
+# the second parameter is the name of function
+# the third parameter is input. eg: ~/workdir/a.root
+# the fourth parameter is output. eg: ~/workdir/b.root
+# the fifth parameter is the file needed: LbBKG/pptw/weight_2d.root
+root -b -l << EOF
+.L $1
+$2("$3","$4","$5")
+EOF

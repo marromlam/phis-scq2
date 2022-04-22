@@ -1,0 +1,264 @@
+# Pipepine to train and apply BDT
+
+
+# rules for proxy signal and background for bdt {{{
+
+def input_to_add_bdt_branches(wildcards):
+    if not wildcards.mode.startswith('MC_'):
+        return expand(rules.apply_preselection_data.output,
+                      version=wildcards.version, mode=wildcards.mode,
+                      year=wildcards.year)
+    else:
+        return expand(rules.merge_strippings.output,
+                      version=wildcards.version, mode=wildcards.mode,
+                      year=wildcards.year)
+	
+
+rule select_background_for_bdt:
+    """
+    Generic rule.
+    Apply cuts specified to provide signal/background proxy for BDT training
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    input:
+        script = 'selection/tools/apply_selection.py',
+        cuts = 'selection/bdt/cuts.yaml',
+        branches = ['selection/bdt/branches.yaml'],
+        files = input_to_add_bdt_branches
+    output:
+        SAMPLES + '/{year}/{mode}/{version}_background_proxy.root'
+    log:
+        'output/log/selection_background_for_bdt/{year}/{mode}/{version}.log'
+    params:
+        treename ='DecayTree'
+    run:
+        shell('(time python {input.script} \
+        --input-file {input.files} \
+        --input-tree-name {params.treename} \
+        --output-file {output} \
+        --mode {wildcards.mode} \
+        --selection-files {input.cuts} \
+        --branches-files {input.branches} \
+        --keep-all-original-branches True \
+        --year {wildcards.year}) &> {log}')
+
+
+rule select_signal_for_bdt:
+    """
+    Generic rule.
+    Apply cuts specified to provide signal/background proxy for BDT training
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    input:
+        script = 'selection/tools/apply_selection.py',
+        cuts = 'selection/bdt/cuts.yaml',
+        branches = ['selection/bdt/branches.yaml'],
+        file = input_to_add_bdt_branches 
+    output:
+        SAMPLES + '/{year}/{mode}/{version}_signal_proxy.root'
+    log:
+        'output/log/selection_signal_for_bdt/{year}/{mode}/{version}.log'
+    run:
+        shell('(time python {input.script} \
+        --input-file {input.file} \
+        --output-file {output} \
+        --mode {wildcards.mode} \
+        --selection-files {input.cuts} \
+        --branches-files {input.branches} \
+        --keep-all-original-branches True \
+        --year {wildcards.year}) &> {log}')
+
+# }}}
+
+
+# train bdt {{{
+
+def signal_proxy_for_bdt(wildcards):
+    signal_mode = wildcards.mode if wildcards.mode.startswith('MC_') else 'MC_'+ wildcards.mode
+    return expand(rules.select_signal_for_bdt.output, mode=signal_mode,
+                  year=wildcards.year, version=wildcards.version)
+
+
+def background_proxy_for_bdt(wildcards):
+    background_mode = wildcards.mode if not wildcards.mode.startswith('MC_') else wildcards.mode.replace('MC_', '')
+    return expand(rules.select_background_for_bdt.output, mode=background_mode,
+                  year=wildcards.year, version=wildcards.version)
+
+
+def signal_weight_for_bdt(wildcards):
+    signal_weight = 'gb_weights'
+    return signal_weight
+
+
+rule train_bdt:
+    """
+    Generic rule.
+    Evaluate MVA on the specified input files. Saves MVA response in
+    the requested location.
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    input:
+        script = 'selection/tools/train_tmva.py',
+        signal_file = signal_proxy_for_bdt,
+        background_file = background_proxy_for_bdt,
+        bdt_vars = 'selection/bdt/branches.yaml'
+    output:
+        # directory(tuples_path('bdt/{mode}/{year}/'))
+        directory(SAMPLES + '/{year}/{mode}/{version}_bdt')
+    log:
+        'output/log/train_bdt/{year}/{mode}/{version}.log'
+    params:
+        signal_weight = signal_weight_for_bdt
+    run:
+        shell('(time python {input.script} \
+        --signal-file {input.signal_file} \
+        --signal-weight {params.signal_weight} \
+        --background-file {input.background_file} \
+        --output-dir {output}\
+        --bdt-vars {input.bdt_vars} \
+        --mode {wildcards.mode} \
+        --year {wildcards.year}) &> {log}')
+
+# }}}
+
+
+# add bdt branches {{{
+
+rule add_bdt_branches:
+    """
+    Adds branches that BDT will be evaluated on. Has to do it now because
+    PID variables in MC first have to be corrected.
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    input:
+        script = 'selection/tools/apply_selection.py',
+        file = input_to_add_bdt_branches,
+        branches = 'selection/bdt/branches.yaml'
+    output:
+        # temp(tuples_path('bdt/{mode}/{mode}_{year}_selected_with_bdt_branches.root'))
+        SAMPLES + '/{year}/{mode}/{version}_withbdt.root'
+    log:
+        'output/log/add_bdt_branches/{year}/{mode}/{version}.log'
+    run:
+        shell('(time python {input.script} \
+        --input-file {input.file} \
+        --output-file {output} \
+        --mode {wildcards.mode} \
+        --branches-files {input.branches} \
+        --keep-all-original-branches True \
+        --year {wildcards.year}) &> {log}')
+
+# }}}
+
+
+# apply bdt seclection {{{
+
+def tmva_weights_file(wildcards):
+    bdt_year_for_weights = selconfig['bdt_year'][wildcards.year]
+    bdt_mode_for_weights = selconfig['bdt_mode'][wildcards.mode]
+
+    return expand(rules.train_bdt.output,
+                  year=bdt_year_for_weights, mode=bdt_mode_for_weights,
+                  version=wildcards.version)
+
+
+def input_to_apply_bdt_selection(wildcards):
+    
+    if not "MC_Bs2JpsiPhi_fromLb" in wildcards.mode:
+        return expand(rules.add_bdt_branches.output,
+                      version=wildcards.version, mode=wildcards.mode,
+                      year=wildcards.year)
+    else:
+        return expand(rules.apply_preselection_mc_Lb.output,
+                      version=wildcards.version, mode=wildcards.mode,
+                      year=wildcards.year)
+
+
+# rule cp_tmva_dir_local:
+#     threads: 2
+#     resources:
+#         mem_mb = 12000
+#     input:
+#        script = 'selection/tools/cp_from_eos.py',
+#     params:
+#        directory = lambda wildcards: selconfig['eos'] + '/' + selconfig['version']+ '/BDT/{}/{}/'.format(selconfig['bdt_mode'][wildcards.mode], selconfig['bdt_year'][wildcards.year])
+#     output:
+#        directory(tuples_path('BDT/{mode}/{year}/'))
+#     shell:
+#         'python {input.script} --input-directory {params.directory} \
+#                                --output-directory {output} '
+
+
+# WARNING :  Modified this rule NOT to use EOS PID
+if config['selection_mode'] == 'run2':
+    rule selection_run2_apply_bdt:
+        """
+        Generic rule.
+        Read tmva weights from given file and fill in response for a given tree.
+        Then the cut on bdt response which is specified in the input file is
+        applied. NOTE the name of the bdt is hard coded in the script to be bdtg3
+        """
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            script = 'selection/tools/apply_bdt_selection.py',
+            tuple_file = input_to_apply_bdt_selection,
+            bdt_cut = 'selection/bdt/bdtcut.yaml',
+            branches = 'selection/bdt/branches.yaml',
+            tmva_weight_dir = tmva_weights_file,
+            #tmva_weight_dir = directory(tuples_path('BDT/{mode}/{year}/')), 
+        # params:
+        #    tmva_weight_dir = lambda wildcards: selconfig['localeos'] + '/' + selconfig['version']+ '/BDT/{}/{}'.format(selconfig['bdt_mode'][wildcards.mode], selconfig['bdt_year'][wildcards.year])
+        output:
+            # tuples_path('{mode}/{mode}_{year}_selected_bdt_noveto.root')
+            SAMPLES + '/{year}/{mode}/{version}_elected.root'
+        log:
+            'output/log/selection_apply_bdt/{year}/{mode}/{version}_elected.log'
+        run:
+            shell('(time python {input.script} \
+            --input-file {input.tuple_file} \
+            --output-file {output} \
+            --mode {wildcards.mode} \
+            --year {wildcards.year} \
+            --bdt-branches {input.branches} \
+            --bdt-cut-file {input.bdt_cut} \
+            --tmva-weight-dir {input.tmva_weight_dir} ) &> {log}')
+elif config['selection_mode'] == 'run1':
+    print("rule for run1")
+
+# }}}
+
+
+# rule to compare distributions {{{
+
+# rule compare_distributions:
+#     threads: 2
+#     resources:
+#         mem_mb = 12000
+#     input:
+#         script = 'selection/tools/compare_distributions.py',
+#         variables = 'bdt/branches.yaml',
+#         file1 = tuples_path('MC_Bs2JpsiPhi/MC_Bs2JpsiPhi_2015_selected_bdt.root'),
+#         file2 = tuples_path('MC_Bs2JpsiPhi/MC_Bs2JpsiPhi_2016_selected_bdt.root')
+#     output:
+#         plots = directory('output/plots/bdt_vars/')
+#     shell:
+#         'python {input.script} --dataset {input.file1} DecayTree none MC_2015 \
+#                                --dataset {input.file2} DecayTree none MC_2016 \
+#                                --compare-vars {input.variables} \
+#                                --mode Bs2JpsiPhi \
+#                                --plot-dir {output.plots}'
+
+# }}}
+
+
+# vim: fdm=marker

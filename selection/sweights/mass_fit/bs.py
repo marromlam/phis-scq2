@@ -10,8 +10,16 @@ __email__ = ["mromerol@cern.ch"]
 
 # Modules {{{
 
-import argparse
 import os
+import ipanema
+import argparse
+import uproot3 as uproot
+import numpy as np
+import re
+from ipanema import (ristra, Sample, splot)
+import matplotlib.pyplot as plt
+from utils.strings import printsec, printsubsec
+from utils.helpers import trigger_scissors, cuts_and
 
 import complot
 import ipanema
@@ -39,6 +47,74 @@ def get_sizes(size, BLOCK_SIZE=256):
         gs, ls = a * BLOCK_SIZE, BLOCK_SIZE
     return int(gs), int(ls)
 
+from analysis.csp_factors.efficiency import (create_mass_bins,
+                                             create_time_bins,
+                                             create_sigmam_bins)
+
+
+def get_bin_from_version(version, subbin, mode):
+    # parse tuple version name first {{{
+    v = version.split('@')
+    if len(v) > 1:
+        v, c = v
+    else:
+        v, c = v[0], ''
+    v = v.split('~')
+    if len(v) > 1:
+        v, w = v
+    else:
+        v, w = v[0], False
+
+    if not w:
+        if 'Bs' in mode:
+            w = 'mX6'
+        else:
+            w = ''
+    print(v, w, c)
+
+    pattern = [
+        "(mX(1|2|3|4|5|6))?",
+        "(time(1|2|3|4))?",
+        "(sigmam(1|2|3|4))?",
+    ]
+    pattern = rf"\A{''.join(pattern)}\Z"
+    p = re.compile(pattern)
+    if subbin != 'all':
+        try:
+            q = p.search(w).groups()
+            mX_bins = int(q[1]) if q[0] else 1
+            time_bins = int(q[3]) if q[2] else 1
+            sigmam_bins = int(q[5]) if q[4] else 1
+        except:
+            raise ValueError(f'Cannot interpret {w} as a sWeight config')
+    # pattern = rf"\A{''.join(pattern)}\Z"
+    print(f"from version = {version} :: {mX_bins}, {time_bins}, {sigmam_bins}")
+    # }}}
+
+    # extract current subbin {{{
+    p = re.compile(pattern)
+    if subbin != 'all':
+        try:
+            q = p.search(subbin).groups()
+            mX = int(q[1]) if q[0] else 1
+            time = int(q[3]) if q[2] else 1
+            sigmam = int(q[5]) if q[4] else 1
+        except:
+            raise ValueError(f'Cannot interpret {w} as a subbin')
+    print(f"from subbin = {subbin} :: {mX}, {time}, {sigmam}")
+    # create bins limits
+    mXLL, mXUL = create_mass_bins(int(mX_bins))[mX-1:mX+1]
+    # timeLL, timeUL = create_time_bins(int(time_bins))[time-1:time+1]
+    timeLL, timeUL, = 0.3, 15  # TODO: fix this
+    sigmamLL, sigmamUL = create_sigmam_bins(int(sigmam_bins))[sigmam-1:sigmam+1]
+    # list of cuts
+    list_of_cuts = [
+        f"X_M > {mXLL} & X_M < {mXUL}",
+        f"time > {timeLL} & time < {timeUL}",
+        f"B_ConstJpsi_MERR_1 > {sigmamLL} & B_ConstJpsi_MERR_1 < {sigmamUL}",
+    ]
+    cuts = f"( {' ) & ( '.join(list_of_cuts)} )"
+    return cuts
 
 # initialize ipanema3 and compile lineshapes
 ipanema.initialize(config.user["backend"], 1)
@@ -687,7 +763,7 @@ def mass_fitter(
     # Chose model {{{
 
     with_calib = False
-    if model == "ipatia":
+    if model == 'ipatia':
         pdf = ipatia_exponential
     elif model == "crystalball":
         pdf = cb_exponential3
@@ -742,6 +818,7 @@ def mass_fitter(
         _pars.unlock("b")
         pars = pars + _pars
     else:
+<<<<<<< HEAD:selection/mass_fit/bs.py
         # This is the prefit stage. Here we will lock the nsig to be 1 and we
         # will not use combinatorial background.
         pars["fsigBs"].value = 1
@@ -792,8 +869,8 @@ def mass_fitter(
             pars.add(dict(name="nR", value=1, min=-1, max=50, free=True, latex=r"n_r"))
             # }}}
         # Combinatorial background
-        pars.add(dict(name="b", value=-0.05, min=-1, max=1, free=False, latex=r"b"))
-        pars.add(dict(name="fcomb", formula="1-fsigBs", latex=r"N_{comb}"))
+      pars.add(dict(name='b',         value=-0.05, min=-1,  max=1,     free=False,  latex=r'b'))
+      pars.add(dict(name='fcomb',      formula="1-fsigBs",                          latex=r'N_{comb}'))
 
     if has_bd:
         # Create common set of Bd parameters
@@ -857,37 +934,21 @@ def mass_fitter(
     #     pars[name].init = res.params[name].value
     # res = False
     try:
-        res = ipanema.optimize(
-            fcn,
-            pars,
-            fcn_kwgs={"data": rd},
-            method="minuit",
-            verbose=True,
-            strategy=1,
-            tol=0.05,
-        )
-        if res.params["fsigBs"] < 1e-4:
-            print("fsigBs was fitted to be zero! this is not ")
-            res = False
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                               method='minuit', verbose=False, strategy=1,
+                               tol=0.05)
     except:
         res = False
     # res = False
     if not res:
         print("There was a problem with the fit. Let's try again.")
-        pars["fsigBs"].set(value=0.0, min=0.0, max=1)
-        pars["s1Bs"].set(value=0.0, init=0.0, min=-20, max=20, free=False)
-        pars["s2Bs"].set(value=0.0, init=0.0, min=-1, max=1, free=False)
-        pars["s0Bs"].set(value=1.0, init=1.0, free=True)
-        res = ipanema.optimize(
-            fcn,
-            pars,
-            fcn_kwgs={"data": rd},
-            method="minuit",
-            verbose=True,
-            strategy=1,
-            tol=0.05,
-        )
-        if with_calib:
+        pars['fsigBs'].set(value=0.0, min=0.0, max=1)
+        pars['s1Bs'].set(value=0.0, init=0.0, min=-20, max=20, free=False)
+        pars['s2Bs'].set(value=0.0, init=0.0, min=-1, max=1, free=False)
+        pars['s0Bs'].set(value=1.0, init=1.0, free=True)
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                               method='minuit', verbose=False, strategy=1,
+                               tol=0.05)
             pars = ipanema.Parameters.clone(res.params)
             pars.lock()
             pars["s1Bs"].set(value=0.0, init=0.0, min=-20, max=20, free=True)
@@ -905,16 +966,10 @@ def mass_fitter(
             pars = ipanema.Parameters.clone(res.params)
             for k, v in pars.items():
                 v.init = v.value
-            pars.unlock("fsigBs", "muBs", "b", "fsigBd")
-            res = ipanema.optimize(
-                fcn,
-                pars,
-                fcn_kwgs={"data": rd},
-                method="minuit",
-                verbose=True,
-                strategy=1,
-                tol=0.05,
-            )
+        pars.unlock('fsigBs', 'muBs', 'b', 'fsigBd')
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                               method='minuit', verbose=False, strategy=1,
+                               tol=0.05)
 
     if res:
         print(res)
@@ -1014,18 +1069,13 @@ def mass_fitter(
         #          sw(p, y, len(data)) * wLb != sw(p, y, wLb.sum())
         #          which one is correct? Lera does the RS and I did LS
         # sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y), _pars, _yields, ristra.get(rd.weight).sum())
-        sw = splot.compute_sweights(
-            lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y),
-            _pars,
-            _yields,
-            rd.weight,
-        )
-        for k, v in sw.items():
+        sw = splot.compute_sweights(lambda *x, **y: pdf(rd.mass, rd.merr, rd.pdf, *x, **y), _pars, _yields, rd.weight)
+        for k,v in sw.items():
             _sw = np.copy(_proxy)
             _sw[list(rd.df.index)] = v
             sw[k] = _sw
-        # for i in range(60, 152):
-        #     print(i, sw['fsigBs'][i])
+        for i in range(0, 100):
+            print(i, sw['fsigBs'][i])
         # print("sum of wLb", np.sum( rd.df.eval(mass_weight).values ))
         return (fpars, sw)
 
@@ -1039,18 +1089,19 @@ def mass_fitter(
 
 # command-line interface {{{
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     p = argparse.ArgumentParser(description=DESCRIPTION)
-    p.add_argument("--sample")
-    p.add_argument("--input-params", default=False)
-    p.add_argument("--output-params")
-    p.add_argument("--output-figures")
-    p.add_argument("--mass-model")
-    p.add_argument("--mass-weight")
-    p.add_argument("--mass-bin", default=False)
-    p.add_argument("--trigger")
-    p.add_argument("--sweights")
-    p.add_argument("--mode")
+  p.add_argument('--sample')
+  p.add_argument('--input-params', default=False)
+  p.add_argument('--output-params')
+  p.add_argument('--output-figures')
+  p.add_argument('--mass-model')
+  p.add_argument('--mass-weight')
+  p.add_argument('--mass-bin', default=False)
+  p.add_argument('--trigger')
+  p.add_argument('--sweights')
+  p.add_argument('--mode')
+  p.add_argument('--version')
     args = vars(p.parse_args())
 
     if args["sweights"]:

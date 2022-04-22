@@ -1,185 +1,294 @@
-__all__ = []
+__all__ = ['create_mass_bins', 'epsmKK']
+__author__ = ['Marcos Romero Lamas']
+__email__ = ['mromerol@cern.ch']
+
+
 import argparse
-import yaml
-from ROOT import *
-from SomeUtils.numericFunctionClass import NF
-import cPickle
-
+import os
 import uproot3 as uproot
-
-def argument_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input-file1', help='Path to the preselected input file')
-    parser.add_argument('--input-file2', help='Path to the uncut input file')
-    parser.add_argument('--input-tree-name-file1', default='DecayTree', help='Name of the tree')
-    parser.add_argument('--input-tree-name-file2', default='DecayTree', help='Name of the tree')
-    parser.add_argument('--output-dir', help='Output directory')
-    parser.add_argument('--mode', help='Name of the selection in yaml')
-    parser.add_argument('--year', help='Year of the selection in yaml')
-    return parser
+import numpy as np
+# import matplotlib.pyplot as plt
+import complot
 
 
 
-def epsmKK(input_file1, input_file2, input_tree_name_file1, input_tree_name_file2, output_dir, mode, year):
-    SWAVE = ('Swave' in mode)
+def create_mass_bins(nob):
+    """
+    Creates a set of bins
 
-    print(mode, input_file1, input_file2)
+    Parameters
+    ----------
+    nob: int
+      Number of mass bins to be created.
 
-    # t1 is the root file from the selection pipeline 
-    t1 = uproot.open(input_file1)[input_tree_name_file1]
-    # t2 is the EvtGen standalone root file
-    t2 = uproot.open(input_file2)[input_tree_name_file2]
+    Returns
+    -------
+    mass_bins: list
+      List with the edges for the required number of bins.
+    """
 
-    # build this list out of none.json parameters
-    mkk_bins = [[ 990 , 1008 ],[ 1008 , 1016 ],[ 1016 , 1020 ],[ 1020 , 1024 ], [ 1024 , 1032 ],[ 1032 , 1050 ]]
-    mkk_histos = []
-
-    NBINS_WIDE = 100 + 150*SWAVE
-    NBINS_NARROW = 200 + 300*SWAVE
-
-    ll = str(980.0)
-    ul = str(1060.0+140.0*SWAVE)
-
-    mKK = "X_M"
-    
-    mKK_true_Swave = "sqrt((hplus_TRUEP_E+hminus_TRUEP_E)*(hplus_TRUEP_E+hminus_TRUEP_E) - ((hplus_TRUEP_X+hminus_TRUEP_X)*(hplus_TRUEP_X+hminus_TRUEP_X)+(hplus_TRUEP_Y+hminus_TRUEP_Y)*(hplus_TRUEP_Y+hminus_TRUEP_Y)+(hplus_TRUEP_Z+hminus_TRUEP_Z)*(hplus_TRUEP_Z+hminus_TRUEP_Z)))"
-    
-    mKK_true = "sqrt(X_TRUEP_E*X_TRUEP_E-(X_TRUEP_X*X_TRUEP_X+X_TRUEP_Y*X_TRUEP_Y+X_TRUEP_Z*X_TRUEP_Z))"
-
-    truth_match = "(B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0))"#"abs(B_TRUEID)==531"#"B_BKGCAT!=60 && abs(B_TRUEID)==531"
-
-    truth_match_Swave = "(B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0))"#"abs(B_TRUEID)==531"#"B_BKGCAT!=60 && abs(B_TRUEID)==531"
-
-    mKK_true_mass_cut = mKK_true+">"+ll+"&&"+mKK_true+"<"+ul
-
-    mKK_true_Swave_mass_cut = mKK_true_Swave+">"+ll+"&&"+mKK_true_Swave+"<"+ul
-
-    # this only applies to the EvtGen standalone MC {{{
-
-    if SWAVE:
-        hname_str_WIDE = "hmkk_WIDE("+str(NBINS_WIDE)+","+ll+","+ul+")"
-        #t2.Draw(mKK_true_Swave+" >> "+hname_str_WIDE, mKK_true_Swave_mass_cut+"&&"+truth_match_Swave)
-        t2.Draw("1000*MKK >> "+hname_str_WIDE)
-        hname_str_NARROW = "hmkk_NARROW("+str(NBINS_NARROW)+","+ll+","+ul+")"
-        #t2.Draw(mKK_true_Swave+" >> "+hname_str_NARROW, mKK_true_Swave_mass_cut+"&&"+truth_match_Swave)
-        t2.Draw("1000*MKK >> "+hname_str_NARROW)
+    if int(nob) == 1:
+        mass_bins = [990, 1050]
+    elif int(nob) == 2:
+        mass_bins = [990, 1020, 1050]
+    # elif int(nob) == 3:
+    #     mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    elif int(nob) == 4:
+        # mass_bins = [990, 1017, 1020, 1027, 1050]  # equipoblado
+        # mass_bins = [990, 1013, 1020, 1027, 1050]  # 1st -- best
+        # mass_bins = [990, 1011, 1020, 1027, 1050]  # 2nd
+        # mass_bins = [990, 1018, 1020, 1027, 1050]  # 3rd -- nada
+        mass_bins = [990, 1012, 1020, 1027, 1050]  # 4nd -- definitive !!!!!
+    elif int(nob) == 5:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    elif int(nob) == 6:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+        # mass_bins = [990, 1014.78, 1018.41, 1020, 10223.42, 1033, 1050]
     else:
-        hname_str_WIDE = "hmkk_WIDE("+str(NBINS_WIDE)+","+ll+","+ul+")"
-        #t2.Draw(mKK_true+" >> "+hname_str_WIDE, mKK_true_mass_cut+"&&"+truth_match)
-        t2.Draw("1000*MKK >> "+hname_str_WIDE)
-        hname_str_NARROW = "hmkk_NARROW("+str(NBINS_NARROW)+","+ll+","+ul+")"
-        #t2.Draw(mKK_true+" >> "+hname_str_NARROW, mKK_true_mass_cut+"&&"+truth_match)
-        t2.Draw("1000*MKK >> "+hname_str_NARROW)
+        raise ValueError("Number of bins cannot be higher than 6")
+    return mass_bins
+
+
+def create_sigmam_bins(nob):
+    """
+    Creates a set of bins
+
+    Parameters
+    ----------
+    nob: int
+      Number of mass bins to be created.
+
+    Returns
+    -------
+    mass_bins: list
+      List with the edges for the required number of bins.
+    """
+
+    if int(nob) == 1:
+        mass_bins = [0, 20]
+    elif int(nob) == 2:
+        mass_bins = [0, 5.66, 20]
+    elif int(nob) == 3:
+        mass_bins = [0, 5.22, 6.13, 20]
+    elif int(nob) == 4:
+        mass_bins = [0, 4.97, 5.66, 6.42, 20]
+    elif int(nob) == 5:
+        mass_bins = [0, 4.80, 5.40, 5.93, 6.62, 20]
+    else:
+        raise ValueError("Number of bins cannot be higher than 5")
+    return mass_bins
+
+
+def create_time_bins(nob):
+    """
+    Creates a set of bins
+
+    Parameters
+    ----------
+    nob: int
+      Number of mass bins to be created.
+
+    Returns
+    -------
+    mass_bins: list
+      List with the edges for the required number of bins.
+    """
+
+    if int(nob) == 1:
+        mass_bins = [990, 1050]
+    elif int(nob) == 2:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    elif int(nob) == 3:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    elif int(nob) == 4:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    elif int(nob) == 5:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    elif int(nob) == 6:
+        mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+    else:
+        raise ValueError("Number of bins cannot be higher than 6")
+    return mass_bins
+
+def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
+    r"""
+    Get efficiency
+
+    .. math::
+      x_2
+
+
+    Parameters
+    ----------
+    df1 : pandas.DataFrame
+      Sample from the selection pipeline
+    df2 : pandas.DataFrame
+      Particle gun generated Sample
+    mode : str
+      Decay mode of the sample coming from the selection pipeline
+    year : int
+      Year of the sample coming from the selection pipeline
+    nbins : int
+      Number of bins to compute the CSP factors
+    mass_branch : string
+      Branch to be used as mass for the X meson
+    weight : string or bool
+      Weight to be used in the histograms. If it is set to false, then a weihgt
+      of ones will be used.
+
+    Returns
+    -------
+    masses: numpy.ndarray
+      Mass bins
+    ratios: numpy.ndarray
+      Efficiency
+    """
+
+    has_swave = True if 'Swave' in mode else False
+
+    if not weight:
+        weight = f'{mass_branch}/{mass_branch}'
+
+    mass_knots = create_mass_bins(int(nbins))
+    mLL, mUL = mass_knots[0]-10, mass_knots[-1]+10+140*has_swave
+
+    nwide = 100 + 150*has_swave
+    nnarr = 200 + 300*has_swave
+
+    # particle gun sample histogram {{{
+
+    hwide = np.histogram(df2['mHH'].values, nwide, range=(mLL, mUL))[0]
+    hnarr = np.histogram(df2['mHH'].values, nnarr, range=(mLL, mUL))[0]
+    # just to have the same hitogram as the one from ROOT::Draw
+    hwide = np.array([0.] + hwide.tolist())
+    hnarr = np.array([0.] + hnarr.tolist())
 
     # }}}
 
-    hmkk_WIDE = (gROOT.FindObject("hmkk_WIDE"))
-    hmkk_NARROW = (gROOT.FindObject("hmkk_NARROW"))
+    # histogram true mass of the MC {{{
 
-    for i in range(len(mkk_bins)):
-        hname = 'epsmKK_'+str(i)
-        if(i == 0 or i == 5):
-            NBINS = NBINS_WIDE
+    hb = []
+    for i, ll, ul in zip(range(int(nbins)), mass_knots[:-1], mass_knots[1:]):
+        if ll == mass_knots[0] or ul == mass_knots[-1]:
+            _nbins = nwide
         else:
-            NBINS = NBINS_NARROW
-        hname_str = hname+"("+str(NBINS)+","+ll+","+ul+")"
-        if(SWAVE==0):
-            cut = mKK + " > " + str(mkk_bins[i][0]) + " && " + mKK + " < "+str(mkk_bins[i][1]) + " && " + mKK_true_mass_cut + " && " + truth_match
-        else:
-            cut = mKK + " > " + str(mkk_bins[i][0]) + " && " + mKK + " < "+str(mkk_bins[i][1]) + " && " + mKK_true_Swave_mass_cut + " && " + truth_match_Swave
-            
-        #print("cut:",cut)
+            _nbins = nnarr
+        mass_cut = f"{mass_branch} > {ll} & {mass_branch} < {ul}"
+        true_mass_cut = f"truemHH > {mLL} & truemHH < {mUL}"
+        _weight = (f"({mass_cut}) & ({true_mass_cut}) & (truthMatch)")
+        _w = df1.eval(f"( {_weight} ) * {weight}")
+        _v = df1['truemHH'].values
+        _c, _b = np.histogram(_v, _nbins, weights=_w, range=(mLL, mUL))
+        # print("bins", _b)
+        hb.append([_b, [0] + _c.tolist() + [0]])
+        # hb.append([0.5*(_b[1:]+_b[:-1]), [0] + _c.tolist() + [0]])
 
-        if(SWAVE==0):        
-            t1.Draw(mKK_true + " >>" + hname_str,cut)
-        else:
-            t1.Draw(mKK_true_Swave + " >>" + hname_str,"gb_weights*("+cut+")")        
-        mkk_histos.append(gROOT.FindObject(hname))
+    # }}}
 
-    graphs = [TGraph(),TGraph(),TGraph(),TGraph(),TGraph(),TGraph()]
-    ratios = [[],[],[],[],[],[],[]]
-    masses = [[],[],[],[],[],[],[]]
-    ratiosid = []
-    NPOINT = 0
+    # build afficiency histograms {{{
 
-    m_cut_off = 980.
-    for j in range(len(mkk_histos)):
-        if(j == 0 or j == 5):
-            NBINS = NBINS_WIDE
-            print("NBINS WIDE=",NBINS)
+    masses = []
+    ratios = []
+    for j in range(len(hb)):
+        _ratios = []
+        _masses = []
+        if(j == 0 or j == int(nbins)-1):
+            NBINS = nwide
+            # print("NBINS WIDE=",NBINS)
             for i in range(NBINS):
-                ratio = mkk_histos[j][i]*1./max(hmkk_WIDE.GetBinContent(i),1)
-                
-                if(hmkk_WIDE.GetBinContent(i) == 0): ratio = 0
-                
-                m = hmkk_WIDE.GetBinCenter(i)
-                if(j!=0 and m <m_cut_off and SWAVE):
+                ratio = hb[j][1][i] / max(hwide[i], 1)
+                if j != 0 and hb[j][1][i] < mLL and has_swave:
                     ratio = 0.
-                
-                ratios[j].append(ratio)
-                masses[j].append(hmkk_WIDE.GetBinCenter(i))
+                ratio = 0 if hwide[i] == 0 else ratio
+                _ratios.append(ratio)
+                _masses.append(0.5 * (hb[j][0][i] + hb[j][0][i+1]))
         else:
-            NBINS = NBINS_NARROW
-            print("NBINS NARROW =",NBINS_NARROW)
+            NBINS = nnarr
+            # print("NBINS NARROW =",NBINS_NARROW)
             for i in range(NBINS):
-                ratio = mkk_histos[j][i]*1./max(hmkk_NARROW.GetBinContent(i),1)
-                 
-                if(hmkk_NARROW.GetBinContent(i) == 0): ratio = 0
-                 
-                m = hmkk_NARROW.GetBinCenter(i)
-                if(j!=0 and m <m_cut_off and SWAVE):
+                ratio = hb[j][1][i] / max(hnarr[i], 1)
+                if j != 0 and hb[j][1][i] < mLL and has_swave:
                     ratio = 0.
-                
-                ratios[j].append(ratio)
-                masses[j].append(hmkk_NARROW.GetBinCenter(i))  
-                
-    for j in range(len(mkk_histos)):
-        NPOINT = 0   
-        if(j==0 or j==5):
-            for i in range(len(ratios[0])): 
-                graphs[j].SetPoint(NPOINT,hmkk_WIDE.GetBinCenter(i),ratios[j][i])
-                NPOINT += 1
-        else:
-            for i in range(len(ratios[1])):
-                graphs[j].SetPoint(NPOINT,hmkk_NARROW.GetBinCenter(i),ratios[j][i])
-                NPOINT += 1
+                ratio = 0 if hnarr[i] == 0 else ratio
+                _ratios.append(ratio)
+                _masses.append(0.5 * (hb[j][0][i] + hb[j][0][i+1]))
+        masses.append(_masses)
+        ratios.append(_ratios)
 
-    graphs[1].SetLineColor(kGreen)
-    graphs[1].SetMarkerColor(kGreen)
-    graphs[2].SetLineColor(kRed)
-    graphs[2].SetMarkerColor(kRed)
-    graphs[3].SetLineColor(kBlue)
-    graphs[3].SetMarkerColor(kBlue)
-    graphs[4].SetLineColor(kMagenta)
-    graphs[4].SetMarkerColor(kMagenta)
-    graphs[5].SetLineColor(kCyan)
-    graphs[5].SetMarkerColor(kCyan)
+    # }}}
 
-    c = TCanvas()
-    graphs[0].GetXaxis().SetTitle("m_{KK} [MeV/c^{2}]")
-    graphs[0].GetYaxis().SetTitle("#epsilon(m_{KK})")
-    graphs[0].GetXaxis().SetLimits(float(ll)-10,float(ul)+10)
-    max_hist = {"2015": 0.1+SWAVE*0.05, "2016": 0.5-SWAVE*0.35, "2017": 0.3-SWAVE*0.15, "2018": 0.3-SWAVE*0.15, "All": 1.-SWAVE*0.85}
-    graphs[0].GetHistogram().SetMaximum(max_hist[str(year)])
-    graphs[0].Draw()
-    graphs[1].Draw("LP")
-    graphs[2].Draw("LP")
-    graphs[3].Draw("LP")
-    graphs[4].Draw("LP")
-    graphs[5].Draw("LP")
+    # plot and dump {{{
 
-    #if SWAVE: gPad.SetLogy()
+    # ### To dump: NF with ratios and masses
+    # functions = []
+    # for i in range(len(mkk_bins)):
+    #     functions.append(NF(masses[i],ratios[i]))
+    #     # cPickle.dump(functions[i],open(),"w"))
+    #     with open(dsafdsafadskfahds, "wb") as output_file:
+    #          cPickle.dump(functions[i], output_file)
 
-    c.SaveAs(output_dir+"epsmKK_"+str(year)+SWAVE*"_SWave"+".pdf")
+    # }}}
 
-    ### To dump: NF with ratios and masses
-    functions = []
-    for i in range(len(mkk_bins)):
-        functions.append(NF(masses[i],ratios[i]))
-        cPickle.dump(functions[i],file(output_dir+"eff_hist_"+str(mkk_bins[i][0])+"_"+str(mkk_bins[i][1]),"w"))    
+    return masses, ratios
+
+# }}}
+
+
+# command line {{{
 
 if __name__ == '__main__':
-    parser = argument_parser()
-    args = parser.parse_args()
-    epsmKK(**vars(args))
+    p = argparse.ArgumentParser()
+    p.add_argument('--simulated-sample',
+                   help='Path to the preselected input file')
+    p.add_argument('--pgun-sample', help='Path to the uncut input file')
+    p.add_argument('--output-figure', help='Output directory')
+    p.add_argument('--output-histos', help='Output directory')
+    p.add_argument('--mode', help='Name of the selection in yaml')
+    p.add_argument('--year', help='Year of the selection in yaml')
+    p.add_argument('--nbins', help='Year of the selection in yaml')
+    args = vars(p.parse_args())
 
+    mass_branch = 'mHH'
+
+    # selection branches
+    list_branches = [
+        mass_branch, 'gbWeights', 'truemHH', 'truthMatch'
+    ]
+
+    # load samples as dataframes
+    sim = uproot.open(args['simulated_sample'])
+    sim = sim[list(sim.keys())[0]].pandas.df(branches=list_branches)
+    gun = uproot.open(args['pgun_sample'])
+    gun = gun[list(gun.keys())[0]].pandas.df()
+
+    # choose weights
+    if args['mode'] == 'MC_Bs2JpsiKK_Swave':
+        weight = 'gb_weights'
+    else:
+        weight = False
+
+    print(args['nbins'])
+    masses, ratios = epsmKK(sim, gun, mode=args['mode'], year=args['year'],
+                            nbins=args['nbins'], mass_branch=mass_branch,
+                            weight=False)
+
+    # create efficiency plot
+    fig, axplot = complot.axes_providers.axes_plot()
+    for i in range(int(args['nbins'])):
+        axplot.fill_between(masses[i], ratios[i], 0, alpha=0.5)
+    axplot.set_xlabel(r"$m(K^+K^-)$")
+    axplot.set_ylabel(r"Efficiency, $\epsilon$")
+    fig.savefig(args['output_figure'])
+    print(args['output_histos'])
+    # dump results
+    np.save(os.path.join(args['output_histos']), [masses, ratios],
+            allow_pickle=True)
+
+    # _masses, _ratios = np.load(os.path.join(args['output_histos']), allow_pickle=True)
+    # print(_masses, masses)
+    # print(_ratios, ratios)
+
+# }}}
+
+
+# vim: fdm=marker

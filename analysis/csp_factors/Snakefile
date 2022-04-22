@@ -29,7 +29,7 @@ rule csp_factors_from_git:
   threads: 128
   wildcard_constraints:
     # version = "v0r0",#"(v0r0|v0r1)",                      # v0r0 not allowed
-    csp = "(vgc|run2|yearly)"
+    csp = "(vgc)"
   params:
     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
     linker = "analysis/params/csp_factors/linker.json"
@@ -52,57 +52,75 @@ rule csp_factors_from_git:
 # }}}
 
 
-# THESE RULES ARE TO COMPUTE CSP FACTORS WITHIN PHIS-SCQ {{{
-#
-# #files_Csp_den = {'MC_Bs2JpsiPhi': '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsjpsiphi_CPLH_10M.root', 'MC_Bs2JpsiKK_Swave': '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsmumukk_RunI_new.root'}
-# trees_Csp_den = {'MC_Bs2JpsiPhi': 'bsjpsikk',
-#                  'MC_Bs2JpsiKK_Swave': 'bsmumukk'}
-#
-# rule csp_factors_efficiency_hist:
-#     """
-#     Efficiency histograms in m(KK) for Csp factors.
-#     """
-#     input:
-#         script = '../Csp/epsmKK.py',
-#     output:
-#         directory(tuples_path('Csp/{mode}/{year}/eff_hists/'))
-#     params:
-#         csp = "analysis/params/csp_factors/Bs2JpsiPhi/none.json",
-#         name_file1 = "{SAMPLES}/{year}/MC_{mode}/{version}.root",
-#         name_file1 = "{SAMPLES}/{year}/TOY_{mode}/{version}.root",
-#         # name_file1 = lambda wildcards: config['localeos'] + '/' + config['version']+ '/{}/{}/{}_{}_selected_bdt_{}.root'.format(wildcards.mode, wildcards.year, wildcards.mode, wildcards.year, config['version']),
-#         # name_file2 = lambda wildcards: config['localeos'] + '/MC_Csp_standalone/BsMuMuKK_' + '{}.root'.format(wildcards.year) if 'Swave' in wildcards.mode else '/eos/lhcb/wg/B2CC/phis-run2/mc/new1/bsjpsiphi_CPLH_10M.root', 
-# 	tree_name_file2 = lambda wildcards: trees_Csp_den[wildcards.mode]
-#     shell:
-#         config['runUrania'] + ' ' +
-#         'python {input.script} --input-file1 {params.name_file1} \
-#                               --input-file2 {params.name_file2} \
-#                               --input-tree-name-file2 {params.tree_name_file2} \
-#                               --output-dir {output} \
-#                               --mode {wildcards.mode}\
-#                               --year {wildcards.year}'
-#
-#
-#
-# rule csp_factors_calculator:
-#     """
-#     Calculate Csp factors and save them in a json file.
-#     """
-#     input:
-#         script = '../Csp/Csp_factors.py',
-#         dir1 = expand(rules.Csp_eff_hist.output, mode='MC_Bs2JpsiPhi', year='{year}'),
-#         dir2 = expand(rules.Csp_eff_hist.output, mode='MC_Bs2JpsiKK_Swave', year='{year}')
-#     output:
-#         tuples_path('Csp/{year}/CspFactors{year}.json').replace('selection/output/tuples','fitinputs/'+config['version'])
-#     shell:
-#         config['runUrania'] + ' ' +
-#         'python {input.script} --input-dir1 {input.dir1} \
-#                               --input-dir2 {input.dir2} \
-#                               --year {wildcards.year}\
-#                               --output {output}'
-#
-#
-#
+# rules to compute csp factors {{{
+
+rule csp_factors_efficiency_hist_yearly:
+    """
+    Efficiency histograms in m(KK) for Csp factors.
+    """
+    input:
+        mc = SAMPLES+"/{year}/{mode}/{version}.root",
+        pgun = SAMPLES+"/{year}/GUN_Bs2JpsiPhi/{version}.root",
+    output:
+        histos = 'output/params/mass_efficiencies/{year}/{mode}/{version}_yearly{nbins}.npy',
+        plots = 'output/figures/mass_efficiencies/{year}/{mode}/{version}_yearly{nbins}.pdf'
+    params:
+        script = 'analysis/csp_factors/efficiency.py',
+    log:
+        "output/log/csp_factors_efficiency/{year}/{mode}/{version}_yearly{nbins}.log"
+    run:
+        shell(f"""(time\
+        python {params.script} \
+        --simulated-sample {input.mc} \
+        --pgun-sample {input.pgun} \
+        --output-figure {output.plots} \
+        --output-histos {output.histos} \
+        --mode {wildcards.mode} \
+        --year {wildcards.year} \
+        --nbins {wildcards.nbins} \
+        ) &> {log}""")
+
+
+rule csp_factors_calculate_yearly:
+    """
+    Calculate Csp factors and save them in a json file.
+    """
+    wildcard_constraints:
+        mode = "MC_.*"
+    input:
+        histos = 'output/params/mass_efficiencies/{year}/{mode}/{version}_yearly{nbins}.npy',
+    output:
+        csp = 'output/params/csp_factors/{year}/{mode}/{version}_yearly{nbins}.json',
+    params:
+        script = 'analysis/csp_factors/calculate_coeffs.py',
+    log:
+        "output/log/csp_factors_calculate/{year}/{mode}/{version}_yearly{nbins}.log"
+    run:
+        shell(f"""(time\
+        python {params.script}\
+        --output {output.csp}\
+        --histos {input.histos}\
+        --mode {wildcards.mode}\
+        --year {wildcards.year}\
+        --nbins {wildcards.nbins}\
+        ) &> {log}""")
+
+
+rule csp_factors_merge:
+    """
+    Calculate Csp factors and save them in a json file.
+    """
+    wildcard_constraints:
+        mode = "(Bs2JpsiPhi)"
+    input:
+        'output/params/csp_factors/{year}/MC_Bs2JpsiPhi/{version}_yearly{nbins}.json',
+    output:
+        'output/params/csp_factors/{year}/{mode}/{version}_yearly{nbins}.json',
+    log:
+        "output/log/csp_factors_calculate/{year}/{mode}/{version}_yearly{nbins}.log"
+    run:
+        shell(f"cp {input} {output}")
+
 # rule csp_factors_merge_files_for_Csp:
 #     params:
 #         file_names = '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'+config['version']+'/{mode}/2015/{mode}_2015_selected_bdt_'+config['version']+'.root ' + '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'+config['version']+'/{mode}/2016/{mode}_2016_selected_bdt_'+config['version']+'.root ' + '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'+config['version']+'/{mode}/2017/{mode}_2017_selected_bdt_'+config['version']+'.root ' + '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/'+config['version']+'/{mode}/2018/{mode}_2018_selected_bdt_'+config['version']+'.root ' 

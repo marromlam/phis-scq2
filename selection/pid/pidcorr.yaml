@@ -1,0 +1,67 @@
+common: &common
+  hplus:
+    'ProbNNk': 'K_MC15TuneV1_ProbNNK_Brunel_Mod2'
+    'ProbNNpi': 'K_MC15TuneV1_ProbNNpi_Brunel'
+    'ProbNNp': 'K_MC15TuneV1_ProbNNp_Brunel'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+  <<: *common
+  hminus:
+    'ProbNNk': 'K_MC15TuneV1_ProbNNK_Brunel_Mod2'
+    'ProbNNpi': 'K_MC15TuneV1_ProbNNpi_Brunel'
+    'ProbNNp': 'K_MC15TuneV1_ProbNNp_Brunel'
+
+MC_Bs2JpsiPhi_dG0:
+    <<: *MC_Bs2JpsiPhi
+
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiKK_Swave:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_Prompt:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bd2JpsiKstar:
+  <<: *common
+  hminus:
+    'ProbNNk': 'pi_MC15TuneV1_ProbNNK_Brunel'
+    'ProbNNpi': 'pi_MC15TuneV1_ProbNNpi_Brunel_Mod2'
+    'ProbNNp': 'pi_MC15TuneV1_ProbNNp_Brunel'
+
+MC_Bu2JpsiKplus:
+  <<: *common
+
+MC_Bs2JpsiPhi_fromLb_kp:
+  hplus:
+    'ProbNNp': 'K_MC15TuneV1_ProbNNp_Brunel'
+    'ProbNNpi': 'K_MC15TuneV1_ProbNNpi_Brunel'
+    'ProbNNk': 'K_MC15TuneV1_ProbNNK_Brunel_Mod2'
+  hminus:
+    'ProbNNp': 'p_LbLcPi_MC15TuneV1_ProbNNp_Brunel'
+    'ProbNNpi': 'p_LbLcPi_MC15TuneV1_ProbNNpi_Brunel'
+    'ProbNNk': 'p_LbLcPi_MC15TuneV1_ProbNNK_Brunel'
+
+MC_Bs2JpsiPhi_fromLb_pk:
+  hplus:
+    'ProbNNp'  : 'p_LbLcPi_MC15TuneV1_ProbNNp_Brunel'
+    'ProbNNpi' : 'p_LbLcPi_MC15TuneV1_ProbNNpi_Brunel'
+    'ProbNNk'  : 'p_LbLcPi_MC15TuneV1_ProbNNK_Brunel'
+  hminus:
+    'ProbNNp'  : 'K_MC15TuneV1_ProbNNp_Brunel'
+    'ProbNNpi' : 'K_MC15TuneV1_ProbNNpi_Brunel'
+    'ProbNNk'  : 'K_MC15TuneV1_ProbNNK_Brunel_Mod2'
+
+MC_Bs2DsPi:
+  Pi1:
+    'PIDK': 'pi_CombDLLK_Brunel'
+  Pi2:
+    'PIDK': 'pi_CombDLLK_Brunel'
+  K1:
+    'PIDK': 'K_CombDLLK_Brunel'
+    'PIDp': 'K_CombDLLp_Brunel'
+  K2:
+    'PIDK': 'K_CombDLLK_Brunel'
+    'PIDp': 'K_CombDLLp_Brunel'

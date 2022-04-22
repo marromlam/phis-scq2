@@ -1,0 +1,26 @@
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+  muplus:
+    'ProbNNmu': 'mu_MC15TuneV1_ProbNNmu_Brunel_NoPt'
+  muminus:
+    'ProbNNmu': 'mu_MC15TuneV1_ProbNNmu_Brunel_NoPt'
+
+MC_Bs2JpsiPhi_dG0:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiKK_Swave:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_Prompt:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bd2JpsiKstar:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bu2JpsiKplus:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_fromLb:
+  <<: *MC_Bs2JpsiPhi

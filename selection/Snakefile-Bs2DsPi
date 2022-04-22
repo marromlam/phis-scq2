@@ -1,0 +1,60 @@
+"""
+Set of rules to produce Bs->Dspi ntuples for Bs -> J/psi Phi analysis.
+Available wildcards are defined in config.yaml
+"""
+
+rule upload_to_eos_pid_dspi:
+    """
+    Generic rule.
+    Copy output of merge_polarities rule to eos path specified in config.yaml.
+    The new folder with the name of version specified in `config.yaml` will be created
+    and this version will also be added to tuple name
+    """
+    input:
+        script = 'tools/cp_to_eos.py',
+        files = lambda wildcards: expand(rules.merge_polarities.output, mode=wildcards.mode,
+                                            strip_sim=config['strip_sim'][wildcards.mode][wildcards.year],
+                                            year=wildcards.year)
+    output:
+        directory = protected(directory('{}/{}/PID/{}/{}'.format(config['eos'], config['version'], '{mode}','{year}'))),
+    shell:
+        'python {input.script} --input-files {input.files} \
+                               --output-directory {output.directory}'
+
+
+
+rule upload_to_eos_dspi:
+    """
+    Generic rule.
+    Copy output of apply_preselection_{data/mc} rule to eos path specified in config.yaml.
+    The new folder with the name of version specified in `config.yaml` will be created
+    and this version will also be added to tuple name
+    """
+    input:
+        script = 'tools/cp_to_eos.py',
+        files =  lambda wildcards: expand(rules.apply_preselection_mc.output,
+                                             strip_sim=config['strip_sim'][wildcards.mode][wildcards.year],
+                                                    mode=wildcards.mode,
+                                                    year=wildcards.year) if wildcards.mode == 'MC_Bs2DsPi' else                                           
+                                   expand(rules.apply_preselection_data.output, 
+                                                  mode=wildcards.mode,
+                                                  year=wildcards.year)                                            
+    output:
+        directory = protected(directory('{}/{}/{}/{}'.format(config['eos'], config['version'], '{mode}', '{year}'))),
+    params:
+        version = config['version'],
+    shell:
+        'python {input.script} --input-files {input.files}\
+                               --version {params.version} \
+                               --output-directory {output.directory}'
+    
+rule upload_to_eos_all:
+   """
+   Run rule upload_to_eos for all years
+   """
+   input:
+        #expand(rules.upload_to_eos_dspi.output, year=['2016','2017','2018'], mode=['Bs2DsPi','MC_Bs2DsPi'])
+        expand(rules.upload_to_eos_dspi.output, year='2015', mode='Bs2DsPi')
+        #expand(rules.upload_to_eos_pid_dspi.output, year=['2016','2017','2018'], mode='MC_Bs2DsPi')
+
+

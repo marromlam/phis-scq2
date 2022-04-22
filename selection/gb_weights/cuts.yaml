@@ -1,0 +1,29 @@
+Bs2JpsiPhi:  # &Bs2JpsiPhi
+  'B_cuts_SW_GBW': 'B_ConstJpsi_M_1 > 5320. && B_ConstJpsi_M_1 < 5420.'
+
+Bs2JpsiPhi_Prompt:  # &Bs2JpsiPhi_Prompt
+  'B_cuts_SW_GBW': 'B_ConstJpsi_M_1 > 5320. && B_ConstJpsi_M_1 < 5420.'
+
+Bd2JpsiKstar:  # &Bd2JpsiKstar
+  'B_cuts_SW_GBW': 'B_ConstJpsi_M_1 > 5230. && B_ConstJpsi_M_1 < 5330.'
+
+Bu2JpsiKplus:  # &Bu2JpsiKplus
+  'B_cuts_SW_GBW': 'B_ConstJpsi_M_1 > 5240. && B_ConstJpsi_M_1 < 5320.'
+
+MC_Bs2JpsiPhi:  # &MC_Bs2JpsiPhi
+  'MC_specific': 'B_BKGCAT == 0 || (B_BKGCAT == 50 && B_TRUETAU > 0)'
+
+MC_Bs2JpsiPhi_dG0:  # &MC_Bs2JpsiPhi_dG0
+  'MC_specific': 'B_BKGCAT == 0 || (B_BKGCAT == 50 && B_TRUETAU > 0)'
+
+MC_Bs2JpsiPhi_Prompt:  # &MC_Bs2JpsiPhi_Prompt
+  'MC_specific': ''
+
+MC_Bs2JpsiKK_Swave:  # &MC_Bs2JpsiKK_Swave
+  'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0)'
+
+MC_Bd2JpsiKstar:  # &MC_Bd2JpsiKstar
+  'MC_specific': 'B_BKGCAT == 0 || (B_BKGCAT == 50 && B_TRUETAU > 0)'
+
+MC_Bu2JpsiKplus:  # &MC_Bu2JpsiKplus
+  'MC_specific': 'B_BKGCAT == 0 || (B_BKGCAT == 50 && B_TRUETAU > 0)'

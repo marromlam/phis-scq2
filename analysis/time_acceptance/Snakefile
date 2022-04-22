@@ -504,7 +504,7 @@ rule lifetime_single_plot:
     --trigger {wildcards.trigger}\
     --timeacc {wildcards.timeacc}\
     --plot {wildcards.plot}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Simultaneous Time Acceptance", f" ", output)
 
 # }}}

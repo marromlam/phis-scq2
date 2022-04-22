@@ -1,0 +1,86 @@
+common: &common
+    'L0_cuts': 'B_L0Global_Dec'
+
+Bs2JpsiPhi: &Bs2JpsiPhi
+    <<: *common
+    'B_cuts': 'B_ConstJpsi_M_1 > 5200. && B_ConstJpsi_M_1 < 5550.'
+    'phi_cuts': 'X_M > 990. && X_M < 1050.'
+    'B_TAU_cuts': '(B_LOKI_DTF_CTAUERR/{C_LIGHT} < 0.15) && (B_LOKI_DTF_CTAU/{C_LIGHT} > 0.3 && B_LOKI_DTF_CTAU/{C_LIGHT} < 15.)'
+    'HLT1_cuts': 'Jpsi_Hlt1DiMuonHighMassDecision_TOS || Jpsi_Hlt1TrackMuonDecision_TOS || B_Hlt1TwoTrackMVADecision_TOS'
+    'HLT2_cuts': 'Jpsi_Hlt2DiMuonDetachedJPsiDecision_TOS'
+    'Lambda_b_veto': '!(((hplus_ProbNNp_corr > 0.7) && (hplus_ProbNNp_corr > hminus_ProbNNp_corr) && (abs(B_pKMuMuKplus_M_1 - 5619.51) < 15.)) || ((hminus_ProbNNp_corr > 0.7) && (hminus_ProbNNp_corr > hplus_ProbNNp_corr) && (abs(B_pKMuMuKminus_M_1 - 5619.51) < 15.)))'
+    'Bd_veto': '!(((hplus_ProbNNk_corr < 0.35 || hplus_ProbNNpi_corr > 0.7) && (hplus_ProbNNpi_corr > hminus_ProbNNpi_corr) && (abs(B_B2KpPiJpsi_M_1 - 5279.63) < 15.)) || ((hminus_ProbNNk_corr < 0.35 || hminus_ProbNNpi_corr > 0.7) && (hminus_ProbNNpi_corr > hplus_ProbNNpi_corr) && (abs(B_B2KmPiJpsi_M_1 - 5279.63) < 15.)))'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+    <<: *Bs2JpsiPhi
+    'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
+
+MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+    <<: *MC_Bs2JpsiPhi
+
+Bs2JpsiPhi_Lb: &Bs2JpsiPhi_Lb
+    <<: *Bs2JpsiPhi
+    'Lambda_b_veto': ''
+    'Bd_veto': ''
+
+Bs2JpsiPhi_Prompt: &Bs2JpsiPhi_Prompt
+    <<: *Bs2JpsiPhi
+    'B_TAU_cuts': ''
+    'HLT1_cuts': 'Jpsi_Hlt1DiMuonHighMassDecision_TOS'
+    'HLT2_cuts': 'Jpsi_Hlt2DiMuonJPsiDecision_TOS'
+
+MC_Bs2JpsiPhi_Prompt:
+    <<: *Bs2JpsiPhi_Prompt
+    'MC_specific': ''
+
+Bd2JpsiKstar: &Bd2JpsiKstar
+    <<: *Bs2JpsiPhi
+    'B_cuts': 'B_ConstJpsi_M_1 > 5150. && B_ConstJpsi_M_1 < 5450.'
+    'phi_cuts': ''
+    'pion_cuts': '(hminus_PT > 250.) && (hminus_PIDK < 0. && hminus_PIDK != -1000.)'
+    'Lambda_b_veto': '!((hminus_ProbNNp_corr > 0.7) && (abs(B_JpsipK_M_1 - 5619.51) < 15.))'
+    'Bd_veto': '!((hminus_ProbNNk_corr > 0.7) && (abs(B_JpsiKK_M_1 - 5366.89) < 30.))'
+
+MC_Bd2JpsiKstar:
+    <<: *Bd2JpsiKstar
+    'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
+
+Bu2JpsiKplus: &Bu2JpsiKplus
+    <<: *Bs2JpsiPhi
+    'B_cuts': 'B_ConstJpsi_M_1 > 5150. && B_ConstJpsi_M_1 < 5450.'
+    'phi_cuts': ''
+    'Lambda_b_veto': ''
+    'Bd_veto': ''
+
+MC_Bu2JpsiKplus:
+    <<: *Bu2JpsiKplus
+    'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
+
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+    <<: *MC_Bs2JpsiPhi_dG0
+
+Bs2DsPi: &Bs2DsPi
+    'HLT1_cuts'  : 'B_Hlt1TrackMVADecision_TOS || B_Hlt1TwoTrackMVADecision_TOS'
+    'HLT2_cuts'  : 'B_Hlt2Topo2BodyDecision_TOS||B_Hlt2Topo3BodyDecision_TOS||B_Hlt2Topo4BodyDecision_TOS'
+    'Pi2_cuts'   : 'Pi2_P>2000. && Pi2_PT>400 && Pi2_IPCHI2_OWNPV>36. && Pi2_PIDK_corr < 0. && Pi2_isMuon == 0 && Pi2_TRACK_CHI2NDOF<4.0 '
+    'Pi1_cuts'   : 'Pi1_PIDK_corr < 8. && Pi1_IPCHI2_OWNPV>9. && Pi1_TRACK_CHI2NDOF<4.0'
+    'K1_cuts'    : 'K1_PIDK_corr > 5. && K1_IPCHI2_OWNPV>9. && K1_TRACK_CHI2NDOF<4.0'
+    'K2_cuts'    : 'K2_PIDK_corr > 5. && K2_IPCHI2_OWNPV>9. && K2_TRACK_CHI2NDOF<4.0'
+    'Ds_cuts'    : 'Ds_MM < 2003 && Ds_MM > 1933 && Ds_IPCHI2_OWNPV > 4. '
+    'B_cuts'     : 'B_PVFitDs_M_1 > 5000. && B_PVFitDs_M_1 < 6000. && B_DIRA_OWNPV>0.9999 && B_IPCHI2_OWNPV<16. && B_MINIPCHI2<15.'
+    'B_TAU_cuts' : 'B_LOKI_DTF_CTAU/{C_LIGHT} > 0.3 && B_LOKI_DTF_CTAU/{C_LIGHT} < 14. && B_LOKI_DTF_CTAUERR/{C_LIGHT} < 0.15'
+    'veto_K1'    : 'K1_PIDK_corr > 10. || MpiKpi < 1840. || MpiKpi > 1900.'
+    'veto_K2'    : 'K2_PIDK_corr > 10. || MKpipi < 1840. || MKpipi > 1900.'
+    'veto_K1_p'  : '(K1_PIDK_corr-K1_PIDp_corr) > 5. || MpKpi < 2255. || MpKpi > 2315.'
+    'veto_K2_p'  : '(K2_PIDK_corr-K2_PIDp_corr) > 5. || MKppi < 2255. || MKppi > 2315.'
+
+MC_Bs2DsPi:
+    <<: *Bs2DsPi
+    'MC_specific': '(B_BKGCAT <= 20 || B_BKGCAT == 50 ) &&  B_TRUETAU > 0.'
+
+MC_Bs2JpsiPhi_fromLb: &MC_Bs2JpsiPhi_fromLb
+    <<: *Bs2JpsiPhi
+    'Match_cut': 'wdp>0'

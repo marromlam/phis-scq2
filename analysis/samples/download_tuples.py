@@ -1,15 +1,9 @@
-DESCRIPTION = """
-    This script downloads tuples from open('config.json')->['eos'] and places
-    them, properly renamed within the convention of phis-scq, in the
-    open('config.json')->['path'] (the so-called sidecar folder)
-"""
-
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 __all__ = []
 
 
-# Modules {{{
+# Modules {{{
 
 import config
 import shutil
@@ -18,7 +12,7 @@ import argparse
 import os
 import numpy as np
 
-# }}}
+# }}}
 
 
 # Some config {{{
@@ -71,6 +65,11 @@ vsub_dict = {
 
 if __name__ == "__main__":
     # argument parser for snakemake
+    DESCRIPTION = """
+    This script downloads tuples from open('config.json')->['eos'] and places
+    them, properly renamed within the convention of phis-scq, in the
+    open('config.json')->['path'] (the so-called sidecar folder)
+    """
     p = argparse.ArgumentParser(description=DESCRIPTION)
     p.add_argument('--year', help='Year of the tuple.')
     p.add_argument('--mode', help='Decay mode of the tuple.')
@@ -84,7 +83,7 @@ if __name__ == "__main__":
 
     # Get the flags and that stuff
     # pipeline tuple version
-    v = args['version'].split("@")[0].split("bdt")[0]
+    v = args['version'].split("@")[0].split("~")[0].split("bdt")[0]
     V = args['version'].replace('bdt', '')  #  full version for phis-scq
     y = args['year']
     m = args['mode']
@@ -148,10 +147,15 @@ if __name__ == "__main__":
         # try DVTuple if the tree does not work
         try:
             result = uproot.open(tmp_path)[tree]
-            result = result.pandas.df(flatten=None)
         except:
-            result = uproot.open(tmp_path)['DVTuple'][tree]
-            result = result.pandas.df(flatten=None)
+            try:
+                result = uproot.open(tmp_path)['DVTuple'][tree]
+            except:
+                result = uproot.open(tmp_path)
+                print("WARNING: Automatically reading tree:",
+                      list(result.keys())[0])
+                result = result[list(result.keys())[0]]
+        result = result.pandas.df(flatten=None)
 
         try:
             print("There are sWeights variables")
@@ -165,10 +169,10 @@ if __name__ == "__main__":
                 result.eval(f"sw = {sw}", inplace=True)
         except:
             if 'B_BKGCAT' in list(result.keys()):
-                print("sWeight is set to zero for B_BKGCAT==60")
+                print("WARNING: sWeight is set to zero for B_BKGCAT==60")
                 result['sw'] = np.where(result['B_BKGCAT'].values != 60, 1, 0)
             else:
-                print("sWeight variable was not found. Set sw = 1")
+                print("WARNING: sWeight variable was not found. Set sw = 1")
                 result['sw'] = np.ones_like(result[result.keys()[0]])
 
         # place cuts according to version substring

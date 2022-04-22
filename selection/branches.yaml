@@ -1,0 +1,557 @@
+common: &common
+    'time': 'B_LOKI_DTF_CTAU/{C_LIGHT}'
+    'sigmat': 'B_LOKI_DTF_CTAUERR/{C_LIGHT}'
+    'runNumber': 'runNumber'
+    'eventNumber': 'eventNumber'
+    'totCandidates': 'totCandidates'
+    'L0DUTCK': 'L0DUTCK'
+    'HLT1TCK': 'HLT1TCK'
+    'HLT2TCK': 'HLT2TCK'
+    'B_LOKI_DTF_CTAU': 'B_LOKI_DTF_CTAU'
+    'B_LOKI_DTF_CTAUERR': 'B_LOKI_DTF_CTAUERR'
+    'B_IPCHI2_OWNPV' : 'B_IPCHI2_OWNPV'
+    'year': '(int) {year}'
+    'nTracks': '(int) nTracks'
+    'nLongTracks': '(int) nLongTracks'
+    'nSPDHits': '(int) nSPDHits'
+    'Polarity': '(int) Polarity'
+    'B_L0Global_Dec': '(int) B_L0Global_Dec'
+    'B_L0MuonDecision_TOS': '(int) B_L0MuonDecision_TOS'
+    'B_L0DiMuonDecision_TOS': '(int) B_L0DiMuonDecision_TOS'
+    'B_Hlt1TrackMuonDecision_TOS': '(int) B_Hlt1TrackMuonDecision_TOS'
+    'B_Hlt1TwoTrackMVADecision_TOS': '(int) B_Hlt1TwoTrackMVADecision_TOS'
+    'B_Hlt2DiMuonDetachedDecision_TOS': '(int) B_Hlt2DiMuonDetachedDecision_TOS'
+    'Jpsi_Hlt1TrackMuonDecision_TOS': '(int) Hlt1TrackMuonDecision_TOS'
+    'Jpsi_Hlt1DiMuonHighMassDecision_TOS': '(int) Jpsi_Hlt1DiMuonHighMassDecision_TOS'
+    'Jpsi_Hlt2DiMuonDetachedJPsiDecision_TOS': '(int) Jpsi_Hlt2DiMuonDetachedJPsiDecision_TOS'
+    'hlt1b': 'Jpsi_Hlt1DiMuonHighMassDecision_TOS == 0 && (Jpsi_Hlt1TrackMuonDecision_TOS == 1 || B_Hlt1TwoTrackMVADecision_TOS == 1)? (int)1 : (int)0'
+    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+    'hplus_PT': 'hplus_PT'
+    'hplus_P': 'hplus_P'
+    'hplus_ProbNNk': 'hplus_ProbNNk'
+    'hplus_ProbNNpi': 'hplus_ProbNNpi'
+    'hplus_ProbNNp': 'hplus_ProbNNp'
+    'B_DOCA_muplus_muminus': 'B_DOCA_muplus_muminus'
+    'B_DOCACHI2_muplus_muminus': 'B_DOCACHI2_muplus_muminus'
+    'hplus_isMuon': 'hplus_isMuon'
+    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+    'muplus_PT': 'muplus_PT'
+    'muplus_P': 'muplus_P'
+    'muplus_ProbNNmu': 'muplus_ProbNNmu'
+    'muplus_PIDmu': 'muplus_PIDmu'
+    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+    'muminus_PT': 'muminus_PT'
+    'muminus_P': 'muminus_P'
+    'muminus_ProbNNmu': 'muminus_ProbNNmu'
+    'muminus_PIDmu': 'muminus_PIDmu'
+    'hplus_PIDK': 'hplus_PIDK'
+    'muplus_TRACK_GhostProb': 'muplus_TRACK_GhostProb'
+    'muminus_TRACK_GhostProb': 'muminus_TRACK_GhostProb'
+    'hplus_TRACK_GhostProb': 'hplus_TRACK_GhostProb'
+    'hplus_TRACK_MatchCHI2': 'hplus_TRACK_MatchCHI2'
+    'muplus_TRACK_MatchCHI2': 'muplus_TRACK_MatchCHI2'
+    'muminus_TRACK_MatchCHI2': 'muminus_TRACK_MatchCHI2'
+    'hplus_IPCHI2_OWNPV': 'hplus_IPCHI2_OWNPV'
+    'muplus_IPCHI2_OWNPV': 'muplus_IPCHI2_OWNPV'
+    'muminus_IPCHI2_OWNPV': 'muminus_IPCHI2_OWNPV'
+    'Jpsi_M': 'B_ConstJpsi_J_psi_1S_M'
+    'Jpsi_MM': 'Jpsi_MM'
+    'Jpsi_npv_M': 'B_ConstJpsiNoPV_J_psi_1S_M[0]'
+    'Jpsi_ENDVERTEX_CHI2': 'Jpsi_ENDVERTEX_CHI2'
+    'Jpsi_ENDVERTEX_NDOF': 'Jpsi_ENDVERTEX_NDOF'
+    'B_DTF_CHI2NDOF': '(double)B_ConstJpsi_chi2[0]/B_ConstJpsi_nDOF[0]'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M[0]'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR[0]'
+    'B_FDS': 'B_LOKI_FDS'
+    'B_DIRA': 'B_LOKI_DIRA'
+    'B_M': 'B_M'
+    'B_ENDVERTEX_CHI2': 'B_ENDVERTEX_CHI2'
+    'B_ENDVERTEX_NDOF': 'B_ENDVERTEX_NDOF'
+    'B_P': 'B_P'
+    'B_PT': 'B_PT'
+    'B_ETA': 'B_ETA'
+    'nPVs': 'nPVs'
+    'beam_shift': 'beam_shift(PVX, PVY, nPV)'
+    'beam_shift_X': 'beam_shift[0]'
+    'beam_shift_Y': 'beam_shift[1]'
+    'hplus_ProbNNk_corr': 'hplus_ProbNNk'
+    'hplus_ProbNNpi_corr': 'hplus_ProbNNpi'
+    'hplus_ProbNNp_corr': 'hplus_ProbNNp'
+    'muplus_ProbNNmu_corr': 'muplus_ProbNNmu'
+    'muminus_ProbNNmu_corr': 'muminus_ProbNNmu'
+    'hplus_PE': 'hplus_PE'
+    'hplus_PX': 'hplus_PX'
+    'hplus_PY': 'hplus_PY'
+    'hplus_PZ': 'hplus_PZ'
+    'muplus_PE': 'muplus_PE'
+    'muplus_PX': 'muplus_PX'
+    'muplus_PY': 'muplus_PY'
+    'muplus_PZ': 'muplus_PZ'
+    'muminus_PE': 'muminus_PE'
+    'muminus_PX': 'muminus_PX'
+    'muminus_PY': 'muminus_PY'
+    'muminus_PZ': 'muminus_PZ'
+    'B_MINIPCHI2NEXTBEST' : 'B_MINIPCHI2NEXTBEST'
+    'B_IP_OWNPV' : 'B_IP_OWNPV'
+    'B_PX' : 'B_PX'
+    'B_PY' : 'B_PY'
+    'B_PZ' : 'B_PZ'
+   
+tagging: &tagging
+    'B_OSCharm_TAGDEC': 'B_OSCharm_TAGDEC'
+    'B_OSCharm_TAGETA': 'B_OSCharm_TAGETA'
+    'B_OSElectron_TAGDEC': 'B_OSElectron_TAGDEC'
+    'B_OSElectron_TAGETA': 'B_OSElectron_TAGETA'
+    'B_OSElectronLatest_TAGDEC': 'B_OSElectronLatest_TAGDEC'
+    'B_OSElectronLatest_TAGETA': 'B_OSElectronLatest_TAGETA'
+    'B_OSKaon_TAGDEC': 'B_OSKaon_TAGDEC'
+    'B_OSKaon_TAGETA': 'B_OSKaon_TAGETA'
+    'B_OSKaonLatest_TAGDEC': 'B_OSKaonLatest_TAGDEC'
+    'B_OSKaonLatest_TAGETA': 'B_OSKaonLatest_TAGETA'
+    'B_OSMuon_TAGDEC': 'B_OSMuon_TAGDEC'
+    'B_OSMuon_TAGETA': 'B_OSMuon_TAGETA'
+    'B_OSMuonLatest_TAGDEC': 'B_OSMuonLatest_TAGDEC'
+    'B_OSMuonLatest_TAGETA': 'B_OSMuonLatest_TAGETA'
+    'B_OSVtxCh_TAGDEC': 'B_OSVtxCh_TAGDEC'
+    'B_OSVtxCh_TAGETA': 'B_OSVtxCh_TAGETA'
+    'B_SSKaon_TAGDEC': 'B_SSKaon_TAGDEC'
+    'B_SSKaon_TAGETA': 'B_SSKaon_TAGETA'
+    'B_SSKaonLatest_TAGDEC': 'B_SSKaonLatest_TAGDEC'
+    'B_SSKaonLatest_TAGETA': 'B_SSKaonLatest_TAGETA'
+    'B_ID': 'B_ID'
+    'B_IFT_InclusiveTagger_TAGDEC': 'B_IFT_InclusiveTagger_TAGDEC'
+    'B_IFT_InclusiveTagger_TAGETA': 'B_IFT_InclusiveTagger_TAGETA'
+    
+Bs2JpsiPhi: &Bs2JpsiPhi
+    <<: *common
+    <<: *tagging
+    'B_pKMuMuKplus_M_1': 'B_pKMuMuKplus_M[0]'
+    'B_pKMuMuKminus_M_1': 'B_pKMuMuKminus_M[0]'
+    'B_B2KpPiJpsi_M_1': 'B_B2KpPiJpsi_M[0]'
+    'B_B2KmPiJpsi_M_1': 'B_B2KmPiJpsi_M[0]'
+    'hminus_IPCHI2_OWNPV': 'hminus_IPCHI2_OWNPV'
+    'hminus_TRACK_GhostProb': 'hminus_TRACK_GhostProb'
+    'hminus_TRACK_MatchCHI2': 'hminus_TRACK_MatchCHI2'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_PT': 'hminus_PT'
+    'hminus_P': 'hminus_P'
+    'hminus_ProbNNk': 'hminus_ProbNNk'
+    'hminus_ProbNNpi': 'hminus_ProbNNpi'
+    'hminus_ProbNNp': 'hminus_ProbNNp'
+    'hminus_ProbNNk_corr': 'hminus_ProbNNk'
+    'hminus_ProbNNpi_corr': 'hminus_ProbNNpi'
+    'hminus_ProbNNp_corr': 'hminus_ProbNNp'
+    'hminus_PIDK': 'hminus_PIDK'
+    'hminus_isMuon': 'hminus_isMuon'
+    'phi_M': 'B_ConstJpsi_phi_1020_M[0]'
+    'phi_npv_M': 'B_ConstJpsiNoPV_phi_1020_M[0]'
+    'X_PT': 'X_PT'
+    'X_M': 'X_M'
+    'X_ENDVERTEX_CHI2': 'X_ENDVERTEX_CHI2'
+    'RecoHelicityAngles': 'HelicityAngles(TLorentzVector(B_ConstJpsi_phi_1020_Kplus_PX[0]/1000.,
+                                                         B_ConstJpsi_phi_1020_Kplus_PY[0]/1000.,
+                                                         B_ConstJpsi_phi_1020_Kplus_PZ[0]/1000.,
+                                                         B_ConstJpsi_phi_1020_Kplus_PE[0]/1000.),
+                                          TLorentzVector(B_ConstJpsi_phi_1020_Kplus_0_PX[0]/1000.,
+                                                         B_ConstJpsi_phi_1020_Kplus_0_PY[0]/1000.,
+                                                         B_ConstJpsi_phi_1020_Kplus_0_PZ[0]/1000.,
+                                                         B_ConstJpsi_phi_1020_Kplus_0_PE[0]/1000.),
+                                          TLorentzVector(B_ConstJpsi_J_psi_1S_muminus_PX[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_PY[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_PZ[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_PE[0]/1000.),
+                                          TLorentzVector(B_ConstJpsi_J_psi_1S_muminus_0_PX[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_0_PY[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_0_PZ[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_0_PE[0]/1000.))'
+    'helcosthetaK': 'RecoHelicityAngles[0]'
+    'helcosthetaL': 'RecoHelicityAngles[1]'
+    'helphi': 'RecoHelicityAngles[2]'
+    'docaz_muminus': 'doca_z(beam_shift_X,
+                             beam_shift_Y,
+                             B_ENDVERTEX_X,
+                             B_ENDVERTEX_Y,
+                             B_ConstJpsi_J_psi_1S_muminus_0_PX,
+                             B_ConstJpsi_J_psi_1S_muminus_0_PY)'
+    'docaz_muplus': 'doca_z(beam_shift_X,
+                            beam_shift_Y,
+                            B_ENDVERTEX_X,
+                            B_ENDVERTEX_Y,
+                            B_ConstJpsi_J_psi_1S_muminus_PX,
+                            B_ConstJpsi_J_psi_1S_muminus_PY)'
+    'docaz_hplus': 'doca_z(beam_shift_X,
+                           beam_shift_Y,
+                           B_ENDVERTEX_X,
+                           B_ENDVERTEX_Y,
+                           B_ConstJpsi_phi_1020_Kplus_PX,
+                           B_ConstJpsi_phi_1020_Kplus_PY)'
+    'docaz_hminus': 'doca_z(beam_shift_X,
+                            beam_shift_Y,
+                            B_ENDVERTEX_X,
+                            B_ENDVERTEX_Y,
+                            B_ConstJpsi_phi_1020_Kplus_0_PX,
+                            B_ConstJpsi_phi_1020_Kplus_0_PY)'
+    'hminus_PE': 'hminus_PE'
+    'hminus_PX': 'hminus_PX'
+    'hminus_PY': 'hminus_PY'
+    'hminus_PZ': 'hminus_PZ'
+    'B_BPV_X' : 'B_OWNPV_X'
+    'B_BPV_Y' : 'B_OWNPV_Y'
+    'B_BPV_Z' : 'B_OWNPV_Z'
+    'B_BPV_XERR' : 'B_OWNPV_XERR'
+    'B_BPV_YERR' : 'B_OWNPV_YERR'
+    'B_BPV_ZERR' : 'B_OWNPV_ZERR'
+    'B_BPV_CHI2' : 'B_OWNPV_CHI2'
+    'B_BPV_NDOF' : 'B_OWNPV_NDOF'
+    'B_SV_X' : 'B_ENDVERTEX_X'
+    'B_SV_Y' : 'B_ENDVERTEX_Y'
+    'B_SV_Z' : 'B_ENDVERTEX_Z'
+    'B_SV_XERR' : 'B_ENDVERTEX_XERR'
+    'B_SV_YERR' : 'B_ENDVERTEX_YERR'
+    'B_SV_ZERR' : 'B_ENDVERTEX_ZERR'
+    'B_SV_CHI2' : 'B_ENDVERTEX_CHI2'
+    'B_SV_NDOF' : 'B_ENDVERTEX_NDOF'
+    'B_IPCHI2' : 'B_IPCHI2_OWNPV'
+    'nPV' : 'nPV'
+    'PVsX' : 'copy_array(PVX)'
+    'PVsY' : 'copy_array(PVY)'
+    'PVsZ' : 'copy_array(PVZ)'  
+    'PVsXERR' : 'copy_array(PVXERR)'
+    'PVsYERR' : 'copy_array(PVYERR)'
+    'PVsZERR' : 'copy_array(PVZERR)'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+    <<: *Bs2JpsiPhi
+    'B_BKGCAT': 'B_BKGCAT'
+    'X_TRUEID': 'X_TRUEID'
+    'B_TRUEID': 'B_TRUEID'
+    'hplus_TRUEP_E': 'hplus_TRUEP_E'
+    'hplus_TRUEP_X': 'hplus_TRUEP_X'
+    'hplus_TRUEP_Y': 'hplus_TRUEP_Y'
+    'hplus_TRUEP_Z': 'hplus_TRUEP_Z'
+    'hminus_TRUEP_E': 'hminus_TRUEP_E'
+    'hminus_TRUEP_X': 'hminus_TRUEP_X'
+    'hminus_TRUEP_Y': 'hminus_TRUEP_Y'
+    'hminus_TRUEP_Z': 'hminus_TRUEP_Z'
+    'X_TRUEP_E': 'X_TRUEP_E'
+    'X_TRUEP_X': 'X_TRUEP_X'
+    'X_TRUEP_Y': 'X_TRUEP_Y'
+    'X_TRUEP_Z': 'X_TRUEP_Z'
+    'B_TRUEPV_X' : 'B_TRUEORIGINVERTEX_X'
+    'B_TRUEPV_Y' : 'B_TRUEORIGINVERTEX_Y'
+    'B_TRUEPV_Z' : 'B_TRUEORIGINVERTEX_Z'
+    'B_TRUESV_X' : 'B_TRUEENDVERTEX_X'
+    'B_TRUESV_Y' : 'B_TRUEENDVERTEX_Y'
+    'B_TRUESV_Z' : 'B_TRUEENDVERTEX_Z'
+    'hplus_ProbNNk_corr': ''
+    'hplus_ProbNNpi_corr': ''
+    'hplus_ProbNNp_corr': ''
+    'hminus_ProbNNk_corr': ''
+    'hminus_ProbNNpi_corr': ''
+    'hminus_ProbNNp_corr': ''
+    'muplus_ProbNNmu_corr': ''
+    'muminus_ProbNNmu_corr': ''
+
+Bs2JpsiPhi_Lb: &Bs2JpsiPhi_Lb
+    <<: *Bs2JpsiPhi
+
+MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+    <<: *MC_Bs2JpsiPhi
+
+Bs2JpsiPhi_Prompt:
+    <<: *Bs2JpsiPhi
+    'tagss_state': ''
+    'tagss_state_latest': ''
+    'Jpsi_Hlt2DiMuonJPsiDecision_TOS': 'Jpsi_Hlt2DiMuonJPsiDecision_TOS'
+
+MC_Bs2JpsiPhi_Prompt:
+    <<: *MC_Bs2JpsiPhi
+    'Jpsi_Hlt2DiMuonJPsiDecision_TOS': 'Jpsi_Hlt2DiMuonJPsiDecision_TOS'
+
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+    <<: *MC_Bs2JpsiPhi_dG0
+
+MC_Bs2JpsiPhi_fromLb:
+    <<: *MC_Bs2JpsiPhi
+    'hplus_TRUEID': 'hplus_TRUEID'
+    'hminus_TRUEID': 'hminus_TRUEID'
+    'Jpsi_TRUEID': 'Jpsi_TRUEID'
+    'Jpsi_TRUEP_E': 'Jpsi_TRUEP_E'
+    'Jpsi_TRUEP_X': 'Jpsi_TRUEP_X'
+    'Jpsi_TRUEP_Y': 'Jpsi_TRUEP_Y'
+    'Jpsi_TRUEP_Z': 'Jpsi_TRUEP_Z'
+    'muplus_TRUEID': 'muplus_TRUEID'
+    'muplus_TRUEP_E': 'muplus_TRUEP_E'
+    'muplus_TRUEP_X': 'muplus_TRUEP_X'
+    'muplus_TRUEP_Y': 'muplus_TRUEP_Y'
+    'muplus_TRUEP_Z': 'muplus_TRUEP_Z'
+    'muminus_TRUEID': 'muminus_TRUEID'
+    'muminus_TRUEP_E': 'muminus_TRUEP_E'
+    'muminus_TRUEP_X': 'muminus_TRUEP_X'
+    'muminus_TRUEP_Y': 'muminus_TRUEP_Y'
+    'muminus_TRUEP_Z': 'muminus_TRUEP_Z'
+    'B_TRUEPT': 'B_TRUEPT'
+    'B_TRUEP_X': 'B_TRUEP_X'
+    'B_TRUEP_Y': 'B_TRUEP_Y'
+    'B_TRUEP_Z': 'B_TRUEP_Z'
+
+Bd2JpsiKstar: &Bd2JpsiKstar
+    <<: *common
+    <<: *tagging
+    'B_JpsipK_M_1': 'B_JpsipK_M[0]'
+    'B_JpsiKK_M_1': 'B_JpsiKK_M[0]'
+    'hminus_IPCHI2_OWNPV': 'hminus_IPCHI2_OWNPV'
+    'hminus_TRACK_GhostProb': 'hminus_TRACK_GhostProb'
+    'hminus_TRACK_MatchCHI2': 'hminus_TRACK_MatchCHI2'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_PIDK': 'hminus_PIDK'
+    'hminus_PT': 'hminus_PT'
+    'hminus_P': 'hminus_P'
+    'hminus_ProbNNk_corr': 'hminus_ProbNNk'
+    'hminus_ProbNNpi_corr': 'hminus_ProbNNpi'
+    'hminus_ProbNNp_corr': 'hminus_ProbNNp'
+    'hminus_ProbNNk': 'hminus_ProbNNk'
+    'hminus_ProbNNpi': 'hminus_ProbNNpi'
+    'hminus_ProbNNp': 'hminus_ProbNNp'
+    'hminus_isMuon': 'hminus_isMuon'
+    'Kstar_M': 'B_ConstJpsi_Kst_892_0_M[0]'
+    'Kstar_npv_M': 'B_ConstJpsiNoPV_Kst_892_0_M[0]'
+    'X_PT': 'X_PT'
+    'X_M': 'Kstar_M_davinci'
+    'X_ENDVERTEX_CHI2': 'X_ENDVERTEX_CHI2'
+    'RecoHelicityAngles': 'HelicityAngles(TLorentzVector(B_ConstJpsi_Kst_892_0_Kplus_PX[0]/1000.,
+                                                         B_ConstJpsi_Kst_892_0_Kplus_PY[0]/1000.,
+                                                         B_ConstJpsi_Kst_892_0_Kplus_PZ[0]/1000.,
+                                                         B_ConstJpsi_Kst_892_0_Kplus_PE[0]/1000.),
+                                          TLorentzVector(B_ConstJpsi_Kst_892_0_piplus_PX[0]/1000.,
+                                                         B_ConstJpsi_Kst_892_0_piplus_PY[0]/1000.,
+                                                         B_ConstJpsi_Kst_892_0_piplus_PZ[0]/1000.,
+                                                         B_ConstJpsi_Kst_892_0_piplus_PE[0]/1000.),
+                                          TLorentzVector(B_ConstJpsi_J_psi_1S_muminus_PX[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_PY[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_PZ[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_PE[0]/1000.),
+                                          TLorentzVector(B_ConstJpsi_J_psi_1S_muminus_0_PX[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_0_PY[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_0_PZ[0]/1000.,
+                                                         B_ConstJpsi_J_psi_1S_muminus_0_PE[0]/1000.))'
+    'helcosthetaK': 'RecoHelicityAngles[0]'
+    'helcosthetaL': 'RecoHelicityAngles[1]'
+    'helphi': 'RecoHelicityAngles[2]'
+    'docaz_muminus': 'doca_z(beam_shift_X,
+                             beam_shift_Y,
+                             B_ENDVERTEX_X,
+                             B_ENDVERTEX_Y,
+                             B_ConstJpsi_J_psi_1S_muminus_0_PX,
+                             B_ConstJpsi_J_psi_1S_muminus_0_PY)'
+    'docaz_muplus': 'doca_z(beam_shift_X,
+                            beam_shift_Y,
+                            B_ENDVERTEX_X,
+                            B_ENDVERTEX_Y,
+                            B_ConstJpsi_J_psi_1S_muminus_PX,
+                            B_ConstJpsi_J_psi_1S_muminus_PY)'
+    'docaz_hplus': 'doca_z(beam_shift_X,
+                           beam_shift_Y,
+                           B_ENDVERTEX_X,
+                           B_ENDVERTEX_Y,
+                           B_ConstJpsi_Kst_892_0_Kplus_PX,
+                           B_ConstJpsi_Kst_892_0_Kplus_PY)'
+    'docaz_hminus': 'doca_z(beam_shift_X,
+                            beam_shift_Y,
+                            B_ENDVERTEX_X,
+                            B_ENDVERTEX_Y,
+                            B_ConstJpsi_Kst_892_0_piplus_PX,
+                            B_ConstJpsi_Kst_892_0_piplus_PY)'
+    'hminus_PE': 'hminus_PE'
+    'hminus_PX': 'hminus_PX'
+    'hminus_PY': 'hminus_PY'
+    'hminus_PZ': 'hminus_PZ'
+    'B_BPV_X' : 'B_OWNPV_X'
+    'B_BPV_Y' : 'B_OWNPV_Y'
+    'B_BPV_Z' : 'B_OWNPV_Z'
+    'B_BPV_XERR' : 'B_OWNPV_XERR'
+    'B_BPV_YERR' : 'B_OWNPV_YERR'
+    'B_BPV_ZERR' : 'B_OWNPV_ZERR'
+    'B_BPV_CHI2' : 'B_OWNPV_CHI2'
+    'B_BPV_NDOF' : 'B_OWNPV_NDOF'
+    'B_SV_X' : 'B_ENDVERTEX_X'
+    'B_SV_Y' : 'B_ENDVERTEX_Y'
+    'B_SV_Z' : 'B_ENDVERTEX_Z'
+    'B_SV_XERR' : 'B_ENDVERTEX_XERR'
+    'B_SV_YERR' : 'B_ENDVERTEX_YERR'
+    'B_SV_ZERR' : 'B_ENDVERTEX_ZERR'
+
+MC_Bd2JpsiKstar: &MC_Bd2JpsiKstar
+    <<: *Bd2JpsiKstar
+    'B_BKGCAT': 'B_BKGCAT'
+    'X_TRUEID': 'X_TRUEID'
+    'B_TRUEID': 'B_TRUEID'
+    'hplus_ProbNNk_corr': ''
+    'hplus_ProbNNpi_corr': ''
+    'hplus_ProbNNp_corr': ''
+    'hminus_ProbNNk_corr': ''
+    'hminus_ProbNNpi_corr': ''
+    'hminus_ProbNNp_corr': ''
+    'muplus_ProbNNmu_corr': ''
+    'muminus_ProbNNmu_corr': ''
+    'tagss_state': ''
+    'tagss_state_latest': ''
+
+Bu2JpsiKplus: &Bu2JpsiKplus
+    <<: *common
+    <<: *tagging
+    'hplus_M': 'hplus_M'
+    'B_B2PiJpsi_M_1': 'B_B2PiJpsi_M[0]'
+    'B_B2PiJpsi_MERR_1': 'B_B2PiJpsi_MERR[0]'
+    'B_B2pJpsi_M_1': 'B_B2pJpsi_M[0]'
+    'B_B2pJpsi_MERR_1': 'B_B2pJpsi_MERR[0]'
+    'helcosthetaL': 'HelicityCosTheta(TLorentzVector(hplus_PX/1000.,
+                                                     hplus_PY/1000.,
+                                                     hplus_PZ/1000.,
+                                                     hplus_PE/1000.),
+                                      TLorentzVector(B_ConstJpsi_J_psi_1S_muminus_PX[0]/1000.,
+                                                     B_ConstJpsi_J_psi_1S_muminus_PY[0]/1000.,
+                                                     B_ConstJpsi_J_psi_1S_muminus_PZ[0]/1000.,
+                                                     B_ConstJpsi_J_psi_1S_muminus_PE[0]/1000.),
+                                      TLorentzVector(B_ConstJpsi_J_psi_1S_muminus_0_PX[0]/1000.,
+                                                     B_ConstJpsi_J_psi_1S_muminus_0_PY[0]/1000.,
+                                                     B_ConstJpsi_J_psi_1S_muminus_0_PZ[0]/1000.,
+                                                     B_ConstJpsi_J_psi_1S_muminus_0_PE[0]/1000.))'
+    'docaz_muminus': 'doca_z(beam_shift_X,
+                             beam_shift_Y,
+                             B_ENDVERTEX_X,
+                             B_ENDVERTEX_Y,
+                             B_ConstJpsi_J_psi_1S_muminus_0_PX,
+                             B_ConstJpsi_J_psi_1S_muminus_0_PY)'
+    'docaz_muplus': 'doca_z(beam_shift_X,
+                            beam_shift_Y,
+                            B_ENDVERTEX_X,
+                            B_ENDVERTEX_Y,
+                            B_ConstJpsi_J_psi_1S_muminus_PX,
+                            B_ConstJpsi_J_psi_1S_muminus_PY)'
+    'docaz_hplus': 'doca_z(beam_shift_X,
+                           beam_shift_Y,
+                           B_ENDVERTEX_X,
+                           B_ENDVERTEX_Y,
+                           B_ConstJpsi_Kplus_PX,
+                           B_ConstJpsi_Kplus_PY)'
+    'B_BPV_X' : 'B_OWNPV_X'
+    'B_BPV_Y' : 'B_OWNPV_Y'
+    'B_BPV_Z' : 'B_OWNPV_Z'
+    'B_BPV_XERR' : 'B_OWNPV_XERR'
+    'B_BPV_YERR' : 'B_OWNPV_YERR'
+    'B_BPV_ZERR' : 'B_OWNPV_ZERR'
+    'B_BPV_CHI2' : 'B_OWNPV_CHI2'
+    'B_BPV_NDOF' : 'B_OWNPV_NDOF'
+    'B_SV_X' : 'B_ENDVERTEX_X'
+    'B_SV_Y' : 'B_ENDVERTEX_Y'
+    'B_SV_Z' : 'B_ENDVERTEX_Z'
+    'B_SV_XERR' : 'B_ENDVERTEX_XERR'
+    'B_SV_YERR' : 'B_ENDVERTEX_YERR'
+    'B_SV_ZERR' : 'B_ENDVERTEX_ZERR'
+
+MC_Bu2JpsiKplus:
+    <<: *Bu2JpsiKplus
+    'B_BKGCAT': 'B_BKGCAT'
+    'hplus_ProbNNk_corr': ''
+    'hplus_ProbNNpi_corr': ''
+    'hplus_ProbNNp_corr': ''
+    'muplus_ProbNNmu_corr': ''
+    'muminus_ProbNNmu_corr': ''
+    'tagss_state': ''
+    'tagss_state_latest': ''
+
+Bs2DsPi: &Bs2DsPi
+    <<: *tagging
+    'B_MM': 'B_MM'
+    'time': 'B_LOKI_DTF_CTAU/{C_LIGHT}'
+    'sigmat': 'B_LOKI_DTF_CTAUERR/{C_LIGHT}'
+    'runNumber': 'runNumber'
+    'eventNumber': 'eventNumber'
+    'B_PVFitDs_M_1': 'B_PVFitDs_M[0]'
+    'B_LOKI_DTF_CTAU': 'B_LOKI_DTF_CTAU'
+    'B_LOKI_DTF_CTAUERR': 'B_LOKI_DTF_CTAUERR'
+    'B_P': 'B_P'
+    'B_PT': 'B_PT'
+    'BETA': 'B_ETA' # will be added in the next WGP
+    'nLong': 'nLongTracks'
+    'nTracks': 'nTracks'
+    'nPVs': 'nPVs'
+    'B_Hlt1TrackMVADecision_TOS': 'B_Hlt1TrackMVADecision_TOS'
+    'B_Hlt1TwoTrackMVADecision_TOS': 'B_Hlt1TwoTrackMVADecision_TOS'
+    'B_Hlt2Topo2BodyDecision_TOS': 'B_Hlt2Topo2BodyDecision_TOS'
+    'B_Hlt2Topo3BodyDecision_TOS': 'B_Hlt2Topo3BodyDecision_TOS'
+    'B_Hlt2Topo4BodyDecision_TOS': 'B_Hlt2Topo4BodyDecision_TOS'
+    'B_Y': ' 0.5*log(( B_PE + B_PZ )/( B_PE-B_PZ ))'
+    'Pi1_P': 'piminus_P'
+    'Pi1_PT': 'piminus_PT'
+    'Pi1_PX': 'piminus_PX'
+    'Pi1_PY': 'piminus_PY'
+    'Pi1_PZ': 'piminus_PZ'
+    'Pi1_PE': 'piminus_PE'
+    'Pi2_P': 'piplus_P'
+    'Pi2_PT': 'piplus_PT'
+    'Pi2_PX': 'piplus_PX'
+    'Pi2_PY': 'piplus_PY'
+    'Pi2_PZ': 'piplus_PZ'
+    'Pi2_PE': 'piplus_PE'
+    'K1_PX': 'hplus_PX'
+    'K1_PY': 'hplus_PY'
+    'K1_PZ': 'hplus_PZ'
+    'K1_PE': 'hplus_PE'
+    'K1_P': 'hplus_P'
+    'K1_PT': 'hplus_PT'
+    'K2_PX': 'hminus_PX'
+    'K2_PY': 'hminus_PY'
+    'K2_PZ': 'hminus_PZ'
+    'K2_PE': 'hminus_PE'
+    'K2_P': 'hminus_P'
+    'K2_PT': 'hminus_PT'
+    'MKK': 'sqrt((K1_PE+K2_PE)*(K1_PE+K2_PE)-(K1_PX+K2_PX)*(K1_PX+K2_PX)-(K1_PY+K2_PY)*(K1_PY+K2_PY)-(K1_PZ+K2_PZ)*(K1_PZ+K2_PZ))'
+    'MpiKpi': 'sqrt((sqrt(K1_PX*K1_PX+K1_PY*K1_PY+K1_PZ*K1_PZ+139.571*139.571)+K2_PE+Pi1_PE)*(sqrt(K1_PX*K1_PX+K1_PY*K1_PY+K1_PZ*K1_PZ+139.571*139.571)+K2_PE+Pi1_PE)-(K1_PX+K2_PX+Pi1_PX)*(K1_PX+K2_PX+Pi1_PX)-(K1_PY+K2_PY+Pi1_PY)*(K1_PY+K2_PY+Pi1_PY)-(K1_PZ+K2_PZ+Pi1_PZ)*(K1_PZ+K2_PZ+Pi1_PZ))'
+    'MKpipi': 'sqrt((sqrt(K2_PX*K2_PX+K2_PY*K2_PY+K2_PZ*K2_PZ+139.571*139.571)+K1_PE+Pi1_PE)*(sqrt(K2_PX*K2_PX+K2_PY*K2_PY+K2_PZ*K2_PZ+139.571*139.571)+K1_PE+Pi1_PE)-(K1_PX+K2_PX+Pi1_PX)*(K1_PX+K2_PX+Pi1_PX)-(K1_PY+K2_PY+Pi1_PY)*(K1_PY+K2_PY+Pi1_PY)-(K1_PZ+K2_PZ+Pi1_PZ)*(K1_PZ+K2_PZ+Pi1_PZ))'
+    'MpKpi': 'sqrt((sqrt(K1_PX*K1_PX+K1_PY*K1_PY+K1_PZ*K1_PZ+938.272*938.272)+K2_PE+Pi1_PE)*(sqrt(K1_PX*K1_PX+K1_PY*K1_PY+K1_PZ*K1_PZ+938.272*938.272)+K2_PE+Pi1_PE)-(K1_PX+K2_PX+Pi1_PX)*(K1_PX+K2_PX+Pi1_PX)-(K1_PY+K2_PY+Pi1_PY)*(K1_PY+K2_PY+Pi1_PY)-(K1_PZ+K2_PZ+Pi1_PZ)*(K1_PZ+K2_PZ+Pi1_PZ))'
+    'MKppi': 'sqrt((sqrt(K2_PX*K2_PX+K2_PY*K2_PY+K2_PZ*K2_PZ+938.272*938.272)+K1_PE+Pi1_PE)*(sqrt(K2_PX*K2_PX+K2_PY*K2_PY+K2_PZ*K2_PZ+938.272*938.272)+K1_PE+Pi1_PE)-(K1_PX+K2_PX+Pi1_PX)*(K1_PX+K2_PX+Pi1_PX)-(K1_PY+K2_PY+Pi1_PY)*(K1_PY+K2_PY+Pi1_PY)-(K1_PZ+K2_PZ+Pi1_PZ)*(K1_PZ+K2_PZ+Pi1_PZ))'
+    'K1_TRACK_GhostProb': 'hplus_TRACK_GhostProb'
+    'K2_TRACK_GhostProb': 'hminus_TRACK_GhostProb'
+    'Pi1_TRACK_GhostProb': 'piminus_TRACK_GhostProb'
+    'Pi2_TRACK_GhostProb': 'piplus_TRACK_GhostProb'
+    'Pi2_isMuon': 'piplus_isMuon'
+    'Pi1_PIDK': 'piminus_PIDK'
+    'Pi2_PIDK': 'piplus_PIDK'
+    'K1_PIDK': 'hplus_PIDK'
+    'K2_PIDK': 'hminus_PIDK'
+    'K1_PIDp': 'hplus_PIDp'
+    'K2_PIDp': 'hminus_PIDp'
+    'Pi2_PIDK_corr': 'piplus_PIDK'
+    'Pi1_PIDK_corr': 'piminus_PIDK'
+    'K1_PIDK_corr': 'hplus_PIDK'
+    'K2_PIDK_corr': 'hminus_PIDK'
+    'K1_PIDp_corr': 'hplus_PIDp'
+    'K2_PIDp_corr': 'hminus_PIDp'
+    'B_DIRA_OWNPV': 'B_DIRA_OWNPV'
+    'B_MINIPCHI2': 'B_MINIPCHI2'
+    'B_IPCHI2_OWNPV': 'B_IPCHI2_OWNPV'
+    'K1_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+    'K2_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'Pi1_TRACK_CHI2NDOF': 'piminus_TRACK_CHI2NDOF'
+    'Pi2_TRACK_CHI2NDOF': 'piplus_TRACK_CHI2NDOF'
+    'K1_IPCHI2_OWNPV': 'hplus_IPCHI2_OWNPV'
+    'K2_IPCHI2_OWNPV': 'hminus_IPCHI2_OWNPV'
+    'Pi2_IPCHI2_OWNPV': 'piplus_IPCHI2_OWNPV'
+    'Pi1_IPCHI2_OWNPV': 'piminus_IPCHI2_OWNPV'
+    'Ds_IPCHI2_OWNPV': 'Ds_IPCHI2_OWNPV'
+    'Ds_MM' : 'Ds_MM'
+    'polarity': 'Polarity'
+    'year': '(int) {year}'
+
+MC_Bs2DsPi:
+    <<: *Bs2DsPi
+    'tagss_state': ''
+    'tagss_state_latest': ''
+    'B_TRUETAU': 'B_TRUETAU'
+    'B_BKGCAT': 'B_BKGCAT'
+

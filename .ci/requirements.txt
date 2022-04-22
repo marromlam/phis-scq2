@@ -20,3 +20,4 @@ hep_ml
 complot==0.0.2.dev2
 lib99ocl
 ipanema3
+sympy

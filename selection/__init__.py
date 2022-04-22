@@ -8,7 +8,7 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
-from . import mass_fit
+from . import sweights
 from . import lb_add
 from . import lb_prepare
 

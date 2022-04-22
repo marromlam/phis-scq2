@@ -1,0 +1,125 @@
+common: &common
+    'B_TRUEP_E': 'B_TRUEP_E'
+    'B_TRUEP_X': 'B_TRUEP_X'
+    'B_TRUEP_Y': 'B_TRUEP_Y'
+    'B_TRUEP_Z': 'B_TRUEP_Z'
+    'muplus_TRUEP_E': 'muplus_TRUEP_E'
+    'muplus_TRUEP_X': 'muplus_TRUEP_X'
+    'muplus_TRUEP_Y': 'muplus_TRUEP_Y'
+    'muplus_TRUEP_Z': 'muplus_TRUEP_Z'
+    'muminus_TRUEP_E': 'muminus_TRUEP_E'
+    'muminus_TRUEP_X': 'muminus_TRUEP_X'
+    'muminus_TRUEP_Y': 'muminus_TRUEP_Y'
+    'muminus_TRUEP_Z': 'muminus_TRUEP_Z'
+    'hplus_TRUEP_E': 'hplus_TRUEP_E'
+    'hplus_TRUEP_X': 'hplus_TRUEP_X'
+    'hplus_TRUEP_Y': 'hplus_TRUEP_Y'
+    'hplus_TRUEP_Z': 'hplus_TRUEP_Z'
+    'hminus_TRUEP_E': 'hminus_TRUEP_E'
+    'hminus_TRUEP_X': 'hminus_TRUEP_X'
+    'hminus_TRUEP_Y': 'hminus_TRUEP_Y'
+    'hminus_TRUEP_Z': 'hminus_TRUEP_Z'
+    
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+    'X_TRUEID': 'X_TRUEID'
+    'hplus_TRUEP_X_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) == 321 && abs(hplus_TRUEID) != 321) ? (X_TRUEP_X - hminus_TRUEP_X) : hplus_TRUEP_X'
+    'hplus_TRUEP_Y_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) == 321 && abs(hplus_TRUEID) != 321) ? (X_TRUEP_Y - hminus_TRUEP_Y) : hplus_TRUEP_Y'
+    'hplus_TRUEP_Z_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) == 321 && abs(hplus_TRUEID) != 321) ? (X_TRUEP_Z - hminus_TRUEP_Z) : hplus_TRUEP_Z'
+    'hplus_TRUEP_E_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) == 321 && abs(hplus_TRUEID) != 321) ? (X_TRUEP_E - hminus_TRUEP_E) : hplus_TRUEP_E'
+    'hminus_TRUEP_X_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) != 321 && abs(hplus_TRUEID) == 321) ? (X_TRUEP_X - hplus_TRUEP_X) : hminus_TRUEP_X'
+    'hminus_TRUEP_Y_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) != 321 && abs(hplus_TRUEID) == 321) ? (X_TRUEP_Y - hplus_TRUEP_Y) : hminus_TRUEP_Y'
+    'hminus_TRUEP_Z_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) != 321 && abs(hplus_TRUEID) == 321) ? (X_TRUEP_Z - hplus_TRUEP_Z) : hminus_TRUEP_Z'
+    'hminus_TRUEP_E_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) != 321 && abs(hplus_TRUEID) == 321) ? (X_TRUEP_E - hplus_TRUEP_E) : hminus_TRUEP_E'
+    'X_TRUEP_X': 'X_TRUEP_X'
+    'X_TRUEP_Y': 'X_TRUEP_Y'
+    'X_TRUEP_Z': 'X_TRUEP_Z'
+    'X_TRUEP_E': 'X_TRUEP_E'
+    'TrueHelicityAngles': 'HelicityAngles(TLorentzVector(hplus_TRUEP_X_corr/1000.,
+                                                         hplus_TRUEP_Y_corr/1000.,
+                                                         hplus_TRUEP_Z_corr/1000.,
+                                                         hplus_TRUEP_E_corr/1000.),
+                                          TLorentzVector(hminus_TRUEP_X_corr/1000.,
+                                                         hminus_TRUEP_Y_corr/1000.,
+                                                         hminus_TRUEP_Z_corr/1000.,
+                                                         hminus_TRUEP_E_corr/1000.),
+                                          TLorentzVector(muplus_TRUEP_X/1000.,
+                                                         muplus_TRUEP_Y/1000.,
+                                                         muplus_TRUEP_Z/1000.,
+                                                         muplus_TRUEP_E/1000.),
+                                          TLorentzVector(muminus_TRUEP_X/1000.,
+                                                         muminus_TRUEP_Y/1000.,
+                                                         muminus_TRUEP_Z/1000.,
+                                                         muminus_TRUEP_E/1000.))'
+    'truehelcosthetaK': 'TrueHelicityAngles[0]'
+    'truehelcosthetaL': 'TrueHelicityAngles[1]'
+    'truehelphi': 'TrueHelicityAngles[2]'
+    
+MC_Bd2JpsiKstar: &MC_Bd2JpsiKstar
+    'hplus_TRUEP_X_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) == 321 && abs(hplus_TRUEID) != 321) ? X_TRUEP_X - hminus_TRUEP_X : hplus_TRUEP_X'
+    'hplus_TRUEP_Y_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) == 321 && abs(hplus_TRUEID) != 321) ? X_TRUEP_Y - hminus_TRUEP_Y : hplus_TRUEP_Y'
+    'hplus_TRUEP_Z_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) == 321 && abs(hplus_TRUEID) != 321) ? X_TRUEP_Z - hminus_TRUEP_Z : hplus_TRUEP_Z'
+    'hplus_TRUEP_E_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) == 321 && abs(hplus_TRUEID) != 321) ? X_TRUEP_E - hminus_TRUEP_E : hplus_TRUEP_E'
+    'hminus_TRUEP_X_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) != 321 && abs(hplus_TRUEID) == 321) ? X_TRUEP_X - hplus_TRUEP_X : hminus_TRUEP_X'
+    'hminus_TRUEP_Y_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) != 321 && abs(hplus_TRUEID) == 321) ? X_TRUEP_Y - hplus_TRUEP_Y : hminus_TRUEP_Y'
+    'hminus_TRUEP_Z_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) != 321 && abs(hplus_TRUEID) == 321) ? X_TRUEP_Z - hplus_TRUEP_Z : hminus_TRUEP_Z'
+    'hminus_TRUEP_E_corr': '(abs(B_TRUEID) == 531 && abs(hminus_TRUEID) != 321 && abs(hplus_TRUEID) == 321) ? X_TRUEP_E - hplus_TRUEP_E : hminus_TRUEP_E'
+    'X_TRUEP_X': 'X_TRUEP_X'
+    'X_TRUEP_Y': 'X_TRUEP_Y'
+    'X_TRUEP_Z': 'X_TRUEP_Z'
+    'X_TRUEP_E': 'X_TRUEP_E'
+    'muplus_TRUEP_X': 'muplus_TRUEP_X'
+    'muplus_TRUEP_Y': 'muplus_TRUEP_Y'
+    'muplus_TRUEP_Z': 'muplus_TRUEP_Z'
+    'muplus_TRUEP_E': 'muplus_TRUEP_E'
+    'muminus_TRUEP_X': 'muminus_TRUEP_X'
+    'muminus_TRUEP_Y': 'muminus_TRUEP_Y'
+    'muminus_TRUEP_Z': 'muminus_TRUEP_Z'
+    'muminus_TRUEP_E': 'muminus_TRUEP_E'
+    'TrueHelicityAngles': 'HelicityAngles(
+                        TLorentzVector(hplus_TRUEP_X_corr/1000.,
+                                       hplus_TRUEP_Y_corr/1000.,
+                                       hplus_TRUEP_Z_corr/1000.,
+                                       hplus_TRUEP_E_corr/1000.),
+                        TLorentzVector(hminus_TRUEP_X_corr/1000.,
+                                       hminus_TRUEP_Y_corr/1000.,
+                                       hminus_TRUEP_Z_corr/1000.,
+                                       hminus_TRUEP_E_corr/1000.),
+                        TLorentzVector(muplus_TRUEP_X/1000.,
+                                       muplus_TRUEP_Y/1000.,
+                                       muplus_TRUEP_Z/1000.,
+                                       muplus_TRUEP_E/1000.),
+                        TLorentzVector(muminus_TRUEP_X/1000.,
+                                       muminus_TRUEP_Y/1000.,
+                                       muminus_TRUEP_Z/1000.,
+                                       muminus_TRUEP_E/1000.))'
+    'truehelcosthetaK': 'TrueHelicityAngles[0]'
+    'truehelcosthetaL': 'TrueHelicityAngles[1]'
+    'truehelphi': 'TrueHelicityAngles[2]'
+    
+
+MC_Bu2JpsiKplus:
+    <<: *Bu2JpsiKplus
+    'muplus_TRUEP_X': 'muplus_TRUEP_X'
+    'muplus_TRUEP_Y': 'muplus_TRUEP_Y'
+    'muplus_TRUEP_Z': 'muplus_TRUEP_Z'
+    'muplus_TRUEP_E': 'muplus_TRUEP_E'
+    'muminus_TRUEP_X': 'muminus_TRUEP_X'
+    'muminus_TRUEP_Y': 'muminus_TRUEP_Y'
+    'muminus_TRUEP_Z': 'muminus_TRUEP_Z'
+    'muminus_TRUEP_E': 'muminus_TRUEP_E'
+    'hplus_TRUEP_X': 'hplus_TRUEP_X'
+    'hplus_TRUEP_Y': 'hplus_TRUEP_Y'
+    'hplus_TRUEP_Z': 'hplus_TRUEP_Z'
+    'hplus_TRUEP_E': 'hplus_TRUEP_E'
+    'truehelcosthetaL': 'HelicityAngles(TLorentzVector(hplus_TRUEP_X/1000.,
+                                                       hplus_TRUEP_Y/1000.,
+                                                       hplus_TRUEP_Z/1000.,
+                                                       hplus_TRUEP_E/1000.),
+                                        TLorentzVector(muplus_TRUEP_X/1000.,
+                                                       muplus_TRUEP_Y/1000.,
+                                                       muplus_TRUEP_Z/1000.,
+                                                       muplus_TRUEP_E/1000.),
+                                        TLorentzVector(muminus_TRUEP_X/1000.,
+                                                       muminus_TRUEP_Y/1000.,
+                                                       muminus_TRUEP_Z/1000.,
+                                                       muminus_TRUEP_E/1000.))'

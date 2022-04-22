@@ -64,30 +64,12 @@ def cb_exponential(
 ):
     # merr = ristra.allocate(np.zeros_like(mass))
     mLL, mUL = ristra.min(mass), ristra.max(mass)
-    ans = cb_exponential3(
-        mass,
-        mass,
-        signal,
-        fsigBs=fsigBu,
-        fsigBd=0,
-        fcomb=nexp,
-        muBs=muBu,
-        s0Bs=sigmaBu,
-        s1Bs=0,
-        s2Bs=0,
-        muBd=5300,
-        s0Bd=1,
-        s1Bd=0,
-        s2Bd=0,
-        aL=aL,
-        nL=nL,
-        aR=aR,
-        nR=nR,
-        b=b,
-        norm=norm,
-        mLL=mLL,
-        mUL=mUL,
-    )
+    ans = cb_exponential3(mass, mass, signal,
+                          fsigBs=nsigBu, fsigBd=0, fcomb=nexp,
+                          muBs=muBu, s0Bs=sigmaBu, s1Bs=0, s2Bs=0,
+                          muBd=5300, s0Bd=1, s1Bd=0, s2Bd=0,
+                          aL=aL, nL=nL, aR=aR, nR=nR,
+                          b=b, norm=norm, mLL=mLL, mUL=mUL)
     return ans
 
 

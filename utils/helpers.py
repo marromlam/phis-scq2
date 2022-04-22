@@ -535,6 +535,29 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
             if weight not in ['selected', 'tagged', 'sWeight', 'ready', 'chopped']:
                 weight = 'sWeight'
         # }}}
+        # GUN_Bs2JpsiPhi {{{
+        elif m == 'GUN_Bs2JpsiPhi':
+            # WARNING: We dont chop this tuple with the @
+            if weight not in ['ready']:
+                weight = 'chopped'
+        # }}}
+        # Bs2JpsiPhi_Prompt {{{
+        elif m == 'Bs2JpsiPhi_Prompt':
+            # WARNING: We dont chop this tuple with the @
+            if weight not in ['ready']:
+                weight = 'chopped'
+        # }}}
+        # MC_Bs2JpsiPhi_Prompt {{{
+        elif m == 'MC_Bs2JpsiPhi_Prompt':
+            # WARNING: We dont chop this tuple with the @
+            if weight not in ['ready', 'gbWeight']:
+                weight = 'chopped'
+        # }}}
+        elif m == 'Bs2JpsiPhi_Prompt_mixPV':
+            # WARNING: We dont chop this tuple with the @
+            if weight not in ['ready']:
+                weight = 'chopped'
+        # }}}
     # print(f"{m} weight was transformed {__weight}->{weight}")
     # }}}
 
