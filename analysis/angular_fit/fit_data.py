@@ -194,7 +194,7 @@ pars = Parameters()
 # S wave fractions
 for i in range(len(mass)-1):
     pars.add(dict(
-        name=f'fSlon{i}', value=SWAVE*0, min=0.00, max=0.90,
+        name=f'fSlon{i+1}', value=SWAVE*0, min=0.00, max=0.90,
         free=SWAVE, latex=rf'|A_S^{{{i}}}|'))
 # P wave 
 pars.add(dict(name="fPlon", value=0.5241, min=0.4, max=0.6,
@@ -226,7 +226,9 @@ pars.add(dict(
 for i in range(len(mass)-1):
     phase = np.linspace(-2.5, 2.5, len(mass)-1)[i]
     pars.add(dict(
-        name=f'dSlon{i}', value=SWAVE*phase,  # min=-np.pi, max=0.90,
+        name=f'dSlon{i+1}', value=SWAVE*phase,
+        # min=-np.pi if phase < 0 else 0, max=np.pi if phase > 0 else 0,
+        min=-2*np.pi, max=2*np.pi,
         free=SWAVE, latex=rf"\delta_S^{{{i}}} - \delta_{{\perp}} \, \mathrm{{[rad]}}"))
 
 # P wave strong phases
@@ -477,7 +479,7 @@ printsubsec("Simultaneous minimization procedure")
 if MINER in ('minuit', 'minos'):
   result = optimize(cost_function, method=MINER, params=pars,
                     fcn_kwgs={'data':data},
-                    verbose=True, timeit=True, tol=0.1, strategy=1,
+                    verbose=False, timeit=True, tol=0.1, strategy=1,
                     policy='filter')
 elif MINER in ('nelder'):
   result = optimize(cost_function, method=MINER, params=pars,
@@ -510,9 +512,9 @@ print(result)
 for kp, vp in result.params.items():
     if vp.free:
         if args['year'] == '2015,2016':
-            print(f"{p:>12} : {vp._getval(False):+.4f} +/- {vp.stdev:+.4f}")
+            print(f"{kp:>12} : {vp._getval(False):+.4f} +/- {vp.stdev:+.4f}")
         else:
-            print(f"{p:>12} : {vp.value:+.4f} +/- {vp.stdev:+.4f}")
+            print(f"{kp:>12} : {vp.value:+.4f} +/- {vp.stdev:+.4f}")
 
 # }}}
 
