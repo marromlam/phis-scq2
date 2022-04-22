@@ -66,9 +66,9 @@ def cb_exponential(mass, signal, nsigBu, nexp, muBu, sigmaBu, aL, nL, aR, nR,
     # merr = ristra.allocate(np.zeros_like(mass))
     mLL, mUL = ristra.min(mass), ristra.max(mass)
     ans = cb_exponential3(mass, mass, signal,
-                          fsigBs=nsigBu, fsigBu=0, fcomb=nexp,
+                          fsigBs=nsigBu, fsigBd=0, fcomb=nexp,
                           muBs=muBu, s0Bs=sigmaBu, s1Bs=0, s2Bs=0,
-                          muBu=5300, s0Bu=1, s1Bu=0, s2Bu=0,
+                          muBd=5300, s0Bd=1, s1Bd=0, s2Bd=0,
                           aL=aL, nL=nL, aR=aR, nR=nR,
                           b=b, norm=norm, mLL=mLL, mUL=mUL)
     return ans
