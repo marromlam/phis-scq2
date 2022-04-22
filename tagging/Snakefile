@@ -1,4 +1,11 @@
+# Tagging pipeline
+#
+#
+# Authors: Marcos Romero Lamas (mromerol@cern.ch)
+#          Ramon Angel Ruiz Fernandez (rruizfer@cern.ch)
 
+
+# calibration {{{
 
 rule tagging_combination_calibration:
   """
@@ -28,6 +35,7 @@ rule tagging_combination_calibration:
       job.write(t.substitute(dict(
         input_tuple=os.path.abspath(f'{input.sample}'),
         sweight=f"sigBuSW",  # sw if you want to use Piera's
+        # TODO: MC should use TRUE_ID but there were problems
         idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
       )))
     # second, write down a bash script to run the EPM
@@ -46,6 +54,10 @@ rule tagging_combination_calibration:
     # copy calibration to know output
     shell(f"cp {output.sandbox}/EspressoCalibrations.py {output.calibration}")
 
+# }}}
+
+
+# Combination {{{
 
 rule tagging_combination:
   """
@@ -76,8 +88,6 @@ rule tagging_combination:
       job.write(t.substitute(dict(
         input_tuple=os.path.abspath(f'{input.sample}'),
         output_tuple=os.path.abspath(f'{output.sample}'),
-        sweight=f"sw",
-        idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
       )))
     # second, write down a bash script to run the EPM
     job_cmds = [
@@ -122,3 +132,6 @@ rule tagging_combination:
       f['DecayTree'].extend(result.to_dict(orient='list'))
     # }}}
 
+# }}}
+
+# vim: fdm=marker
