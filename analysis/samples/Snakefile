@@ -8,7 +8,7 @@
 #    to SAMPLES_PATH folder. It requires you to make a kinit on your system,
 #    and then it worka automatically.
 
-if config['allow_downloads']:
+if config['allow_downloads'] and not config['run_selection']:
   rule samples_download_tuple:
     wildcard_constraints:
       weight = "(selected|ready)"
