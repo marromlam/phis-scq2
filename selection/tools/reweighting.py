@@ -60,7 +60,7 @@ def reweighting(original_file, original_tree_name, original_weight, target_file,
                                            learning_rate=0.1,
                                            max_depth=6,
                                            min_samples_leaf=1000,
-                                           gb_args={'subsample': 0.6})
+                                           gb_args={'subsample': 1})
         reweighter.fit(original[variables], target, original_weight=original_weight, target_weight=target_weight)
 
     elif weight_method == 'binned':
