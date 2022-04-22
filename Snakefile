@@ -59,7 +59,8 @@ modes = ['Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi',
 
 # Including Snakefiles {{{
 
-include: 'selection/Snakefile'
+if config['run_selection']:
+    include: 'selection/Snakefile'
 include: 'selection/sweights/Snakefile'
 include: 'tagging/Snakefile'
 include: 'analysis/samples/Snakefile'
