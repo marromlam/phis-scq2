@@ -88,8 +88,6 @@ MC_common: &MC_common
 Bs2JpsiPhi: &Bs2JpsiPhi
   <<: *common
   "sWeight" : "sigBsSW"
-  "sWeightBd" : "sigBdSW"
-  "sWeightComb" : "combSW"
   "tagOSdec" : "OS_Combination_DEC"
   "tagSSdec" : "B_SSKaonLatest_TAGDEC"
   "tagOSeta" : "OS_Combination_ETA"
@@ -118,17 +116,17 @@ MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
   <<: *MC_common
-  "sWeight" : "sw"
+  "sWeight" : "sWeight"
   "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiPhi_Prompt:
   <<: *MC_common
-  "sWeight" : "sw"
+  "sWeight" : "sWeight"
   "genidB" : "B_ID_GenLvl"
 
 GUN_Bs2JpsiPhi:
   <<: *MC_common
-  "sWeight" : "sw"
+  "sWeight" : "sWeight"
   "genidB" : "B_ID_GenLvl"
   "mHH" : "1000*MKK"
 
