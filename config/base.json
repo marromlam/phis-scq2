@@ -23,9 +23,11 @@
     "minimizer": "minuit",
     "contour": 0,
     "allow_downloads": false,
-    "run_preselection": false,
-    "run_pid": false,
-    "run_selection": false,
+    "shuffle_events": false,
+    "run_preselection": true,
+    "run_pid": true,
+    "run_selection": true,
+    "run_tagging": true,
     "ludicrous": false,
-    "selection_mode": "cut"
+    "selection_mode": "run2"
 }

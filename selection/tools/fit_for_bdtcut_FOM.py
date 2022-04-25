@@ -9,14 +9,14 @@ from array import array
 
 import multiprocessing
 
-from ROOT import AddressOf
+from ROOT import addressof
 from ROOT import kDashed, kRed, kGreen, kBlue, kBlack, kTRUE, kFALSE, gPad, TGraph, TArrow
 from ROOT import TMath, TAxis, TH1, TLatex, TROOT, TSystem, TCanvas, TFile, TTree, TObject, gROOT
 from ROOT import ROOT, RDataFrame, vector, gInterpreter
 from ROOT import RooFit, RooAbsData, RooArgSet, RooArgList, RooAbsDataStore, RooAddModel, RooAddPdf, RooCBShape, RooConstVar, RooDataSet, RooExponential, RooFFTConvPdf, RooGaussian, RooGlobalFunc, RooPlot, RooPolynomial, RooProdPdf, RooRealVar, RooVoigtian, RooStats
 from constants import *
 gROOT.ProcessLine('struct mysWeight{Double_t sWValue;};')
-gROOT.ProcessLine(".x ./styles/lhcbStyle.C")
+# gROOT.ProcessLine(".x ./styles/lhcbStyle.C")
 from ROOT import mysWeight
 
 def argument_parser():
@@ -166,7 +166,7 @@ def fit_branch(sigTuple, input_branch, plot_dir, mode, year, bdtcut):
     new_tree = sigTuple.CloneTree()
     
     sWeight_struct = mysWeight()
-    sWBranch = new_tree.Branch('sw', AddressOf(sWeight_struct, 'sWValue'), 'sw/D')
+    sWBranch = new_tree.Branch('sw', addressof(sWeight_struct, 'sWValue'), 'sw/D')
     
     for entry in range(int(new_tree.GetEntries())):
         new_tree.GetEntry(entry)
@@ -187,7 +187,7 @@ def fit_branch(sigTuple, input_branch, plot_dir, mode, year, bdtcut):
 
 def fit_for_bdtcut_fom(input_file, input_tree_name, input_branch, bdt_branch, plot_dir, output_file,  mode, year, bdtcut, cuts):
 
-    xarray=array('d',float(bdtcut))
+    xarray=array('d',[float(bdtcut)])
     yarray=array('d',[0.0])
     sigFile = TFile.Open(input_file)
     sigTuple = sigFile.Get(input_tree_name)
@@ -221,7 +221,9 @@ def fit_for_bdtcut_fom(input_file, input_tree_name, input_branch, bdt_branch, pl
     ar.SetLineColor(4)
     ar.Draw()
     print ("Best FOM: "+str(Neff_max)+ " at bdtg3> "+format(bdtcut_val, '.2'))
-    canvas.SaveAs(output_file)
+    with open(output_file, 'w') as f:
+        f.write(f"{bdtcut_val:.2f}")
+    canvas.SaveAs(f"{plot_dir}/fom.pdf")
 
 if __name__ == '__main__':
     parser = argument_parser()

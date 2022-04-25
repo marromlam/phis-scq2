@@ -5,7 +5,8 @@ bdt cut is not applied here.
 """
 
 
-rule prepare_mc_Lb:
+# if config['run_preselection']:
+rule prepare_mc_lambdab:
     """
     Rule for Lb background
     Do not apply cuts, only add branches specified in the corresponding yaml
@@ -19,12 +20,12 @@ rule prepare_mc_Lb:
     # input:
     output:
         # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_prepared_Lb.root'))
-        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_lb.root',
+        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
     params:
         files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim][wildcards.polarity],
-        treename = lambda wildcards: selconfig['treenames'][wildcards.mode],
         script = 'selection/tools/apply_selection.py',
-        branches = ['selection/branches.yaml']
+        branches = ['selection/branches.yaml'],
+        treename = lambda wildcards: selconfig['treenames'][wildcards.mode],
     log:
         'output/selection_prepare_mc/{year}/{mode}/{version}_{strip_sim}_{polarity}.log',
     run:
@@ -46,17 +47,19 @@ rule split_tree_to_pid:
     we add a wildcard named pkkp which should be pk or kp, using to distinguish final state.
     """
     wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        mode = 'MC_Bs2JpsiPhi_fromLb'
+        # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
     threads: 2
     resources:
         mem_mb = 10000
     input:
         script = 'selection/tools/split_tree.py',
-        input_file = expand(rules.prepare_mc_Lb.output, mode='{mode}',
-                                                        year='{year}',
-                                                        version='{version}',
-                                                        strip_sim='{strip_sim}',
-                                                        polarity='{polarity}')
+        input_file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
+        # input_file = expand(rules.prepare_mc_Lb.output, mode='{mode}',
+        #                                                 year='{year}',
+        #                                                 version='{version}',
+        #                                                 strip_sim='{strip_sim}',
+        #                                                 polarity='{polarity}')
     output:
         # file = temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_selected_with_gen_{pkkp}.root'))
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_splitted{pkkp}.root',
@@ -71,25 +74,29 @@ rule split_tree_to_pid:
         --output-type {wildcards.pkkp}) &> {log}')
 
 
+# corrections for pid {{{
+
 rule correct_pid_Lb:
     """
     Lb background
     Adds corrected PID variables to the given MC tuple
     """
     wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        mode = 'MC_Bs2JpsiPhi_fromLb'
+        # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
     threads: 2
     resources:
         mem_mb = 12000
     input:
         script = 'selection/tools/PIDCorr.py',
         tracks = 'selection/pid/pidcorr.yaml',
-        file = expand(rules.split_tree_to_pid.output.file, mode='{mode}',
-                                                           strip_sim='{strip_sim}',
-                                                           year='{year}',
-                                                           version='{version}',
-                                                           polarity='{polarity}',
-                                                           pkkp='{pkkp}'),
+        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_splitted{pkkp}.root',
+        # file = expand(rules.split_tree_to_pid.output.file, mode='{mode}',
+        #                                                    strip_sim='{strip_sim}',
+        #                                                    year='{year}',
+        #                                                    version='{version}',
+        #                                                    polarity='{polarity}',
+        #                                                    pkkp='{pkkp}'),
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}_tmp1.root',
@@ -113,19 +120,21 @@ rule correct_muonpid_Lb:
     Adds corrected PID variables to the given MC tuple
     """
     wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        mode = 'MC_Bs2JpsiPhi_fromLb'
+        # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
     threads: 2
     resources:
         mem_mb = 12000
     input:
         script = 'selection/tools/PIDGen.py',
         tracks = 'selection/pid/pidgen.yaml',
-        file = expand(rules.correct_pid_Lb.output.file, mode='{mode}',
-                                                        strip_sim='{strip_sim}',
-                                                        year='{year}',
-                                                        version='{version}',
-                                                        polarity='{polarity}',
-                                                        pkkp='{pkkp}'),
+        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root',
+    #     file = expand(rules.correct_pid_Lb.output.file, mode='{mode}',
+    #                                                     strip_sim='{strip_sim}',
+    #                                                     year='{year}',
+    #                                                     version='{version}',
+    #                                                     polarity='{polarity}',
+    #                                                     pkkp='{pkkp}'),
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}_tmp1.root',
@@ -143,15 +152,18 @@ rule correct_muonpid_Lb:
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2} \
                                --tmp2 {output.tmp2} &> {log}'
+# }}}
 
-rule merge_polarities_pkkp:
+
+# if config['run_pid'] and config['run_preselection']:
+rule merge_polarities_lambdab:
     """
     Rule for Lb background to merge different polarities and output type :
         1. hplus = p, hminus = k, (pk)
         2. hplus = k, hminus = p, (kp)
     """
     wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        mode = 'MC_Bs2JpsiPhi_fromLb'
     threads: 2
     resources:
         mem_mb = 12000
@@ -170,12 +182,13 @@ rule merge_polarities_pkkp:
                           pkkp=selconfig['MC_Bs2JpsiPhi_fromLb_pkkp'])
     output:
         # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_selected_pidcorrected_Lb.root'))
-        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_polaritymerged.root'
+        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root'
     shell:
        'if grep -i error  {input.logfile1} {input.logfile2} ;\
         then echo an error occured with pid correction, please check the log files;\
         else hadd {output} {input.root};\
         fi;'
+
 
 rule merge_strippings_Lb:
     """
@@ -184,7 +197,7 @@ rule merge_strippings_Lb:
     given path
     """
     wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        mode = 'MC_Bs2JpsiPhi_fromLb'
     threads: 2
     resources:
         mem_mb = 12000
@@ -312,4 +325,4 @@ rule apply_preselection_mc_Lb:
                                --year {wildcards.year}'
 
 
-# vim: fdm=marker
+# vim: fdm=marker:cc=120

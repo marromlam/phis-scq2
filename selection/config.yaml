@@ -326,7 +326,6 @@ bdt_year:
     '2018': '2018'
 
 # Current version of ntuples used and corresponding eos folders
-version: v1r1
 eos_data:
     DIMUON: # [Bs2JpsiPhi, Bd2JpsiKstar, Bu2JpsiKplus]
         2015:
