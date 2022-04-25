@@ -202,7 +202,7 @@ rule merge_strippings_Lb:
     resources:
         mem_mb = 12000
     input:
-        lambda wildcards: expand(rules.merge_polarities_pkkp.output,
+        lambda wildcards: expand(rules.merge_polarities_lambdab.output,
                                  mode=wildcards.mode, version=wildcards.version,
                                  strip_sim=selconfig['strip_sim'][wildcards.mode][wildcards.year],
                                  year=wildcards.year)
