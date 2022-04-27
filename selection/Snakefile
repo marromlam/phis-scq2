@@ -2,7 +2,14 @@
 
 # Configuration for the selection is in an independent file
 import yaml
-with open('selection/config.yaml') as file:
+
+#Load eos paths (restripped or usual tuples)
+if config['stripping_mode']=='pidcuts':
+  with open('selection/config.yaml') as file:
+    selconfig = yaml.load(file, Loader=yaml.FullLoader)
+
+elif config['stripping_mode']=='nopidcuts':
+  with open('selection/config_restripped.yaml') as file:
     selconfig = yaml.load(file, Loader=yaml.FullLoader)
 
 
@@ -56,7 +63,7 @@ def grid_tuples(wcs):
 # Preselection Data {{{
 
 if config['run_preselection'] and config['run_pid']:
-    rule apply_preselection_data:
+    rule preselection_data:
         """
         Generic rule.
         Apply cuts specified in input yaml files on the given tree and adds branches
@@ -100,18 +107,17 @@ if config['run_preselection'] and config['run_pid']:
 # Prepare MC tuple {{{
 
 if config['run_preselection']:
-    rule prepare_mc:
+    rule preselection_prepare_mc:
         """
         Generic rule.
         Do not apply cuts, only add branches specified in the corresponding yaml
         file and save new tree in the requested location
         """
+        wildcard_constraints:
+            mode  = "(MC)((?!.*?(_fromLb)).*)"
         threads: 2
         resources:
             mem_mb = 6000
-        input:
-            script = 'selection/tools/apply_selection.py',
-            branches = ['selection/branches.yaml', 'selection/generator_level_branches_to_be_merged.yaml']
         output:
             # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_prepared.root'))
             SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
@@ -120,18 +126,20 @@ if config['run_preselection']:
             'output/log/prepare_mc/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.log'
         params:
             files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim][wildcards.polarity],
+            script = 'selection/tools/apply_selection.py',
+            branches = ['selection/branches.yaml', 'selection/generator_level_branches_to_be_merged.yaml'],
             treename = lambda wildcards: selconfig['treenames'][wildcards.mode]
         run:
-            shell('(time python {input.script} \
+            shell('(time python {params.script} \
             --input-file {params.files} \
             --input-tree-name {params.treename} \
             --output-file {output} \
             --mode {wildcards.mode} \
-            --branches-files {input.branches} \
+            --branches-files {params.branches} \
             --year {wildcards.year} ) &> {log}')
 
 
-    rule prepare_generator_level_tuple:
+    rule preselection_prepare_genlvl:
         """
         Generic rule.
         Create tuple with generator level information, that contains only specified
@@ -162,7 +170,7 @@ if config['run_preselection']:
             --year {wildcards.year} ) &> {log}')
 
 
-    rule add_generator_level_info:
+    rule preselection_add_genlvl_info:
         """
         Generic rule.
         Add generator level information to specified MC tuple from given tuple with
@@ -172,10 +180,10 @@ if config['run_preselection']:
         resources:
             mem_mb = 6000
         input:
-            input_file = expand(rules.prepare_mc.output,
+            input_file = expand(rules.preselection_prepare_mc.output,
                                 mode='{mode}', version='{version}', year='{year}',
                                 strip_sim='{strip_sim}', polarity='{polarity}'),
-            input_gen_file = expand(rules.prepare_generator_level_tuple.output,
+            input_gen_file = expand(rules.preselection_prepare_genlvl.output,
                                     mode='{mode}', version='{version}',
                                     year='{year}', strip_sim='{strip_sim}',
                                     polarity='{polarity}'),
@@ -211,17 +219,19 @@ if config['run_pid']:
 
 # rompe el pipeline
 if config['run_pid'] and config['run_preselection']:
-    rule merge_polarities:
+    rule preselection_merge_polarities:
         """
         Generic rule.
         Merges input root files using hadd command and saves the output to the
         given path.
         """
+        wildcard_constraints:
+            mode  = "(MC)((?!.*?(_fromLb)).*)"
         threads: 2
         resources:
             mem_mb = 6000
         input:
-            expand(rules.correct_pid.output.file,
+            expand(rules.preselection_correct_pid.output.file,
                 version='{version}', mode='{mode}', strip_sim='{strip_sim}',
                 year='{year}', polarity=selconfig['polarities'])
         output:
@@ -233,7 +243,7 @@ if config['run_pid'] and config['run_preselection']:
             shell('hadd {output} {input}')
 
 
-    rule apply_preselection_mc:
+    rule preselection_mc:
         """
         Generic rule.
         Apply cuts specified in input yaml files on the given tree and adds branches
@@ -243,7 +253,7 @@ if config['run_pid'] and config['run_preselection']:
         resources:
             mem_mb = 12000
         wildcard_constraints:
-            mode = "MC_.*"
+            mode  = "(MC)((?!.*?(_fromLb)).*)"
         input:
             script = 'selection/tools/apply_selection.py',
             #file = expand(rules.merge_polarities.output, mode='{mode}',
@@ -253,17 +263,21 @@ if config['run_pid'] and config['run_preselection']:
             file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root',
         output:
             # tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_pidcorrected_selected_preselected.root')
-            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_preselected.root',
+            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
         params:
             cut_keys = cut_keys_mode,
             # file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/PID/{}/{}_{}_{}_selected_pidcorrected.root'.format(wildcards.mode, wildcards.mode, wildcards.year, wildcards.strip_sim)
-        shell:
-            'python {input.script} --input-file {input.file} \
-                                --output-file {output} \
-                                --mode {wildcards.mode} \
-                                --selection-files {input.cuts} \
-                                --cut-keys {params.cut_keys} \
-                                --year {wildcards.year}'
+        log:
+            # tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_pidcorrected_selected_preselected.root')
+            'output/log/preselection_mc/{year}/{mode}/{version}_{strip_sim}.log'
+        run:
+            shell('(time python {input.script} \
+            --input-file {input.file} \
+            --output-file {output} \
+            --mode {wildcards.mode} \
+            --selection-files {input.cuts} \
+            --cut-keys {params.cut_keys} \
+            --year {wildcards.year}) &> {log}')
 
 # }}}
 
@@ -273,20 +287,20 @@ include: 'gb_weights/Snakefile'
 
 # Merge strippings {{{
 
-rule add_arrays:
+rule preselection_add_arrays:
     threads: 2
     resources:
         mem_mb = 6000
     input:
         script  = 'selection/tools/add_arrays.py',
-        files = lambda wildcards: expand(rules.apply_gb_weights.output if wildcards.mode != 'MC_Bs2JpsiPhi_Prompt'
+        files = lambda wildcards: expand(rules.selection_gbw_compute.output if wildcards.mode != 'MC_Bs2JpsiPhi_Prompt'
                                                                              else rules.apply_gb_weights_prompt.output, 
                                                                              mode=wildcards.mode, 
                                                                              strip_sim=wildcards.strip_sim, 
                                                            version=wildcards.version,
                                                                              year=wildcards.year),
 
-        files_arrays = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_preselected.root',
+        files_arrays = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
         # files_arrays = expand(rules.apply_preselection_mc.output, year='{year}',
         #                                                    mode='{mode}',
         #                                                    version='{version}',
@@ -309,22 +323,23 @@ rule add_arrays:
 
 # modes = ['MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_Prompt']
 
-rule merge_strippings:
+rule preselection_merge_strippings:
     threads: 2
     resources:
         mem_mb = 6000
     input:
         script = 'selection/tools/file_merger.py',
         input_files = lambda wildcards: expand(
-                rules.add_arrays.output.file if wildcards.mode == 'MC_Bs2JpsiPhi' or wildcards.mode == 'MC_Bs2JpsiPhi_Prompt'
-                else rules.apply_gb_weights.output, 
+                rules.preselection_add_arrays.output.file if wildcards.mode == 'MC_Bs2JpsiPhi' or wildcards.mode == 'MC_Bs2JpsiPhi_Prompt'
+                else rules.selection_gbw_compute.output, 
                                                                              mode=wildcards.mode, 
                                                                              version=wildcards.version, 
                                                                              strip_sim=selconfig['strip_sim'][wildcards.mode][wildcards.year],
                                                                              year=wildcards.year)
     output:
         # temp(tuples_path('{mode}/{mode}_{year}_pid_gb.root'))
-        file = SAMPLES + '/{year}/{mode}/{version}_pidgb.root',
+        # >>> file = SAMPLES + '/{year}/{mode}/{version}_pidgb.root',
+        file = SAMPLES + '/{year}/{mode}/{version}_preselected.root',
     shell:
         'python {input.script} --input-files {input.input_files} \
                                --output-file {output}'
@@ -347,7 +362,7 @@ def all_strippings(wildcards):
 
     return ' '.join(files)
 
-rule merge_pid_corrected:
+rule preselection_merge_pid_corrected:
     """
     Generic rule.
     Merges input root files after applying PID correction using hadd command and saves the output to the
@@ -384,7 +399,8 @@ rule selection_apply_veto:
     resources:
         mem_mb = 6000
     input:
-        files = input_to_background_veto,
+        # files = input_to_background_veto,
+        files = SAMPLES + '/{year}/{mode}/{version}_elected.root',
         script = 'selection/tools/apply_selection.py',
         cuts = 'selection/cuts.yaml'
     output:

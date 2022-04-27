@@ -9,7 +9,15 @@
 
 # correct the PID {{{
 
-rule correct_pid:
+def input_for_correct_pid(wildcards):
+    if "MC_Bs2DsPi" == f"{wildcards.mode}":
+        # return SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root',
+        return SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
+    else:
+        return SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root',
+
+
+rule preselection_correct_pid:
     """
     Generic rule.
     Adds corrected PID variables to the given MC tuple
@@ -20,15 +28,17 @@ rule correct_pid:
     wildcard_constraints:
         strip_sim = "str.*",
         polarity = "(Up|Down)",
+        mode  = "(MC)((?!.*?(_fromLb)).*)"
     input:
         script = 'selection/tools/PIDCorr.py',
         tracks = 'selection/pid/pidcorr.yaml',
-        file = lambda wildcards: expand(rules.correct_muonpid.output.file if wildcards.mode != 'MC_Bs2DsPi' else rules.prepare_mc.output,
-                                        version='{version}',
-                                        mode='{mode}',
-                                        strip_sim='{strip_sim}',
-                                        year='{year}',
-                                        polarity='{polarity}'),
+        file = input_for_correct_pid,
+        # file = lambda wildcards: expand(rules.correct_muonpid.output.file if wildcards.mode != 'MC_Bs2DsPi' else rules.prepare_mc.output,
+        #                                 version='{version}',
+        #                                 mode='{mode}',
+        #                                 strip_sim='{strip_sim}',
+        #                                 year='{year}',
+        #                                 polarity='{polarity}'),
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp1.root',
@@ -51,18 +61,22 @@ rule correct_pid:
 
 # run gen PID {{{
 
-rule correct_muonpid:
-    threads: 2
-    resources:
-        mem_mb = 12000
+rule preselection_correct_muonpid:
     """
     Generic rule.
     Adds corrected muon PID variables to the given MC tuple
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        strip_sim = "str.*",
+        polarity = "(Up|Down)",
+        mode  = "(MC)((?!.*?(_fromLb)).*)"
     input:
         script = 'selection/tools/PIDGen.py',
         tracks = 'selection/pid/pidgen.yaml',
-        file = expand(rules.add_generator_level_info.output.file,
+        file = expand(rules.preselection_add_genlvl_info.output.file,
                       mode='{mode}',
                       version='{version}',
                       strip_sim='{strip_sim}',

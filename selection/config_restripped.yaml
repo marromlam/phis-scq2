@@ -303,27 +303,27 @@ MC_Bs2JpsiPhi_fromLb_pkkp:
     - pk
     - kp
 
-# bdt_mode:
-#     Bs2JpsiPhi: Bs2JpsiPhi
-#     Bs2JpsiPhi_Lb: Bs2JpsiPhi
-#     Bd2JpsiKstar: Bs2JpsiPhi
-#     Bs2JpsiPhi_Prompt: Bs2JpsiPhi
-#     Bu2JpsiKplus: Bu2JpsiKplus
-#     MC_Bs2JpsiPhi: Bs2JpsiPhi
-#     MC_Bs2JpsiKK_Swave: Bs2JpsiPhi #Check if it's not better to use MC_Bs2JpsiKK_Swave
-#     MC_Bs2JpsiPhi_dG0: Bs2JpsiPhi
-#     MC_Bs2JpsiPhi_dG0_large_lifetime: Bs2JpsiPhi
-#     MC_Bs2JpsiPhi_Prompt: Bs2JpsiPhi
-#     MC_Bd2JpsiKstar: Bs2JpsiPhi
-#     MC_Bu2JpsiKplus: Bu2JpsiKplus
-#     MC_Bs2JpsiPhi_fromLb: Bs2JpsiPhi
-#     MC_Bc2BsPi: Bs2JpsiPhi
-#
-# bdt_year:
-#     '2015': '2016'
-#     '2016': '2016'
-#     '2017': '2017'
-#     '2018': '2018'
+bdt_mode:
+    Bs2JpsiPhi: Bs2JpsiPhi
+    Bs2JpsiPhi_Lb: Bs2JpsiPhi
+    Bd2JpsiKstar: Bs2JpsiPhi
+    Bs2JpsiPhi_Prompt: Bs2JpsiPhi
+    Bu2JpsiKplus: Bu2JpsiKplus
+    MC_Bs2JpsiPhi: Bs2JpsiPhi
+    MC_Bs2JpsiKK_Swave: Bs2JpsiPhi #Check if it's not better to use MC_Bs2JpsiKK_Swave
+    MC_Bs2JpsiPhi_dG0: Bs2JpsiPhi
+    MC_Bs2JpsiPhi_dG0_large_lifetime: Bs2JpsiPhi
+    MC_Bs2JpsiPhi_Prompt: Bs2JpsiPhi
+    MC_Bd2JpsiKstar: Bs2JpsiPhi
+    MC_Bu2JpsiKplus: Bu2JpsiKplus
+    MC_Bs2JpsiPhi_fromLb: Bs2JpsiPhi
+    MC_Bc2BsPi: Bs2JpsiPhi
+
+bdt_year:
+    '2015': '2016'
+    '2016': '2016'
+    '2017': '2017'
+    '2018': '2018'
 
 # Current version of ntuples used and corresponding eos folders
 eos_data:
@@ -457,109 +457,38 @@ eos_mc:
         2015:
             str24r2_sim09b_dst:
                 Up:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str24_sim09b_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089541/0000/'
-                    # Third WGP str24_sim09b_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097399/0000/'
-                    # Analysis production v0r0p2517396 
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135861/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2015/MC_Bs2JpsiPhi_2015_sim09b_MagUp.root'
  
                 Down:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str24_sim09b_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089561/0000/'
-                    # Third WGP str24_sim09b_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097391/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135819/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2015/MC_Bs2JpsiPhi_2015_sim09b_MagDown.root'
  
         2016:
             str28r2_sim09b_dst:
                 Up:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str28_sim09b_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089581/0000/'
-                    # Third WGP str28_sim09b_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097409/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135863/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09b_MagUp.root'
                 Down:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str28_sim09b_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089609/0000/'
-                    # Third WGP str28_sim09b_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097405/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135821/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09b_MagDown.root'
  
             str28r2_sim09c_dst:
                 Up:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str28_sim09c_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089579/0000/'
-                    # Third WGP str28_sim09c_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097401/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135865/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09c_MagUp.root'
                 Down:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str28_sim09c_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089607/0000/'
-                    # Third WGP str28_sim09c_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097389/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135823/0000/'
-            #str26_sim09b_mdst: #depricated because mdst                                                                                                        DEPRICATED TO BE DELETED
-            #    Up:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089583/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097411/0000/'        
-            #    Down:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089611/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097403/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09c_MagDown.root'
                     
         2017:
-            #str29r2_sim09f_dst: #depricated because of the buggy sim09def                                                                                      DEPRICATED TO BE DELETED
-            #    Up:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089723/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097387/0000/'        
-            #    Down:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089731/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097381/0000/'
-                    
             str29r2_sim09g_dst:
                 Up:
                     # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097385/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133627/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2017/MC_Bs2JpsiPhi_2017_sim09g_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097383/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133581/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2017/MC_Bs2JpsiPhi_2017_sim09g_MagDown.root'
         2018:
-            #str34_sim09f_dst: #depricated because of the buggy sim09def                                                                                        DEPRICATED TO BE DELETED
-            #    Up:
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097393/0000/'        
-            #    Down:
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097397/0000/'
-                    
             str34_sim09g_dst:
                 Up:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097407/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133629/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2018/MC_Bs2JpsiPhi_2018_sim09g_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097395/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133583/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2018/MC_Bs2JpsiPhi_2018_sim09g_MagDown.root'
+
     MC_Bs2JpsiKK_Swave:
         2015:
             str24r2_sim09k_dst:
@@ -647,80 +576,29 @@ eos_mc:
         2015: 
             str24r2_sim09k_dst:
                  Up:
-                   'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00137623/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2015/MC_Bs2JpsiPhi_dG0_2015_sim09k_MagUp.root'
                  Down:
-                   'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00137619/0000/'
-            #str24_sim09b_mdst: # this is depricated because mdst                                                                                                  DEPRICATED TO BE DELETED
-            #    Up:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089559/0000/'
-            #        # Third WGP 
-            #        'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097423/0000/'
-            #    Down:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089539/0000/'
-            #        # Third WGP
-            #        'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097427/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2015/MC_Bs2JpsiPhi_dG0_2015_sim09k_MagDown.root'
         2016: 
             str28r2_sim09k_dst:
                  Up:
-                   'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00137625/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2016/MC_Bs2JpsiPhi_dG0_2016_sim09k_MagUp.root'
                  Down:
-                   'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00137621/0000/'
- 
-        #NOTE NEW APS ARE NOT HERE YET
-            #str26_sim09b_mdst:                                                                                                                                   DEPRICATED TO BE DELETED
-            #    Up:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089585/0000/'
-            #        # Third WGP
-            #        'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097425/0000/'
-            #    Down:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089613/0000/'
-            #        # Third WGP
-            #        'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097421/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2016/MC_Bs2JpsiPhi_dG0_2016_sim09k_MagDown.root'
            
         2017:
             str29r2_sim09h_dst:
                 Up:
-                    # Third WGP 
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097417/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133631/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2017/MC_Bs2JpsiPhi_dG0_2017_sim09h_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097413/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133585/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2017/MC_Bs2JpsiPhi_dG0_2017_sim09h_MagDown.root'
         2018:
             str34_sim09h_dst:
                 Up:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097415/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133633/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2018/MC_Bs2JpsiPhi_dG0_2018_sim09h_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097419/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133587/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2018/MC_Bs2JpsiPhi_dG0_2018_sim09h_MagDown.root'
                     #
-    #DEPRICATED MC
-    #MC_Bs2JpsiPhi_dG0_large_lifetime:                                                                                                                              DEPRICATED TO BE DELETED
-    #    2017:
-    #        str29r2_sim09f_dst:
-    #            Up:
-    #                # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-    #                #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089721/0000/'
-    #                # Third WGP
-    #                #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097379/0000/'
-    #            Down:
-    #                # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-    #                #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089729/0000/'
-    #                # Third WGP
-    #                #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097377/0000/'
-
     MC_Bs2JpsiPhi_Prompt: 
         2015:
             str24r2_sim09b_dst:
@@ -798,169 +676,61 @@ eos_mc:
         2015:
             str24r2_sim09b_ldst:
                 Up:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str24r2_sim09b_ldst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089545/0000/'
-                    # Third WGP str24r2_sim09b_ldst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097331/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135849/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09b_MagUp.root'
                 Down:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str24r2_sim09b_ldst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089565/0000/'
-                    # Third WGP str24r2_sim09b_ldst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097341/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135807/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09b_MagDown.root'
             str24r2_sim09c_dst:
                 Up:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str24r1_sim09c_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089543/0000/'
-                    # Third WGP str24r1_sim09c_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097349/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135851/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09c_MagUp.root'
                 Down:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str24r1_sim09c_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089563/0000/'
-                    # Third WGP str24r1_sim09c_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097345/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135809/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09c_MagDown.root'
             str24r2_sim09h_ldst:
                 Up:
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135853/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09h_MagUp.root'
                 Down:
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135811/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09h_MagDown.root'
 
-            #str24r1_sim09c_mdst: #depricated because mdst                                                                                               DEPRICATED TO BE DELETED
-            #    Up:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089547/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097333/0000/'
-            #        
-            #    Down:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089567/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097329/0000/'
-                    
         2016:
             str28r2_sim09b_dst:
                 Up:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str26_sim09b_ds
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089587/0000/'
-                    # Third WGP str26_sim09b_ds
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097353/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135855/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_dst_MagUp.root'
                 Down:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str26_sim09b_ds
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089619/0000/'
-                    # Third WGP str26_sim09b_ds
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097355/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135813/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_dst_MagDown.root'
             str28r2_sim09b_ldst:
                 Up:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str26_sim09b_ldst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089589/0000/'
-                    # Third WGP str26_sim09b_ldst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097337/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135857/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_ldst_MagUp.root'
                 Down:
-                    # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2 str26_sim09b_ldst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089617/0000/'
-                    # Third WGP str26_sim09b_ldst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097339/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135815/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_ldst_MagDown.root'
             str28r2_sim09h_ldst:
                 Up:
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135859/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09h_MagUp.root'
                 Down:
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135817/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09h_MagDown.root'
 
-            #str28r1_sim09c_mdst: #depricated because mdst                                                                                               DEPRICATED TO BE DELETED
-            #    Up:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089591/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097335/0000/'
-                    
-            #    Down:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089615/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097347/0000/'
-                    
         2017:
-            #str29r2_sim09f_dst: #depricated because sim09def                                                                                           DEPRICATED TO BE DELETED
-            #    Up:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089725/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097357/0000/'        
-            #    Down:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089733/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097359/0000/'
-                    
             str29r2_sim09g_ldst:
                 Up:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/ANAPROD_BSTOJPSIPHI.ROOT/00105019/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/ANAPROD_BSTOJPSIPHI.ROOT/00135773/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09g_MagUp.root'
  
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/ANAPROD_BSTOJPSIPHI.ROOT/00105013/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/ANAPROD_BSTOJPSIPHI.ROOT/00135771/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09g_MagDown.root'
                     
             str29r2_sim09i_dst:
                 Up:
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133615/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09i_MagUp.root'
                 Down:
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133569/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09i_MagDown.root'
         2018:
-            #str34_sim09f_dst:                                                                                                                          DEPRICATED TO BE DELETED
-            #    Up:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089711/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097351/0000/'
-            #    Down:
-            #        # First WGP: https://gitlab.cern.ch/lhcb-datapkg/AnalysisProductions/-/merge_requests/2
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00089717/0000/'
-            #        # Third WGP
-            #        #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097343/0000/'
             str34_sim09g_ldst:
                 Up:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/ANAPROD_BSTOJPSIPHI.ROOT/00105009/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/ANAPROD_BSTOJPSIPHI.ROOT/00135777/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09g_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/ANAPROD_BSTOJPSIPHI.ROOT/00105015/0000/'
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/ANAPROD_BSTOJPSIPHI.ROOT/00135775/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09g_MagDown.root'
             str34_sim09i_dst:
                 Up:
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133617/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09i_MagUp.root'
                 Down:
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133571/0000/'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09i_MagDown.root'
     MC_Bu2JpsiKplus:
         2015: 
             str24r2_sim09b_ldst:
@@ -1200,51 +970,27 @@ eos_mc:
         2015:
             str24r2_sim09h_dst:
                 Up:
-                    # Third WGP  str24r1_sim09h_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097645/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135867/0000/'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2015/MC_Bs2JpsiPhi_fromLb_2015_sim09h_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097655/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2015/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00135825/0000/'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2015/MC_Bs2JpsiPhi_fromLb_2015_sim09h_MagDown.root'
         2016:
             str28r2_sim09g_dst:
                 Up:
-                    # Third WGP str28r1_sim09g_dst
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097641/0000/'
-                    # Analysis production v0r0p3194184
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00148821/0000/'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2016/MC_Bs2JpsiPhi_fromLb_2016_sim09g_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097651/0000/'
-                    # Analysis production v0r0p3194184
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2016/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00148823/0000/'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2016/MC_Bs2JpsiPhi_fromLb_2016_sim09g_MagDown.root'
         2017:
             str29r2_sim09g_dst:
                 Up:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097653/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133635/0000/'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2017/MC_Bs2JpsiPhi_fromLb_2017_sim09g_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097647/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2017/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133589/0000/'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2017/MC_Bs2JpsiPhi_fromLb_2017_sim09g_MagDown.root'
         2018:
             str34_sim09g_dst:
                 Up:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097649/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133637/0000/'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2018/MC_Bs2JpsiPhi_fromLb_2018_sim09g_MagUp.root'
                 Down:
-                    # Third WGP
-                    #'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00097643/0000/'
-                    # Analysis production v0r0p2517396
-                    'root://eoslhcb.cern.ch//eos/lhcb/grid/prod/lhcb/MC/2018/B2CC_BSTOJPSIPHI_DVNTUPLE.ROOT/00133591/0000/'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2018/MC_Bs2JpsiPhi_fromLb_2018_sim09g_MagUp.root'
     MC_Bc2BsPi:
         2015:
             str24r2_sim09k_dst:

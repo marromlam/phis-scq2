@@ -9,6 +9,8 @@ common: &common
     'HLT2TCK': 'HLT2TCK'
     'B_LOKI_DTF_CTAU': 'B_LOKI_DTF_CTAU'
     'B_LOKI_DTF_CTAUERR': 'B_LOKI_DTF_CTAUERR'
+    'B_LOKI_DTF_VCHI2NDOF': 'B_LOKI_DTF_VCHI2NDOF'
+    'B_LOKI_DTF_CHI2NDOF': 'B_LOKI_DTF_CHI2NDOF'
     'B_IPCHI2_OWNPV' : 'B_IPCHI2_OWNPV'
     'year': '(int) {year}'
     'nTracks': '(int) nTracks'
@@ -148,6 +150,7 @@ Bs2JpsiPhi: &Bs2JpsiPhi
     'X_PT': 'X_PT'
     'X_M': 'X_M'
     'X_ENDVERTEX_CHI2': 'X_ENDVERTEX_CHI2'
+    'X_ENDVERTEX_NDOF': 'X_ENDVERTEX_NDOF'
     'RecoHelicityAngles': 'HelicityAngles(TLorentzVector(B_ConstJpsi_phi_1020_Kplus_PX[0]/1000.,
                                                          B_ConstJpsi_phi_1020_Kplus_PY[0]/1000.,
                                                          B_ConstJpsi_phi_1020_Kplus_PZ[0]/1000.,
@@ -322,6 +325,7 @@ Bd2JpsiKstar: &Bd2JpsiKstar
     'X_PT': 'X_PT'
     'X_M': 'Kstar_M_davinci'
     'X_ENDVERTEX_CHI2': 'X_ENDVERTEX_CHI2'
+    'X_ENDVERTEX_NDOF': 'X_ENDVERTEX_NDOF'
     'RecoHelicityAngles': 'HelicityAngles(TLorentzVector(B_ConstJpsi_Kst_892_0_Kplus_PX[0]/1000.,
                                                          B_ConstJpsi_Kst_892_0_Kplus_PY[0]/1000.,
                                                          B_ConstJpsi_Kst_892_0_Kplus_PZ[0]/1000.,
