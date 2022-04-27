@@ -303,27 +303,27 @@ MC_Bs2JpsiPhi_fromLb_pkkp:
     - pk
     - kp
 
-bdt_mode:
-    Bs2JpsiPhi: Bs2JpsiPhi
-    Bs2JpsiPhi_Lb: Bs2JpsiPhi
-    Bd2JpsiKstar: Bs2JpsiPhi
-    Bs2JpsiPhi_Prompt: Bs2JpsiPhi
-    Bu2JpsiKplus: Bu2JpsiKplus
-    MC_Bs2JpsiPhi: Bs2JpsiPhi
-    MC_Bs2JpsiKK_Swave: Bs2JpsiPhi #Check if it's not better to use MC_Bs2JpsiKK_Swave
-    MC_Bs2JpsiPhi_dG0: Bs2JpsiPhi
-    MC_Bs2JpsiPhi_dG0_large_lifetime: Bs2JpsiPhi
-    MC_Bs2JpsiPhi_Prompt: Bs2JpsiPhi
-    MC_Bd2JpsiKstar: Bs2JpsiPhi
-    MC_Bu2JpsiKplus: Bu2JpsiKplus
-    MC_Bs2JpsiPhi_fromLb: Bs2JpsiPhi
-    MC_Bc2BsPi: Bs2JpsiPhi
-
-bdt_year:
-    '2015': '2016'
-    '2016': '2016'
-    '2017': '2017'
-    '2018': '2018'
+# bdt_mode:
+#     Bs2JpsiPhi: Bs2JpsiPhi
+#     Bs2JpsiPhi_Lb: Bs2JpsiPhi
+#     Bd2JpsiKstar: Bs2JpsiPhi
+#     Bs2JpsiPhi_Prompt: Bs2JpsiPhi
+#     Bu2JpsiKplus: Bu2JpsiKplus
+#     MC_Bs2JpsiPhi: Bs2JpsiPhi
+#     MC_Bs2JpsiKK_Swave: Bs2JpsiPhi #Check if it's not better to use MC_Bs2JpsiKK_Swave
+#     MC_Bs2JpsiPhi_dG0: Bs2JpsiPhi
+#     MC_Bs2JpsiPhi_dG0_large_lifetime: Bs2JpsiPhi
+#     MC_Bs2JpsiPhi_Prompt: Bs2JpsiPhi
+#     MC_Bd2JpsiKstar: Bs2JpsiPhi
+#     MC_Bu2JpsiKplus: Bu2JpsiKplus
+#     MC_Bs2JpsiPhi_fromLb: Bs2JpsiPhi
+#     MC_Bc2BsPi: Bs2JpsiPhi
+#
+# bdt_year:
+#     '2015': '2016'
+#     '2016': '2016'
+#     '2017': '2017'
+#     '2018': '2018'
 
 # Current version of ntuples used and corresponding eos folders
 eos_data:
