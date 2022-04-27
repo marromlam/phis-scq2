@@ -22,7 +22,7 @@ rule selection_gbw_preliminar_mc:
         #                                              strip_sim='{strip_sim}'),
         cuts = ['selection/cuts.yaml', 'selection/gb_weights/cuts.yaml'],
         branches = 'selection/branches.yaml',
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
+        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root',
     output:
         # temp(tuples_path('{mode}/{mode}_{strip_sim}_{year}_GBW_MC_selected.root'))
         SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_preliminarGBW.root',

@@ -211,8 +211,7 @@ def input_to_apply_bdt_selection(wildcards):
 
 include: 'bdt_study/Snakefile'
 
-# print(config)
-# WARNING :  Modified this rule NOT to use EOS PID
+
 if config['selection_mode'] == 'run2':
     rule selection_bdt_apply:
         """
@@ -228,7 +227,9 @@ if config['selection_mode'] == 'run2':
             tuple_file = input_to_apply_bdt_selection,
             bdt_cut = lambda wcs: expand("output/params/bdt_cut/{year}/{mode}/{version}.json",
                              mode="Bu2JpsiKplus" if 'Bu' in f'{wcs.mode}' else "Bs2JpsiPhi",
-                             year = f"{wcs.year}", version = f"{wcs.version}"),
+                             year= selconfig['bdt_year'][wildcards.year],
+                             # mode = selconfig['bdt_mode'][wildcards.mode],
+                             version = f"{wcs.version}"),
             tmva_weight_dir = tmva_weights_file,
         params:
             script = 'selection/tools/apply_bdt_selection.py',
