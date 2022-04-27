@@ -248,7 +248,8 @@ if __name__ == '__main__':
     'data': [cats['signalMC'].time, cats['controlMC'].time, cats['controlRD'].time],
     'prob': [cats['signalMC'].lkhd, cats['controlMC'].lkhd, cats['controlRD'].lkhd],
     'weight': [cats['signalMC'].weight, cats['controlMC'].weight, cats['controlRD'].weight],
-    'flatend': TIMEACC['use_flatend'],
+    # TODO: flatend should be applied in badjanak, general
+    # 'flatend': TIMEACC['use_flatend'],
     'tLL': tLL,
     'tUL': tUL
   }

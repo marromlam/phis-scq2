@@ -78,14 +78,14 @@ MC_common: &MC_common
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "bkgcatB" : "B_BKGCAT"
-  "gbWeights" : "gb_weights"
+  "gbWeight" : "gb_weights"
 
 # }}}
 
 
 # Bs family {{{
 
-Bs2JpsiPhi: &Bs2JpsiPhi
+Bs2JpsiPhi: # &Bs2JpsiPhi
   <<: *common
   "sWeight" : "sigBsSW"
   "tagOSdec" : "OS_Combination_DEC"
@@ -99,7 +99,7 @@ MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   "sWeight" : "sigBsSW"
   "genidB" : "B_ID_GenLvl"
 
-MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+MC_Bs2JpsiPhi: # &MC_Bs2JpsiPhi
   <<: *MC_Bs2JpsiPhi_dG0
   "dg0Weight" : "dg0Weight"
   "truemHH" : "sqrt(X_TRUEP_E*X_TRUEP_E-(X_TRUEP_X*X_TRUEP_X+X_TRUEP_Y*X_TRUEP_Y+X_TRUEP_Z*X_TRUEP_Z))"
@@ -107,7 +107,7 @@ MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   # "truthMatch" : "abs(B_TRUEID)==531"
   # "truthMatch" : "B_BKGCAT!=60 && abs(B_TRUEID)==531"
 
-MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+MC_Bs2JpsiKK_Swave: # &MC_Bs2JpsiKK_Swave
   <<: *MC_Bs2JpsiPhi_dG0
   "dg0Weight" : "dg0Weight"
   "truemHH" : "sqrt((hplus_TRUEP_E+hminus_TRUEP_E)*(hplus_TRUEP_E+hminus_TRUEP_E) - ((hplus_TRUEP_X+hminus_TRUEP_X)*(hplus_TRUEP_X+hminus_TRUEP_X)+(hplus_TRUEP_Y+hminus_TRUEP_Y)*(hplus_TRUEP_Y+hminus_TRUEP_Y)+(hplus_TRUEP_Z+hminus_TRUEP_Z)*(hplus_TRUEP_Z+hminus_TRUEP_Z)))"
@@ -116,12 +116,12 @@ MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
 
 MC_Bs2JpsiPhi_dG0_large_lifetime:
   <<: *MC_common
-  "sWeight" : "sWeight"
+  "sWeight" : "sw"
   "genidB" : "B_ID_GenLvl"
 
 MC_Bs2JpsiPhi_Prompt:
   <<: *MC_common
-  "sWeight" : "sWeight"
+  "sWeight" : "sw"
   "genidB" : "B_ID_GenLvl"
 
 GUN_Bs2JpsiPhi:
@@ -135,7 +135,7 @@ GUN_Bs2JpsiPhi:
 
 # Bd family {{{
 
-Bd2JpsiKstar: &Bd2JpsiKstar
+Bd2JpsiKstar: # &Bd2JpsiKstar
   <<: *common
   "sWeight" : "sigBdSW"
   "kbsWeight" : "kbsWeight"
@@ -160,7 +160,7 @@ MC_Bd2JpsiKstar:
 
 Bu2JpsiKplus:
   <<: *common
-  "sWeight" : "sw"
+  "sWeight" : "sigBuSW"
   "kbsWeight" : "kbsWeight"
   "oddWeight" : "oddWeight"
   "tagOSdec" : "0*time"
@@ -171,7 +171,7 @@ Bu2JpsiKplus:
 MC_Bu2JpsiKplus:
   <<: *MC_common
   "kbuWeight" : "kbuWeight"
-  "sWeight" : "sw"
+  "sWeight" : "sigBuSW"
   "genidB" : "B_ID_GenLvl"
 
 # }}}
