@@ -8,7 +8,8 @@ __all__ = ['badjanak', 'reweightings', 'time_resolution', 'time_acceptance',
            'angular_acceptance']
 
 
-from . import badjanak
+# TODO: work to be able to import it here
+# from . import badjanak
 from . import reweightings
 from . import time_resolution
 from . import time_acceptance

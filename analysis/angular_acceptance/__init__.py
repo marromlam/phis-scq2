@@ -5,8 +5,8 @@ Angular acceptance module
 
 __all__ = ["corrected", "iterative", "new_merger", "analytical_corrected"]
 
-
-from . import analytical_corrected
+# TODO: this file is wrong
+# from . import analytical_corrected
 from . import corrected
 from . import new_merger
 from . import iterative
