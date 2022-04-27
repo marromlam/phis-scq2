@@ -76,11 +76,11 @@ if __name__ == "__main__":
     print("Target weights:", ncorr[1], wcorr[1])
   
     # Background-subtracted sample - not using kbsWeight 
-    xncorr, yncorr = complot.compare_hist(tdf[branch], odf[branch],
+    xncorr, yncorr, npull = complot.compare_hist(tdf[branch], odf[branch],
                                       tdf.eval(ncorr[1]), odf.eval(ncorr[0]),
                                       bins=60, range=trang,
                                       density=True)
-    xwcorr, ywcorr = complot.compare_hist(tdf[branch], odf[branch],
+    xwcorr, ywcorr, wpull = complot.compare_hist(tdf[branch], odf[branch],
                                       tdf.eval(wcorr[1]), odf.eval(wcorr[0]),
                                       bins=60, range=orang,
                                       density=True)
@@ -96,8 +96,10 @@ if __name__ == "__main__":
                         step="mid", facecolor='none', edgecolor='C0', #hatch='xxx',
                         label=f"${otexmode}$ reweighted")
   
-    axpull.fill_between(yncorr.bins, xncorr.counts/yncorr.counts, 1, facecolor='C2')
-    axpull.fill_between(ywcorr.bins, xncorr.counts/ywcorr.counts, 1, facecolor='C0')
+    # axpull.fill_between(yncorr.bins, xncorr.counts/yncorr.counts, 1, facecolor='C2')
+    # axpull.fill_between(ywcorr.bins, xncorr.counts/ywcorr.counts, 1, facecolor='C0')
+    axpull.fill_between(yncorr.bins, npull, 0, facecolor='C2')
+    axpull.fill_between(ywcorr.bins, wpull, 0, facecolor='C0')
   
     axpull.set_xlabel(rf"${get_var_in_latex(branch)}$")
     axpull.set_ylabel(f"$\\frac{{N({ttexmode})}}{{N({otexmode})}}$")
@@ -106,8 +108,8 @@ if __name__ == "__main__":
       axplot.set_ylim(0, axplot.get_ylim()[1]*20)
     else:
       axplot.set_ylim(0, axplot.get_ylim()[1]*1.2)
-    axpull.set_ylim(-1,3)
-    axpull.set_yticks([-0.5, 1, 2.5])
+    axpull.set_ylim(-6, 6)
+    axpull.set_yticks([-5, 0, 5])
     axplot.legend()
     watermark(axplot, version=f"${args['version']}$", scale=1.25)
     fig.savefig(args['output'])
