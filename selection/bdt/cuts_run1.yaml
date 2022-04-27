@@ -7,13 +7,22 @@ Bs2JpsiPhi: &Bs2JpsiPhi
     'mu_cuts': '((muplus_PT <muminus_PT && muplus_PT>500.) || (muminus_PT<muplus_PT && muminus_PT>500.)) && muplus_TRACK_CHI2NDOF<4.0 && muminus_TRACK_CHI2NDOF<4.0'
     'h_cuts': 'hplus_TRACK_CHI2NDOF<4.0 && hminus_TRACK_CHI2NDOF<4.0'
     'pid_cuts': 'hplus_ProbNNk_corr > 0.25 && hminus_ProbNNk_corr >0.25 && muplus_ProbNNmu_corr>0.25 && muminus_ProbNNmu_corr>0.25'
-    'san_cuts': 'hplus_PIDK > 0.0 && muplus_PIDmu > 0.0 && muminus_PIDmu>0'
     'Lambda_b_veto': '!(((hplus_ProbNNp_corr > 0.7) && (hplus_ProbNNp_corr > hminus_ProbNNp_corr) && (abs(B_pKMuMuKplus_M_1 - 5619.51) < 15.)) || ((hminus_ProbNNp_corr > 0.7) && (hminus_ProbNNp_corr > hplus_ProbNNp_corr) && (abs(B_pKMuMuKminus_M_1 - 5619.51) < 15.)))'
     'Bd_veto': '!(((hplus_ProbNNk_corr < 0.35 || hplus_ProbNNpi_corr > 0.7) && (hplus_ProbNNpi_corr > hminus_ProbNNpi_corr) && (abs(B_B2KpPiJpsi_M_1 - 5279.63) < 15.)) || ((hminus_ProbNNk_corr < 0.35 || hminus_ProbNNpi_corr > 0.7) && (hminus_ProbNNpi_corr > hplus_ProbNNpi_corr) && (abs(B_B2KmPiJpsi_M_1 - 5279.63) < 15.)))'
 
 
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
-    <<: *Bs2JpsiPhi
+    'B_cuts': 'B_IPCHI2_OWNPV < 25 && B_LOKI_DTF_VCHI2NDOF > 0 && B_LOKI_DTF_CHI2NDOF > 0 && B_LOKI_DTF_VCHI2NDOF < 5 && B_ENDVERTEX_CHI2/B_ENDVERTEX_NDOF<10 && B_ConstJpsi_M_1 > 5200. && B_ConstJpsi_M_1 < 5550.'
+    'nextPV': 'B_MINIPCHI2NEXTBEST > 50 || B_MINIPCHI2NEXTBEST < 0'
+    'X_cuts': 'X_PT > 1000. && X_M > 990. && X_M < 1050.'
+    'X_vertex': 'X_ENDVERTEX_CHI2/X_ENDVERTEX_NDOF < 18'
+    'Jpsi_cuts': 'Jpsi_MM>3030 && Jpsi_MM<3150 && Jpsi_ENDVERTEX_CHI2/Jpsi_ENDVERTEX_NDOF<16'
+    'mu_cuts': '((muplus_PT <muminus_PT && muplus_PT>500.) || (muminus_PT<muplus_PT && muminus_PT>500.)) && muplus_TRACK_CHI2NDOF_scaled<4.0 && muminus_TRACK_CHI2NDOF_scaled<4.0'
+    'h_cuts': 'hplus_TRACK_CHI2NDOF_scaled<4.0 && hminus_TRACK_CHI2NDOF_scaled<4.0'
+    'pid_cuts': 'hplus_ProbNNk_corr > 0.25 && hminus_ProbNNk_corr >0.25 && muplus_ProbNNmu_corr>0.25 && muminus_ProbNNmu_corr>0.25'
+    'san_cuts': 'hplus_PIDK > 0.0 && muplus_PIDmu > 0.0 && muminus_PIDmu>0'
+    'Lambda_b_veto': '!(((hplus_ProbNNp_corr > 0.7) && (hplus_ProbNNp_corr > hminus_ProbNNp_corr) && (abs(B_pKMuMuKplus_M_1 - 5619.51) < 15.)) || ((hminus_ProbNNp_corr > 0.7) && (hminus_ProbNNp_corr > hplus_ProbNNp_corr) && (abs(B_pKMuMuKminus_M_1 - 5619.51) < 15.)))'
+    'Bd_veto': '!(((hplus_ProbNNk_corr < 0.35 || hplus_ProbNNpi_corr > 0.7) && (hplus_ProbNNpi_corr > hminus_ProbNNpi_corr) && (abs(B_B2KpPiJpsi_M_1 - 5279.63) < 15.)) || ((hminus_ProbNNk_corr < 0.35 || hminus_ProbNNpi_corr > 0.7) && (hminus_ProbNNpi_corr > hplus_ProbNNpi_corr) && (abs(B_B2KmPiJpsi_M_1 - 5279.63) < 15.)))'
     'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
@@ -40,23 +49,39 @@ Bd2JpsiKstar: &Bd2JpsiKstar
     'pion_cuts': '(hminus_PT > 250.) && (hminus_PIDK < 0. && hminus_PIDK != -1000.)'
     'h_cuts': 'hplus_TRACK_CHI2NDOF<4.0'
     'pid_cuts': 'hplus_ProbNNk_corr > 0.25 && muplus_ProbNNmu_corr>0.25 && muminus_ProbNNmu_corr>0.25'
-    'san_cuts': 'hplus_PIDK > 0.0 && muplus_PIDmu > 0.0 && muminus_PIDmu>0'
     'Lambda_b_veto': '!((hminus_ProbNNp_corr > 0.7) && (abs(B_JpsipK_M_1 - 5619.51) < 15.))'
     'Bd_veto': '!((hminus_ProbNNk_corr > 0.7) && (abs(B_JpsiKK_M_1 - 5366.89) < 30.))'
 
 MC_Bd2JpsiKstar:
-    <<: *Bd2JpsiKstar
+    'B_cuts': 'B_IPCHI2_OWNPV < 25  && B_LOKI_DTF_VCHI2NDOF > 0 && B_LOKI_DTF_CHI2NDOF > 0 && B_LOKI_DTF_VCHI2NDOF < 5 && B_ENDVERTEX_CHI2/B_ENDVERTEX_NDOF<10  && B_ConstJpsi_M_1 > 5150. && B_ConstJpsi_M_1 < 5450.'
+    'nextPV': 'B_MINIPCHI2NEXTBEST > 50 || B_MINIPCHI2NEXTBEST < 0'
+    'X_cuts': 'X_PT > 1000. &&  X_M > 826. && X_M < 966.'
+    'X_vertex': 'X_ENDVERTEX_CHI2/X_ENDVERTEX_NDOF < 18'
+    'Jpsi_cuts': 'Jpsi_MM>3030 && Jpsi_MM<3150 && Jpsi_ENDVERTEX_CHI2/Jpsi_ENDVERTEX_NDOF<16'
+    'mu_cuts': '((muplus_PT<muminus_PT && muplus_PT>500.) || (muminus_PT<muplus_PT && muminus_PT>500.)) && muplus_TRACK_CHI2NDOF_scaled<4.0 && muminus_TRACK_CHI2NDOF_scaled<4.0'
+    'pion_cuts': '(hminus_PT > 250.) && (hminus_PIDK < 0. && hminus_PIDK != -1000.)'
+    'h_cuts': 'hplus_TRACK_CHI2NDOF_scaled<4.0'
+    'pid_cuts': 'hplus_ProbNNk_corr > 0.25 && muplus_ProbNNmu_corr>0.25 && muminus_ProbNNmu_corr>0.25'
+    'san_cuts': 'hplus_PIDK > 0.0 && muplus_PIDmu > 0.0 && muminus_PIDmu>0'
+    'Lambda_b_veto': '!((hminus_ProbNNp_corr > 0.7) && (abs(B_JpsipK_M_1 - 5619.51) < 15.))'
+    'Bd_veto': '!((hminus_ProbNNk_corr > 0.7) && (abs(B_JpsiKK_M_1 - 5366.89) < 30.))'
     'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
 
 Bu2JpsiKplus: &Bu2JpsiKplus
     'B_cuts': 'B_IPCHI2_OWNPV < 25 && B_LOKI_DTF_VCHI2NDOF > 0 && B_LOKI_DTF_CHI2NDOF > 0 && B_LOKI_DTF_VCHI2NDOF < 5 && B_ENDVERTEX_CHI2/B_ENDVERTEX_NDOF<10  && B_ConstJpsi_M_1 > 5150. && B_ConstJpsi_M_1 < 5450.'
     'nextPV': 'B_MINIPCHI2NEXTBEST > 50 || B_MINIPCHI2NEXTBEST < 0'
     'Jpsi_cuts': 'Jpsi_MM>3030 && Jpsi_MM<3150 && Jpsi_ENDVERTEX_CHI2/Jpsi_ENDVERTEX_NDOF<16'
+    'h_cuts': 'hplus_TRACK_CHI2NDOF<4.0'
     'mu_cuts': '((muplus_PT<muminus_PT && muplus_PT>500.) || (muminus_PT<muplus_PT && muminus_PT>500.)) && muplus_TRACK_CHI2NDOF<4.0 && muminus_TRACK_CHI2NDOF<4.0'
     'pid_cuts': 'hplus_ProbNNk_corr > 0.25 && muplus_ProbNNmu_corr>0.25 && muminus_ProbNNmu_corr>0.25'
 
 MC_Bu2JpsiKplus:
-    <<: *Bu2JpsiKplus
+    'B_cuts': 'B_IPCHI2_OWNPV < 25 && B_LOKI_DTF_VCHI2NDOF > 0 && B_LOKI_DTF_CHI2NDOF > 0 && B_LOKI_DTF_VCHI2NDOF < 5 && B_ENDVERTEX_CHI2/B_ENDVERTEX_NDOF<10  && B_ConstJpsi_M_1 > 5150. && B_ConstJpsi_M_1 < 5450.'
+    'nextPV': 'B_MINIPCHI2NEXTBEST > 50 || B_MINIPCHI2NEXTBEST < 0'
+    'Jpsi_cuts': 'Jpsi_MM>3030 && Jpsi_MM<3150 && Jpsi_ENDVERTEX_CHI2/Jpsi_ENDVERTEX_NDOF<16'
+    'mu_cuts': '((muplus_PT<muminus_PT && muplus_PT>500.) || (muminus_PT<muplus_PT && muminus_PT>500.)) && muplus_TRACK_CHI2NDOF_scaled<4.0 && muminus_TRACK_CHI2NDOF_scaled<4.0'
+    'h_cuts': 'hplus_TRACK_CHI2NDOF_scaled<4.0'
+    'pid_cuts': 'hplus_ProbNNk_corr > 0.25 && muplus_ProbNNmu_corr>0.25 && muminus_ProbNNmu_corr>0.25'
     'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
