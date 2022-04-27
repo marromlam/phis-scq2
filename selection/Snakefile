@@ -331,7 +331,7 @@ rule preselection_merge_strippings:
         script = 'selection/tools/file_merger.py',
         input_files = lambda wildcards: expand(
                 rules.preselection_add_arrays.output.file if wildcards.mode == 'MC_Bs2JpsiPhi' or wildcards.mode == 'MC_Bs2JpsiPhi_Prompt'
-                else rules.selection_calculate_gbw.output, 
+                else rules.selection_gbw_compute.output, 
                                                                              mode=wildcards.mode, 
                                                                              version=wildcards.version, 
                                                                              strip_sim=selconfig['strip_sim'][wildcards.mode][wildcards.year],
