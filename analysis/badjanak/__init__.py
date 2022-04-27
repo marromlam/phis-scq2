@@ -131,7 +131,6 @@ def compile(verbose=False, pedantic=False):
     kstrg = open(os.path.join(PATH, 'kernel.cu'), "r").read()
     # some custom compiling options {{{
     opts = ''
-<<<<<<< HEAD
     if BACKEND == 'cuda':
         opts = "-Xptxas -suppress-stack-size-warning"
         opts = ''
@@ -157,33 +156,12 @@ def compile(verbose=False, pedantic=False):
     if verbose:
         print('\nSuccesfully compiled.\n')
     return prog
-=======
-  # }}}
-  if builtins.REAL == 'double':
-    prog = ipanema.compile(kstrg,
-              render_kwds={**{"USE_DOUBLE":"1"},**flagger(verbose)},
-              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH} {opts}"],
-              keep=False)
-    real_type = np.float64
-  else:
-    prog = ipanema.compile(kstrg,
-              render_kwds={**{"USE_DOUBLE":"0"},**flagger(verbose)},
-              compiler_options=[f"-I{ipanema.IPANEMALIB}", f"-I{PATH} {opts}"],
-              keep=False)
-    real_type = np.float64
-  if pedantic:
-    print(prog.source)
-  if verbose:
-    print('\nSuccesfully compiled.\n')
-  return prog
->>>>>>> main
 
 
 def get_kernels(verbose=False, pedantic=False):
     """
     Get the compiled kernels and bind them to the the badjanak module.
 
-<<<<<<< HEAD
     Parameters
     ----------
     verbose : bool
@@ -196,34 +174,14 @@ def get_kernels(verbose=False, pedantic=False):
     items = ['pyrateBs', 'pyrateBd',
              'pyFcoeffs',
              'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
-             # 'dG5toy',
-             # 'integral_ijk_fx'
+             #'integral_ijk_fx'
              ]
+    if BACKEND == 'cuda':
+        items.append('dG5toy')
+        items.append('integral_ijk_fx')
     for item in items:
         setattr(prog, item[2:], prog.__getattr__(item))
     __KERNELS__ = prog
-=======
-  Parameters
-  ----------
-  verbose :
-      verbose
-  pedantic :
-      pedantic
-  """
-  global __KERNELS__
-  prog = compile(verbose, pedantic)
-  items = ['pyrateBs', 'pyrateBd',
-           'pyFcoeffs',
-           'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
-           #'integral_ijk_fx'
-           ]
-  if BACKEND == 'cuda':
-    items.append('dG5toy')
-    items.append('integral_ijk_fx')
-  for item in items:
-    setattr(prog, item[2:], prog.__getattr__(item))
-  __KERNELS__ = prog
->>>>>>> main
 
 
 # Get the kernels just after one import this module
@@ -263,8 +221,7 @@ def parser_rateBs(
     # Flags
     use_fk=1, use_angacc=0, use_timeacc=0,
     use_timeoffset=0, set_tagging=0, use_timeres=0,
-    verbose=False, flatend=False,
-        **p):
+    verbose=False, **p):
 
     r = {}
     r['mass_bins'] = len([k for k in p.keys() if re.compile('CSP.*').match(k)])
@@ -347,22 +304,13 @@ def parser_rateBs(
     r['dp1_ss'] = dp1_ss
     r['dp2_ss'] = dp2_ss
 
-<<<<<<< HEAD
     # Time acceptance
     timeacc = [p[k] for k in p.keys() if re.compile(
         '(a|b|c)([0-9])([0-9])?(u|b)?').match(k)]
     if timeacc:
-        r['timeacc'] = THREAD.to_device(coeffs_to_poly(timeacc, flatend))
+        r['timeacc'] = THREAD.to_device(coeffs_to_poly(timeacc))
     else:
         r['timeacc'] = THREAD.to_device(real_type([1]))
-=======
-  # Time acceptance
-  timeacc = [ p[k] for k in p.keys() if re.compile('(a|b|c)([0-9])([0-9])?(u|b)?').match(k)]
-  if timeacc:
-    r['timeacc'] = THREAD.to_device(coeffs_to_poly(timeacc))
-  else:
-    r['timeacc'] = THREAD.to_device(real_type([1]))
->>>>>>> main
 
     # Angular acceptance
     angacc = [p[k] for k in p.keys() if re.compile(
@@ -855,7 +803,7 @@ def get_angular_acceptance_weights_Bd(true, reco, weight, BLOCK_SIZE=256, **para
 # Time acceptance functions {{{
 
 def splinexerf(time, lkhd, coeffs, mu=0.0, sigma=0.04, gamma=0.6, tLL=0.3,
-               tUL=15, BLOCK_SIZE=256, flatend=False):
+               tUL=15, BLOCK_SIZE=256):
     """
     Spline interpolation of the time acceptance function.
 
@@ -872,47 +820,13 @@ def splinexerf(time, lkhd, coeffs, mu=0.0, sigma=0.04, gamma=0.6, tLL=0.3,
     """
     g_size, l_size = get_sizes(lkhd.shape[0], BLOCK_SIZE)
 
-<<<<<<< HEAD
     __KERNELS__.SingleTimeAcc(
         time, lkhd,  # input, output
-        THREAD.to_device(coeffs_to_poly(coeffs, flatend)).astype(real_type),
+        THREAD.to_device(coeffs_to_poly(coeffs)).astype(real_type),
         real_type(mu), real_type(sigma), real_type(gamma),
         real_type(tLL), real_type(tUL),
         np.int32(lkhd.shape[0]),
         global_size=g_size, local_size=l_size
-    )
-=======
-  __KERNELS__.SingleTimeAcc(
-    time, lkhd, # input, output
-    THREAD.to_device(coeffs_to_poly(coeffs)).astype(real_type),
-    real_type(mu), real_type(sigma), real_type(gamma),
-    real_type(tLL),real_type(tUL),
-    np.int32(lkhd.shape[0]),
-    global_size=g_size, local_size=l_size
-  )
->>>>>>> main
-
-
-def sbxscxerf(time_a, time_b, lkhd_a, lkhd_b, coeffs_a, coeffs_b, mu_a=0.0,
-              sigma_a=0.04, gamma_a=0.6, mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
-              tLL=0.3, tUL=15, BLOCK_SIZE=256, flatend=False, **crap):
-<<<<<<< HEAD
-    """
-    Three splines
-    """
-    size_a = np.int32(lkhd_a.shape[0])
-    size_b = np.int32(lkhd_b.shape[0])
-    size_max = max(size_a, size_b)
-    __KERNELS__.RatioTimeAcc(
-        time_a, time_b, lkhd_a, lkhd_b,
-        np.float64(tLL), np.float64(tUL),
-        THREAD.to_device(coeffs_to_poly(coeffs_a, flatend)).astype(real_type),
-        THREAD.to_device(coeffs_to_poly(coeffs_b, flatend)).astype(real_type),
-        real_type(mu_a), real_type(sigma_a), real_type(gamma_a),
-        real_type(mu_b), real_type(sigma_b), real_type(gamma_b),
-        real_type(tLL), real_type(tUL),
-        size_a, size_b,
-        global_size=(len(output),)
     )
 
 
@@ -923,7 +837,7 @@ def saxsbxscxerf(
         mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
         mu_c=0.0, sigma_c=0.04, gamma_c=0.6,
         tLL=0.3, tUL=15,
-        BLOCK_SIZE=256, flatend=False, **crap):
+        BLOCK_SIZE=256, **crap):
     """
     Two splines
     """
@@ -934,9 +848,9 @@ def saxsbxscxerf(
     g_size, l_size = get_sizes(size_max, BLOCK_SIZE)
     __KERNELS__.FullTimeAcc(
         time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-        THREAD.to_device(coeffs_to_poly(coeffs_a, flatend)).astype(real_type),
-        THREAD.to_device(coeffs_to_poly(coeffs_b, flatend)).astype(real_type),
-        THREAD.to_device(coeffs_to_poly(coeffs_c, flatend)).astype(real_type),
+        THREAD.to_device(coeffs_to_poly(coeffs_a)).astype(real_type),
+        THREAD.to_device(coeffs_to_poly(coeffs_b)).astype(real_type),
+        THREAD.to_device(coeffs_to_poly(coeffs_c)).astype(real_type),
         real_type(mu_a), real_type(sigma_a), real_type(gamma_a),
         real_type(mu_b), real_type(sigma_b), real_type(gamma_b),
         real_type(mu_c), real_type(sigma_c), real_type(gamma_c),
@@ -946,7 +860,7 @@ def saxsbxscxerf(
     )
 
 
-def bspline(time, coeffs, flatend=False, BLOCK_SIZE=256):
+def bspline(time, coeffs, BLOCK_SIZE=256):
     if isinstance(time, np.ndarray):
         time_d = THREAD.to_device(time).astype(real_type)
         spline_d = THREAD.to_device(0*time).astype(real_type)
@@ -961,92 +875,6 @@ def bspline(time, coeffs, flatend=False, BLOCK_SIZE=256):
         global_size=(len(time),)
     )
     return ristra.get(spline_d) if deallocate else spline_d
-=======
-  """
-  In:
-          time: 2D list of 1D gpuarray with time to be fitted, the expected
-                format is [time1,time2] (tipically 1:BsMC 2:BdMC)
-          lkhd: 2D list of 1D gpuarray where likelihood is being stored
-       params1: dict of params {'name': value}
-    BLOCK_SIZE: device block/workgroup size
-
-  Out:
-          void
-
-  Look at kernel definition to see more help
-  """
-  size_a  = np.int32(lkhd_a.shape[0]);
-  size_b  = np.int32(lkhd_b.shape[0])
-  size_max = max(size_a,size_b)
-  __KERNELS__.RatioTimeAcc(
-    time_a, time_b, lkhd_a, lkhd_b,
-    np.float64(tLL),np.float64(tUL),
-    THREAD.to_device(coeffs_to_poly(coeffs_a)).astype(real_type),
-    THREAD.to_device(coeffs_to_poly(coeffs_b)).astype(real_type),
-    real_type(mu_a), real_type(sigma_a), real_type(gamma_a),
-    real_type(mu_b), real_type(sigma_b), real_type(gamma_b),
-    real_type(tLL),real_type(tUL),
-    size_a, size_b,
-    global_size=(len(output),)
-  )
-
-
-def saxsbxscxerf(
-      time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-      coeffs_a, coeffs_b, coeffs_c,
-      mu_a=0.0, sigma_a=0.04, gamma_a=0.6,
-      mu_b=0.0, sigma_b=0.04, gamma_b=0.6,
-      mu_c=0.0, sigma_c=0.04, gamma_c=0.6,
-      tLL = 0.3, tUL = 15,
-      BLOCK_SIZE=256, flatend=False, **crap):
-  """
-  In:
-          time: 3D list of 1D gpuarray with time to be fitted, the expected
-                format is [time1,time2] (tipically 1:BsMC 2:BdMC)
-          lkhd: 3D list of 1D gpuarray where likelihood is being stored
-       params1: dict of params {'name': value}
-    BLOCK_SIZE: device block/workgroup size
-
-  Out:
-          void
-
-  Look at kernel definition to see more help
-  """
-  size_a  = np.int32(lkhd_a.shape[0])
-  size_b  = np.int32(lkhd_b.shape[0])
-  size_c  = np.int32(lkhd_c.shape[0])
-  size_max = max(size_a,size_b,size_c)
-  g_size, l_size = get_sizes(size_max,BLOCK_SIZE)
-  __KERNELS__.FullTimeAcc(
-    time_a, time_b, time_c, lkhd_a, lkhd_b, lkhd_c,
-    THREAD.to_device(coeffs_to_poly(coeffs_a)).astype(real_type),
-    THREAD.to_device(coeffs_to_poly(coeffs_b)).astype(real_type),
-    THREAD.to_device(coeffs_to_poly(coeffs_c)).astype(real_type),
-    real_type(mu_a), real_type(sigma_a), real_type(gamma_a),
-    real_type(mu_b), real_type(sigma_b), real_type(gamma_b),
-    real_type(mu_c), real_type(sigma_c), real_type(gamma_c),
-    real_type(tLL),real_type(tUL),
-    size_a, size_b, size_c,
-    global_size=g_size, local_size=l_size
-  )
-
-
-def bspline(time, coeffs, flatend=False):
-  if isinstance(time, np.ndarray):
-    time_d = THREAD.to_device(time).astype(real_type)
-    spline_d = THREAD.to_device(0*time).astype(real_type)
-    deallocate = True
-  else:
-    time_d = time
-    spline_d = THREAD.to_device(0*time).astype(real_type)
-    deallocate = False
-  coeffs_d = THREAD.to_device(coeffs_to_poly(coeffs)).astype(np.float64)
-  __KERNELS__.Spline(
-    time_d, spline_d, coeffs_d, np.int32(len(time)),
-    global_size=(len(time),)
-  )
-  return ristra.get(spline_d) if deallocate else spline_d
->>>>>>> main
 
 
 # Time accepntace helpers {{{
@@ -1059,101 +887,16 @@ def get_knot(i, knots, n):
     return knots[i]
 
 
-<<<<<<< HEAD
 def coeffs_to_poly(listcoeffs: list) -> np.ndarray:
-    n = config['nknots']
-    result = []  # list of bin coeffs C
-    n_time_bins = int(config['config']) - 1
-=======
-def coeffs_to_poly(listcoeffs:list) -> np.ndarray:
-  n = len(config['knots'])
-  flatend = False
-  result = []                                           # list of bin coeffs C
-  def u(j): return get_knot(j,config['knots'],len(config['knots'])-1)
-  for i in range(0, len(config['knots'])-1):
-    a, b, c, d = listcoeffs[i:i+4]                    # bspline coeffs b_i
-    C = []                                   # each bin 4 coeffs c_{bin,i}
-    C.append(-((b*u(-2+i)*pow(u(1+i),2))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))))+
-        (a*pow(u(1+i),3))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
-        (c*pow(u(-1+i),2)*u(1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (b*u(-1+i)*u(1+i)*u(2+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (c*u(-1+i)*u(i)*u(2+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (b*u(i)*pow(u(2+i),2))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (d*pow(u(i),3))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
-        (c*pow(u(i),2)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-    C.append((2*b*u(-2+i)*u(1+i))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
-        (3*a*pow(u(1+i),2))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
-        (b*pow(u(1+i),2))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
-        (c*pow(u(-1+i),2))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (b*u(-1+i)*u(1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (2*c*u(-1+i)*u(1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (b*u(-1+i)*u(2+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (b*u(1+i)*u(2+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (c*u(-1+i)*u(i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (c*u(-1+i)*u(2+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (2*b*u(i)*u(2+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (c*u(i)*u(2+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (b*pow(u(2+i),2))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (c*pow(u(i),2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
-        (3*d*pow(u(i),2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))-
-        (2*c*u(i)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-    C.append(-((b*u(-2+i))/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*
-        (-u(i)+u(1+i))))+(3*a*u(1+i))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
-        (2*b*u(1+i))/
-        ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))-
-        (b*u(-1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        (2*c*u(-1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (b*u(1+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*
-        (-u(-1+i)+u(2+i)))+(c*u(1+i))/
-        ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        (b*u(2+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*
-        (-u(-1+i)+u(2+i)))+(c*u(-1+i))/
-        ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (b*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (c*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        (2*b*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (c*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))+
-        (2*c*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))-
-        (3*d*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
-        (c*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-    C.append(-(a/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))))+
-        b/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))+
-        b/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))-
-        c/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i)))+
-        b/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        c/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i)))-
-        c/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i)))+
-        d/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-    result.append(C)
->>>>>>> main
+    n = len(config['knots'])
+    result = []                                          # list of bin coeffs C
 
     def u(j):
-        return get_knot(j, config['knots'], n_time_bins)
-    for i in range(0, n_time_bins):
-        a, b, c, d = listcoeffs[i:i+4]                    # bspline coeffs b_i
-        C = []                                   # each bin 4 coeffs c_{bin,i}
+        return get_knot(j, config['knots'], n-1)
+
+    for i in range(0, n-1):
+        a, b, c, d = listcoeffs[i:i+4]                     # bspline coeffs b_i
+        C = []                                    # each bin 4 coeffs c_{bin,i}
         C.append(-((b*u(-2+i)*pow(u(1+i), 2)) /
                    ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))) +
                  (a*pow(u(1+i), 3)) /
@@ -1234,8 +977,8 @@ def coeffs_to_poly(listcoeffs:list) -> np.ndarray:
     # extrapolation in the general badjanak.config
     if config['final_extrap']:
         if config['flat_end']:
-            # if insead fo a liear extrapolation we just want the extrapolation to
-            # be completely flat (no slope at all)
+            # if instead of linear extrapolation we just want the extrapolation
+            # to be completely flat (no slope at all)
             m = 0
         else:
             # linear extrapolation in the last bin till tUL
@@ -1328,176 +1071,6 @@ def dG5toys(output,
         global_size=g_size, local_size=l_size)
 
 # }}}
-
-
-<<<<<<< HEAD
-# Duplicates {{{
-
-def coeffs_to_poly(listcoeffs, flatend=False):
-    n = len(config['knots'])
-    flatend = False
-    result = []                                           # list of bin coeffs C
-    def u(j): return get_knot(j, config['knots'], len(config['knots'])-1)
-    for i in range(0, len(config['knots'])-1):
-        a, b, c, d = listcoeffs[i:i+4]                    # bspline coeffs b_i
-        C = []                                   # each bin 4 coeffs c_{bin,i}
-        C.append(-((b*u(-2+i)*pow(u(1+i), 2)) /
-                   ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))) +
-                 (a*pow(u(1+i), 3)) /
-                 ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))) +
-                 (c*pow(u(-1+i), 2)*u(1+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) -
-                 (b*u(-1+i)*u(1+i)*u(2+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) +
-                 (c*u(-1+i)*u(i)*u(2+i)) /
-                 ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 (b*u(i)*pow(u(2+i), 2)) /
-                 ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 (d*pow(u(i), 3))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))) +
-                 (c*pow(u(i), 2)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-        C.append((2*b*u(-2+i)*u(1+i)) /
-                 ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))) -
-                 (3*a*pow(u(1+i), 2)) /
-                 ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))) +
-                 (b*pow(u(1+i), 2)) /
-                 ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))) -
-                 (c*pow(u(-1+i), 2)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) +
-                 (b*u(-1+i)*u(1+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) -
-                 (2*c*u(-1+i)*u(1+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) +
-                 (b*u(-1+i)*u(2+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) +
-                 (b*u(1+i)*u(2+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) -
-                 (c*u(-1+i)*u(i)) /
-                 ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 (c*u(-1+i)*u(2+i)) /
-                 ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) +
-                 (2*b*u(i)*u(2+i)) /
-                 ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 (c*u(i)*u(2+i)) /
-                 ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) +
-                 (b*pow(u(2+i), 2)) /
-                 ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 (c*pow(u(i), 2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))) +
-                 (3*d*pow(u(i), 2))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))) -
-                 (2*c*u(i)*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-        C.append(-((b*u(-2+i))/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i)) *
-                                (-u(i)+u(1+i))))+(3*a*u(1+i)) /
-                 ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))) -
-                 (2*b*u(1+i)) /
-                 ((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))) -
-                 (b*u(-1+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) +
-                 (2*c*u(-1+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) -
-                 (b*u(1+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i)) *
-                             (-u(-1+i)+u(2+i)))+(c*u(1+i)) /
-                 ((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) -
-                 (b*u(2+i))/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i)) *
-                             (-u(-1+i)+u(2+i)))+(c*u(-1+i)) /
-                 ((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 (b*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) +
-                 (c*u(i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 (2*b*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) +
-                 (c*u(2+i))/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) +
-                 (2*c*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))) -
-                 (3*d*u(i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))) +
-                 (c*u(3+i))/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-        C.append(-(a/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i)))) +
-                 b/((-u(-2+i)+u(1+i))*(-u(-1+i)+u(1+i))*(-u(i)+u(1+i))) +
-                 b/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) -
-                 c/((-u(-1+i)+u(1+i))*(-u(i)+u(1+i))*(-u(-1+i)+u(2+i))) +
-                 b/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 c/((-u(i)+u(1+i))*(-u(-1+i)+u(2+i))*(-u(i)+u(2+i))) -
-                 c/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))) +
-                 d/((-u(i)+u(1+i))*(-u(i)+u(2+i))*(-u(i)+u(3+i))))
-        result.append(C)
-    # linear extrapolation in the last bin till tUL
-    m = C[1] + 2*C[2]*u(n) + 3*C[3]*u(n)**2
-    if flatend:
-        # *flat* acceptance since last bin
-        m = 0
-    C = [C[0] + C[1]*u(n) + C[2]*u(n)**2 + C[3]*u(n)**3 - m*u(n), m, 0, 0]
-    result.append(C)
-    return np.array(result)
-
-
-def dG5toys(output,
-            G, DG, DM,
-            CSP,
-            ASlon, APlon, APpar, APper,
-            pSlon, pPlon, pPpar, pPper,
-            dSlon, dPlon, dPpar, dPper,
-            lSlon, lPlon, lPpar, lPper,
-            # Time limits
-            tLL, tUL,
-            # Time resolution
-            sigma_offset, sigma_slope, sigma_curvature,
-            mu,
-            # Flavor tagging
-            eta_os, eta_ss,
-            p0_os,  p1_os, p2_os,
-            p0_ss,  p1_ss, p2_ss,
-            dp0_os, dp1_os, dp2_os,
-            dp0_ss, dp1_ss, dp2_ss,
-            # Time acceptance
-            timeacc,
-            # Angular acceptance
-            angacc,
-            # Flags
-            use_fk=1, use_angacc=0, use_timeacc=0,
-            use_timeoffset=0, set_tagging=0, use_timeres=0,
-            prob_max=2.7,
-            BLOCK_SIZE=256, seed=False, **crap):
-    """
-    Look at kernel definition to see help
-    The aim of this function is to be the fastest wrapper
-    """
-    if not seed:
-        seed = int(1e10*np.random.rand())
-    g_size, l_size = get_sizes(output.shape[0], BLOCK_SIZE)
-    __KERNELS__.dG5toy(
-        # Input and output arrays
-        output,
-        # Differential cross-rate parameters
-        real_type(G), real_type(DG), real_type(DM),
-        CSP.astype(real_type),
-        ASlon.astype(real_type), APlon.astype(real_type), APpar.astype(
-            real_type), APper.astype(real_type),
-        real_type(pSlon), real_type(pPlon), real_type(pPpar), real_type(pPper),
-        dSlon.astype(real_type), real_type(
-            dPlon), real_type(dPpar), real_type(dPper),
-        real_type(lSlon), real_type(lPlon), real_type(lPpar), real_type(lPper),
-        # Time range
-        real_type(tLL), real_type(tUL),
-        # Time resolution
-        real_type(sigma_offset), real_type(
-            sigma_slope), real_type(sigma_curvature),
-        real_type(mu),
-        # Flavor tagging
-        real_type(eta_os), real_type(eta_ss),
-        real_type(p0_os), real_type(p1_os), real_type(p2_os),
-        real_type(p0_ss), real_type(p1_ss), real_type(p2_ss),
-        real_type(dp0_os), real_type(dp1_os), real_type(dp2_os),
-        real_type(dp0_ss), real_type(dp1_ss), real_type(dp2_ss),
-        # Decay-time acceptance
-        timeacc.astype(real_type),
-        # Angular acceptance
-        angacc.astype(real_type),
-        # Flags
-        np.int32(use_fk), np.int32(len(CSP)), np.int32(
-            use_angacc), np.int32(use_timeacc),
-        np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
-        real_type(prob_max), np.int32(seed),  np.int32(len(output)),
-        global_size=g_size, local_size=l_size)
-    # grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
-
-# }}}
-=======
->>>>>>> main
 
 
 # Other useful bindings {{{
