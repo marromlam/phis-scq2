@@ -9,7 +9,7 @@ __all__ = ['transform_cijk', 'get_angular_prediction']
 
 
 
-from ipanema import wrap_unc, uncertainty_wrapper, get_confidence_bands
+from ipanema import uncertainty_wrapper, get_confidence_bands
 from ipanema import initialize, ristra, Parameters, Sample, optimize, IPANEMALIB
 from utils.helpers import  version_guesser, trigger_scissors, cuts_and
 from utils.strings import printsec, printsubsec
@@ -22,7 +22,7 @@ from scipy.special import lpmv
 from scipy.interpolate import interp1d, interpn
 import argparse
 initialize('cuda',1)
-import badjanak
+from analysis import badjanak
 badjanak.get_kernels()
 from scipy.special import comb
 from scipy.integrate import romb, simpson
