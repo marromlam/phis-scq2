@@ -19,7 +19,7 @@ import config
 
 # initialize ipanema3 and compile lineshapes
 ipanema.initialize(config.user['backend'], 1)
-from selection.mass_fit.bs import cb_exponential3
+from selection.sweights.mass_fit.bs import cb_exponential3
 
 # }}}
 

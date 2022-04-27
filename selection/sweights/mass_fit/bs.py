@@ -750,15 +750,15 @@ def mass_fitter(
     # mass range cut
     if not mass_range:
         mass_range = (min(odf[mass_branch]), max(odf[mass_branch]))
-    mass_cut = f"B_ConstJpsi_M_1 > {mass_range[0]} & B_ConstJpsi_M_1 < {mass_range[1]}"
     mLL, mUL = mass_range
+    mass_cut = f"B_ConstJpsi_M_1 > {mLL} & B_ConstJpsi_M_1 < {mUL}"
 
     # mass cut and trigger cut
     current_cut = trigger_scissors(trigger, cuts_and(mass_cut, cut))
 
     # Select model and set parameters {{{
-    #    Select model from command-line arguments and create corresponding set of
-    #    paramters
+    #    Select model from command-line arguments and create corresponding set
+    #    of paramters
 
     # Chose model {{{
 
@@ -818,7 +818,6 @@ def mass_fitter(
         _pars.unlock("b")
         pars = pars + _pars
     else:
-<<<<<<< HEAD:selection/mass_fit/bs.py
         # This is the prefit stage. Here we will lock the nsig to be 1 and we
         # will not use combinatorial background.
         pars["fsigBs"].value = 1
@@ -869,8 +868,8 @@ def mass_fitter(
             pars.add(dict(name="nR", value=1, min=-1, max=50, free=True, latex=r"n_r"))
             # }}}
         # Combinatorial background
-      pars.add(dict(name='b',         value=-0.05, min=-1,  max=1,     free=False,  latex=r'b'))
-      pars.add(dict(name='fcomb',      formula="1-fsigBs",                          latex=r'N_{comb}'))
+        pars.add(dict(name='b',         value=-0.05, min=-1,  max=1,     free=False,  latex=r'b'))
+        pars.add(dict(name='fcomb',      formula="1-fsigBs",                          latex=r'N_{comb}'))
 
     if has_bd:
         # Create common set of Bd parameters
@@ -949,23 +948,23 @@ def mass_fitter(
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
                                method='minuit', verbose=False, strategy=1,
                                tol=0.05)
-            pars = ipanema.Parameters.clone(res.params)
-            pars.lock()
-            pars["s1Bs"].set(value=0.0, init=0.0, min=-20, max=20, free=True)
-            pars["s2Bs"].set(value=0.0, init=0.0, min=-1, max=1, free=True)
-            pars["s0Bs"].set(value=0.0, init=1.0, free=False)
-            res = ipanema.optimize(
-                fcn,
-                pars,
-                fcn_kwgs={"data": rd},
-                method="minuit",
-                verbose=True,
-                strategy=1,
-                tol=0.05,
-            )
-            pars = ipanema.Parameters.clone(res.params)
-            for k, v in pars.items():
-                v.init = v.value
+        pars = ipanema.Parameters.clone(res.params)
+        pars.lock()
+        pars["s1Bs"].set(value=0.0, init=0.0, min=-20, max=20, free=True)
+        pars["s2Bs"].set(value=0.0, init=0.0, min=-1, max=1, free=True)
+        pars["s0Bs"].set(value=0.0, init=1.0, free=False)
+        res = ipanema.optimize(
+            fcn,
+            pars,
+            fcn_kwgs={"data": rd},
+            method="minuit",
+            verbose=True,
+            strategy=1,
+            tol=0.05,
+        )
+        pars = ipanema.Parameters.clone(res.params)
+        for k, v in pars.items():
+            v.init = v.value
         pars.unlock('fsigBs', 'muBs', 'b', 'fsigBd')
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
                                method='minuit', verbose=False, strategy=1,
@@ -1091,17 +1090,17 @@ def mass_fitter(
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=DESCRIPTION)
-  p.add_argument('--sample')
-  p.add_argument('--input-params', default=False)
-  p.add_argument('--output-params')
-  p.add_argument('--output-figures')
-  p.add_argument('--mass-model')
-  p.add_argument('--mass-weight')
-  p.add_argument('--mass-bin', default=False)
-  p.add_argument('--trigger')
-  p.add_argument('--sweights')
-  p.add_argument('--mode')
-  p.add_argument('--version')
+    p.add_argument('--sample')
+    p.add_argument('--input-params', default=False)
+    p.add_argument('--output-params')
+    p.add_argument('--output-figures')
+    p.add_argument('--mass-model')
+    p.add_argument('--mass-weight')
+    p.add_argument('--mass-bin', default=False)
+    p.add_argument('--trigger')
+    p.add_argument('--sweights')
+    p.add_argument('--mode')
+    p.add_argument('--version')
     args = vars(p.parse_args())
 
     if args["sweights"]:

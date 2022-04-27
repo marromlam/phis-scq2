@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ipanema import Sample, ristra, splot
 
-from selection.mass_fit.bs import cb_exponential3
+from selection.sweights.mass_fit.bs import cb_exponential3
 from utils.helpers import cuts_and, trigger_scissors
 
 __author__ = ["Marcos Romero"]
@@ -41,7 +41,7 @@ from utils.helpers import cuts_and, trigger_scissors
 # initialize ipanema3 and compile lineshapes
 ipanema.initialize(os.environ["IPANEMA_BACKEND"], 1)
 
-from bs import cb_exponential3
+# from bs import cb_exponential3
 
 prog = ipanema.compile(
     """
@@ -60,12 +60,12 @@ __all__ = ["mass_fitter"]
 
 
 def cb_exponential(
-    mass, signal, fsigBu, nexp, muBu, sigmaBu, aL, nL, aR, nR, b, norm=1
+    mass, signal, fsigBu, fexp, muBu, sigmaBu, aL, nL, aR, nR, b, norm=1
 ):
     # merr = ristra.allocate(np.zeros_like(mass))
     mLL, mUL = ristra.min(mass), ristra.max(mass)
     ans = cb_exponential3(mass, mass, signal,
-                          fsigBs=nsigBu, fsigBd=0, fcomb=nexp,
+                          fsigBs=fsigBu, fsigBd=0, fcomb=fexp,
                           muBs=muBu, s0Bs=sigmaBu, s1Bs=0, s2Bs=0,
                           muBd=5300, s0Bd=1, s1Bd=0, s2Bd=0,
                           aL=aL, nL=nL, aR=aR, nR=nR,
@@ -113,9 +113,9 @@ def mass_fitter(
         pars = ipanema.Parameters()
         # Create common set of parameters (all models must have and use)
         pars.add(
-            dict(name="nsigBd", value=0.99, min=0.2, max=1, free=True, latex=r"N_{B_d}")
+            dict(name="fsigBu", value=0.99, min=0.2, max=1, free=True, latex=r"N_{B_d}")
         )
-        pars.add(dict(name="muBd", value=5280, min=5200, max=5500, latex=r"\mu_{B_d}"))
+        pars.add(dict(name="muBu", value=5280, min=5200, max=5500, latex=r"\mu_{B_d}"))
         pars.add(
             dict(
                 name="sigmaBu",
@@ -164,7 +164,7 @@ def mass_fitter(
             # }}}
         # Combinatorial background
         pars.add(dict(name="b", value=-4e-3, min=-1, max=1, free=True, latex=r"b"))
-        pars.add(dict(name="nexp", formula="1-nsigBd", latex=r"N_{comb}"))
+        pars.add(dict(name="fexp", formula="1-fsigBu", latex=r"N_{comb}"))
     pars.unlock("fsigBu", "muBu", "sigmaBu", "b")
     # if 'ipatia' in model:
     #     pars.unlock('zeta', 'beta')
@@ -234,10 +234,10 @@ def mass_fitter(
 
     # plot signal: nbkg -> 0 and nexp -> 0
     _p = ipanema.Parameters.clone(fpars)
-    if "fsigBd" in _p:
-        _p["fsigBd"].set(value=0, min=-np.inf, max=np.inf)
-    if "nexp" in _p:
-        _p["nexp"].set(value=0, min=-np.inf, max=np.inf)
+    if "fsigBu" in _p:
+        _p["fsigBu"].set(value=0, min=-np.inf, max=np.inf)
+    if "fexp" in _p:
+        _p["fexp"].set(value=0, min=-np.inf, max=np.inf)
     _x, _y = ristra.get(mass), ristra.get(
         pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm)
     )
@@ -276,7 +276,7 @@ def mass_fitter(
 
     if sweights:
         # separate paramestes in yields and shape parameters
-        _yields = ipanema.Parameters.find(fpars, "fsig.*") + ["nexp"]
+        _yields = ipanema.Parameters.find(fpars, "fsig.*") + ["fexp"]
         _pars = list(fpars)
         [_pars.remove(_y) for _y in _yields]
         _yields = ipanema.Parameters.build(fpars, _yields)
