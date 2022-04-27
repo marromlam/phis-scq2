@@ -1,9 +1,3 @@
-DESCRIPTION = """
-    Create tables with the number of events for each sample for a given set of
-    years and splitting by trigger category.
-"""
-
-
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 __all__ = []
@@ -22,6 +16,10 @@ import argparse
 # Command line runner {{{
 
 if __name__ == "__main__":
+    DESCRIPTION = """
+    Create tables with the number of events for each sample for a given set of
+    years and splitting by trigger category.
+    """
     p = argparse.ArgumentParser(description=DESCRIPTION)
     p.add_argument('--sample', help='Sample or samples to compute stats from')
     p.add_argument('--year', help='Years')
@@ -65,4 +63,4 @@ if __name__ == "__main__":
 # }}}
 
 
-# vim: foldmethod=marker
+# vim: fdm=marker

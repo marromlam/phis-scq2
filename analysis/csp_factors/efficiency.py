@@ -11,7 +11,6 @@ import numpy as np
 import complot
 
 
-
 def create_mass_bins(nob):
     """
     Creates a set of bins
@@ -109,6 +108,7 @@ def create_time_bins(nob):
     else:
         raise ValueError("Number of bins cannot be higher than 6")
     return mass_bins
+
 
 def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
     r"""
