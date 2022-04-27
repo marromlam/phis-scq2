@@ -9,16 +9,23 @@ common: &common
   'B_P': 'B_P'
   'B_PT': 'B_PT'
   'X_M': 'X_M'
-  'hlt1b': 'hlt1b'
+  'hlt1b': 'hlt1b'     
+  'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+  'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+  'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+
 
 Bs2JpsiPhi:  # &Bs2JpsiPhi
   <<: *common
+  'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
 
 Bs2JpsiPhi_Prompt:  # &Bs2JpsiPhi_Prompt
   <<: *common
+  'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
 
 Bd2JpsiKstar:  # &Bd2JpsiKstar
   <<: *common
+  'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
 
 Bu2JpsiKplus:  # &Bu2JpsiKplus
   <<: *common
