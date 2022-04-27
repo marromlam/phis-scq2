@@ -14,7 +14,7 @@ rule selection_gbw_preliminar_mc:
     resources:
         mem_mb =  6000
     wildcard_constraints:
-        mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)"
+        mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
     input:
         script = 'selection/tools/apply_selection.py',
         #file = expand(rules.merge_polarities.output, mode='{mode}',
@@ -254,6 +254,44 @@ rule selection_gbw_reweighter_train:
 #                                                      strip_sim=strip_sim)
 
 
+#Rescaling Veronika
+def trackchi2_vars(wildcards):
+    mode = wildcards.mode
+    if wildcards.mode == 'MC_Bu2JpsiKplus':
+        return '{"hplus_TRACK_CHI2NDOF", "muplus_TRACK_CHI2NDOF", "muminus_TRACK_CHI2NDOF"}'
+    else:
+        return '{"hplus_TRACK_CHI2NDOF", "hminus_TRACK_CHI2NDOF", "muplus_TRACK_CHI2NDOF", "muminus_TRACK_CHI2NDOF"}'
+
+
+rule apply_trackchi2_scaling:
+    """
+    Rule to rescale TrackChi2 variables on MC using sweighted data.
+    """
+    input:
+        input_mc = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',                                                  
+        input_data =  lambda wcs: expand(
+                SAMPLES + '/{data_year}/{data_mode}/{version}_bkgsubtracted.root',
+                version = wcs.version,
+                data_mode = selconfig['gbw_input_data_mode'][f'{wcs.mode}'],
+                data_year = selconfig['gbw_input_data_year'][f'{wcs.year}']
+                )
+
+    params:
+        target_weight = lambda wildcards: expand('\"sw\"' if selconfig['gbw_input_data_mode'][wildcards.mode] != 'Bs2JpsiPhi_Prompt'
+                                                      else '\"\"'),
+        treename = "DecayTree",
+        vars = trackchi2_vars,
+	    plots = SAMPLES+ 'output/figures/plots/{mode}/{year}/TrackChi2Scaling_{strip_sim}'
+    output:
+        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_TrackChi2_weighted.root'
+    shell:
+        "root -l -q 'selection/gb_weights/TrackChi2Rescaling.C({params.vars}, {params.target_weight}, \"{input.input_mc}\", \"{input.input_data}\", \"{output.file}\", \"{params.treename}\", \"{params.treename}\", \"{params.plots}\")'"
+
+
+
+
+
+
 rule selection_gbw_compute:
     """
     Rule to apply GB weights on MC reading from a pickle file where these have been stored.
@@ -262,19 +300,15 @@ rule selection_gbw_compute:
     resources:
         mem_mb = 12000
     input:
-        files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
-        # files = expand(rules.apply_preselection_mc.output, year='{year}',
-        #                                                    mode='{mode}',
-        #                                                    version='{version}',
-        #                                                    strip_sim='{strip_sim}'),
-        # TODO: make sure to GB each strip_sim
+        # files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
+        files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_TrackChi2_weighted.root',
+        # TODO: checkear que esto esta bien:
         weights_file = lambda wcs: expand(
                 SAMPLES + '/{mc_year}/{mc_mode}/{version}_{strip_sim}_gbWeighted_{data_mode}_{data_year}.pkl',
-                mc_mode = selconfig['gbw_input_MC_mode'][f'{wcs.mode}'][f'{wcs.year}']['mode'],
-                # strip_sim = f'{wcs.strip_sim}',
-                strip_sim = selconfig['gbw_input_MC_mode'][f"{wcs.mode}"][f"{wcs.year}"]['strip_sim'],
+                mc_mode = f'{wcs.mode}',
+                mc_year= f'{wcs.year}',
+                strip_sim = f'{wcs.strip_sim}',
                 version = f'{wcs.version}',
-                mc_year = selconfig['gbw_input_MC_year'][f'{wcs.year}'],
                 data_mode = selconfig['gbw_input_data_mode'][f'{wcs.mode}'],
                 data_year = selconfig['gbw_input_data_year'][f'{wcs.year}'])
     output:
@@ -310,26 +344,15 @@ rule selection_gbw_compute_prompt:
         mem_mb = 12000
     input:
         files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_gbWeight.root',
-        # files = expand(rules.apply_gb_weights.output, year='{year}',
-        #                mode='{mode}', version='{version}',
-        #                strip_sim='{strip_sim}'),
         weights_file = lambda wcs: expand(
-                SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_gbWeighted_{data_mode}_{data_year}.pkl',
-                version=f"{wcs.version}",
-                year=f"{wcs.year}",
-                mode=f"{wcs.mode}",
-                strip_sim=f"{wcs.strip_sim}",
+                SAMPLES + '/{mc_year}/{mc_mode}/{version}_{strip_sim}_gbWeighted_{data_mode}_{data_year}.pkl',
+                mc_mode = f'{wcs.mode}',
+                strip_sim = f'{wcs.strip_sim}',
+                version = f'{wcs.version}',
+                mc_year= f'{wcs.year}',
                 data_mode='Bs2JpsiPhi_Prompt',
-                data_year=selconfig['gbw_input_data_year'][f'{wcs.year}']),
-        # weights_file = lambda wildcards: expand(rules.selection_calculate_gb_weights.output,
-        #                                         mc_mode='{mode}',
-        #                                         mc_year='{year}',
-        #                                         version='{version}',
-        #                                         data_mode='Bs2JpsiPhi_Prompt',
-        #                                         data_year = selconfig['gbw_input_data_year'][wildcards.year],
-        #                                         strip_sim='{strip_sim}')
+                data_year = selconfig['gbw_input_data_year'][f'{wcs.year}'])
     output:
-        # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_GB_weighted_Prompt.root'))
         SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_gbWeight.root'
     params:
         script = 'selection/tools/apply_weights.py',
