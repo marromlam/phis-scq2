@@ -10,8 +10,11 @@ Bs2JpsiPhi: &Bs2JpsiPhi
   'log_B_IPCHI2_mva': 'B_IPCHI2_OWNPV <= 0.0 ? -25.0 : log(B_IPCHI2_OWNPV)'
   'B_PT_mva': 'B_PT'
 
+
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
   <<: *Bs2JpsiPhi
+  'max_K_TRCHI2_mva': 'max(hplus_TRACK_CHI2NDOF_scaled, hminus_TRACK_CHI2NDOF_scaled)'
+  'max_mu_TRCHI2_mva': 'max(muplus_TRACK_CHI2NDOF_scaled, muminus_TRACK_CHI2NDOF_scaled)'
 
 MC_Bs2JpsiKK_Swave:  # &MC_Bs2JpsiKK_Swave
   <<: *MC_Bs2JpsiPhi
@@ -51,6 +54,8 @@ Bu2JpsiKplus: &Bu2JpsiKplus
 
 MC_Bu2JpsiKplus:
   <<: *Bu2JpsiKplus
+  'max_K_TRCHI2_mva': 'max(hplus_TRACK_CHI2NDOF_scaled)'
+  'max_mu_TRCHI2_mva': 'max(muplus_TRACK_CHI2NDOF, muminus_TRACK_CHI2NDOF)'
 
 MC_Bs2JpsiPhi_fromLb:
   <<: *Bs2JpsiPhi
