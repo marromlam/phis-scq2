@@ -1,8 +1,8 @@
 # Pipepine to train and apply BDT
 
 
-# with open('selection/bdt/config.yml') as file:
-#     BDT_CONFIG = yaml.load(file, Loader=yaml.FullLoader)
+with open('selection/bdt/config.yml') as file:
+    BDT_CONFIG = yaml.load(file, Loader=yaml.FullLoader)
 
 
 # rules for proxy signal and background for bdt {{{
@@ -178,8 +178,8 @@ rule selection_bdt_add_branches:
 # apply bdt seclection {{{
 
 def tmva_weights_file(wildcards):
-    bdt_year_for_weights = selconfig['bdt_year'][wildcards.year]
-    bdt_mode_for_weights = selconfig['bdt_mode'][wildcards.mode]
+    bdt_year_for_weights = BDT_CONFIG['bdt_year'][wildcards.year]
+    bdt_mode_for_weights = BDT_CONFIG['bdt_mode'][wildcards.mode]
 
     return expand(rules.selection_bdt_train.output,
                   year=bdt_year_for_weights, mode=bdt_mode_for_weights,
@@ -227,7 +227,7 @@ if config['selection_mode'] == 'run2':
             tuple_file = input_to_apply_bdt_selection,
             bdt_cut = lambda wcs: expand("output/params/bdt_cut/{year}/{mode}/{version}.json",
                              mode="Bu2JpsiKplus" if 'Bu' in f'{wcs.mode}' else "Bs2JpsiPhi",
-                             year= selconfig['bdt_year'][wildcards.year],
+                             year= BDT_CONFIG['bdt_year'][wcs.year],
                              # mode = selconfig['bdt_mode'][wildcards.mode],
                              version = f"{wcs.version}"),
             tmva_weight_dir = tmva_weights_file,
