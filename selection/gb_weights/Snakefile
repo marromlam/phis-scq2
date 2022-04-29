@@ -263,10 +263,13 @@ def trackchi2_vars(wildcards):
         return '{"hplus_TRACK_CHI2NDOF", "hminus_TRACK_CHI2NDOF", "muplus_TRACK_CHI2NDOF", "muminus_TRACK_CHI2NDOF"}'
 
 
-rule apply_trackchi2_scaling:
+rule selection_apply_trackchi2_scaling:
     """
     Rule to rescale TrackChi2 variables on MC using sweighted data.
     """
+    threads: 2
+    resources:
+        mem_mb = 12000
     input:
         input_mc = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
         input_data =  lambda wcs: expand(
