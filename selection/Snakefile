@@ -119,16 +119,14 @@ if config['run_preselection']:
         resources:
             mem_mb = 6000
         output:
-            # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_prepared.root'))
             SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
-        log:
-            # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_prepared.root'))
-            'output/log/prepare_mc/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.log'
         params:
             files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim][wildcards.polarity],
             script = 'selection/tools/apply_selection.py',
             branches = ['selection/branches.yaml', 'selection/generator_level_branches_to_be_merged.yaml'],
             treename = lambda wildcards: selconfig['treenames'][wildcards.mode]
+        log:
+            'output/log/preselection_prepare_mc/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.log'
         run:
             shell('(time python {params.script} \
             --input-file {params.files} \
@@ -148,26 +146,25 @@ if config['run_preselection']:
         threads: 2
         resources:
             mem_mb = 6000
-        input:
-            script = 'selection/tools/apply_selection.py',
-            branches = 'selection/generator_level_branches_to_be_created.yaml'
         output:
-            # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_only_genlevel.root'))
             SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_genlevel{polarity}.root',
         log:
             'output/log/prepare_genlvl_mc/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.log'
         params:
             files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim][wildcards.polarity],
+            script = 'selection/tools/apply_selection.py',
+            branches = 'selection/generator_level_branches_to_be_created.yaml',
             gen_treename = lambda wildcards: selconfig['treenames'][wildcards.mode].replace('_Tuple/DecayTree','_MCTuple/MCTuple')
         run:
-            shell('(time python {input.script} \
+            shell('(time python {params.script} \
             --input-file {params.files} \
             --input-tree-name {params.gen_treename} \
             --output-file {output} \
             --output-tree-name MCTuple \
             --mode {wildcards.mode} \
-            --branches-files {input.branches} \
-            --year {wildcards.year} ) &> {log}')
+            --branches-files {params.branches} \
+            --year {wildcards.year} \
+            ) &> {log}')
 
 
     rule preselection_add_genlvl_info:
@@ -204,7 +201,8 @@ if config['run_preselection']:
             --output-file {output.file} \
             --output-file-tmp {output.file_tmp} \
             --mode {wildcards.mode} \
-            --branches-files {params.branches}) &> {log}')
+            --branches-files {params.branches} \
+            ) &> {log}')
 
 # }}}
 
@@ -287,7 +285,7 @@ include: 'gb_weights/Snakefile'
 
 # Merge strippings {{{
 
-rule preselection_add_arrays:
+rule selection_add_arrays:
     threads: 2
     resources:
         mem_mb = 6000
@@ -323,14 +321,14 @@ rule preselection_add_arrays:
 
 # modes = ['MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_Prompt']
 
-rule preselection_merge_strippings:
+rule selection_merge_strippings:
     threads: 2
     resources:
         mem_mb = 6000
     input:
         script = 'selection/tools/file_merger.py',
         input_files = lambda wildcards: expand(
-                rules.preselection_add_arrays.output.file if wildcards.mode == 'MC_Bs2JpsiPhi' or wildcards.mode == 'MC_Bs2JpsiPhi_Prompt'
+                rules.selection_add_arrays.output.file if wildcards.mode == 'MC_Bs2JpsiPhi' or wildcards.mode == 'MC_Bs2JpsiPhi_Prompt'
                 else rules.selection_gbw_compute.output, 
                                                                              mode=wildcards.mode, 
                                                                              version=wildcards.version, 
