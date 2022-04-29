@@ -5,324 +5,324 @@ bdt cut is not applied here.
 """
 
 
-# if config['run_preselection']:
-rule prepare_mc_lambdab:
-    """
-    Rule for Lb background
-    Do not apply cuts, only add branches specified in the corresponding yaml
-    file and save new tree in the requested location
-    """
-    wildcard_constraints:
-        mode = 'MC_Bs2JpsiPhi_fromLb'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    # input:
-    output:
-        # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_prepared_Lb.root'))
-        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
-    params:
-        files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim][wildcards.polarity],
-        script = 'selection/tools/apply_selection.py',
-        branches = ['selection/branches.yaml'],
-        treename = lambda wildcards: selconfig['treenames'][wildcards.mode],
-    log:
-        'output/selection_prepare_mc/{year}/{mode}/{version}_{strip_sim}_{polarity}.log',
-    run:
-        shell('(time python {params.script} \
-        --input-file {params.files} \
-        --input-tree-name {params.treename} \
-        --output-file {output} \
-        --mode {wildcards.mode} \
-        --branches-files {params.branches} \
-        --year {wildcards.year}) &> {log}')
-
-
-rule split_tree_to_pid:
-    """
-    Lb background need split the tree to two part:
-    1.hplus=p,hminus=k and
-    2.hplus=k,hminus=p
-    and do pid resample separately. This step is split the tree
-    we add a wildcard named pkkp which should be pk or kp, using to distinguish final state.
-    """
-    wildcard_constraints:
-        mode = 'MC_Bs2JpsiPhi_fromLb'
-        # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
-    threads: 2
-    resources:
-        mem_mb = 10000
-    input:
-        script = 'selection/tools/split_tree.py',
-        input_file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
-        # input_file = expand(rules.prepare_mc_Lb.output, mode='{mode}',
-        #                                                 year='{year}',
-        #                                                 version='{version}',
-        #                                                 strip_sim='{strip_sim}',
-        #                                                 polarity='{polarity}')
-    output:
-        # file = temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_selected_with_gen_{pkkp}.root'))
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_splitted{pkkp}.root',
-    log:
-        'output/log/split_tree_to_pid/{year}/{mode}/{version}_{strip_sim}_{polarity}_selected_with_gen_{pkkp}.log'
-    run:
-        shell('(/home3/marcos.romero/.linuxbrew/bin/time python {input.script} \
-        --input-file {input.input_file} \
-        --input-tree-name DecayTree \
-        --output-file {output.file} \
-        --output-tree-name DecayTree \
-        --output-type {wildcards.pkkp}) &> {log}')
-
-
-# corrections for pid {{{
-
-rule correct_pid_Lb:
-    """
-    Lb background
-    Adds corrected PID variables to the given MC tuple
-    """
-    wildcard_constraints:
-        mode = 'MC_Bs2JpsiPhi_fromLb'
-        # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        script = 'selection/tools/PIDCorr.py',
-        tracks = 'selection/pid/pidcorr.yaml',
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_splitted{pkkp}.root',
-        # file = expand(rules.split_tree_to_pid.output.file, mode='{mode}',
-        #                                                    strip_sim='{strip_sim}',
-        #                                                    year='{year}',
-        #                                                    version='{version}',
-        #                                                    polarity='{polarity}',
-        #                                                    pkkp='{pkkp}'),
-    output:
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root',
-        tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}_tmp1.root',
-        tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}tmp2.root',
-    log:
-        'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.log',
-    shell:
-        selconfig['runUrania'] + ' ' +
-        'python {input.script} --input-file {input.file} \
-                               --input-tree-name DecayTree \
-                               --output-file {output.file} \
-                               --data-set Mag{wildcards.polarity}_{wildcards.year} \
-                               --mode {wildcards.mode}_{wildcards.pkkp} \
-                               --tracks-file {input.tracks} \
-                               --tmp1 {output.tmp1} \
-                               --tmp2 {output.tmp2} &> {log}'
-
-rule correct_muonpid_Lb:
-    """
-    Lb background
-    Adds corrected PID variables to the given MC tuple
-    """
-    wildcard_constraints:
-        mode = 'MC_Bs2JpsiPhi_fromLb'
-        # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        script = 'selection/tools/PIDGen.py',
-        tracks = 'selection/pid/pidgen.yaml',
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root',
-    #     file = expand(rules.correct_pid_Lb.output.file, mode='{mode}',
-    #                                                     strip_sim='{strip_sim}',
-    #                                                     year='{year}',
-    #                                                     version='{version}',
-    #                                                     polarity='{polarity}',
-    #                                                     pkkp='{pkkp}'),
-    output:
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.root',
-        tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}_tmp1.root',
-        tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}tmp2.root',
-    log:
-        'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.log',
-    shell:
-        selconfig['runUrania'] + ' ' +
-        'python {input.script} --input-file {input.file} \
-                               --input-tree-name DecayTree \
-                               --output-file {output.file} \
-                               --data-set Mag{wildcards.polarity}_{wildcards.year} \
-                               --mode {wildcards.mode} \
-                               --tracks-file {input.tracks} \
-                               --tmp1 {output.tmp1} \
-                               --tmp2 {output.tmp2} \
-                               --tmp2 {output.tmp2} &> {log}'
-# }}}
-
-
-# if config['run_pid'] and config['run_preselection']:
-rule merge_polarities_lambdab:
-    """
-    Rule for Lb background to merge different polarities and output type :
-        1. hplus = p, hminus = k, (pk)
-        2. hplus = k, hminus = p, (kp)
-    """
-    wildcard_constraints:
-        mode = 'MC_Bs2JpsiPhi_fromLb'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        root = expand(rules.correct_muonpid_Lb.output.file,
-                      mode='{mode}', strip_sim='{strip_sim}', year='{year}',
-                      version='{version}', polarity=selconfig['polarities'],
-                      pkkp=selconfig['MC_Bs2JpsiPhi_fromLb_pkkp']),
-        logfile1 = expand(rules.correct_pid_Lb.log,
+if config['run_preselection']:
+    rule prepare_mc_lambdab:
+        """
+        Rule for Lb background
+        Do not apply cuts, only add branches specified in the corresponding yaml
+        file and save new tree in the requested location
+        """
+        wildcard_constraints:
+            mode = 'MC_Bs2JpsiPhi_fromLb'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        # input:
+        output:
+            # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_prepared_Lb.root'))
+            SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
+        params:
+            files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim][wildcards.polarity],
+            script = 'selection/tools/apply_selection.py',
+            branches = ['selection/branches.yaml'],
+            treename = lambda wildcards: selconfig['treenames'][wildcards.mode],
+        log:
+            'output/selection_prepare_mc/{year}/{mode}/{version}_{strip_sim}_{polarity}.log',
+        run:
+            shell('(time python {params.script} \
+            --input-file {params.files} \
+            --input-tree-name {params.treename} \
+            --output-file {output} \
+            --mode {wildcards.mode} \
+            --branches-files {params.branches} \
+            --year {wildcards.year}) &> {log}')
+    
+    
+    rule split_tree_to_pid:
+        """
+        Lb background need split the tree to two part:
+        1.hplus=p,hminus=k and
+        2.hplus=k,hminus=p
+        and do pid resample separately. This step is split the tree
+        we add a wildcard named pkkp which should be pk or kp, using to distinguish final state.
+        """
+        wildcard_constraints:
+            mode = 'MC_Bs2JpsiPhi_fromLb'
+            # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        threads: 2
+        resources:
+            mem_mb = 10000
+        input:
+            script = 'selection/tools/split_tree.py',
+            input_file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
+            # input_file = expand(rules.prepare_mc_Lb.output, mode='{mode}',
+            #                                                 year='{year}',
+            #                                                 version='{version}',
+            #                                                 strip_sim='{strip_sim}',
+            #                                                 polarity='{polarity}')
+        output:
+            # file = temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_selected_with_gen_{pkkp}.root'))
+            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_splitted{pkkp}.root',
+        log:
+            'output/log/split_tree_to_pid/{year}/{mode}/{version}_{strip_sim}_{polarity}_selected_with_gen_{pkkp}.log'
+        run:
+            shell('(/home3/marcos.romero/.linuxbrew/bin/time python {input.script} \
+            --input-file {input.input_file} \
+            --input-tree-name DecayTree \
+            --output-file {output.file} \
+            --output-tree-name DecayTree \
+            --output-type {wildcards.pkkp}) &> {log}')
+    
+    
+    # corrections for pid {{{
+    
+    rule correct_pid_Lb:
+        """
+        Lb background
+        Adds corrected PID variables to the given MC tuple
+        """
+        wildcard_constraints:
+            mode = 'MC_Bs2JpsiPhi_fromLb'
+            # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            script = 'selection/tools/PIDCorr.py',
+            tracks = 'selection/pid/pidcorr.yaml',
+            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_splitted{pkkp}.root',
+            # file = expand(rules.split_tree_to_pid.output.file, mode='{mode}',
+            #                                                    strip_sim='{strip_sim}',
+            #                                                    year='{year}',
+            #                                                    version='{version}',
+            #                                                    polarity='{polarity}',
+            #                                                    pkkp='{pkkp}'),
+        output:
+            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root',
+            tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}_tmp1.root',
+            tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}tmp2.root',
+        log:
+            'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.log',
+        shell:
+            selconfig['runUrania'] + ' ' +
+            'python {input.script} --input-file {input.file} \
+                                   --input-tree-name DecayTree \
+                                   --output-file {output.file} \
+                                   --data-set Mag{wildcards.polarity}_{wildcards.year} \
+                                   --mode {wildcards.mode}_{wildcards.pkkp} \
+                                   --tracks-file {input.tracks} \
+                                   --tmp1 {output.tmp1} \
+                                   --tmp2 {output.tmp2} &> {log}'
+    
+    rule correct_muonpid_Lb:
+        """
+        Lb background
+        Adds corrected PID variables to the given MC tuple
+        """
+        wildcard_constraints:
+            mode = 'MC_Bs2JpsiPhi_fromLb'
+            # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            script = 'selection/tools/PIDGen.py',
+            tracks = 'selection/pid/pidgen.yaml',
+            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root',
+        #     file = expand(rules.correct_pid_Lb.output.file, mode='{mode}',
+        #                                                     strip_sim='{strip_sim}',
+        #                                                     year='{year}',
+        #                                                     version='{version}',
+        #                                                     polarity='{polarity}',
+        #                                                     pkkp='{pkkp}'),
+        output:
+            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.root',
+            tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}_tmp1.root',
+            tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}tmp2.root',
+        log:
+            'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.log',
+        shell:
+            selconfig['runUrania'] + ' ' +
+            'python {input.script} --input-file {input.file} \
+                                   --input-tree-name DecayTree \
+                                   --output-file {output.file} \
+                                   --data-set Mag{wildcards.polarity}_{wildcards.year} \
+                                   --mode {wildcards.mode} \
+                                   --tracks-file {input.tracks} \
+                                   --tmp1 {output.tmp1} \
+                                   --tmp2 {output.tmp2} \
+                                   --tmp2 {output.tmp2} &> {log}'
+    # }}}
+    
+    
+    # if config['run_pid'] and config['run_preselection']:
+    rule merge_polarities_lambdab:
+        """
+        Rule for Lb background to merge different polarities and output type :
+            1. hplus = p, hminus = k, (pk)
+            2. hplus = k, hminus = p, (kp)
+        """
+        wildcard_constraints:
+            mode = 'MC_Bs2JpsiPhi_fromLb'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            root = expand(rules.correct_muonpid_Lb.output.file,
                           mode='{mode}', strip_sim='{strip_sim}', year='{year}',
                           version='{version}', polarity=selconfig['polarities'],
                           pkkp=selconfig['MC_Bs2JpsiPhi_fromLb_pkkp']),
-        logfile2 = expand(rules.correct_muonpid_Lb.log, mode='{mode}',
-                          strip_sim='{strip_sim}', year='{year}',
-                          version='{version}', polarity=selconfig['polarities'],
-                          pkkp=selconfig['MC_Bs2JpsiPhi_fromLb_pkkp'])
-    output:
-        # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_selected_pidcorrected_Lb.root'))
-        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root'
-    shell:
-       'if grep -i error  {input.logfile1} {input.logfile2} ;\
-        then echo an error occured with pid correction, please check the log files;\
-        else hadd {output} {input.root};\
-        fi;'
-
-
-rule merge_strippings_Lb:
-    """
-    Rule for Lb background
-    Merges input root files using hadd command and saves the output to the
-    given path
-    """
-    wildcard_constraints:
-        mode = 'MC_Bs2JpsiPhi_fromLb'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        lambda wildcards: expand(rules.merge_polarities_lambdab.output,
-                                 mode=wildcards.mode, version=wildcards.version,
-                                 strip_sim=selconfig['strip_sim'][wildcards.mode][wildcards.year],
-                                 year=wildcards.year)
-    output:
-        # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_Lb.root'))
-        SAMPLES + '/{year}/{mode}/{version}_stripmerged.root'
-    shell:
-        'hadd {output} {input}'
-
-rule add_dalitz_weight_Lb:
-    """
-    Rule for Lb background
-    to add dalitz weight.
-    This is a C++ program. The rule goes to LbBKG/WeightLb and excutes builds it.
-    There are four parameter:
-     1. output eg:~/workdir/a.root
-     2. input  eg:~/workdir/b.root
-     3. the file needed in this program: WeightLb/FitRes5/dummy.root
-     4. the file needed in this program: WeightLb/FitRes5/params_pentaquark_paper.func
-    """
-    wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        files = expand(rules.merge_strippings_Lb.output,
-                       mode='{mode}', version='{version}', year='{year}'),
-        rootfile = 'selection/LbBKG/WeightLb/FitRes5/dummy.root',
-        funcfile = 'selection/LbBKG/WeightLb/FitRes5/params_pentaquark_paper.func'
-    output:
-        # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_Lb.root'))
-        SAMPLES + '/{year}/{mode}/{version}_dalitzWeight.root'
-    run:
-        # WARNING :: this needs to be compiled on old ROOT
-        # 'cd selection/LbBKG/WeightLb/; mkdir -p bin;'
-        # 'make foo=genMCPhisNew;'
-        # 'cd -;'
-        shell(f'selection/LbBKG/WeightLb/bin/genMCPhisNew {output} {input.files} {input.rootfile} {input.funcfile}')
-
-
-rule add_ppt_weight_Lb:
-    """
-    Rule for Lb background
-    Add pt weight
-    There are five parameter
-     the first parameter is the position of macro we want to run, in this case LbBKG/pptw/addpptw.C
-     the second parameter is the name of function
-     the third parameter is input. eg: ~/workdir/a.root
-     the fourth parameter is output. eg: ~/workdir/b.root
-     the fifth parameter is the file needed: LbBKG/pptw/weight_2d.root
-    """
-    wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        files = expand(rules.add_dalitz_weight_Lb.output,
-                       mode='{mode}', version='{version}', year='{year}'),
-        command = 'selection/LbBKG/pptw/run',
-        script = 'selection/LbBKG/pptw/addpptw.C',
-        weight_file = 'selection/LbBKG/pptw/weight_2d.root'
-    output:
-        # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_Lb.root'))
-        SAMPLES + '/{year}/{mode}/{version}_pptWeight.root'
-    shell:
-        '{input.command} {input.script} addpptw {input.files} {output} {input.weight_file}'
-
-rule add_bdt_branches_Lb:
-    """
-    Rule for Lb background
-    Adds branches that BDT will be evaluated on. Has to do it now because
-    PID variables in MC first have to be corrected.
-    """
-    wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        script = 'selection/tools/apply_selection.py',
-        file = expand(rules.add_ppt_weight_Lb.output,
-                      mode='{mode}', version='{version}', year='{year}'),
-        branches = 'selection/bdt/branches.yaml'
-    output:
-        SAMPLES + '/{year}/{mode}/{version}_withbdtLb.root'
-        # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_with_bdt_branches_Lb.root'))
-    shell:
-        'python {input.script} --input-file {input.file} \
-                               --output-file {output} \
-                               --mode {wildcards.mode} \
-                               --branches-files {input.branches} \
-                               --keep-all-original-branches True \
-                               --year {wildcards.year}'
-
-rule apply_preselection_mc_Lb:
-    """
-    Rule for Lb background
-    Apply the offline selection to Lb
-    """
-    wildcard_constraints:
-        mode = 'MC_Bs2JpsiPhi_fromLb'
-    threads: 2
-    resources:
-        mem_mb = 12000
-    input:
-        script = 'selection/tools/apply_selection.py',
-        file = expand(rules.add_bdt_branches_Lb.output,
-                      mode='{mode}', version='{version}', year='{year}'),
-        cuts = 'selection/cuts.yaml'
-    output:
-        # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_with_bdt_branches_cut_Lb.root'))
-        SAMPLES + '/{year}/{mode}/{version}_preselected.root',
-    shell:
-        'python {input.script} --input-file {input.file} \
-                               --output-file {output} \
-                               --mode {wildcards.mode} \
-                               --selection-files {input.cuts} \
-                               --year {wildcards.year}'
+            logfile1 = expand(rules.correct_pid_Lb.log,
+                              mode='{mode}', strip_sim='{strip_sim}', year='{year}',
+                              version='{version}', polarity=selconfig['polarities'],
+                              pkkp=selconfig['MC_Bs2JpsiPhi_fromLb_pkkp']),
+            logfile2 = expand(rules.correct_muonpid_Lb.log, mode='{mode}',
+                              strip_sim='{strip_sim}', year='{year}',
+                              version='{version}', polarity=selconfig['polarities'],
+                              pkkp=selconfig['MC_Bs2JpsiPhi_fromLb_pkkp'])
+        output:
+            # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_selected_pidcorrected_Lb.root'))
+            SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root'
+        shell:
+           'if grep -i error  {input.logfile1} {input.logfile2} ;\
+            then echo an error occured with pid correction, please check the log files;\
+            else hadd {output} {input.root};\
+            fi;'
+    
+    
+    rule merge_strippings_Lb:
+        """
+        Rule for Lb background
+        Merges input root files using hadd command and saves the output to the
+        given path
+        """
+        wildcard_constraints:
+            mode = 'MC_Bs2JpsiPhi_fromLb'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            lambda wildcards: expand(rules.merge_polarities_lambdab.output,
+                                     mode=wildcards.mode, version=wildcards.version,
+                                     strip_sim=selconfig['strip_sim'][wildcards.mode][wildcards.year],
+                                     year=wildcards.year)
+        output:
+            # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_Lb.root'))
+            SAMPLES + '/{year}/{mode}/{version}_stripmerged.root'
+        shell:
+            'hadd {output} {input}'
+    
+    rule add_dalitz_weight_Lb:
+        """
+        Rule for Lb background
+        to add dalitz weight.
+        This is a C++ program. The rule goes to LbBKG/WeightLb and excutes builds it.
+        There are four parameter:
+         1. output eg:~/workdir/a.root
+         2. input  eg:~/workdir/b.root
+         3. the file needed in this program: WeightLb/FitRes5/dummy.root
+         4. the file needed in this program: WeightLb/FitRes5/params_pentaquark_paper.func
+        """
+        wildcard_constraints:
+            mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            files = expand(rules.merge_strippings_Lb.output,
+                           mode='{mode}', version='{version}', year='{year}'),
+            rootfile = 'selection/LbBKG/WeightLb/FitRes5/dummy.root',
+            funcfile = 'selection/LbBKG/WeightLb/FitRes5/params_pentaquark_paper.func'
+        output:
+            # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_Lb.root'))
+            SAMPLES + '/{year}/{mode}/{version}_dalitzWeight.root'
+        run:
+            # WARNING :: this needs to be compiled on old ROOT
+            # 'cd selection/LbBKG/WeightLb/; mkdir -p bin;'
+            # 'make foo=genMCPhisNew;'
+            # 'cd -;'
+            shell(f'selection/LbBKG/WeightLb/bin/genMCPhisNew {output} {input.files} {input.rootfile} {input.funcfile}')
+    
+    
+    rule add_ppt_weight_Lb:
+        """
+        Rule for Lb background
+        Add pt weight
+        There are five parameter
+         the first parameter is the position of macro we want to run, in this case LbBKG/pptw/addpptw.C
+         the second parameter is the name of function
+         the third parameter is input. eg: ~/workdir/a.root
+         the fourth parameter is output. eg: ~/workdir/b.root
+         the fifth parameter is the file needed: LbBKG/pptw/weight_2d.root
+        """
+        wildcard_constraints:
+            mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            files = expand(rules.add_dalitz_weight_Lb.output,
+                           mode='{mode}', version='{version}', year='{year}'),
+            command = 'selection/LbBKG/pptw/run',
+            script = 'selection/LbBKG/pptw/addpptw.C',
+            weight_file = 'selection/LbBKG/pptw/weight_2d.root'
+        output:
+            # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_Lb.root'))
+            SAMPLES + '/{year}/{mode}/{version}_pptWeight.root'
+        shell:
+            '{input.command} {input.script} addpptw {input.files} {output} {input.weight_file}'
+    
+    rule add_bdt_branches_Lb:
+        """
+        Rule for Lb background
+        Adds branches that BDT will be evaluated on. Has to do it now because
+        PID variables in MC first have to be corrected.
+        """
+        wildcard_constraints:
+            mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            script = 'selection/tools/apply_selection.py',
+            file = expand(rules.add_ppt_weight_Lb.output,
+                          mode='{mode}', version='{version}', year='{year}'),
+            branches = 'selection/bdt/branches.yaml'
+        output:
+            SAMPLES + '/{year}/{mode}/{version}_withbdtLb.root'
+            # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_with_bdt_branches_Lb.root'))
+        shell:
+            'python {input.script} --input-file {input.file} \
+                                   --output-file {output} \
+                                   --mode {wildcards.mode} \
+                                   --branches-files {input.branches} \
+                                   --keep-all-original-branches True \
+                                   --year {wildcards.year}'
+    
+    rule apply_preselection_mc_Lb:
+        """
+        Rule for Lb background
+        Apply the offline selection to Lb
+        """
+        wildcard_constraints:
+            mode = 'MC_Bs2JpsiPhi_fromLb'
+        threads: 2
+        resources:
+            mem_mb = 12000
+        input:
+            script = 'selection/tools/apply_selection.py',
+            file = expand(rules.add_bdt_branches_Lb.output,
+                          mode='{mode}', version='{version}', year='{year}'),
+            cuts = 'selection/cuts.yaml'
+        output:
+            # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_with_bdt_branches_cut_Lb.root'))
+            SAMPLES + '/{year}/{mode}/{version}_preselected.root',
+        shell:
+            'python {input.script} --input-file {input.file} \
+                                   --output-file {output} \
+                                   --mode {wildcards.mode} \
+                                   --selection-files {input.cuts} \
+                                   --year {wildcards.year}'
 
 
 # vim: fdm=marker:cc=120
