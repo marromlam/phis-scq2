@@ -268,7 +268,7 @@ rule apply_trackchi2_scaling:
     Rule to rescale TrackChi2 variables on MC using sweighted data.
     """
     input:
-        input_mc = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',                                                  
+        input_mc = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
         input_data =  lambda wcs: expand(
                 SAMPLES + '/{data_year}/{data_mode}/{version}_bkgsubtracted.root',
                 version = wcs.version,
