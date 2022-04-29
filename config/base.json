@@ -29,5 +29,6 @@
     "run_selection": true,
     "run_tagging": true,
     "ludicrous": false,
-    "selection_mode": "run2"
+    "selection_mode": "run2",
+    "stripping_mode": "pidcuts"
 }
