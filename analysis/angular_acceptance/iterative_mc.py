@@ -1,16 +1,18 @@
 DESCRIPTION = """
-    Angular acceptance iterative procedure
+    Angular acceptance iterative procedure for MC check
 """
 
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
+__all__ = ['fcn_data', 'get_angular_acceptance', 'kkp_weighting', 'compute_pdf_ratio_weight', 'check_for_convergence']
 
 
 ################################################################################
 # Modules ######################################################################
 
 # ignore all future warnings
+from utils.helpers import parse_angacc
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -36,7 +38,7 @@ import multiprocessing
 
 # load ipanema
 from ipanema import initialize
-initialize(os.environ['IPANEMA_BACKEND'],1)
+initialize(os.environ['IPANEMA_BACKEND'],1, real='double')
 from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # get badjanak and compile it with corresponding flags
@@ -53,18 +55,19 @@ from utils.helpers import  version_guesser, timeacc_guesser, trigger_scissors, p
 
 # binned variables
 import config
-resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
-bdtconfig = config.timeacc['bdtconfig']
-Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
+bdtconfig= config.angacc['bdtconfig']
+#resolutions = config.timeacc['constants']
+#all_knots = config.timeacc['knots']
+#bdtconfig = config.timeacc['bdtconfig']
+#Gdvalue = config.general['Gd']
+#tLL = config.general['tLL']
+#tUL = config.general['tUL']
 
 # reweighting config
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)   # ignore future warnings
 from hep_ml import reweight
-reweighter = reweight.GBReweighter(**bdtconfig)
+# reweighter = reweight.GBReweighter(**bdtconfig)
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
 def acceptance_effect(p, a):
@@ -79,6 +82,20 @@ def check_for_convergence(a,b):
   return False
 
 
+def compute_pdf_ratio_weight(mcsample, mcparams, rdparams, tLL, tUL):
+  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
+                           **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
+  original_pdf_h = mcsample.pdf.get()
+  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
+                           **mcparams.valuesdict(), tLL=tLL, tUL=tUL)
+  original_pdf_h /= mcsample.pdf.get()
+  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=1,
+                           **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
+  target_pdf_h = mcsample.pdf.get()
+  badjanak.delta_gamma5_mc(mcsample.true, mcsample.pdf, use_fk=0,
+                           **rdparams.valuesdict(), tLL=tLL, tUL=tUL)
+  target_pdf_h /= mcsample.pdf.get()
+  return np.nan_to_num(target_pdf_h/original_pdf_h)
 
 # core functions
 #     They work for a given category only.
@@ -134,6 +151,7 @@ def kkp_weighting(original_v, original_w, target_v, target_w, path, year, mode,
   """
   Kinematic reweighting
   """
+  reweighter = reweight.GBReweighter(**bdtconfig)
   # do reweighting
   reweighter.fit(original=original_v, target=target_v,
                  original_weight=original_w, target_weight=target_w);
@@ -157,7 +175,7 @@ def kkp_weighting_bins(original_v, original_w, target_v, target_w, path, y,m,t,i
   print(f" * GB-weighting {m}-{y}-{trigger} sample\n  {kkpWeight[:10]}")
 """
 
-def get_angular_acceptance(mc, trigger, kkpWeight=False):
+def get_angular_acceptance(mc, tLL, tUL, kkpWeight=False):
   """
   Compute angular acceptance
   """
@@ -170,24 +188,24 @@ def get_angular_acceptance(mc, trigger, kkpWeight=False):
   weight = ristra.allocate(weight)
   # compute angular acceptance
   if 'Bs2Jpsi' in MODE:
-    ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict())
+    ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict(), tLL=tLL, tUL=tUL)
   else:
-    ans = badjanak.get_angular_acceptance_weights_Bd(mc.true, mc.reco, weight, **mc.params.valuesdict())
+    ans = badjanak.get_angular_acceptance_weights_Bd(mc.true, mc.reco, weight, **mc.params.valuesdict(), tLL=tLL, tUL=tUL)
 
   # create ipanema.Parameters
   w, uw, cov, corr = ans
   mc.angaccs[i] = Parameters()
   for k in range(0,len(w)):
-    correl = {f'w{j}{trigger[0]}': corr[k][j]
+    correl = {f'w{j}': corr[k][j]
               for j in range(0, len(w)) if k > 0 and j > 0}
-    mc.angaccs[i].add({'name': f'w{k}{trigger[0]}', 'value': w[k], 'stdev': uw[k],
-                       'free': False, 'latex': f'w_{k}^{trigger[0]}', 'correl': correl})
+    mc.angaccs[i].add({'name': f'w{k}', 'value': w[k], 'stdev': uw[k],
+                       'free': False, 'latex': f'w_{k}', 'correl': correl})
   #print(f"{  np.array(mc.angular_weights[t])}")
 
 
 
 # this one should be moved
-def fcn_data(parameters, data):
+def fcn_data(parameters, data, tLL, tUL):
   # here we are going to unblind the parameters to the fcn caller, thats why
   # we call parameters.valuesdict(blind=False), by default
   # parameters.valuesdict() has blind=True
@@ -199,7 +217,8 @@ def fcn_data(parameters, data):
   for dy in data.values():
     for dt in dy.values():
       badjanak_gamma5(dt.data, dt.lkhd, pars_dict, **dt.timeacc.valuesdict(),
-                     **dt.csp.valuesdict(), **dt.angacc.valuesdict())
+                     **dt.csp.valuesdict(), **dt.angacc.valuesdict(),
+                    tLL=tLL, tUL=tUL, BLOCK_SIZE=128)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)
@@ -276,20 +295,19 @@ def merge_std_dg0(std, dg0, verbose=True, label=''):
 # Multiple categories functions 
 #     They run over multiple categories
 
-def do_fit(verbose=False):
+def do_fit(tLL, tUL, verbose=False):
   """
   Fit
   """
   # Get'em from the global scope
   global pars, data
-  verbose = True 
   # start where we left
   for v in pars.values():
     v.init = v.value
 
   # do the fit
   result = optimize(fcn_data, method='minuit', params=pars,
-                    fcn_kwgs={'data':data}, verbose=True, timeit=True,
+                    fcn_kwgs=dict(data=data, tLL=tLL, tUL=tUL), verbose=True, timeit=True,
                     tol=0.05, strategy=2)
 
   #print fit results
@@ -324,7 +342,7 @@ def do_fit(verbose=False):
   return result.chi2
 
 
-def do_pdf_weighting(verbose):
+def do_pdf_weighting(tLL, tUL, verbose):
   """
   We need to change badjanak to handle MC samples and then we compute the
   desired pdf weights for a given set of fitted pars in step 1. This
@@ -336,15 +354,18 @@ def do_pdf_weighting(verbose):
       for t, v in dy.items(): # loop over triggers
         if verbose:
           print(f' * Calculating pdfWeight for {MODE}-{y}-{t} sample')
-        v.pdfWeight[i] = pdf_reweighting(v, v.params, pars+data[y][t].csp)
+        j = len(v.pdfWeight.keys())+1
+        # v.pdfWeight[i] = pdf_reweighting(v, v.params, pars+data[y][t].csp)
+        v.pdfWeight[j] = compute_pdf_ratio_weight(v, v.params,pars+data[y][t].csp, tLL=tLL, tUL=tUL)
   if verbose:
     for y, dy in mc.items(): # loop over years
       print(f'Show 10 fist pdfWeight[{i}] for {y}')
       print(f"{'biased':<11}  {'unbiased':<11}")
       for evt in range(0, 10):
-        print(f"{dy['biased'].pdfWeight[i][evt]:>+.8f}", end='')
+        print(f"{dy['biased'].pdfWeight[j][evt]:>+.8f}", end='')
         print(f"  ", end='')
-        print(f"{dy['unbiased'].pdfWeight[i][evt]:>+.8f}", end='\n')
+        print(f"{dy['unbiased'].pdfWeight[j][evt]:>+.8f}", end='\n')
+        print(f" | ", end='')
 
 
 
@@ -362,10 +383,10 @@ def do_kkp_weighting(verbose):
   for y, dy in mc.items(): # loop over years
       for t, v in dy.items():
         # original variables + weight (mc)
+        j = len(v.pdfWeight.keys())
         ov  = v.df[['pTHm','pTHp','pHm','pHp']]
         ow  = v.df.eval(f'angWeight*polWeight*{weight_mc}')
-        # ow  = v.df.eval(f'angWeight*{weight_mc}')                                 # WARNING: use polWeight
-        ow *= v.pdfWeight[i]
+        ow *= v.pdfWeight[j]
         # target variables + weight (real data)
         tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
         tw = data[y][t].df.eval(f'{weight_rd}')
@@ -384,7 +405,7 @@ def do_kkp_weighting(verbose):
 
 
 
-def do_angular_weights(verbose):
+def do_angular_weights(tLL, tUL, verbose):
   """
   dddd
   """
@@ -396,7 +417,7 @@ def do_angular_weights(verbose):
         path_to_weights = v.path_to_weights.replace('.root',f'_{t}.npy')
         v.kkpWeight[i] = np.load(path_to_weights)
         os.remove(path_to_weights)
-        get_angular_acceptance(v, t, kkpWeight=True)
+        get_angular_acceptance(v, tLL, tUL, kkpWeight=True)
     if verbose:
       print(f'Show 10 fist kkpWeight[{i}] for {y}')
       print(f"{'biased':<11}  {'unbiased':<11}")
@@ -404,6 +425,7 @@ def do_angular_weights(verbose):
         print(f"{dy['biased'].kkpWeight[i][evt]:>+.8f}", end='')
         print(f"  ", end='')
         print(f"{dy['unbiased'].kkpWeight[i][evt]:>+.8f}", end='\n')
+        print(f" | ", end='')
 
 
 
@@ -434,7 +456,7 @@ def do_mc_combination(verbose):
 
 
 
-def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
+def angular_acceptance_iterative_procedure(tLL, tUL, verbose=False, iteration=0):
   global pars
   
   itstr = f"[iteration #{iteration}]"
@@ -442,12 +464,12 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
 
   #1 fit RD sample obtaining pars
   print(f'{itstr} Simultaneous fit Bs2JpsiPhi {"&".join(list(mc.keys()))}')
-  likelihood = do_fit(verbose=verbose)
+  likelihood = do_fit(tLL, tUL, verbose=verbose)
   
   #2 pdfWeight MC to RD using pars
   print(f'\n{itstr} PDF weighting MC samples to match Bs2JpsiPhi RD')
   t0 = timer()
-  do_pdf_weighting(verbose=verbose)
+  do_pdf_weighting(tLL, tUL, verbose=verbose)
   tf = timer()-t0
   print(f'PDF weighting took {tf:.3f} seconds.')
   
@@ -461,7 +483,7 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
   # 4th step: angular weights
   print(f'\n{itstr} Extract angular normalisation weights')
   t0 = timer()
-  do_angular_weights(verbose)
+  do_angular_weights(tLL, tUL, verbose)
   tf = timer()-t0
   print(f'Extract angular normalisation weights took {tf:.3f} seconds.')
   
@@ -478,13 +500,13 @@ def angular_acceptance_iterative_procedure(verbose=False, iteration=0):
 
 
 
-def lipschitz_iteration(max_iter=30, verbose=True):
+def lipschitz_iteration(tLL, tUL, max_iter=30, verbose=True):
   global pars
   likelihoods = []
   
   for i in range(1,max_iter):
 
-    ans = angular_acceptance_iterative_procedure(verbose, i)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, i)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
     
@@ -519,16 +541,19 @@ def lipschitz_iteration(max_iter=30, verbose=True):
 
 
 
-def aitken_iteration(max_iter=30, verbose=True):
+def aitken_iteration(tLL, tUL, max_iter=30, verbose=True):
   global pars
   likelihoods = []
+    
   for i in range(1,max_iter):
+
     # x1 = angular_acceptance_iterative_procedure <- x0
-    ans = angular_acceptance_iterative_procedure(verbose, 2*i-1)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, 2*i-1)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
+
     # x2 = angular_acceptance_iterative_procedure <- x1
-    ans = angular_acceptance_iterative_procedure(verbose, 2*i)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, 2*i)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
     
@@ -549,9 +574,9 @@ def aitken_iteration(max_iter=30, verbose=True):
               aitken = x2
           else:
               #checker.append(False)
-              aitken = x2 - ( (x2-x1)**2 ) / den # aitken
+              #aitken = x2 - ( (x2-x1)**2 ) / den # aitken
               #aitken = x0 - ( (x1-x0)**2 ) / den # steffensen
-              #aitken = x1 - ( (x2-x1)**2 ) / den # romero
+              aitken = x1 - ( (x2-x1)**2 ) / den # romero
 
           # update angacc
           dt.angacc[p].set(value=aitken.n)
@@ -649,16 +674,18 @@ if __name__ == '__main__':
   global MODE 
   MODE = args['mode']
   ANGACC = parse_angacc(args['angacc'])
+  tLL = 0.3
+  tUL = 15.0
 
   if 'Bs2Jpsi' in MODE:
     def badjanak_gamma5(data, lkhd, pars, **kwargs):
       return badjanak.delta_gamma5_data(data, lkhd, **pars, **kwargs,
-                                        tLL=tLL, tUL=tUL, use_timeacc=2,
+                                        use_timeacc=2,
                                         use_timeres=0, set_tagging=0)
   else:
     def badjanak_gamma5(data, lkhd, pars, **kwargs):
       return badjanak.delta_gamma5_data_Bd(data, lkhd, **pars, **kwargs,
-                                           tLL=tLL, tUL=tUL, use_timeacc=0,
+                                           use_timeacc=0,
                                            set_tagging=1, use_timeres=0)
 
 
@@ -666,8 +693,7 @@ if __name__ == '__main__':
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
 
   # Prepare the cuts -----------------------------------------------------------
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
-  CUT = cuts_and(CUT,f'gentime>={tLL} & gentime<={tUL}')
+  CUT = f'gentime>={tLL} & gentime<={tUL}'
 
   # Samples as lists, mc and data
   samples_mc = args['sample_mc'].split(',')
@@ -693,6 +719,7 @@ if __name__ == '__main__':
   angacc_unbiased = args['output_angacc_unbiased'].split(',')
   weights_mc = args['output_weights_mc'].split(',')
 
+  reweighter = reweight.GBReweighter(**bdtconfig)
   # Print settings
   printsec('Settings')
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
@@ -722,15 +749,15 @@ if __name__ == '__main__':
     real += ['mHH', '0*sigmat', 'idB', 'idB', '0*mHH', '0*mHH']
 
   # sWeight variable
-  weight_mc = "sw"
-  weight_rd = "sw"
-  if "Bs2Jpsi" in MODE:
-    weight_mc += '/gb_weights'
-    if 'evt' in args['version']:
-      weight_rd = f'{weight_rd}/gb_weights'
-  if "bkgcat60" in args['version']:
-    weight_mc = 'time/time'
-    weight_rd = 'time/time'
+  weight_mc = "sWeight"
+  weight_rd = "sWeight"
+  # if "Bs2Jpsi" in MODE:
+    # weight_mc += '/gb_weights'
+    # if 'evt' in args['version']:
+      # weight_rd = f'{weight_rd}/gb_weights'
+  # if "bkgcat60" in args['version']:
+  #   weight_mc = 'time/time'
+  #   weight_rd = 'time/time'
   if ANGACC['use_oddWeight']:
     weight_rd = f'oddWeight*{weight_rd}'
   if ANGACC['use_pTWeight']:
@@ -785,7 +812,7 @@ if __name__ == '__main__':
     csp = Parameters.load(csp_factors[i]);
     resolution = Parameters.load(time_resolution[i])
     flavor = Parameters.load(flavor_tagging[i])
-    mass = np.array(csp.build(csp, csp.find('mKK.*'))).tolist()
+    mass = np.array( csp.build(csp, csp.find('mKK.*')) ).tolist()
     badjanak.config['mhh'] = mass
 
     # loop in triggers
@@ -996,11 +1023,12 @@ if __name__ == '__main__':
 
   # run the procedure!
 
-  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True)
+
+  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True, tLL=tLL, tUL=tUL)
 
   if not ok:
-    ok, likelihoods = aitken_iteration(max_iter=30, verbose=True)
-
+    ok, likelihoods = aitken_iteration(max_iter=30, verbose=True, tLL=tLL, tUL=tUL)
+        
   if not ok:
     print('WARNING: Convergence was not achieved!')
 
