@@ -118,7 +118,7 @@ if __name__ == '__main__':
     fig.savefig(f"{args['output_figures']}/fom.pdf")
 
     # save best bdt_branch cut
-    with open(output_file, 'w') as f:
+    with open(args['output_file'], 'w') as f:
         f.write(f"{best_x:.2f}")
 
 
