@@ -15,6 +15,7 @@ initialize(os.environ['IPANEMA_BACKEND'], 1)
 
 # get badjanak and compile it with corresponding flags
 from analysis.angular_acceptance.bdtconf_tester import bdtmesh
+from analysis.angular_acceptance.iterative_mc import acceptance_effect
 from analysis import badjanak
 badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
@@ -145,7 +146,6 @@ if __name__ == '__main__':
         pTm = np.array(rd.df['pTHm'])
         pT_acc = np.ones_like(rd.df['pTHp'])
         for k in range(len(pT_acc)):
-            # BUG: the wrong pt effect is not imported
             pT_acc[k] = acceptance_effect(pTp[k], 250**3)
             pT_acc[k] *= acceptance_effect(pTm[k], 250**3)
         rd.df['pTWeight'] = pT_acc
