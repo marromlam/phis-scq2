@@ -46,7 +46,7 @@ rule preselection_correct_pid:
     log:
         'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.log',
     shell:
-        selconfig['runUrania'] + ' ' +
+        '(' + selconfig['runUrania'] + ' ' +
         'python {input.script} --input-file {input.file} \
                                --input-tree-name DecayTree \
                                --output-file {output.file} \
@@ -54,7 +54,7 @@ rule preselection_correct_pid:
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks} \
                                --tmp1 {output.tmp1} \
-                               --tmp2 {output.tmp2} &> {log}'
+                               --tmp2 {output.tmp2}) &> {log}'
 
 # }}}
 
@@ -89,7 +89,7 @@ rule preselection_correct_muonpid:
     log:
         'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.log',
     shell:
-        selconfig['runUrania'] + ' ' +
+        '(' + selconfig['runUrania'] + ' ' +
         'python {input.script} --input-file {input.file} \
                               --input-tree-name DecayTree \
                               --output-file {output.file} \
@@ -97,7 +97,7 @@ rule preselection_correct_muonpid:
                               --mode {wildcards.mode} \
                               --tracks-file {input.tracks} \
                               --tmp1 {output.tmp1} \
-                              --tmp2 {output.tmp2} &> {log}'
+                              --tmp2 {output.tmp2} ) &> {log}'
 
 # }}}
 
