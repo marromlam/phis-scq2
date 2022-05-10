@@ -90,6 +90,42 @@ rule selection_gbw_preliminar_data:
 
 # sweigting for GB weighting {{{
 
+# rule selection_gbw_bkgsubtract_data:
+#     """
+#     Rule for sweighting data for GB weights.
+#     Performs fit to Bs mass. Saves new tree with sweights in the requested location
+#     """
+#     threads: 2
+#     resources:
+#         mem_mb = 12000
+#     wildcard_constraints:
+#         # mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt)"    # ORIGINAL
+#         mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
+#     input:
+#         tuple_file = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
+#         # tuple_file = expand(rules.select_GBW_data_ntuples.output,
+#         #                     year='{year}', version='{version}', mode='{mode}'),
+#     params:
+#         script = 'selection/gb_weights/sweights_for_gb_weights.py',
+#         branch_name = 'B_ConstJpsi_M_1',
+#     output:
+#         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
+#         sample = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
+#         plots = directory(SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted/')
+#     log:
+#         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
+#         'output/selection_data_background_subtraction/{year}/{mode}/{version}.log',
+#     run:
+#         shell('mkdir -p {output.plots}')
+#         shell('(time python {params.script} \
+#         --input-file {input.tuple_file} \
+#         --output-file {output.sample} \
+#         --input-branch {params.branch_name} \
+#         --plot-dir {output.plots} \
+#         --mode {wildcards.mode} \
+#         --year {wildcards.year}) &> {log}')
+
+
 rule selection_gbw_bkgsubtract_data:
     """
     Rule for sweighting data for GB weights.
@@ -102,29 +138,33 @@ rule selection_gbw_bkgsubtract_data:
         # mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt)"    # ORIGINAL
         mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
     input:
-        tuple_file = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
+        sample = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
         # tuple_file = expand(rules.select_GBW_data_ntuples.output,
         #                     year='{year}', version='{version}', mode='{mode}'),
     params:
-        script = 'selection/gb_weights/sweights_for_gb_weights.py',
-        branch_name = 'B_ConstJpsi_M_1',
+        script = 'selection/gb_weights/background_subtraction.py',
+        mass_branch = 'B_ConstJpsi_M_1',
+        mass_model = 'hypatia',
     output:
         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
-        sample = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
-        plots = directory(SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted/')
+        sweights = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
+        pars = 'output/params/background_subtraction/{year}/{mode}/{version}.json',
+        plots = directory('output/figures/background_subtraction/{year}/{mode}/{version}/')
     log:
         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
         'output/selection_data_background_subtraction/{year}/{mode}/{version}.log',
     run:
         shell('mkdir -p {output.plots}')
         shell('(time python {params.script} \
-        --input-file {input.tuple_file} \
-        --output-file {output.sample} \
-        --input-branch {params.branch_name} \
-        --plot-dir {output.plots} \
+        --sample {input.sample} \
+        --sweights {output.sweights} \
+        --mass-branch {params.mass_branch} \
+        --mass-model {params.mass_model} \
+        --output-params {output.pars} \
+        --output-figures {output.plots} \
         --mode {wildcards.mode} \
-        --year {wildcards.year}) &> {log}')
-
+        --version {wildcards.version} \
+        --year {wildcards.year}) #&> {log}')
 
 # NOT USE IPATIA rule mass_prefit_GBW_mc:
 # NOT USE IPATIA     """
