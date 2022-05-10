@@ -15,3 +15,10 @@ Bs2JpsiPhi_Prompt:
 MC_Bs2JpsiPhi_Prompt:
     <<: *Bs2JpsiPhi
 
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+    <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+    <<: *MC_Bs2JpsiPhi
+
+

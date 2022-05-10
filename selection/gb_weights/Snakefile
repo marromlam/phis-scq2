@@ -28,7 +28,9 @@ rule selection_gbw_preliminar_mc:
         SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_preliminarGBW.root',
         # /scratch46/marcos.romero/sidecar14/{year}/{mode}/{version}_{strip_sim}GBWpreliminar.root'
     params:
-        cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific',
+        # RR Warning updated pipeline
+        # cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific',
+        cutkeys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific_GBW',
         # file = lambda wildcards: selconfig['eos'] + '/' + config['version'] + '/PID/{}/{}_{}_{}_selected_pidcorrected.root'.format(wildcards.mode, wildcards.mode, wildcards.year, wildcards.strip_sim)
     log:
         'output/log/select_GBW_MC_ntuples/{mode}/{version}_{strip_sim}_{year}_GBW_MC_selected.log'
@@ -65,7 +67,11 @@ rule selection_gbw_preliminar_data:
                 if wildcards.mode.startswith('MC_') \
                 else selconfig['eos_data'][selconfig['streams'][wildcards.mode]][int(wildcards.year)],
         treename = lambda wildcards: selconfig['treenames'][wildcards.mode],
-        cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts_SW_GBW'
+        #RR Warning updated pipeline
+        #cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts_SW_GBW'
+        cutkeys = 'L0_cuts B_cuts_SW_GBW phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts'
+
+
     log:
         'output/log/select_GBW_data_ntuples/{year}/{mode}/{version}_GBW_MC_selected.log'
     run:

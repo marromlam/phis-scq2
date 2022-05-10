@@ -26,8 +26,15 @@ def cut_keys_mode(wildcards):
     Define cut keys to be applied if not all. 
     Only exception at the moment is DsPi.
     """
-    if 'Bs2DsPi' not in wildcards.mode: 
-       return 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts phi_cuts'
+    # RR Warning updated pipeline
+    # if 'Bs2DsPi' not in wildcards.mode: 
+    #    return 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts phi_cuts'
+    if 'Bs2DsPi' not in wildcards.mode:
+        if 'MC' in wildcards.mode: 
+            return 'L0_cuts B_cuts phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts MC_specific'   
+        else:
+            return 'L0_cuts B_cuts phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts'
+
  
     return 'all'
 
