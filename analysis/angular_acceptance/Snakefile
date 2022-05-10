@@ -1066,18 +1066,48 @@ rule angular_acceptance_pvalue_table_latex:
     resources:
       mem_mb = 4096
     input:
-      'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.json'
-    params:
-      'analysis/params/generator/{year}/{mode}.json'
+      target = 'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.json',
+      original = 'analysis/params/generator/{year}/{mode}.json'
     output:
-      'output/tables/pvalue_table_latex/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.tex'
+      'output/tables/pvalue_table_latex/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_previous.tex'
     log:
-      'output/log/pvalue_table_latex/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
+      'output/log/pvalue_table_latex/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_previous.log'
     run:
       shell(f"""(time\
       python analysis/angular_acceptance/pvalue.py\
-      --input {input}\
-      --params {params}\
+      --target {input.target}\
+      --original {input.original}\
+      --output {output}\
+      --mode {wildcards.mode}\
+      --version {wildcards.version}\
+      --angacc {wildcards.angacc}\
+      --year {wildcards.year}\
+      ) &> {log}""")
+      send_mail(f"Pull angular acceptance :: {wildcards}", f"{log}")
+
+# }}}
+
+# Latex table with overall p-values {{{
+#   pulls for a set of parameters 
+
+rule pvalue_MCcheck:
+    resources:
+      mem_mb = 4096
+    wildcard_constraints:
+      mode = 'MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?',
+      effect = '(pT|Odd)'
+    input:
+      target = 'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}{effect}_{csp}_{flavor}_{timeacc}{effect}_{timeres}.json',
+      original = 'tmp/params/physics_params/{year}/{mode}/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.json'
+    output:
+      'output/tables/pvalue_table_latex/{year}/{mode}/{version}_{angacc}{effect}_{csp}_{flavor}_{timeacc}{effect}_{timeres}.tex'
+    log:
+      'output/log/pvalue_table_latex/{year}/{mode}/{version}_{angacc}{effect}_{csp}_{flavor}_{timeacc}_{timeres}.log'
+    run:
+      shell(f"""(time\
+      python analysis/angular_acceptance/pvalue.py\
+      --target {input.target}\
+      --original {input.original}\
       --output {output}\
       --mode {wildcards.mode}\
       --version {wildcards.version}\
