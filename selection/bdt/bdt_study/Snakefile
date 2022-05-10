@@ -33,6 +33,44 @@ rule selection_add_bdt_response:
         ) &> {log}')
 
 
+# rule selection_bdt_cut_optimization:
+#     """
+#     Generic rule.
+#     Fit to B_ConstJpsi_M_1 with different cut on bdtg3 to obtain the rough
+#     sweight to define FOM=(sum_w)^2/sum_(w^2) and find the best bdtg3 cut with
+#     largest FOM
+#
+#     TODO: Generalize for Bu tuples too
+#     """
+#     threads: 2
+#     resources:
+#         mem_mb = 12000
+#     wildcard_constraints:
+#         mode = '(Bu2JpsiKplus|Bs2JpsiPhi)'
+#     input:
+#         tuple_file = SAMPLES + '/{year}/{mode}/{version}_bdt_response.root',
+#         # tuple_file = expand(rules.add_bdt_response.output, version='{version}',
+#         #                     year='{year}', mode='{mode}'),
+#     params:
+#         script = 'selection/tools/fit_for_bdtcut_FOM.py',
+#         branch_name = 'B_ConstJpsi_M_1',
+#     output:
+#         cut = 'output/params/bdt_cut/{year}/{mode}/{version}.json',
+#         plots = directory('output/figures/bdt_cut/{year}/{mode}/{version}/')
+#     log:
+#         'output/log/selection_bdt_cut_optimization/{year}/{year}/{mode}/{version}.log'
+#     run:
+#         shell(f'mkdir -p {output.plots}')
+#         shell('(time python {params.script} \
+#         --input-file {input.tuple_file} \
+#         --input-branch {params.branch_name} \
+#         --plot-dir {output.plots} \
+#         --output-file {output.cut} \
+#         --mode {wildcards.mode} \
+#         --year {wildcards.year} \
+#         ) &> {log}')
+#
+
 rule selection_bdt_cut_optimization:
     """
     Generic rule.
@@ -52,7 +90,7 @@ rule selection_bdt_cut_optimization:
         # tuple_file = expand(rules.add_bdt_response.output, version='{version}',
         #                     year='{year}', mode='{mode}'),
     params:
-        script = 'selection/tools/fit_for_bdtcut_FOM.py',
+        script = 'selection/bdt/optimize_bdt_cut.py',
         branch_name = 'B_ConstJpsi_M_1',
     output:
         cut = 'output/params/bdt_cut/{year}/{mode}/{version}.json',
@@ -64,12 +102,11 @@ rule selection_bdt_cut_optimization:
         shell('(time python {params.script} \
         --input-file {input.tuple_file} \
         --input-branch {params.branch_name} \
-        --plot-dir {output.plots} \
+        --output-figures {output.plots} \
         --output-file {output.cut} \
         --mode {wildcards.mode} \
         --year {wildcards.year} \
-        ) &> {log}')
-
+        ) #&> {log}')
 
 # rule fit_for_bdtcut_optimization_Bu:
 #     """
