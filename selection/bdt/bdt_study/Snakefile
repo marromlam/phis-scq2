@@ -46,7 +46,7 @@ rule selection_bdt_cut_optimization:
     resources:
         mem_mb = 12000
     wildcard_constraints:
-        mode = 'Bs2JpsiPhi'
+        mode = '(Bu2JpsiKplus|Bs2JpsiPhi)'
     input:
         tuple_file = SAMPLES + '/{year}/{mode}/{version}_bdt_response.root',
         # tuple_file = expand(rules.add_bdt_response.output, version='{version}',
