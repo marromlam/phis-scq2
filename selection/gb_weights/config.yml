@@ -1,0 +1,132 @@
+# Configuration file for the gb-weights
+#
+# Here we...
+
+# For a given mode, which is the corresponing mode to extract the tails from?
+# Here we define it
+tails_mode:
+  'Bs2JpsiPhi': 'MC_Bs2JpsiPhi'
+  'MC_Bs2JpsiPhi': 'MC_Bs2JpsiPhi'
+  'MC_Bs2JpsiPhi_dG0': 'MC_Bs2JpsiPhi'
+  'Bd2JpsiKstar': 'MC_Bd2JpsiKstar'
+  'MC_Bd2JpsiKstar': 'MC_Bd2JpsiKstar'
+  'Bu2JpsiKplus': 'MC_Bu2JpsiKplus'
+  'MC_Bu2JpsiKplus': 'MC_Bu2JpsiKplus'
+
+
+mass_model:
+  'Bs2JpsiPhi': 'hypatia'
+  'MC_Bs2JpsiPhi': 'hypatia'
+  'MC_Bs2JpsiPhi_dG0': 'hypatia'
+  'Bd2JpsiKstar': 'hypatia'
+  'MC_Bd2JpsiKstar': 'hypatia'
+  'Bu2JpsiKplus': 'hypatia'
+  'MC_Bu2JpsiKplus': 'hypatia'
+
+
+mass_branch:
+  'Bs2JpsiPhi': 'B_ConstJpsi_M_1'
+  'MC_Bs2JpsiPhi': 'B_ConstJpsi_M_1'
+  'MC_Bs2JpsiPhi_dG0': 'B_ConstJpsi_M_1'
+  'Bd2JpsiKstar': 'B_ConstJpsi_M_1'
+  'MC_Bd2JpsiKstar': 'B_ConstJpsi_M_1'
+  'Bu2JpsiKplus': 'B_ConstJpsi_M_1'
+  'MC_Bu2JpsiKplus': 'B_ConstJpsi_M_1'
+
+
+gbweighting_branches:
+  common: &gbw-common
+    'B_PT': 'B_PT'
+    'B_ETA': 'B_ETA'
+    'nLongTracks': 'nLongTracks'
+    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+  Bs2JpsiPhi: &gbw-Bs2JpsiPhi
+    <<: *gbw-common
+  Bs2JpsiPhi_Prompt:
+    <<: *gbw-common
+  Bd2JpsiKstar: &gbw-Bd2JpsiKstar
+    <<: *gbw-common
+  Bu2JpsiKplus: &gbw-Bu2JpsiKplus
+    'B_PT': 'B_PT'
+    'B_ETA': 'B_ETA'
+    'nTracks': 'nTracks'
+  MC_Bs2JpsiPhi:
+    <<: *gbw-common
+  MC_Bs2JpsiPhi_Prompt:
+    <<: *gbw-common
+  MC_Bs2JpsiPhi_dG0:
+    <<: *gbw-common
+  MC_Bs2JpsiKK_Swave:
+    <<: *gbw-common
+  MC_Bd2JpsiKstar:
+    <<: *gbw-common
+  MC_Bu2JpsiKplus:
+    <<: *gbw-Bu2JpsiKplus
+
+
+all_branches:
+  common: &all-common
+    'Polarity': 'Polarity'
+    'time': 'time'
+    'sigmat': 'sigmat'
+    'nLongTracks': 'nLongTracks'
+    'B_ETA': 'B_ETA'
+    'B_P': 'B_P'
+    'B_PT': 'B_PT'
+    'X_M': 'X_M'
+    'hlt1b': 'hlt1b'
+    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+  Bs2JpsiPhi:  &all-Bs2JpsiPhi
+    <<: [*all-common, *gbw-Bs2JpsiPhi]
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  Bs2JpsiPhi_Prompt:  &all-Bs2JpsiPhi_Prompt
+    <<: [*all-common, *gbw-Bs2JpsiPhi]
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  Bd2JpsiKstar:  &all-Bd2JpsiKstar
+    <<: [*all-common, *gbw-Bd2JpsiKstar]
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  Bu2JpsiKplus:  &all-Bu2JpsiKplus
+    <<: [*all-common, *gbw-Bu2JpsiKplus]
+  MC_Bs2JpsiPhi:
+    <<: *all-Bs2JpsiPhi
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'B_BKGCAT': 'B_BKGCAT'
+  MC_Bs2JpsiPhi_Prompt:
+    <<: *all-Bs2JpsiPhi_Prompt
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'B_BKGCAT': 'B_BKGCAT'
+  MC_Bs2JpsiPhi_dG0:
+    <<: *all-Bs2JpsiPhi
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'B_BKGCAT': 'B_BKGCAT'
+  MC_Bs2JpsiKK_Swave:
+    <<: *all-Bs2JpsiPhi
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'B_BKGCAT': 'B_BKGCAT'
+  MC_Bd2JpsiKstar:
+    <<: *all-Bd2JpsiKstar
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'B_BKGCAT': 'B_BKGCAT'
+  MC_Bu2JpsiKplus:
+    <<: *all-Bu2JpsiKplus
