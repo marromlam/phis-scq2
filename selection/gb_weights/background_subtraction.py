@@ -2,7 +2,7 @@
 #
 #
 
-__all__ = []
+__all__ = ['cb_exponential', 'ipatia_exponential']
 __author__ = ["Marcos Romero Lamas"]
 __email__ = ["mromerol@cern.ch"]
 
@@ -15,10 +15,12 @@ import argparse
 import uproot3 as uproot
 import numpy as np
 import re
+import yaml
 from ipanema import (ristra, Sample, splot)
 import matplotlib.pyplot as plt
 from utils.strings import printsec, printsubsec
 from utils.helpers import trigger_scissors, cuts_and
+import pandas as pd
 
 import complot
 import ipanema
@@ -30,7 +32,10 @@ from ipanema import Sample, ristra, splot
 import config
 from utils.helpers import cuts_and, trigger_scissors
 from utils.strings import printsec, printsubsec
+from ipanema.tools.misc import get_vars_from_string
 
+with open('selection/gb_weights/config.yml') as file:
+    GBW_CONFIG = yaml.load(file, Loader=yaml.FullLoader)
 
 def get_sizes(size, BLOCK_SIZE=8):
     """
@@ -133,6 +138,11 @@ def cb_exponential(
     sBs = s0Bs + merr * (s1Bs + merr * s2Bs)
     sBd = s0Bd + merr * (s1Bd + merr * s2Bd)
     # print(sBs, sBd)
+    # print(
+    #     fsigBs, fsigBd, fcomb,
+    #     np.float64(muBs), sBs, np.float64(aL), np.float64(nL),
+    #     np.float64(aR), np.float64(nR), np.float64(mLL), np.float64(mUL),
+    # )
 
     # main peak -- double-sided crystal-ball
     prog.kernel_double_crystal_ball(
@@ -173,8 +183,8 @@ def cb_exponential(
 
 def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     mass_weight="B_ConstJpsi_M_1/B_ConstJpsi_M_1", cut=False, figs=False,
-    model="dscb", has_bd=False, trigger="combined", input_pars=False,
-    sweights=False, verbose=False):
+    model="dscb", has_bd=False, trigger=False, input_pars=False,
+    sweights=False, verbose=False, prefit=False, free_tails=False):
 
     # mass range cut
     if not mass_range:
@@ -184,20 +194,20 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     mass_cut = f"B_ConstJpsi_M_1 > {mLL} & B_ConstJpsi_M_1 < {mUL}"
 
     # mass cut and trigger cut
-    if trigger != 'combined':
-        cut = trigger if not cut else f"({trigger}) & ({cut})"
+    cut =  f"({trigger}) & ({cut})" if trigger else cut
     current_cut = mass_cut if not cut else f"({mass_cut}) & ({cut})"
 
     # Allocate the sample variables {{{
 
+    if verbose:
+        print(f"Cut: {current_cut}")
+        print(f"Mass branch: {mass_branch}")
+        print(f"Mass weight: {mass_weight}")
     rd = Sample.from_pandas(odf)
     _proxy = np.float64(rd.df[mass_branch]) * 0.0
     # rd = Sample.from_pandas(odf.head(int(1e5)))
     rd.chop(current_cut)
     if verbose:
-        print(f"Cut: {current_cut}")
-        print(f"Mass branch: {mass_branch}")
-        print(f"Mass weight: {mass_weight}")
         print("Candidates:", rd.df.shape)
     rd.allocate(mass=mass_branch, merr="B_ConstJpsi_MERR_1")
     rd.allocate(pdf=f"0*{mass_branch}", weight=mass_weight)
@@ -233,14 +243,16 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     pars = ipanema.Parameters()
 
     # Create common set of Bs parameters (all models must have and use)
-    pars.add(dict(name="fsigBs", value=0.9, min=0.0, max=1,
+    _mu = np.mean(rd.mass.get())
+    _sigma = min(np.std(rd.mass.get()), 20)
+    pars.add(dict(name="fsigBs", value=0.5, min=0.0, max=1,
                   free=True,
-                  latex=r"N_{B_s}"))
-    pars.add(dict(name="muBs", value=np.mean(rd.mass.get()), min=mLL, max=mUL,
+                  latex=r"f_{B_s}"))
+    pars.add(dict(name="muBs", value=_mu, min=_mu-2*_sigma, max=_mu+2*_sigma,
                   free=True,
                   latex=r"\mu_{B_s}"))
     if with_calib:
-        pars.add(dict(name="s0Bs", value=0, min=0, max=50,
+        pars.add(dict(name="s0Bs", value=0, min=0, max=30,
                       free=False,
                       latex=r"p_0^{B_s}"))
         pars.add(dict(name="s1Bs", value=0.7, min=-5, max=10,
@@ -250,7 +262,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
                       free=True,
                       latex=r"p_2^{B_s}"))
     else:
-        pars.add(dict(name="s0Bs", value=np.std(rd.mass.get()), min=0.1, max=50,
+        pars.add(dict(name="s0Bs", value=_sigma, min=0.1, max=30,
                       free=True,
                       latex=r"p_0^{B_s}"))
         pars.add(dict(name="s1Bs", value=0.0, min=0, max=10,
@@ -271,9 +283,13 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
         _pars.unlock("b")
         pars = pars + _pars
     else:
+        # This is the prefit stage. Here we will lock the nsig to be 1 and we
+        # will not use combinatorial background.
+        pars["fsigBs"].value = 1 if prefit else 0.2
+        pars["fsigBs"].free = False if prefit else True
         if "hypatia" in model:
             # Hypatia tails {{{
-            pars.add(dict(name="lambd", value=-1.5, min=-4, max=-1.1,
+            pars.add(dict(name="lambd", value=-2.5, min=-6, max=2,
                           free=True,
                           latex=r"\lambda",))
             pars.add(dict(name="zeta", value=1e-5,
@@ -282,31 +298,31 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
             pars.add(dict(name="beta", value=0.0,
                           free=False,
                           latex=r"\beta"))
-            pars.add(dict(name="aL", value=1.23, min=0.5, max=5.5,
+            pars.add(dict(name="aL", value=1.23, min=0.5, max=10,
                           free=True,
                           latex=r"a_l"))
-            pars.add(dict(name="nL", value=1.05, min=0, max=6,
+            pars.add(dict(name="nL", value=2.05, min=0, max=60,
                           free=True,
                           latex=r"n_l"))
-            pars.add(dict(name="aR", value=1.03, min=0.5, max=5.5,
+            pars.add(dict(name="aR", value=1.03, min=0.5, max=10,
                           free=True,
                           latex=r"a_r"))
-            pars.add(dict(name="nR", value=1.02, min=0, max=6,
+            pars.add(dict(name="nR", value=3.02, min=0, max=60,
                           free=True,
                           latex=r"n_r"))
             # }}}
         elif "crystalball" in model or 'dscb' in model:
             # Crystal Ball tails {{{
-            pars.add(dict(name="aL", value=0.5, min=0.0, max=3.5,
+            pars.add(dict(name="aL", value=2.5, min=0.0, max=5,
                           free=True,
                           latex=r"a_l"))
-            pars.add(dict(name="nL", value=0.20, min=0, max=500,
+            pars.add(dict(name="nL", value=1.20, min=0, max=500,
                           free=True,
                           latex=r"n_l"))
-            pars.add(dict(name="aR", value=0.5, min=0.0, max=3.5,
+            pars.add(dict(name="aR", value=2.5, min=0.0, max=5,
                           free=True,
                           latex=r"a_r"))
-            pars.add(dict(name="nR", value=0.20, min=0, max=500,
+            pars.add(dict(name="nR", value=1.20, min=0, max=500,
                           free=True,
                           latex=r"n_r"))
             # }}}
@@ -327,7 +343,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
             # }}}
         # Combinatorial background
         pars.add(dict(name='b', value=-0.02, min=-1,  max=1,
-                      free=True,
+                      free=False if prefit else True,
                       latex=r'b'))
         pars.add(dict(name='fcomb', formula="1-fsigBs",
                       latex=r'f_{\text{comb}}'))
@@ -359,14 +375,14 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     # Fit {{{
 
     # 1st: do a fast fit to 100k events
-    if verbose:
-        print("Running fast fit")
-    res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd100k},
-                           method='minuit', verbose=False, strategy=1)
-    for k, v in pars.items():
-        if v.free:
-            pars[k].value=res.params[k].value
-            pars[k].init=res.params[k].value
+    # if verbose:
+    #     print("Running fast fit")
+    # res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd100k},
+    #                        method='minuit', verbose=False, strategy=1)
+    # for k, v in pars.items():
+    #     if v.free:
+    #         pars[k].value=res.params[k].value
+    #         pars[k].init=res.params[k].value
 
     # 2nd: fit to the full sample
     if verbose:
@@ -376,6 +392,21 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     if verbose:
         print(res)
     fpars = ipanema.Parameters.clone(res.params)
+
+    if free_tails:
+        for k, v in pars.items():
+            if v.free:
+                pars[k].value = res.params[k].value
+                pars[k].init = res.params[k].value
+            if k.startswith('a') or k.startswith('n') or k=='lambd' or k=='zeta' or k=='beta':
+            # if k.startswith('a') or k.startswith('n') or k=='lambd':
+                pars[k].free = True
+        if verbose:
+            print("Running fit with free tails")
+        print(pars)
+        res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
+                              method='minuit', verbose=verbose, strategy=1)
+        print(res)
 
     # }}}
 
@@ -388,7 +419,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
 
     fig, axplot, axpull = complot.axes_plotpull()
     hdata = complot.hist(
-        ristra.get(rd.mass), weights=rd.df.eval(mass_weight), bins=60, density=False
+        ristra.get(rd.mass), weights=rd.df.eval(mass_weight), bins=100, density=False
     )
     axplot.errorbar(
         hdata.bins, hdata.counts, yerr=hdata.yerr, xerr=hdata.xerr, fmt=".k"
@@ -524,6 +555,8 @@ if __name__ == '__main__':
                    help='Version of the dataset')
     p.add_argument('--year',
                    help='Year of the dataset')
+    p.add_argument('--override_prefit', default=False,
+                   help='Year of the dataset')
     args = vars(p.parse_args())
 
     if args["sweights"]:
@@ -536,43 +569,61 @@ if __name__ == '__main__':
     else:
         input_pars = False
 
-    branches = [args['mass_branch']]
-    branches = branches + ["B_ConstJpsi_MERR_1", "X_M"]
+    mass_branch = args['mass_branch']
 
     if args["mass_weight"]:
         mass_weight = args["mass_weight"]
-        branches += [mass_weight]
     else:
-        mass_weight = f"{branches[0]}/{branches[0]}"
+        mass_weight = f"{mass_branch}/{mass_branch}"
 
     cut = False
-    if "prefit" in args["output_params"]:
+    is_prefit = False
+    if "tails" in args["output_params"]:
         cut = "B_BKGCAT == 0 | B_BKGCAT == 10 | B_BKGCAT == 50"
-        branches += ["B_BKGCAT"]
+        is_prefit = True
+    print("is_prefit =", is_prefit)
+    is_prefit = bool(args['override_prefit']) if args['override_prefit'] else is_prefit
+    print("is_prefit =", is_prefit)
 
-    sample = Sample.from_root(args["sample"], branches=branches)
-    print(sample.df)
+    branches = GBW_CONFIG['all_branches'][args['mode']]
+    _branches = sum([get_vars_from_string(k) for k in branches.values()],[])
+    df = pd.concat([
+            Sample.from_root(sample, branches=_branches).df 
+            for sample in args["sample"].split(',')])
+    [df.eval(f"{k}={v}", inplace=True) for k,v in branches.items()]
+    df = df[list(branches.keys())]
 
+    if 'Bu' in args['mode']:
+        mass_range = (5240, 5320)
+    elif 'Bd' in args['mode']:
+        mass_range = (5230, 5330)
+    elif 'Bs' in args['mode']:
+        mass_range = (5320, 5420)
+    else:
+        mass_range=False
+
+    # TODO: maybe in the future we want to split by trigger category
     pars, sw = mass_fitter(
-        sample.df,
-        mass_range=False,  # we compute it from the mass branch range
+        df,
+        mass_range=mass_range,  # we compute it from the mass branch range
         mass_branch=args['mass_branch'],  # branch to fit
         mass_weight=mass_weight,  # weight to apply to the likelihood
-        trigger=args["trigger"],  # trigger splitter
+        trigger=False,  # trigger splitter
         figs=args["output_figures"],  # where to save the fit plots
         model=args["mass_model"],  # mass model to use
         cut=cut,  # extra cuts, if required
         sweights=sweights,  #  whether to comput or not the sWeights
         input_pars=input_pars,  # whether to use prefit tail parameters or not
         verbose=True,  # level of verobisty
+        prefit=is_prefit,  # level of verobisty
     )
 
     pars.dump(args["output_params"])
     if sw:
-        sample.df['sw'] = sw[list(sw.keys())[0]]
+        df['sw'] = sw[list(sw.keys())[0]]
         with uproot.recreate(args['sweights']) as f:
             _branches = {}
-            for k, v in sample.df.items():
+            for k, v in df.items():
                 if 'int' in v.dtype.name:
                     _v = np.int32
                 elif 'bool' in v.dtype.name:
@@ -582,7 +633,7 @@ if __name__ == '__main__':
                 _branches[k] = _v
             mylist = list(dict.fromkeys(_branches.values()))
             f["DecayTree"] = uproot.newtree(_branches)
-            f["DecayTree"].extend(sample.df.to_dict(orient='list'))
+            f["DecayTree"].extend(df.to_dict(orient='list'))
 
 # }}}
 
