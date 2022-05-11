@@ -76,57 +76,67 @@ all_branches:
     'B_ETA': 'B_ETA'
     'B_P': 'B_P'
     'B_PT': 'B_PT'
-    'X_M': 'X_M'
     'hlt1b': 'hlt1b'
     'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
     'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
     'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
   Bs2JpsiPhi:  &all-Bs2JpsiPhi
     <<: [*all-common, *gbw-Bs2JpsiPhi]
+    'X_M': 'X_M'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
   Bs2JpsiPhi_Prompt:  &all-Bs2JpsiPhi_Prompt
     <<: [*all-common, *gbw-Bs2JpsiPhi]
+    'X_M': 'X_M'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
   Bd2JpsiKstar:  &all-Bd2JpsiKstar
     <<: [*all-common, *gbw-Bd2JpsiKstar]
+    'X_M': 'X_M'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
   Bu2JpsiKplus:  &all-Bu2JpsiKplus
     <<: [*all-common, *gbw-Bu2JpsiKplus]
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
   MC_Bs2JpsiPhi:
     <<: *all-Bs2JpsiPhi
+    'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
   MC_Bs2JpsiPhi_Prompt:
     <<: *all-Bs2JpsiPhi_Prompt
+    'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
   MC_Bs2JpsiPhi_dG0:
     <<: *all-Bs2JpsiPhi
+    'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
   MC_Bs2JpsiKK_Swave:
     <<: *all-Bs2JpsiPhi
+    'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
   MC_Bd2JpsiKstar:
     <<: *all-Bd2JpsiKstar
+    'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
   MC_Bu2JpsiKplus:
     <<: *all-Bu2JpsiKplus
+    'B_BKGCAT': 'B_BKGCAT'
