@@ -1,6 +1,8 @@
 # Set of rules to run and apply GB weighting
 #
 
+with open('selection/gb_weights/config.yml') as file:
+    GBW_CONFIG = yaml.load(file, Loader=yaml.FullLoader)
 
 # preliminar selection before GB {{{
 
@@ -58,7 +60,8 @@ rule selection_gbw_preliminar_data:
     input:
         script = 'selection/tools/apply_selection.py',
         cuts = ['selection/cuts.yaml', 'selection/gb_weights/cuts.yaml'],
-        branches = ['selection/gb_weights/branches.yaml', 'selection/gb_weights/weighting_variables.yaml']
+        branches = ['selection/gb_weights/branches.yaml',
+                    'selection/gb_weights/weighting_variables.yaml']
     output:
         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_selected.root'))
         SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
@@ -90,43 +93,45 @@ rule selection_gbw_preliminar_data:
 
 # sweigting for GB weighting {{{
 
-# rule selection_gbw_bkgsubtract_data:
-#     """
-#     Rule for sweighting data for GB weights.
-#     Performs fit to Bs mass. Saves new tree with sweights in the requested location
-#     """
-#     threads: 2
-#     resources:
-#         mem_mb = 12000
-#     wildcard_constraints:
-#         # mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt)"    # ORIGINAL
-#         mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
-#     input:
-#         tuple_file = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
-#         # tuple_file = expand(rules.select_GBW_data_ntuples.output,
-#         #                     year='{year}', version='{version}', mode='{mode}'),
-#     params:
-#         script = 'selection/gb_weights/sweights_for_gb_weights.py',
-#         branch_name = 'B_ConstJpsi_M_1',
-#     output:
-#         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
-#         sample = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
-#         plots = directory(SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted/')
-#     log:
-#         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
-#         'output/selection_data_background_subtraction/{year}/{mode}/{version}.log',
-#     run:
-#         shell('mkdir -p {output.plots}')
-#         shell('(time python {params.script} \
-#         --input-file {input.tuple_file} \
-#         --output-file {output.sample} \
-#         --input-branch {params.branch_name} \
-#         --plot-dir {output.plots} \
-#         --mode {wildcards.mode} \
-#         --year {wildcards.year}) &> {log}')
+rule selection_gbw_tails:
+    """
+    Rule for sweighting data for GB weights.
+    Performs fit to Bs mass. Saves new tree with sweights in the requested location
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        mode = "MC_(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)(.*)?"
+    input:
+        sample = lambda wcs: expand(SAMPLES + '/{{year}}/{{mode}}/{{version}}_{strip_sim}_preliminarGBW.root',
+                        strip_sim=selconfig['strip_sim'][wcs.mode][wcs.year])
+    params:
+        script = 'selection/gb_weights/background_subtraction.py',
+        mass_branch = lambda w: GBW_CONFIG['mass_branch'][f"{w.mode}"],
+        mass_model = lambda w: GBW_CONFIG['mass_model'][f"{w.mode}"],
+    output:
+        # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
+        # sweights = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
+        pars = 'output/params/tails_mc/{year}/{mode}/{version}.json',
+        plots = directory('output/figures/tails_mc/{year}/{mode}/{version}/')
+    log:
+        # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
+        'output/selection_gbw_tails/{year}/{mode}/{version}.log',
+    run:
+        shell('mkdir -p {output.plots}')
+        shell(f"""(time python {params.script} \
+        --sample {",".join(input.sample)} \
+        --mass-branch {params.mass_branch} \
+        --mass-model {params.mass_model} \
+        --output-params {output.pars} \
+        --output-figures {output.plots} \
+        --mode {wildcards.mode} \
+        --version {wildcards.version} \
+        --year {wildcards.year}) &> {log}""")
 
 
-rule selection_gbw_bkgsubtract_data:
+rule selection_gbw_bkgsubtract:
     """
     Rule for sweighting data for GB weights.
     Performs fit to Bs mass. Saves new tree with sweights in the requested location
@@ -136,23 +141,23 @@ rule selection_gbw_bkgsubtract_data:
         mem_mb = 12000
     wildcard_constraints:
         # mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt)"    # ORIGINAL
-        mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
+        mode = "(MC_)?(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
     input:
-        sample = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
+        sample = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root',
+        pars = lambda wcs: expand('output/params/tails_mc/{{year}}/{mode}/{{version}}.json',
+                                  mode=GBW_CONFIG['tails_mode'][wcs.mode]),
         # tuple_file = expand(rules.select_GBW_data_ntuples.output,
         #                     year='{year}', version='{version}', mode='{mode}'),
     params:
         script = 'selection/gb_weights/background_subtraction.py',
-        mass_branch = 'B_ConstJpsi_M_1',
-        mass_model = 'hypatia',
+        mass_branch = lambda w: GBW_CONFIG['mass_branch'][f"{w.mode}"],
+        mass_model = lambda w: GBW_CONFIG['mass_model'][f"{w.mode}"],
     output:
-        # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
         sweights = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
         pars = 'output/params/background_subtraction/{year}/{mode}/{version}.json',
         plots = directory('output/figures/background_subtraction/{year}/{mode}/{version}/')
     log:
-        # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
-        'output/selection_data_background_subtraction/{year}/{mode}/{version}.log',
+        'output/selection_gbw_bkgsubtract/{year}/{mode}/{version}.log',
     run:
         shell('mkdir -p {output.plots}')
         shell('(time python {params.script} \
@@ -160,88 +165,13 @@ rule selection_gbw_bkgsubtract_data:
         --sweights {output.sweights} \
         --mass-branch {params.mass_branch} \
         --mass-model {params.mass_model} \
+        --input-params {input.pars} \
         --output-params {output.pars} \
         --output-figures {output.plots} \
         --mode {wildcards.mode} \
         --version {wildcards.version} \
-        --year {wildcards.year}) #&> {log}')
+        --year {wildcards.year}) &> {log}')
 
-# NOT USE IPATIA rule mass_prefit_GBW_mc:
-# NOT USE IPATIA     """
-# NOT USE IPATIA     Run mass fit on selected Bu->J/psiKplus or Bd->J/psiKstar MC to determine Ipatia tail parameters for
-# NOT USE IPATIA     the fit to data. It only takes B_BKGCAT=0,50 candidates.
-# NOT USE IPATIA     """
-# NOT USE IPATIA     threads: 2
-# NOT USE IPATIA     resources:
-# NOT USE IPATIA         mem_mb = 12000
-# NOT USE IPATIA     input:
-# NOT USE IPATIA         script = 'selection/tools/mass_fit_ipatia.py',
-# NOT USE IPATIA         root_file =  expand(rules.select_GBW_MC_ntuples.output,
-# NOT USE IPATIA                             mode ='MC_{mode}', year ='{year}',
-# NOT USE IPATIA                             version ='{version}', strip_sim ='{strip_sim}')
-# NOT USE IPATIA     output:
-# NOT USE IPATIA         params_file =  output_path('MC_{mode}/mass_prefit_GBW_{year}/mass_fit_params_{version}_{year}_{strip_sim}.json'),
-# NOT USE IPATIA         plots = directory(output_path('MC_{mode}/mass_prefit_GBW_{version}_{year}_{strip_sim}/plots/'))
-# NOT USE IPATIA     shell:
-# NOT USE IPATIA         'python {input.script} --input-file {input.root_file} \
-# NOT USE IPATIA                                --fit-result-file {output.params_file} \
-# NOT USE IPATIA                                --mode {wildcards.mode} \
-# NOT USE IPATIA                                --plots-loc {output.plots}'
-# NOT USE IPATIA 
-# NOT USE IPATIA 
-# NOT USE IPATIA 
-# NOT USE IPATIA rule sweight_GBW_data_ntuple_Ipatia:
-# NOT USE IPATIA     """
-# NOT USE IPATIA     Rule for sweighting data for GB weights.
-# NOT USE IPATIA     Performs fit to Bu or Bd mass fixing Ipatia tail parameters to mc with B_BKGCAT=0,50. 
-# NOT USE IPATIA     Saves new tree with sweights in the requested location
-# NOT USE IPATIA     """
-# NOT USE IPATIA     threads: 2
-# NOT USE IPATIA     resources:
-# NOT USE IPATIA         mem_mb = 12000
-# NOT USE IPATIA     input:
-# NOT USE IPATIA         script = 'selection/tools/mass_fit_ipatia.py',
-# NOT USE IPATIA         root_file = expand(rules.select_GBW_data_ntuples.output, mode='{mode}',version='{version}',year='{year}'),
-# NOT USE IPATIA         params_file = lambda wildcards: expand(rules.mass_prefit_GBW_mc.output.params_file, version='{version}', year='{year}', mode= '{mode}', strip_sim = selconfig['gbw_input_MC_mode']['MC_'+ wildcards.mode][wildcards.year]['strip_sim'])
-# NOT USE IPATIA     output:
-# NOT USE IPATIA         root_file = tuples_path('{mode}/{version}_{mode}_{year}_GBW_data_sweighted_ipatia.root'),
-# NOT USE IPATIA         plots = directory(output_path('{mode}/{version}_mass_fit_GBW_{year}/plots/')),
-# NOT USE IPATIA         params_file = output_path('{mode}/{version}_mass_fit_GBW_{year}/mass_fit_params_{year}.json'),
-# NOT USE IPATIA         root_file_tmp = temp(output_path('{mode}/{version}_mass_fit_GBW_{year}.root'))
-# NOT USE IPATIA     params:
-# NOT USE IPATIA         params_to_fix = ['alpha1', 'alpha2', 'n1', 'n2', 'm_sig_lambda'],
-# NOT USE IPATIA         mass_range = lambda wildcards:  (5240, 5320) if('Bu' in wildcards.mode) else (5230, 5330)
-# NOT USE IPATIA     shell:
-# NOT USE IPATIA         'python {input.script} --input-file {input.root_file} \
-# NOT USE IPATIA                                --output-file-tmp {output.root_file_tmp} \
-# NOT USE IPATIA                                --output-file {output.root_file} \
-# NOT USE IPATIA                                --mode {wildcards.mode} \
-# NOT USE IPATIA                                --mass-range {params.mass_range} \
-# NOT USE IPATIA                                --params-to-fix-file {input.params_file} \
-# NOT USE IPATIA                                --params-to-fix-list {params.params_to_fix} \
-# NOT USE IPATIA                                --background \
-# NOT USE IPATIA                                --fit-result-file {output.params_file} \
-# NOT USE IPATIA                                --plots-loc {output.plots} \
-# NOT USE IPATIA                                --add-sweights'
-
-def sweighted_data_for_gb_weights(wildcards):
-    """
-    TODO: change this function
-    """
-    # mode = wildcards.data_mode
-    # version = wildcards.version
-    # if wildcards.data_mode == 'Bs2JpsiPhi_Prompt':
-    #     return expand(rules.select_GBW_data_ntuples.output, year=wildcards.data_year, version=version, mode=wildcards.data_mode)
-    #
-    # elif ('Bs2JpsiPhi' in wildcards.data_mode and wildcards.data_mode != 'Bs2JpsiPhi_Prompt'):
-    #     return expand(rules.sweight_GBW_data_ntuples.output.sample, mode=wildcards.data_mode, version=version, year=wildcards.data_year)
-    #
-    # else:
-    #     # WARNING: Now we use DSCB instead of Hypatia
-    #     return expand(rules.sweight_GBW_data_ntuples.output.sample, mode=wildcards.data_mode, version=version, year=wildcards.data_year)
-    #     # return expand(rules.sweight_GBW_data_ntuple_Ipatia.output.root_file,mode=wildcards.data_mode, version=version, year=wildcards.data_year) 
-
-    return SAMPLES + f'/{wildcards.year}/{wildcards.mode}/{wildcards.version}_bkgsubtracted.root',
 # }}}
 
 
@@ -282,25 +212,8 @@ rule selection_gbw_reweighter_train:
 # }}}
 
 
-# apply GB weights {{{
+# Track scaling {{{
 
-# TODO: cargarselo
-# def weights_for_GBW(wildcards):
-#     mc_mode = selconfig['gbw_input_MC_mode'][wildcards.mode][wildcards.year]['mode']
-#     strip_sim = selconfig['gbw_input_MC_mode'][wildcards.mode][wildcards.year]['strip_sim']
-#     mc_year = selconfig['gbw_input_MC_year'][wildcards.year]
-#     data_mode = selconfig['gbw_input_data_mode'][wildcards.mode]
-#     data_year = selconfig['gbw_input_data_year'][wildcards.year]
-#
-#     return expand(rules.selection_pkl_gb_weights.output, mc_mode=mc_mode,
-#                                                      mc_year=mc_year,
-#                                                      version=wildcards.version,
-#                                                      data_mode=data_mode,
-#                                                      data_year=data_year,
-#                                                      strip_sim=strip_sim)
-
-
-#Rescaling Veronika
 def trackchi2_vars(wildcards):
     mode = wildcards.mode
     if wildcards.mode == 'MC_Bu2JpsiKplus':
@@ -309,7 +222,7 @@ def trackchi2_vars(wildcards):
         return '{"hplus_TRACK_CHI2NDOF", "hminus_TRACK_CHI2NDOF", "muplus_TRACK_CHI2NDOF", "muminus_TRACK_CHI2NDOF"}'
 
 
-rule selection_apply_trackchi2_scaling:
+rule selection_gbw_trackchi2_scaling:
     """
     Rule to rescale TrackChi2 variables on MC using sweighted data.
     """
@@ -336,10 +249,10 @@ rule selection_apply_trackchi2_scaling:
     shell:
         "root -l -q 'selection/gb_weights/TrackChi2Rescaling.C({params.vars}, {params.target_weight}, \"{input.input_mc}\", \"{input.input_data}\", \"{output.file}\", \"{params.treename}\", \"{params.treename}\", \"{params.plots}\")'"
 
+# }}}
 
 
-
-
+# apply GB weights {{{
 
 rule selection_gbw_compute:
     """
