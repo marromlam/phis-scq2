@@ -87,6 +87,7 @@ rule selection_bdt_cut_optimization:
         mode = '(Bu2JpsiKplus|Bs2JpsiPhi)'
     input:
         tuple_file = SAMPLES + '/{year}/{mode}/{version}_bdt_response.root',
+        pars = 'output/params/tails_mc/{year}/MC_{mode}/{version}.json',
         # tuple_file = expand(rules.add_bdt_response.output, version='{version}',
         #                     year='{year}', mode='{mode}'),
     params:
@@ -102,6 +103,7 @@ rule selection_bdt_cut_optimization:
         shell('(time python {params.script} \
         --input-file {input.tuple_file} \
         --input-branch {params.branch_name} \
+        --input-params {input.pars} \
         --output-figures {output.plots} \
         --output-file {output.cut} \
         --mode {wildcards.mode} \
