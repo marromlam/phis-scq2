@@ -30,24 +30,30 @@ if __name__ == '__main__':
     p.add_argument('--input-tree-name', default='DecayTree', help='Name of the input tree')
     p.add_argument('--input-branch', default='B_ConstJpsi_M_1', help='Name of the branch to be fitted')
     p.add_argument('--bdt-branch', default='bdtg3', help='Name of the BDT branch to be cut')
+    p.add_argument('--input-params', help='Location in which to save the plots')
     p.add_argument('--output-figures', help='Location in which to save the plots')
     p.add_argument('--output-file', default='FOM_Bs2JpsiPhi_2016.pdf', help='name of output FOM plot')
     p.add_argument('--mode', help='Name of the selection in yaml')
     p.add_argument('--year', required=True, help='Year of data taking')
     p.add_argument('--bdtcut', default='-1.0', help='pre-bdtg3 cut')
     p.add_argument('--cuts', default='1', help='pre-selection cut')
-    p.add_argument('--mass-model', default='dscb', help='pre-selection cut')
+    p.add_argument('--mass-model', default='hypatia', help='pre-selection cut')
     p.add_argument('--mass-weight', default=False, help='pre-selection cut')
     p.add_argument('--mass-branch', default='B_ConstJpsi_M_1', help='pre-selection cut')
     args = vars(p.parse_args())
 
     bdt_branch = args['bdt_branch']
     cuts = args['cuts']
-    
 
     # branches
     branches = [args['mass_branch'], args['bdt_branch']]
     branches = branches + ["B_ConstJpsi_MERR_1", "X_M"]
+
+    if args["input_params"]:
+        input_pars = ipanema.Parameters.load(args["input_params"])
+    else:
+        input_pars = False
+
 
     if args["mass_weight"]:
         mass_weight = args["mass_weight"]
@@ -79,9 +85,12 @@ if __name__ == '__main__':
             model=args["mass_model"],  # mass model to use
             cut=ccut,  # extra cuts, if required
             sweights=True,  #  whether to comput or not the sWeights
-            input_pars=False,  # whether to use prefit tail parameters or not
+            # input_pars=input_pars,  # whether to use prefit tail parameters or not
             verbose=False,  # level of verobisty
+            prefit=False,
+            free_tails=False
         )
+        # exit()
 
         # get fraction of signal
         psig = ipanema.Parameters.find(pars, "fsig.*")[0]
