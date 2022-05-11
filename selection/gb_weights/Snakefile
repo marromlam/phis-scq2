@@ -18,7 +18,6 @@ rule selection_gbw_preliminar_mc:
     wildcard_constraints:
         mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
     input:
-        script = 'selection/tools/apply_selection.py',
         #file = expand(rules.merge_polarities.output, mode='{mode}',
         #                                              year='{year}',
         #                                              strip_sim='{strip_sim}'),
@@ -30,6 +29,7 @@ rule selection_gbw_preliminar_mc:
         SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_preliminarGBW.root',
         # /scratch46/marcos.romero/sidecar14/{year}/{mode}/{version}_{strip_sim}GBWpreliminar.root'
     params:
+        script = 'selection/tools/apply_selection.py',
         # RR Warning updated pipeline
         # cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific',
         cutkeys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific_GBW',
@@ -37,7 +37,7 @@ rule selection_gbw_preliminar_mc:
     log:
         'output/log/select_GBW_MC_ntuples/{mode}/{version}_{strip_sim}_{year}_GBW_MC_selected.log'
     run:
-        shell(f'(time python {input.script} --input-file {input.file} \
+        shell(f'(time python {params.script} --input-file {input.file} \
                                --output-file {output} \
                                --mode {wildcards.mode} \
                                --cut-keys {params.cutkeys} \
@@ -58,7 +58,6 @@ rule selection_gbw_preliminar_data:
     wildcard_constraints:
         mode = "(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)"
     input:
-        script = 'selection/tools/apply_selection.py',
         cuts = ['selection/cuts.yaml', 'selection/gb_weights/cuts.yaml'],
         branches = ['selection/gb_weights/branches.yaml',
                     'selection/gb_weights/weighting_variables.yaml']
@@ -66,6 +65,7 @@ rule selection_gbw_preliminar_data:
         # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_selected.root'))
         SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
     params:
+        script = 'selection/tools/apply_selection.py',
         files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim] \
                 if wildcards.mode.startswith('MC_') \
                 else selconfig['eos_data'][selconfig['streams'][wildcards.mode]][int(wildcards.year)],
@@ -78,7 +78,7 @@ rule selection_gbw_preliminar_data:
     log:
         'output/log/select_GBW_data_ntuples/{year}/{mode}/{version}_GBW_MC_selected.log'
     run:
-        shell(f'(time python {input.script} \
+        shell(f'(time python {params.script} \
         --input-file {params.files} \
         --input-tree-name {params.treename} \
         --output-file {output} \

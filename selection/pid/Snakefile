@@ -30,7 +30,6 @@ rule preselection_correct_pid:
         polarity = "(Up|Down)",
         mode  = "(MC)((?!.*?(_fromLb)).*)"
     input:
-        script = 'selection/tools/PIDCorr.py',
         tracks = 'selection/pid/pidcorr.yaml',
         file = input_for_correct_pid,
         # file = lambda wildcards: expand(rules.correct_muonpid.output.file if wildcards.mode != 'MC_Bs2DsPi' else rules.prepare_mc.output,
@@ -39,6 +38,8 @@ rule preselection_correct_pid:
         #                                 strip_sim='{strip_sim}',
         #                                 year='{year}',
         #                                 polarity='{polarity}'),
+    params:
+        script = 'selection/tools/PIDCorr.py',
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp1.root',
@@ -47,7 +48,7 @@ rule preselection_correct_pid:
         'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.log',
     shell:
         '(' + selconfig['runUrania'] + ' ' +
-        'python {input.script} --input-file {input.file} \
+        'python {params.script} --input-file {input.file} \
                                --input-tree-name DecayTree \
                                --output-file {output.file} \
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
@@ -74,7 +75,6 @@ rule preselection_correct_muonpid:
         polarity = "(Up|Down)",
         mode  = "(MC)((?!.*?(_fromLb)).*)"
     input:
-        script = 'selection/tools/PIDGen.py',
         tracks = 'selection/pid/pidgen.yaml',
         file = expand(rules.preselection_add_genlvl_info.output.file,
                       mode='{mode}',
@@ -82,6 +82,8 @@ rule preselection_correct_muonpid:
                       strip_sim='{strip_sim}',
                       year='{year}',
                       polarity='{polarity}'),
+    params:
+        script = 'selection/tools/PIDGen.py',
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp1.root',
@@ -90,7 +92,7 @@ rule preselection_correct_muonpid:
         'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.log',
     shell:
         '(' + selconfig['runUrania'] + ' ' +
-        'python {input.script} --input-file {input.file} \
+        'python {params.script} --input-file {input.file} \
                               --input-tree-name DecayTree \
                               --output-file {output.file} \
                               --data-set Mag{wildcards.polarity}_{wildcards.year}\

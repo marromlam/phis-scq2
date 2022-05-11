@@ -7,19 +7,6 @@ with open('selection/bdt/config.yml') as file:
 
 # rules for proxy signal and background for bdt {{{
 
-# def input_to_add_bdt_branches(wildcards):
-#     if wildcards.mode.startswith('MC_'):
-#         return SAMPLES + '/{year}/{mode}/{version}_preselected.root',
-#         # return expand(rules.merge_strippings.output,
-#         #               version=wildcards.version, mode=wildcards.mode,
-#         #               year=wildcards.year)
-#     else:
-#         return SAMPLES + '/{year}/{mode}/{version}_preselected.root'
-#         # return expand(rules.apply_preselection_data.output,
-#         #               version=wildcards.version, mode=wildcards.mode,
-#         #               year=wildcards.year)
-	
-
 rule selection_bdt_background:
     """
     Generic rule.
@@ -29,7 +16,6 @@ rule selection_bdt_background:
     resources:
         mem_mb = 12000
     input:
-        script = 'selection/tools/apply_selection.py',
         cuts = 'selection/bdt/cuts.yaml',
         branches = ['selection/bdt/branches.yaml'],
         files = SAMPLES + '/{year}/{mode}/{version}_preselected.root'
@@ -38,9 +24,10 @@ rule selection_bdt_background:
     log:
         'output/log/selection_background_for_bdt/{year}/{mode}/{version}.log'
     params:
-        treename ='DecayTree'
+        treename ='DecayTree',
+        script = 'selection/tools/apply_selection.py',
     run:
-        shell('(time python {input.script} \
+        shell('(time python {params.script} \
         --input-file {input.files} \
         --input-tree-name {params.treename} \
         --output-file {output} \
@@ -60,17 +47,17 @@ rule selection_bdt_signal:
     resources:
         mem_mb = 12000
     input:
-        script = 'selection/tools/apply_selection.py',
         cuts = 'selection/bdt/cuts.yaml',
         branches = ['selection/bdt/branches.yaml'],
         file = SAMPLES + '/{year}/{mode}/{version}_preselected.root'
-        # file = input_to_add_bdt_branches 
+    params:
+        script = 'selection/tools/apply_selection.py',
     output:
         SAMPLES + '/{year}/{mode}/{version}_signal_proxy.root'
     log:
         'output/log/selection_signal_for_bdt/{year}/{mode}/{version}.log'
     run:
-        shell('(time python {input.script} \
+        shell('(time python {params.script} \
         --input-file {input.file} \
         --output-file {output} \
         --mode {wildcards.mode} \
@@ -155,16 +142,17 @@ rule selection_bdt_add_branches:
     resources:
         mem_mb = 12000
     input:
-        script = 'selection/tools/apply_selection.py',
         file = SAMPLES + '/{year}/{mode}/{version}_preselected.root',
         branches = 'selection/bdt/branches.yaml'
+    params:
+        script = 'selection/tools/apply_selection.py',
     output:
         # temp(tuples_path('bdt/{mode}/{mode}_{year}_selected_with_bdt_branches.root'))
         SAMPLES + '/{year}/{mode}/{version}_withbdt.root'
     log:
         'output/log/add_bdt_branches/{year}/{mode}/{version}.log'
     run:
-        shell('(time python {input.script} \
+        shell('(time python {params.script} \
         --input-file {input.file} \
         --output-file {output} \
         --mode {wildcards.mode} \
@@ -191,22 +179,6 @@ def input_to_apply_bdt_selection(wildcards):
         return SAMPLES + f'/{wildcards.year}/{wildcards.mode}/{wildcards.version}_preselected.root',
     else:
         return SAMPLES + f'/{wildcards.year}/{wildcards.mode}/{wildcards.version}_withbdt.root'
-
-
-
-# rule cp_tmva_dir_local:
-#     threads: 2
-#     resources:
-#         mem_mb = 12000
-#     input:
-#        script = 'selection/tools/cp_from_eos.py',
-#     params:
-#        directory = lambda wildcards: selconfig['eos'] + '/' + selconfig['version']+ '/BDT/{}/{}/'.format(selconfig['bdt_mode'][wildcards.mode], selconfig['bdt_year'][wildcards.year])
-#     output:
-#        directory(tuples_path('BDT/{mode}/{year}/'))
-#     shell:
-#         'python {input.script} --input-directory {params.directory} \
-#                                --output-directory {output} '
 
 
 include: 'bdt_study/Snakefile'
@@ -277,29 +249,6 @@ elif config['selection_mode'] == 'run1':
                                 --mode {wildcards.mode} \
                                 --year {wildcards.year} \
                                 --selection-files {params.cuts} )&> {log}')
-
-# }}}
-
-
-# rule to compare distributions {{{
-
-# rule compare_distributions:
-#     threads: 2
-#     resources:
-#         mem_mb = 12000
-#     input:
-#         script = 'selection/tools/compare_distributions.py',
-#         variables = 'bdt/branches.yaml',
-#         file1 = tuples_path('MC_Bs2JpsiPhi/MC_Bs2JpsiPhi_2015_selected_bdt.root'),
-#         file2 = tuples_path('MC_Bs2JpsiPhi/MC_Bs2JpsiPhi_2016_selected_bdt.root')
-#     output:
-#         plots = directory('output/plots/bdt_vars/')
-#     shell:
-#         'python {input.script} --dataset {input.file1} DecayTree none MC_2015 \
-#                                --dataset {input.file2} DecayTree none MC_2016 \
-#                                --compare-vars {input.variables} \
-#                                --mode Bs2JpsiPhi \
-#                                --plot-dir {output.plots}'
 
 # }}}
 

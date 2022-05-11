@@ -260,7 +260,6 @@ if config['run_pid'] and config['run_preselection']:
         wildcard_constraints:
             mode  = "(MC)((?!.*?(_fromLb)).*)"
         input:
-            script = 'selection/tools/apply_selection.py',
             #file = expand(rules.merge_polarities.output, mode='{mode}',
             #                                              year='{year}',
             #                                               strip_sim='{strip_sim}'),
@@ -270,13 +269,14 @@ if config['run_pid'] and config['run_preselection']:
             # tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_pidcorrected_selected_preselected.root')
             file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
         params:
+            script = 'selection/tools/apply_selection.py',
             cut_keys = cut_keys_mode,
             # file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/PID/{}/{}_{}_{}_selected_pidcorrected.root'.format(wildcards.mode, wildcards.mode, wildcards.year, wildcards.strip_sim)
         log:
             # tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_pidcorrected_selected_preselected.root')
             'output/log/preselection_mc/{year}/{mode}/{version}_{strip_sim}.log'
         run:
-            shell('(time python {input.script} \
+            shell('(time python {params.script} \
             --input-file {input.file} \
             --output-file {output} \
             --mode {wildcards.mode} \
@@ -297,7 +297,6 @@ rule selection_add_arrays:
     resources:
         mem_mb = 6000
     input:
-        script  = 'selection/tools/add_arrays.py',
         files = lambda wildcards: expand(rules.selection_gbw_compute.output if wildcards.mode != 'MC_Bs2JpsiPhi_Prompt'
                                                                              else rules.apply_gb_weights_prompt.output, 
                                                                              mode=wildcards.mode, 
@@ -311,13 +310,15 @@ rule selection_add_arrays:
         #                                                    version='{version}',
         #                                                    strip_sim='{strip_sim}'), 
         variables = 'selection/array_branches.yaml' 
+    params:
+        script  = 'selection/tools/add_arrays.py',
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_witharrs.root',
         file_tmp = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_witharrs_tmp.root',
         # file = tuples_path('{mode}/{mode}_{strip_sim}_{year}_pid_gb_arr.root'),
         # file_tmp = temp(tuples_path('{mode}/{mode}_{strip_sim}_{year}_pid_gb_arr_tmp.root'))
     shell:
-        'python {input.script} --input-file {input.files} \
+        'python {params.script} --input-file {input.files} \
                                --input-file-arrays {input.files_arrays} \
                                --variables-files {input.variables} \
                                --mode {wildcards.mode} \
@@ -333,7 +334,6 @@ rule selection_merge_strippings:
     resources:
         mem_mb = 6000
     input:
-        script = 'selection/tools/file_merger.py',
         input_files = lambda wildcards: expand(
                 rules.selection_add_arrays.output.file if wildcards.mode == 'MC_Bs2JpsiPhi' or wildcards.mode == 'MC_Bs2JpsiPhi_Prompt'
                 else rules.selection_gbw_compute.output, 
@@ -341,12 +341,14 @@ rule selection_merge_strippings:
                                                                              version=wildcards.version, 
                                                                              strip_sim=selconfig['strip_sim'][wildcards.mode][wildcards.year],
                                                                              year=wildcards.year)
+    params:
+        script = 'selection/tools/file_merger.py',
     output:
         # temp(tuples_path('{mode}/{mode}_{year}_pid_gb.root'))
         # >>> file = SAMPLES + '/{year}/{mode}/{version}_pidgb.root',
         file = SAMPLES + '/{year}/{mode}/{version}_preselected.root',
     shell:
-        'python {input.script} --input-files {input.input_files} \
+        'python {params.script} --input-files {input.input_files} \
                                --output-file {output}'
 
 # }}}
@@ -406,14 +408,15 @@ rule selection_apply_veto:
     input:
         # files = input_to_background_veto,
         files = SAMPLES + '/{year}/{mode}/{version}_elected.root',
-        script = 'selection/tools/apply_selection.py',
         cuts = 'selection/cuts.yaml'
+    params:
+        script = 'selection/tools/apply_selection.py',
     output:
         SAMPLES + '/{year}/{mode}/{version}_selected.root'
     log:
         'output/log/selection_apply_veto/{year}/{mode}/{version}_selected.log'
     run:
-        shell('(time python {input.script} \
+        shell('(time python {params.script} \
         --input-file {input.files} \
         --input-tree-name DecayTree \
         --output-file {output} \
@@ -421,274 +424,6 @@ rule selection_apply_veto:
         --selection-files {input.cuts} \
         --year {wildcards.year}) &> {log}')
 
-# }}}
-
-
-# TO BE DELETED {{{
-
-# rule select_jpsikstar_mc_for_prefit_acc:
-#     """
-#     Select B0->J/psiK* MC to determine Ipatia tail parameters for
-#     the fit to data. It only takes B_BKGCAT=0,50 events.
-#     """
-#     input:
-# #        root_file = expand(rules.apply_background_veto.output, mode='MC_Bd2JpsiKstar',
-# #                                                             year='{year}'),
-#         script = 'selection/tools/apply_selection.py',
-#         cuts = 'time_acceptance/cuts.yaml'
-#     output:
-#         temp(tuples_path('{mode}/{mode}_{year}_mc_for_prefit_acc.root'))
-#     params:
-#         root_file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/{}/{}/{}_{}_selected_bdt_{}.root'.format('MC_Bd2JpsiKstar', wildcards.year, 'MC_Bd2JpsiKstar', wildcards.year, selconfig['version'])
-#     shell:
-#         'python {input.script} --input-file {params.root_file} \
-#                                --output-file {output} \
-#                                --mode {wildcards.mode} \
-#                                --selection-files {input.cuts} \
-#                                --year {wildcards.year}'
-#
-# rule select_jpsikstar_data_for_acc:
-#     """
-#     Select B0->J/psiK* data for time acceptance.
-#     """
-#     input:
-# #        root_file = expand(rules.apply_background_veto.output, mode='Bd2JpsiKstar',
-# #                                                             year='{year}'),
-#         script = 'selection/tools/apply_selection.py',
-#         cuts = 'time_acceptance/cuts.yaml'
-#     output:
-#         temp(tuples_path('{mode}/{mode}_{year}_data_for_acc.root'))
-#     params:
-#         root_file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/{}/{}/{}_{}_selected_bdt_{}.root'.format('Bd2JpsiKstar', wildcards.year, 'Bd2JpsiKstar', wildcards.year, selconfig['version'])
-#     shell:
-#         'python {input.script} --input-file {params.root_file} \
-#                                --output-file {output} \
-#                                --mode {wildcards.mode} \
-#                                --selection-files {input.cuts} \
-#                                --year {wildcards.year}'
-#
-#
-# rule mass_prefit_jpsikstar_mc:
-#     """
-#     Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
-#     the fit to data. It only takes B_BKGCAT=0,50 candidates.
-#     """
-#     input:
-#         script = 'selection/tools/mass_fit_ipatia.py',
-#         root_file = expand(rules.select_jpsikstar_mc_for_prefit_acc.output, mode='MC_Bd2JpsiKstar',
-#                                                                             year='{year}')
-#     output:
-#         params_file = output_path('MC_Bd2JpsiKstar/mass_prefit_{year}/mass_fit_params_{year}.json'),
-#         plots = directory(output_path('MC_Bd2JpsiKstar/mass_prefit_{year}/plots/'))
-#     shell:
-#         'python {input.script} --input-file {input.root_file} \
-#                                --fit-result-file {output.params_file} \
-#                                --mode MC_Bd2JpsiKstar \
-#                                --trigcat \
-#                                --plots-loc {output.plots}'
-#
-# rule select_jpsikstar_mc_for_acc:
-#     """
-#     Select B0->J/psiK* MC for time acceptance. It includes B_BKGCAT=0,50,60 candidates.
-#     """
-#     input:
-# #        root_file = expand(rules.apply_background_veto.output, mode='MC_Bd2JpsiKstar',
-# #                                                             year='{year}'),
-#         script = 'selection/tools/apply_selection.py',
-#         cuts = 'time_acceptance/cuts.yaml'
-#     output:
-#         tuples_path('{mode}/{mode}_{year}_mc_for_fit_acc.root')
-#     params:
-#         root_file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/{}/{}/{}_{}_selected_bdt_{}.root'.format('MC_Bd2JpsiKstar', wildcards.year, 'MC_Bd2JpsiKstar', wildcards.year, selconfig['version']),
-#         cut_keys = 'B_cuts_acc Kstar_cuts_acc'
-#     shell:
-#         'python {input.script} --input-file {params.root_file} \
-#                                --output-file {output} \
-#                                --mode {wildcards.mode} \
-#                                --selection-files {input.cuts} \
-#                                --cut-keys {params.cut_keys} \
-#                                --year {wildcards.year}'
-#
-# rule mass_fit_jpsikstar_data:
-#     """
-#     Run mass fit on selected B0->J/psiK* data fixing Ipatia tail parameters for
-#     the fit to mc with B_BKGCAT=0,50.
-#     """
-#     input:
-#         script = 'selection/tools/mass_fit_ipatia.py',
-#         root_file = expand(rules.select_jpsikstar_data_for_acc.output, mode='Bd2JpsiKstar',
-#                                                              year='{year}'),
-#         params_file = expand(rules.mass_prefit_jpsikstar_mc.output.params_file, year='{year}')
-#     output:
-#         root_file = tuples_path('Bd2JpsiKstar/Bd2JpsiKstar_{year}_selected_bdt_sw.root'),
-#         plots = directory(output_path('Bd2JpsiKstar/mass_fit_{year}/plots/')),
-#         params_file = output_path('Bd2JpsiKstar/mass_fit_{year}/mass_fit_params_{year}.json'),
-#         root_file_tmp = temp(output_path('Bd2JpsiKstar/mass_fit_{year}.root'))
-#     params:
-#         params_to_fix = ['alpha1', 'alpha2', 'n1', 'n2']
-#     shell:
-#         'python {input.script} --input-file {input.root_file} \
-#                                --output-file-tmp {output.root_file_tmp} \
-#                                --output-file {output.root_file} \
-#                                --mode Bd2JpsiKstar \
-#                                --trigcat \
-#                                --params-to-fix-file {input.params_file} \
-#                                --params-to-fix-list {params.params_to_fix} \
-#                                --background \
-#                                --fit-result-file {output.params_file} \
-#                                --plots-loc {output.plots} \
-#                                --add-sweights '
-#
-# rule mass_fit_jpsikstar_mc:
-#     """
-#     Run MC fit on selected B0->J/psiK* MC with B_BKGCAT=0,50,60 fixing Ipatia tail parameters for
-#     the fit to mc with B_BKGCAT=0,50.
-#     """
-#     input:
-#         script = 'selection/tools/mass_fit_ipatia.py',
-#         root_file = expand(rules.select_jpsikstar_mc_for_acc.output, mode='MC_Bd2JpsiKstar',
-#                                                              year='{year}'),
-#         params_file = expand(rules.mass_prefit_jpsikstar_mc.output.params_file, year='{year}')
-#     output:
-#         root_file = tuples_path('MC_Bd2JpsiKstar/MC_Bd2JpsiKstar_{year}_selected_bdt_sw.root'),
-#         plots = directory(output_path('MC_Bd2JpsiKstar/mass_fit_{year}/plots/')),
-#         params_file = output_path('MC_Bd2JpsiKstar/mass_fit_{year}/mass_fit_params_{year}.json'),
-#         root_file_tmp = temp(output_path('MC_Bd2JpsiKstar/mass_fit_{year}.root'))
-#     params:
-#         params_to_fix = ['alpha1', 'alpha2', 'n1', 'n2']
-#     shell:
-#         'python {input.script} --input-file {input.root_file} \
-#                                --output-file-tmp {output.root_file_tmp} \
-#                                --output-file {output.root_file} \
-#                                --mode MC_Bd2JpsiKstar \
-#                                --trigcat \
-#                                --params-to-fix-file {input.params_file} \
-#                                --params-to-fix-list {params.params_to_fix} \
-#                                --background \
-#                                --fit-result-file {output.params_file} \
-#                                --plots-loc {output.plots} \
-#                                --add-sweights '
-#
-#
-# rule select_jpsikplus_mc_for_prefit_and_tagging:
-#     """
-#     Select B+->J/psiK+ MC for tagging studies and to determine Ipatia tail parameters for
-#     the fit to data. It only takes B_BKGCAT=0,50 events.
-#     """
-#     input:
-# #        root_file = expand(rules.apply_background_veto.output, mode='MC_Bu2JpsiKplus', year='{year}'),
-#         script = 'selection/tools/apply_selection.py'
-#     output:
-#         root_file = tuples_path('MC_Bu2JpsiKplus/MC_Bu2JpsiKplus_{year}_selected_bdt_bkgcat_0_50.root')
-#     params:
-#         root_file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/{}/{}/{}_{}_selected_bdt_{}.root'.format('MC_Bu2JpsiKplus', wildcards.year, 'MC_Bu2JpsiKplus', wildcards.year, selconfig['version']),
-#         cut = 'B_BKGCAT == 0 || (B_BKGCAT == 50 && B_TRUETAU > 0)'
-#     shell:
-#         'python {input.script} --input-file {params.root_file} \
-#                                --output-file {output} \
-#                                --mode MC_Bu2JpsiKplus \
-#                                --cut-string "{params.cut}" \
-#                                --year {wildcards.year}'
-#
-# rule mass_prefit_jpsikplus_mc:
-#     """
-#     Run mass fit on bdt selected B+->J/psiK+ MC to determine Ipatia tail parameters for
-#     the fit to data. It only takes B_BKGCAT=0,50 candidates.
-#     """
-#     input:
-#         script = 'selection/tools/mass_fit_ipatia.py',
-#         root_file = expand(rules.select_jpsikplus_mc_for_prefit_and_tagging.output, year='{year}')
-#     output:
-#         params_file = output_path('MC_Bu2JpsiKplus/mass_final_prefit_{year}/mass_fit_params_{year}.json'),
-#         plots = directory(output_path('MC_Bu2JpsiKplus/mass_final_prefit_{year}/plots/'))
-#     shell:
-#         'python {input.script} --input-file {input.root_file} \
-#                                --fit-result-file {output.params_file} \
-#                                --mode MC_Bu2JpsiKplus \
-#                                --trigcat \
-#                                --plots-loc {output.plots}'
-#
-#
-# rule mass_fit_jpsikplus_data:
-#     """
-#     Run mass fit on selected B+->J/psiK+ data fixing Ipatia tail parameters for
-#     the fit to mc with B_BKGCAT=0,50.
-#     """
-#     input:
-#         script = 'selection/tools/mass_fit_ipatia.py',
-# #        root_file = expand(rules.apply_background_veto.output, mode='Bu2JpsiKplus',
-# #                                                      year='{year}'),
-#         params_file = expand(rules.mass_prefit_jpsikplus_mc.output.params_file, year='{year}')
-#     output:
-#         root_file = tuples_path('Bu2JpsiKplus/Bu2JpsiKplus_{year}_selected_bdt_sw.root'),
-#         plots = directory(output_path('Bu2JpsiKplus/mass_fit_{year}/plots/')),
-#         params_file = output_path('Bu2JpsiKplus/mass_fit_{year}/mass_fit_params_{year}.json'),
-#         root_file_tmp = temp(output_path('Bu2JpsiKplus/mass_fit_{year}.root'))
-#     params:
-#         root_file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/{}/{}/{}_{}_selected_bdt_{}.root'.format('Bu2JpsiKplus', wildcards.year, 'Bu2JpsiKplus', wildcards.year, selconfig['version']),
-#         params_to_fix = ['alpha1', 'alpha2', 'n1', 'n2']
-#     shell:
-#         'python {input.script} --input-file {params.root_file} \
-#                                --output-file-tmp {output.root_file_tmp} \
-#                                --output-file {output.root_file} \
-#                                --mode Bu2JpsiKplus \
-#                                --trigcat \
-#                                --params-to-fix-file {input.params_file} \
-#                                --params-to-fix-list {params.params_to_fix} \
-#                                --background \
-#                                --fit-result-file {output.params_file} \
-#                                --plots-loc {output.plots} \
-#                                --add-sweights '
-#
-# rule select_jpsikplus_mc_bkgcat_0_50_60:
-#     """
-#     Select B+->J/psiK+ MC with B_BKGCAT=0,50,60 events.
-#     """
-#     input:
-# #        root_file = expand(rules.apply_background_veto.output, mode='MC_Bu2JpsiKplus', year='{year}'),
-#         script = 'selection/tools/apply_selection.py'
-#     output:
-#         root_file = tuples_path('MC_Bu2JpsiKplus/MC_Bu2JpsiKplus_{year}_selected_bdt_bkgcat_0_50_60.root')
-#     params:
-#         root_file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/{}/{}/{}_{}_selected_bdt_{}.root'.format('MC_Bu2JpsiKplus', wildcards.year, 'MC_Bu2JpsiKplus', wildcards.year, selconfig['version']),
-#         cut = 'B_BKGCAT == 0 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
-#     shell:
-#         'python {input.script} --input-file {params.root_file} \
-#                                --output-file {output} \
-#                                --mode MC_Bu2JpsiKplus \
-#                                --cut-string "{params.cut}" \
-#                                --year {wildcards.year}'
-#
-#
-# rule mass_fit_jpsikplus_mc:
-#     """
-#     Run MC fit on selected B+->J/psiK+ MC with B_BKGCAT=0,50,60 fixing Ipatia tail parameters for
-#     the fit to mc with B_BKGCAT=0,50.
-#     """
-#     input:
-#         script = 'selection/tools/mass_fit_ipatia.py',
-#         root_file = expand(rules.select_jpsikplus_mc_bkgcat_0_50_60.output, mode='MC_Bu2JpsiKplus',
-#                                                              year='{year}'),
-#         params_file = expand(rules.mass_prefit_jpsikplus_mc.output.params_file, year='{year}')
-#     output:
-#         root_file = tuples_path('MC_Bu2JpsiKplus/MC_Bu2JpsiKplus_{year}_selected_bdt_sw.root'),
-#         plots = directory(output_path('MC_Bu2JpsiKplus/mass_fit_{year}/plots/')),
-#         params_file = output_path('MC_Bu2JpsiKplus/mass_fit_{year}/mass_fit_params_{year}.json'),
-#         root_file_tmp = temp(output_path('MC_Bu2JpsiKplus/mass_fit_{year}.root'))
-#     params:
-#         params_to_fix = ['alpha1', 'alpha2', 'n1', 'n2']
-#     shell:
-#         'python {input.script} --input-file {input.root_file} \
-#                                --output-file-tmp {output.root_file_tmp} \
-#                                --output-file {output.root_file} \
-#                                --mode MC_Bu2JpsiKplus \
-#                                --trigcat \
-#                                --params-to-fix-file {input.params_file} \
-#                                --params-to-fix-list {params.params_to_fix} \
-#                                --background \
-#                                --fit-result-file {output.params_file} \
-#                                --plots-loc {output.plots} \
-#                                --add-sweights '
 # }}}
 
 

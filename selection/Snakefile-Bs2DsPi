@@ -11,14 +11,15 @@ rule upload_to_eos_pid_dspi:
     and this version will also be added to tuple name
     """
     input:
-        script = 'tools/cp_to_eos.py',
         files = lambda wildcards: expand(rules.merge_polarities.output, mode=wildcards.mode,
                                             strip_sim=config['strip_sim'][wildcards.mode][wildcards.year],
                                             year=wildcards.year)
+    params:
+        script = 'tools/cp_to_eos.py',
     output:
         directory = protected(directory('{}/{}/PID/{}/{}'.format(config['eos'], config['version'], '{mode}','{year}'))),
     shell:
-        'python {input.script} --input-files {input.files} \
+        'python {params.script} --input-files {input.files} \
                                --output-directory {output.directory}'
 
 
@@ -31,7 +32,6 @@ rule upload_to_eos_dspi:
     and this version will also be added to tuple name
     """
     input:
-        script = 'tools/cp_to_eos.py',
         files =  lambda wildcards: expand(rules.apply_preselection_mc.output,
                                              strip_sim=config['strip_sim'][wildcards.mode][wildcards.year],
                                                     mode=wildcards.mode,
@@ -42,9 +42,10 @@ rule upload_to_eos_dspi:
     output:
         directory = protected(directory('{}/{}/{}/{}'.format(config['eos'], config['version'], '{mode}', '{year}'))),
     params:
+        script = 'tools/cp_to_eos.py',
         version = config['version'],
     shell:
-        'python {input.script} --input-files {input.files}\
+        'python {params.script} --input-files {input.files}\
                                --version {params.version} \
                                --output-directory {output.directory}'
     
