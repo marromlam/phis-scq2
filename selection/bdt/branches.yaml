@@ -54,7 +54,7 @@ Bu2JpsiKplus: &Bu2JpsiKplus
 
 MC_Bu2JpsiKplus:
   <<: *Bu2JpsiKplus
-  'max_K_TRCHI2_mva': 'max(hplus_TRACK_CHI2NDOF)'
+  'max_K_TRCHI2_mva': 'hplus_TRACK_CHI2NDOF'
   'max_mu_TRCHI2_mva': 'max(muplus_TRACK_CHI2NDOF, muminus_TRACK_CHI2NDOF)'
 
 MC_Bs2JpsiPhi_fromLb:
