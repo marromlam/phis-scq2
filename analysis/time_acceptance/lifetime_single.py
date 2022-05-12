@@ -18,7 +18,7 @@ import hjson
 import numpy as np
 
 # load ipanema
-from ipanema import initialize, plotting
+from ipanema import initialize #, plotting
 from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 
 # import some phis-scq utils
@@ -32,19 +32,20 @@ import config
 # binned variables
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
+# all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
 Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
-
+# tLL = config.general['tLL']
+# tUL = config.general['tUL']
+tLL = 0.3
+tUL = 15
 # Parse arguments for this script
 def argument_parser():
   return p
 
 if __name__ != '__main__':
   initialize(os.environ['IPANEMA_BACKEND'],1)
-  import time_acceptance.fcn_functions as fcns
+  import analysis.time_acceptance.fcn_functions as fcns
 
 ################################################################################
 
@@ -80,7 +81,7 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it
   initialize(os.environ['IPANEMA_BACKEND'],1)
-  import time_acceptance.fcn_functions as fcns
+  import analysis.time_acceptance.fcn_functions as fcns
 
   sWeight = "sw"
   if TIMEACC['use_veloWeight']:

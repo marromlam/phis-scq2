@@ -77,13 +77,20 @@ def plot_timeacc_simul_fit(params, data, weight, kind, axes=None, log=False,
         varaible to plot
     weights: ipanema.ristra
         Set of weights for the histogram
+    """
+    if not axes: fig,axplot,axpull = complot.axes_plotpull()
+    else: fig,axplot,axpull = axes
 
     knots = np.array(params.build(params, params.find('k.*'))).tolist()
-  badjanak.config['knots'] = knots
+    badjanak.config['knots'] = knots
     badjanak.get_kernels()
 
+    ref = complot.hist(ristra.get(data), weights=ristra.get(weight), bins=nob,
+                       range=(params['tLL'].value, params['tUL'].value))
+    ref_x = ref.bins
+
     # Get x and y for pdf plot
-    x = np.linspace(tLL, tUL, 200)
+    x = np.linspace(params['tLL'].value, params['tUL'].value, 200)
 
     if kind == 'mc':
         i = 0
