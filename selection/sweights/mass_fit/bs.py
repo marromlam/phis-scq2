@@ -1073,8 +1073,6 @@ def mass_fitter(
             _sw = np.copy(_proxy)
             _sw[list(rd.df.index)] = v
             sw[k] = _sw
-        for i in range(0, 100):
-            print(i, sw['fsigBs'][i])
         # print("sum of wLb", np.sum( rd.df.eval(mass_weight).values ))
         return (fpars, sw)
 
