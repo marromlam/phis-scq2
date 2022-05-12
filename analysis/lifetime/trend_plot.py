@@ -8,7 +8,7 @@ __all__ = []
 
 import argparse
 import ipanema
-from ipanema import plotting
+import complot
 import numpy as np
 import matplotlib.pyplot as plt
 import uncertainties as unc
@@ -59,9 +59,10 @@ if __name__ == "__main__":
   ipars['u'] = [ipanema.Parameters.load(p) for p in args['unbiased_params'].split(",")]
   ipars['c'] = [ipanema.Parameters.load(p) for p in args['combined_params'].split(",")]
   years = [int(y) for y in args['year'].split(",")]
+  print(years)
   figure = args['figure']
 
-  fig, ax = plotting.axes_plot()
+  fig, ax = complot.axes_plot()
 
   # generate some linspace to create plots
   x = np.linspace(2014,2019,10)
