@@ -179,6 +179,45 @@ def cb_exponential(
 # }}}
 
 
+# Double Gaussian + Combinatorial {{{
+
+def dgauss_exponential(
+    mass, merr, signal, fsigBs=0, fsigBd=0, fcomb=0, muBs=5400, s1Bs=0, s2Bs=0,
+    muBd=5300, s1Bd=1, s2Bd=0, frac=0.5, norm=1, mLL=None, mUL=None
+):
+    # main peak -- double-sided crystal-ball
+    prog.kernel_double_gaussian(
+        signal, mass, np.float64(muBs), np.float64(s1Bs), np.float64(s2Bs),
+        np.float64(frac), global_size=(len(mass),)
+    )
+    pBs = ristra.get(signal)
+
+    # second peak with same tails as main one
+    if fsigBd > 0:
+        prog.kernel_double_gaussian(
+            signal, mass, np.float64(muBd), np.float64(s1Bd), np.float64(s2Bd),
+            np.float64(frac), global_size=(len(mass),)
+        )
+        pBd = ristra.get(signal)
+    else:
+        pBd = 0
+
+    # combinatorial background
+    if fcomb > 0:
+        prog.kernel_exponential(
+            signal, mass, np.float64(b), np.float64(mLL), np.float64(mUL),
+            global_size=(len(mass)),
+        )
+        pComb = ristra.get(signal)
+    else:
+        pComb = 0
+
+    ans = fsigBs * pBs + fsigBd * pBd + fcomb * pComb
+    return norm * ans
+
+# }}}
+
+
 # Bs mass fit function {{{
 
 def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
@@ -230,6 +269,8 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     elif model == "dscbcalib":
         pdf = cb_exponential
         with_calib = True
+    elif model == "dgauss":
+        pdf = dgauss_exponential
 
     def fcn(params, data):
         p = params.valuesdict()
@@ -262,9 +303,10 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
                       free=True,
                       latex=r"p_2^{B_s}"))
     else:
-        pars.add(dict(name="s0Bs", value=_sigma, min=0.1, max=30,
-                      free=True,
-                      latex=r"p_0^{B_s}"))
+        if model != 'dgauss':
+            pars.add(dict(name="s0Bs", value=_sigma, min=0.1, max=30,
+                          free=True,
+                          latex=r"p_0^{B_s}"))
         pars.add(dict(name="s1Bs", value=0.0, min=0, max=10,
                       free=False, latex=r"p_1^{B_s}"))
         pars.add(dict(name="s2Bs", value=0.0, min=-1, max=1,
@@ -274,12 +316,15 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     if input_pars:
         _pars = ipanema.Parameters.clone(input_pars)
         _pars.lock()
-        if with_calib:
-            _pars.remove("fsigBs", "muBs")
-            pars.remove("s1Bs", "s2Bs")
-            _pars.unlock("s1Bs", "s2Bs")
+        if model == 'dgauss':
+            _pars.remove("fsigBs", "muBs", "s1Bs", "s2Bs", "frac")
         else:
-            _pars.remove("fsigBs", "muBs", "s0Bs")
+            if with_calib:
+                _pars.remove("fsigBs", "muBs")
+                pars.remove("s1Bs", "s2Bs")
+                _pars.unlock("s1Bs", "s2Bs")
+            else:
+                _pars.remove("fsigBs", "muBs", "s0Bs")
         _pars.unlock("b")
         pars = pars + _pars
     else:
@@ -340,6 +385,12 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
             pars.add(dict(name="nR", value=1, min=-1, max=50,
                           free=True,
                           latex=r"n_r"))
+            # }}}
+        elif "dgauss" in model:
+            # Crystal Ball with per event resolution tails {{{
+            pars.add(dict(name="frac", value=0.5, min=0, max=1,
+                          free=True,
+                          latex=r"f"))
             # }}}
         # Combinatorial background
         pars.add(dict(name='b', value=-0.02, min=-1,  max=1,
