@@ -24,6 +24,16 @@ bdt_mode:
   MC_Bc2BsPi: Bs2JpsiPhi
 
 
+bdt_cutoff:
+  Bs2JpsiPhi: -1.0
+  Bu2JpsiKplus: -1.0
+
+
+bdt_branch:
+  Bs2JpsiPhi: "bdtg3"
+  Bu2JpsiKplus: "bdtg3"
+
+
 # Year selection
 # Choose with in which year is trained the BDT to select the year with
 # 2015 is usually trained with 2016 because stats in 2015 as very low
@@ -32,6 +42,22 @@ bdt_year:
   '2016': '2016'
   '2017': '2017'
   '2018': '2018'
+
+
+mass_model:
+  'Bs2JpsiPhi': 'dgauss'
+  'Bd2JpsiKstar': 'dgauss'
+  'Bu2JpsiKplus': 'dgauss'
+
+
+mass_branch:
+  'Bs2JpsiPhi': 'B_ConstJpsi_M_1'
+  'MC_Bs2JpsiPhi': 'B_ConstJpsi_M_1'
+  'MC_Bs2JpsiPhi_dG0': 'B_ConstJpsi_M_1'
+  'Bd2JpsiKstar': 'B_ConstJpsi_M_1'
+  'MC_Bd2JpsiKstar': 'B_ConstJpsi_M_1'
+  'Bu2JpsiKplus': 'B_ConstJpsi_M_1'
+  'MC_Bu2JpsiKplus': 'B_ConstJpsi_M_1'
 
 
 # vim: fdm=marker
