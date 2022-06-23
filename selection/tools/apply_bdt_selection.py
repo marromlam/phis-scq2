@@ -40,7 +40,7 @@ def argument_parser():
     parser.add_argument('--mode', help='Name of the selection in yaml')
     parser.add_argument('--year', help='Year of the selection in yaml')
     parser.add_argument('--bdt-branches', nargs='+', required=True, help='Yaml files with selection')
-    parser.add_argument('--bdt-cut-file', nargs='+', required=True, help='Yaml file with bdt cut to be applied')
+    parser.add_argument('--bdt-cut-file', required=True, help='Yaml file with bdt cut to be applied')
     parser.add_argument('--tmva-weight-dir', help='File to read TMVA weight from')
     parser.add_argument('--bdt-method-name', default='BDTG3 method', help='Choose which BDT to apply')
     return parser
@@ -52,11 +52,12 @@ def apply_bdt_selection(input_file, input_tree_name, output_file, output_tree_na
     bdt_conversion = read_from_yaml(mode, bdt_branches)
     # read separate cut value
     #bdt_cut = read_from_yaml(mode, bdt_cut_file)['cut']
-    print(bdt_cut_file)
-    if 'json' in bdt_cut_file[0]:
-        bdt_cut = open(bdt_cut_file[0], 'r').read()
-    else:
-        bdt_cut = read_from_yaml(mode, bdt_cut_file)[year]
+    # print(bdt_cut_file)
+    # if 'json' in bdt_cut_file[0]:
+    #     bdt_cut = open(bdt_cut_file[0], 'r').read()
+    # else:
+    #     bdt_cut = read_from_yaml(mode, bdt_cut_file)[year]
+    bdt_cut = float(bdt_cut_file)
     print(f"BDT cut is: {bdt_cut}")
 
     # prepare BDT reader
