@@ -182,25 +182,24 @@ def cb_exponential(
 # Double Gaussian + Combinatorial {{{
 
 def dgauss_exponential(
-    mass, merr, signal, fsigBs=0, fsigBd=0, fcomb=0, muBs=5400, s1Bs=0, s2Bs=0,
-    muBd=5300, s1Bd=1, s2Bd=0, frac=0.5, norm=1, mLL=None, mUL=None
+    mass, merr, signal, fsigBs=0, fcomb=0, muBs=5400, s1Bs=0, s2Bs=0,
+    frac=0.5, b=0, norm=1, mLL=None, mUL=None
 ):
+    """
+    Mass model to fit Bd, Bs and Bu mass shapes.
+    It returns the normalized model
+    
+    .. math::
+      p.d.f.(m) = f_{sig} DoubleGaussian + (1-f_{sig}) * Exponential
+
+    """
     # main peak -- double-sided crystal-ball
     prog.kernel_double_gaussian(
         signal, mass, np.float64(muBs), np.float64(s1Bs), np.float64(s2Bs),
-        np.float64(frac), global_size=(len(mass),)
+        np.float64(frac), np.float64(mLL), np.float64(mUL),
+        global_size=(len(mass),)
     )
     pBs = ristra.get(signal)
-
-    # second peak with same tails as main one
-    if fsigBd > 0:
-        prog.kernel_double_gaussian(
-            signal, mass, np.float64(muBd), np.float64(s1Bd), np.float64(s2Bd),
-            np.float64(frac), global_size=(len(mass),)
-        )
-        pBd = ristra.get(signal)
-    else:
-        pBd = 0
 
     # combinatorial background
     if fcomb > 0:
@@ -212,7 +211,7 @@ def dgauss_exponential(
     else:
         pComb = 0
 
-    ans = fsigBs * pBs + fsigBd * pBd + fcomb * pComb
+    ans = fsigBs * pBs + fcomb * pComb
     return norm * ans
 
 # }}}
@@ -223,7 +222,8 @@ def dgauss_exponential(
 def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     mass_weight="B_ConstJpsi_M_1/B_ConstJpsi_M_1", cut=False, figs=False,
     model="dscb", has_bd=False, trigger=False, input_pars=False,
-    sweights=False, verbose=False, prefit=False, free_tails=False):
+    sweights=False, verbose=False, prefit=False, free_tails=False,
+    mode=False):
 
     # mass range cut
     if not mass_range:
@@ -281,11 +281,30 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
 
     # Build parameters {{{
 
+    _mu = np.mean(rd.mass.get())
+    _sigma = 10 #min(np.std(rd.mass.get()), 20)
+    _dsigma = 0
+    _res = 0.
+    print(mode)
+    # if mode == 'Bd2JpsiKstar':
+    #     _sigma = 7
+    #     _dsigma = 5
+    #     _res = 0.5
+    # elif mode == 'Bs2JpsiPhi':
+    #     _mu = 5367
+    #     _sigma = 7
+    #     _dsigma = 0
+    #     _sigma = 5
+    #     _dsigma = 9
+    #     _res = 0.5
+    # elif mode == 'Bu2JpsiKplus':
+    #     _sigma = 12
+    #     _dsigma = -5
+    #     _res = 0.44
+
     pars = ipanema.Parameters()
 
     # Create common set of Bs parameters (all models must have and use)
-    _mu = np.mean(rd.mass.get())
-    _sigma = min(np.std(rd.mass.get()), 20)
     pars.add(dict(name="fsigBs", value=0.5, min=0.0, max=1,
                   free=True,
                   latex=r"f_{B_s}"))
@@ -303,15 +322,22 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
                       free=True,
                       latex=r"p_2^{B_s}"))
     else:
-        if model != 'dgauss':
+        if model == 'dgauss':
+            pars.add(dict(name="s1Bs", value=_sigma, min=1, max=20,
+                          free=True, latex=r"p_1^{B_s}"))
+            # pars.add(dict(name="s2Bs", value=_dsigma, min=-20, max=20, # WARN
+            pars.add(dict(name="s2Bs", value=_dsigma, min=1, max=20,
+                          free=True,
+                          latex=r"p_2^{B_s}"))
+        else:
             pars.add(dict(name="s0Bs", value=_sigma, min=0.1, max=30,
                           free=True,
                           latex=r"p_0^{B_s}"))
-        pars.add(dict(name="s1Bs", value=0.0, min=0, max=10,
-                      free=False, latex=r"p_1^{B_s}"))
-        pars.add(dict(name="s2Bs", value=0.0, min=-1, max=1,
-                      free=False,
-                      latex=r"p_2^{B_s}"))
+            pars.add(dict(name="s1Bs", value=0.0, min=0, max=10,
+                          free=False, latex=r"p_1^{B_s}"))
+            pars.add(dict(name="s2Bs", value=0.0, min=-1, max=1,
+                          free=False,
+                          latex=r"p_2^{B_s}"))
 
     if input_pars:
         _pars = ipanema.Parameters.clone(input_pars)
@@ -330,7 +356,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     else:
         # This is the prefit stage. Here we will lock the nsig to be 1 and we
         # will not use combinatorial background.
-        pars["fsigBs"].value = 1 if prefit else 0.2
+        pars["fsigBs"].value = 1 if prefit else 0.8
         pars["fsigBs"].free = False if prefit else True
         if "hypatia" in model:
             # Hypatia tails {{{
@@ -388,38 +414,24 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
             # }}}
         elif "dgauss" in model:
             # Crystal Ball with per event resolution tails {{{
-            pars.add(dict(name="frac", value=0.5, min=0, max=1,
+            # pars.add(dict(name="frac", value=_res, min=0, max=10, # WARN
+            pars.add(dict(name="frac", value=_res, min=0, max=1,
                           free=True,
                           latex=r"f"))
             # }}}
         # Combinatorial background
-        pars.add(dict(name='b', value=-0.02, min=-1,  max=1,
+        pars.add(dict(name='b', value=-0.001, min=-1,  max=1,
                       free=False if prefit else True,
                       latex=r'b'))
         pars.add(dict(name='fcomb', formula="1-fsigBs",
                       latex=r'f_{\text{comb}}'))
 
-    if has_bd:
-        # Create common set of Bd parameters
-        DMsd = 5366.89 - 5279.63; DMsd = 87.26
-        pars.add(dict(name="fsigBd", value=0.01, min=0, max=1,
-                      free=True,
-                      latex=r"f_{B_d^0}"))
-        pars.add(dict(name="muBd", formula=f"muBs-{DMsd}",
-                      latex=r"\mu_{B_d^0}"))
-        pars.add(dict(name="s0Bd", value=7, min=5, max=20,
-                      free=False,
-                      latex=r"\sigma_{B_d^0}"))
-        # Combinatorial background
-        pars.pop("fcomb")
-        pars.add(dict(name="fcomb", formula="1-fsigBs-fsigBd",
-                      latex=r"f_{\text{comb}}"))
-
     # finally, set mass lower and upper limits
     pars.add(dict(name="mLL", value=mLL, free=False, latex=r"m_{ll}"))
     pars.add(dict(name="mUL", value=mUL, free=False, latex=r"m_{ul}"))
-    if verbose:
-        print(pars)
+    # if verbose:
+    #     print(pars)
+    print(pars)
 
     # }}}
 
@@ -443,6 +455,8 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     if verbose:
         print(res)
     fpars = ipanema.Parameters.clone(res.params)
+    print(fpars)
+    # fpars = ipanema.Parameters.clone(pars)
 
     if free_tails:
         for k, v in pars.items():
@@ -465,7 +479,10 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
 
     # fall back to averaged resolution when plotting
     _p = fpars.valuesdict()
-    merr = _p["s0Bs"] + _p["s1Bs"] * rd.merr + _p["s2Bs"] * rd.merr * rd.merr
+    if model == 'dgauss':
+        merr = rd.merr
+    elif model == 'dgauss':
+        merr = _p["s0Bs"] + _p["s1Bs"] * rd.merr + _p["s2Bs"] * rd.merr * rd.merr
     merr = np.median(ristra.get(rd.merr))
 
     fig, axplot, axpull = complot.axes_plotpull()
@@ -667,6 +684,7 @@ if __name__ == '__main__':
         input_pars=input_pars,  # whether to use prefit tail parameters or not
         verbose=True,  # level of verobisty
         prefit=is_prefit,  # level of verobisty
+        mode=args['mode']
     )
 
     pars.dump(args["output_params"])
