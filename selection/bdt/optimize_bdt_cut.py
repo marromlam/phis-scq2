@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     # branches
     branches = [args['mass_branch'], args['bdt_branch']]
-    branches = branches + ["B_ConstJpsi_MERR_1", "X_M"]
+    branches = branches + ["B_ConstJpsi_MERR_1"]
 
     if args["input_params"]:
         input_pars = ipanema.Parameters.load(args["input_params"])
@@ -85,10 +85,11 @@ if __name__ == '__main__':
             model=args["mass_model"],  # mass model to use
             cut=ccut,  # extra cuts, if required
             sweights=True,  #  whether to comput or not the sWeights
-            # input_pars=input_pars,  # whether to use prefit tail parameters or not
+            input_pars=input_pars,  # whether to use prefit tail parameters or not
             verbose=False,  # level of verobisty
-            prefit=False,
-            free_tails=False
+            # prefit=False,
+            free_tails=False,
+            mode=args['mode']
         )
         # exit()
 
