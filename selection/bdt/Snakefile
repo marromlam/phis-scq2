@@ -163,7 +163,7 @@ rule selection_bdt_add_branches:
 # }}}
 
 
-# apply bdt seclection {{{
+# bdt cut optimization {{{
 
 def tmva_weights_file(wildcards):
     bdt_year_for_weights = BDT_CONFIG['bdt_year'][wildcards.year]
@@ -181,8 +181,150 @@ def input_to_apply_bdt_selection(wildcards):
         return SAMPLES + f'/{wildcards.year}/{wildcards.mode}/{wildcards.version}_withbdt.root'
 
 
-include: 'bdt_study/Snakefile'
+rule selection_add_bdt_response:
+    """
+    Generic rule.
+    Read tmva weights from given file and fill in response for a given tree.
+    NO cut on the bdt response applied yet.
+    NOTE the name of the bdt is hard coded in the script to be bdtg3
 
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    input:
+        tuple_file = SAMPLES + '/{year}/{mode}/{version}_withbdt.root',
+        tmva_weight_dir = tmva_weights_file,
+    params:
+        script = 'selection/tools/apply_bdt_selection.py',
+        bdt_cut = lambda w: BDT_CONFIG['bdt_cutoff'][w.mode],
+        branches = 'selection/bdt/branches.yaml',
+    output:
+        SAMPLES + '/{year}/{mode}/{version}_bdt_response.root'
+    log:
+        'output/log/selection_add_bdt_response/{year}/{mode}/{version}.log'
+    run:
+        shell('(time python {params.script} \
+        --input-file {input.tuple_file} \
+        --output-file {output} \
+        --mode {wildcards.mode} \
+        --year {wildcards.year} \
+        --bdt-branches {params.branches} \
+        --bdt-cut {params.bdt_cut} \
+        --tmva-weight-dir {input.tmva_weight_dir} \
+        ) &> {log}')
+
+
+rule selection_bdt_masscut:
+    """
+    selection narrow mass range of B for simple Gaussian fit to find the optimal cut for BDT
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    input:
+        file = SAMPLES + '/{year}/{mode}/{version}_bdt_response.root'
+    params:
+        script = 'selection/tools/apply_selection.py',
+        cuts = 'selection/bdt/cuts_masscut.yaml',
+        branches = 'selection/bdt/branches.yaml',
+    output:
+        SAMPLES + '/{year}/{mode}/{version}_withbdt_masscut.root'
+    log:
+        'output/log/selection_bdt_masscut/{year}/{mode}/{version}.log'
+    run:
+        shell('(time python {params.script} \
+        --input-file {input.file} \
+        --output-file {output} \
+        --mode {wildcards.mode} \
+        --selection-files {params.cuts} \
+        --branches-files {params.branches} \
+        --keep-all-original-branches True \
+        --year {wildcards.year} \
+        ) &> {log}')
+
+
+rule selection_bdt_cut_optimization:
+    """
+    Fit to mass_branch with different cut on bdtg3 to obtain the rough
+    sweight to define FOM=(sum_w)^2/sum_(w^2) and find the best bdtg3 cut with
+    largest FOM.
+    This function runs for both Bs and Bu modes. By default the tails
+    are deactivated because we are supposed to run without power-law
+    mass models (MC is not good enough).
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        mode = '(Bu2JpsiKplus)'
+    input:
+        tuple_file = SAMPLES + '/{year}/{mode}/{version}_withbdt_masscut.root',
+        # pars = 'output/params/tails_mc/{year}/MC_{mode}/{version}.json',
+    params:
+        script = 'selection/bdt/optimize_bdt_cut.py',
+        mass_model = lambda w: BDT_CONFIG['mass_model'][f"{w.mode}"],
+        mass_branch = lambda w: BDT_CONFIG['mass_branch'][f"{w.mode}"],
+    output:
+        cut = 'output/params/bdt_cut/{year}/{mode}/{version}.json',
+        plots = directory('output/figures/bdt_cut/{year}/{mode}/{version}/')
+    log:
+        'output/log/selection_bdt_cut_optimization/{year}/{year}/{mode}/{version}.log'
+    run:
+        shell(f'mkdir -p {output.plots}')
+        shell('(time python {params.script} \
+        --input-file {input.tuple_file} \
+        --input-branch {params.mass_branch} \
+        --mass-model {params.mass_model} \
+        --output-figures {output.plots} \
+        --output-file {output.cut} \
+        --mode {wildcards.mode} \
+        --year {wildcards.year} \
+        ) &> {log}')
+        # --input-params {input.pars} \
+
+
+rule selection_bdt_cut_optimization2:
+    """
+    Generic rule.
+    Fit to B_ConstJpsi_M_1 with different cut on bdtg3 to obtain the rough
+    sweight to define FOM=(sum_w)^2/sum_(w^2) and find the best bdtg3 cut with
+    largest FOM
+
+    TODO: Generalize for Bu tuples too
+    """
+    threads: 2
+    resources:
+        mem_mb = 12000
+    wildcard_constraints:
+        mode = '(Bs2JpsiPhi)'
+    input:
+        tuple_file = SAMPLES + '/{year}/{mode}/{version}_withbdt_masscut.root'
+        # tuple_file = expand(rules.add_bdt_response.output, version='{version}',
+        #                     year='{year}', mode='{mode}'),
+    params:
+        script = 'selection/tools/fit_for_bdtcut_FOM.py',
+        branch_name = 'B_ConstJpsi_M_1',
+    output:
+        cut = 'output/params/bdt_cut/{year}/{mode}/{version}.json',
+        plots = directory('output/figures/bdt_cut/{year}/{mode}/{version}/')
+    log:
+        'output/log/selection_bdt_cut_optimization/{year}/{year}/{mode}/{version}.log'
+    run:
+        shell(f'mkdir -p {output.plots}')
+        shell('(time python {params.script} \
+        --input-file {input.tuple_file} \
+        --input-branch {params.branch_name} \
+        --plot-dir {output.plots} \
+        --output-file {output.cut} \
+        --mode {wildcards.mode} \
+        --year {wildcards.year} \
+        ) &> {log}')
+
+# }}}
+
+
+# apply bdt seclection {{{
 
 if config['selection_mode'] == 'run2':
     rule selection_bdt_apply:
@@ -213,16 +355,16 @@ if config['selection_mode'] == 'run2':
         log:
             'output/log/selection_apply_bdt/{year}/{mode}/{version}_elected.log'
         run:
-            shell('(time python {params.script} \
+            bdt_cut = open(f"{input.bdt_cut}", 'r').read()
+            shell(f'(time python {params.script} \
             --input-file {input.tuple_file} \
             --output-file {output} \
             --mode {wildcards.mode} \
             --year {wildcards.year} \
             --bdt-branches {params.branches} \
-            --bdt-cut-file {input.bdt_cut} \
-            --tmva-weight-dir {input.tmva_weight_dir} ) &> {log}')
-
-
+            --bdt-cut "{bdt_cut}" \
+            --tmva-weight-dir {input.tmva_weight_dir} \
+            ) &> {log}')
 elif config['selection_mode'] == 'run1':
     rule selection_run1:
         """
