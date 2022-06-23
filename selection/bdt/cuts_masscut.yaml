@@ -1,0 +1,21 @@
+common: &common
+    'L0_cuts': 'B_L0Global_Dec'
+
+Bs2JpsiPhi: &Bs2JpsiPhi
+    <<: *common
+    'B_cuts': 'B_ConstJpsi_M_1 >= 5320. && B_ConstJpsi_M_1 <= 5420.'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+    <<: *Bs2JpsiPhi
+    'B_cuts': 'B_ConstJpsi_M_1 >= 5200. && B_ConstJpsi_M_1 <= 5550.'
+    'MC_specific': 'B_BKGCAT == 0 || (B_BKGCAT == 50 && B_TRUETAU > 0)|| B_BKGCAT==60'
+    
+
+Bu2JpsiKplus: &Bu2JpsiKplus
+    <<: *Bs2JpsiPhi
+    'B_cuts': 'B_ConstJpsi_M_1 > 5210. && B_ConstJpsi_M_1 < 5350.'      
+    'phi_cuts': ''
+    
+MC_Bu2JpsiKplus: &MC_Bu2JpsiKplus
+    <<: *Bu2JpsiKplus
+
