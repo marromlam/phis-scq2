@@ -27,7 +27,7 @@ def cut_keys_mode(wildcards):
     Only exception at the moment is DsPi.
     """
     # RR Warning updated pipeline
-    # if 'Bs2DsPi' not in wildcards.mode: 
+    # if 'Bs2DsPi' not in wildcards.mode:
     #    return 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts phi_cuts'
     if 'Bs2DsPi' not in wildcards.mode:
         if 'MC' in wildcards.mode: 
@@ -69,7 +69,7 @@ def grid_tuples(wcs):
 
 # Preselection Data {{{
 
-if config['run_preselection'] and config['run_pid']:
+if config['run_preselection']:
     rule preselection_data:
         """
         Generic rule.
@@ -223,7 +223,7 @@ if config['run_pid']:
 # Preselection MC {{{
 
 # rompe el pipeline
-if config['run_pid'] and config['run_preselection']:
+if config['run_preselection']:
     rule preselection_merge_polarities:
         """
         Generic rule.
@@ -236,7 +236,8 @@ if config['run_pid'] and config['run_preselection']:
         resources:
             mem_mb = 6000
         input:
-            expand(rules.preselection_correct_pid.output.file,
+            expand(
+                SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root',
                 version='{version}', mode='{mode}', strip_sim='{strip_sim}',
                 year='{year}', polarity=selconfig['polarities'])
         output:
@@ -244,8 +245,43 @@ if config['run_pid'] and config['run_preselection']:
             # ELMARCS
             SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root'
         run:
-            print(f'hadd {output} {input}')
             shell('hadd {output} {input}')
+
+    rule samples_upload_pidtuple:
+      wildcard_constraints:
+        # surname = "(lbWeight|tagged)"
+        weight = "(selected|sWeight|lbWeight|tagged)"
+      threads: 2
+      resources:
+        mem_mb=6144
+      params:
+        os.path.join(settings.user['eos'], 'tuples_pidcorrected')
+      input:
+        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root'
+      output:
+        SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9]+}_{strip_sim}_pidcorrected.eos'
+      run:
+        m = f'{wildcards.mode}'
+        y = f'{wildcards.year}'
+        v = f'{wildcards.version}'
+        s = f'{wildcards.strip_sim}'
+        local = f'{input}'
+        # phi-scq tuple handler is smarter than the user, and it knows which is the
+        # actual last tuple the user wants if she/he asks for some tuple that do
+        # not exist
+        # w = f'{wildcards.weight}'
+        # w = os.path.basename(local).replace('.root', '')
+        # w = w.split('_')[-1]  # remove version
+        # jan22, we decided the following naming convention for eos tuples
+        eos = os.path.join(f"{params}", v, m, y, f"{v}_{m}_{y}_{s}.root")
+        remote = f"root://eoslhcb.cern.ch/{eos}"
+        # eos = f'{input}'.replace(SAMPLES, f"{params}")
+        # if s == 'lbWeight':
+        #     eos.replace('_lbWeight.root', '_ready.root')
+        # elif m != 'Bs2JpsiPhi' and s == 'tagged':
+        #     eos.replace('_tagged.root', '_ready.root')
+        # shell(f"{}")
+        shell(f"(time xrdcp -f {local} {remote}) &> {output}")
 
 
     rule preselection_mc:
@@ -330,6 +366,8 @@ rule selection_add_arrays:
 # modes = ['MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_Prompt']
 
 rule selection_merge_strippings:
+    wildcard_constraints:
+        mode = "MC_.*"
     threads: 2
     resources:
         mem_mb = 6000
