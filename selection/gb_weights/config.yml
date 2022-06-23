@@ -15,11 +15,11 @@ tails_mode:
 
 
 mass_model:
-  'Bs2JpsiPhi': 'hypatia'
-  'MC_Bs2JpsiPhi': 'hypatia'
-  'MC_Bs2JpsiPhi_dG0': 'hypatia'
-  'Bd2JpsiKstar': 'hypatia'
-  'MC_Bd2JpsiKstar': 'hypatia'
+  'Bs2JpsiPhi': 'dgauss'
+  'MC_Bs2JpsiPhi': 'dgauss'
+  'MC_Bs2JpsiPhi_dG0': 'dgauss'
+  'Bd2JpsiKstar': 'dgauss'
+  'MC_Bd2JpsiKstar': 'dgauss'
   'Bu2JpsiKplus': 'hypatia'
   'MC_Bu2JpsiKplus': 'hypatia'
 
