@@ -4,6 +4,7 @@
 with open('selection/gb_weights/config.yml') as file:
     GBW_CONFIG = yaml.load(file, Loader=yaml.FullLoader)
 
+
 # preliminar selection before GB {{{
 
 rule selection_gbw_preliminar_mc:
@@ -14,36 +15,32 @@ rule selection_gbw_preliminar_mc:
     """
     threads: 4
     resources:
-        mem_mb =  6000
+        mem_mb = 6000
     wildcard_constraints:
         mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
     input:
-        #file = expand(rules.merge_polarities.output, mode='{mode}',
-        #                                              year='{year}',
-        #                                              strip_sim='{strip_sim}'),
         cuts = ['selection/cuts.yaml', 'selection/gb_weights/cuts.yaml'],
         branches = 'selection/branches.yaml',
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root',
     output:
-        # temp(tuples_path('{mode}/{mode}_{strip_sim}_{year}_GBW_MC_selected.root'))
         SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_preliminarGBW.root',
-        # /scratch46/marcos.romero/sidecar14/{year}/{mode}/{version}_{strip_sim}GBWpreliminar.root'
     params:
         script = 'selection/tools/apply_selection.py',
-        # RR Warning updated pipeline
-        # cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific',
-        cutkeys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific_GBW',
-        # file = lambda wildcards: selconfig['eos'] + '/' + config['version'] + '/PID/{}/{}_{}_{}_selected_pidcorrected.root'.format(wildcards.mode, wildcards.mode, wildcards.year, wildcards.strip_sim)
+        # CHANGE IN CUT KEYS
+        cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific',
+        # cutkeys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific_GBW',
     log:
-        'output/log/select_GBW_MC_ntuples/{mode}/{version}_{strip_sim}_{year}_GBW_MC_selected.log'
+        'output/log/selection_gbw_preliminar_mc/{year}/{mode}/{version}_{strip_sim}.log'
     run:
-        shell(f'(time python {params.script} --input-file {input.file} \
-                               --output-file {output} \
-                               --mode {wildcards.mode} \
-                               --cut-keys {params.cutkeys} \
-                               --selection-files {input.cuts} \
-                               --branches-files {input.branches} \
-                               --year {wildcards.year}) &> {log}')
+        shell(f'(time python {params.script} \
+        --input-file {input.file} \
+        --output-file {output} \
+        --mode {wildcards.mode} \
+        --cut-keys {params.cutkeys} \
+        --selection-files {input.cuts} \
+        --branches-files {input.branches} \
+        --year {wildcards.year} \
+        ) &> {log}')
 
 
 rule selection_gbw_preliminar_data:
@@ -62,7 +59,6 @@ rule selection_gbw_preliminar_data:
         branches = ['selection/gb_weights/branches.yaml',
                     'selection/gb_weights/weighting_variables.yaml']
     output:
-        # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_selected.root'))
         SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
     params:
         script = 'selection/tools/apply_selection.py',
@@ -70,13 +66,11 @@ rule selection_gbw_preliminar_data:
                 if wildcards.mode.startswith('MC_') \
                 else selconfig['eos_data'][selconfig['streams'][wildcards.mode]][int(wildcards.year)],
         treename = lambda wildcards: selconfig['treenames'][wildcards.mode],
-        #RR Warning updated pipeline
-        #cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts_SW_GBW'
-        cutkeys = 'L0_cuts B_cuts_SW_GBW phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts'
-
-
+        # CHANGE IN CUT KEYS
+        cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts_SW_GBW',
+        # cutkeys = 'L0_cuts B_cuts_SW_GBW phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts',
     log:
-        'output/log/select_GBW_data_ntuples/{year}/{mode}/{version}_GBW_MC_selected.log'
+        'output/log/selection_gbw_preliminar_data/{year}/{mode}/{version}.log'
     run:
         shell(f'(time python {params.script} \
         --input-file {params.files} \
@@ -131,7 +125,46 @@ rule selection_gbw_tails:
         --year {wildcards.year}) &> {log}""")
 
 
-rule selection_gbw_bkgsubtract:
+# rule selection_gbw_bkgsubtract:
+#     """
+#     Rule for sweighting data for GB weights.
+#     Performs fit to Bs mass. Saves new tree with sweights in the requested location
+#     """
+#     threads: 2
+#     resources:
+#         mem_mb = 12000
+#     wildcard_constraints:
+#         mode = "(MC_)?(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
+#     input:
+#         sample = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root',
+#         # pars = lambda wcs: expand('output/params/tails_mc/{{year}}/{mode}/{{version}}.json',
+#         #                           mode=GBW_CONFIG['tails_mode'][wcs.mode]),
+#     params:
+#         script = 'selection/gb_weights/background_subtraction.py',
+#         mass_branch = lambda w: GBW_CONFIG['mass_branch'][f"{w.mode}"],
+#         # mass_model = lambda w: GBW_CONFIG['mass_model'][f"{w.mode}"],
+#         mass_model = 'dgauss',
+#     output:
+#         sweights = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
+#         pars = 'output/params/background_subtraction/{year}/{mode}/{version}.json',
+#         plots = directory('output/figures/background_subtraction/{year}/{mode}/{version}/')
+#     log:
+#         'output/selection_gbw_bkgsubtract/{year}/{mode}/{version}.log',
+#     run:
+#         shell('mkdir -p {output.plots}')
+#         shell('(time python {params.script} \
+#         --sample {input.sample} \
+#         --sweights {output.sweights} \
+#         --mass-branch {params.mass_branch} \
+#         --mass-model {params.mass_model} \
+#         --output-params {output.pars} \
+#         --output-figures {output.plots} \
+#         --mode {wildcards.mode} \
+#         --version {wildcards.version} \
+#         --year {wildcards.year}) &> {log}')
+
+
+rule selection_gbw_bkgsubtract_data:
     """
     Rule for sweighting data for GB weights.
     Performs fit to Bs mass. Saves new tree with sweights in the requested location
@@ -141,35 +174,29 @@ rule selection_gbw_bkgsubtract:
         mem_mb = 12000
     wildcard_constraints:
         # mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt)"    # ORIGINAL
-        mode = "(MC_)?(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
+        mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
     input:
-        sample = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root',
-        pars = lambda wcs: expand('output/params/tails_mc/{{year}}/{mode}/{{version}}.json',
-                                  mode=GBW_CONFIG['tails_mode'][wcs.mode]),
+        tuple_file = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root'
         # tuple_file = expand(rules.select_GBW_data_ntuples.output,
         #                     year='{year}', version='{version}', mode='{mode}'),
     params:
-        script = 'selection/gb_weights/background_subtraction.py',
-        mass_branch = lambda w: GBW_CONFIG['mass_branch'][f"{w.mode}"],
-        mass_model = lambda w: GBW_CONFIG['mass_model'][f"{w.mode}"],
+        script = 'selection/gb_weights/sweights_for_gb_weights.py',
+        branch_name = 'B_ConstJpsi_M_1',
     output:
-        sweights = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
-        pars = 'output/params/background_subtraction/{year}/{mode}/{version}.json',
-        plots = directory('output/figures/background_subtraction/{year}/{mode}/{version}/')
+        # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
+        sample = SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
+        plots = directory(SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted/')
     log:
-        'output/selection_gbw_bkgsubtract/{year}/{mode}/{version}.log',
+        # temp(tuples_path('{mode}/{mode}_{year}_GBW_data_sweighted.root'))
+        'output/selection_data_background_subtraction/{year}/{mode}/{version}.log',
     run:
         shell('mkdir -p {output.plots}')
         shell('(time python {params.script} \
-        --sample {input.sample} \
-        --sweights {output.sweights} \
-        --mass-branch {params.mass_branch} \
-        --mass-model {params.mass_model} \
-        --input-params {input.pars} \
-        --output-params {output.pars} \
-        --output-figures {output.plots} \
+        --input-file {input.tuple_file} \
+        --output-file {output.sample} \
+        --input-branch {params.branch_name} \
+        --plot-dir {output.plots} \
         --mode {wildcards.mode} \
-        --version {wildcards.version} \
         --year {wildcards.year}) &> {log}')
 
 # }}}
@@ -196,9 +223,9 @@ rule selection_gbw_reweighter_train:
         weight_method = 'gb'
     output:
         # tuples_path('{mc_mode}/{mc_year}/{strip_sim}/{mc_mode}_{mc_year}_{strip_sim}_{data_mode}_{data_year}_GB_weights.pkl'),
-        SAMPLES + '/{mc_year}/{mc_mode}/{version}_{strip_sim}_gbWeighted_{data_mode}_{data_year}.pkl'
+        temp(SAMPLES + '/{mc_year}/{mc_mode}/{version}_{strip_sim}_gbWeighted_{data_mode}_{data_year}.pkl')
     log:
-        'output/log/selection_calculate_gbw/{mc_mode}/{mc_year}/{strip_sim}/{version}_{mc_mode}_{mc_year}_{strip_sim}_{data_mode}_{data_year}_GB_weights.log'
+        'output/log/selection_gbw_reweighter_train/{mc_year}/{mc_mode}/{version}_{strip_sim}_{data_mode}-{data_year}.log'
     run:
         shell('(time python {params.script} \
         --original-file {input.mc} \
@@ -207,7 +234,8 @@ rule selection_gbw_reweighter_train:
         --mode {wildcards.mc_mode} \
         --weight-method {params.weight_method} \
         --variables-files {params.variables_file} \
-        --output-file {output}) &> {log}')
+        --output-file {output}) \
+        &> {log}')
 
 # }}}
 
@@ -262,9 +290,10 @@ rule selection_gbw_compute:
     resources:
         mem_mb = 12000
     input:
-        # files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
-        files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_TrackChi2_weighted.root',
-        # TODO: checkear que esto esta bien:
+        files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
+        # if we want to apply the scaling, comment the line above and uncomment
+        # below
+        # files = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_TrackChi2_weighted.root',
         weights_file = lambda wcs: expand(
                 SAMPLES + '/{mc_year}/{mc_mode}/{version}_{strip_sim}_gbWeighted_{data_mode}_{data_year}.pkl',
                 mc_mode = f'{wcs.mode}',
@@ -272,9 +301,8 @@ rule selection_gbw_compute:
                 strip_sim = f'{wcs.strip_sim}',
                 version = f'{wcs.version}',
                 data_mode = selconfig['gbw_input_data_mode'][f'{wcs.mode}'],
-                data_year = selconfig['gbw_input_data_year'][f'{wcs.year}'])
+                data_year = wcs.year)
     output:
-        # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_GB_weighted.root'))
         SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_gbWeight.root'
     params:
         script = 'selection/tools/apply_weights.py',
