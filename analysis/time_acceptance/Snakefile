@@ -445,27 +445,27 @@ rule time_acceptance_simultaneous_plot:
       tuples(wcs,version=v, year=y, mode='MC_Bs2JpsiPhi_dG0'),
       tuples(wcs,version=v, year=y, mode='MC_Bd2JpsiKstar'),
       tuples(wcs,version=v, year=y, mode='Bd2JpsiKstar')]
-      for v in f"{wcs.version}".split('+')] for y in YEARS[f'{wcs.year}']], []), []),
+      for v in f"{wcs.mversion}".split('+')] for y in YEARS[f'{wcs.myear}']], []), []),
     params = lambda wcs: expand([
       'output/params/time_acceptance/{year}/MC_Bs2JpsiPhi_dG0/{version}_{timeacc}_{{trigger}}.json',
       'output/params/time_acceptance/{year}/MC_Bd2JpsiKstar/{version}_{timeacc}_{{trigger}}.json',
       'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{{trigger}}.json'
-    ], timeacc=f"{wcs.timeacc}".split('+'), version=f"{wcs.version}".split('+'), year=YEARS[f'{wcs.year}'])
+    ], timeacc=f"{wcs.mtimeacc}".split('+'), version=f"{wcs.mversion}".split('+'), year=YEARS[f'{wcs.myear}'])
   output:
-    'output/figures/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.pdf',
+    'output/figures/time_acceptance/{myear}/{mode}/{mversion}_{mtimeacc}_{trigger}_{plot}.pdf',
   log:
-    'output/log/time_acceptance_plot/{year}/{mode}/{version}_{timeacc}_{trigger}_{plot}.log'
+    'output/log/time_acceptance_plot/{myear}/{mode}/{mversion}_{mtimeacc}_{trigger}_{plot}.log'
   run:
     shell(f"""(time\
     python analysis/time_acceptance/plot_functions.py\
     --samples {",".join(input.samples)}\
     --params {",".join(input.params)}\
     --figure {output}\
-    --year {wildcards.year}\
+    --year {wildcards.myear}\
     --mode {wildcards.mode}\
-    --version {wildcards.version}\
+    --version {wildcards.mversion}\
     --trigger {wildcards.trigger}\
-    --timeacc {wildcards.timeacc}\
+    --timeacc {wildcards.mtimeacc}\
     --plot {wildcards.plot}\
     ) &> {log}""")
     send_mail(f"Simultaneous Time Acceptance", f" ", output)
