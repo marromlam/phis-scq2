@@ -83,7 +83,7 @@ if __name__ == '__main__':
   initialize(os.environ['IPANEMA_BACKEND'],1)
   import analysis.time_acceptance.fcn_functions as fcns
 
-  sWeight = "sw"
+  sWeight = "sWeight"
   if TIMEACC['use_veloWeight']:
     sweight = f'veloWeight*{sWeight}'
 
