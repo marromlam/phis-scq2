@@ -199,10 +199,10 @@ rule slides_compile:
     #        year = ['2015', '2016', '2017', '2018']),
     # time acceptance plot - nominal case only
     expand(rules.time_acceptance_simultaneous_plot.output,
-           version=config['version'],
+           mversion=config['version'],
            mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
-           timeacc=['simul3', 'simul3Noncorr'],
-           year=['2015', '2016', '2017', '2018'],
+           mtimeacc=['simul3', 'simul3Noncorr'],
+           myear=['2015', '2016', '2017', '2018'],
            plot=['fitlog', 'splinelog'],
            trigger=['biased', 'unbiased']),
     # lifetime trend plots {{{
