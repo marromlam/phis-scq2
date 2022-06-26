@@ -12,24 +12,20 @@ from utils.strings import printsec
 from hep_ml.reweight import GBReweighter
 from warnings import simplefilter
 import yaml
-import hjson
-import math
-from shutil import copyfile
-import ast
+# import hjson
+# import math
+# from shutil import copyfile
+# import ast
 import uproot3 as uproot
 import numpy as np
 import argparse
-
-
-
-
-
-# reweighting config
-# ignore future warnings
-simplefilter(action='ignore', category=FutureWarning)
+from ipanema.tools.misc import get_vars_from_string
 
 # TODO: create resimplement this
-# from analysis.angular_acceptance.bdtconf_tester import bdtmesh
+from analysis.angular_acceptance.bdtconf_tester import bdtmesh
+
+simplefilter(action='ignore', category=FutureWarning)
+
 
 # }}}
 
@@ -65,9 +61,10 @@ def reweight(original, target, original_weight, target_weight,
     Returns
     -------
     np.ndarray
-    Array with the computed weights in order to original to be the same as target.
+    Array with the computed weights in order to original to be the same as
+    target.
     """
-    # setup the reweighter
+    # setup the reweighter
     reweighter = GBReweighter(n_estimators=int(n_estimators),
                               learning_rate=float(learning_rate),
                               max_depth=int(max_depth),
@@ -75,7 +72,8 @@ def reweight(original, target, original_weight, target_weight,
                               gb_args={'subsample': 1})
     # perform the fit
     reweighter.fit(original=original, target=target,
-                   original_weight=original_weight, target_weight=target_weight)
+                   original_weight=original_weight,
+                   target_weight=target_weight)
 
     # predict the weights
     kinWeight = reweighter.predict_weights(original)
@@ -101,10 +99,6 @@ def kinematic_weighting(original_file, original_treename, original_vars,
                         n_estimators, learning_rate, max_depth,
                         min_samples_leaf, gb_args, trunc=False):
 
-    # find all needed branches
-    # all_original_vars = original_vars + getStringVars(original_weight)
-    # all_target_vars   = target_vars + getStringVars(target_weight)
-
     # fetch variables in original files
     print('Loading branches for original_sample')
     odf = uproot.open(original_file)[original_treename].pandas.df(flatten=None)
@@ -114,7 +108,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
     except:
         odf['phiHH'] = odf.eval("time/time")
         print(f'You cannot calculate the phi of the phi for {original_file}')
-    print(odf)
+    # print(odf)
     print('Loading branches for target_sample')
     tdf = uproot.open(target_file)[target_treename].pandas.df(flatten=None)
     try:
@@ -123,17 +117,22 @@ def kinematic_weighting(original_file, original_treename, original_vars,
     except:
         tdf['phiHH'] = tdf.eval("time/time")
         print(f'You cannot calculate the phi of the phi for {target_file}')
-    print(tdf)
+    # print(tdf)
 
-    print(f"Original weight = {original_weight}")
-    print(odf.eval(original_weight))
-    print(f"Target weight = {target_weight}")
-    print(tdf.eval(target_weight))
+    # print(f"Original weight = {original_weight}")
+    # print(odf.eval(original_weight))
+    # print(f"Target weight = {target_weight}")
+    # print(tdf.eval(target_weight))
 
     print("Starting dataframes")
-    print(odf)
-    print(tdf)
+    print(odf[original_vars+get_vars_from_string(original_weight)])
+    print(tdf[original_vars+get_vars_from_string(target_weight)])
 
+    check_result = False
+    if 'v0r0' in output_file:
+        print("NOTE: This is v0r0 tuple, special config is loading")
+        config.user['reweightings_per_trigger'] = False
+        check_result = True
     if config.user['reweightings_per_trigger']:
         TRIGGER = ['biased', 'unbiased']
     else:
@@ -143,27 +142,31 @@ def kinematic_weighting(original_file, original_treename, original_vars,
     theWeight = np.zeros_like(list(odf.index)).astype(np.float64)
     for trig in TRIGGER:
         if config.user['reweightings_per_trigger']:
-            codf = odf.query(trigger_scissors(trig)).sample(frac=1)
-            ctdf = tdf.query(trigger_scissors(trig)).sample(frac=1)
+            codf = odf.query(trigger_scissors(trig))  # .sample(frac=1)
+            ctdf = tdf.query(trigger_scissors(trig))  # .sample(frac=1)
         else:
-            codf = odf.sample(frac=1)  # .reset_index(drop=True)
-            ctdf = tdf.sample(frac=1)  # .reset_index(drop=True)
-        cweight = reweight(codf.get(original_vars), ctdf.get(target_vars),
-                           codf.eval(original_weight), ctdf.eval(target_weight),
-                           n_estimators, learning_rate, max_depth,
-                           min_samples_leaf, trunc)
-        theWeight[list(codf.index)] = cweight
+            codf = odf  # .sample(frac=1)  # .reset_index(drop=True)
+            ctdf = tdf  # .sample(frac=1)  # .reset_index(drop=True)
+        cw = reweight(codf.get(original_vars), ctdf.get(target_vars),
+                      codf.eval(original_weight), ctdf.eval(target_weight),
+                      n_estimators, learning_rate, max_depth,
+                      min_samples_leaf, trunc)
+        theWeight[list(codf.index)] = cw
     odf[weight_set] = theWeight
 
-    print('Final dataframe')
-    print(odf)
+    # Check maximum difference wrt. to the kinWeight variable in the tuple
+    if check_result and 'kinWeight' in odf.keys():
+        print("Max. diff. wrt. Simon:",
+              np.max(odf['kinWeight'] - odf[weight_set]))
 
-    # Save weights to file ------------------------------------------------------
-    print(f'Writing on {output_file}')
-    f = uproot.recreate(output_file)
-    f[original_treename] = uproot.newtree({var: 'float64' for var in odf})
-    f[original_treename].extend(odf.to_dict(orient='list'))
-    f.close()
+    print('Final dataframe of weights')
+    print(odf[get_vars_from_string(original_weight) + [weight_set]])
+
+    # Save weights to file
+    print(f'Writing to {output_file}')
+    with uproot.recreate(output_file) as f:
+        f[original_treename] = uproot.newtree({var: 'float64' for var in odf})
+        f[original_treename].extend(odf.to_dict(orient='list'))
     return odf[weight_set].values
 
 # }}}
@@ -172,7 +175,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
 # Command Line Interface {{{
 
 if __name__ == '__main__':
-    # parse comandline arguments
+    # parse comandline arguments
     p = argparse.ArgumentParser()
     p.add_argument('--original-file', help='File to correct')
     p.add_argument('--original-treename', default='DecayTree',
@@ -214,8 +217,18 @@ if __name__ == '__main__':
     # change bdt according to filename, if applies
     bdtconfig = timeacc['bdtconfig']
     if 'bdt' in args['version'].split('@')[0]:
-        bdtconfig = int(version.split('bdt')[1])
-        bdtconfig = bdtmesh(bdtconfig, settings.general['bdt_tests'], False)
+        bdtconfig = int(args['version'].split('bdt')[1])
+        bdtconfig = bdtmesh(bdtconfig, config.general['bdt_tests'], False)
+
+    # for v0r0 the GB config is the following one
+    if 'v0r0' in args['version']:
+        bdtconfig = {
+            "n_estimators": 20,
+            "learning_rate": 0.3,
+            "max_depth": 3,
+            "min_samples_leaf": 1000,
+            "gb_args": {"subsample": 1}
+        }
 
     # delete some keys and update with bdtconfig
     del args['version']
@@ -224,7 +237,7 @@ if __name__ == '__main__':
     args.update(**bdtconfig)
     args.update({"trunc": False})
 
-    # run the kinematic weight
+    # run the kinematic weight
     printsec("Kinematic reweighting")
     for k, v in args.items():
         print(f"{k:>25} : {v}")
@@ -235,4 +248,4 @@ if __name__ == '__main__':
 # }}}
 
 
-# vim:foldmethod=marker
+# vim: fdm=marker
