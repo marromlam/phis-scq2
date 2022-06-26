@@ -636,7 +636,7 @@ if __name__ == '__main__':
                     _samples.append(args['samples'].split(',')[j:j+3])
             else:
                 _samples = args['samples'].split(',')
-                samples.append(_samples)
+            samples.append(_samples)
     else:
         if mix_version:
             _samples = []
@@ -645,7 +645,7 @@ if __name__ == '__main__':
                 _samples.append(args['samples'].split(',')[j:j+3])
         else:
             _samples = args['samples'].split(',')
-            samples.append(_samples)
+        samples.append(_samples)
 
     print('PARAMS')
     print(params)
@@ -660,6 +660,7 @@ if __name__ == '__main__':
         axes = complot.axes_plotpull()
 
     for iy, yy in enumerate(config.years[args['year']]):
+        samples0 = samples[iy]
         if mix_timeacc:
             for i, m in enumerate(mixers):
                 args = {
@@ -679,8 +680,8 @@ if __name__ == '__main__':
         elif mix_version:
             for i, m in enumerate(mixers):
                 args = {
-                    "samples": f"{','.join(samples[i])}",
-                    "params":  f"{','.join(params[i])}",
+                    "samples": f"{','.join(samples[iy][i])}",
+                    "params":  f"{','.join(params[iy][i])}",
                     "figure":  args["figure"],
                     "mode":    f"{args['mode']}",
                     "year":    f"{args['year']}",

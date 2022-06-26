@@ -8,6 +8,7 @@ __all__ = ['plot_timeacc_fit', 'plot_timeacc_spline']
 ################################################################################
 # %% Modules ###################################################################
 
+from trash_can.knot_generator import create_time_bins
 import argparse
 import os
 import sys
@@ -31,11 +32,12 @@ from uncertainties import unumpy as unp
 
 from ipanema import ristra
 from ipanema import Parameters, fit_report, optimize
-from ipanema import histogram
+# from ipanema import histogram
 from ipanema import Sample
-from ipanema import plotting
-from ipanema import wrap_unc
+# from ipanema import plotting
+from ipanema import uncertainty_wrapper
 from ipanema.confidence import get_confidence_bands
+import complot
 
 import matplotlib.pyplot as plt
 from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
@@ -49,11 +51,9 @@ import config
 # binned variables
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
+# all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
 Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
 
 
 # Parse arguments for this script
@@ -76,18 +76,21 @@ def argument_parser():
 
 
 def plot_timeacc_fit(params, data, weight, mode, axes=None, log=False,
-                            label=None, nob=100, nop=200, flatend=False):
+                            label=None, nob=100, nop=200):
   # Look for axes
-  if not axes: fig,axplot,axpull = plotting.axes_plotpull()
+  if not axes: fig,axplot,axpull = complot.axes_plotpull()
   else: fig,axplot,axpull = axes
-
-  # Get bins and counts for data histogram
-  ref = histogram.hist(ristra.get(data), weights=ristra.get(weight), bins=nob,
-                       range=(params['tLL'].value, params['tUL'].value))
 
   knots = np.array(params.build(params, params.find('k.*'))).tolist()
   badjanak.config['knots'] = knots
   badjanak.get_kernels(True)
+
+  ref = complot.hist(ristra.get(data), weights=ristra.get(weight), bins=nob,
+                     range=(params['tLL'].value, params['tUL'].value))
+  ref_x = ref.bins
+
+  # Get x and y for pdf plot
+  x = np.linspace(params['tLL'].value, params['tUL'].value, 200)
 
   # Get x and y for pdf plot
   x = np.linspace(params['tLL'].value, params['tUL'].value, nop)
@@ -95,27 +98,26 @@ def plot_timeacc_fit(params, data, weight, mode, axes=None, log=False,
   elif mode == 'MC_Bd2JpsiKstar': i = 1
   elif mode == 'Bd2JpsiKstar': i = 2
 
-  if len(params.fetch('gamma.*')) > 1: # then is the simultaneous fit or similar
-    y = saxsbxscxerf(params, [x, x, x] )[i]
-    y_norm = saxsbxscxerf(params, [ref.bins, ref.bins, ref.bins], flatend=flatend )[i]
-  else: # the single fit
-    y = splinexerf(params, x )
-    y_norm = splinexerf(params, ref.bins , flatend=flatend)
+  y = splinexerf(params, x )
+  y_norm = splinexerf(params, ref_x)
 
   # normalize y to histogram counts     [[[I don't understand it completely...
-  y *= np.trapz( ref.counts,ref.bins ) / np.trapz(y_norm,ref.bins)
+  y *= np.trapz(ref.counts, ref_x) / np.trapz(y_norm, ref_x)
   #*abs(ref.edges[1]-ref.edges[0])/(y.sum()*abs(x[1]-x[0]))
 
   if label:
     axplot.plot(x,y, label=label)
   else:
     axplot.plot(x,y)
-  axpull.fill_between(ref.bins,
-                      histogram.pull_pdf(x,y,ref.bins,ref.counts,ref.errl,ref.errh),
-                      0)
-  axplot.errorbar(ref.bins,ref.counts,yerr=[ref.errl,ref.errh], fmt='.', color='k')
+  pulls = complot.compute_pdfpulls(x, y, ref_x, ref.counts, *ref.yerr)
+  axpull.fill_between(ref_x, pulls, 0)
+
+  # plot histogram with errorbars
+  axplot.errorbar(ref.bins, ref.counts, ref.yerr, fmt='.', color='k')
+
+  # place labels and scales
   if log:
-    axplot.set_yscale('log')
+      axplot.set_yscale('log')
   axpull.set_xlabel(r'$t$ [ps]')
   axplot.set_ylabel(r'Weighted candidates')
   return fig, axplot, axpull
@@ -124,7 +126,7 @@ def plot_timeacc_fit(params, data, weight, mode, axes=None, log=False,
 
 def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=45,
                         log=False, axes=False, modelabel=None, label=None,
-                        flatend=False, timeacc=None):
+                        timeacc=None):
   """
   Hi Marcos,
 
@@ -142,7 +144,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=45,
   # Look for axes {{{
 
   if not axes:
-    fig, axplot, axpull = plotting.axes_plotpull()
+    fig, axplot, axpull = complot.axes_plotpull()
     FMTCOLOR = 'k'
   else:
     fig, axplot, axpull = axes
@@ -164,7 +166,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=45,
 
   # Create some kinda lambda here {{{
   def splinef(time, *coeffs, BLOCK_SIZE=256):
-     return badjanak.bspline(time, *coeffs, flatend=flatend, BLOCK_SIZE=BLOCK_SIZE)
+     return badjanak.bspline(time, *coeffs, BLOCK_SIZE=BLOCK_SIZE)
   # }}}
 
   # exit()
@@ -218,14 +220,14 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=45,
 
 
   # Manipulate data
-  ref = histogram.hist(ristra.get(time), bins=bins, weights=ristra.get(weights))
+  ref = complot.hist(ristra.get(time), bins=bins, weights=ristra.get(weights))
   ref.counts *= int_pdf; ref.errl *= int_pdf; ref.errh *= int_pdf
 
   # Manipulate the decay-time dependence of the efficiency
   x = ref.cmbins#np.linspace(0.3,15,200)
   print(x)
   X = np.linspace(tLL, tUL, 2000)
-  y = wrap_unc(splinef, x, *coeffs)
+  y = uncertainty_wrapper(splinef, x, *coeffs)
   y_nom = unp.nominal_values(y)
   y_spl = interp1d(x, y_nom, kind='cubic', fill_value='extrapolate')(5)
   y_norm = np.trapz(y_nom/y_spl, x)
@@ -290,7 +292,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=45,
                       label=f'${conf_level}\sigma$ c.b. {label}')
 
   axpull.fill_between(ref.cmbins,
-                      histogram.pull_pdf(
+                      complot.compute_pdfpulls(
                           x, y_nom/y_spl, ref.cmbins, y_norm*ref.counts/ref_norm,
                           np.sqrt(ref.errl**2+ref.errh**2), np.sqrt(ref.errl**2+ref.errh**2)),
                       0)
@@ -359,39 +361,40 @@ def plotter(args,axes):
     for __y in (2015,2016,2017,2018):
       if str(__y) in samples[0]:
         thelabel += f'  ${__y}$'
+
   # Prepare the cuts
   if TIMEACC['use_transverse_time']:
       time = 'timeT'
   else:
-      if TIMEACC['use_truetime']:
-        time = 'gentime'
-      else:
-        time = 'time'
+      time = 'time'
+  if TIMEACC['use_truetime']:
+      time = f'gen{time}'
 
   if TIMEACC['use_upTime']:
-    tLL = 0.89
+      tLL = config.general['upper_time_lower_limit']
+  else:
+      tLL = config.general['time_lower_limit']
   if TIMEACC['use_lowTime']:
-    tUL = 0.89
+      tUL = config.general['lower_time_upper_limit']
+  else:
+      tUL = config.general['time_upper_limit']
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
-  # binned variables
-  # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
-  resolutions = config.timeacc['constants']
-  all_knots = config.timeacc['knots']
-  bdtconfig = config.timeacc['bdtconfig']
-  Gdvalue = config.general['Gd']
-  tLL = config.general['tLL']
-  tUL = config.general['tUL']
+  # Check timeacc flag to set knots and weights and place the final cut
+  knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL).tolist()
+  tLL, tUL = knots[0], knots[-1]
+
+  # Cut is ready
   CUT = f'{time}>={tLL} & {time}<={tUL}'
-  CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
-  print(CUT)
+  # place cut attending to trigger
+  CUT = trigger_scissors(TRIGGER, CUT)
 
 
   # Get data into categories ---------------------------------------------------
   print(f"\n{80*'='}\n", "Loading categories", f"\n{80*'='}\n")
 
   cats = {}
-  sw = 'sw' #f'sw_{VAR}' if VAR else 'sw'
+  sw = 'sWeight' #f'sw_{VAR}' if VAR else 'sw'
   for i,m in enumerate(['MC_Bd2JpsiKstar', 'Bd2JpsiKstar']):
     # Correctly apply weight and name for diffent samples
     if m=='MC_Bs2JpsiPhi':
@@ -450,14 +453,14 @@ def plotter(args,axes):
     axes = plot_timeacc_fit(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           mode=MMMODE, log=LOGSCALE, axes=axes,
-                                          label=thelabel, flatend=TIMEACC['use_flatend'])
+                                          label=thelabel)
   elif PLOT=='spline':
     axes = plot_timeacc_spline(pars,
                                           cats[MMODE].time, cats[MMODE].weight,
                                           mode=MMMODE, log=LOGSCALE, axes=axes,
                                           conf_level=1, timeacc=args['timeacc'],
                                           modelabel=mode_tex(MODE),
-                                          label=thelabel, flatend=TIMEACC['use_flatend'])
+                                          label=thelabel)
   return axes
 
 
@@ -475,11 +478,11 @@ def plotter(args,axes):
 
 if __name__ == '__main__':
   args = vars(argument_parser().parse_args())
-  axes = plotting.axes_plotpull()
+  axes = complot.axes_plotpull()
   print('hello')
 
   initialize(os.environ['IPANEMA_BACKEND'], 1)
-  from time_acceptance.fcn_functions import badjanak, saxsbxscxerf, splinexerf
+  from analysis.time_acceptance.fcn_functions import badjanak, saxsbxscxerf, splinexerf
 
   mix_timeacc = len(args['timeacc'].split('+')) > 1
   mix_version = len(args['version'].split('+')) > 1
@@ -539,10 +542,10 @@ if __name__ == '__main__':
   # print(samples)
 
   if 'spline' in args['plot']:
-    axes = plotting.axes_plot()
+    axes = complot.axes_plot()
     axes = None#plotting.axes_plotpull()
   else:
-    axes = plotting.axes_plotpull()
+    axes = complot.axes_plotpull()
 
   for iy, yy in enumerate(config.years[args['year']]):
     if mix_timeacc:
