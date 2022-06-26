@@ -33,7 +33,9 @@ else:
     sw8s = 'ready'
     # sw8s = 'selected'
 
-if config.user['allow_continuous']:
+# FIXME: obviously this is not reading from the command line arguments sent to
+# snakemake. need to change the arguments to the function (maybe?)
+if config.base['allow_continuous']:
     ready = 'lbWeight'
 else:
     ready = 'ready'
@@ -43,8 +45,8 @@ if config.user['velo_weights']:
 else:
     vw8s = sw8s
 
-
-if config.user['allow_continuous']:
+# FIXME: same here!
+if config.base['allow_continuous']:
     ready = 'lbWeight'
 else:
     ready = 'ready'
@@ -223,13 +225,16 @@ def version_guesser(version):
             r"(magUp|magDown)?",
             # cut in cosK
             r"(LcosK|UcosK)?",
+            # only OS, SS or fully tagged events
+            r"(only(OST|SST|OSS))?",
             # split in pTB, etaB and sigmat bins: for systematics
-            r"((pTB|pXB|pYB|etaB|sigmat)(\d{1}))?"
+            r"((pTB|pXB|pYB|etaB|sigmat|pid)(\d{1}))?"
         ]
         pattern = rf"\A{''.join(pattern)}\Z"
         p = re.compile(pattern)
         try:
-            share, evt, shit, time, runN, mag, cosk, fullcut, var, nbin = p.search(
+            # FIXME: please change this!! -- it is awful
+            share, evt, shit, time, runN, mag, cosk, ttag, tag, fullcut, var, nbin = p.search(
                 mod).groups()
             share = int(share) if share else 100
             evt = evt if evt else None

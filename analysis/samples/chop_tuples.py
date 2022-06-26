@@ -53,6 +53,10 @@ vsub_dict = {
     # cut the Bd angular distribution
     "LcosK": "helcosthetaK<=0.0",
     "UcosK": "helcosthetaK>0.0",
+    # tagging
+    "onlyOST": "abs(OS_Combination_DEC)==1 & abs(B_SSKaonLatest_TAGDEC)==0",
+    "onlySST": "abs(OS_Combination_DEC)==0 & abs(B_SSKaonLatest_TAGDEC)==1",
+    "onlyOSS": "abs(OS_Combination_DEC)==1 & abs(B_SSKaonLatest_TAGDEC)==1",
     # pXB and pYB cuts
     "pXB1": "B_PX >= 0 & B_PX < 2.7e3",
     "pXB2": "B_PX >= 2.7e3 & B_PX < 4.2e3",
@@ -62,6 +66,11 @@ vsub_dict = {
     "pYB2": "B_PY >= 2.7e3 & B_PY < 4.2e3",
     "pYB3": "B_PY >= 4.2e3 & B_PY <= 6.3e3",
     "pYB4": "B_PY >= 6.3e3",
+    # pid cuts
+    "pid1": 'hplus_ProbNNk_corr<0.876',
+    "pid2": 'hplus_ProbNNk_corr>0.876 & hplus_ProbNNk_corr<0.965',
+    "pid3": 'hplus_ProbNNk_corr>0.965 & hplus_ProbNNk_corr<0.996',
+    "pid4": 'hplus_ProbNNk_corr>0.996',
 }
 
 # }}}
@@ -118,6 +127,8 @@ if __name__ == "__main__":
     # }}}
 
     # ensure sw branch exists {{{
+    list_of_branches = list(result.keys())
+    print(list_of_branches)
 
     try:
         print("There are sWeights variables")
@@ -164,6 +175,8 @@ if __name__ == "__main__":
         vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
 
     # place the cut
+    print("Cut to be applied")
+    print(vsub_cut)
     if vsub_cut and not is_gun:
         result = result.query(vsub_cut)
     print("Showing the final dataframe:")
