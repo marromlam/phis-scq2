@@ -14,6 +14,7 @@ import ipanema
 import uproot3 as uproot
 import pandas as pd
 
+np.random.seed(45353654)
 
 # specify as values the actual name of taggers in the nTuples
 TAGS = {
