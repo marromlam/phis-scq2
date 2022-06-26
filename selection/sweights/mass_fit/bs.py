@@ -1131,7 +1131,7 @@ if __name__ == '__main__':
     if args["mass_bin"]:
         if "Bd2JpsiKstar" in args["mode"]:
             mass = [826, 861, 896, 931, 966]
-        elif "Bs2JpsiPhi" in args["mode"]:
+        elif "Bs2JpsiPhi" in args["mode"] or "Bs2JpsiKK" in args['mode']:
             mass = [990, 1008, 1016, 1020, 1024, 1032, 1050]
         if args["mass_bin"] == "all":
             mLL = mass[0]
