@@ -211,7 +211,7 @@ if __name__ == '__main__':
     cats[mode].params.add(*[
                     {'name':f'{c}{j}{TRIGGER[0]}', 'value':1.0,
                      'latex':f'{c}_{j}^{TRIGGER[0]}',
-                     'free':False if j==0 else True, #'min':0.10, 'max':5.0
+                     'free': False if j == 0 else True,  # 'min':0.1, 'max':10.
                     } for j in range(len(knots[:-1])+2)
     ])
     cats[mode].params.add({'name':f'gamma_{c}',
