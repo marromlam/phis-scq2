@@ -30,5 +30,6 @@
     "run_tagging": true,
     "ludicrous": false,
     "selection_mode": "run2",
-    "stripping_mode": "pidcuts"
+    "stripping_mode": "pidcuts",
+    "allow_continuous": false
 }
