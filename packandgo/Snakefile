@@ -5,60 +5,60 @@
 
 # ruleorder: physics_params_tabular_1on1 > physics_params_tabular_yearly
 # ruleorder: physics_params_tabular_magnet > physics_params_tabular_1on1
-ruleorder: physics_params_tabular_yearly > physics_params_tabular_1on1
+# ruleorder: physics_params_tabular_yearly > physics_params_tabular_1on1
 #
 
 # Compare any two different parameter sets {{{
 
-rule physics_params_tabular_1on1:
-  wildcard_constraints:
-    timeacc = 'simul.*'
-  resources:
-    mem_mb=1048
-  input:
-    lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
-                       year=config['year'], fit=config['fit'], csp=config['csp'],
-                       angacc=config['angacc'], timeacc=config['timeacc'],
-                       flavor=config['flavor'], timeres=config['timeres'],
-                       trigger=config['trigger']),
-    lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.json'),
-    lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{{year}}_{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.npy",
-                       dyear=config['year'], dfit=config['fit'], dcsp=config['csp'],
-                       dangacc=config['angacc'], dtimeacc=config['timeacc'],
-                       dflavor=config['flavor'], dtimeres=config['timeres'],
-                       dtrigger=config['trigger']),
-  output:
-    'output/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.tex',
-  log:
-    'output/log/physics_params_tabular_1on1/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
-  run:
-    import hjson
-    import numpy as np
-    import os
-    # print(input)
-    dlls = {}
-    dlls[1] = {}
-    dlls[1][0] = np.load(input[-1]).tolist()[:-1]
-
-    with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
-      hjson.dump(dlls, fp)
-
-    # print(dlls)
-    shell(f"""(time\
-    python packandgo/physics_tables.py\
-    --params {",".join(input[:-1])}\
-    --output {output}\
-    --mode {wildcards.mode}\
-    --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
-    --version {wildcards.version}\
-    --timeacc {wildcards.timeacc}\
-    --angacc {wildcards.angacc}\
-    ) &> {log}""")
-    os.remove( f'{output}'.replace('.tex','.json') )
-
-    if NOTE:
-      notepath = f"{output}".replace('output', NOTE)
-      shell(f"cp {output} {notepath}")
+# rule physics_params_tabular_1on1:
+#   wildcard_constraints:
+#     timeacc = 'simul.*'
+#   resources:
+#     mem_mb=1048
+#   input:
+#     lambda wcs: expand('output/params/physics_params/run2/{{mode}}/{{version}}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+#                        year=config['year'], fit=config['fit'], csp=config['csp'],
+#                        angacc=config['angacc'], timeacc=config['timeacc'],
+#                        flavor=config['flavor'], timeres=config['timeres'],
+#                        trigger=config['trigger']),
+#     lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.json'),
+#     lambda wcs: expand("tmp/pvalues/{{mode}}/{dyear}_{{version}}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{{year}}_{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.npy",
+#                        dyear=config['year'], dfit=config['fit'], dcsp=config['csp'],
+#                        dangacc=config['angacc'], dtimeacc=config['timeacc'],
+#                        dflavor=config['flavor'], dtimeres=config['timeres'],
+#                        dtrigger=config['trigger']),
+#   output:
+#     'output/tables/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.tex',
+#   log:
+#     'output/log/physics_params_tabular_1on1/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+#   run:
+#     import hjson
+#     import numpy as np
+#     import os
+#     # print(input)
+#     dlls = {}
+#     dlls[1] = {}
+#     dlls[1][0] = np.load(input[-1]).tolist()[:-1]
+#
+#     with open(f'{output}'.replace('.tex','.json'), 'w') as fp:
+#       hjson.dump(dlls, fp)
+#
+#     # print(dlls)
+#     shell(f"""(time\
+#     python packandgo/physics_tables.py\
+#     --params {",".join(input[:-1])}\
+#     --output {output}\
+#     --mode {wildcards.mode}\
+#     --year {",".join([f"{config['year']}",f"{wildcards.year}"])}\
+#     --version {wildcards.version}\
+#     --timeacc {wildcards.timeacc}\
+#     --angacc {wildcards.angacc}\
+#     ) &> {log}""")
+#     os.remove( f'{output}'.replace('.tex','.json') )
+#
+#     if NOTE:
+#       notepath = f"{output}".replace('output', NOTE)
+#       shell(f"cp {output} {notepath}")
 
 # }}}
 
