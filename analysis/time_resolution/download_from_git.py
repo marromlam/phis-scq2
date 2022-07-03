@@ -52,7 +52,19 @@ if __name__ == "__main__":
     printsec("Get time resolution from Bs2JpsiPhi-FullRun2 repository")
 
     # get name for time resolution
-    _timeres = hjson.load(open(linker, "r"))[timeres].format(year=year)
+    if version == 'v0r5':
+        _timeres = hjson.load(open(linker, "r"))[timeres][0].format(year=year)
+    else:
+        surname = 'nominal'
+        if 'pT1' in args['version']:
+            surname = 'pT0'
+        elif 'pT2' in args['version']:
+            surname = 'pT1'
+        elif 'pT3' in args['version']:
+            surname = 'pT2'
+        elif 'pT4' in args['version']:
+            surname = 'pT2'
+        _timeres = hjson.load(open(linker, "r"))[timeres][1].format(surname=surname)
 
     # cook local and remote paths
     tmp_path = out_path.replace('output', 'tmp')
