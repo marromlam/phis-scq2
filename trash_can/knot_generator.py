@@ -31,7 +31,9 @@ def create_time_bins(nbins, tLL=0.3, tUL=15):
   if np.isclose(tLL, 0.3, 1e-2) and np.isclose(tUL, 15, 1e-2):
     knots =  {
       "2": [ 0.3, 0.91, 2.0, 15.0],
-      "3": [ 0.3, 0.91, 1.96, 7.0, 15.0],
+      # concerning the 3-knot version, we have to be sure with 9ps all tests
+      # converge
+      "3": [ 0.3, 0.91, 1.96, 9.0, 15.0],
       "4": [ 0.3, 0.74, 1.35, 2.4, 9.0, 15.0],
       "5": [ 0.3, 0.64, 1.07, 1.69, 2.74, 9.0, 15.0],
       "6": [ 0.3, 0.58, 0.91, 1.35, 1.96, 3.01, 7.0, 15.0],
