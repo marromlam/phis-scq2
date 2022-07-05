@@ -1,7 +1,3 @@
-DESCRIPTION = """
-  hey there
-"""
-
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 __all__ = ['dump_joint_acceptance']
@@ -9,7 +5,7 @@ __all__ = ['dump_joint_acceptance']
 
 # Modules {{{
 
-from analysis.utils.plot import mode_tex
+from utils.plot import mode_tex
 from ipanema import Parameters
 import argparse
 
@@ -48,6 +44,10 @@ def dump_joint_acceptance(pu, pb, years):
 # CMDline run {{{
 
 if __name__ == '__main__':
+  DESCRIPTION = """
+  hey there
+  """
+
   # parse cmdline arguments
   p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--biased', help='Biased acceptance')
@@ -80,3 +80,6 @@ if __name__ == '__main__':
     fp.write(table)
 
 # }}}
+
+
+# vim: fdm=marker
