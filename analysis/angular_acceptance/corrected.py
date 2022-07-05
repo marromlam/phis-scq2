@@ -8,6 +8,7 @@ __email__ = ['mromerol@cern.ch']
 import numpy as np
 import os
 import argparse
+import pandas as pd
 
 # load ipanema
 from ipanema import (ristra, Sample, Parameters, initialize)
@@ -113,14 +114,20 @@ if __name__ == '__main__':
 
     printsec("Loading categories")
 
+
+    if VERSION == 'v0r0':
+        args['input_params'] = args['input_params'].replace(
+            'generator', 'generator_old')
+
     # Load Monte Carlo samples
     mc = Sample.from_root(args['sample_mc'], share=SHARE, name=MODE)
     mc.assoc_params(args['input_params'])
     kinWeight = np.zeros_like(list(mc.df.index)).astype(np.float64)
-    mc.chop(trigger_scissors(TRIGGER, CUT))
     # Load corresponding data sample
     rd = Sample.from_root(args['sample_data'], share=SHARE, name='data')
-    rd.chop(trigger_scissors(TRIGGER, CUT))
+    if VERSION != 'v0r0':
+        mc.chop(trigger_scissors(TRIGGER, CUT))
+        rd.chop(trigger_scissors(TRIGGER, CUT))
 
     # print(mc.df[['sw', 'sWeight']])
     # print(rd.df[['sw', 'sWeight']])
@@ -132,6 +139,9 @@ if __name__ == '__main__':
     # if not using bkgcat==60, then don't use sWeight
     weight_rd = 'sWeight'
     weight_mc = 'polWeight*sWeight'
+    if VERSION == 'v0r0':
+        weight_mc = f"({weight_mc})*({trigger_scissors(TRIGGER)})"
+        weight_rd = f"({weight_rd})*({trigger_scissors(TRIGGER)})"
     # weight_rd = 'sw'
     # weight_mc = 'polWeight*sw'
 
@@ -166,6 +176,14 @@ if __name__ == '__main__':
     mc.allocate(pdf='0*time')
     mc.allocate(weight=weight_mc)
 
+
+    print('Simulation sample')
+    print(pd.concat((mc.df[['mHH', 'pB', 'pTB']],
+                     mc.df.eval(weight_mc)), axis=1))
+    print('Data sample')
+    print(pd.concat((rd.df[['mHH', 'pB', 'pTB']],
+                     rd.df.eval(weight_rd)), axis=1))
+
     # }}}
 
     # Compute standard kinematic weights {{{
@@ -180,10 +198,11 @@ if __name__ == '__main__':
                    original_weight=mc.df.eval(weight_mc),
                    target_weight=rd.df.eval(weight_rd))
     angWeight = reweighter.predict_weights(mc.df[['mHH', 'pB', 'pTB']])
+    angWeight = np.where(mc.df.eval(weight_mc) != 0, angWeight, 0)
     kinWeight[list(mc.df.index)] = angWeight
 
     print(f"{'idx':>3} | {'sw':>11} | {'polWeight':>11} | {'angWeight':>11} ")
-    for i in range(0, 100):
+    for i in range(0, 20):
         if kinWeight[i] != 0:
             print(f"{str(i):>3} | {mc.df.eval('sWeight')[i]:+.8f} |",
                   f"{mc.df['polWeight'][i]:+.8f} | {kinWeight[i]:+.8f} ")
