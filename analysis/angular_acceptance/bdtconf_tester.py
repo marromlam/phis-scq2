@@ -1,13 +1,15 @@
-from ipanema import ristra, initialize
-import numpy as np
-
-
 __all__ = ["bdtmesh"]
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
-initialize('python')
+from ipanema import ristra, initialize
+import numpy as np
+import builtins
+
+
+if not builtins.BACKEND:
+    initialize('python')
 
 
 def bdtmesh(conf, bdt_tests=100, verbose=False):

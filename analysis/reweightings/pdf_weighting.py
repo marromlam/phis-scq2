@@ -14,11 +14,6 @@ import uproot3 as uproot
 from utils.strings import printsec
 import os
 
-ROOT_PANDAS = False
-if ROOT_PANDAS:
-  from shutil import copyfile
-  import root_numpy
-  # import root_pandas
 
 from ipanema import initialize
 from ipanema import ristra, Parameters
@@ -43,9 +38,12 @@ def pdf_weighting(data, target_params, original_params, mode):
   if mode in ("MC_Bd2JpsiKstar"):
     badjanak.config["mHH"] = [826, 861, 896, 931, 966]
     # WARNING : Here we should be using 511*X_ID/311
+    data.eval("B_ID_GenLvl = 511*X_ID_GenLvl/313", inplace=True)
     avars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
              'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M', 'sigmat',
-             'B_ID', 'B_ID', 'B_ID', 'B_ID']
+             'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
+             # 'X_ID_GenLvl', 'X_ID_GenLvl', 'X_ID_GenLvl', 'X_ID_GenLvl']
+             # 'B_ID', 'B_ID', 'B_ID', 'B_ID']
     badjanak.get_kernels(True)
     cross_rate = badjanak.delta_gamma5_mc
   elif mode in ("MC_Bs2JpsiPhi", "MC_Bs2JpsiPhi_dG0", "MC_Bs2JpsiKK_Swave"):
@@ -177,13 +175,7 @@ if __name__ == '__main__':
     print('dg0Weight was succesfully calculated')
 
   # save weights to file
-  if ROOT_PANDAS:
-    copyfile(ifile, rfile)
-    var = np.array(df[weight].values, dtype=[(weight, np.float64)])
-    root_numpy.array2root(var, rfile, itree, mode='update')
-    # root_pandas.to_root(odf, output_file, key=otree)
-  else:
-    with uproot.recreate(rfile) as rf:
+  with uproot.recreate(rfile) as rf:
       rf[itree] = uproot.newtree({var:'float64' for var in df})
       rf[itree].extend(df.to_dict(orient='list'))
 

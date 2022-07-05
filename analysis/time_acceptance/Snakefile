@@ -538,6 +538,7 @@ rule time_acceptance_tabular:
     ) &> {log}""")
     if NOTE:
       notepath = f"{output}".replace('output', NOTE)
+      os.makedirs(os.path.dirname(notepath), exist_ok=True)
       shell(f"cp {output} {notepath}")
 
 # }}}

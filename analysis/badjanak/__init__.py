@@ -174,7 +174,7 @@ def get_kernels(verbose=False, pedantic=False):
     items = ['pyrateBs', 'pyrateBd',
              'pyFcoeffs',
              'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
-             #'integral_ijk_fx'
+             #  'py_tijk2weights'
              ]
     if BACKEND == 'cuda':
         items.append('dG5toy')

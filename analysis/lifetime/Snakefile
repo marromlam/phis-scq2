@@ -88,7 +88,7 @@ rule lifetime_single_Bx_disentangle:
     #timeacc = "single.*",
     mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
   input:
-    "output/params/physics_params/{year}/{mode}/{version}_yearly_yearlyDual_vgc_amsrd_{timeacc}_amsrd_{trigger}.json"
+    "output/params/physics_params/{year}/{mode}/{version}_auto_yearlyDual_vgc_amsrd_{timeacc}_amsrd_{trigger}.json"
   output:
     params = 'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   run:
@@ -139,14 +139,14 @@ rule lifetime_tabular_single:
   resources:
     mem_mb=1048
   input:
-    corr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}_{{trigger}}.json',
+    corr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}_{{trigger}}.json',
                               year=YEARS[f'{wcs.year}']),
-    noncorr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_life{{timeacc}}Noncorr_{{trigger}}.json',
+    noncorr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}Noncorr_{{trigger}}.json',
                                  year=YEARS[f'{wcs.year}']),
   output:
-    'output/tables/lifetime/{year}/{mode}/{version}_life{timeacc}_{trigger}.tex',
+    'output/tables/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.tex',
   log:
-    'output/log/lifetime_tabular_single/{year}/{mode}/{version}_life{timeacc}_{trigger}.log'
+    'output/log/lifetime_tabular_single/{year}/{mode}/{version}_{timeacc}_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/lifetime/lifetime_tables.py\
@@ -228,4 +228,4 @@ rule lifetime_tabular_Bd:
 # }}}
 
 
-# vim:foldmethod=marker
+# vim: fdm=marker

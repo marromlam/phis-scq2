@@ -403,12 +403,12 @@ rule angular_acceptance_iterative_dual_data_run2a:
       'output/params/angular_acceptance/2016/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json'
     ],
     weights_std = [
-      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
-      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
+      SAMPLES_PATH+'/2015/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'/2016/MC_Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
     weights_dg0 = [
-      SAMPLES_PATH+'2015/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
-      SAMPLES_PATH+'2016/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
+      SAMPLES_PATH+'/2015/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root',
+      SAMPLES_PATH+'/2016/MC_Bs2JpsiPhi_dG0/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_kkpWeight.root'
     ],
   log:
     'output/log/angular_acceptance_iterative/{angacc}/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}.log'
