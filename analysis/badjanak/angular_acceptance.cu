@@ -1,15 +1,15 @@
 #include "angular_acceptance.h"
 
-//
-//   KERNEL
-// void py_tijk2weights(GLOBAL_MEM ftype *w, GLOBAL_MEM const ftype *tijk, 
-//     const int order_cosK, const int order_cosL, 
-//     const int order_hphi)
-// {
-//
-//   tijk2weights(w, tijk, order_cosK, order_cosL, order_hphi);
-//
-// }
+
+KERNEL
+void py_tijk2weights(GLOBAL_MEM ftype *w, GLOBAL_MEM const ftype *tijk,
+    const int order_cosK, const int order_cosL,
+    const int order_hphi)
+{
+
+  tijk2weights(w, tijk, order_cosK, order_cosL, order_hphi);
+
+}
 
 
 KERNEL

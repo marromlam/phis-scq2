@@ -155,8 +155,8 @@ ftype rateBs(const ftype *data,
 #endif
 
   const bool FULL_RANGE = (cosKLL==-1)&&(cosKUL==1) &&
-    (cosLLL==-1)&&(cosLUL==1) &&
-    (hphiLL==-M_PI)&&(hphiUL==M_PI);
+                          (cosLLL==-1)&&(cosLUL==1) &&
+                          (hphiLL==-M_PI)&&(hphiUL==M_PI);
   // }}}
 
 
@@ -197,7 +197,7 @@ ftype rateBs(const ftype *data,
   {
     exp_p = expconv_wores(time-t_offset, G + 0.5*DG, 0.);
     exp_m = expconv_wores(time-t_offset, G - 0.5*DG, 0.);
-    exp_i = expconv_wores(time-t_offset,          G, DM);   
+    exp_i = expconv_wores(time-t_offset,          G, DM);
   }
   else
   {
@@ -205,6 +205,22 @@ ftype rateBs(const ftype *data,
     exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
     exp_i = expconv(time-t_offset, G         , DM, delta_t);
   }
+
+  // TODO: temporal fix to get HD fitter results
+  //       we should try if this can/cannot be removed
+  // if ( delta_t == 0 ) // MC samples need to solve some problems
+  // {
+  //   exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
+  //   exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
+  //   exp_i = expconv(time-t_offset,          G, DM, delta_t);
+  // }
+  // else
+  // {
+  //   exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
+  //   exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
+  //   exp_i = expconv(time-t_offset, G         , DM, delta_t);
+  // }
+
   ftype ta = 0.5*(exp_m.x+exp_p.x);
   ftype tb = 0.5*(exp_m.x-exp_p.x);
   ftype tc = exp_i.x;

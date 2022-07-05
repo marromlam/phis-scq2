@@ -106,26 +106,187 @@ ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs,
 
 // Some exponential convolution functions {{{
 
-  WITHIN_KERNEL
-ctype expconv_simon(const ftype t, const ftype G, const ftype omega,
-    const ftype sigma)
+
+WITHIN_KERNEL ctype faddeeva( ctype z)
 {
+   ftype in_real = z.x;
+   ftype in_imag = z.y;
+   int n, nc, nu;
+   ftype h, q, Saux, Sx, Sy, Tn, Tx, Ty, Wx, Wy, xh, xl, x, yh, y;
+   ftype Rx [33];
+   ftype Ry [33];
+
+   x = fabs(in_real);
+   y = fabs(in_imag);
+
+   if (y < YLIM && x < XLIM) {
+      q = (1.0 - y / YLIM) * sqrt(1.0 - (x / XLIM) * (x / XLIM));
+      h  = 1.0 / (3.2 * q);
+      #ifdef CUDA
+        nc = 7 + int(23.0 * q);
+      #else
+        nc = 7 + convert_int(23.0 * q);
+      #endif
+
+//       xl = pow(h, ftype(1 - nc));
+      ftype h_inv = 1./h;
+      xl = h_inv;
+      for(int i = 1; i < nc-1; i++)
+          xl *= h_inv;
+
+      xh = y + 0.5 / h;
+      yh = x;
+      #ifdef CUDA
+        nu = 10 + int(21.0 * q);
+      #else
+        nu = 10 + convert_int(21.0 * q);
+      #endif
+      Rx[nu] = 0.;
+      Ry[nu] = 0.;
+      for (n = nu; n > 0; n--){
+         Tx = xh + n * Rx[n];
+         Ty = yh - n * Ry[n];
+         Tn = Tx*Tx + Ty*Ty;
+         Rx[n-1] = 0.5 * Tx / Tn;
+         Ry[n-1] = 0.5 * Ty / Tn;
+         }
+      Sx = 0.;
+      Sy = 0.;
+      for (n = nc; n>0; n--){
+         Saux = Sx + xl;
+         Sx = Rx[n-1] * Saux - Ry[n-1] * Sy;
+         Sy = Rx[n-1] * Sy + Ry[n-1] * Saux;
+         xl = h * xl;
+      };
+      Wx = ERRF_CONST * Sx;
+      Wy = ERRF_CONST * Sy;
+   }
+   else {
+      xh = y;
+      yh = x;
+      Rx[0] = 0.;
+      Ry[0] = 0.;
+      for (n = 9; n>0; n--){
+         Tx = xh + n * Rx[0];
+         Ty = yh - n * Ry[0];
+         Tn = Tx * Tx + Ty * Ty;
+         Rx[0] = 0.5 * Tx / Tn;
+         Ry[0] = 0.5 * Ty / Tn;
+      };
+      Wx = ERRF_CONST * Rx[0];
+      Wy = ERRF_CONST * Ry[0];
+   }
+
+   if (y == 0.) {
+      Wx = exp(-x * x);
+   }
+   if (in_imag < 0.) {
+
+      ftype exp_x2_y2 = exp(y * y - x * x);
+      Wx =   2.0 * exp_x2_y2 * cos(2.0 * x * y) - Wx;
+      Wy = - 2.0 * exp_x2_y2 * sin(2.0 * x * y) - Wy;
+      if (in_real > 0.) {
+         Wy = -Wy;
+      }
+   }
+   else if (in_real < 0.) {
+      Wy = -Wy;
+   }
+
+   return C(Wx,Wy);
+}
+
+
+WITHIN_KERNEL
+ctype ipanema_erfc2(ctype z)
+{
+  ftype re = -z.x * z.x + z.y * z.y;
+  ftype im = -2. * z.x * z.y;
+  ctype expmz = cexp( C(re,im) );
+
+  if (z.x >= 0.0) {
+    return                 cmul( expmz, faddeeva(C(-z.y,+z.x)) );
+  }
+  else{
+    ctype ans = cmul( expmz, faddeeva(C(+z.y,-z.x)) );
+    return C(2.0-ans.x, ans.y);
+  }
+}
+
+
+
+WITHIN_KERNEL
+ctype ipanema_erfc(ctype z)
+{
+  if (z.y<0)
+  {
+    ctype ans = ipanema_erfc2( C(-z.x, -z.y) );
+    return C( 2.0-ans.x, -ans.y);
+  }
+  else{
+    return ipanema_erfc2(z);
+  }
+}
+
+
+
+WITHIN_KERNEL
+ctype cErrF_2(ctype x)
+{
+  // ctype I = C(0.0,1.0);
+  ctype z = cmul(I,x);
+  ctype result = cmul( cexp(  cmul(C(-1,0),cmul(x,x))   ) , faddeeva(z) );
+
+  //printf("z = %+.16f %+.16fi\n", z.x, z.y);
+  //printf("fad = %+.16f %+.16fi\n", faddeeva(z).x, faddeeva(z).y);
+
+  if (x.x > 20.0){// && fabs(x.y < 20.0)
+    result = C(0.0,0);
+  }
+  if (x.x < -20.0){// && fabs(x.y < 20.0)
+    result = C(2.0,0);
+  }
+
+  return result;
+}
+
+
+WITHIN_KERNEL
+ctype old_cerfc(ctype z)
+{
+  if (z.y<0)
+  {
+    ctype ans = cErrF_2( C(-z.x, -z.y) );
+    return C( 2.0-ans.x, -ans.y);
+  }
+  else{
+    return cErrF_2(z);
+  }
+}
+
+
+
+
+
+
+
+
+WITHIN_KERNEL
+ctype expconv_simon(ftype t, ftype G, ftype omega, ftype sigma)
+{
+  // ctype I  = C( 0, 1);
   ctype I2 = C(-1, 0);
   ctype I3 = C( 0,-1);
-
-  const ftype sigma2 = sigma*sigma;
-  const ftype omega2 = omega*omega;
+  ftype sigma2 = sigma*sigma;
 
   if (omega == 0)
   {
-    if( t > -6.0*sigma )
-    {
-      const ftype t_exp = 0.5*exp(-t*G + 0.5*G*G*sigma2 -0.5*omega2*sigma2);
-      const ctype t_cerfc = cerfc(C(sigma*G/sqrt(2.0) - t/sigma/sqrt(2.0),0));
-      return cmul( C(t_exp,0) , t_cerfc );
+    if( t > -6.0*sigma ){
+      ftype exp_part = 0.5*exp(-t*G + 0.5*G*G*sigma2 -0.5*omega*omega*sigma2);
+      ctype my_erfc = ipanema_erfc(C(sigma*G/sqrt(2.0) - t/sigma/sqrt(2.0),0));
+      return cmul( C(exp_part,0) , my_erfc );
     }
-    else
-    {
+    else{
       return C(0,0);
     }
   }
@@ -148,7 +309,7 @@ ctype expconv_simon(const ftype t, const ftype G, const ftype omega,
     }
     else
     {
-      cerf = cerfc(cerfarg);//best complex error function
+      cerf = cErrF_2(cerfarg);//best complex error function
     }
     ctype c2 = cmul(exp2, cerf);
     //ftype im = -c2.x;//exp*sin
@@ -266,10 +427,10 @@ ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
   // warning there are improvement to do here!!!
   if (omega == 0){
     //conv_term = cmul( cexp(arg1), ipanema_erfc(arg2) );
-    conv_term = cmul( cexp(arg1), cerfc(arg2) );
+    conv_term = cmul( cexp(arg1), old_cerfc(arg2) );
   }
   else{
-    conv_term = cmul( cexp(arg1), cerfc(arg2) );
+    conv_term = cmul( cexp(arg1), old_cerfc(arg2) );
     //conv_term = 2.0*expconv_simon(t,gamma,omega,sigma);
     //conv_term = 2.0*exp(-gamma*t+0.5*gamma*gamma*sigma*sigma-0.5*omega*omega*sigma*sigma)*(cos(omega*(t-gamma*sigma*sigma)) + I*sin(omega*(t-gamma*sigma*sigma)));
   }
