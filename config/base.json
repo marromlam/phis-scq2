@@ -1,7 +1,7 @@
 {
-    "version": "v1r0",
+    "version": "v2r0p1",
     "year": "run2",
-    "fit": "run2",
+    "fit": "auto",
     "angacc": "run2Dual",
     "csp": "vgc",
     "flavor": "amsrd",
