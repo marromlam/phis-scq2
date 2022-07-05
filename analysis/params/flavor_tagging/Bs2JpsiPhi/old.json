@@ -1,0 +1,83 @@
+{
+  eta_ss:
+  {
+    name: eta_ss
+    value: 0.4167
+    free: false
+    stdev: 0.0
+    latex: \bar{\eta}_{ss}
+  }
+  p0_ss:
+  {
+    name: p0_ss
+    value: 0.432
+    free: false
+    stdev: 0.0
+    latex: p_{ss}^0
+  }
+  dp0_ss:
+  {
+    name: dp0_ss
+    value: 0.0
+    free: false
+    stdev: 0.0
+    latex: \Delta p_{ss}^0
+  }
+  p1_ss:
+  {
+    name: p1_ss
+    value: 0.92
+    free: false
+    stdev: 0.0
+    latex: p_{ss}^1
+  }
+  dp1_ss:
+  {
+    name: dp1_ss
+    value: 0.0
+    free: false
+    stdev: 0.0
+    latex: \Delta p_{ss}^1
+  }
+  eta_os:
+  {
+    name: eta_os
+    value: 0.3602
+    free: false
+    stdev: 0.0
+    latex: \bar{\eta}_{os}
+  }
+  p0_os:
+  {
+    name: p0_os
+    value: 0.3890
+    free: false
+    stdev: 0.0
+    latex: p_{os}^0
+  }
+  dp0_os:
+  {
+    name: dp0_os
+    value: 0.0090
+    free: false
+    stdev: 0.0
+    latex: \Delta p_{os}^0
+  }
+  p1_os:
+  {
+    name: p1_os
+    value: 0.849
+    free: false
+    stdev: 0.0
+    latex: p_{os}^1
+  }
+  dp1_os:
+  {
+    name: dp1_os
+    value: 0.014
+    free: false
+    stdev: 0.0
+    latex: \Delta p_{os}^1
+  }
+}
+
