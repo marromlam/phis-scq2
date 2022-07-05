@@ -4,9 +4,10 @@
 
 % fit and spline plots simul3 {{{
 
-\begin{frame}{\insertsubsection: Lifetime fit plots}
-
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime fit plots}
 \framesubtitle{simul3--biased}
+
   \begin{tabular}{ccccc}
   \small
   & $2015$ & $2016$ & $2017$ & $2018$ \\
@@ -26,12 +27,15 @@
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion_simul3_biased_fitlog.pdf}&
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion_simul3_biased_fitlog.pdf}
   \end{tabular}
+
 \end{frame}
 
-\begin{frame}{\insertsubsection: Lifetime fit plots}
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime fit plots}
 \framesubtitle{simul3--unbiased}
-  \small
+
   \begin{tabular}{ccccc}
+  \small
   & $2015$ & $2016$ & $2017$ & $2018$ \\
   MC $B_s^0$ &
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion_simul3_unbiased_fitlog.pdf}&
@@ -49,12 +53,15 @@
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion_simul3_unbiased_fitlog.pdf}&
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion_simul3_unbiased_fitlog.pdf}
   \end{tabular}
+
 \end{frame}
 
-\begin{frame}{\insertsubsection: Lifetime spline plots}
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime spline plots}
 \framesubtitle{simul3--biased}
-  \small
+
   \begin{tabular}{ccccc}
+  \small
   & $2015$ & $2016$ & $2017$ & $2018$ \\
   MC $B_s^0$ &
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion_simul3_biased_splinelog.pdf}&
@@ -72,12 +79,15 @@
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion_simul3_biased_splinelog.pdf}&
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion_simul3_biased_splinelog.pdf}
   \end{tabular}
+
 \end{frame}
 
-\begin{frame}{\insertsubsection: Spline plots}
+\begin{frame}
+\frametitle{\insertsubsection: Spline plots}
 \framesubtitle{simul3--unbiased}
-  \small
+
   \begin{tabular}{ccccc}
+  \small
   & $2015$ & $2016$ & $2017$ & $2018$ \\
   MC $B_s^0$ &
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion_simul3_unbiased_splinelog.pdf}&
@@ -95,113 +105,240 @@
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion_simul3_unbiased_splinelog.pdf}&
   \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion_simul3_unbiased_splinelog.pdf}
   \end{tabular}
+
 \end{frame}
 
 % }}}
 
 
-\section{pT analysis}
+\section{\texorpdfstring{Analysis in bins of $\eta(B)$}{Analysis in bins of etaB}}
 \subsection{Time acceptance}
-% fit and spline plots simul3 {{{
 
-\foreach \ptbin in {1,2,3,4}{%
-\begin{frame}{\insertsubsection: Lifetime fit plots}
 
-\framesubtitle{simul3--biased \ptbin}
+% fit and spline plots in bins of pT {{{
+
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime fit plots}
+\framesubtitle{simul3--biased}
+
   \begin{tabular}{ccccc}
   \small
   & $2015$ & $2016$ & $2017$ & $2018$ \\
   MC $B_s^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}\\
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}\\
   MC $B_d^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}\\
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}\\
   RD $B_d^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_fitlog.pdf}
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_fitlog.pdf}
   \end{tabular}
+
 \end{frame}
 
-\begin{frame}{\insertsubsection: Lifetime fit plots}
-\framesubtitle{simul3--unbiased \ptbin}
-  \small
-  \begin{tabular}{ccccc}
-  & $2015$ & $2016$ & $2017$ & $2018$ \\
-  MC $B_s^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}\\
-  MC $B_d^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}\\
-  RD $B_d^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_fitlog.pdf}
-  \end{tabular}
-\end{frame}
-}
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime fit plots}
+\framesubtitle{simul3--unbiased}
 
-\foreach \ptbin in {1,2,3,4}{%
-\begin{frame}{\insertsubsection: Lifetime spline plots}
-\framesubtitle{simul3--biased \ptbin}
-  \small
   \begin{tabular}{ccccc}
+  \small
   & $2015$ & $2016$ & $2017$ & $2018$ \\
   MC $B_s^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}\\
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}\\
   MC $B_d^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}\\
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}\\
   RD $B_d^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_biased_splinelog.pdf}
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_fitlog.pdf}
   \end{tabular}
+
 \end{frame}
 
-\begin{frame}{\insertsubsection: Spline plots}
-\framesubtitle{simul3--unbiased \ptbin}
-  \small
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime spline plots}
+\framesubtitle{simul3--biased}
+
   \begin{tabular}{ccccc}
+  \small
   & $2015$ & $2016$ & $2017$ & $2018$ \\
   MC $B_s^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}\\
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}\\
   MC $B_d^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}\\
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}\\
   RD $B_d^0$ &
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}&
-  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion pTB\ptbin_simul3_unbiased_splinelog.pdf}
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_biased_splinelog.pdf}
   \end{tabular}
+
 \end{frame}
-}
+
+\begin{frame}
+\frametitle{\insertsubsection: Spline plots}
+\framesubtitle{simul3--unbiased}
+
+  \begin{tabular}{ccccc}
+  \small
+  & $2015$ & $2016$ & $2017$ & $2018$ \\
+  MC $B_s^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}\\
+  MC $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}\\
+  RD $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_simul3_unbiased_splinelog.pdf}
+  \end{tabular}
+
+\end{frame}
+
+% }
 
 % }}}
 
 
-% vim:foldmethod=marker
+\section{\texorpdfstring{Analysis in bins of $p_T(B)$}{Analysis in bins of pTB}}
+\subsection{Time acceptance}
+
+
+% fit and spline in bins of etaB {{{
+
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime fit plots}
+\framesubtitle{simul3--biased}
+
+  \begin{tabular}{ccccc}
+  \small
+  & $2015$ & $2016$ & $2017$ & $2018$ \\
+  MC $B_s^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}\\
+  MC $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}\\
+  RD $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_fitlog.pdf}
+  \end{tabular}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime fit plots}
+\framesubtitle{simul3--unbiased}
+
+  \begin{tabular}{ccccc}
+  \small
+  & $2015$ & $2016$ & $2017$ & $2018$ \\
+  MC $B_s^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}\\
+  MC $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}\\
+  RD $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_fitlog.pdf}
+  \end{tabular}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{\insertsubsection: Lifetime spline plots}
+\framesubtitle{simul3--biased}
+
+  \begin{tabular}{ccccc}
+  \small
+  & $2015$ & $2016$ & $2017$ & $2018$ \\
+  MC $B_s^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}\\
+  MC $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}\\
+  RD $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_biased_splinelog.pdf}
+  \end{tabular}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{\insertsubsection: Spline plots}
+\framesubtitle{simul3--unbiased}
+
+  \begin{tabular}{ccccc}
+  \small
+  & $2015$ & $2016$ & $2017$ & $2018$ \\
+  MC $B_s^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}\\
+  MC $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/MC_Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}\\
+  RD $B_d^0$ &
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2015/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2016/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2017/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}&
+  \includegraphics[width=0.2\textwidth]{\FIGS/time_acceptance/2018/Bd2JpsiKstar/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_simul3_unbiased_splinelog.pdf}
+  \end{tabular}
+
+\end{frame}
+
+% }
+
+% }}}
+
+
+% vim:fdm=marker
