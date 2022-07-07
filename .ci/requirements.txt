@@ -1,10 +1,11 @@
 iminuit==1.5.2
 matplotlib==3.4.3
 scipy==1.7.1
-snakemake
+snakemake==6.14.0
 py-cpuinfo
 uproot
 uproot3
+awkward
 numpy
 six
 uncertainties
@@ -21,3 +22,4 @@ complot==0.0.2.dev2
 lib99ocl
 ipanema3
 sympy
+htcondor
