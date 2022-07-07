@@ -160,6 +160,7 @@ rule lifetime_tabular_single:
     ) &> {log}""")
     if NOTE:
       notepath = f"{output}".replace('output', NOTE)
+      os.makedirs(os.path.dirname(notepath), exist_ok=True)
       shell(f"cp {output} {notepath}")
 
 
