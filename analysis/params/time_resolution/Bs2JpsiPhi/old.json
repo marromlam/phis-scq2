@@ -23,4 +23,12 @@
     stdev: 0.0057
     latex: \sigma_1
   }
+  mu:
+  {
+    name: mu
+    value: 0.
+    free: false
+    stdev: 0.
+    latex: \mu
+  }
 }

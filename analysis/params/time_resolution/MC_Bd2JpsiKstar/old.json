@@ -1,11 +1,11 @@
 {
-  mu:
+  sigma_curvature:
   {
-    name: mu
+    name: sigma_curvature
     value: 0.0
     free: false
     stdev: 0.0
-    latex: \sigma_0
+    latex: \sigma_2
   }
   sigma_offset:
   {
@@ -18,17 +18,18 @@
   sigma_slope:
   {
     name: sigma_slope
-    value: 0.0
+    value: 1.0
     free: false
     stdev: 0.0
     latex: \sigma_1
   }
-  sigma_curvature:
+  mu:
   {
-    name: sigma_curvature
+    name: mu
     value: 0.0
     free: false
     stdev: 0.0
-    latex: \sigma_2
+    latex: \mu
   }
 }
+
