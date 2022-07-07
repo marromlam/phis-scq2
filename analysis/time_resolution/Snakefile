@@ -19,6 +19,41 @@ rule time_resolution_basics:
     shell(f"mkdir -p {os.path.dirname(f'{output}')}")
     shell(f"cp {res} {output}")
 
+
+rule time_resolution_offset:
+  output:
+    "output/params/time_offset/{year}/{mode}/{version}_{timeres}.json",
+  run:
+    import os
+    from ipanema import Parameters
+    mode = f"{wildcards.mode}"
+    year = f"{wildcards.year}"
+    pars = Parameters.load(f"analysis/params/time_resolution/{mode}/none.json")
+    output_file = f"{output}"
+
+    # TODO: this should be either computed withing this analysis pipeline or
+    # moved elsewhere
+    meson = {
+        "Bs2JpsiPhi": {
+           '2015': -4.853652301889032,
+           '2016': -6.122278950797789,
+           '2017': -7.130933450563839,
+           '2018': -5.870099929940548
+        },
+        "Bd2JpsiKstar": {
+            '2015': -4.853652301889032,
+            '2016': -6.122278950797789,
+            '2017': -7.130933450563839,
+            '2018': -5.870099929940548
+        }
+    }
+
+    if not "v0r0" in f"{wildcards.version}":
+        if mode in meson.keys():
+            pars['mu'].set(value=meson[mode][year])
+    print(pars)
+    pars.dump(output_file)
+
 # }}}
 
 
@@ -30,6 +65,8 @@ rule time_resolution_from_git:
   threads: 128
   wildcard_constraints:
     timeres = "ams(rd|mc|dg0)"
+  input:
+    "output/params/time_offset/{year}/{mode}/{version}_{timeres}.json",
   params:
     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
     linker = "analysis/params/time_resolution/linker.json"
@@ -47,7 +84,14 @@ rule time_resolution_from_git:
     --output {output}\
     --repo {params.repo}\
     --linker {params.linker}\
-    ) &> {log}""")
+    ) #&> {log}""")
+    # TODO: move this to the script itself / create another rule to merge time
+    # resolution and time offset
+    import ipanema
+    res = ipanema.Parameters.load(f"{output}")
+    off = ipanema.Parameters.load(f"{input}")
+    res['mu'].set(value=off['mu'].value, stdev=off['mu'].stdev)
+    res.dump(f"{output}")
 
 # }}}
 
