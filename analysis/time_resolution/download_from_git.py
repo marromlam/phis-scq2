@@ -78,22 +78,30 @@ if __name__ == "__main__":
     print(f"Loading Time Resolution {year}")
     rawd = hjson.load(open(f"{tmp_path}/{_timeres}",'r'))['TimeResParameters']
     outd = Parameters.load("analysis/params/time_resolution/Bs2JpsiPhi/none.json")
+    print(rawd)
 
     # parse parameters
+    # WARNING: This parser can be broken really easily
     print(f'Parsing parameters to match phis-scq sctructure')
     for i, par in enumerate(list(outd.keys())):
-      if rawd[i]['Name'] == f'p{i}':
-        outd[par].set(value=rawd[i]['Value'], stdev=rawd[i]['Error'])
-        for j, rap in enumerate(list(outd.keys())):
-          for k in range(len(rawd)):
-            if rawd[k]['Name'] == f'rho_p{i}_p{j}_time_res':
-              outd[par].correl[rap] = rawd[k]['Value']
-            elif rawd[k]['Name'] == f'rho_p{j}_p{i}_time_res':
-              outd[par].correl[rap] = rawd[k]['Value']
-            else:
-              outd[par].correl[rap] = 1 if i==j else 0
-      else:
-        print(f"    - Parameter {par} does not exist")
+      what = par.split('_')[-1]
+      print(what)
+      for ii, _ in enumerate(list(rawd)):
+        if rawd[ii]['Name'] == 'mu':
+          outd[par].set(value=rawd[ii]['Value'], stdev=rawd[ii]['Error'])
+
+        elif rawd[ii]['Name'] == f'p{i-1}' and f'sigma_{what}' == par:
+          outd[par].set(value=rawd[ii]['Value'], stdev=rawd[ii]['Error'])
+          for j, rap in enumerate(list(outd.keys())):
+            for k in range(len(rawd)):
+              if rawd[k]['Name'] == f'rho_p{i-1}_p{j-1}_time_res':
+                outd[par].correl[rap] = rawd[k]['Value']
+              elif rawd[k]['Name'] == f'rho_p{j-1}_p{i-1}_time_res':
+                outd[par].correl[rap] = rawd[k]['Value']
+              else:
+                outd[par].correl[rap] = 1 if i==j else 0
+        else:
+          print(f"    - Parameter {par} does not exist")
 
     print("\nParameter table")
     print(outd)
