@@ -45,6 +45,7 @@ if __name__ == '__main__':
   printsec("Time acceptance procedure")
   p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
+  p.add_argument('--resolutions', help='Bs2JpsiPhi MC sample')
   p.add_argument('--params', help='Bs2JpsiPhi MC sample')
   p.add_argument('--year', help='Year to fit') 
   p.add_argument('--version', help='Version of the tuples to use')
@@ -105,6 +106,7 @@ if __name__ == '__main__':
 
   # List samples, params and tables
   samples = args['samples'].split(',')
+  time_offset = args['resolutions'].split(',')
   oparams = args['params'].split(',')
 
 
@@ -218,7 +220,7 @@ if __name__ == '__main__':
                            'value':Gdvalue+resolutions[m]['DGsd'],
                            'latex':f'\Gamma_{c}', 'free':False})
     cats[mode].params.add({'name':f'mu_{c}',
-                           'value':resolutions[m]['mu'],
+                           'value':time_offset[i]['mu'].value,
                            'latex':f'\mu_{c}', 'free':False})
     _sigma = np.mean(cats[mode].df['sigmat'].values)
     print(f"sigmat = {resolutions[m]['sigma']} -> {_sigma}")

@@ -54,6 +54,7 @@ if __name__ == "__main__":
 
     p = argparse.ArgumentParser(description="Compute single decay-time acceptance.")
     p.add_argument("--samples", help="Bs2JpsiPhi MC sample")
+    p.add_argument("--resolution", help="Bs2JpsiPhi MC sample")
     p.add_argument("--params", help="Bs2JpsiPhi MC sample")
     p.add_argument("--year", help="Year to fit")
     p.add_argument("--mode", help="Year to fit", default="Bd2JpsiKstar")
@@ -108,6 +109,7 @@ if __name__ == "__main__":
 
     # List samples, params and tables
     samples = args["samples"].split(",")
+    time_offset = args["resolution"].split(",")
     oparams = args["params"].split(",")
 
     # Check timeacc flag to set knots and weights and place the final cut
@@ -254,7 +256,7 @@ if __name__ == "__main__":
         cats[mode].params.add(
             {
                 "name": f"mu_{c}",
-                "value": resolutions[m]["mu"],
+                "value": time_offset[i]["mu"].value,
                 "latex": f"\mu_{c}",
                 "free": False,
             }
