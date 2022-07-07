@@ -1,6 +1,6 @@
 import argparse
 import yaml
-import root_numpy
+import uproot as ur
 import numpy as np
 import pandas
 import pickle
@@ -41,17 +41,17 @@ def reweighting(original_file, original_tree_name, original_weight, target_file,
       names.append(n if n.endswith('.root') else n+'*.root')
     print('Specified input files:\n', names)
 
-    original = root_numpy.root2array(names, treename=original_tree_name)
+    original = ur.concatenate([f"{fname}:{original_tree_name}" for fname in names], library="np", expressions=variables)
     original = pandas.DataFrame(original)
     if original_weight:
-        original_weight = root_numpy.root2array(names, treename=original_tree_name, branches=[original_weight])
+        original_weight = ur.concatenate([f"{fname}:{original_tree_name}" for fname in names], library="np", expressions=[original_weight])[original_weight].array()
     else:
         original_weight = np.ones(len(original))
 
-    target = root_numpy.root2array(target_file, treename=target_tree_name, branches=variables)
+    target = ur.open(f"{target_file}:{target_tree_name}").arrays(library="np", expressions=variables)
     target = pandas.DataFrame(target)
     if target_weight:
-        target_weight = root_numpy.root2array(target_file, treename=target_tree_name, branches=[target_weight])
+        target_weight = ur.open(f"{target_file}:{target_tree_name}")[target_weight].array(library="np")
     else:
         target_weight = np.ones(len(target))
 
@@ -60,13 +60,17 @@ def reweighting(original_file, original_tree_name, original_weight, target_file,
                                            learning_rate=0.1,
                                            max_depth=6,
                                            min_samples_leaf=1000,
-                                           gb_args={'subsample': 1})
-        reweighter.fit(original[variables], target, original_weight=original_weight, target_weight=target_weight)
+                                           gb_args={'subsample': 1.0})
+        reweighter.fit(original, target,
+                       original_weight=original_weight,
+                       target_weight=target_weight)
 
     elif weight_method == 'binned':
         reweighter = reweight.BinsReweighter(n_bins=20,
                                              n_neighs=1.)
-        reweighter.fit(original[variables], target, original_weight=original_weight, target_weight=target_weight)
+        reweighter.fit(original, target,
+                       original_weight=original_weight,
+                       target_weight=target_weight)
     else:
         print("ERROR: Invalid weighter type. Valid types are 'gb' and 'binned'. Exiting.")
         return
@@ -78,3 +82,6 @@ if __name__ == '__main__':
     parser = argument_parser()
     args = parser.parse_args()
     reweighting(**vars(args))
+
+
+# vim: fdm=marker
