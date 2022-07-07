@@ -41,6 +41,7 @@ rule time_acceptance_single:
     timeacc = "single.*"
   input:
     sample = lambda wcs: tuples(wcs),
+    reso = 'output/params/time_resolution/{year}/{mode}/{version}.json',
   output:
     params = 'output/params/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   log:
@@ -53,6 +54,7 @@ rule time_acceptance_single:
     shell(f"""(time\
     python analysis/time_acceptance/single.py\
     --sample {input.sample}\
+    --resolution {input.resolution}\
     --params {output.params}\
     --mode {wildcards.mode}\
     --year {wildcards.year}\
@@ -126,6 +128,11 @@ rule time_acceptance_simultaneous:
       tuples(wcs,mode='MC_Bs2JpsiPhi_dG0'),
       tuples(wcs,mode='MC_Bd2JpsiKstar'),
       tuples(wcs,mode='Bd2JpsiKstar')
+    ],
+    resos = lambda wcs: [
+      'output/params/time_resolution/{year}/MC_Bs2JpsiPhi_dG0/{version}.json',
+      'output/params/time_resolution/{year}/MC_Bs2JpsiKstar/{version}.json',
+      'output/params/time_resolution/{year}/Bs2JpsiKstar/{version}.json',
     ]
   output:
     params = [
@@ -145,6 +152,7 @@ rule time_acceptance_simultaneous:
     python analysis/time_acceptance/simultaneous.py\
     --samples {",".join(input.sample)}\
     --params {",".join(output.params)}\
+    --resolutions {",".join(input.resos)}\
     --year {wildcards.year}\
     --version {wildcards.version}\
     --trigger {wildcards.trigger}\
@@ -452,9 +460,9 @@ rule time_acceptance_simultaneous_plot:
       'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{{trigger}}.json'
     ], timeacc=f"{wcs.mtimeacc}".split('+'), version=f"{wcs.mversion}".split('+'), year=YEARS[f'{wcs.myear}'])
   output:
-    'output/figures/time_acceptance/{myear}/{mode}/{mversion}_{mtimeacc}_{trigger}_{plot}.pdf',
+    'output/figures/time_acceptance/{myear}/{mmode}/{mversion}_{mtimeacc}_{trigger}_{plot}.pdf',
   log:
-    'output/log/time_acceptance_plot/{myear}/{mode}/{mversion}_{mtimeacc}_{trigger}_{plot}.log'
+    'output/log/time_acceptance_plot/{myear}/{mmode}/{mversion}_{mtimeacc}_{trigger}_{plot}.log'
   run:
     shell(f"""(time\
     python analysis/time_acceptance/plot_functions.py\
@@ -462,7 +470,7 @@ rule time_acceptance_simultaneous_plot:
     --params {",".join(input.params)}\
     --figure {output}\
     --year {wildcards.myear}\
-    --mode {wildcards.mode}\
+    --mode {wildcards.mmode}\
     --version {wildcards.mversion}\
     --trigger {wildcards.trigger}\
     --timeacc {wildcards.mtimeacc}\
