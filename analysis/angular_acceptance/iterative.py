@@ -592,7 +592,8 @@ def aitken_iteration(tLL, tUL, max_iter=30, verbose=True):
     checker = []
     print(f"[aitken #{i}] Update solution")
     for y, dy in data.items():  #  loop over years
-      for t, dt in dy.items():
+      for t in ['biased', 'unbiased']:
+        dt = dy[t]
         for p in dt.angacc.keys():
           x0 = dt.angaccs[2*i-2][p].uvalue
           x1 = dt.angaccs[2*i-1][p].uvalue
