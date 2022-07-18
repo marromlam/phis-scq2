@@ -212,9 +212,6 @@ def version_guesser(version):
         pattern = [
             # percentage of tuple to be loaded
             r"(\d+)?",
-            # split tuple by event number: useful for MC tests and crosschecks
-            # Odd is plays data role and MC is Even
-            r"(evtOdd|evtEven)?",
             # background category
             r"(bkgcat60)?",
             # upper / lower times
@@ -229,12 +226,15 @@ def version_guesser(version):
             r"(only(OST|SST|OSS))?",
             # split in pTB, etaB and sigmat bins: for systematics
             r"((pTB|pXB|pYB|etaB|sigmat|pid)(\d{1}))?"
+            # split tuple by event number: useful for MC tests and crosschecks
+            # Odd is plays data role and MC is Even
+            r"(evtOdd|evtEven)?",
         ]
         pattern = rf"\A{''.join(pattern)}\Z"
         p = re.compile(pattern)
         try:
             # FIXME: please change this!! -- it is awful
-            share, evt, shit, time, runN, mag, cosk, ttag, tag, fullcut, var, nbin = p.search(
+            share, shit, time, runN, mag, cosk, ttag, tag, fullcut, var, nbin, evt = p.search(
                 mod).groups()
             share = int(share) if share else 100
             evt = evt if evt else None
