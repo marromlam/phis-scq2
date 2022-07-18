@@ -10,6 +10,16 @@ import argparse
 from ipanema import Sample
 import numpy as np
 
+def shorten_mode(mode):
+    if 'Bs' in mode:
+      return 'Bs'
+    elif 'Bd' in mode:
+      return 'Bd'
+    elif 'Bu' in mode:
+      return 'Bu'
+    else:
+      print("adsfadsfds")
+      exit()
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description="mass fit")
@@ -19,6 +29,8 @@ if __name__ == '__main__':
     p.add_argument('--unbiased-weights')
     p.add_argument('--mode')
     args = vars(p.parse_args())
+
+    short_mode = shorten_mode(args['mode'])
 
     # Load full dataset and creae prxoy to store new sWeights
     sample = Sample.from_root(args['input_sample'], flatten=None)
@@ -40,6 +52,10 @@ if __name__ == '__main__':
             __proxy += _weight[w]
         sample.df[f"{w[1:]}SW"] = __proxy
     print(sample.df)
+    # if 'Bd' in args['mode']:
+    #     print("Now we will remove events with sW==0")
+    #     sample.df = sample.df.query(f"abs(sig{short_mode}SW) > 1e-15")
+    #     print(sample.df)
 
     with uproot.recreate(args['output_sample']) as f:
         _branches = {}
