@@ -453,7 +453,7 @@ if __name__ == "__main__":
                     # **dt.flavor.valuesdict(),
                     tLL=tLL, tUL=tUL,
                     use_fk=1, use_angacc=1, use_timeacc=1,
-                    use_timeoffset=0, set_tagging=1, use_timeres=1,
+                    use_timeoffset=1, set_tagging=1, use_timeres=1,
                     BLOCK_SIZE=256
                 )
                 chi2.append(-2.0 * (ristra.log(dt.prob) * dt.weight).get())

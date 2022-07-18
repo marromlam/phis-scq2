@@ -12,6 +12,8 @@ rule physics_params_data_Bs:
     fit = "(auto|yearly|run2|run2a)(Dual)?(Poldep|magUp|magDown)?",
     mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
   threads: 8
+  resources:
+    memb_mb=4000
   input:
     samples = lambda wcs: tuples(wcs, year=f'{wcs.year}'),
     angacc_biased = lambda wcs: angaccs(wcs, trigger='biased'),
