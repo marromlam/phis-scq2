@@ -11,5 +11,5 @@ dependencies:
   - pocl
   - pyopencl
   - reikna
-  - nlohmann 3.10.5
+  - nlohmann_json 3.10.5
   - cmake
