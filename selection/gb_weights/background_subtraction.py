@@ -225,12 +225,22 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     sweights=False, verbose=False, prefit=False, free_tails=False,
     mode=False):
 
+    if 'Bs' in mode:
+       mode_label = f"B_s^0"
+    elif 'Bd' in mode:
+       mode_label = f"B_d^0"
+    elif 'Bu' in mode:
+       mode_label = f"B_u^+"
+    else:
+      print("this mode is not familiar")
+      exit()
+
     # mass range cut
     if not mass_range:
         mass_range = min(odf[mass_branch]), max(odf[mass_branch])
         mass_range = np.floor(mass_range[0]), np.ceil(mass_range[1])
     mLL, mUL = mass_range
-    mass_cut = f"B_ConstJpsi_M_1 > {mLL} & B_ConstJpsi_M_1 < {mUL}"
+    mass_cut = f"{mass_branch} > {mLL} & {mass_branch} < {mUL}"
 
     # mass cut and trigger cut
     cut =  f"({trigger}) & ({cut})" if trigger else cut
@@ -286,21 +296,21 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     _dsigma = 0
     _res = 0.
     print(mode)
-    # if mode == 'Bd2JpsiKstar':
-    #     _sigma = 7
-    #     _dsigma = 5
-    #     _res = 0.5
-    # elif mode == 'Bs2JpsiPhi':
-    #     _mu = 5367
-    #     _sigma = 7
-    #     _dsigma = 0
-    #     _sigma = 5
-    #     _dsigma = 9
-    #     _res = 0.5
-    # elif mode == 'Bu2JpsiKplus':
-    #     _sigma = 12
-    #     _dsigma = -5
-    #     _res = 0.44
+    if mode == 'Bd2JpsiKstar':
+        _sigma = 7
+        _dsigma = 5
+        _res = 0.5
+    elif mode == 'Bs2JpsiPhi':
+        _mu = 5367
+        _sigma = 7
+        _dsigma = 15
+        _sigma = 5
+        _dsigma = 9
+        _res = 0.5
+    elif mode == 'Bu2JpsiKplus':
+        _sigma = 8
+        _dsigma = 15
+        _res = 0.44
 
     pars = ipanema.Parameters()
 
@@ -506,7 +516,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     _x, _y = ristra.get(mass), ristra.get(
         pdf(mass, merr, signal, **_p.valuesdict(), norm=hdata.norm)
     )
-    axplot.plot(_x, _y, color="C1", label=rf"$B_s^0$ {model}")
+    axplot.plot(_x, _y, color="C1", label=rf"${mode_label}$ {model}")
 
     # plot backgrounds: nsig -> 0
     if has_bd:
@@ -526,9 +536,11 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
         pdf(mass, merr, signal, **_p.valuesdict(), norm=hdata.norm)
     )
     axplot.plot(x, y, color="C0")
+    pulls = complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts, *hdata.yerr)
+    if np.amax(np.abs(pulls)) > 4:
+      print(f"ERROR: fit did not converge: max. pull = {np.amax(pulls)}")
     axpull.fill_between(
-        hdata.bins,
-        complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts, *hdata.yerr),
+        hdata.bins, pulls,
         0,
         facecolor="C0",
         alpha=0.5,
@@ -538,7 +550,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     axpull.set_xlabel(r"$m(J\!/\psi X)$ [MeV/$c^2$]")
     axpull.set_ylim(-6.5, 6.5)
     axpull.set_yticks([-5, 0, 5])
-    axplot.set_ylabel(rf"Candidates")
+    axplot.set_ylabel("Candidates")
     axplot.legend(loc="upper left")
     if figs:
         os.makedirs(figs, exist_ok=True)

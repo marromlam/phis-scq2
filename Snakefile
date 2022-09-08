@@ -352,7 +352,7 @@ rule slides_compile:
     # time acceptance plot - nominal case only
     expand(rules.time_acceptance_simultaneous_plot.output,
            mversion=config['version'],
-           mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
+           mmode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
            mtimeacc=['simul3', 'simul3Noncorr'],
            myear=['2015', '2016', '2017', '2018'],
            plot=['fitlog', 'splinelog'],

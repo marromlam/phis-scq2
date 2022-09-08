@@ -34,6 +34,7 @@ if __name__ == '__main__':
     p.add_argument('--output-figures', help='Location in which to save the plots')
     p.add_argument('--output-file', default='FOM_Bs2JpsiPhi_2016.pdf', help='name of output FOM plot')
     p.add_argument('--mode', help='Name of the selection in yaml')
+    p.add_argument('--version', help='Name of the selection in yaml')
     p.add_argument('--year', required=True, help='Year of data taking')
     p.add_argument('--bdtcut', default='-1.0', help='pre-bdtg3 cut')
     p.add_argument('--cuts', default='1', help='pre-selection cut')
@@ -44,12 +45,13 @@ if __name__ == '__main__':
 
     bdt_branch = args['bdt_branch']
     cuts = args['cuts']
+    
 
     # branches
     branches = [args['mass_branch'], args['bdt_branch']]
     branches = branches + ["B_ConstJpsi_MERR_1"]
 
-    if args["input_params"]:
+    if args["input_params"] and args['mass_model'] != 'dgauss':
         input_pars = ipanema.Parameters.load(args["input_params"])
     else:
         input_pars = False
@@ -74,6 +76,7 @@ if __name__ == '__main__':
     for xi, vx in enumerate(x_arr[:-1]):
         # ccut = f"({cuts}) & ({bdt_branch}>{vx:.2f})"
         ccut = f"({bdt_branch}>{vx:.2f})"
+        print("\n\n ----------------------------------------")
         print(f"Fitting {xi+1} bin: {ccut}")
 
         pars, sw = mass_fitter(
@@ -118,13 +121,26 @@ if __name__ == '__main__':
                         range=(x_min, x_max))
     fig, axplot = complot.axes_plot()
     # plot histogram
-    axplot.fill_between(hbdt.bins, hbdt.counts, 0, facecolor='k', alpha=0.3)
-    axplot.plot(x_arr, y_arr, '-')
-    axplot.plot(x_arr, y_arr, '.k')
-    axplot.plot(best_x, best_y, '*')
+    axplot.fill_between(hbdt.bins, hbdt.counts, 0, step='post', facecolor='k', alpha=0.3)
+    axplot.set_ylabel("Candidates")
+    axplot2 = axplot.twinx()
+    axplot2.plot(x_arr, y_arr, '-')
+    axplot2.plot(x_arr, y_arr, '.', color='C0')
+    axplot2.plot(best_x, best_y, 'o', color='C2',
+                 label=f'Optimal cut at {best_x:.2f}')
     axplot.set_xlabel(bdt_branch.replace('_', '-'))
-    axplot.set_ylabel(r"f.o.m = $\frac{(\sum w_i)^2}{\sum_i w_i^2}$")
-    fig.savefig("bdtshit.pdf")
+    axplot2.set_ylabel(r"f.o.m = $\frac{(\sum w_i)^2}{\sum_i w_i^2}$")
+    axplot.set_xlim(np.min(hbdt.bins), np.max(hbdt.bins))
+    axplot.set_yscale('log')
+    from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
+    # fig.savefig("bdtshit.pdf")
+    v_mark = args['version'].split('@')[0]  # watermark plots
+    tag_mark = ''
+    if v_mark[0] == 'b' or v_mark == 'v1r1':
+      v_mark = 'LHC$b$'  # watermark plots
+      tag_mark = 'THIS THESIS' 
+    watermark(axplot2, version=v_mark, tag=tag_mark, scale=1.3)
+    axplot2.legend(loc='lower left')
     fig.savefig(f"{args['output_figures']}/fom.pdf")
 
     # save best bdt_branch cut
