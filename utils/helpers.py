@@ -7,6 +7,7 @@
 # Modules {{{
 
 import re
+import typing
 import hjson
 import numpy as np
 from utils.strings import cuts_and
@@ -156,6 +157,7 @@ def parse_angacc(angacc):
         r"(naive|corrected|analytic|yearly|run2a|run2b|run2)",
         # dual MC or single
         r"(Dual)?",
+        r"(Insieme)?",
         # wether to use resolution time or not
         r"(Nores)?",
         # whether to use oddWeight or not
@@ -166,10 +168,11 @@ def parse_angacc(angacc):
     pattern = rf"\A{''.join(pattern)}\Z"
     p = re.compile(pattern)
     try:
-        acc, dual, res, oddity, ptW = p.search(angacc).groups()
+        acc, dual, insieme, res, oddity, ptW = p.search(angacc).groups()
         ans = {
             "acc": acc,
             "dual": True if dual else False,
+            "insieme": True if insieme else False,
             "use_truetime": True if res == 'Nores' else False,
             "use_oddWeight": True if oddity == 'Odd' else False,
             "use_pTWeight": True if ptW == 'pT' else False
@@ -212,20 +215,22 @@ def version_guesser(version):
         pattern = [
             # percentage of tuple to be loaded
             r"(\d+)?",
-            # background category
-            r"(bkgcat60)?",
             # upper / lower times
             r"(LT|UT)?",
             # split in runNumber
             r"(l210300|g210300)?",
-            # split by magnet Up or Down: useful for crosschecks
-            r"(magUp|magDown)?",
             # cut in cosK
             r"(LcosK|UcosK)?",
+            # background category
+            r"(bkgcat60)?",
+            # mass sidebands
+            r"(RSB|LSB)?",
+            # split by magnet Up or Down: useful for crosschecks
+            r"(magUp|magDown)?",
             # only OS, SS or fully tagged events
             r"(only(OST|SST|OSS))?",
             # split in pTB, etaB and sigmat bins: for systematics
-            r"((pTB|pXB|pYB|etaB|sigmat|pid)(\d{1}))?"
+            r"((pTB|pXB|pYB|etaB|sigmat|pid|PV)(\d{1}))?"
             # split tuple by event number: useful for MC tests and crosschecks
             # Odd is plays data role and MC is Even
             r"(evtOdd|evtEven)?",
@@ -234,8 +239,7 @@ def version_guesser(version):
         p = re.compile(pattern)
         try:
             # FIXME: please change this!! -- it is awful
-            share, shit, time, runN, mag, cosk, ttag, tag, fullcut, var, nbin, evt = p.search(
-                mod).groups()
+            share, timecut, runN, cosk, bkg60, massSB, mag, ttag, tag, fullcut, var, nbin, evt = p.search(mod).groups()
             share = int(share) if share else 100
             evt = evt if evt else None
             nbin = int(nbin)-1 if nbin else None
@@ -437,7 +441,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         elif m == 'Bu2JpsiKplus':
             if weight == 'lbWeight':
                 weight = 'tagged'
-            if weight not in _general + ['kinWeight']:
+            if weight not in _general + ['sWeightForTag', 'kinWeight']:
                 weight = vw8s
         # }}}
         # Bd2JpsiKstar {{{
@@ -466,7 +470,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
                 weight = 'tagged'
             if weight == 'veloWeight':
                 weight = vw8s
-            elif weight not in _general + ['polWeight', 'kinWeight']:
+            elif weight not in _general + ['sWeightForTag', 'polWeight', 'kinWeight']:
                 weight = 'polWeight'
         # }}}
         # MC_Bd2JpsiKstar {{{
@@ -646,7 +650,10 @@ def flavors(wcs, version=False, year=False, mode=False, flavor=False):
     return ans
 
 
-def timeaccs(wcs, version=False, year=False, mode=False, timeacc=False, trigger=False):
+def timeaccs(wcs, version: typing.Optional[str]=None,
+             year: typing.Optional[str]=None, mode: typing.Optional[str]=None,
+             timeacc: typing.Optional[str]=None,
+             trigger: typing.Optional[str]=None) -> typing.List[str]:
     if not version:
         version = f"{wcs.version}"
     if not year:
@@ -658,7 +665,13 @@ def timeaccs(wcs, version=False, year=False, mode=False, timeacc=False, trigger=
     if not mode:
         mode = f"{wcs.mode}"
 
+    # assert(type(timeacc) == str)
+    # for _arg in [version, year, mode, timeacc, trigger]:
+    #     if not isinstance(_arg, str):
+    #         raise ValueError(f"Cannot pars {_arg} if it is not a string")
+
     # select mode
+    m = mode
     if mode == 'Bs2JpsiPhi':
         if timeacc.startswith('simul'):
             if "BuasBd" in timeacc:
@@ -683,7 +696,9 @@ def timeaccs(wcs, version=False, year=False, mode=False, timeacc=False, trigger=
         else:
             m = 'Bd2JpsiKstar'
     elif mode == 'Bu2JpsiKplus':
-        if timeacc.startswith('simul'):
+        if timeacc.startswith('simul') and not timeacc.endswith('BuasBd'):
+            # This is the situation where we run on half Bu data as proxy for
+            # Bs data.
             if 'BuasBs' in timeacc:
                 if 'evtEven' in version:
                     version = version.replace('evtEven', 'evtOdd')
@@ -694,8 +709,6 @@ def timeaccs(wcs, version=False, year=False, mode=False, timeacc=False, trigger=
             m = 'Bd2JpsiKstar'
         else:
             m = 'Bu2JpsiKplus'
-    else:
-        m = mode
 
     # loop over years and return list of time acceptances
     ans = []
@@ -737,7 +750,12 @@ def angaccs(wcs, version=False, year=False, mode=False, timeacc=False,
             ans.append(
                 f'output/params/angular_acceptance/{y}/{m}/{version}_{angacc}_none_{trigger}.json')
     elif angacc.startswith('analytic'):
-        print("To be implemented!!")
+        m = mode
+        ans = []
+        for y in YEARS[year]:
+            ans.append(
+                f'output/params/angular_acceptance/{y}/{m}/{version}_{angacc}_none_{trigger}.json')
+        # print("To be implemented!!")
     else:
         m = mode
         ans = []
