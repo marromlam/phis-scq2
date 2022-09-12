@@ -22,6 +22,7 @@
     "bu_mass_bins": ["all"],
     "minimizer": "minuit",
     "contour": 0,
+    "n_bdt_tests": 10,
     "allow_downloads": false,
     "shuffle_events": false,
     "run_preselection": true,
@@ -31,5 +32,5 @@
     "ludicrous": false,
     "selection_mode": "run2",
     "stripping_mode": "pidcuts",
-    "allow_continuous": false
+    "allow_continuous":false
 }
