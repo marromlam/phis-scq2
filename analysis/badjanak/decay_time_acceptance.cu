@@ -14,7 +14,7 @@
 #include "decay_time_acceptance.h"
 
 
-  KERNEL
+KERNEL
 void pySingleTimeAcc(GLOBAL_MEM ftype *time, GLOBAL_MEM ftype *lkhd,
     GLOBAL_MEM ftype *coeffs, ftype mu,
     const ftype sigma, const ftype gamma,
@@ -22,12 +22,12 @@ void pySingleTimeAcc(GLOBAL_MEM ftype *time, GLOBAL_MEM ftype *lkhd,
 {
   const int row = get_global_id(0);
   if (row >= NEVT) { return; }
-  ftype t = time[row] - mu;
-  lkhd[row] = getOneSplineTimeAcc(t, coeffs, sigma, gamma, tLL, tUL);
+  ftype t = time[row];
+  lkhd[row] = getOneSplineTimeAcc(t, coeffs, mu, sigma, gamma, tLL, tUL);
 }
 
 
-  KERNEL
+KERNEL
 void pyRatioTimeAcc(GLOBAL_MEM const ftype *time1, GLOBAL_MEM const ftype *time2,
     GLOBAL_MEM ftype *lkhd1, GLOBAL_MEM ftype *lkhd2,
     GLOBAL_MEM const ftype *c1, GLOBAL_MEM const ftype *c2,
@@ -39,50 +39,50 @@ void pyRatioTimeAcc(GLOBAL_MEM const ftype *time1, GLOBAL_MEM const ftype *time2
   const int row = get_global_id(0);
   if (row < NEVT1)
   {
-    ftype t1 = time1[row] - mu1;
-    lkhd1[row] = getOneSplineTimeAcc(t1, c1,     sigma1, gamma1, tLL, tUL);
+    ftype t1 = time1[row];
+    lkhd1[row] = getOneSplineTimeAcc(t1, c1,     mu1, sigma1, gamma1, tLL, tUL);
   }
   if (row < NEVT2)
   {
-    ftype t2 = time2[row] - mu2;
-    lkhd2[row] = getTwoSplineTimeAcc(t2, c1, c2, sigma2, gamma2, tLL, tUL);
+    ftype t2 = time2[row];
+    lkhd2[row] = getTwoSplineTimeAcc(t2, c1, c2, mu2, sigma2, gamma2, tLL, tUL);
   }
 }
 
 
-  KERNEL
+KERNEL
 void pyFullTimeAcc(GLOBAL_MEM ftype const *time1, GLOBAL_MEM ftype const *time2,
     GLOBAL_MEM ftype const *time3, GLOBAL_MEM ftype *lkhd1,
     GLOBAL_MEM ftype *lkhd2, GLOBAL_MEM ftype *lkhd3,
     GLOBAL_MEM ftype *c1,
     GLOBAL_MEM ftype *c2,
     GLOBAL_MEM ftype *c3,
-    ftype mu1, ftype sigma1, ftype gamma1,
-    ftype mu2, ftype sigma2, ftype gamma2,
-    ftype mu3, ftype sigma3, ftype gamma3,
-    ftype tLL, ftype tUL,
+    const ftype mu1, const ftype sigma1, const ftype gamma1,
+    const ftype mu2, const ftype sigma2, const ftype gamma2,
+    const ftype mu3, const ftype sigma3, const ftype gamma3,
+    const ftype tLL, const ftype tUL,
     const int NEVT1, const int NEVT2, const int NEVT3)
 {
   const int row = get_global_id(0);
   if (row < NEVT1)
   {
-    ftype t1 = time1[row] - mu1;
-    lkhd1[row] = getOneSplineTimeAcc(t1, c1,     sigma1, gamma1, tLL, tUL);
+    ftype t1 = time1[row];
+    lkhd1[row] = getOneSplineTimeAcc(t1, c1,     mu1, sigma1, gamma1, tLL, tUL);
   }
   if (row < NEVT2)
   {
-    ftype t2 = time2[row] - mu2;
-    lkhd2[row] = getTwoSplineTimeAcc(t2, c1, c2, sigma2, gamma2, tLL, tUL);
+    ftype t2 = time2[row];
+    lkhd2[row] = getTwoSplineTimeAcc(t2, c1, c2, mu2, sigma2, gamma2, tLL, tUL);
   }
   if (row < NEVT3)
   {
-    ftype t3 = time3[row] - mu3;
-    lkhd3[row] = getTwoSplineTimeAcc(t3, c2, c3, sigma3, gamma3, tLL, tUL);
+    ftype t3 = time3[row];
+    lkhd3[row] = getTwoSplineTimeAcc(t3, c2, c3, mu3, sigma3, gamma3, tLL, tUL);
   }
 }
 
 
-  KERNEL
+KERNEL
 void pySpline(GLOBAL_MEM const ftype *time, GLOBAL_MEM ftype *f,
     GLOBAL_MEM const ftype *coeffs, const int NEVT)
 {
