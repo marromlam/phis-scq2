@@ -15,7 +15,7 @@
 #include "cross_rate_bs.h"
 
 
-  KERNEL
+KERNEL
 void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
     // Time-dependent angular distribution
     const ftype G, const ftype DG, const ftype DM,
@@ -54,7 +54,8 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
   if (evt >= NEVT) { return; }
 
   const ftype mass = data[evt*10+4];
-  const ftype arr[9] = {data[evt*10+0], // cosK
+  const ftype arr[9] = {
+    data[evt*10+0], // cosK
     data[evt*10+1], // cosL
     data[evt*10+2], // hphi
     data[evt*10+3], // time
@@ -84,3 +85,6 @@ void pyrateBs(GLOBAL_MEM const ftype *data, GLOBAL_MEM ftype *lkhd,
       USE_FK, USE_ANGACC, USE_TIMEACC,
       USE_TIMEOFFSET, SET_TAGGING, USE_TIMERES);
 }
+
+
+// vim: fdm=marker
