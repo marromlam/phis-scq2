@@ -14,11 +14,11 @@ from scipy.stats import chi2
 from timeit import default_timer as timer
 from hep_ml.metrics_utils import ks_2samp_weighted
 
-from angular_acceptance.iterative import fcn_data
+from analysis.angular_acceptance.iterative import fcn_data
 from utils.plot import mode_tex
 from utils.strings import cammel_case_split, cuts_and, printsec, printsubsec
 from utils.helpers import  version_guesser, parse_angacc, timeacc_guesser, trigger_scissors
-from angular_acceptance.bdtconf_tester import bdtmesh
+from analysis.angular_acceptance.bdtconf_tester import bdtmesh
 
 # threading
 import logging
@@ -31,19 +31,14 @@ initialize('cuda', 1)
 from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # get badjanak and compile it with corresponding flags
-import badjanak
-badjanak.config['fast_integral'] = 0
+import analysis.badjanak as badjanak
+badjanak.config['fast_integral'] = 1
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
 badjanak.get_kernels(True)
 
 import config
-resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
-bdtconfig = config.timeacc['bdtconfig']
-Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
+bdtconfig = config.angacc['bdtconfig']
 
 # reweighting config
 from warnings import simplefilter
@@ -157,7 +152,8 @@ def get_angular_acceptance(mc, kkpWeight=False):
 
   # compute angular acceptance
   ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight,
-                                                **mc.params.valuesdict())
+                                                **mc.params.valuesdict(),
+                                                tLL=mc.tLL, tUL=mc.tUL)
 
   # create ipanema.Parameters
   w, uw, cov, corr = ans
@@ -287,11 +283,11 @@ def do_time_acceptance(samples, samples_list=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKs
           _weight.append(samples[time_mode][ky][kt].weight *
              samples[time_mode][ky][kt].preWeight[-1] *
              ristra.allocate(samples[time_mode][ky][kt].kkpWeight[-1]) )
-        import time_acceptance.fcn_functions as fcns
+        import analysis.time_acceptance.fcn_functions as fcns
         fcn_call = fcns.saxsbxscxerf
         fcn_pars = _pars[0] + _pars[1] + _pars[2] + _pars[3]
         fcn_kwgs={ 'data': _data, 'prob': _prob, 'weight': _weight,
-                   'flatend': TIMEACC['use_flatend'], 'tLL': tLL, 'tUL': tUL
+                   'tLL': tLL, 'tUL': tUL
         }
         result = optimize(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs,
                           method='minuit', verbose=False, tol=0.1);
@@ -420,9 +416,13 @@ if __name__ == '__main__':
       time = f'gen{time}'
 
     if TIMEACC['use_upTime']:
-      tLL = 1.36
+      tLL = config.general['upper_time_lower_limit']
+    else:
+      tLL = config.general['time_lower_limit']
     if TIMEACC['use_lowTime']:
-      tUL = 1.36
+      tUL = config.general['lower_time_upper_limit']
+    else:
+      tUL = config.general['time_upper_limit']
 
     print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
@@ -464,8 +464,9 @@ if __name__ == '__main__':
             else: ValueError("I dont get this year at all") 
             s[km][ky] = {}
             for kt in trigger:
-              s[km][ky][kt] = Sample.from_root(vy,
-                      cuts=cuts_and(trigger_scissors(kt), cut), name=f"{km}-{ky}-{kt}")
+              s[km][ky][kt] = Sample.from_root(vy, name=f"{km}-{ky}-{kt}")
+              print(s[km][ky][kt])
+              s[km][ky][kt].chop(cuts_and(trigger_scissors(kt), cut))
               print(s[km][ky][kt])
 
         return s
@@ -544,7 +545,7 @@ if __name__ == '__main__':
             if km == 'MC_Bs2JpsiPhi':
               vt.params = Parameters.load(args['params_BsMC'].split(',')[i]);
               angWeight = uproot.open(args['weight_BsMC'].split(',')[i])['DecayTree'].array('angWeight')
-              print(km, ky, kt, vt.shape, len(angWeight))
+              print(km, ky, kt, vt.df.shape, len(angWeight))
               vt.df['angWeight'] = angWeight[vt.df.index]
             elif km == 'MC_Bs2JpsiPhi_dG0':
               vt.params = Parameters.load(args['params_BsMCdG0'].split(',')[i]);
@@ -575,6 +576,8 @@ if __name__ == '__main__':
               vt.df['sWeight'] = sw
               vt.allocate(data=real, prob='0*time')
           vt.allocate(weight='sWeight', time=time, pdf='0*time')
+          vt.tLL = tLL
+          vt.tUL = tUL
           preWeight = []
           # TODO: found a bug. MC_Bs2JpsiPhi does not have kinWeight
           if 'pdfWeight' in vt.branches: preWeight.append('pdfWeight')
@@ -727,4 +730,4 @@ if __name__ == '__main__':
 
 
 
-# vim:foldmethod=marker
+# vim: fdm=marker

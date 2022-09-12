@@ -146,7 +146,7 @@ def fcn_data(parameters, data):
       if not timeacc_free and parameters[_to_keep[2]].free:
         _to_cnstr = [k[:-2] for k in pars_dict.keys() if re.compile(
           f'(c)([0-9])([0-9])?({t[0]})({y[2:]})').match(k)]
-        print('constrained')
+        # print('constrained')
         c0 = pars.valuesarray(_to_keep[1:]) + dt.timeacc.valuesarray(_to_cnstr[1:])
         c0 = np.matrix(c0)
         cov = dt.timeacc.cov(_to_cnstr[1:])  # constraint covariance matrix
@@ -761,6 +761,7 @@ if __name__ == '__main__':
     pars.add(dict(name="DM", value=17.768, min=16.0, max=20.0,
               free=True, latex=r"\Delta m"))
 
+    timeacc_freedom = 'constrained'
     timeacc_freedom = 'full'
     if timeacc_freedom == 'fixed' or timeacc_freedom == 'constrained':
       timeacc_pars_from = ['Bs2JpsiPhi']
@@ -775,19 +776,20 @@ if __name__ == '__main__':
           _timeacc = Parameters.build(vt.timeacc, vt.timeacc.fetch('(a|b|c).*'))
           for cname, cvalue in _timeacc.items():
             _correl = {}
-            print(cvalue.correl)
             if cvalue.correl:
               for oname, ovalue in cvalue.correl.items():
-                print(oname, ovalue)
                 _correl[f"{oname}{ky[2:]}"] = ovalue
             # pars.add(dict(name=f"{cname}{ky[2:]}"))
             # pars[f"{cname}{ky[2:]}"] = cvalue
+            _free = cvalue.free if timeacc_freedom != 'fixed' else False
+            _free = _free if cname.startswith('c') else False
             pars.add(dict(
               name=f"{cname}{ky[2:]}",
               value=cvalue.value, stdev=cvalue.stdev, correl=_correl,
-              free=cvalue.free if timeacc_freedom != 'fixed' else False,
-              latex=cvalue.latex,
+              free=_free, latex=cvalue.latex,
             ))
+    print(pars)
+    # exit()
 
     # }}}
 
