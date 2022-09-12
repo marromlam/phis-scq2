@@ -662,7 +662,7 @@ rule physics_params_tabulate_versions:
         _header += [f"{' ':>10}"]
         if i == len(wilds[0])-1:
             _header[0] = f"{'Parameter':<54}"
-            _header[-1] = f"{'pull':>10}"
+            _header[-1] = f"{'pvalue':>10}"
         header.append( " & ".join(_header) )
     # print("\\\\ \n".join(header))
 
@@ -712,6 +712,139 @@ rule physics_params_tabulate_versions:
       f.write(r"\end{tabular}")
     f.close()
 
+rule physics_params_tabulate_systematic:
+  """
+  General rule to create tables of physics params with pvalues
+  """
+  threads: 8
+  input:
+      lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+            year = config['year'],
+            mode = 'Bs2JpsiPhi',
+            version = config['version'] + '@LcosK',
+            # fit = [f.replace('run2', y) for f,y in zip(wcs.mfit.split('+'), wcs.myear.split('+'))],
+            fit = config['fit'],
+            angacc = config['angacc'],
+            csp = config['csp'],
+            flavor = config['flavor'],
+            timeacc = config['timeacc'],
+            timeres = config['timeres'],
+            trigger = config['trigger']
+            ),
+      lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+            year = wcs.myear.split('+'),
+            mode = wcs.mmode.split('+'),
+            version = wcs.mversion.split('+'),
+            # fit = [f.replace('run2', y) for f,y in zip(wcs.mfit.split('+'), wcs.myear.split('+'))],
+            fit = wcs.mfit.split('+'),
+            angacc = wcs.mangacc.split('+'),
+            csp = wcs.mcsp.split('+'),
+            flavor = wcs.mflavor.split('+'),
+            timeacc = wcs.mtimeacc.split('+'),
+            timeres = wcs.mtimeres.split('+'),
+            trigger = wcs.mtrigger.split('+')
+            ),
+  output:
+    'output/tables/systematics/{myear}/{mmode}/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex'
+  log:
+    'output/log/physics_params_tabulate_systematics/{myear}/{mmode}/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.log'
+  run:
+    import ipanema
+    import numpy as np
+    import sys
+    from iminuit import Minuit
+    from scipy.stats import chi2
+
+    pars = f"{input}".split(" ")
+    pars = [ipanema.Parameters.load(p) for p in pars]
+    # vers = f"{wildcards.version}".split("+")
+    
+    wilds = []
+    for p in f"{input}".split(" "):
+        file_name = os.path.basename(p)
+        _year = p.split("/")[3]
+        _mode = p.split("/")[4]
+        # exit()
+        _v, _fit, _a, _c, _f, _t, _r, _trig = file_name.split("_")
+        wilds.append({
+                "version" : _v,
+                "fit" : _fit.replace("auto",_year),
+                "angacc" : _a.replace("yearly",_year),
+                "csp" : _c,
+                "flavor" : _f,
+                "timeacc" : _t,
+                "timeres" : _r,
+                "trigger" : _trig.split(".")[0]
+                })
+    # print(wilds)
+    # attending to version, build a header row
+    header = []
+    for i, kw in enumerate(wilds[0]):
+        _header = [f"{' ':<54}"]
+        for w in wilds:
+            _header.append(f"$ {f'{w[kw]}':>25} $")
+        _header += [f"{' ':>10}"]
+        # _header += [f"{' ':>10}"]
+        if i == len(wilds[0])-1:
+            _header[0] = f"{'Parameter':<54}"
+            # _header[-1] = f"{'pvalue':>10}"
+            _header[-1] = f"{'syst.':>10}"
+        header.append( " & ".join(_header) )
+    # print("\\\\ \n".join(header))
+
+    _calign = 'l|' + 'c'*len(pars) + '|c'
+    # lets build the tble
+    table = []
+    # table.append(" & ".join(_header))
+    # print(table)
+    # exit()
+
+    _params = ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs', 'DM']
+    for p in _params:
+        _row = [  f"$ {pars[0][p].latex:>50} $" ]
+        for P in pars:
+            _row.append( f"$ {f'{P[p].uvalue:.2uL}':>25} $" )
+        if len(pars) > 1:
+            # get from parameters objects
+            central_values = [P[p].uvalue.n for P in pars]
+            standard_deviations = [P[p].uvalue.s for P in pars]
+            def compute_chi2(reference_value):
+                chi2 = 0.0
+                for v, s in zip(central_values, standard_deviations):
+                    chi2 += ((v - reference_value)/s)**2
+                return chi2
+
+            # do linear fit on those numbers
+            p = 'reference_value'
+            result = Minuit(compute_chi2, reference_value=0.0, errordef=1)
+            result.migrad()
+            pval = chi2.sf(result.fval, len(central_values)-1)
+            systs = [c-central_values[0] for c in central_values]
+            systs = np.array(systs)
+            signs = systs/np.abs(systs)
+            syst = np.amax(np.abs(systs))
+            syst *= signs[np.abs(systs) == syst]
+            # _row.append(f"$ {pval:+.3f} $")  # for pvalue
+            syst = syst if len(syst) < 2 else syst[0]
+            print(np.float64(syst))
+            _row.append(f"$ {np.float64(syst):+.4f} $")
+        table.append(" & ".join(_row))
+    with open(f'{output}','w') as f:
+      f.write(rf"\begin{{tabular}}{{{_calign}}}")
+      f.write('\n')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write("\\\\ \n".join(header))
+      f.write('\\\\ \n')
+      f.write(f'\hline')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write("\\\\ \n".join(table))
+      f.write('\\\\ \n')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write(r"\end{tabular}")
+    f.close()
 # }}}
 
 
