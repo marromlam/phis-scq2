@@ -28,9 +28,16 @@ if __name__ == '__main__':
     p.add_argument('--biased-weights')
     p.add_argument('--unbiased-weights')
     p.add_argument('--mode')
+    p.add_argument('--version', default=None)
     args = vars(p.parse_args())
 
+    mode = args['mode']
+    version = args['version']
     short_mode = shorten_mode(args['mode'])
+    ones = False
+    if version:
+        if 'bkgcat60' in version and 'MC' in mode:
+            ones = True
 
     # Load full dataset and creae prxoy to store new sWeights
     sample = Sample.from_root(args['input_sample'], flatten=None)
@@ -50,7 +57,7 @@ if __name__ == '__main__':
             _weight = np.load(sw, allow_pickle=True)
             _weight = _weight.item()
             __proxy += _weight[w]
-        sample.df[f"{w[1:]}SW"] = __proxy
+        sample.df[f"{w[1:]}SW"] = 1+0*__proxy if ones else __proxy
     print(sample.df)
     # if 'Bd' in args['mode']:
     #     print("Now we will remove events with sW==0")

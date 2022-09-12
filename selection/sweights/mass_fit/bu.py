@@ -176,7 +176,7 @@ def mass_fitter(
 
     if model == "ipatia":
         pdf = ipatia_exponential
-    elif model == "crystalball":
+    elif model.startswith("crystalball"):
         pdf = cb_exponential
 
     def fcn(params, data):

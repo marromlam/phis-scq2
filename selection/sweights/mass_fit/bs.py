@@ -335,70 +335,30 @@ def ipatia_exponential(
     mUL=None,
 ):
     # ipatia
-    prog.py_ipatia(
-        signal,
-        mass,
-        np.float64(muBs),
-        np.float64(sigmaBs),
-        np.float64(lambd),
-        np.float64(zeta),
-        np.float64(beta),
-        np.float64(aL),
-        np.float64(nL),
-        np.float64(aR),
-        np.float64(nR),
-        global_size=(len(mass)),
+    prog.py_ipatia( signal, mass, np.float64(muBs), np.float64(sigmaBs),
+        np.float64(lambd), np.float64(zeta), np.float64(beta), np.float64(aL),
+        np.float64(nL), np.float64(aR), np.float64(nR), global_size=(len(mass)),
     )
     pdfBs = 1.0 * signal.get()
     signal = 0 * signal
-    prog.py_ipatia(
-        signal,
-        mass,
-        np.float64(muBd),
-        np.float64(sigmaBd),
-        np.float64(lambd),
-        np.float64(zeta),
-        np.float64(beta),
-        np.float64(aL),
-        np.float64(nL),
-        np.float64(aR),
-        np.float64(nR),
-        global_size=(len(mass)),
+    prog.py_ipatia( signal, mass, np.float64(muBd), np.float64(sigmaBd),
+        np.float64(lambd), np.float64(zeta), np.float64(beta), np.float64(aL),
+        np.float64(nL), np.float64(aR), np.float64(nR), global_size=(len(mass)),
     )
     pdfBd = 1.0 * signal.get()
     backgr = ristra.exp(mass * b).get()
     # normalize
     _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)
     _y = _x * 0
-    prog.py_ipatia(
-        _y,
-        _x,
-        np.float64(muBs),
-        np.float64(sigmaBs),
-        np.float64(lambd),
-        np.float64(zeta),
-        np.float64(beta),
-        np.float64(aL),
-        np.float64(nL),
-        np.float64(aR),
-        np.float64(nR),
-        global_size=(len(_x)),
+    prog.py_ipatia( _y, _x, np.float64(muBs), np.float64(sigmaBs),
+        np.float64(lambd), np.float64(zeta), np.float64(beta), np.float64(aL),
+        np.float64(nL), np.float64(aR), np.float64(nR), global_size=(len(_x)),
     )
     nBs = np.trapz(ristra.get(_y), ristra.get(_x))
     _y = _x * 0
-    prog.py_ipatia(
-        _y,
-        _x,
-        np.float64(muBd),
-        np.float64(sigmaBd),
-        np.float64(lambd),
-        np.float64(zeta),
-        np.float64(beta),
-        np.float64(aL),
-        np.float64(nL),
-        np.float64(aR),
-        np.float64(nR),
-        global_size=(len(_x)),
+    prog.py_ipatia(_y, _x, np.float64(muBd), np.float64(sigmaBd),
+        np.float64(lambd), np.float64(zeta), np.float64(beta), np.float64(aL),
+        np.float64(nL), np.float64(aR), np.float64(nR), global_size=(len(_x)),
     )
     nBd = np.trapz(ristra.get(_y), ristra.get(_x))
     nbackgr = np.trapz(ristra.get(ristra.exp(_x * b)), ristra.get(_x))
@@ -631,15 +591,11 @@ def cb_exponential3(
     pBs = ristra.get(signal)
     # second peak with same tails as main one
     if fsigBd > 0:
-        prog.kernel_double_crystal_ball(
+        prog.kernel_gaussian(
             signal,
             mass,
             np.float64(muBd),
-            sBd,
-            np.float64(aL),
-            np.float64(nL),
-            np.float64(aR),
-            np.float64(nR),
+            np.float64(s0Bd),
             np.float64(mLL),
             np.float64(mUL),
             global_size=(len(mass)),
@@ -751,7 +707,7 @@ def mass_fitter(
     if not mass_range:
         mass_range = (min(odf[mass_branch]), max(odf[mass_branch]))
     mLL, mUL = mass_range
-    mass_cut = f"B_ConstJpsi_M_1 > {mLL} & B_ConstJpsi_M_1 < {mUL}"
+    mass_cut = f"{mass_branch} > {mLL} & {mass_branch} < {mUL}"
 
     # mass cut and trigger cut
     current_cut = trigger_scissors(trigger, cuts_and(mass_cut, cut))
@@ -921,7 +877,9 @@ def mass_fitter(
     print(f"Mass weight: {mass_weight}")
     rd = Sample.from_pandas(odf)
     _proxy = np.float64(rd.df[mass_branch]) * 0.0
+    print(rd)
     rd.chop(current_cut)
+    print(rd)
     rd.allocate(mass=mass_branch, merr="B_ConstJpsi_MERR_1")
     rd.allocate(pdf=f"0*{mass_branch}", weight=mass_weight)
     # print(rd)
@@ -947,27 +905,22 @@ def mass_fitter(
         pars['s0Bs'].set(value=1.0, init=1.0, free=True)
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
                                method='minuit', verbose=False, strategy=1,
-                               tol=0.05)
-        pars = ipanema.Parameters.clone(res.params)
-        pars.lock()
-        pars["s1Bs"].set(value=0.0, init=0.0, min=-20, max=20, free=True)
-        pars["s2Bs"].set(value=0.0, init=0.0, min=-1, max=1, free=True)
-        pars["s0Bs"].set(value=0.0, init=1.0, free=False)
-        res = ipanema.optimize(
-            fcn,
-            pars,
-            fcn_kwgs={"data": rd},
-            method="minuit",
-            verbose=True,
-            strategy=1,
-            tol=0.05,
-        )
+                               tol=0.1)
+        if with_calib:
+            pars = ipanema.Parameters.clone(res.params)
+            pars.lock()
+            pars["s1Bs"].set(value=0.0, init=0.0, min=-20, max=20, free=True)
+            pars["s2Bs"].set(value=0.0, init=0.0, min=-1, max=1, free=True)
+            pars["s0Bs"].set(value=0.0, init=1.0, free=False)
+            res = ipanema.optimize(fcn, pars, fcn_kwgs={"data": rd},
+                                   method="minuit", verbose=False, strategy=2,
+                                   tol=0.05)
         pars = ipanema.Parameters.clone(res.params)
         for k, v in pars.items():
             v.init = v.value
         pars.unlock('fsigBs', 'muBs', 'b', 'fsigBd')
         res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                               method='minuit', verbose=False, strategy=1,
+                               method='minuit', verbose=False, strategy=2,
                                tol=0.05)
 
     if res:
@@ -1140,12 +1093,13 @@ if __name__ == '__main__':
             bin = int(args["mass_bin"][-1])
             mLL = mass[bin - 1]
             mUL = mass[bin]
-        if "LSB" in args["mass_bin"]:
+        if "LSB" in args["mass_bin"] or "LSB" in args['version']:
             mass_range = (5202, 5367 + 50)
-        elif "RSB" in args["mass_bin"]:
+        elif "RSB" in args["mass_bin"] or "RSB" in args['version']:
             mass_range = (5367 - 80, 5548)
         cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}" if cut else f"X_M>{mLL} & X_M<{mUL}"
 
+    print(sample.df)
     pars, sw = mass_fitter(
         sample.df,
         mass_range=mass_range,

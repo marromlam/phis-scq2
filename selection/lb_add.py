@@ -13,8 +13,9 @@ import numpy as np
 import ipanema
 import uproot3 as uproot
 import pandas as pd
+import os
 
-np.random.seed(45353654)
+# np.random.seed(45353654)
 
 # specify as values the actual name of taggers in the nTuples
 TAGS = {
@@ -191,6 +192,13 @@ if __name__ == '__main__':
     rdLbIn = rdLbIn.pandas.df(flatten=None)
     rdIn = uproot.open(args['rd_input'])['DecayTree']
     rdIn = rdIn.pandas.df(flatten=None)
+    if 'wLb' in rdIn:
+      # print(rdIn)
+      print("WARNING: wLb already present. Just copying tuple")
+      # rdIn = rdIn.query("wLb>0")
+      print(rdIn)
+      os.system(f"cp {args['rd_input']} {args['rd_output']}")
+      exit(0)
 
     # update tuples with wLb
     mcLbOut, rdLbOut, rdOut = merge_lb(nLb, mcLbIn, rdLbIn, rdIn)
