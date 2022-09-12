@@ -78,14 +78,13 @@ if __name__ == "__main__":
     print(f"Loading Time Resolution {year}")
     rawd = hjson.load(open(f"{tmp_path}/{_timeres}",'r'))['TimeResParameters']
     outd = Parameters.load("analysis/params/time_resolution/Bs2JpsiPhi/none.json")
-    print(rawd)
 
     # parse parameters
     # WARNING: This parser can be broken really easily
     print(f'Parsing parameters to match phis-scq sctructure')
     for i, par in enumerate(list(outd.keys())):
       what = par.split('_')[-1]
-      print(what)
+      outd[par].correl = {}
       for ii, _ in enumerate(list(rawd)):
         if rawd[ii]['Name'] == 'mu':
           outd[par].set(value=rawd[ii]['Value'], stdev=rawd[ii]['Error'])

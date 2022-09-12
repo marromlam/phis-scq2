@@ -1,8 +1,3 @@
-DESCRIPTION = """
-    This file contains 3 fcn functions to be minimized under ipanema3 framework
-    those functions are, actually functions of badjanak kernels.
-"""
-
 __all__ = []
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
@@ -38,8 +33,12 @@ Gdvalue = config.general['Gd']
 
 
 # Command Line Interface {{{
-    
+
 if __name__ == '__main__':
+  DESCRIPTION = """
+      This file contains 3 fcn functions to be minimized under ipanema3 framework
+      those functions are, actually functions of badjanak kernels.
+  """
 
   # Parse arguments {{{
   printsec("Time acceptance procedure")
@@ -107,6 +106,8 @@ if __name__ == '__main__':
   # List samples, params and tables
   samples = args['samples'].split(',')
   time_offset = args['resolutions'].split(',')
+  time_offset = [Parameters.load(i) for i in time_offset]
+  print(time_offset)
   oparams = args['params'].split(',')
 
 
@@ -128,7 +129,7 @@ if __name__ == '__main__':
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
       m = 'MC_Bs2JpsiPhi'
       if TIMEACC['corr']:
-        weight = f'kbsWeight*polWeight*pdfWeight*dg0Weight*sWeight'
+        weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
         weight = f'dg0Weight*sWeight'
       mode = 'signalMC'; c = 'a'
@@ -185,8 +186,8 @@ if __name__ == '__main__':
       weight = f"oddWeight*{weight}"
     if TIMEACC['use_veloWeight']:
       weight = f"veloWeight*{weight}"
-    if "bkgcat60" in args['version']:
-      weight = weight.replace(f'sWeight', 'time/time')
+    # if "bkgcat60" in args['version']:
+    #   weight = weight.replace(f'sWeight', 'time/time')
     print(f"Weight is set to: {weight}")
     # }}}
 
@@ -195,6 +196,7 @@ if __name__ == '__main__':
     cats[mode].allocate(time=time, lkhd='0*time', weight=weight)
     print(np.min(cats[mode].time.get()), np.max(cats[mode].time.get()))
     cats[mode].weight = swnorm(cats[mode].weight)
+    print(cats[mode].df)
     # print(cats[mode].df['veloWeight'])
 
     # Add knots
@@ -220,7 +222,7 @@ if __name__ == '__main__':
                            'value':Gdvalue+resolutions[m]['DGsd'],
                            'latex':f'\Gamma_{c}', 'free':False})
     cats[mode].params.add({'name':f'mu_{c}',
-                           'value':time_offset[i]['mu'].value,
+                           'value': 0 * time_offset[i]['mu'].value,
                            'latex':f'\mu_{c}', 'free':False})
     _sigma = np.mean(cats[mode].df['sigmat'].values)
     print(f"sigmat = {resolutions[m]['sigma']} -> {_sigma}")

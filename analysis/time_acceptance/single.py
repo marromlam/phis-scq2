@@ -110,6 +110,7 @@ if __name__ == "__main__":
     # List samples, params and tables
     samples = args["samples"].split(",")
     time_offset = args["resolution"].split(",")
+    time_offset = [Parameters.load(i) for i in time_offset]
     oparams = args["params"].split(",")
 
     # Check timeacc flag to set knots and weights and place the final cut
@@ -193,8 +194,8 @@ if __name__ == "__main__":
             weight = f"oddWeight*{weight}"
         if TIMEACC["use_veloWeight"]:
             weight = f"veloWeight*{weight}"
-        if "bkgcat60" in args["version"]:
-            weight = weight.replace(f"sWeight", "time/time")
+        # if "bkgcat60" in args["version"]:
+        #     weight = weight.replace(f"sWeight", "time/time")
         print(f"Weight is set to: {weight}")
         # }}}
 

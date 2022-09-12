@@ -176,12 +176,18 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=45,
   kind = 'single'
   try:
     if mode in ('MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0'):
+      mu = list(params.build(params, params.find('mu(.*)a(.*)')).keys())[0]
+      mu = params[mu].value
       list_coeffs = list(a.keys())
       gamma = params['gamma_a'].value
     elif mode == 'MC_Bd2JpsiKstar':
+      mu = list(params.build(params, params.find('mu(.*)b(.*)')).keys())[0]
+      mu = params[mu].value
       list_coeffs = list(b.keys())
       gamma = params['gamma_b'].value
     elif mode == 'Bd2JpsiKstar':
+      mu = list(params.build(params, params.find('mu(.*)c(.*)')).keys())[0]
+      mu = params[mu].value
       list_coeffs = list(c.keys())
       gamma = params['gamma_c'].value
   except:
@@ -220,7 +226,7 @@ def plot_timeacc_spline(params, time, weights, mode=None, conf_level=1, bins=45,
 
 
   # Manipulate data
-  ref = complot.hist(ristra.get(time), bins=bins, weights=ristra.get(weights))
+  ref = complot.hist(ristra.get(time)-mu, bins=bins, weights=ristra.get(weights))
   ref.counts *= int_pdf; ref.errl *= int_pdf; ref.errh *= int_pdf
 
   # Manipulate the decay-time dependence of the efficiency
