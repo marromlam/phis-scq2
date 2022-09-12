@@ -71,6 +71,10 @@ vsub_dict = {
     "pid2": 'hplus_ProbNNk_corr>0.876 & hplus_ProbNNk_corr<0.965',
     "pid3": 'hplus_ProbNNk_corr>0.965 & hplus_ProbNNk_corr<0.996',
     "pid4": 'hplus_ProbNNk_corr>0.996',
+    # prymary vertex cut
+    "PV1": 'nPVs==1',
+    "PV2": 'nPVs==2',
+    "PV3": 'nPVs>=3',
 }
 
 # }}}
