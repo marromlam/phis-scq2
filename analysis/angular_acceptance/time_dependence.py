@@ -7,8 +7,7 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
-################################################################################
-#%% Modules ####################################################################
+# Modules {{{
 
 import argparse
 import numpy as np
@@ -21,6 +20,7 @@ import hjson
 import numpy as np
 import uncertainties as unc
 from uncertainties import unumpy as unp
+import complot
 
 # load ipanema
 from ipanema import initialize
@@ -30,24 +30,15 @@ from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
 from utils.helpers import version_guesser, trigger_scissors
 
 # get bsjpsikk and compile it with corresponding flags
-import badjanak
+from analysis import badjanak
 badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
 badjanak.get_kernels(True)
 
-from angular_acceptance.new_merger import merge_std_dg0
+from analysis.angular_acceptance.new_merger import merge_std_dg0
 
-################################################################################
-
-
-pt_bins = [0, 3.8, 6, 9]
-eta_bins = [0, 3.3, 3.9, 6]
-sigmat_bins = [0, 0.031, 0.042, 0.150]
-
-
-################################################################################
-#%% ############################################################################
+# }}}
 
 
 def argument_parser():
@@ -120,6 +111,7 @@ output_params_path = args['output_params']
 
 
 def plot_comparison_binned_angular_weights(pars, knots, version):
+  print(pars)
   nterms = len(pars[0])   # triangle number of the number of amplitudes T(4)=10
   pcols = 3
   prows = (nterms-1)//pcols + (1 if (nterms-1)%pcols else 0)
@@ -132,7 +124,7 @@ def plot_comparison_binned_angular_weights(pars, knots, version):
       2*[pars[0][wi].value+pars[0][wi].stdev],
       2*[pars[0][wi].value-pars[0][wi].stdev],
       alpha=0.5, label="base")
-    ax[i//pcols ,i%pcols].set_ylabel(f"$w_{i}$")
+    ax[i//pcols ,i%pcols].set_ylabel(f"$w_{i+1}$")
     for bin in range( len(knots)-1 ):
       ax[i//pcols ,i%pcols].errorbar(
         (knots[bin]+knots[bin+1])*0.5,
@@ -140,9 +132,9 @@ def plot_comparison_binned_angular_weights(pars, knots, version):
         xerr=knots[bin+1]-(knots[bin]+knots[bin+1])*0.5,
         yerr=pars[bin+1][wi].stdev, fmt='.', color='k')
     #ax[i//pcols ,i%pcols].legend()
-  watermark(ax[0,0],version=f"${version}$",scale=1.01)
+  watermark(ax[0,0], version=f"${version}$", scale=1.01)
   [make_square_axes(ax[ix,iy]) for ix,iy in np.ndindex(ax.shape)]
-  [tax.set_xlabel(f"$t\,\mathrm{{[ps^{{-1}}]}}$") for tax in ax[prows-1,:]]
+  [tax.set_xlabel(f"$t\,\mathrm{{[ps]}}$") for tax in ax[prows-1,:]]
   return fig, ax
 
 
@@ -168,7 +160,7 @@ if __name__ == '__main__':
 
   # Calculating the weight
   n = len(stdmc.find('kkp.*')) # get last iteration number
-  strweight = f'angWeight*kkpWeight{n}*polWeight*sw/gb_weights'
+  strweight = f'angWeight*kkpWeight{n}*polWeight*sWeight'
   stdmc.df['weight'] = stdmc.df.eval(strweight).values
   dg0mc.df['weight'] = dg0mc.df.eval(strweight).values
 
@@ -198,11 +190,14 @@ if __name__ == '__main__':
   print(f"\nCompute angWeights for std MC\n{80*'='}\n")
   angacc_std = []
   for i in range(0,len(knots)-1):
+    tLL = knots[i]
+    tUL = knots[i+1]
+    badjanak.config['knots'] = [tLL, tUL]
     print(f'Computing angular weights for time >= {knots[i]} & time < {knots[i+1]}')
     vt = ristra.allocate( np.stack( stdmc.subdfs[i].eval(true), axis=-1) )
     vr = ristra.allocate( np.stack( stdmc.subdfs[i].eval(reco), axis=-1) )
     vw = ristra.allocate(stdmc.subdfs[i]['weight'].values)
-    ans = badjanak.get_angular_acceptance_weights(vt, vr, vw, **stdmc.params.valuesdict() )
+    ans = badjanak.get_angular_acceptance_weights(vt, vr, vw, tLL=tLL, tUL=tUL, **stdmc.params.valuesdict() )
     w, uw, cov, corr = ans
     temp = Parameters()
     for k in range(0,len(w)):
@@ -215,11 +210,14 @@ if __name__ == '__main__':
   print(f"\nCompute angWeights for DG0 MC\n{80*'='}\n")
   angacc_dg0 = []
   for i in range(0,len(knots)-1):
+    tLL = knots[i]
+    tUL = knots[i+1]
+    badjanak.config['knots'] = [tLL, tUL]
     print(f'Computing angular weights for time >= {knots[i]} & time < {knots[i+1]}')
     vt = ristra.allocate( np.stack( dg0mc.subdfs[i].eval(true), axis=-1) )
     vr = ristra.allocate( np.stack( dg0mc.subdfs[i].eval(reco), axis=-1) )
     vw = ristra.allocate(dg0mc.subdfs[i]['weight'].values)
-    ans = badjanak.get_angular_acceptance_weights(vt, vr, vw, **dg0mc.params.valuesdict() )
+    ans = badjanak.get_angular_acceptance_weights(vt, vr, vw, tLL=tLL, tUL=tUL, **dg0mc.params.valuesdict() )
     w, uw, cov, corr = ans
     temp = Parameters()
     for k in range(0,len(w)):
@@ -233,11 +231,13 @@ if __name__ == '__main__':
   angaccs = []
   for i in range(0,len(knots)-1):
     angaccs.append( merge_std_dg0(angacc_std[i], angacc_dg0[i]) )
-    print(args['angacc'].replace(f"_run2_",f"_run2Time{i+1}_"))
-    angaccs[-1].dump(args['angacc'].replace(f"_run2_",f"_run2Time{i+1}_"))
+    # print(args['angacc'].replace(f"_run2_",f"_run2Time{i+1}_"))
+    # angaccs[-1].dump(args['angacc'].replace(f"_run2_",f"_run2Time{i+1}_"))
 
   print(f"\nCreate figure\n{80*'='}\n")
   base = Parameters.load(args['angacc'])
-
-  fig, ax = plot_comparison_binned_angular_weights([base,*angaccs],knots,'v0r5')
+  print(base)
+  [print(a) for a in angaccs]
+  fig, ax = plot_comparison_binned_angular_weights([base,*angaccs], knots,
+                                                   args['version'].split('@')[0])
   fig.savefig(args['figure'])

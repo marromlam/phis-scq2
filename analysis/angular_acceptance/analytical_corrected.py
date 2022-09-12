@@ -8,7 +8,8 @@ __email__ = ['mromerol@cern.ch']
 __all__ = ['transform_cijk', 'get_angular_prediction']
 
 
-
+import ipanema
+ipanema.initialize('cuda',1)
 from ipanema import uncertainty_wrapper, get_confidence_bands
 from ipanema import initialize, ristra, Parameters, Sample, optimize, IPANEMALIB
 from utils.helpers import  version_guesser, trigger_scissors, cuts_and
@@ -21,12 +22,13 @@ import uproot3 as uproot
 from scipy.special import lpmv
 from scipy.interpolate import interp1d, interpn
 import argparse
-initialize('cuda',1)
 from analysis import badjanak
 badjanak.get_kernels()
 from scipy.special import comb
 from scipy.integrate import romb, simpson
-from ipanema import plotting
+from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
+# from ipanema import plotting
+import complot
 import uncertainties.unumpy as unp
 import uncertainties as unc
 from scipy import stats, special
@@ -35,13 +37,16 @@ import hjson
 
 import config
 
-tLL = config.general['tLL']
-tUL = config.general['tUL']
-all_knots = config.timeacc['knots']
+# tLL = config.general['tLL']
+# tUL = config.general['tUL']
+# all_knots = config.timeacc['knots']
 
 order_cosK, order_cosL, order_hphi = config.angacc['legendre_order']
 nob = config.angacc['analytic_bins'][0]
+# nob = 20
+# order_cosK, order_cosL, order_hphi = 2,4,0
 
+# transforma cijk {{{
 
 def transform_cijk(cijk, order_x, order_y, order_z, w=False):
   # TODO: I'm pretty sure this can be done much more easily and faster, but
@@ -101,6 +106,7 @@ def transform_cijk(cijk, order_x, order_y, order_z, w=False):
 
   return np.array(coeffs)
 
+# }}}
 
 
 def fcn_d(pars):
@@ -112,7 +118,9 @@ def fcn_d(pars):
                                     np.int32(cosL_l), np.int32(hphi_l),
                                     np.int32(order_cosK), np.int32(order_cosL),
                                     np.int32(order_hphi),
-                                    global_size=(cosL_l, hphi_l, cosK_l))
+                                    global_size=(cosK_l, cosL_l, hphi_l))
+  # exit()
+  # breakpoint()
   return ristra.get(chi2_d).ravel()
 
 
@@ -155,9 +163,11 @@ if __name__ == "__main__":
   p.add_argument('--year', help='Year of data-taking')
   p.add_argument('--angacc', help='Year of data-taking')
   p.add_argument('--version', help='Year of data-taking')
+  p.add_argument('--figures', help='Year of data-taking')
   p.add_argument('--trigger', help='Trigger(s) to fit [comb/(biased)/unbiased]')
   args = vars(p.parse_args())
 
+  tLL = 0.3; tUL = 15
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   ANGACC = args['angacc']
@@ -165,13 +175,15 @@ if __name__ == "__main__":
   TRIGGER = args['trigger']
   print(ANGACC)
   # Prepare the cuts
-  CUT = bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ''   # place cut attending to version
 
+  from trash_can.knot_generator import create_time_bins
   if ANGACC != 'analytic':
     nknots, timebin = ANGACC.split('knots')
-    tLL = all_knots[nknots[8:]][int(timebin)-1]
-    tUL = all_knots[nknots[8:]][int(timebin)]
-    CUT = cuts_and(CUT,f'time>={tLL} & time<{tUL}')
+    timebin = int(timebin)
+    knots = create_time_bins(int(nknots[8:]), tLL, tUL).tolist()
+    tLL, tUL = knots[timebin-1], knots[timebin]
+    CUT = cuts_and(CUT, f'time>={tLL} & time<{tUL}')
   CUT = trigger_scissors(TRIGGER, CUT)
 
   # Print settings
@@ -179,26 +191,35 @@ if __name__ == "__main__":
   print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
-  print(f"{'angacc':>15}: {ANGACC:50}{order_cosK}{order_cosL}{order_hphi}")
+  print(f"{'angacc':>15}: {ANGACC} {order_cosK}{order_cosL}{order_hphi}")
 
+  weight_str = 'polWeight*sWeight'
   if VERSION == 'v0r0':
     args['input_params'] = args['input_params'].replace('generator','generator_old')
+    weight_str = 'polWeight*sWeight/gbWeight'
+    weight_str = 'polWeight*sWeight'
 
   # load parameters
   gen = Parameters.load(args['input_params'])
 
   # load MC sample
-  mc = Sample.from_root(args['sample'])
+  branches = [ 'cosK', 'cosL', 'hphi', 'time', 'gencosK', 'gencosL', 'genhphi',
+    'gentime', 'polWeight', 'sWeight', 'gbWeight', 'hlt1b'
+  ]
+  mc = Sample.from_root(args['sample'], branches=branches)
   mc.chop(CUT)
   mc = mc.df
+  print(mc)
 
 
   """
   mc = pd.concat((
-  uproot.open('/scratch08/marcos.romero/tuples/mc/new1/BsJpsiPhi_MC_2015_UpDown_DST_20181101_Sim09b_tmva_cut58_sel_sw.root')['DecayTree'].pandas.df(['helcosthetaK','helcosthetaL','helphi', 'time', 'sw', 'gb_weights', 'hlt1b', 'cosThetaKRef_GenLvl', 'cosThetaMuRef_GenLvl', 'phiHelRef_GenLvl']),
-  uproot.open('/scratch08/marcos.romero/SideCar/BsJpsiPhi_MC_2015_UpDown_DST_20181101_Sim09b_tmva_cut58_sel_sw_PolWeight.root')['PolWeight'].pandas.df(['PolWeight'])
+  # uproot.open('/scratch08/marcos.romero/tuples/mc/new1/BsJpsiPhi_MC_2015_UpDown_DST_20181101_Sim09b_tmva_cut58_sel_sw.root')['DecayTree'].pandas.df(['helcosthetaK','helcosthetaL','helphi', 'time', 'sw', 'gb_weights', 'hlt1b', 'cosThetaKRef_GenLvl', 'cosThetaMuRef_GenLvl', 'phiHelRef_GenLvl']),
+  # uproot.open('/scratch08/marcos.romero/SideCar/BsJpsiPhi_MC_2015_UpDown_DST_20181101_Sim09b_tmva_cut58_sel_sw_PolWeight.root')['PolWeight'].pandas.df(['PolWeight'])
+  uproot.open('/scratch08/marcos.romero/tuples/mc/new1/BsJpsiPhi_MC_2016_UpDown_CombDSTMDST_20181101_CombSim09bSim09c_tmva_cut58_sel_sw.root')['DecayTree'].pandas.df(['helcosthetaK','helcosthetaL','helphi', 'time', 'sw', 'gb_weights', 'hlt1b', 'cosThetaKRef_GenLvl', 'cosThetaMuRef_GenLvl', 'phiHelRef_GenLvl']),
+  uproot.open('/scratch08/marcos.romero/SideCar/BsJpsiPhi_MC_2016_UpDown_CombDSTMDST_20181101_CombSim09bSim09c_tmva_cut58_sel_sw_PolWeight.root')['PolWeight'].pandas.df(['PolWeight']),
   ), axis=1)
-  
+
   mc.eval('cosK = helcosthetaK', inplace=True)
   mc.eval('cosL = helcosthetaL', inplace=True)
   mc.eval('hphi = helphi', inplace=True)
@@ -206,21 +227,25 @@ if __name__ == "__main__":
   mc.eval('gencosL = cosThetaMuRef_GenLvl', inplace=True)
   mc.eval('genhphi = phiHelRef_GenLvl', inplace=True)
   mc.eval('polWeight = PolWeight', inplace=True)
-  
+  mc.eval('sWeight = sw', inplace=True)
+  mc.eval('gbWeight = gb_weights', inplace=True)
+
   # get only one trigger cat
   mc = mc.query('hlt1b == 0')
-  #weights = np.array(mc.eval(f'polWeight*sw/gb_weights'))
-  #alpha = np.sum(weights)/np.sum(weights**2)
+  print(mc)
+  # weights = np.array(mc.eval(f'polWeight*sw/gb_weights'))
+  # alpha = np.sum(weights)/np.sum(weights**2)
   """
-  sum_weights = np.array(mc.eval(f'polWeight*sw/gb_weights')).sum()
+  sum_weights = np.array(mc.eval(weight_str)).sum()
 
 
-  # Prepare data and arrays ---------------------------------------------------
+  # Prepare data and arrays {{{
+
   printsubsec("Prepare data")
 
   print(" * Prepare data")
   histdd = np.histogramdd(mc[['cosK','cosL','hphi']].values, bins=(nob,nob,nob),
-                          weights=mc.eval(f'polWeight*sw/gb_weights'),
+                          weights=mc.eval(weight_str),
                           range=[(-1,1),(-1,1),(-np.pi,np.pi)])
   mccounts, (ecosK, ecosL, ehphi) = histdd
   noe = (order_hphi+1)*(order_cosL+1)*(order_cosK+1)
@@ -257,29 +282,36 @@ if __name__ == "__main__":
     a = d//N; b = d%N
     return gencounts[a, b, c]
 
+  # for i in range(nob**3):
+  #   print(data_3d(i, nob), prediction_3d(i, nob), prediction_3d(i,nob)*sum_weights)
+  # print(sum_weights)
 
-  # Fit eff x prediction to data -----------------------------------------------
+  # }}}
+
+  # Fit eff x prediction to data {{{
+
   printsubsec('Fitting legendre polynomials coefficients')
 
   # WARNING: I messed up. At some point I confused cosK with cosL, and therefore
   #          there are several functions treating these two as the other. So, 
   #          be aware of this issue, and read the code properly. 
   #          THIS NEEDS TO BE FIXED!
-  order_cosK, order_cosL, order_hphi = order_cosL, order_cosK, order_hphi
+  # order_cosK, order_cosL, order_hphi = order_cosL, order_cosK, order_hphi
 
   print(' * Build parameters dict')
   pars = Parameters()
   for i in range(noe):
-    pars.add({"name":f"b{i+1}", "value":0.0, "latex":f"b_{i+1}", "free":False})
-    cosK_bin = i % (order_cosK+1)
-    hphi_bin = ((i - cosK_bin)/(order_cosK+1)) % (order_hphi+1)
-    cosL_bin = ((i - cosK_bin)/(order_cosK+1) - hphi_bin)/(order_hphi+1);
+    cosL_bin = int(i % (order_cosL+1))
+    hphi_bin = int(((i - cosL_bin)/(order_cosL+1)) % (order_hphi+1))
+    cosK_bin = int(((i - cosL_bin)/(order_cosL+1) - hphi_bin)/(order_hphi+1))
+    pars.add({"name":f"b{cosL_bin}{hphi_bin}{cosK_bin}", "value":0.0, "latex":f"b_{i+1}", "free":False})
     if ((cosK_bin % 2 == 0 or cosK_bin == 0) and
         (hphi_bin % 2 == 0 or hphi_bin == 0) and
         (cosL_bin % 2 == 0 or cosL_bin == 0)):
-      pars[f'b{i+1}'].free = True
-      pars[f'b{i+1}'].set(value=0.0)
-  pars['b1'].set(value=1.0)
+      pars[f'b{cosL_bin}{hphi_bin}{cosK_bin}'].free = True
+      pars[f'b{cosL_bin}{hphi_bin}{cosK_bin}'].set(value=0.0)
+  print(pars)
+  pars['b000'].set(value=1.0)
 
   print(' * Allocating arrays')
   chi2_d = ristra.allocate(0*bcosK).astype(np.float64)
@@ -287,10 +319,10 @@ if __name__ == "__main__":
   cosL_d = ristra.allocate(bcosL).astype(np.float64)
   hphi_d = ristra.allocate(bhphi).astype(np.float64)
   data_3d_d = ristra.allocate(
-                  np.float64([data_3d(i) for i in range(nob**3)])
+                  np.float64([data_3d(i, nob) for i in range(nob**3)])
               ).astype(np.float64)
   prediction_3d_d = sum_weights*ristra.allocate(
-                          np.float64([prediction_3d(i) for i in range(nob**3)])
+                          np.float64([prediction_3d(i, nob) for i in range(nob**3)])
                     ).astype(np.float64)
 
   print(' * Fitting...')
@@ -304,7 +336,7 @@ if __name__ == "__main__":
   #    If you recall I messed up just before. Whatever I did is correct from
   #    the lines that follow up. So, basically, you do not need to touch from
   #    now on but before.
-  order_cosK, order_cosL, order_hphi = order_cosL, order_cosK, order_hphi
+  # order_cosK, order_cosL, order_hphi = order_cosL, order_cosK, order_hphi
   peff = [p.uvalue for p in result.params.values()]
   upeff = uncertainty_wrapper(
               lambda p: transform_cijk(p, order_cosL, order_hphi, order_cosK),
@@ -365,14 +397,14 @@ if __name__ == "__main__":
   #exit()
   #%% THE PLOTS ##################################################################
   
-  mc = data_3d_d.get().reshape(20,20,20)
-  th = prediction_3d_d.get().reshape(20,20,20)
+  mc = data_3d_d.get().reshape(nob,nob,nob)
+  th = prediction_3d_d.get().reshape(nob,nob,nob)
   
-  cosK = 0.5*(np.linspace(-1,1,21)[1:]+np.linspace(-1,1,21)[:-1])
-  cosL = 0.5*(np.linspace(-1,1,21)[1:]+np.linspace(-1,1,21)[:-1])
-  hphi = 0.5*(np.linspace(-1,1,21)[1:]+np.linspace(-1,1,21)[:-1])
+  cosK = 0.5*(np.linspace(-1,1,nob+1)[1:]+np.linspace(-1,1,nob+1)[:-1])
+  cosL = 0.5*(np.linspace(-1,1,nob+1)[1:]+np.linspace(-1,1,nob+1)[:-1])
+  hphi = 0.5*(np.linspace(-1,1,nob+1)[1:]+np.linspace(-1,1,nob+1)[:-1])
   
-  N = 21
+  N = nob+1
   cosKd = ristra.allocate(0.5*(np.linspace(-1,1,N)[1:]+np.linspace(-1,1,N)[:-1]))
   cosLd = ristra.allocate(0.5*(np.linspace(-1,1,N)[1:]+np.linspace(-1,1,N)[:-1]))
   hphid = ristra.allocate(0.5*(np.linspace(-1,1,N)[1:]+np.linspace(-1,1,N)[:-1]))
@@ -413,7 +445,11 @@ if __name__ == "__main__":
     ux = 0.5*(x[1]-x[0])*np.ones_like(x)
   
     # compute confidence bands
-    yunc = uncertainty_wrapper(lambda p: np.mean(th*badjanak.analytical_angular_efficiency(p, cosKd, cosLd, hphid, None, order_cosK, order_cosL, order_hphi), dir) / np.mean(th, dir) , uncertainty_wrapper(lambda p: transform_cijk(np.array(p), order_cosK, order_hphi, order_cosL), upeff))
+    yunc = uncertainty_wrapper(
+            lambda p: np.mean(th*badjanak.analytical_angular_efficiency(p, cosKd, cosLd, hphid, None, order_cosK, order_cosL, order_hphi), dir) / np.mean(th, dir),
+            # uncertainty_wrapper(lambda p: transform_cijk(np.array(p), order_cosK, order_hphi, order_cosL), upeff)
+            upeff
+    )
     yl, yh = get_confidence_bands(yunc)#/norm/np.max(y)
   
     # toy confidence bands (very slow, as you would expect)
@@ -432,7 +468,7 @@ if __name__ == "__main__":
     # shit = np.mean(np.array(accs),0)
   
     # plot
-    fig, ax = plotting.axes_plot()
+    fig, ax = complot.axes_plot()
     ax.errorbar(bounds*x, y/np.max(y), yerr=uy, xerr=bounds*ux, fmt='.k')
     ax.plot(bounds*xh, eff/norm/np.max(y))
     #ax.plot(bounds*xh, shit/norm/np.max(y))
@@ -440,4 +476,8 @@ if __name__ == "__main__":
     ax.set_ylim(0.85,1.05)
     ax.set_xlabel(f"${tex}$")
     ax.set_ylabel(rf"$\varepsilon({tex})$ [a.u.]")
-    fig.savefig(f"{var}.pdf")
+    os.makedirs(args['figures'], exist_ok=True)
+    _mark = args['version'].split('@')[0]  # watermark plots
+    # watermark(ax, version=f"${_mark}$  {weight_str}", scale=1.02)
+    watermark(ax, version=f"${_mark}$", scale=1.02)
+    fig.savefig(os.path.join(args['figures'], f"{var}.pdf"))
