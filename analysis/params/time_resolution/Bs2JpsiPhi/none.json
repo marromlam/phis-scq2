@@ -5,7 +5,7 @@
     value: 0.0
     free: false
     stdev: 0.0
-    latex: \sigma_0
+    latex: \mu
   }
   sigma_offset:
   {
