@@ -2,15 +2,15 @@ rule brutality:
   threads: 128,
   wildcard_constraints:
     mode = 'Bs2JpsiPhi',
-    angacc = '.*Insieme'
+    angacc = '([A-Za-z0-9@~]+)Insieme'
   input:
     tupleBdRD = lambda wcs: tuples(wcs, mode="Bd2JpsiKstar"),
     tupleBdMC = lambda wcs: tuples(wcs, mode="MC_Bd2JpsiKstar"),
     tupleBsRD = lambda wcs: tuples(wcs, mode="Bs2JpsiPhi"),
     tupleBsMC = lambda wcs: tuples(wcs, mode="MC_Bs2JpsiPhi"),
     tupleBsMCdG0 = lambda wcs: tuples(wcs, mode="MC_Bs2JpsiPhi_dG0"),
-    weightBsMC = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2', angacc='corrected', weight=f'angWeight'),
-    weightBsMCdG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2', angacc='corrected', weight=f'angWeight'),
+    weightBsMC = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', angacc='corrected', weight=f'angWeight'),
+    weightBsMCdG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', angacc='corrected', weight=f'angWeight'),
     bangaccBsRD = lambda wcs: angaccs(wcs, angacc='correctedDual', csp='none', trigger='biased'),
     uangaccBsRD = lambda wcs: angaccs(wcs, angacc='correctedDual', csp='none', trigger='unbiased'),
     btimeaccBsMC = lambda wcs: timeaccs(wcs, mode='MC_Bs2JpsiPhi_dG0', trigger='biased'),
@@ -78,7 +78,94 @@ rule brutality:
     --csp-BsRD {concatenater(input.cspBsRD)} \
     --flavor-BsRD {concatenater(input.tagBsRD)} \
     --params {output.params} \
-    --fit {wildcards.fit} \
+    --angacc {wildcards.angacc} \
+    --timeacc {wildcards.timeacc}  \
+    --trigger {wildcards.trigger}  \
+    --version {wildcards.version}  \
+    """)
+
+
+
+rule brutality2:
+  threads: 128,
+  wildcard_constraints:
+    mode = 'Bs2JpsiPhi',
+    angacc = '.*Insieme'
+  input:
+    tupleBdRD = lambda wcs: tuples(wcs, mode="Bd2JpsiKstar"),
+    tupleBdMC = lambda wcs: tuples(wcs, mode="MC_Bd2JpsiKstar"),
+    tupleBsRD = lambda wcs: tuples(wcs, mode="Bs2JpsiPhi"),
+    tupleBsMC = lambda wcs: tuples(wcs, mode="MC_Bs2JpsiPhi"),
+    tupleBsMCdG0 = lambda wcs: tuples(wcs, mode="MC_Bs2JpsiPhi_dG0"),
+    weightBsMC = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', angacc='corrected', weight=f'angWeight'),
+    weightBsMCdG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', angacc='corrected', weight=f'angWeight'),
+    bangaccBsRD = lambda wcs: angaccs(wcs, angacc='correctedDual', csp='none', trigger='biased'),
+    uangaccBsRD = lambda wcs: angaccs(wcs, angacc='correctedDual', csp='none', trigger='unbiased'),
+    btimeaccBsMC = lambda wcs: timeaccs(wcs, mode='MC_Bs2JpsiPhi_dG0', trigger='biased'),
+    utimeaccBsMC = lambda wcs: timeaccs(wcs, mode='MC_Bs2JpsiPhi_dG0', trigger='unbiased'),
+    btimeaccBdMC = lambda wcs: timeaccs(wcs, mode='MC_Bd2JpsiKstar', trigger='biased'),
+    utimeaccBdMC = lambda wcs: timeaccs(wcs, mode='MC_Bd2JpsiKstar', trigger='unbiased'),
+    btimeaccBdRD = lambda wcs: timeaccs(wcs, trigger='biased'),
+    utimeaccBdRD = lambda wcs: timeaccs(wcs, trigger='unbiased'),
+    # cspBdRD = lambda wcs: csps(wcs, mode="Bd2JpsiKstar", csp='none'),
+    # cspBdMC = lambda wcs: csps(wcs, mode="MC_Bd2JpsiKstar", csp='none'),
+    cspBsRD = lambda wcs: csps(wcs, mode="Bs2JpsiPhi"),
+    # cspBsMC = lambda wcs: csps(wcs, mode="MC_Bs2JpsiPhi", csp='none'),
+    # cspBsMCdG0 = lambda wcs: csps(wcs, mode="MC_Bs2JpsiPhi_dG0", csp='none'),
+    # resBdRD = lambda wcs: timeress(wcs, mode="Bd2JpsiKstar", timeres='none'),
+    # resBdMC = lambda wcs: timeress(wcs, mode="MC_Bd2JpsiKstar", timeres='none'),
+    resBsRD = lambda wcs: timeress(wcs, mode="Bs2JpsiPhi"),
+    # resBsMC = lambda wcs: timeress(wcs, mode="MC_Bs2JpsiPhi", timeres='none'),
+    # resBsMCdG0 = lambda wcs: timeress(wcs, mode="MC_Bs2JpsiPhi_dG0", timeres='none'),
+    # tagBdRD = lambda wcs: flavors(wcs, mode="Bd2JpsiKstar", flavor='none'),
+    # tagBdMC = lambda wcs: flavors(wcs, mode="MC_Bd2JpsiKstar", flavor='none'),
+    tagBsRD = lambda wcs: flavors(wcs, mode="Bs2JpsiPhi"),
+    # tagBsMC = lambda wcs: flavors(wcs, mode="MC_Bs2JpsiPhi", flavor='none'),
+    # tagBsMCdG0 = lambda wcs: flavors(wcs, mode="MC_Bs2JpsiPhi_dG0", flavor='none'),
+  params:
+    BsMC = [
+      'analysis/params/generator/2015/MC_Bs2JpsiPhi.json',
+      'analysis/params/generator/2016/MC_Bs2JpsiPhi.json',
+      'analysis/params/generator/2017/MC_Bs2JpsiPhi.json',
+      'analysis/params/generator/2018/MC_Bs2JpsiPhi.json'
+    ],
+    BsMCdG0 = [
+      'analysis/params/generator/2015/MC_Bs2JpsiPhi_dG0.json',
+      'analysis/params/generator/2016/MC_Bs2JpsiPhi_dG0.json',
+      'analysis/params/generator/2017/MC_Bs2JpsiPhi_dG0.json',
+      'analysis/params/generator/2018/MC_Bs2JpsiPhi_dG0.json'
+    ],
+  output:
+    params = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+  log:
+    'output/log/brutality/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+  run:
+    def concatenater(x):
+       x = [x] if isinstance(x,str) else x
+       return ",".join(x)
+    shell(f"""
+    python analysis/what_the_hell/simultaneous_fit_physics_timeacc.py \
+    --sample-BdRD {concatenater(input.tupleBdRD)} \
+    --sample-BdMC {concatenater(input.tupleBdMC)} \
+    --sample-BsRD {concatenater(input.tupleBsRD)} \
+    --sample-BsMC {concatenater(input.tupleBsMC)} \
+    --sample-BsMCdG0 {concatenater(input.tupleBsMCdG0)} \
+    --weight-BsMC {concatenater(input.weightBsMC)} \
+    --weight-BsMCdG0 {concatenater(input.weightBsMCdG0)} \
+    --params-BsMC {concatenater(params.BsMC)} \
+    --params-BsMCdG0 {concatenater(params.BsMCdG0)} \
+    --angacc-biased-BsRD {concatenater(input.bangaccBsRD)} \
+    --angacc-unbiased-BsRD {concatenater(input.uangaccBsRD)} \
+    --timeacc-biased-BsMC {concatenater(input.btimeaccBsMC)} \
+    --timeacc-unbiased-BsMC {concatenater(input.utimeaccBsMC)} \
+    --timeacc-biased-BdMC {concatenater(input.btimeaccBdMC)} \
+    --timeacc-unbiased-BdMC {concatenater(input.utimeaccBdMC)} \
+    --timeacc-biased-BdRD {concatenater(input.btimeaccBdRD)} \
+    --timeacc-unbiased-BdRD {concatenater(input.utimeaccBdRD)} \
+    --timeres-BsRD {concatenater(input.resBsRD)} \
+    --csp-BsRD {concatenater(input.cspBsRD)} \
+    --flavor-BsRD {concatenater(input.tagBsRD)} \
+    --params {output.params} \
     --angacc {wildcards.angacc} \
     --timeacc {wildcards.timeacc}  \
     --trigger {wildcards.trigger}  \

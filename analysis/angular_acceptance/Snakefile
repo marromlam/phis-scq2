@@ -102,21 +102,23 @@ rule angular_acceptance_naive_analytical:
     params = 'analysis/params/generator/{year}/{mode}.json'
   output:
     tijk = 'output/params/angular_acceptance/{year}/{mode}/{version}_tijk{angacc}_{trigger}.json',
-    angacc = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}.json'
+    angacc =             'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}_none_{trigger}.json',
+    figures = directory('output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}_{trigger}/'),
   log:
     'output/log/angular_acceptance_naive_analytical/{year}/{mode}/{version}_{angacc}_{trigger}.log'
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/analytical_corrected.py\
-             --sample {input.sample}\
-             --input-params {params.params}\
-             --output-tijk {output.tijk}\
-             --output-angacc {output.angacc}\
-             --year {wildcards.year}\
-             --mode {wildcards.mode}\
-             --version {wildcards.version}\
-             --angacc {wildcards.angacc}\
-             --trigger {wildcards.trigger}
+    --sample {input.sample}\
+    --input-params {params.params}\
+    --output-tijk {output.tijk}\
+    --output-angacc {output.angacc}\
+    --year {wildcards.year}\
+    --mode {wildcards.mode}\
+    --version {wildcards.version}\
+    --angacc {wildcards.angacc}\
+    --trigger {wildcards.trigger}\
+    --figures {output.figures}
     ) &> {log}""")
     send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
 
@@ -171,7 +173,7 @@ rule angular_acceptance_corrected_dual:
   resources:
     mem_mb = 512
   wildcard_constraints:
-    step = "(naive|corrected|analytic)Dual.*",
+    step = "(naive|corrected|analytic.*)Dual.*",
     #version = "^((?!v0r1).)*$",
   input:
     weights_std = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/MC_Bs2JpsiPhi/{wcs.version}_{wcs.step.replace('Dual','')}_{wcs.csp}_{wcs.trigger}.json",
@@ -890,14 +892,14 @@ rule angular_weights_time_dependence:
     weights_std = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi',weight=f'kkpWeight'),
     weights_dg0 = lambda wcs: tuples(wcs,mode='MC_Bs2JpsiPhi_dG0',weight=f'kkpWeight'),
     timeacc = 'output/params/time_acceptance/{year}/Bd2JpsiKstar/{version}_{timeacc}_{trigger}.json',
-    angacc = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{timeacc}_{trigger}.json',
+    angacc = 'output/params/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
   params:
     params_std = 'analysis/params/generator/{year}/MC_Bs2JpsiPhi.json',
     params_dg0 = 'analysis/params/generator/{year}/MC_Bs2JpsiPhi_dG0.json'
   output:
-    figure = 'output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}Timedep_{timeacc}_{trigger}.pdf',
+    figure = 'output/figures/angular_acceptance/{year}/{mode}/{version}_{angacc}Timedep_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.pdf',
   log:
-    'output/log/angular_weights_time_dependence/{year}/{mode}/{version}_{angacc}_{timeacc}_{trigger}.log'
+    'output/log/angular_acceptance_time_dependence/{year}/{mode}/{version}_{angacc}Timedep_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log',
   run:
     shell(f"""(time\
     python analysis/angular_acceptance/time_dependence.py\
@@ -932,6 +934,7 @@ rule angular_efficiency_time_dependence:
     samples = lambda wcs: tuples(wcs),
     #weights = lambda wcs: tuples(wcs,weight=f'kkpWeight'),
     angacc0 = ['output/params/angular_acceptance/{year}/{mode}/{version}_tijk{angacc}_{timeacc}.json'],
+    # angacci = ['output/params/angular_acceptance/{year}/{mode}/{version}_tijk{angacc}_{timeacc}.json'],
     angacci = lambda wcs: expand('output/params/angular_acceptance/{{year}}/{{mode}}/{{version}}_tijk{{angacc}}{{nknots}}knots{bin}_{{timeacc}}.json', bin=range(1,int(f'{wcs.nknots}')+2)),
   params:
     'analysis/params/generator/{year}/{mode}.json',
@@ -1117,6 +1120,34 @@ rule pvalue_MCcheck:
       send_mail(f"Pull angular acceptance :: {wildcards}", f"{log}")
 
 # }}}
+
+
+rule angular_acceptance_bdt_systematic:
+  input:
+    nominal = "output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+    bdt = lambda w: expand("output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+                           year=w.year, fit=w.fit, angacc=w.angacc, csp=w.csp,
+                           flavor=w.flavor, timeacc=w.timeacc, timeres=w.timeres,
+                           trigger=w.trigger,
+                           version=[f"{w.version.split('@')[0]}bdt{i}@{w.version.split('@')[1]}" for i in range(1,config['n_bdt_tests']+1)]
+    )
+  params:
+    n_tests=config['n_bdt_tests']
+  output:
+    pars = "output/params/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.json",
+    tabs = "output/tables/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.tex"
+  log:
+    "output/log/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.tex"
+  run:
+      shell(f"""(time\
+      python test_bdt_hists.py\
+      --nominal-params {input.nominal}\
+      --bdt-params {','.join(input.bdt)}\
+      --output-params {output.pars}\
+      --output-table {output.tabs}\
+      --n-tests {params.n_tests}\
+      ) &> {log}""")
+
 
 
 

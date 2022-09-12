@@ -5,6 +5,12 @@
 # Contributors:
 #       Marcos Romero Lamas, mromerol@cern.ch
 #       Ramón Ángel Ruiz Fernández, rruizfer@cern.ch
+#
+# Info:
+#       Tuple sizes: A full tuple, directly dowloded from EOS or selected within
+#       pipeline is ~8GB. The largest reduced tuple, v@cut.root sizes ~1GB.
+#
+#
 
 
 # Modules {{{
@@ -83,16 +89,17 @@ include: 'packandgo/Snakefile'
 # }}}
 
 
-# Final rule (compile slides) {{{
-
 rule help:
     """
     Print list of all targets with help.
     """
     run:
+        all_rules = 0
         for rule in workflow.rules:
             print(rule.name)
             print(rule.docstring)
+            all_rules += 1
+        print(f"Total number of rules is: {all_rules}")
 
 
 rule all:
@@ -100,107 +107,311 @@ rule all:
     "output/b2cc_all.pdf"
 
 
-
 rule pack_thesis:
   input:
     # TABLES {{{
+    # All tables needed for the theis or analysis note
+    #
+    #
     # time acceptance tables {{{
     #
-    # baseline time acceptance {{{
-    f"output/tables/time_acceptance/run2/MC_Bs2JpsiPhi_dG0/{config['version']}_simul3.tex",
-    f"output/tables/time_acceptance/run2/MC_Bd2JpsiKstar/{config['version']}_simul3.tex",
-    f"output/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul3.tex",
+    # baseline time acceptance
+    expand([
+        "output/tables/time_acceptance/run2/MC_Bs2JpsiPhi_dG0/{mversion}_{mtimeacc}.tex",
+        "output/tables/time_acceptance/run2/MC_Bd2JpsiKstar/{mversion}_{mtimeacc}.tex",
+        "output/tables/time_acceptance/run2/Bd2JpsiKstar/{mversion}_{mtimeacc}.tex",
+        ],
+        mtimeacc = [
+            f"{config['timeacc']}",  # baseline
+            f"{config['timeacc']}".replace('3', '6'),  # using 6 knots
+            f"{config['timeacc']}Noncorr"  # wihtout timeacc corerctions
+        ],
+        mversion = [f"{config['version']}@LcosK"]
+    ),
+    # using Bs signal MC instead of DG0 one
+    expand([
+        "output/tables/time_acceptance/run2/MC_Bs2JpsiPhi/{mversion}_{mtimeacc}.tex",
+        "output/tables/time_acceptance/run2/MC_Bd2JpsiKstar/{mversion}_{mtimeacc}.tex",
+        "output/tables/time_acceptance/run2/Bd2JpsiKstar/{mversion}_{mtimeacc}.tex",
+        ],
+        mtimeacc = [ f"{config['timeacc']}DGn0" ],
+        mversion = [f"{config['version']}@LcosK"]
+    ),
+    # using Bu as control channel instead of Bd
+    expand([
+        "output/tables/time_acceptance/run2/MC_Bs2JpsiPhi_dG0/{mversion}_{mtimeacc}.tex",
+        "output/tables/time_acceptance/run2/MC_Bu2JpsiKplus/{mversion}_{mtimeacc}.tex",
+        "output/tables/time_acceptance/run2/Bu2JpsiKplus/{mversion}_{mtimeacc}.tex",
+        ],
+        mtimeacc = [
+            f"{config['timeacc']}BuasBd",  # using Bu as control channel
+        ],
+        mversion = [f"{config['version']}@LcosK"]
+    ),
+    #
     # }}}
     #
-    # baseline with dG!=0 time acceptance {{{ 
-    f"output/tables/time_acceptance/run2/MC_Bs2JpsiPhi/{config['version']}_simul3DGn0.tex",
-    f"output/tables/time_acceptance/run2/MC_Bd2JpsiKstar/{config['version']}_simul3DGn0.tex",
-    f"output/tables/time_acceptance/run2/Bd2JpsiKstar/{config['version']}_simul3DGn0.tex",
-    # }}}
     #
-    # }}}
     # lifetimes {{{
-    # single (each mode independently fitted) {{{
-    f"output/tables/lifetime/run2/Bs2JpsiPhi/{config['version']}_single3_combined.tex",
-    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}_single3_combined.tex",
-    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_single3_combined.tex",
-    f"output/tables/lifetime/run2/Bs2JpsiPhi/{config['version']}_single3_unbiased.tex",
-    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}_single3_unbiased.tex",
-    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_single3_unbiased.tex",
-    f"output/tables/lifetime/run2/Bs2JpsiPhi/{config['version']}_single3_biased.tex",
-    f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}_single3_biased.tex",
-    f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_single3_biased.tex",
+    #
+    # single (each mode independently fitted)
+    expand(
+        "output/tables/lifetime/run2/{mmode}/{mversion}_{mtimeacc}_{mtrigger}.tex",
+        mversion = [f"{config['version']}@LcosK"],
+        mtimeacc = [f"{config['timeacc']}".replace('simul', 'single')],
+        mtrigger = ["combined", "biased", "unbiased"],
+        # mmode = ["Bu2JpsiKplus", "Bd2JpsiKstar", "Bs2JpsiPhi"],
+        mmode = ["Bd2JpsiKstar", "Bs2JpsiPhi"],
+    ),
+    #
+    # simul
+    expand(
+        "output/tables/lifetime/run2/{mmode}/{mversion}_{mtimeacc}_{mtrigger}.tex",
+        mversion = [f"{config['version']}@LcosK"],
+        mtimeacc = [f"{config['timeacc']}".replace('simul', 'single')],
+        mtrigger = ["combined", "biased", "unbiased"],
+        # mmode = ["Bu2JpsiKplus", "Bd2JpsiKstar"],
+        mmode = ["Bd2JpsiKstar"],
+    ),
+    #
+    # Bd as Bs lifetime measurement
+    expand(
+        "output/tables/lifetime/{myear}/{mmode}/{mversion}_{mtimeacc}BdasBs_{mtrigger}.tex",
+        mversion = [f"{config['version']}@LcosKevtEven"],
+        mtimeacc = [f"{config['timeacc']}"],
+        mtrigger = ["combined", "biased", "unbiased"],
+        mmode = ["Bd2JpsiKstar"],
+        myear = ['run2']
+    ),
+    #
     # }}}
-    # cross-checks {{{
+    #
+    #
+    # csp factors {{{
+    #
+    # PUT PATH HERE
+    #
+    # }}}
+    #
+    #
+    # angular acceptance {{{
+    #
+    expand(
+        "output/tables/angular_acceptance/run2/Bs2JpsiPhi/{mversion}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}.tex",
+        mversion = [f"{config['version']}@LcosK"],
+        mangacc = [
+            f"{config['angacc']}",
+            f"{config['angacc']}".replace('run2', 'yearly'),
+        ],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [f"{config['timeacc']}"],
+        mtimeres = [f"{config['timeres']}"],
+    ),
+    #
+    # }}}
+    #
+    #
+    # physics parameters {{{
     # f"output/tables/lifetime/run2/Bd2JpsiKstar/{config['version']}@evtEven_simul3BdasBs_combined.tex",
     # f"output/tables/lifetime/run2/Bu2JpsiKplus/{config['version']}_simul3BuasBs_combined.tex",
+    #
+    # cuts on the tuple using Bd as control channel
+    expand(
+        "output/tables/physics_params/{myear}/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex",
+        mversion = [
+            f"{config['version']}@LcosK+{config['version']}",
+            f"{config['version']}@LcosK+{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4",
+            f"{config['version']}@LcosK+{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3",
+        ],
+        myear = [f"{config['year']}", "2015", "2016", "2017", "2018"],
+        mfit = [f"{config['fit']}"],
+        mangacc = [ f"{config['angacc']}"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [f"{config['timeacc']}"],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    #
+    # cuts on the tuple using Bd as control channel
+    expand(
+        "output/tables/physics_params/{myear}/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex",
+        mversion = [
+            f"{config['version']}@LcosK",
+            f"{config['version']}",
+            # f"{config['version']}@LcosK+{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4",
+            # f"{config['version']}@LcosK+{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3",
+        ],
+        myear = [f"{config['year']}", "2015+2016+2017+2018"],
+        mfit = [f"{config['fit']}"],
+        mangacc = [ f"{config['angacc']}".replace('run2', 'yearly')],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [f"{config['timeacc']}"],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    #
+    # time acceptance variations
+    expand(
+        "output/tables/systematics/run2/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex",
+        mversion = [f"{config['version']}@LcosK"],
+        mfit = [f"{config['fit']}"],
+        mangacc = [f"{config['angacc']}"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [
+            f"{config['timeacc']}DGn0",  # using DG!=0 Bs MC
+            f"{config['timeacc'].replace('3', '6')}",  # using 6 knots
+            # f"{config['timeacc']}+{config['timeacc']}BuasBd",  # using Bu as control channel
+            f"{config['timeacc']}Noncorr"  # wihtout timeacc corerctions
+        ],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    #
+    # angular acceptance variations
+    expand(
+        "output/tables/systematics/run2/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex",
+        mversion = [f"{config['version']}@LcosK"],
+        mfit = [f"{config['fit']}"],
+        mangacc = [f"analytic2knots1Dual+analytic2knots2Dual+analytic2knots3Dual"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [ f"{config['timeacc']}" ],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    #
     # }}}
-    # }}}
-    # angular acceptance {{{
-    # baseline
-    # f"output/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_run2_vgc_amsrd_simul3_amsrd.tex",
-    # yearly
-    # f"output/tables/angular_acceptance/run2/Bs2JpsiPhi/{config['version']}_yearly_vgc_amsrd_simul3_amsrd.tex",
-    # }}}
-    # physics parameters {{{
-    # HERE nominal {{{
-    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
-    # }}}
+    #
+    #
     # trigger cross-checks {{{
-    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@Trigger_run2_run2_vgc_amsrd_simul3_amsrd.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@LcosK_auto_run2Dual_vgc_amsrd_simul3_amsrd_biased+unbiased.tex",
     # }}}
     # magnet cross-checks {{{
-    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@Magnet_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@LcosKmagUp+{config['version']}@LcosKmagDown_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex",
     # }}}
-    # yearly cross-checks {{{
+    # yearly cross-checks {{{
     # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
     # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
     # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_yearly_yearly_vgc_amsrd_simul3Noncorr_amsrd_combined.tex",
     # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_vgc_amsrd_simul3DGn0_amsrd_combined.tex",
     # }}}
-    # pT cross-check {{{
-    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@pTB_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    # pT and etaB cross-check with Bs and Bd as control {{{
+    # run2
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_{config['angacc']}_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_{config['angacc']}_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    # yearly
+    f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}_{config['timeres']}_{config['trigger']}.tex",
+    # tag
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@LcosKonlyOST+{config['version']}@LcosKonlySST+{config['version']}@LcosKonlyOSS_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex",
+    f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@LcosKPV1+{config['version']}@LcosKPV2+{config['version']}@LcosKPV3_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex",
     # }}}
-    # pT cross-check using Bu as control channel {{{
-    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@pTB_run2_run2_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
-    # f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
-    # f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
-    # f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
-    # f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@pTB_yearly_yearly_vgc_amsrd_simul3BuasBd_amsrd_combined.tex",
-    # }}}
-    # etaB cross-check {{{
-    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@etaB_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@etaB_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # }}}
-    # sigmat cross-check {{{
-    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@sigmat_run2_run2_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
-    # f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@sigmat_yearly_yearly_vgc_amsrd_simul3_amsrd_combined.tex",
+    # pT and etaB cross-check with Bs and Bu as control {{{
+    # run2
+    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_{config['angacc']}_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_{config['angacc']}_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # yearly
+    # f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # f"output/tables/physics_params/2015/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # f"output/tables/physics_params/2016/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # f"output/tables/physics_params/2017/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
+    # f"output/tables/physics_params/2018/Bs2JpsiPhi/{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3_{config['fit']}_yearlyDual_{config['csp']}_{config['flavor']}_{config['timeacc']}BuasBd_{config['timeres']}_{config['trigger']}.tex",
     # }}}
     # time acceptance variations {{{
     # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_vgc_amsrd_simul3DGn0_amsrd_combined.tex",
     # f"output/tables/physics_params/run2/Bs2JpsiPhi/{config['version']}_run2_run2_vgc_amsrd_simul3Noncorr_amsrd_combined.tex",
     # }}}
     # }}}
-    # }}}
+    #
+    #
+    #
+    #
     # FIGURES {{{
     #
-    # reweighting plots
-    # expand(rules.reweightings_plot_time_acceptance.output,
-    #        version = 'v0r5',
-    #        mode = ['MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar',
-    #                'Bd2JpsiKstar'],
-    #        branch = ['B_P', 'B_PT', 'X_M'],
-    #        year = ['2015', '2016', '2017', '2018']),
+    #
+    # reweighting plots {{{
+    #
+    expand(rules.reweightings_plot_time_acceptance.output,
+           version = [
+               f"{config['version']}@LcosK",
+           ],
+           mode = ['MC_Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar',
+                   'Bd2JpsiKstar'],
+           branch = ['pTB', 'pB', 'mHH'],
+           year = ['2015', '2016', '2017', '2018'],
+           trigger=['biased', 'unbiased'],
+    ),
+    #
+    # }}}
+    #
+    #
+    # time acceptance plots {{{
+    #
+    # baseline time acceptance
+    expand(
+        rules.time_acceptance_simultaneous_plot.output,
+        mtimeacc = [
+            f"{config['timeacc']}",  # baseline
+            f"{config['timeacc']}".replace('3', '6'),  # using 6 knots
+            # f"{config['timeacc']}BuasBd",  # using Bu as control channel
+            f"{config['timeacc']}Noncorr"  # wihtout timeacc corerctions
+        ],
+        mmode = [ 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar' ],
+        myear = [ '2015', '2016', '2017', '2018' ],
+        mversion = [
+            f"{config['version']}@LcosK",
+            f"{config['version']}@LcosK+{config['version']}"
+        ],
+        plot = ['fit', 'fitlog', 'spline', 'splinelog'],
+        trigger = ['biased', 'unbiased'],
+    ),
+    expand(
+        rules.time_acceptance_simultaneous_plot.output,
+        mtimeacc = [
+            f"{config['timeacc']}+{config['timeacc'].replace('3', '6')}",  # using 6 knots
+            # f"{config['timeacc']}BuasBd",  # using Bu as control channel
+            f"{config['timeacc']}+{config['timeacc']}Noncorr"  # wihtout timeacc corerctions
+        ],
+        mmode = [ 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar' ],
+        myear = [ '2015', '2016', '2017', '2018' ],
+        mversion = [ f"{config['version']}@LcosK", ],
+        plot = ['fit', 'fitlog', 'spline', 'splinelog'],
+        trigger = ['biased', 'unbiased'],
+    ),
+    #
+    # time acceptance plots with DGn0
+    # this rule cannot handle these plots yet!
+    # expand(
+    #     rules.time_acceptance_simultaneous_plot.output,
+    #     mtimeacc = [
+    #         f"{config['timeacc']}DGn0",  # using DG!=0 Bs MC
+    #         f"{config['timeacc']}DGn0Noncorr"  # wihtout timeacc corerctions
+    #     ],
+    #     mmode = [ 'MC_Bs2JpsiPhi', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar' ],
+    #     myear = [ '2015', '2016', '2017', '2018' ],
+    #     mversion = [
+    #         f"{config['version']}@LcosK",
+    #         # f"{config['version']}@LcosK+{config['version']}"
+    #     ],
+    #     plot = ['fit', 'fitlog', 'spline', 'splinelog'],
+    #     trigger = ['biased', 'unbiased'],
+    # ),
+    #
+    # }}}
+    #
     # time acceptance plot - nominal case only
     # expand(rules.time_acceptance_simultaneous_plot.output,
     #        mversion=config['version'],
@@ -216,7 +427,27 @@ rule pack_thesis:
     #        timeacc=['single', 'singleNoncorr'],
     #        year=['run2']),
     # }}}
-    # time acceptance plots - binned variables
+    #
+    #
+    # time acceptance plots - binned variables {{{
+    #
+    # cuts on the tuple using Bd as control channel
+    expand(
+        rules.time_acceptance_simultaneous_plot.output,
+        mversion = [
+            f"{config['version']}@LcosK+{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4",
+            f"{config['version']}@LcosK+{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3",
+        ],
+        myear = ["2015", "2016", "2017", "2018"],
+        mtimeacc = [f"{config['timeacc']}"],
+        mmode = [ 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar' ],
+        trigger = ['biased', 'unbiased'],
+        plot = ['fit', 'fitlog', 'spline', 'splinelog'],
+    ),
+    #
+    # }}}
+    #
+    #
     # expand(rules.time_acceptance_plot.output,
     #        version=['v0r5+v0r5@pTB1+v0r5@pTB2+v0r5@pTB3+v0r5@pTB4',
     #                 'v0r5+v0r5@sigmat1+v0r5@sigmat2+v0r5@sigmat3',
@@ -234,19 +465,47 @@ rule pack_thesis:
     #        year=['2015', '2016', '2017', '2018'],
     #        plot=['splinelog'],
     #        trigger=['biased', 'unbiased']),
+    #
+    # angular acceptance plots {{{
+    #
+    expand("output/figures/angular_acceptance/{year}/Bs2JpsiPhi/{version}_{angacc}Timedep_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.pdf",
+            version=[f"{config['version']}@LcosK"],
+            trigger=["biased", "unbiased"],
+            timeacc=["simul3"],
+            timeres=["amsrd"],
+            flavor=["amsrd"],
+            csp=["vgc"],
+            angacc=["run2Dual"],
+            year=[ 2015, 2016, 2017, 2018],
+    ),
+    expand("output/figures/angular_acceptance/{year}/{mode}/{version}_analytic2knots_{trigger}_{branch}.pdf",
+            version=[f"{config['version']}@LcosK"],
+            mode=["MC_Bs2JpsiPhi_dG0", "MC_Bs2JpsiPhi"],
+            trigger=["biased", "unbiased"],
+            branch=["cosL", "cosK", "hphi"],
+            year=[ 2015, 2016, 2017, 2018],
+    ),
+    #
     # rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
     #               version=['v0r5'],
     #               mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
     #               branch=['B_P','B_PT','X_M','hplus_PT','hplus_P','hminus_PT','hminus_P'],
     #               angacc=['yearly'],
-    #               timeacc=['repo'],
+    #               timeacc=['repo']
     #               weight=['sWeight','kinWeight','kkpWeight'],
     #               year=['2015']),
     #               #year=['2015','2016','2017','2018']),
     # }}}
+    #
+    #
+    # }}}
   output:
-    "caca.log"
+    f"caca_{config['version']}.log"
   run:
+      for element in f"{input}".split(' '):
+          notepath = f"{element}".replace('output', NOTE)
+          os.makedirs(os.path.dirname(notepath), exist_ok=True)
+          shell(f"cp {element} {notepath}")
       shell("(ls) &> {output}")
 
 
@@ -350,19 +609,19 @@ rule slides_compile:
     #        branch = ['B_P', 'B_PT', 'X_M'],
     #        year = ['2015', '2016', '2017', '2018']),
     # time acceptance plot - nominal case only
-    expand(rules.time_acceptance_simultaneous_plot.output,
-           mversion=config['version'],
-           mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
-           mtimeacc=['simul3', 'simul3Noncorr'],
-           myear=['2015', '2016', '2017', '2018'],
-           plot=['fitlog', 'splinelog'],
-           trigger=['biased', 'unbiased']),
-    # lifetime trend plots {{{
-    expand(rules.lifetime_trend.output,
-           version=config['version'],
-           mode=['Bs2JpsiPhi', 'Bu2JpsiKplus', 'Bd2JpsiKstar'],
-           timeacc=['single', 'singleNoncorr'],
-           year=['run2']),
+    # expand(rules.time_acceptance_simultaneous_plot.output,
+    #        mversion=config['version'],
+    #        mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
+    #        mtimeacc=['simul3', 'simul3Noncorr'],
+    #        myear=['2015', '2016', '2017', '2018'],
+    #        plot=['fitlog', 'splinelog'],
+    #        trigger=['biased', 'unbiased']),
+    # # lifetime trend plots {{{
+    # expand(rules.lifetime_trend.output,
+    #        version=config['version'],
+    #        mode=['Bs2JpsiPhi', 'Bu2JpsiKplus', 'Bd2JpsiKstar'],
+    #        timeacc=['single', 'singleNoncorr'],
+    #        year=['run2']),
     # }}}
     # time acceptance plots - binned variables
     # expand(rules.time_acceptance_plot.output,

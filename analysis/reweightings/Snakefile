@@ -261,7 +261,7 @@ rule reweightings_plot_time_acceptance:
     mem_mb=1024
   input:
     original = lambda wcs: tuples(wcs),
-    target = lambda wcs: tuples(wcs,mode='cdata')
+    target = lambda wcs: tuples(wcs, mode='cdata')
   output:
     'output/figures/reweightings/{year}/{mode}/{version,[A-Za-z0-9@]+}_{branch}_{trigger}.pdf'
   log:

@@ -32,7 +32,7 @@ rule time_resolution_offset:
     output_file = f"{output}"
 
     # TODO: this should be either computed withing this analysis pipeline or
-    # moved elsewhere
+    # moved elsewhere in fs
     meson = {
         "Bs2JpsiPhi": {
            '2015': -4.853652301889032,
@@ -41,17 +41,16 @@ rule time_resolution_offset:
            '2018': -5.870099929940548
         },
         "Bd2JpsiKstar": {
-            '2015': -4.853652301889032,
-            '2016': -6.122278950797789,
-            '2017': -7.130933450563839,
-            '2018': -5.870099929940548
+           '2015': -4.264111432238109,
+           '2016': -5.375427671067498,
+           '2017': -6.2590084518453155,
+           '2018': -5.1545189890594285
         }
     }
 
     if not "v0r0" in f"{wildcards.version}":
         if mode in meson.keys():
-            pars['mu'].set(value=meson[mode][year])
-    print(pars)
+            pars['mu'].set(value=1e-3 * meson[mode][year])
     pars.dump(output_file)
 
 # }}}
@@ -92,6 +91,7 @@ rule time_resolution_from_git:
     off = ipanema.Parameters.load(f"{input}")
     res['mu'].set(value=off['mu'].value, stdev=off['mu'].stdev)
     res.dump(f"{output}")
+    print(res)
 
 # }}}
 
@@ -310,4 +310,4 @@ rule time_resolution_calibration_translate:
         ) &> {log}""")
 
 
-# vim:foldmethod=marker
+# vim: fdm=marker
