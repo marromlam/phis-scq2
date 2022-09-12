@@ -304,6 +304,49 @@ if __name__ == "__main__":
                   free=True, min=-0.1, max=0.1,
                   latex=r"\Delta p^{\rm SS}_{1}"))
 
+    # for year in YEARS:
+    #   if int(year) > 2015:
+    #     str_year = str(year)
+    #     syear = int(str_year[:-2])
+    #     pars.add(dict(name=f"etaOS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['eta_os'].value,
+    #                 free=False))
+    #     pars.add(dict(name=f"etaSS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['eta_ss'].value,
+    #                 free=False))
+    #     pars.add(dict(name=f"p0OS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['p0_os'].value,
+    #                 free=True, min=0.0, max=1.0,
+    #                 latex=r"p^{\rm OS}_{0}"))
+    #     pars.add(dict(name=f"p1OS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['p1_os'].value,
+    #                 free=True, min=0.5, max=1.5,
+    #                 latex=r"p^{\rm OS}_{1}"))
+    #     pars.add(dict(name=f"p0SS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['p0_ss'].value,
+    #                 free=True, min=0.0, max=2.0,
+    #                 latex=r"p^{\rm SS}_{0}"))
+    #     pars.add(dict(name=f"p1SS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['p1_ss'].value,
+    #                 free=True, min=0.0, max=2.0,
+    #                 latex=r"p^{\rm SS}_{1}"))
+    #     pars.add(dict(name=f"dp0OS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['dp0_os'].value,
+    #                 free=True, min=-0.1, max=0.1,
+    #                 latex=r"\Delta p^{\rm OS}_{0}"))
+    #     pars.add(dict(name=f"dp1OS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['dp1_os'].value,
+    #                 free=True, min=-0.1, max=0.1,
+    #                 latex=r"\Delta p^{\rm OS}_{1}"))
+    #     pars.add(dict(name=f"dp0SS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['dp0_ss'].value,
+    #                 free=True, min=-0.1, max=0.1,
+    #                 latex=r"\Delta p^{\rm SS}_{0}"))
+    #     pars.add(dict(name=f"dp1SS{syear}",
+    #                 value=data[str(year)][TRIGGER[0]].flavor['dp1_ss'].value,
+    #                 free=True, min=-0.1, max=0.1,
+    #                 latex=r"\Delta p^{\rm SS}_{1}"))
+
     # }}}
 
     # Print all ingredients of the pdf {{{
@@ -453,7 +496,7 @@ if __name__ == "__main__":
                     # **dt.flavor.valuesdict(),
                     tLL=tLL, tUL=tUL,
                     use_fk=1, use_angacc=1, use_timeacc=1,
-                    use_timeoffset=1, set_tagging=1, use_timeres=1,
+                    use_timeoffset=0, set_tagging=1, use_timeres=1,
                     BLOCK_SIZE=256
                 )
                 chi2.append(-2.0 * (ristra.log(dt.prob) * dt.weight).get())
