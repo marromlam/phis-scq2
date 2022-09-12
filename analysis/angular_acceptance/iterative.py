@@ -168,7 +168,7 @@ def fcn_data(parameters, data, tLL, tUL):
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
                   **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc=1,
-                  use_timeoffset=1, BLOCK_SIZE=128)
+                  use_timeoffset=0, BLOCK_SIZE=128)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)

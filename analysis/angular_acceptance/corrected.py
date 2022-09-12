@@ -146,9 +146,9 @@ if __name__ == '__main__':
     # weight_mc = 'polWeight*sw'
 
     # if mode is from Bs family, then use gb_weights
-    if "bkgcat60" in args['version']:
-        weight_mc = 'polWeight'
-        weight_rd = 'time/time'
+    # if "bkgcat60" in args['version']:
+    #     weight_mc = 'polWeight'
+    #     weight_rd = 'time/time'
     if ANGACC['use_oddWeight']:
         weight_rd = f'{weight_rd}*oddWeight'
     if ANGACC['use_pTWeight']:
