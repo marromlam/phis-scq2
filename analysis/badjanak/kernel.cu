@@ -42,7 +42,7 @@ const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 // Include ipanema
 #include <lib99ocl/complex.c>
 #include <lib99ocl/special.c>
-#include <lib99ocl/cspecial.c>
+// #include <lib99ocl/cspecial.c>
 #include <lib99ocl/random.c>
 
 // Include analysis parts implementation
@@ -63,6 +63,8 @@ const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 #include "cross_rate_bs.cu"
 #include "cross_rate_bd.cu"
 #include "angular_acceptance.cu"
+#ifdef CUDA
 #include "toy.cu"
+#endif
 
 // that's all folks

@@ -3,7 +3,7 @@ __all__ = []
 
 if __name__ == "__main__":
 
-    from ipanema import wrap_unc, uncertainty_wrapper, get_confidence_bands
+    from ipanema import uncertainty_wrapper, get_confidence_bands
     from ipanema import initialize, ristra, Parameters, Sample, optimize, IPANEMALIB, ristra
     from utils.helpers import version_guesser, trigger_scissors, cuts_and
     from utils.strings import printsec, printsubsec
@@ -15,11 +15,13 @@ if __name__ == "__main__":
     from scipy.special import lpmv
     from scipy.interpolate import interp1d, interpn
     import argparse
-# initialize('opencl',1)
+    import ipanema
+    ipanema.initialize('cuda',1, real='double')
     from analysis import badjanak
     from scipy.special import comb
 # from scipy.integrate import romb, simpson
-    from ipanema import plotting, hist
+    # from ipanema import plotting, hist
+    import complot
     import uncertainties.unumpy as unp
     import uncertainties as unc
     from scipy import stats, special
@@ -50,8 +52,9 @@ if __name__ == "__main__":
             samples['MC_Bs2JpsiKK_Swave'] = MC_Bs2JpsiKK_Swave
         if MC_Bd2JpsiKstar:
             samples['MC_Bd2JpsiKstar'] = MC_Bd2JpsiKstar
-
+        
         s = {}
+        print(samples)
         for km, vm in samples.items():
             s[km] = {}
             for vy in vm:
@@ -64,13 +67,12 @@ if __name__ == "__main__":
                 elif '2018' in vy:
                     ky = '2018'
                 else:
-                    ValueError("I dont get this year at all")
+                    raise ValueError("I dont get this year at all")
                 s[km][ky] = {}
                 for kt in trigger:
-                    s[km][ky][kt] = Sample.from_root(vy,
-                                                    cuts=cuts_and(trigger_scissors(kt), cut), name=f"{km}-{ky}-{kt}")
+                    s[km][ky][kt] = Sample.from_root(vy, cuts=cuts_and(trigger_scissors(kt), cut), name=f"{km}-{ky}-{kt}")
                     # print(s[km][ky][kt])
-
+                
         return s
 
 
@@ -78,7 +80,7 @@ if __name__ == "__main__":
     p.add_argument('--version')
     p.add_argument('--trigger')
     p.add_argument('--year')
-    p.add_argument('--timeacc')
+    p.add_argument('--timeacc', default='simul3')
     args = vars(p.parse_args())
 
 
@@ -86,6 +88,7 @@ if __name__ == "__main__":
     TRIGGER = args['trigger']
     TIMEACC = args['timeacc']
     YEARS = args['year'].split(',')
+    print(YEARS)
 
 
     if TRIGGER == 'combined':
@@ -103,20 +106,20 @@ if __name__ == "__main__":
 # there is only one set of parameters
     try:
         pars = Parameters.load(
-            f"output/params/physics_params/run2/Bs2JpsiPhi/{VERSION}_run2_run2Dual_vgc_amsrd_{TIMEACC}_amsrd_{TRIGGER}.json").valuesdict(False)
+            f"output/params/physics_params/run2/Bs2JpsiPhi/{VERSION}_auto_run2Dual_vgc_amsrd_{TIMEACC}_amsrd_{TRIGGER}.json").valuesdict(False)
     except:
         pars = Parameters.load(
-            f"output/params/physics_params/run2/Bs2JpsiPhi/{VERSION}_run2_run2Dual_vgc_amsrd_{TIMEACC}_amsrd_unbiased.json").valuesdict(False)
+            f"output/params/physics_params/run2/Bs2JpsiPhi/{VERSION}_auto_run2Dual_vgc_amsrd_{TIMEACC}_amsrd_unbiased.json").valuesdict(False)
 # df = uproot.open("/scratch46/marcos.romero/sidecar/2016/MC_Bs2JpsiPhi_dG0/v0r5.root")['DecayTree'].pandas.df().query("hlt1b!=0 & time>0.3")
 
 # print(pars)
 
     all_samples = [
-        f"/scratch46/marcos.romero/sidecar14/{y}/Bs2JpsiPhi/{VERSION}.root" for y in YEARS]
+        f"/scratch49/marcos.romero/sidecar/{y}/Bs2JpsiPhi/{VERSION}.root" for y in YEARS]
     all_csp = [
         f"output/params/csp_factors/{y}/Bs2JpsiPhi/{VERSION}_vgc.json" for y in YEARS]
     all_flavor = [
-        "output/params/flavor_tagging/2016/Bs2JpsiPhi/v0r5_amsrd.json" for y in YEARS]
+        f"output/params/flavor_tagging/{y}/Bs2JpsiPhi/{VERSION}_amsrd.json" for y in YEARS]
     all_timeacc = {
         'biased': [f"output/params/time_acceptance/{y}/Bd2JpsiKstar/{VERSION}_{TIMEACC}_biased.json" for y in YEARS],
         'unbiased': [f"output/params/time_acceptance/{y}/Bd2JpsiKstar/{VERSION}_{TIMEACC}_unbiased.json" for y in YEARS]
@@ -217,6 +220,7 @@ if __name__ == "__main__":
             var = np.float64([0.0]*3 + [1] + [1020.] + [0.00043] + [0.0]*4)
             var = ristra.allocate(np.ascontiguousarray(var))
             pdf = ristra.allocate(np.float64([0.0]))
+            print(pars)
             badjanak.delta_gamma5_mc(var, pdf, **pars, tLL=tLL, tUL=tUL)
             num = pdf.get()
             badjanak.delta_gamma5_mc(var, pdf, **pars, cosKLL=cosKLL, cosKUL=cosKUL,
@@ -283,7 +287,7 @@ if __name__ == "__main__":
     edges = np.linspace(tLL, tUL, 61)
 
 
-    fig, axplot, axpull = plotting.axes_plotpull()
+    fig, axplot, axpull = complot.axes_plotpull()
 
 
     hvar = []  # where to store counts
@@ -297,7 +301,7 @@ if __name__ == "__main__":
     for km, vm in samples.items():
         for ky, vy in vm.items():
             for kt, vt in vy.items():
-                _hvar = hist(vt.df[branch].values, bins=edges,
+                _hvar = complot.hist(vt.df[branch].values, bins=edges,
                             weights=vt.df[wvar].values)
                 _pdfvar, _var = pdf_projector(pars, var, branch,
                                             # timeacc=False,
@@ -306,9 +310,8 @@ if __name__ == "__main__":
                 # exit()
                 hvar.append(_hvar.counts)
                 hbin.append(_hvar.bins)
-                hyerr.append([np.nan_to_num(_hvar.errl),
-                            np.nan_to_num(_hvar.errh)])
-                hxerr.append([edges[1:]-_hvar.bins, _hvar.bins-edges[:-1]])
+                hyerr.append(np.nan_to_num(_hvar.yerrl))
+                hxerr.append(np.nan_to_num(_hvar.xerrl))
                 pdf_x.append(_var)
                 pdf_y.append(_hvar.norm * _pdfvar)
 
@@ -327,7 +330,7 @@ if __name__ == "__main__":
     axplot.set_title(f'{VERSION}-{YEARS}-{TRIGGER}')
 
     axpull.fill_between(hbin[0],
-                        ipanema.histogram.pull_pdf(pdf_x[0], all_pdf_y,
+                        complot.histogram.pull_pdf(pdf_x[0], all_pdf_y,
                                                 hbin[0], all_hvar, *all_yerr),
                         0, facecolor="C0", alpha=0.5)
     plt.show()

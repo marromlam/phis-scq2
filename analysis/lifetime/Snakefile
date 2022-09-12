@@ -194,7 +194,7 @@ rule lifetime_tabular_Bu:
       shell(f"cp {output} {notepath}")
 
 
-rule lifetime_tabular_Bd:
+rule lifetime_tabular_bd_as_bs:
   threads: 2
   wildcard_constraints:
     version = "(.*)?(evtEven|evtOdd)(.*)?",
@@ -204,9 +204,9 @@ rule lifetime_tabular_Bd:
     mem_mb=1048
   input:
     corr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}{mod}BdasBs_{{trigger}}.json',
-                              year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
+                              year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'alpha']),
     noncorr = lambda wcs: expand('output/params/lifetime/{year}/{{mode}}/{{version}}_{{timeacc}}Noncorr{mod}BdasBs_{{trigger}}.json',
-                                 year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'deltat']),
+                                 year=YEARS[f'{wcs.year}'], mod=['', 'mKstar', 'alpha']),
   output:
     'output/tables/lifetime/{year}/{mode}/{version}_{timeacc}BdasBs_{trigger}.tex',
   log:
@@ -218,6 +218,7 @@ rule lifetime_tabular_Bd:
     --noncorr {",".join(input.noncorr)}\
     --output {output}\
     --mode {wildcards.mode}\
+    --trigger {wildcards.trigger}\
     --year {",".join(YEARS[f"{wildcards.year}"])}\
     --version {wildcards.version}\
     --timeacc {wildcards.timeacc}\

@@ -105,7 +105,7 @@ rule samples_chop_tuple:
   resources:
     mem_mb=6144
   input:
-    lambda wcs: tuples(wcs, version=f'{wcs.version}'.split('@')[0].split('~')[0], year=f'{wcs.year}', weight=f'ready')
+    lambda wcs: tuples(wcs, version=f'{wcs.version}'.split('@')[0].split('~')[0].split('bdt')[0], year=f'{wcs.year}', weight=f'ready')
   output:
     SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@~]+}_chopped.root'
   log:

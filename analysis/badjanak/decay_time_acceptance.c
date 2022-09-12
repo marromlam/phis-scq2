@@ -20,7 +20,7 @@
 
 // Some helpers {{{
 
-  WITHIN_KERNEL
+WITHIN_KERNEL
 unsigned int getTimeBin(ftype const t)
 {
   int _i = 0;
@@ -38,7 +38,7 @@ unsigned int getTimeBin(ftype const t)
 }
 
 
-  WITHIN_KERNEL
+WITHIN_KERNEL
 unsigned int getMassBin(ftype const t)
 {
   int _i = 0;
@@ -56,7 +56,7 @@ unsigned int getMassBin(ftype const t)
 
 
 
-  WITHIN_KERNEL
+WITHIN_KERNEL
 ftype getKnot(int i)
 {
   if (i<=0) {
@@ -70,7 +70,7 @@ ftype getKnot(int i)
 
 
 
-  WITHIN_KERNEL
+WITHIN_KERNEL
 ftype getCoeff(GLOBAL_MEM const ftype *mat, int const r, int const c)
 {
   return mat[4*r+c];
@@ -81,7 +81,7 @@ ftype getCoeff(GLOBAL_MEM const ftype *mat, int const r, int const c)
 
 // Decay-time efficiency {{{
 
-  WITHIN_KERNEL
+WITHIN_KERNEL
 ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs,
     const ftype tLL, const ftype tUL)
 {
@@ -90,13 +90,13 @@ ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs,
   ftype c1 = getCoeff(coeffs,bin,1);
   ftype c2 = getCoeff(coeffs,bin,2);
   ftype c3 = getCoeff(coeffs,bin,3);
-#ifdef DEBUG
+  #if DEBUG
   if (DEBUG >= 3 && ( get_global_id(0) == DEBUG_EVT))
   {
     printf("\nTIME ACC           : t=%.8f\tbin=%d\tc=[%+f\t%+f\t%+f\t%+f]\tdta=%+.8f\n",
         t,bin,c0,c1,c2,c3, (c0 + t*(c1 + t*(c2 + t*c3))) );
   }
-#endif
+  #endif
 
   return (c0 + t*(c1 + t*(c2 + t*c3)));
 }
@@ -436,15 +436,15 @@ ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
   }
   //conv_term = 2.0*expconv_simon(t,gamma,omega,sigma);///(sqrt(0.5*M_PI));
 
-#ifdef DEBUG
-  if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) ){
-    printf("\nerfc*exp = %+.16f %+.16fi\n",  conv_term.x, conv_term.y);
-    // printf("erfc = %+.16f %+.16fi\n",  ipanema_erfc(arg2).x, ipanema_erfc(arg2).y );
-    // printf("cErrF_2 = %+.16f %+.16fi\n",  cErrF_2(arg2).x, cErrF_2(arg2).y );
-    // printf("exp  = %+.16f %+.16fi\n",  cexp(arg1).x, cexp(arg1).y );
-    // printf("z    = %+.16f %+.16fi     %+.16f %+.16f %+.16f        x = %+.16f\n",  z.x, z.y, gamma, omega, sigma, x);
-  }
-#endif
+// #if DEBUG
+//   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) ){
+//     printf("\nerfc*exp = %+.16f %+.16fi\n",  conv_term.x, conv_term.y);
+//     // printf("erfc = %+.16f %+.16fi\n",  ipanema_erfc(arg2).x, ipanema_erfc(arg2).y );
+//     // printf("cErrF_2 = %+.16f %+.16fi\n",  cErrF_2(arg2).x, cErrF_2(arg2).y );
+//     // printf("exp  = %+.16f %+.16fi\n",  cexp(arg1).x, cexp(arg1).y );
+//     // printf("z    = %+.16f %+.16fi     %+.16f %+.16f %+.16f        x = %+.16f\n",  z.x, z.y, gamma, omega, sigma, x);
+//   }
+// #endif
 
   if (n == 0)
   {
@@ -454,8 +454,6 @@ ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
   }
   else if (n == 1)
   {
-    // return 2.*(-pycuda::complex<double>(sqrt(1./M_PI)*exp(-x*x),0.)-x*conv_term);
-    //ctype a = C(sqrt(1./M_PI)*exp(-x*x),0.);
     ctype a = C(sqrt(1.0/M_PI)*exp(-x*x),0.);
     ctype b = C(x,0);
     b = cmul(b,conv_term);
@@ -463,7 +461,6 @@ ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
   }
   else if (n == 2)
   {
-    // return 2.*(-2.*x*exp(-x*x)*ctype(sqrt(1./M_PI),0.)-(2.*x*x-1.)*conv_term);
     ctype a = C(-2.*x*exp(-x*x)*sqrt(1./M_PI),0.);
     ctype b = C(2*x*x-1,0);
     b = cmul(b,conv_term);
@@ -471,7 +468,6 @@ ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
   }
   else if (n == 3)
   {
-    // return 4.*(-(2.*x*x-1.)*exp(-x*x)*ctype(sqrt(1./M_PI),0.)-x*(2.*x*x-3.)*conv_term);
     ctype a = C(-(2.*x*x-1.)*exp(-x*x)*sqrt(1./M_PI),0.);
     ctype b = C(x*(2*x*x-3),0);
     b = cmul(b,conv_term);
@@ -494,18 +490,24 @@ ctype getM(ftype x, int n, ftype t, ftype sigma, ftype gamma, ftype omega)
 
 
 
-  WITHIN_KERNEL
-void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
-    const ftype G, const ftype DG, const ftype DM,
-    GLOBAL_MEM const ftype *coeffs, const ftype t0, const ftype tLL, const ftype tUL)
+WITHIN_KERNEL void
+intgTimeAcceptance(ftype time_terms[4], const ftype delta_t, const ftype G,
+    const ftype DG, const ftype DM, GLOBAL_MEM const ftype *coeffs,
+    const ftype t0, const ftype tLL, const ftype tUL)
 {
   // Some constants
-  ftype cte1 = 1.0/(sqrt(2.0)*delta_t);
-  ctype cte2 = C( delta_t/(sqrt(2.0)) , 0 );
-  if (DEBUG > 3 && delta_t <= 0.0)
+  const ftype cte1 = 1.0/(sqrt(2.0)*delta_t);
+  const ctype cte2 = C(delta_t/(sqrt(2.0)), 0);
+  #if DEBUG
+  if (DEBUG > 3)
   {
-    printf("WARNING            : delta_t = %.4f is not a valid value.\n", delta_t);
+    printf("WARNING            : mu = %.4f\n", t0);
+    if (delta_t <= 0)
+    {
+      printf("ERROR               : delta_t = %.4f is not a valid value.\n", delta_t);
+    }
   }
+  #endif
 
   // Add tUL to knots list
   ftype x[NTIMEBINS] = {0.};
@@ -516,7 +518,8 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
     knots[i] = KNOTS[i];
     x[i] = (knots[i] - t0)*cte1;
   }
-  knots[NKNOTS] = tUL; x[NKNOTS] = (knots[NKNOTS] - t0)*cte1;
+  knots[NKNOTS] = tUL;
+  x[NKNOTS] = (knots[NKNOTS] - t0)*cte1;
 
   // Fill S matrix                (TODO speed to be gained here - S is constant)
   ftype S[SPL_BINS][4][4];
@@ -528,8 +531,14 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
       {
         if(i+j < 4)
         {
-          S[bin][i][j] = getCoeff(coeffs,bin,i+j)
-            *factorial(i+j)/factorial(j)/factorial(i)/rpow(2.0,i+j);
+          // S[bin][i][j] = getCoeff(coeffs,bin,i+j) * binom(i+j, j) / rpow(2.,i+j);
+          // S[bin][i][j] = getCoeff(coeffs,bin,i+j) * delta_t / sqrt(2.) * binom(i+j, i) * pow(sqrt(2.)* delta_t, i) * rpow(t0, j) / rpow(2.,i+j);
+
+
+          // S[bin][i][j] = getCoeff(coeffs,bin,i+j) * binom(i+j, i) * rpow(t0, j) / rpow(2.,i+j);
+
+          // simon S[bin][i][j] = getCoeff(coeffs,bin,i+j) * delta_t / sqrt(2.) * binom(i+j, i)        * rpow(sqrt(2.)*delta_t, i) * rpow(t0, j) / rpow(2.,i+j);
+          S[bin][i][j] = getCoeff(coeffs,bin,i+j) * factorial(i+j) / factorial(j) / factorial(i) / rpow(2.0,i+j);
         }
         else
         {
@@ -553,14 +562,14 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
     K_expp[j] = getK(z_expp,j);
     K_expm[j] = getK(z_expm,j);
     K_trig[j] = getK(z_trig,j);
-#ifdef DEBUG
+    #if DEBUG
     if (DEBUG > 3 && (get_global_id(0) == DEBUG_EVT) )
     {
       printf("K_expp[%d](%+.14f%+.14f) = %+.14f%+.14f\n",  j,z_expp.x,z_expp.y,K_expp[j].x,K_expp[j].y);
       printf("K_expm[%d](%+.14f%+.14f) = %+.14f%+.14f\n",  j,z_expm.x,z_expm.y,K_expm[j].x,K_expm[j].y);
       printf("K_trig[%d](%+.14f%+.14f) = %+.14f%+.14f\n\n",j,z_trig.x,z_trig.y,K_trig[j].x,K_trig[j].y);
     }
-#endif
+    #endif
   }
 
   // Fill Mn
@@ -572,7 +581,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
       M_expp[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G+0.5*DG,0.);
       M_trig[bin][j] = getM(x[bin],j,knots[bin]-t0,delta_t,G       ,DM);
       if (bin>0){
-#ifdef DEBUG
+        #if DEBUG
         if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
         {
           ctype aja = M_expp[bin][j];//-M_expp[bin-1][j];
@@ -582,7 +591,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
           printf("bin=%d M_expm[%d] = %+.14f%+.14f\n",  bin,j,eje.x,eje.y);
           printf("bin=%d M_trig[%d] = %+.14f%+.14f\n\n",bin,j,iji.x,iji.y);
         }
-#endif
+        #endif
       }
     }
   }
@@ -591,7 +600,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
   ftype delta_t_fact[4];
   for (int i=0; i<4; ++i)
   {
-    delta_t_fact[i] = rpow(delta_t*sqrt(2.), i+1)/sqrt(2.);
+    delta_t_fact[i] = rpow(delta_t*sqrt(2.), i+1) / sqrt(2.);
   }
 
   // Integral calculation for cosh, expm, cos, sin terms
@@ -606,7 +615,8 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
     {
       for (int k=0; k<=3-j; ++k)
       {
-        aux = C( S[bin][j][k]*delta_t_fact[j+k] , 0 );
+        aux = C( S[bin][j][k]*delta_t_fact[j+k], 0 );
+        // aux = C( S[bin][j][k], 0 );
 
         int_expm_aux = csub(M_expm[bin+1][j],M_expm[bin][j]);
         int_expm_aux = cmul(int_expm_aux,K_expm[k]);
@@ -623,13 +633,14 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
         int_trig_aux = cmul(int_trig_aux,aux);
         int_trig     = cadd( int_trig, int_trig_aux );
 
-#ifdef DEBUG
+        #if DEBUG
         if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
         {
-          //printf("bin=%d int_expm_aux[%d,%d] = %+.14f%+.14f\n",  bin,j,k,int_expm_aux.x,int_expm_aux.y);
-          printf("bin=%d int_expm[%d,%d] = %+.14f%+.14f\n",  bin,j,k,int_expm.x,int_expm.y);
+          // printf("bin=%d int_expm[%d,%d] = %+.14f%+.14f\n",  bin,j,k,int_expm.x,int_expm.y);
+          // printf("bin=%d int_expp[%d,%d] = %+.14f%+.14f\n",  bin,j,k,int_expp.x,int_expp.y);
+          printf("bin=%d int_trig[%d,%d] = %+.14f%+.14f\n",  bin,j,k,int_trig.x,int_trig.y);
         }
-#endif
+        #endif
       }
     }
   }
@@ -640,7 +651,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
   time_terms[2] = sqrt(0.5)*int_trig.x;
   time_terms[3] = sqrt(0.5)*int_trig.y;
 
-#ifdef DEBUG
+  #if DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
     printf("\nNORMALIZATION      : ta=%.16f\ttb=%.16f\ttc=%.16f\ttd=%.16f\n",
@@ -648,7 +659,7 @@ void intgTimeAcceptance(ftype time_terms[4], const ftype delta_t,
     printf("                   : sigma=%.16f\tgamma+=%.16f\tgamma-=%.16f\n",
         delta_t, G+0.5*DG, G-0.5*DG);
   }
-#endif
+  #endif
 }
 
 
@@ -674,7 +685,7 @@ void integralFullSpline( ftype result[2],
     result[0] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb + vc[k]*tc + vd[k]*td);
     result[1] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb - vc[k]*tc - vd[k]*td);
   }
-#ifdef DEBUG
+#if DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
     printf("                   : t_offset=%+.16f  delta_t=%+.16f\n", t_offset, delta_t);
@@ -803,8 +814,8 @@ void integralSpline( ftype result[2],
   for(int bin = 0; bin < NKNOTS; bin++)
   {
     if (bin == NKNOTS-1){
-      tS = KNOTS[bin+0];
-      tE = tUL-t_offset;
+      tS = KNOTS[bin+0] - t_offset;
+      tE = tUL - t_offset;
     }
     else{
       tS = KNOTS[bin+0] - t_offset;
@@ -915,7 +926,7 @@ void intgTimeAcceptance_wores(ftype time_terms[4], const ftype G,
   ctype z_expm = C((G-0.5*DG), 0.);
   ctype z_expp = C((G+0.5*DG), 0.);
   ctype z_trig = C(G, -DM);
-#ifdef DEBUG
+#if DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
     printf("                   : z_expm_x=%+16f\n  z_expp_x=%+.16f\n z_trig_x=%+.16f\n", z_expm.x, z_expp.x, z_trig.x);
@@ -937,7 +948,7 @@ void intgTimeAcceptance_wores(ftype time_terms[4], const ftype G,
       I_expp = cadd(cmul(C(getCoeff(coeffs, bin, i),0.),getI(z_expp, i, knots[bin], knots[bin+1])), I_expp);
       I_trig = cadd(cmul(C(getCoeff(coeffs, bin, i),0.),getI(z_trig, i, knots[bin], knots[bin+1])), I_trig);
     }
-#ifdef DEBUG
+#if DEBUG
     if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
     {
       printf("                   : I_expm_x=%+16f\n  I_expp_x=%+.16f\n I_trig_x=%+.16f\n", I_expm.x, I_expp.x, I_trig.x);
@@ -974,7 +985,7 @@ void integralFullSpline_wores( ftype result[2],
     result[0] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb + vc[k]*tc + vd[k]*td);
     result[1] += vn[k]*norm[k]*(va[k]*ta + vb[k]*tb - vc[k]*tc - vd[k]*td);
   }
-#ifdef DEBUG
+#if DEBUG
   if (DEBUG > 3 && ( get_global_id(0) == DEBUG_EVT) )
   {
     printf("                   : result_0=%+.16f  result_1=%+.16f\n", result[0], result[1]);
@@ -991,13 +1002,13 @@ void integralFullSpline_wores( ftype result[2],
 
   WITHIN_KERNEL
 ftype getOneSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs,
-    const ftype sigma, const ftype gamma,
+    const ftype mu, const ftype sigma, const ftype gamma,
     const ftype tLL, const ftype tUL)
 {
   // Compute pdf value
-  ftype erf_value = 1 - erf((gamma*sigma - t/sigma)/sqrt(2.0));
+  ftype erf_value = 1 - erf((gamma*sigma - (t-mu)/sigma)/sqrt(2.0));
   ftype fpdf = 1.0; ftype ipdf = 0;
-  fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*t) ) * (erf_value);
+  fpdf *= 0.5*exp( 0.5*gamma*(sigma*sigma*gamma - 2.0*(t-mu)) ) * (erf_value);
   fpdf *= time_efficiency(t, coeffs , tLL, tUL);
 
   // Compute per event normatization
@@ -1019,44 +1030,44 @@ ftype getOneSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs,
     c2 = getCoeff(coeffs,k,2);
     c3 = getCoeff(coeffs,k,3);
 
-    ipdf += (exp((rpow(gamma,2)*rpow(sigma,2))/2.)*((c1*(-exp(-(gamma*tf))
-              + exp(-(gamma*ti)) -
+    ipdf += (exp((rpow(gamma,2)*rpow(sigma,2))/2.)*((c1*(-exp(-(gamma*(tf-mu)))
+              + exp(-(gamma*(ti-mu))) -
               (gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
                   rpow(tf,2))/(2.*rpow(sigma,2))) +
               (gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
-                  rpow(ti,2))/(2.*rpow(sigma,2))) - (gamma*tf)/exp(gamma*tf) +
-              (gamma*ti)/exp(gamma*ti) +
+                  rpow(ti,2))/(2.*rpow(sigma,2))) - (gamma*tf)/exp(gamma*(tf-mu)) +
+              (gamma*ti)/exp(gamma*(ti-mu)) +
               erf(tf/(sqrt(2.0)*sigma))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) + ((1 +
                   gamma*tf)*erf((gamma*sigma)/sqrt(2.0) -
-                    tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) -
+                    tf/(sqrt(2.0)*sigma)))/exp(gamma*(tf-mu)) -
               erf(ti/(sqrt(2.0)*sigma))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) -
-              erf((gamma*sigma)/sqrt(2.0) - ti/(sqrt(2.0)*sigma))/exp(gamma*ti) -
+              erf((gamma*sigma)/sqrt(2.0) - ti/(sqrt(2.0)*sigma))/exp(gamma*(ti-mu)) -
               (gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
-                            ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/rpow(gamma,2) -
-          (c2*(2/exp(gamma*tf) - 2/exp(gamma*ti) +
+                            ti/(sqrt(2.0)*sigma)))/exp(gamma*(ti-mu))))/rpow(gamma,2) -
+          (c2*(2/exp(gamma*(tf-mu)) - 2/exp(gamma*(ti-mu)) +
                (2*gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
                    rpow(tf,2))/(2.*rpow(sigma,2))) -
                (2*gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
-                   rpow(ti,2))/(2.*rpow(sigma,2))) + (2*gamma*tf)/exp(gamma*tf) +
+                   rpow(ti,2))/(2.*rpow(sigma,2))) + (2*gamma*tf)/exp(gamma*(tf-mu)) +
                (rpow(gamma,2)*sqrt(2/M_PI)*sigma*tf)/exp((rpow(gamma,2)*rpow(sigma,4) +
                    rpow(tf,2))/(2.*rpow(sigma,2))) +
-               (rpow(gamma,2)*rpow(tf,2))/exp(gamma*tf) - (2*gamma*ti)/exp(gamma*ti) -
+               (rpow(gamma,2)*rpow(tf,2))/exp(gamma*(tf-mu)) - (2*gamma*ti)/exp(gamma*(ti-mu)) -
                (rpow(gamma,2)*sqrt(2/M_PI)*sigma*ti)/exp((rpow(gamma,2)*rpow(sigma,4) +
                    rpow(ti,2))/(2.*rpow(sigma,2))) -
-               (rpow(gamma,2)*rpow(ti,2))/exp(gamma*ti) - ((2 +
+               (rpow(gamma,2)*rpow(ti,2))/exp(gamma*(ti-mu)) - ((2 +
                    rpow(gamma,2)*rpow(sigma,2))*erf(tf/(sqrt(2.0)*sigma)))/exp((rpow(gamma,
                      2)*rpow(sigma,2))/2.) - ((2 + 2*gamma*tf +
                      rpow(gamma,2)*rpow(tf,2))*erf((gamma*sigma)/sqrt(2.0) -
-                     tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) +
+                     tf/(sqrt(2.0)*sigma)))/exp(gamma*(tf-mu)) +
                (2*erf(ti/(sqrt(2.0)*sigma)))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) +
                (rpow(gamma,2)*rpow(sigma,2)*erf(ti/(sqrt(2.0)*sigma)))/exp((rpow(gamma,
                      2)*rpow(sigma,2))/2.) + (2*erf((gamma*sigma)/sqrt(2.0) -
-                     ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+                     ti/(sqrt(2.0)*sigma)))/exp(gamma*(ti-mu)) +
                (2*gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
-                               ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+                               ti/(sqrt(2.0)*sigma)))/exp(gamma*(ti-mu)) +
                (rpow(gamma,2)*rpow(ti,2)*erf((gamma*sigma)/sqrt(2.0) -
-                                           ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/rpow(gamma,3) -
-                                           (c3*(6/exp(gamma*tf) - 6/exp(gamma*ti) +
+                                           ti/(sqrt(2.0)*sigma)))/exp(gamma*(ti-mu))))/rpow(gamma,3) -
+                                           (c3*(6/exp(gamma*(tf-mu)) - 6/exp(gamma*(ti-mu)) +
                                                 (6*gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
                                                     rpow(tf,2))/(2.*rpow(sigma,2))) -
                                                 (6*gamma*sqrt(2/M_PI)*sigma)/exp((rpow(gamma,2)*rpow(sigma,4) +
@@ -1064,38 +1075,38 @@ ftype getOneSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs,
                                                 (2*rpow(gamma,3)*sqrt(2/M_PI)*rpow(sigma,3))/exp((rpow(gamma,2)*rpow(sigma,
                                                       4) + rpow(tf,2))/(2.*rpow(sigma,2))) -
                                                 (2*rpow(gamma,3)*sqrt(2/M_PI)*rpow(sigma,3))/exp((rpow(gamma,2)*rpow(sigma,
-                                                      4) + rpow(ti,2))/(2.*rpow(sigma,2))) + (6*gamma*tf)/exp(gamma*tf) +
+                                                      4) + rpow(ti,2))/(2.*rpow(sigma,2))) + (6*gamma*tf)/exp(gamma*(tf-mu)) +
                                                 (3*rpow(gamma,2)*sqrt(2/M_PI)*sigma*tf)/exp((rpow(gamma,2)*rpow(sigma,4) +
                                                     rpow(tf,2))/(2.*rpow(sigma,2))) +
-                                                (3*rpow(gamma,2)*rpow(tf,2))/exp(gamma*tf) +
+                                                (3*rpow(gamma,2)*rpow(tf,2))/exp(gamma*(tf-mu)) +
                                                 (rpow(gamma,3)*sqrt(2/M_PI)*sigma*rpow(tf,2))/exp((rpow(gamma,2)*rpow(sigma,
                                                       4) + rpow(tf,2))/(2.*rpow(sigma,2))) +
-                                                (rpow(gamma,3)*rpow(tf,3))/exp(gamma*tf) - (6*gamma*ti)/exp(gamma*ti) -
+                                                (rpow(gamma,3)*rpow(tf,3))/exp(gamma*(tf-mu)) - (6*gamma*ti)/exp(gamma*(ti-mu)) -
                                                 (3*rpow(gamma,2)*sqrt(2/M_PI)*sigma*ti)/exp((rpow(gamma,2)*rpow(sigma,4) +
                                                     rpow(ti,2))/(2.*rpow(sigma,2))) -
-                                                (3*rpow(gamma,2)*rpow(ti,2))/exp(gamma*ti) -
+                                                (3*rpow(gamma,2)*rpow(ti,2))/exp(gamma*(ti-mu)) -
                                                 (rpow(gamma,3)*sqrt(2/M_PI)*sigma*rpow(ti,2))/exp((rpow(gamma,2)*rpow(sigma,
                                                       4) + rpow(ti,2))/(2.*rpow(sigma,2))) -
-                                                (rpow(gamma,3)*rpow(ti,3))/exp(gamma*ti) - (3*(2 +
+                                                (rpow(gamma,3)*rpow(ti,3))/exp(gamma*(ti-mu)) - (3*(2 +
                                                     rpow(gamma,2)*rpow(sigma,2))*erf(tf/(sqrt(2.0)*sigma)))/exp((rpow(gamma,
                                                       2)*rpow(sigma,2))/2.) - ((6 + 6*gamma*tf + 3*rpow(gamma,2)*rpow(tf,2) +
                                                       rpow(gamma,3)*rpow(tf,3))*erf((gamma*sigma)/sqrt(2.0) -
-                                                      tf/(sqrt(2.0)*sigma)))/exp(gamma*tf) +
+                                                      tf/(sqrt(2.0)*sigma)))/exp(gamma*(tf-mu)) +
                                                         (6*erf(ti/(sqrt(2.0)*sigma)))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) +
                                                         (3*rpow(gamma,2)*rpow(sigma,2)*erf(ti/(sqrt(2.0)*sigma)))/exp((rpow(
                                                                 gamma,2)*rpow(sigma,2))/2.) + (6*erf((gamma*sigma)/sqrt(2.0) -
-                                                                ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+                                                                ti/(sqrt(2.0)*sigma)))/exp(gamma*(ti-mu)) +
                                                                 (6*gamma*ti*erf((gamma*sigma)/sqrt(2.0) -
-                                                                                ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+                                                                                ti/(sqrt(2.0)*sigma)))/exp(gamma*(ti-mu)) +
                                                                 (3*rpow(gamma,2)*rpow(ti,2)*erf((gamma*sigma)/sqrt(2.0) -
-                                                                                              ti/(sqrt(2.0)*sigma)))/exp(gamma*ti) +
+                                                                                              ti/(sqrt(2.0)*sigma)))/exp(gamma*(ti-mu)) +
                                                                 (rpow(gamma,3)*rpow(ti,3)*erf((gamma*sigma)/sqrt(2.0) -
-                                                                                            ti/(sqrt(2.0)*sigma)))/exp(gamma*ti)))/rpow(gamma,4) +
+                                                                                            ti/(sqrt(2.0)*sigma)))/exp(gamma*(ti-mu))))/rpow(gamma,4) +
                                                                                             (c0*(erf(tf/(sqrt(2.0)*sigma))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) -
                                                                                                  erf(ti/(sqrt(2.0)*sigma))/exp((rpow(gamma,2)*rpow(sigma,2))/2.) -
-                                                                                                 erfc((gamma*rpow(sigma,2) - tf)/(sqrt(2.0)*sigma))/exp(gamma*tf) +
+                                                                                                 erfc((gamma*rpow(sigma,2) - tf)/(sqrt(2.0)*sigma))/exp(gamma*(tf-mu)) +
                                                                                                  erfc((gamma*rpow(sigma,2) -
-                                                                                                     ti)/(sqrt(2.0)*sigma))/exp(gamma*ti)))/gamma))/2.;
+                                                                                                     ti)/(sqrt(2.0)*sigma))/exp(gamma*(ti-mu))))/gamma))/2.;
   }
 
   return fpdf/ipdf;
@@ -1110,7 +1121,7 @@ ftype getOneSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs,
   WITHIN_KERNEL
 ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
     GLOBAL_MEM const ftype *coeffs1,
-    const ftype sigma, const ftype gamma, const ftype tLL,
+    const ftype mu, const ftype sigma, const ftype gamma, const ftype tLL,
     const ftype tUL)
 {
   // Compute pdf
@@ -1146,7 +1157,7 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
     b2 = getCoeff(coeffs2,k,2);
     b3 = getCoeff(coeffs2,k,3);
 
-    term1i = -((exp(gamma*ti - (ti*(2*gamma*rpow(sigma,2) +
+    term1i = -((exp(gamma*ti - ((ti-mu)*(2*gamma*rpow(sigma,2) +
                 ti))/(2.*rpow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*ti)
                 + 12*rpow(gamma,2)*(2*r1 + 5*r2*ti + 10*r3*(2*rpow(sigma,2) +
                     rpow(ti,2))) + 2*rpow(gamma,3)*(3*r0 + 6*r1*ti + 10*r2*(2*rpow(sigma,2)
@@ -1169,7 +1180,7 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
                     10*r3*(2*rpow(sigma,2) + rpow(ti,2)))) + b0*rpow(gamma,2)*(6*r3 +
                   gamma*(2*r2 + 3*r3*ti + gamma*(r1 + 2*r3*rpow(sigma,2) + r2*ti +
                       r3*rpow(ti,2)))))))/(rpow(gamma,6)*sqrt(2*M_PI)));
-    term1f = -((exp(gamma*tf - (tf*(2*gamma*rpow(sigma,2) +
+    term1f = -((exp(gamma*tf - ((tf-mu)*(2*gamma*rpow(sigma,2) +
                 tf))/(2.*rpow(sigma,2)))*sigma*(b3*(720*r3 + 120*gamma*(r2 + 3*r3*tf)
                 + 12*rpow(gamma,2)*(2*r1 + 5*r2*tf + 10*r3*(2*rpow(sigma,2) +
                     rpow(tf,2))) + 2*rpow(gamma,3)*(3*r0 + 6*r1*tf + 10*r2*(2*rpow(sigma,2)
@@ -1192,7 +1203,7 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
                     10*r3*(2*rpow(sigma,2) + rpow(tf,2)))) + b0*rpow(gamma,2)*(6*r3 +
                   gamma*(2*r2 + 3*r3*tf + gamma*(r1 + 2*r3*rpow(sigma,2) + r2*tf +
                       r3*rpow(tf,2)))))))/(rpow(gamma,6)*sqrt(2*M_PI)));
-    term2i = (exp(gamma*ti)*(3*b3*(240*r3 + gamma*(2*rpow(gamma,2)*r0 +
+    term2i = (exp(gamma*(ti-mu))*(3*b3*(240*r3 + gamma*(2*rpow(gamma,2)*r0 +
               8*gamma*r1 + 40*r2 + gamma*(rpow(gamma,3)*r0 + 4*rpow(gamma,2)*r1 +
                 20*gamma*r2 + 120*r3)*rpow(sigma,2) + rpow(gamma,3)*(rpow(gamma,2)*r1 +
                   5*gamma*r2 + 30*r3)*rpow(sigma,4) + 5*rpow(gamma,5)*r3*rpow(sigma,6))) +
@@ -1220,8 +1231,8 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
                 rpow(gamma,4)*ti*(r0 + ti*(r1 + ti*(r2 + r3*ti)))) + b0*gamma*(6*r3 +
                 gamma*(2*r2 + 6*r3*ti + gamma*(r1 + ti*(2*r2 + 3*r3*ti)) +
                   rpow(gamma,2)*(r0 + ti*(r1 + ti*(r2 + r3*ti))))))))*erfc((gamma*sigma
-            - ti/sigma)/sqrt(2.0)))/(2.*exp(gamma*ti)*rpow(gamma,7));
-    term2f = (exp(gamma*tf)*(3*b3*(240*r3 + gamma*(2*rpow(gamma,2)*r0 +
+            - ti/sigma)/sqrt(2.0)))/(2.*exp(gamma*(ti-mu))*rpow(gamma,7));
+    term2f = (exp(gamma*(tf-mu))*(3*b3*(240*r3 + gamma*(2*rpow(gamma,2)*r0 +
               8*gamma*r1 + 40*r2 + gamma*(rpow(gamma,3)*r0 + 4*rpow(gamma,2)*r1 +
                 20*gamma*r2 + 120*r3)*rpow(sigma,2) + rpow(gamma,3)*(rpow(gamma,2)*r1 +
                   5*gamma*r2 + 30*r3)*rpow(sigma,4) + 5*rpow(gamma,5)*r3*rpow(sigma,6))) +
@@ -1249,7 +1260,7 @@ ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
                 rpow(gamma,4)*tf*(r0 + tf*(r1 + tf*(r2 + r3*tf)))) + b0*gamma*(6*r3 +
                 gamma*(2*r2 + 6*r3*tf + gamma*(r1 + tf*(2*r2 + 3*r3*tf)) +
                   rpow(gamma,2)*(r0 + tf*(r1 + tf*(r2 + r3*tf))))))))*erfc((gamma*sigma
-            - tf/sigma)/sqrt(2.0)))/(2.*exp(gamma*tf)*rpow(gamma,7));
+            - tf/sigma)/sqrt(2.0)))/(2.*exp(gamma*(tf-mu))*rpow(gamma,7));
 
     ipdf += (term1f + term2f) - (term1i + term2i);
 

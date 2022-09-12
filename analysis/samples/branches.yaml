@@ -148,7 +148,7 @@ Bd2JpsiKstar: # &Bd2JpsiKstar
 
 MC_Bd2JpsiKstar:
   <<: *MC_common
-  "sWeight" : "sigBdSW*gb_weights"
+  "sWeight" : "sigBdSW"
   "genidB" : "511*X_ID_GenLvl/313"
   "kbuWeight" : "kbuWeight"
   "kbdWeight" : "kbdWeight"

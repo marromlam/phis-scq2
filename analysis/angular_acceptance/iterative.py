@@ -44,7 +44,7 @@ from ipanema import ristra, Sample, Parameters, Parameter, optimize
 
 # get badjanak and compile it with corresponding flags
 from analysis import badjanak
-badjanak.config['fast_integral'] = 0
+badjanak.config['fast_integral'] = 1
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
 badjanak.get_kernels(True)
@@ -167,7 +167,8 @@ def fcn_data(parameters, data, tLL, tUL):
       badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
                   **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc=1, BLOCK_SIZE=128)
+                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc=1,
+                  use_timeoffset=0, BLOCK_SIZE=128)
       chi2.append( -2.0 * (ristra.log(dt.lkhd) * dt.weight).get() );
 
   return np.concatenate(chi2)

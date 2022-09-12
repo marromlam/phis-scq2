@@ -29,7 +29,7 @@ rule mass_prefit_bd_mc:
   input:
     root_file = lambda wcs: tuples(wcs, weight='chopped'),
   output:
-    params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
+    params = temp('output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json'),
     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/sweights/mass_fit/bd.py',
@@ -42,6 +42,7 @@ rule mass_prefit_bd_mc:
     --output-params {output.params} \
     --output-figures {output.plots} \
     --mass-model {wildcards.massmodel} \
+    --mass-weight gb_weights \
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
@@ -77,6 +78,7 @@ rule mass_fit_bd_mc:
     --output-params {output.params} \
     --output-figures {output.plots} \
     --mass-model {wildcards.massmodel} \
+    --mass-weight gb_weights \
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
@@ -135,7 +137,9 @@ rule mass_prefit_bu_mc:
   wildcard_constraints:
     mode = 'MC_Bu2JpsiKplus',
   input:
-    root_file = lambda wcs: tuples(wcs, weight='selected'),
+    # root_file = lambda wcs: tuples(wcs, weight='selected'),
+    # root_file = lambda wcs: tuples(wcs, weight='selected' if 'ForTag' in ),
+    root_file = lambda wcs: tuples(wcs, weight='selected', version=f'{wcs.version}'.split('@')[0]) if 'ForTag' in f"{wcs.massmodel}" else tuples(wcs, weight='chopped'),
   output:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
@@ -167,7 +171,9 @@ rule mass_fit_bu_mc:
   wildcard_constraints:
     mode = 'MC_Bu2JpsiKplus',
   input:
-    root_file = lambda wcs: tuples(wcs, weight='selected'),
+    # root_file = lambda wcs: tuples(wcs, weight='selected'),
+    # root_file = lambda wcs: tuples(wcs),
+    root_file = lambda wcs: tuples(wcs, weight='selected', version=f'{wcs.version}'.split('@')[0]) if 'ForTag' in f"{wcs.massmodel}" else tuples(wcs, weight='chopped'),
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
@@ -203,7 +209,9 @@ rule mass_fit_bu_rd:
   wildcard_constraints:
     mode = 'Bu2JpsiKplus',
   input:
-    root_file = lambda wcs: tuples(wcs, weight='selected'),
+    # root_file = lambda wcs: tuples(wcs, weight='selected'),
+    # root_file = lambda wcs: tuples(wcs),
+    root_file = lambda wcs: tuples(wcs, weight='selected', version=f'{wcs.version}'.split('@')[0]) if 'ForTag' in f"{wcs.massmodel}" else tuples(wcs, weight='chopped'),
     params = 'output/params/mass_prefit/{year}/MC_{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
   output:
     params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
@@ -458,35 +466,69 @@ def guess_massbins(wcs, version=False, mode=False):
     return caca
 
 
+
+
+def tuple_and_npy_for_sweights(wcs, version=None, year=None, mode=None, what='tuple', sweight=None):
+    if not version:
+        version = wcs.version
+    if not year:
+        year = wcs.year
+    if not mode:
+        mode = wcs.mode
+    if not sweight:
+        sweight = wcs.sweight
+    # print("DEBUG:", version, year, mode, sweight,)
+    _is_for = "Tag" if "Tag" in sweight else ""
+    _name = version.split('@')[0] if _is_for == "Tag" else version
+    _surname = "selected" if _is_for == "Tag" else "chopped"
+    _massbin = guess_massbins(wcs)
+    _massmodel = config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
+    _massmodel = f"{_massmodel}ForTag" if _is_for == "Tag" else _massmodel
+
+    # root file
+    if what == 'tuple':
+        # print( tuples(wcs, version=_name, weight=_surname) )
+        return tuples(wcs, version=_name, weight=_surname)
+    # parameters
+    parameters = []
+    for _bin in _massbin:
+        parameters.append(SAMPLES + f'/{year}/{mode}/{_name}_{_massmodel}_{_bin}_{what}.npy')
+    # print(parameters)
+    return parameters
+
 rule sweights_add:
   """
   Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
   the fit to data. It only takes B_BKGCAT=0,50 candidates.
   """
   wildcard_constraints:
-    mode = ".*((?!.*?(_fromLb|_Lb)).*)"
+    mode = ".*((?!.*?(_fromLb|_Lb)).*)",
+    sweight = "(sWeight|sWeightForTag)"
   threads: 2
   resources:
-    mem_mb=6000
+    mem_mb=8000
   input:
-    root_file = lambda wcs: tuples(wcs, weight='chopped' if 'Bu' not in f'{wcs.mode}' else 'selected'),
-    biased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_biased.npy',
-                                year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
-                                massbin=guess_massbins(wcs),
-                                massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
-                               ),
-    unbiased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_unbiased.npy',
-                                year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
-                                massbin=guess_massbins(wcs),
-                                # massbin=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_bins"],
-                                massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
-                               ),
+    root_file = lambda wcs: tuple_and_npy_for_sweights(wcs),
+    biased = lambda wcs: tuple_and_npy_for_sweights(wcs, what='biased'),
+    unbiased = lambda wcs: tuple_and_npy_for_sweights(wcs, what='unbiased'),
+    # root_file = lambda wcs: tuples(wcs, weight='chopped' if 'Bu' not in f'{wcs.mode}' else 'selected'),
+    # biased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_biased.npy',
+    #                             year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
+    #                             massbin=guess_massbins(wcs),
+    #                             massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
+    #                            ),
+    # unbiased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_unbiased.npy',
+    #                             year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
+    #                             massbin=guess_massbins(wcs),
+    #                             # massbin=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_bins"],
+    #                             massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
+    #                            ),
   output:
-    root_file = SAMPLES+'/{year}/{mode}/{version}_sWeight.root',
+    root_file = SAMPLES+'/{year}/{mode}/{version}_{sweight}.root',
   params:
     script = 'selection/sweights/sweighter.py',
   log:
-    'output/log/sweights_bs_rd/{year}/{mode}/{version}.log',
+    'output/log/sweights_add/{year}/{mode}/{version}_{sweight}.log',
   run:
     bpars = input.biased
     bpars = [bpars] if isinstance(bpars,str) else bpars

@@ -60,52 +60,86 @@ void magia_borras(
     const int bin_cosK, const int bin_cosL, const int bin_hphi,
     const int order_cosK, const int order_cosL, const int order_hphi)
 {
+  const int l = get_global_id(0); if (l >= 1+0*bin_cosK) {return;}
+  const int k = get_global_id(2); if (k >= 1+0*bin_hphi) {return;}
+  const int j = get_global_id(1); if (j >= 1+0*bin_cosL) {return;}
+
   ftype fitted = 0.0; ftype pred = 0.0; ftype value = 0.0;
   int hbin = 0; int lbin = 0;
 
-  const int l = get_global_id(0); //if (l >= bin_cosK) {return;}
-const int k = get_global_id(1); //if (k >= bin_cosL) {return;}
-const int j = get_global_id(2); //if (j >= bin_hphi) {return;}
+  // printf("bins :: cK%d cL%d hp%d\n", bin_cosK, bin_cosL, bin_hphi);
+  // printf("order :: cK%d cL%d hp%d\n", order_cosK, order_cosL, order_hphi);
+  // printf("pars = ");
+  // for (int npar=0; npar<14; npar++)
+  //   printf("%f, ", pars[npar]);
+  // printf("\n");
 
-#ifdef CUDA
-hbin = int(j + bin_cosK*k + bin_cosK*bin_hphi*l);
-#else
-hbin = convert_int(j + bin_cosK*k + bin_cosK*bin_hphi*l);
-#endif
+  for (int l=0; l<bin_cosK; l++){
+  for (int k=0; k<bin_hphi; k++){
+  for (int j=0; j<bin_cosL; j++){
 
-fitted = 0.0;
-for( int p=0; p<order_cosL+1; p++ )
-{
-  for( int o=0; o<order_hphi+1; o++ )
+  #ifdef CUDA
+    hbin = int(j + bin_cosL*k + bin_cosL*bin_hphi*l);
+  #else
+    hbin = convert_int(j + bin_cosL*k + bin_cosL*bin_hphi*l);
+  #endif
+  // if (hbin == 0) printf("orders = %d,%d,%d\n", order_cosK, order_cosL, order_hphi);
+  fitted = 0.0;
+  // printf("(%d,%d,%d) = ", l, k, j);
+  for( int p=0; p<order_cosK+1; p++ )
   {
-    for( int n=0; n<order_cosK+1; n++ )
+    for( int o=0; o<order_hphi+1; o++ )
     {
-#ifdef CUDA
-      lbin = int(n + (order_cosK+1)*o + (order_cosK+1)*(order_hphi+1)*p);
-#else
-      lbin = convert_int(n + (order_cosK+1)*o + (order_cosK+1)*(order_hphi+1)*p);
-#endif
-      if (pars[lbin] != 0.0)
+      for( int n=0; n<order_cosL+1; n++ )
       {
-        fitted += pars[lbin]*lpmv(0.,n,cosK[j])*lpmv(0.,p,cosL[l])*lpmv(0.,o,hphi[k]);
+        #ifdef CUDA
+          lbin = int(n + (order_cosL+1)*o + (order_cosL+1)*(order_hphi+1)*p);
+        #else
+          lbin = convert_int(n + (order_cosL+1)*o + (order_cosL+1)*(order_hphi+1)*p);
+        #endif
+        // if (hbin ==0) printf("(%d,%d,%d) = %f\n", n, o, p, pars[lbin]);
+        // if (hbin ==231) printf("(%d,%d,%d) = %f, %f, %f\n", n, o, p, lpmv(0.,n,cosL[j]),lpmv(0.,o,hphi[k]),lpmv(0.,p,hphi[l]));
+        // printf("cosL(%f, %d) = %f\n", cosL[j], n, lpmv(0, n, cosL[j]));
+        // printf("hphi(%f, %d) = %f\n", hphi[j], o, lpmv(0, o, hphi[j]));
+        // printf("cosK(%f, %d) = %f\n", cosK[j], p, lpmv(0, p, cosK[j]));
+        if (pars[lbin] != 0.0)
+        {
+        // printf("lbin:%d => par:%f\n", lbin, pars[lbin]);
+
+          // printf("+ %f*%f*%f*%f", pars[lbin], lpmv(0.,n,cosL[j]), lpmv(0.,o,hphi[k]), lpmv(0.,p,cosK[l]));
+          // printf("+ %f*%f*%f*%f", pars[lbin], lpmv(0.,n,cosL[j]), lpmv(0.,o,hphi[k]), lpmv(0.,p,cosK[l]));
+          // printf("+ p[%d]*L[cL,%d,%d]*L[hp,%d,%d]*L[cK,%d,%d]", lbin, n,j, o,k,p,l);
+          fitted += pars[lbin] * lpmv(0.,n,cosL[j])
+                               * lpmv(0.,p,cosK[l])
+                               * lpmv(0.,o,hphi[k]);
+          // fitted += pars[lbin]*lpmv(n,0,cosL[j])*lpmv(o,0,hphi[k])*lpmv(p,0,cosK[l]);
+        }
+        // if (l+k+j == 0){
+        //   printf("%d\n", lbin);
+        // }
       }
-      // if (l+k+j == 0){
-      //   printf("%d\n", lbin);
-      // }
     }
   }
-}
-value = data_3d[hbin];
-pred = prediction_3d[hbin];
-if ( (fitted > 0.0) & (pred > 0.0) )
-{
-  // cross-entropy minimization
-  chi2[hbin] -= ( 2.0 * ( value*log(fitted*pred) - fitted*pred ) );
-  // chi2 minimization
-  // chi2[hbin] += ( pow(value - pred*fitted,2)/pow(pred,1) );
-}
+  // printf("= %f\n", fitted);
+  
+  value = data_3d[hbin];
+  pred = prediction_3d[hbin];
+  // printf("(%d,%d,%d) = %f   %f\n", l, k, j, value, pred);
+  // printf("(%d,%d,%d) = %f   %f   %f\n", l, k, j, value, pred, fitted);
+  if ( (fitted > 0.0) & (pred > 0.0) )
+  {
+    // cross-entropy minimization
+    chi2[hbin] -= ( 2.0 * ( value*log(fitted*pred) - fitted*pred ) );
+    // chi2 minimization
+    // chi2[hbin] += ( pow(value - pred*fitted,2)/pow(pred,1) );
+  }
+
+
+  }
+  }
+  }
 
 }
 
 
-// vim:foldmethod=marker
+// vim: fdm=marker ft=cpp

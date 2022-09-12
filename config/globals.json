@@ -1,6 +1,6 @@
 {
   "Gd": 0.65789,
-  "bdt_tests": 100,
+  "bdt_tests": 10,
   "time_lower_limit": 0.3,
   "time_upper_limit": 15,
   "lower_time_upper_limit": 1.36,

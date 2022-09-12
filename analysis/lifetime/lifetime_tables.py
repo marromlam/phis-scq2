@@ -31,9 +31,10 @@ def dump_joint_lifetimeBd(pars, caption=""):
   table.append(r"\toprule")
   col1 = 'Event'
   col2 = r'$m(K^*)$'
-  col3 = r'$\sigma_t$'
+  # col3 = r'$\sigma_t$'
   col4 = r'$\alpha$'
-  table.append(f"{'Year':>5} & {col1:<36} & {col2:>36} & {col3:>36} & {col4:>36}")
+  # table.append(f"{'Year':>5} & {col1:<36} & {col2:>36} & {col3:>36} & {col4:>36}")
+  table.append(f"{'Year':>5} & {col1:<36} & {col2:>36} & {col4:>36}")
   table.append(r"\\ \midrule")
   for year in pars:
     for flag in ['simul3', 'simul3Noncorr']:
@@ -41,7 +42,7 @@ def dump_joint_lifetimeBd(pars, caption=""):
       _flag = 'C' if flag=='simul3' else 'U'
       line.append(f"{year} {_flag}")
       #for test in ['', 'mKstar', 'deltat', 'alpha']:
-      for test in ['', 'mKstar', 'deltat']:
+      for test in ['', 'mKstar', 'alpha']:
         print(pars[year])
         nsigma = abs(tau['Bd'].n - pars[year][flag][test].n)/pars[year][flag][test].s
         svalue = f"{pars[year][flag][test]:.2uL}"
@@ -129,6 +130,7 @@ if __name__ == '__main__':
   p.add_argument('--mode', help='Mode')
   p.add_argument('--year', help='Year')
   p.add_argument('--version', help='Tuple version')
+  p.add_argument('--trigger', help='Tuple version')
   p.add_argument('--timeacc', help='Time Acceptance Flag')
   args = vars(p.parse_args())
 
@@ -145,6 +147,9 @@ if __name__ == '__main__':
     exit()
 
   print(f"PDG lifetime for {mode} is : {tau[mode]}")
+
+  V = args['version']
+  trigger = args['trigger']
 
   # tabule
   if 'single' in args['timeacc']:
@@ -169,8 +174,11 @@ if __name__ == '__main__':
       for flag in [f'{args["timeacc"]}', f'{args["timeacc"]}Noncorr']:
         pars[year][flag] = {}
         #for test in ['', 'mKstar', 'deltat', 'alpha']:
-        for test in ['', 'mKstar', 'deltat']:
-          pars[year][flag][test] = 1/Parameters.load(f'output/params/time_acceptance/{year}/Bd2JpsiKstar/v0r5_lifeBd{flag}{test}.json')['gamma'].uvalue
+        for test in ['', 'mKstar', 'alpha']:
+          try:
+            pars[year][flag][test] = 1/Parameters.load(f'output/params/lifetime/{year}/Bd2JpsiKstar/{V}_{flag}{test}_{trigger}.json')['gamma'].uvalue
+          except:
+            pars[year][flag][test] = 1/Parameters.load(f'output/params/lifetime/{year}/Bd2JpsiKstar/{V}_{flag}{test}BdasBs_{trigger}.json')['gamma'].uvalue
     table = dump_joint_lifetimeBd(pars)
   else:
     icorr = args['corr'].split(',')

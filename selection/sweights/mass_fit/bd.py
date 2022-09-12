@@ -21,6 +21,48 @@ import config
 ipanema.initialize(config.user['backend'], 1)
 from selection.sweights.mass_fit.bs import cb_exponential3
 
+prog = ipanema.compile(
+"""
+#define USE_DOUBLE 1
+#include <exposed/kernels.ocl>
+"""
+)
+
+
+def ipatia_exponential(mass, signal, nsigBd=0, nexp=0,
+    muBd=0, sigmaBd=10, lambd=0, zeta=0, beta=0,
+    aL=0, nL=0, aR=0, nR=0, b=0, norm=1, mLL=None, mUL=None,
+):
+    mLL, mUL = ristra.min(mass), ristra.max(mass)
+    # ipatia
+    prog.py_ipatia( signal, mass, np.float64(muBd), np.float64(sigmaBd),
+        np.float64(lambd), np.float64(zeta), np.float64(beta), np.float64(aL),
+        np.float64(nL), np.float64(aR), np.float64(nR), global_size=(len(mass)),
+    )
+    pdfBs = 1.0 * signal.get()
+    # normalize
+    _x = ristra.linspace(ristra.min(mass), ristra.max(mass), 1000)
+    _y = _x * 0
+    prog.py_ipatia( _y, _x, np.float64(muBd), np.float64(sigmaBd),
+        np.float64(lambd), np.float64(zeta), np.float64(beta), np.float64(aL),
+        np.float64(nL), np.float64(aR), np.float64(nR), global_size=(len(_x)),
+    )
+    nBs = np.trapz(ristra.get(_y), ristra.get(_x))
+    pComb = 0
+    if nexp > 0:
+        prog.kernel_exponential(
+            signal,
+            mass,
+            np.float64(b),
+            np.float64(mLL),
+            np.float64(mUL),
+            global_size=(len(mass)),
+        )
+        pComb = ristra.get(signal)
+    # compute pdf value
+    ans = nsigBd * (pdfBs / nBs) + nexp * pComb
+    return norm * ans
+
 # }}}
 
 
@@ -275,11 +317,14 @@ if __name__ == '__main__':
             mLL = mass[bin-1]
             mUL = mass[bin]
         if cut:
-            cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}"
+            # cut = f"({cut}) & X_M>{mLL} & X_M<{mUL}"
+            cut = cut
         else:
-            cut = f"X_M>{mLL} & X_M<{mUL}"
+            # cut = f"X_M>{mLL} & X_M<{mUL}"
+            cut = False
 
-    pars, sw = mass_fitter(sample.df, mass_range=mass_range,
+    pars, sw = mass_fitter(sample.df,
+                           mass_range=mass_range,
                            mass_branch='B_ConstJpsi_M_1',
                            mass_weight=mass_weight, trigger=args['trigger'],
                            figs=args['output_figures'],

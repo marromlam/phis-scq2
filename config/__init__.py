@@ -33,6 +33,7 @@ angacc = hjson.load(open(f"{__PATH}/angacc.json", 'r'))
 #     in the following list (by default it is empty).
 
 user = hjson.load(open(f"{__PATH}/user.json", 'r'))
+user['backend'] = os.environ['IPANEMA_BACKEND'] if os.environ["IPANEMA_BACKEND"] else user['backend']
 
 # }}}
 

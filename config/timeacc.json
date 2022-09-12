@@ -14,8 +14,8 @@
     },
     "MC_Bs2JpsiPhi_dG0": {
       "mu": 0,
-      //"sigma": 0.0382,
-      "sigma": 0.0417,
+      "sigma": 0.0382,
+      //"sigma": 0.0417,
       "sigma": 0.0417,
       "DGsd": 0.003486
     },

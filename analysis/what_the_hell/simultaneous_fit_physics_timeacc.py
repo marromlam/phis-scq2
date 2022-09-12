@@ -7,6 +7,7 @@ import pandas as pd
 import uproot3 as uproot # warning - upgrade to uproot4 asap
 import os
 import sys
+import re
 import hjson
 import uncertainties as unc
 from uncertainties import unumpy as unp
@@ -47,6 +48,7 @@ from hep_ml import reweight
 #40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
 reweighter = reweight.GBReweighter(**bdtconfig)
+import analysis.time_acceptance.fcn_functions as fcns
 
 def check_for_convergence(a,b):
   a_f = np.array( [float(a[p].unc_round[0]) for p in a] )
@@ -73,16 +75,93 @@ def KS_test(original, target, original_weight, target_weight):
 # this one should be moved
 def fcn_data(parameters, data):
   pars_dict = parameters.valuesdict(blind=False)
+
+  _timeacc_mc_signal = [k for k in pars_dict.keys() if re.compile(
+        'a([0-9])([0-9])?(u|b)?((1|2)[0-9])?').match(k)]
+  _timeacc_mc_control = [k for k in pars_dict.keys() if re.compile(
+        'b([0-9])([0-9])?(u|b)?((1|2)[0-9])?').match(k)]
+  _timeacc_rd_control = [k for k in pars_dict.keys() if re.compile(
+        'c([0-9])([0-9])?(u|b)?((1|2)[0-9])?').match(k)]
+  _timeacc_all = _timeacc_mc_signal + _timeacc_mc_control + _timeacc_rd_control
+  _to_remove = _timeacc_mc_signal + _timeacc_mc_control + _timeacc_rd_control
   chi2 = []
+  
+  # is timeacc floating or not during the fit
+  if _timeacc_mc_control and _timeacc_mc_signal:
+    timeacc_free = True
+  else:
+    timeacc_free = False
 
-  for y, dy in data.items():
-    for dt in dy.values():
-      badjanak.delta_gamma5_data(dt.data, dt.prob, **pars_dict,
-                  **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
+  if timeacc_free:
+    # print('full freedom')
+    years = list(samples['Bs2JpsiPhi'].keys())
+    triggers = list(samples['Bs2JpsiPhi'][years[0]].keys())
+    samples_list=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar']
+
+    for ky in years:
+      for kt in triggers:
+        # load previous time acceptance
+        _pars = [samples['Bs2JpsiPhi'][ky][kt].knots]
+        _to_keep = [k for k in pars_dict.keys() if re.compile(f'(a|b|c)([0-9])([0-9])?({kt[0]})({ky[2:]})').match(k)]
+        # print(_to_keep)
+        # _pars.append(Parameters.build(parameters, _to_keep))
+        
+        _data = []; _prob = []; _weight = []
+        for time_mode in samples_list:
+          _pars.append(samples[time_mode][ky][kt].timeacc_history[-1])
+          _data.append(samples[time_mode][ky][kt].time)
+          _prob.append(samples[time_mode][ky][kt].pdf)
+          _weight.append(samples[time_mode][ky][kt].weight *
+             samples[time_mode][ky][kt].preWeight[-1] *
+             ristra.allocate(samples[time_mode][ky][kt].kkpWeight[-1]) )
+        fcn_pars =_pars[0] + _pars[1] + _pars[2] + _pars[3]
+        # fcn_call = fcns.saxsbxscxerf
+        # fcn_kwgs={ 'data': _data, 'prob': _prob, 'weight': _weight,
+        #            'tLL': tLL, 'tUL': tUL
+        # }
+        # result = optimize(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs,
+        #                   method='minuit', verbose=False, tol=0.1);
+        _shit = fcn_pars.valuesarray()
+        # update fcn_pars with latest guess from minimizer
+        for min_par in _to_keep:
+            fcn_pars[min_par[:-2]].value = pars_dict[min_par]
+        # print(fcn_pars.valuesarray() - _shit)
+        _chi2 = fcns.saxsbxscxerf(fcn_pars, _data, weight=_weight, prob=_prob,
+                                  tLL=tLL, tUL=tUL)
+        chi2.append(ristra.get(_chi2))
+
+  for y, dy in data['Bs2JpsiPhi'].items():
+    for t, dt in dy.items():
+      _to_keep = [k for k in pars_dict.keys() if re.compile(
+          f'(c)([0-9])([0-9])?({t[0]})({y[2:]})').match(k)]
+      # print(list(_to_keep))
+      _names = set(_to_remove) - set(_to_keep)
+      # print(_names)
+
+      _this_cat_pars = {k:v for k,v in pars_dict.items() if k not in _names}
+      # print(_this_cat_pars)
+
+      # calculate constraint
+      cnstr = 0
+      if not timeacc_free and parameters[_to_keep[2]].free:
+        _to_cnstr = [k[:-2] for k in pars_dict.keys() if re.compile(
+          f'(c)([0-9])([0-9])?({t[0]})({y[2:]})').match(k)]
+        # print('constrained')
+        c0 = pars.valuesarray(_to_keep[1:]) + dt.timeacc.valuesarray(_to_cnstr[1:])
+        c0 = np.matrix(c0)
+        cov = dt.timeacc.cov(_to_cnstr[1:])  # constraint covariance matrix
+        cnstr = np.dot(np.dot(c0, np.linalg.inv(cov)), c0.T)
+        cnstr += len(c0) * np.log(2*np.pi) + np.log(np.linalg.det(cov))
+        # per event constraint
+        cnstr = np.float64(cnstr[0][0])/len(dt.prob)
+
+      badjanak.delta_gamma5_data(dt.data, dt.prob, **_this_cat_pars,
+                  # **dt.timeacc.valuesdict(),
+                  **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc = 1)
-      chi2.append( -2.0 * (ristra.log(dt.prob) * dt.weight).get() );
-
+                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc=1)
+      chi2.append(ristra.get(-2 * (ristra.log(dt.prob)+cnstr) * dt.weight))
+  # exit()
   return np.concatenate(chi2)
 
 
@@ -95,11 +174,12 @@ def do_fit(ipars, data, verbose=False):
   #   v.init = v.value 
   
   # do the fit
-  result = optimize(fcn_data, method='minuit', params=ipars, 
-                    fcn_kwgs={'data':data}, verbose=verbose, timeit=True, 
-                    tol=0.05, strategy=2)
+  result = optimize(fcn_data, method='minuit', params=ipars,
+                    fcn_kwgs={'data':data}, verbose=True, timeit=True,
+                    tol=0.5, strategy=1)
   if verbose:
     print(result.params) 
+  print(result) 
   rpars = Parameters.clone(result.params)
   return rpars, result.chi2
 
@@ -680,7 +760,36 @@ if __name__ == '__main__':
               free=True, latex=r"\Gamma_s - \Gamma_d"))
     pars.add(dict(name="DM", value=17.768, min=16.0, max=20.0,
               free=True, latex=r"\Delta m"))
+
+    timeacc_freedom = 'constrained'
+    timeacc_freedom = 'full'
+    if timeacc_freedom == 'fixed' or timeacc_freedom == 'constrained':
+      timeacc_pars_from = ['Bs2JpsiPhi']
+    elif timeacc_freedom == 'full':
+      timeacc_pars_from = timeacc_list
+    else:
+      raise ValueError("Cannot interpret {timeacc_freedom}!")
+
+    for km in timeacc_pars_from:
+      for ky, vy in samples[km].items():
+        for kt, vt in vy.items():
+          _timeacc = Parameters.build(vt.timeacc, vt.timeacc.fetch('(a|b|c).*'))
+          for cname, cvalue in _timeacc.items():
+            _correl = {}
+            if cvalue.correl:
+              for oname, ovalue in cvalue.correl.items():
+                _correl[f"{oname}{ky[2:]}"] = ovalue
+            # pars.add(dict(name=f"{cname}{ky[2:]}"))
+            # pars[f"{cname}{ky[2:]}"] = cvalue
+            _free = cvalue.free if timeacc_freedom != 'fixed' else False
+            _free = _free if cname.startswith('c') else False
+            pars.add(dict(
+              name=f"{cname}{ky[2:]}",
+              value=cvalue.value, stdev=cvalue.stdev, correl=_correl,
+              free=_free, latex=cvalue.latex,
+            ))
     print(pars)
+    # exit()
 
     # }}}
 
@@ -696,7 +805,7 @@ if __name__ == '__main__':
               print([f"{v:.2uP}" for v in el.uvaluesdict().values()])
 
       print(f"\n[#{iteration}] FIT DATA")
-      pars, curret_chi2 = do_fit(pars, samples['Bs2JpsiPhi'], verbose=False)
+      pars, curret_chi2 = do_fit(pars, samples, verbose=False)
       # print(pars)
 
       print(f"\n[#{iteration}] PDF WEIGHTING MC TO DATA")
@@ -724,10 +833,11 @@ if __name__ == '__main__':
           pars.dump(args['params'])
           break
 
-      print(f"\n[#{iteration}] TIME ACCEPTANCE DETERMINATION")
-      do_time_acceptance(samples, samples_list=timeacc_list, verbose=False)
+      # print(f"\n[#{iteration}] TIME ACCEPTANCE DETERMINATION")
+      # do_time_acceptance(samples, samples_list=timeacc_list, verbose=False)
       print(pars)
 
 
 
 # vim: fdm=marker
+

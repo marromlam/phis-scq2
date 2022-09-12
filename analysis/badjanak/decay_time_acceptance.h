@@ -94,14 +94,14 @@ void integralFullSpline( ftype result[2],
 
   WITHIN_KERNEL
 ftype getOneSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs,
-    const ftype sigma, const ftype gamma,
+    const ftype mu, const ftype sigma, const ftype gamma,
     const ftype tLL, const ftype tUL);
 
 
   WITHIN_KERNEL
 ftype getTwoSplineTimeAcc(const ftype t, GLOBAL_MEM const ftype *coeffs2,
     GLOBAL_MEM const ftype *coeffs1,
-    const ftype sigma, const ftype gamma, const ftype tLL,
+    const ftype mu, const ftype sigma, const ftype gamma, const ftype tLL,
     const ftype tUL);
 
 

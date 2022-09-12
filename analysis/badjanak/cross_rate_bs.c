@@ -170,7 +170,8 @@ ftype rateBs(const ftype *data,
 
   if (USE_TIMEOFFSET)
   {
-    t_offset = parabola(sigma_t, sigma_t_mu_a, sigma_t_mu_b, sigma_t_mu_c);
+    // t_offset = parabola(sigma_t, sigma_t_mu_a, sigma_t_mu_b, sigma_t_mu_c);
+    t_offset = mu;
   }
 
   if (USE_TIMERES) // use_per_event_res
@@ -178,13 +179,13 @@ ftype rateBs(const ftype *data,
     delta_t  = parabola(sigma_t, sigma_offset, sigma_slope, sigma_curvature);
   }
 
-#if DEBUG
+  #if DEBUG
   if (DEBUG > 3 && get_global_id(0) == DEBUG_EVT )
   {
     printf("\nTIME RESOLUTION    : delta_t=%.8f\n", delta_t);
-    printf("                   : time-t_offset=%.8f\n", delta_t);
+    printf("                   : time-t_offset=%.8f\n", time-t_offset);
   }
-#endif
+  #endif
 
   // }}}
 
@@ -193,17 +194,20 @@ ftype rateBs(const ftype *data,
 
   ctype exp_p = C(0,0); ctype exp_m = C(0,0); ctype exp_i = C(0,0);
 
-  if (USE_TIMEACC & !USE_TIMERES)
+  if ( (USE_TIMEACC & !USE_TIMERES) || (delta_t==0) )
   {
-    exp_p = expconv_wores(time-t_offset, G + 0.5*DG, 0.);
-    exp_m = expconv_wores(time-t_offset, G - 0.5*DG, 0.);
-    exp_i = expconv_wores(time-t_offset,          G, DM);
-  }
-  else
-  {
+    // exp_p = expconv_wores(time-t_offset, G + 0.5*DG, 0.);
+    // exp_m = expconv_wores(time-t_offset, G - 0.5*DG, 0.);
+    // exp_i = expconv_wores(time-t_offset,          G, DM);
     exp_p = expconv(time-t_offset, G + 0.5*DG, 0., delta_t);
     exp_m = expconv(time-t_offset, G - 0.5*DG, 0., delta_t);
     exp_i = expconv(time-t_offset, G         , DM, delta_t);
+  }
+  else
+  {
+    exp_p = expconv_simon(time-t_offset, G + 0.5*DG, 0., delta_t);
+    exp_m = expconv_simon(time-t_offset, G - 0.5*DG, 0., delta_t);
+    exp_i = expconv_simon(time-t_offset, G         , DM, delta_t);
   }
 
   // TODO: temporal fix to get HD fitter results
@@ -314,9 +318,9 @@ ftype rateBs(const ftype *data,
   // Allocate some variables {{{
 
   ftype vnk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-#if DEBUG
+  #if DEBUG
   ftype vfk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
-#endif
+  #endif
   ftype vak[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   ftype vbk[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   ftype vck[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
@@ -336,11 +340,11 @@ ftype rateBs(const ftype *data,
     nk = getN(APlon,ASlon,APpar,APper,CSP,k);
     if (USE_FK)
     {
-#if FAST_INTEGRAL
-      fk = getF(cosK,cosL,hphi,k);
-#else
-      fk = ( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);
-#endif
+      #if FAST_INTEGRAL
+        fk = getF(cosK,cosL,hphi,k);
+      #else
+        fk = ( 9.0/(16.0*M_PI) )*getF(cosK,cosL,hphi,k);
+      #endif
     }
     else
     {
@@ -422,11 +426,11 @@ ftype rateBs(const ftype *data,
     integralSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm, G, DG,
         DM, delta_t, tLL, tUL, t_offset, coeffs);
 #else
-    // const int simon_j = sigma_t/(SIGMA_T/80);
+    const int simon_j = sigma_t/(SIGMA_T/80);
     integralFullSpline(intBBar, vnk, vak, vbk, vck, vdk, angnorm,
         G, DG, DM, 
-        /* what should beused */ delta_t,
-        /* HD-fitter used */ //parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
+        /* what should beused */ // delta_t,
+        /* HD-fitter used */ parabola((0.5+simon_j)*(SIGMA_T/80), sigma_offset, sigma_slope, sigma_curvature), // as simon cached integral
         tLL, tUL, t_offset,
         coeffs);
 #endif
@@ -447,9 +451,9 @@ ftype rateBs(const ftype *data,
 
   ftype num = 1.0; ftype den = 1.0;
   num = (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * pdfB +
-    (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar;
+        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * pdfBbar;
   den = (1+tagOS*(1-2*omegaOSB)   ) * (1+tagSS*(1-2*omegaSSB)   ) * intB +
-    (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar;
+        (1-tagOS*(1-2*omegaOSBbar)) * (1-tagSS*(1-2*omegaSSBbar)) * intBbar;
 
 #if FAST_INTEGRAL 
   num = dta*num;

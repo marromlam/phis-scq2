@@ -67,11 +67,11 @@
   pPlon:
   {
     name: pPlon
-    value: 0.07
+    value: -0.03
     free: false
     min: null
     max: null
-    init: 0.07
+    init: -0.03
     latex: pPlon
     blind: false
     blindengine: python
@@ -171,11 +171,11 @@
   fPlon:
   {
     name: fPlon
-    value: 0.521284
+    value: 0.524176
     free: false
     min: null
     max: null
-    init: 0.521284
+    init: 0.524176
     latex: fPlon
     blind: false
     blindengine: python
@@ -184,11 +184,11 @@
   fPper:
   {
     name: fPper
-    value: 0.249001
+    value: 0.25
     free: false
     min: null
     max: null
-    init: 0.249001
+    init: 0.25
     latex: fPper
     blind: false
     blindengine: python
@@ -197,11 +197,11 @@
   dPpar:
   {
     name: dPpar
-    value: 3.3
+    value: 3.26
     free: false
     min: null
     max: null
-    init: 3.3
+    init: 3.26
     latex: dPpar
     blind: false
     blindengine: python
@@ -210,11 +210,11 @@
   dPper:
   {
     name: dPper
-    value: 3.07
+    value: 3.08
     free: false
     min: null
     max: null
-    init: 3.07
+    init: 3.08
     latex: dPper
     blind: false
     blindengine: python

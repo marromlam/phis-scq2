@@ -33,7 +33,8 @@ simplefilter(action='ignore', category=FutureWarning)
 # Reweightings functions {{{
 
 def reweight(original, target, original_weight, target_weight,
-             n_estimators, learning_rate, max_depth, min_samples_leaf, trunc):
+             n_estimators=20, learning_rate=0.1, max_depth=3,
+             min_samples_leaf=1000, trunc=False):
     r"""
     This is the general reweighter for phis analysis.
 
@@ -217,7 +218,9 @@ if __name__ == '__main__':
     # change bdt according to filename, if applies
     bdtconfig = timeacc['bdtconfig']
     if 'bdt' in args['version'].split('@')[0]:
-        bdtconfig = int(args['version'].split('bdt')[1])
+        bdtconfig = args['version'].split('@')[0].split('~')[0].split('bdt')[1]
+        bdtconfig = int(bdtconfig)
+        # bdtconfig = int(args['version'].split('bdt')[1])
         bdtconfig = bdtmesh(bdtconfig, config.general['bdt_tests'], False)
 
     # for v0r0 the GB config is the following one

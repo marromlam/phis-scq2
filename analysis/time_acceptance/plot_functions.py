@@ -199,29 +199,37 @@ def plot_timeacc_simul_spline(params, time, weights, mode=None, conf_level=1,
 
     # Create some kinda lambda here {{{
 
-    def splinef(time, coeffs):
+    def splinef(time, mu, coeffs):
         return badjanak.bspline(time, coeffs)
 
     # }}}
 
     # try to guess what do you what to plot {{{
 
+    mu = 0
     if mode == 'rd':
         LOG.error("We need to decide yet how to plot this")
         eff_label = r"\varepsilon_{RD}^{B_s^0}"
     if mode == 'rd_control':
         gamma = params['gamma_c'].value
         list_coeffs = list(c.keys())
+        mu = list(params.build(params, params.find('mu(.*)c(.*)')).keys())[0]
+        mu = params[mu].value
         eff_label = r"\varepsilon_{RD}^{B_d^0}"
     if mode == 'mc_control':
         gamma = params['gamma_b'].value
+        mu = list(params.build(params, params.find('mu(.*)b(.*)')).keys())[0]
+        mu = params[mu].value
         list_coeffs = list(b.keys())
         eff_label = r"\varepsilon_{MC}^{ratio}"
     if mode == 'mc':
         gamma = params['gamma_a'].value
+        mu = list(params.build(params, params.find('mu(.*)a(.*)')).keys())[0]
+        mu = params[mu].value
         list_coeffs = list(a.keys())
         eff_label = r"\varepsilon_{MC}^{B_s^0}"
 
+    print(f"VELO misaligment: {mu}")
     # }}}
 
     # Prepare coeffs as ufloats
@@ -261,7 +269,7 @@ def plot_timeacc_simul_spline(params, time, weights, mode=None, conf_level=1,
     # create the histogram for the dataset {{{
     # The binning obviously is computed in the previous step
 
-    ref = complot.hist(ristra.get(time), bins=edges, center_of_mass=True,
+    ref = complot.hist(ristra.get(time)-0*mu, bins=edges, center_of_mass=True,
                        weights=ristra.get(weights))
     ref_x = ref.bins
     ref_counts = ref.counts * int_pdf
@@ -270,10 +278,12 @@ def plot_timeacc_simul_spline(params, time, weights, mode=None, conf_level=1,
     spline_compl = 1
     if kind == 'mc_control':
         coeffs_a = [params[key].value for key in params if key[0] == 'a']
-        spline_compl = splinef(ref_x, coeffs_a)
+        mu_a = 0
+        spline_compl = splinef(ref_x, mu_a, coeffs_a)
     elif kind == 'rd_control':
         coeffs_b = [params[key].value for key in params if key[0] == 'b']
-        spline_compl = splinef(ref_x, coeffs_b)
+        mu_b = 0
+        spline_compl = splinef(ref_x, mu_b, coeffs_b)
 
     # renormalize histogram
     ref_counts = ref_counts / spline_compl
@@ -301,7 +311,7 @@ def plot_timeacc_simul_spline(params, time, weights, mode=None, conf_level=1,
     # create efficiency spline {{{
 
     x = np.linspace(tLL, tUL, 200)
-    y = uncertainty_wrapper(lambda p: splinef(ref_x, p), coeffs)
+    y = uncertainty_wrapper(lambda p: splinef(ref_x, mu, p), coeffs)
     y_nom = unp.nominal_values(y)
     y_spl = interp1d(ref_x, y_nom, kind='cubic', fill_value='extrapolate')(5)
     y_norm = np.trapz(y_nom/y_spl, ref_x)
@@ -500,8 +510,8 @@ def plot_wrapper(args, axes):
             weight = f"oddWeight*{weight}"
         if TIMEACC['use_veloWeight']:
             weight = f"veloWeight*{weight}"
-        if "bkgcat60" in args['version']:
-            weight = weight.replace(f'sWeight', 'time/time')
+        # if "bkgcat60" in args['version']:
+        #     weight = weight.replace(f'sWeight', 'time/time')
         print(f"Weight is set to: {weight}")
         # }}}
 
@@ -664,8 +674,9 @@ if __name__ == '__main__':
         if mix_timeacc:
             for i, m in enumerate(mixers):
                 args = {
-                    "samples": f"{args['samples']}",
-                    "params":  f"{','.join(params[i])}",
+                    "samples":  f"{','.join(samples[iy])}",
+                    # "samples": f"{args['samples']}",
+                    "params":  f"{','.join(params[iy][i])}",
                     "figure":  args["figure"],
                     "mode":    f"{args['mode']}",
                     "year":    f"{args['year']}",
