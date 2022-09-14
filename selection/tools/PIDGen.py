@@ -19,13 +19,15 @@ def argument_parser():
     parser.add_argument('--output-file', help='Output ROOT file')
     parser.add_argument('--data-set', help='Mag and Year, for example MagUp_2016')
     parser.add_argument('--mode', help='Name of the selection in yaml')
+    parser.add_argument('--var', default="default",
+                           help='Variation, default indicates no syst neither stat')
     parser.add_argument('--tracks-file', nargs='+', help='Yaml file with tracks')
     parser.add_argument('--tmp1', help='Temporary file to apply PID 1st step')
     parser.add_argument('--tmp2', help='Temporary file to apply PID 2nd step')
     return parser
 
 
-def PIDGen(input_file, input_tree_name, output_file, data_set, mode,
+def PIDGen(input_file, input_tree_name, output_file, data_set, mode, var,
            tracks_file, tmp1, tmp2):
     ## START OF CONFIG
     # Read comments and check vars
@@ -63,6 +65,9 @@ def PIDGen(input_file, input_tree_name, output_file, data_set, mode,
     #     {pid_config} is the string describing the PID configuration.
     # Run PIDCorr.py without arguments to get the full list of PID configs
     tracks = read_from_yaml(mode, tracks_file)
+
+    variation = var
+    #For calculating uncertainties (syst, and stat.)
 
     # IF ON LXPLUS: if /tmp exists and is accessible, use for faster processing
     # IF NOT: use /tmp if you have enough RAM
@@ -102,6 +107,7 @@ def PIDGen(input_file, input_tree_name, output_file, data_set, mode,
                 command += " -d %s" % dataset
                 command += " -i %s" % tmpinfile
                 command += " -o %s" % tmpoutfile
+                command += " -v %s" % variation
                 if seed :
                     command += " -s %d" % seed
 
@@ -126,4 +132,5 @@ def PIDGen(input_file, input_tree_name, output_file, data_set, mode,
 if __name__ == "__main__":
     parser = argument_parser()
     args = parser.parse_args()
+    print(args)
     PIDGen(**vars(args))

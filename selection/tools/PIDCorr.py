@@ -19,13 +19,15 @@ def argument_parser():
     parser.add_argument('--output-file', help='Output ROOT file')
     parser.add_argument('--data-set', help='Mag and Year, for example MagUp_2016')
     parser.add_argument('--mode', help='Name of the selection in yaml')
+    parser.add_argument('--var', default="default",
+                           help='Variation, default indicates no syst neither stat')
     parser.add_argument('--tracks-file', nargs='+', help='Yaml file with tracks')
     parser.add_argument('--tmp1', help='Temporary file to apply PID 1st step')
     parser.add_argument('--tmp2', help='Temporary file to apply PID 2nd step')
     return parser
 
 
-def PIDCorr(input_file, input_tree_name, output_file, data_set, mode,
+def PIDCorr(input_file, input_tree_name, output_file, data_set, mode, var,
             tracks_file, tmp1, tmp2):
     ## START OF CONFIG
     # Read comments and check vars
@@ -62,6 +64,8 @@ def PIDCorr(input_file, input_tree_name, output_file, data_set, mode,
     #     {pid_config} is the string describing the PID configuration.
     # Run PIDCorr.py without arguments to get the full list of PID configs
     tracks = read_from_yaml(mode, tracks_file)
+
+    variation = var
 
     # IF ON LXPLUS: if /tmp exists and is accessible, use for faster processing
     # IF NOT: use /tmp if you have enough RAM
@@ -102,6 +106,7 @@ def PIDCorr(input_file, input_tree_name, output_file, data_set, mode,
                 command += " -i %s" % tmpinfile
                 command += " -o %s" % tmpoutfile
                 command += " -S %s" % simversion
+                command += " -v %s" % variation
 
                 treename = output_tree
                 tmpinfile = tmpoutfile
