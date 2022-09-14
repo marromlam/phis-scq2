@@ -1,0 +1,599 @@
+% !TEX program = xelatex
+\documentclass[9pt,aspectratio=43]{beamer}
+\usepackage{xcolor}
+
+% \usetheme{Compostela}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{$\phi_s$ meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}\\
+\href{mailto:rruizfer@cern.ch}{Ramón A. Ruíz Fernández}
+}
+\newcommand{\TalkAuthorShort}{V. G. Chobanova, D. Martínez, M. Romero, R. A. Ruiz}
+\newcommand{\TalkTitle}{$\phi_s$ status in Santiago}
+\newcommand{\TalkTitleShort}{$\phi_s$ status in Santiago}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{March 22nd}
+\newcommand{\TalkDateNumber}{2021/03/23}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\usepackage{array}
+\newcommand{\TupleVersion}{v1r0p1@LcosK}
+% \newcommand{\FIGS}{/home3/marcos.romero/phis-scq.git/14-lifetime-and-ptb-issues/output/figures}
+\newcommand{\FIGS}{/lustre/LHCb/marcos.romero/phis-scq/output/figures}
+
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE PAGE & CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \begin{frame}[plain,overlaytitlepage=0.9]
+%   \begin{minipage}[b][\textheight][b]{5cm}
+%     \includegraphics[height=0.5cm]{logos/igfae_bw}\hspace{1mm}
+%     \includegraphics[height=0.5cm]{logos/usc_bw}\hspace{1mm}
+%     \includegraphics[height=0.5cm]{logos/xunta_bw}\hspace{1mm}\\[2mm]
+%     % \includegraphics[height=0.5cm]{logos/maeztu_bw}\hspace{1mm}
+%     \includegraphics[height=0.5cm]{logos/lhcb_bw}\\[-1mm]
+%   \end{minipage}
+% \end{frame}
+%
+% \begin{frame}[plain,overlaytoc=0.9]
+%   \addtocounter{framenumber}{-1}
+%   \hspace*{5.3cm}\begin{minipage}{8cm}
+%     \tableofcontents
+%   \end{minipage}
+% \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+\section{News in pipeline}
+
+
+\subsection{Analysis steps}
+
+% frame {{{
+%
+\begin{frame}[default]
+\frametitle{noframetitle}
+
+When selection pipeline is finished we end up with the \texttt{*\_selected\_bdt.root} tuple.
+There the analysis starts, and the following parts need to be done:
+
+\begin{enumerate}
+  \item sWeight to create our background subtracted samples.
+  \item Reweightings to make our MC and control channels more similar to $B_s^0$.
+  \item Time resolution calibration.
+  \item Time acceptance.
+  \item Flavor tagging calibration.
+  \item CSP factors.
+  \item Angular acceptance.
+  \item Final time-dependent angular fit.
+\end{enumerate}
+
+\end{frame}
+%
+% }}}
+
+
+% frame {{{
+%
+\begin{frame}[default]
+\frametitle{Summary}
+\frametitle{What we \textit{can} do?}
+
+\begin{enumerate}
+	\item \texttt{lbWeight} pipeline.
+    \begin{itemize}
+      \item ...
+    \end{itemize}
+  \item We can compute our own sWeights.
+    \begin{itemize}
+      \item We can use different lineshapes, currently Ipatia and double CB are being used.
+      \item sWeights are computed using GPUs and implemented in the ipanema3 framework.
+    \end{itemize}
+  \item Reweightings pipeline.
+    \begin{itemize}
+      \item Reweightings from $B_q \rightarrow B_{q'}$ (MC $\rightarrow$ MC and MC $\rightarrow$ RD).
+      \item Different variations: standard magnet, pdf and kinematic weights plus $\phi(X)$-angle weights, \textit{odd} weights...
+      \item Now GB-based reweightings are done independently for biased and unbiased trigger categories.
+      \item GB configuration is: \texttt{20:0.1:3:1000}.
+    \end{itemize}
+  \addtocounter{enumi}{1}
+  \item Decay time dependence of the efficiency, aka time acceptance.
+    \begin{itemize}
+      \item Different spline variations.
+      \item VELO-weights procedure.
+    \end{itemize}
+  \addtocounter{enumi}{2}
+  \item Angular dependence of the efficiency, aka angular acceptance.
+    \begin{itemize}
+      \item Naive, GB-corrected, analytic and iterative angular acceptances.
+      \item Now full time-angular iterative procedure in place.
+    \end{itemize}
+  \item Final time-dependent angular fit with tagging constraints.
+\end{enumerate}
+
+\end{frame}
+%
+% }}}
+
+
+% frame {{{
+%
+\begin{frame}[default]
+\frametitle{Summary}
+\frametitle{What we \textit{cannot} do?}
+
+We are still missing some steps in the \texttt{phis-scq} pipeline.
+Since we cannot recompute them for each of our tests, we take the
+baseline set  of parameters for each of the tests.
+Namely:
+
+\medskip
+
+\begin{enumerate}
+  \addtocounter{enumi}{2}
+  \item We can not extract time resolution calibration.
+    \begin{itemize}
+      \item Do we expect this to change between tests? \emph{to be implemented} : \emph{skip} 
+    \end{itemize}
+  \addtocounter{enumi}{1}
+  \item We can not compute the flavor tagging calibration.
+    \begin{itemize}
+      \item Do we expect this to change between tests? \emph{to be implemented} : \emph{skip}
+    \end{itemize}
+  \item We can not compute CSP factors.
+    \begin{itemize}
+      \item CSP factors should not vary a lot between the tests, this not creating sizeable effects.
+      \item \emph{Probably best to just port Veronika's code to \texttt{phis-scq}.}
+    \end{itemize}
+\end{enumerate}
+
+\end{frame}
+%
+% }}}
+
+
+% frame {{{
+%
+\begin{frame}[default]
+\frametitle{sWeighting procedure}
+
+\begin{itemize}
+  \item Implemented sWeights for three main channels: $B_s^0$, $B_d^0$ and $B_u^+$.
+  \item Different mass shapes, $M(m)$:
+    \begin{itemize}
+      \item $B_s^0$ modes are fitted with double-sided Ipatia lineshape.
+      \item $B_d^0$ and $B_u^+$ modes are fitted with double-sided Crystal-Ball lineshape.
+    \end{itemize}
+  \item The mass branch is \texttt{B\_ConstJpis\_M\_1}. Mass windows to be
+    close to some numbers I saw in p2vv and in our selection pipeline.
+  \item The fits are GPU-based: I use some numerical integration for the normalization of the pdfs.
+  \item A general full mass shape is:
+    $$ F(m) = \sum_{i}^{\text{species}} f_{\text{signal}, i} \, \frac{M(m)}{\int_{mLL}^{mUL} M(m) dm} + \left( 1-\sum_{i}^{\text{species}}f_{\text{signal}, i} \right) \, \frac{e^{-bm}}{\int_{mLL}^{mUL} e^{-bm} dm} $$
+  \item Maximum-likelihood fit is performed over all candidates:
+    \begin{itemize}
+      \item Per year (all samples).
+      \item Per trigger category (all samples).
+      \item Per $m(X)$ bin (only $B_s^0$ samples).
+    \end{itemize}
+
+\end{itemize}
+
+\end{frame}
+%
+% }}}
+
+
+% frame {{{
+%
+\begin{frame}[default]
+\frametitle{sWeighting pipeline}
+
+\begin{itemize}
+  \item Mass prefit:
+    \begin{itemize}
+       \item Fit $F(m)$ to the MC sample requiring \texttt{BKG\_CAT == 0|10|50}.
+       \item Only one specie is modelled. 
+       \item Dump tail parameters to be used later.
+    \end{itemize}
+  \item Mass fit:
+    \begin{itemize}
+      \item MC/RD mass fit: fit the $F(m)$ model to the MC/RD sample now using all events.
+      \item Fix $F(m)$ tails to the prefit parameters.
+      \item If it is $B_s^0$ RD, then scale the likelihood with per-event \texttt{wLb}.
+      \item If it is $B_s^0$ RD, then another Ipatia for $B_d^0$ with $\sigma_{B_d}=\sigma_{B_s}$ and $\mu_{B_s}=\mu_{B_s}-\delta\mu_{B_s-B_d}^{PDG}$.
+    \end{itemize}
+\end{itemize}
+
+\begin{center}
+  \includegraphics[width=\textwidth]{gpx/sweight_pipeline_bs.pdf}\\
+  \vspace*{5mm}
+  \includegraphics[width=2cm]{gpx/sweight_pipeline_bd.pdf}
+\end{center}
+
+\end{frame}
+%
+% }}}
+
+
+% frame {{{l
+%
+\begin{frame}[default]
+\frametitle{sWeighting}
+
+Usually Lera provides sWeights for $B_s^0$, Peilian for $B_d^0$ and Piera for $B_u^+$.
+We see some differences if we use the ones we compute in SCQ. Some examples:
+
+\begin{center}
+  \begin{tabular}{c|c|c}
+                     & from main pipeline     & from Santiago          \\ \hline
+    baseline         & $ -0.0078 \pm 0.0013 $ & $ -0.0033 \pm 0.0013 $ \\
+    1st $p_T(B)$ bin & $ -0.0036 \pm 0.0027 $ & $ +0.0031 \pm 0.0027 $ \\
+    2nd $p_T(B)$ bin & $ -0.0065 \pm 0.0027 $ & $ -0.0028 \pm 0.0027 $ \\
+    3rd $p_T(B)$ bin & $ -0.0130 \pm 0.0027 $ & $ -0.0079 \pm 0.0027 $ \\
+    4th $p_T(B)$ bin & $ -0.0023 \pm 0.0027 $ & $ +0.0022 \pm 0.0027 $ \\
+  \end{tabular}
+\end{center}
+
+The issue is known to \textbf{be only} with $B_s^0$ RD.
+
+\medskip
+
+List of differences wrt. Lera:
+\begin{itemize}
+  \item $\sigma$ dependence.
+  \item Ipatia vs. CB.
+  \item ...
+\end{itemize}
+
+\end{frame}
+%
+% }}}
+
+
+\subsection{sWeighting}
+
+% BsMC mass prefits {{{
+%
+\foreach \year in {2015, 2016, 2017, 2018}{%
+% \foreach \year in {2015}{%
+  \foreach \ptbin in {1,2,3,4}{%
+  \begin{frame}[default]
+  \frametitle{$B_s^0$ signal MC mass \textit{pre}fits for \year}
+  \framesubtitle{\TupleVersion pTB\ptbin} 
+  \begin{tabular}{cccccc}
+      1st            & 2nd            & 3rd            & 4th            & 5th            & 6th            \\
+          $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin \\ \hline
+      \\
+      \multicolumn{6}{c}{biased} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_biased/fit.pdf} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_biased/logfit.pdf} \\
+      \\
+      \multicolumn{6}{c}{unbiased} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_unbiased/fit.pdf} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_unbiased/logfit.pdf} \\
+  \end{tabular}
+  \end{frame}
+}
+}
+%
+% }}}
+
+
+% BsMC mass fits {{{
+%
+\foreach \year in {2015, 2016, 2017, 2018}{%
+% \foreach \year in {2015}{%
+  \foreach \ptbin in {1,2,3,4}{%
+  \begin{frame}[default]
+  \frametitle{$B_s^0$ signal MC mass fits for \year}
+  \framesubtitle{\TupleVersion pTB\ptbin} 
+  \begin{tabular}{cccccc}
+      1st            & 2nd            & 3rd            & 4th            & 5th            & 6th            \\
+          $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin \\ \hline
+      \\
+      \multicolumn{6}{c}{biased} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_biased/fit.pdf} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_biased/logfit.pdf} \\
+      \\
+      \multicolumn{6}{c}{unbiased} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_unbiased/fit.pdf} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_unbiased/logfit.pdf} \\
+  \end{tabular}
+  \end{frame}
+}
+}
+%
+% }}}
+
+
+% BsMCdG0 mass fits {{{
+%
+\foreach \year in {2015, 2016, 2017, 2018}{%
+% \foreach \year in {2015}{%
+  \foreach \ptbin in {1,2,3,4}{%
+  \begin{frame}[default]
+  \frametitle{$B_s^0$ $\Delta\Gamma=0$ MC mass fits for \year}
+  \framesubtitle{\TupleVersion pTB\ptbin} 
+  \begin{tabular}{cccccc}
+      1st            & 2nd            & 3rd            & 4th            & 5th            & 6th            \\
+          $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin \\ \hline
+      \\
+      \multicolumn{6}{c}{biased} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX1_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX2_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX3_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX4_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX5_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX6_biased/fit.pdf} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX1_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX2_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX3_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX4_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX5_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX6_biased/logfit.pdf} \\
+      \\
+      \multicolumn{6}{c}{unbiased} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX1_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX2_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX3_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX4_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX5_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX6_unbiased/fit.pdf} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX1_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX2_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX3_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX4_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX5_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_ipatia_mX6_unbiased/logfit.pdf} \\
+  \end{tabular}
+  \end{frame}
+}
+}
+%
+% }}}
+
+
+% BsRD mass fits {{{
+%
+\foreach \year in {2015, 2016, 2017, 2018}{%
+% \foreach \year in {2015}{%
+  \foreach \ptbin in {1,2,3,4}{%
+  \begin{frame}[default]
+  \frametitle{$B_s^0$ RD mass fits for \year}
+  \framesubtitle{\TupleVersion pTB\ptbin} 
+  \begin{tabular}{cccccc}
+      1st            & 2nd            & 3rd            & 4th            & 5th            & 6th            \\
+          $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin \\ \hline
+      \\
+      \multicolumn{6}{c}{biased} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_biased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_biased/fit.pdf} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_biased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_biased/logfit.pdf} \\
+      \\
+      \multicolumn{6}{c}{unbiased} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_unbiased/fit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_unbiased/fit.pdf} \\
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX1_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX2_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX3_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX4_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX5_unbiased/logfit.pdf} &
+      \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_ipatia_mX6_unbiased/logfit.pdf} \\
+  \end{tabular}
+  \end{frame}
+}
+}
+%
+% }}}
+
+
+% frame {{{
+%
+\begin{frame}[default]
+\frametitle{Time-Angular Acceptance iterative procedure}
+
+Now we can do an iterative procedure where we reuse the angular acceptance
+correctons in the time acceptance. So, the time-angular iterative procedure
+\footnote{This does not mean we can get the correlation between angular acceptance
+weights and the time acceptance coefficients (yet). We just recompute the time
+acceptance in each iteration applying the corrections to the $B_s^0$
+sample.}
+
+How it works:
+\begin{enumerate}
+  \addtocounter{enumi}{-2}
+  \item Compute the decay time acceptance (as usually).
+  \item Compute the GB-corredted angular acceptance.
+  \item Fit $B_s^0$ RD with the previous acceptances.
+  \item Compute \texttt{pdfWeight} for MC with the previous parameters.
+  \item Compute the \texttt{kkpWeight} between MC and RD with the previuous \texttt{pdfWeight}.
+  \item Compute the angular acceptance with the previous MC corrections.
+  \item Compute the decay time acceptance with the usual corrections + \texttt{kkpWeight}.
+  \item Go back to 1.
+\end{enumerate}
+
+This procedure usually takes 10 iterations (baseline takes 4).
+So far I have not seen any large difference between both procedures
+in $\Gamma_s - \Gamma_d$.
+
+\end{frame}
+%
+% }}}
+
+
+\section{$p_T(B)$ issue}
+%%% % solve it {{{
+%%% \addtocounter{framenumber}{-1}
+%%% \frame[plain, default]
+%%% {
+%%%    \vspace*{3cm}
+%%%    \centering\Large\bfseries\boldmath\color{black}$p_T(B)$ issue \\
+%%%    \begin{tikzpicture}[transform shape, rotate=10, baseline=-3.5cm]
+%%%    \node [mybox] (box) {%
+%%%        \begin{minipage}[t!]{0.42\textwidth}
+%%%          \begin{center}
+%%%           \Huge {\color{scqred} \textit{quasi} 
+%%%           %\fontspec{Academy Engraved LET}
+%%%           \textbf{SOLVED}}
+%%%          \end{center}
+%%%        \end{minipage}
+%%%        };
+%%%    \end{tikzpicture}
+%%% }
+%%% % }}}
+
+
+
+% frame {{{
+%
+\subsection{Wrong decay time fit projections}
+\begin{frame}[default,allowframebreaks]
+\frametitle{noframetitle}
+
+% \includegraphics[width=\textwidth,page=1]{gpx/the_how_to}
+% \includegraphics[width=\textwidth,page=3]{gpx/the_how_to}
+% \includegraphics[width=\textwidth,page=4]{gpx/the_how_to}
+% \includegraphics[width=\textwidth,page=5]{gpx/the_how_to}
+% \includegraphics[width=\textwidth,page=6]{gpx/the_how_to}
+\includegraphics[width=\textwidth,page=1]{gpx/the_how_to2}
+\includegraphics[width=\textwidth,page=2]{gpx/the_how_to2}
+
+\end{frame}
+%
+% }}}
+
+
+% frame {{{
+%
+\subsection{Current results}
+\begin{frame}[default]
+\frametitle{noframetitle}
+
+\resizebox{\textwidth}{!}{%
+  \begin{tabular}{c|cccc|c}
+    test                                          & 1st pT(B) bin          & 2nd pT(B) bin          & 3rd pT(B) bin          & 4th pT(B) bin          & $p$-value             \\ \hline
+                                                  &                        &                        &                        &                        &                       \\
+    \multicolumn{6}{c}{Where the $p_T(B)$ issue is}                                                                                                                           \\
+    $\cos(\theta_k)<0 $ and $t\in[0.3,15]$ ps     & $  0.0031 \pm 0.0038 $ & $ -0.0028 \pm 0.0038 $ & $ -0.0079 \pm 0.0038 $ & $  0.0022 \pm 0.0038 $ & 0.020                 \\
+                                                  &                        &                        &                        &                        &                       \\
+    \multicolumn{6}{c}{First test to shed light on the issue}                                                                                                                 \\
+    $\cos(\theta_k)<0 $ and $t\in[0.5,7]$ ps      & $ -0.0082 \pm 0.0038 $ & $ -0.0065 \pm 0.0038 $ & $ -0.0067 \pm 0.0038 $ & $ +0.0014 \pm 0.0038 $ & {\color{red}0.25}     \\
+                                                  &                        &                        &                        &                        &                       \\
+    \multicolumn{6}{c}{New tests trying to isolate the issue}                                                                                                                 \\
+    $\cos(\theta_K)<0 $ and $t\in[0.3,7]$ ps      & $ +0.0046 \pm 0.0032 $ & $ -0.0042 \pm 0.0032 $ & $ -0.0072 \pm 0.0032 $ & $ -0.0017 \pm 0.0032 $ & 0.00                  \\
+    $\cos(\theta_K)<0 $ and $t\in[0.5,15]$ ps     & $ -0.0035 \pm 0.0028 $ & $ -0.0023 \pm 0.0028 $ & $ -0.0091 \pm 0.0028 $ & $ -0.0017 \pm 0.0028 $ & 0.00                  \\
+                                                  &                        &                        &                        &                        &                       \\
+    \multicolumn{6}{c}{Next tests (to be done, actually repeated)}                                                                                                            \\
+    $\cos(\theta_K)<0 $ and $t\in[0.3,1.36]$ ps   & $ -0.0000 \pm 0.0027 $ & $ -0.0000 \pm 0.0027 $ & $ -0.0000 \pm 0.0027 $ & $ -0.0000 \pm 0.0027 $ & 0.00                  \\
+    $\cos(\theta_K)<0 $ and $t\in[1.36,15]$ ps    & $ -0.0000 \pm 0.0027 $ & $ -0.0000 \pm 0.0027 $ & $ -0.0000 \pm 0.0027 $ & $ -0.0000 \pm 0.0027 $ & 0.00                  \\
+  \end{tabular}
+}
+
+\vfill
+
+\textsc{Moral:} \emph{We must recompute sWeights for each test we do.}
+
+\end{frame}
+%
+% }}}
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Add images
+
+%\input{figures}
+%\input{angacc_figures}
+%\input{tables}
+
+
+
+
+
+
+\end{document}
+
+
+% vim:foldmethod=marker
