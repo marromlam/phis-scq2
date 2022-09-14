@@ -14,6 +14,7 @@ Bs2JpsiPhi: &Bs2JpsiPhi
 MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
     <<: *Bs2JpsiPhi
     'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
+    'pid_stripping': 'hplus_PIDK_corr>0 && muplus_PIDmu_corr>0 && muminus_PIDmu_corr>0'
 
 MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
     <<: *MC_Bs2JpsiPhi
@@ -44,6 +45,7 @@ Bd2JpsiKstar: &Bd2JpsiKstar
 MC_Bd2JpsiKstar:
     <<: *Bd2JpsiKstar
     'MC_specific': 'B_BKGCAT == 0 || B_BKGCAT == 10 || (B_BKGCAT == 50 && B_TRUETAU > 0) || B_BKGCAT == 60'
+    'pid_stripping': 'hplus_PIDK_corr>0 && hminus_PIDK_corr<0 $$ muplus_PIDmu_corr>0 && muminus_PIDmu_corr>0'
 
 Bu2JpsiKplus: &Bu2JpsiKplus
     <<: *Bs2JpsiPhi
@@ -84,3 +86,4 @@ MC_Bs2DsPi:
 MC_Bs2JpsiPhi_fromLb: &MC_Bs2JpsiPhi_fromLb
     <<: *Bs2JpsiPhi
     'Match_cut': 'wdp>0'
+    'pid_stripping': 'hplus_PIDK_corr>0 && muplus_PIDmu_corr>0 && muminus_PIDmu_corr>0'
