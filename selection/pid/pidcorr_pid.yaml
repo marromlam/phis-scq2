@@ -1,0 +1,58 @@
+common: &common
+  hplus:
+    'PIDK': 'K_CombDLLK_Brunel'
+    'PIDp': 'K_CombDLLp_Brunel'
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+  <<: *common
+  hminus:
+    'PIDK': 'K_CombDLLK_Brunel'
+    'PIDp': 'K_CombDLLp_Brunel'
+
+MC_Bs2JpsiPhi_dG0:
+    <<: *MC_Bs2JpsiPhi
+
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiKK_Swave:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_Prompt:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bd2JpsiKstar:
+  <<: *common
+  hminus:
+    'PIDK': 'pi_CobDLLK_Brunel'
+    'PIDp': 'pi_CombDLLp_Brunel' #Warning: Based on Dspi
+
+MC_Bu2JpsiKplus:
+  <<: *common
+
+MC_Bs2JpsiPhi_fromLb_kp:
+  hplus:
+    'PIDK': 'K_CombDLLK_Brunel'
+    'PIDp': 'K_CombDLLp_Brunel'
+  hminus:
+    'PIDK': 'p_CombDLLK_Brunel'
+    'PIDp': 'p_CombDLLp_Brunel'
+
+MC_Bs2JpsiPhi_fromLb_pk:
+  hplus:
+    'PIDK'  : 'p_LbLcPi_CombDLLK_Brunel'
+    'PIDp'  : 'p_LbLcPi_CombDLLp_Brunel'
+  hminus:
+
+MC_Bs2DsPi:
+  Pi1:
+    'PIDK': 'pi_CombDLLK_Brunel'
+  Pi2:
+    'PIDK': 'pi_CombDLLK_Brunel'
+  K1:
+    'PIDK': 'K_CombDLLK_Brunel'
+    'PIDp': 'K_CombDLLp_Brunel'
+  K2:
+    'PIDK': 'K_CombDLLK_Brunel'
+    'PIDp': 'K_CombDLLp_Brunel'
