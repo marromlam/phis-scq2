@@ -307,6 +307,8 @@ if config['run_preselection']:
         params:
             script = 'selection/tools/apply_selection.py',
             cut_keys = cut_keys_mode,
+            if config['stripping_mode'] =='nopidcuts':
+                cut_keys += ' pid_stripping'
             # file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/PID/{}/{}_{}_{}_selected_pidcorrected.root'.format(wildcards.mode, wildcards.mode, wildcards.year, wildcards.strip_sim)
         log:
             # tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_pidcorrected_selected_preselected.root')
