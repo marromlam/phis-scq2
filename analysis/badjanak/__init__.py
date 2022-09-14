@@ -306,7 +306,7 @@ def parser_rateBs(
 
     # Time acceptance
     timeacc = [p[k] for k in p.keys() if re.compile(
-        '(a|b|c)([0-9])([0-9])?(u|b)?').match(k)]
+        '(a|b|c)([0-9])([0-9])?(u|b)?((1|2)[0-9])?').match(k)]
     if timeacc:
         r['timeacc'] = THREAD.to_device(coeffs_to_poly(timeacc))
     else:
