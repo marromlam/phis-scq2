@@ -55,6 +55,61 @@ rule physics_params_data_Bs:
 # }}}
 
 
+
+# plot projections {{{
+
+rule physics_params_data_Bs_plot:
+  wildcard_constraints:
+    fit = "(auto|yearly|run2|run2a)(Dual)?(Poldep|magUp|magDown)?",
+    mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
+  threads: 8
+  resources:
+    memb_mb=4000
+  input:
+    samples = lambda wcs: tuples(wcs, year=f'{wcs.year}'),
+    angacc_biased = lambda wcs: angaccs(wcs, trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, trigger='unbiased'),
+    timeacc_biased = lambda wcs: timeaccs(wcs, trigger='biased'),
+    timeacc_unbiased = lambda wcs: timeaccs(wcs, trigger='unbiased'),
+    csp_factors = lambda wcs: csps(wcs),
+    time_resolution = lambda wcs: timeress(wcs),
+    flavor = lambda wcs: flavors(wcs),
+    params = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+  output:
+    directory('output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/')
+  log:
+    'output/log/physics_params_plot/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+  run:
+    # WARNING: maybe this needs to be understood
+    samples = input.samples
+    samples = [samples] if isinstance(samples,str) else samples
+    shell(f"""(time\
+    python analysis/angular_fit/plot_projections.py\
+    --samples {",".join(samples)}\
+    --angacc-biased {",".join(input.angacc_biased)}\
+    --angacc-unbiased {",".join(input.angacc_unbiased)}\
+    --timeacc-biased {",".join(input.timeacc_biased)}\
+    --timeacc-unbiased {",".join(input.timeacc_unbiased)}\
+    --csp {",".join(input.csp_factors)}\
+    --time-resolution {",".join(input.time_resolution)}\
+    --flavor-tagging {",".join(input.flavor)}\
+    --params {input.params}\
+    --figures {output}\
+    --year {",".join(YEARS[f'{wildcards.year}'])}\
+    --fit {wildcards.fit}\
+    --angacc {wildcards.angacc}\
+    --timeacc {wildcards.timeacc}\
+    --trigger {wildcards.trigger}\
+    --version {wildcards.version}\
+    ) &> {log}""")
+    send_mail(f"Physics Parameters RD :: {wildcards}", f"{log}")
+
+
+# }}}
+
+
+
+
 # rule physics_params_data_Bs_dll:
 #   wildcard_constraints:
 #     fit = "(auto|yearly|run2|run2a)(Dual)?(Poldep|magUp|magDown)?",
