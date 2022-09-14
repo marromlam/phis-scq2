@@ -30,7 +30,8 @@ rule preselection_correct_pid:
         polarity = "(Up|Down)",
         mode  = "(MC)((?!.*?(_fromLb)).*)"
     input:
-        tracks = 'selection/pid/pidcorr.yaml',
+        tracks_prob = 'selection/pid/pidcorr.yaml',
+        tracks_pid = 'selection/pid/pidcorr_pid.yaml',
         file = input_for_correct_pid,
         # file = lambda wildcards: expand(rules.correct_muonpid.output.file if wildcards.mode != 'MC_Bs2DsPi' else rules.prepare_mc.output,
         #                                 version='{version}',
@@ -40,22 +41,48 @@ rule preselection_correct_pid:
         #                                 polarity='{polarity}'),
     params:
         script = 'selection/tools/PIDCorr.py',
+        var = config["pid_flag"]
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp1.root',
         tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp2.root',
+        tmp3 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp3.root',
     log:
         'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.log',
-    shell:
-        '(' + selconfig['runUrania'] + ' ' +
-        'python {params.script} --input-file {input.file} \
+    run:
+        if config['stripping_mode']=='pidcuts':
+          shell(f"({selconfig['runUrania']} 
+                    python {params.script} --input-file {input.file} \
                                --input-tree-name DecayTree \
                                --output-file {output.file} \
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
-                               --tracks-file {input.tracks} \
+                               --tracks-file {input.tracks_prob} \
+                               --var {params.var}\
                                --tmp1 {output.tmp1} \
-                               --tmp2 {output.tmp2}) &> {log}'
+                               --tmp2 {output.tmp2}) &> {log}")
+          shell(f'touch {output.tmp3}')
+        else:
+          shell(f"({selconfig['runUrania']} 
+                    python {params.script} --input-file {input.file} \
+                               --input-tree-name DecayTree \
+                               --output-file {output.tmp3} \
+                               --data-set Mag{wildcards.polarity}_{wildcards.year} \
+                               --mode {wildcards.mode} \
+                               --tracks-file {input.tracks_prob} \
+                               --var {params.var}\
+                               --tmp1 {output.tmp1} \
+                               --tmp2 {output.tmp2}) &> {log}")
+          shell(f"({selconfig['runUrania']} 
+                    python {params.script} --input-file {output.tmp3} \
+                               --input-tree-name DecayTree \
+                               --output-file {output.file} \
+                               --data-set Mag{wildcards.polarity}_{wildcards.year} \
+                               --mode {wildcards.mode} \
+                               --tracks-file {input.tracks_pid} \
+                               --var {params.var}\
+                               --tmp1 {output.tmp1} \
+                               --tmp2 {output.tmp2}) &> {log}")
 
 # }}}
 
@@ -75,7 +102,8 @@ rule preselection_correct_muonpid:
         polarity = "(Up|Down)",
         mode  = "(MC)((?!.*?(_fromLb)).*)"
     input:
-        tracks = 'selection/pid/pidgen.yaml',
+        tracks_prob = 'selection/pid/pidgen.yaml',
+        tracks_pid = 'selection/pid/pidgen_pid.yaml',
         file = expand(rules.preselection_add_genlvl_info.output.file,
                       mode='{mode}',
                       version='{version}',
@@ -84,22 +112,48 @@ rule preselection_correct_muonpid:
                       polarity='{polarity}'),
     params:
         script = 'selection/tools/PIDGen.py',
+        var = config['pid_flag'],
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp1.root',
         tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp2.root',
+        tmp3 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp3.root',
     log:
         'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.log',
-    shell:
-        '(' + selconfig['runUrania'] + ' ' +
-        'python {params.script} --input-file {input.file} \
-                              --input-tree-name DecayTree \
-                              --output-file {output.file} \
-                              --data-set Mag{wildcards.polarity}_{wildcards.year}\
-                              --mode {wildcards.mode} \
-                              --tracks-file {input.tracks} \
-                              --tmp1 {output.tmp1} \
-                              --tmp2 {output.tmp2} ) &> {log}'
+    run:
+        if config['stripping_mode']=='pidcuts':
+          shell(f"({selconfig['runUrania']} 
+                    python {params.script} --input-file {input.file} \
+                               --input-tree-name DecayTree \
+                               --output-file {output.file} \
+                               --data-set Mag{wildcards.polarity}_{wildcards.year} \
+                               --mode {wildcards.mode} \
+                               --tracks-file {input.tracks_prob} \
+                               --var {params.var}\
+                               --tmp1 {output.tmp1} \
+                               --tmp2 {output.tmp2}) &> {log}")
+          shell(f'touch {output.tmp3}')
+        else:
+          shell(f"({selconfig['runUrania']} 
+                    python {params.script} --input-file {input.file} \
+                               --input-tree-name DecayTree \
+                               --output-file {output.tmp3} \
+                               --data-set Mag{wildcards.polarity}_{wildcards.year} \
+                               --mode {wildcards.mode} \
+                               --tracks-file {input.tracks_prob} \
+                               --var {params.var}\
+                               --tmp1 {output.tmp1} \
+                               --tmp2 {output.tmp2}) &> {log}")
+          shell(f"({selconfig['runUrania']} 
+                    python {params.script} --input-file {output.tmp3} \
+                               --input-tree-name DecayTree \
+                               --output-file {output.file} \
+                               --data-set Mag{wildcards.polarity}_{wildcards.year} \
+                               --mode {wildcards.mode} \
+                               --tracks-file {input.tracks_pid} \
+                               --var {params.var}\
+                               --tmp1 {output.tmp1} \
+                               --tmp2 {output.tmp2}) &> {log}")
 
 # }}}
 
