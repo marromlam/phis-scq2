@@ -1,0 +1,97 @@
+common: &common
+  "time" : "time"
+  "helcosthetaK" : "helcosthetaK"
+  "helcosthetaL" : "helcosthetaL"
+  "helphi" : "helphi"
+  "B_ID" : "B_ID"
+  "X_ID" : "X_ID"
+  "X_M" : "X_M"
+  "pTX" : "X_PT"
+  "X_ID" : "X_ID"
+  "sigmat" : "sigmat"
+  "hplus_P" : "hplus_P"
+  "hplus_PT" : "hplus_PT"
+  "hminus_P" : "hminus_P"
+  "hminus_PT" : "hminus_PT"
+  "B_PT" : "B_PT"
+  "B_P" : "B_P"
+  "B_ETA" : "B_ETA"
+  "hlt1b" : "hlt1b"
+  "Polarity" : "Polarity"
+  "Jpsi_Hlt1DiMuonHighMassDecision_TOS" : "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
+  "eventNumber" : "eventNumber"
+  "OS_Combination_DEC" : "tagos_dec_new"
+  "B_SSKaonLatest_TAGDEC" : "B_SSKaonLatest_TAGDEC"
+  "OS_Combination_ETA" : "tagos_eta_new"
+  "B_SSKaonLatest_TAGETA" : "B_SSKaonLatest_TAGETA"
+  "log_B_IPCHI2" : "log_B_IPCHI2"
+  "log_B_IPCHI2" : "log_B_IPCHI2_mva"
+  "B_DTF_CHI2NDOF" : "B_DTF_CHI2NDOF"
+  "log_min_K_PNNk_mva" : "log_min_K_PNNk_mva"
+  "B_VX_CHI2NDOF_mva" : "B_VX_CHI2NDOF_mva"
+  "max_K_TRCHI2_mva" : "max_K_TRCHI2_mva"
+  "max_mu_TRCHI2_mva" : "max_mu_TRCHI2_mva"
+  "log_Jpsi_VX_CHI2NDOF_mva" : "log_Jpsi_VX_CHI2NDOF_mva"
+  "log_min_mu_PNNmu_mva" : "log_min_mu_PNNmu_mva"
+  "B_ConstJpsi_M_1": "B_ConstJpsi_M_1"
+  "B_ConstJpsi_MERR_1": "B_ConstJpsi_MERR_1"
+  "wLb": "wLb"
+
+
+MC_common: &MC_common
+  <<: *common
+  "B_TRUETAU" : "B_TRUETAU"
+  "truehelcosthetaK" : "truehelcosthetaK"
+  "truehelcosthetaL" : "truehelcosthetaL"
+  "truehelphi" : "truehelphi"
+  "B_TRUETAU_GenLvl" : "time_GenLvl"
+  "truehelcosthetaK_GenLvl" : "cosThetaKRef_GenLvl"
+  "truehelcosthetaL_GenLvl" : "cosThetaMuRef_GenLvl"
+  "truehelphi_GenLvl" : "phiHelRef_GenLvl"
+  "B_BKGCAT" : "B_BKGCAT"
+  "polWeight" : "PolWeight"
+  "pdfWeight" : "PDFWeight"
+  "kinWeight" : "kinWeight"
+  "gb_weights" : "gb_weights"
+
+MC_Bs2JpsiPhi: &MC_Bs2JpsiPhi
+  <<: *MC_common
+  "B_ID_GenLvl" : "B_ID_GenLvl"
+  "sw" : "sw/gb_weights"
+
+MC_Bs2JpsiKK_Swave: &MC_Bs2JpsiKK_Swave
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_dG0_large_lifetime:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bs2JpsiPhi_Prompt:
+  <<: *MC_Bs2JpsiPhi
+
+MC_Bd2JpsiKstar:
+  <<: *MC_Bs2JpsiPhi
+  "B_ID_GenLvl" : "B_ID"
+  "sw" : "nsig_sw"
+
+MC_Bu2JpsiKplus:
+  <<: *common
+  "B_ID_GenLvl" : "B_ID"
+  "sw" : "nsig_sw"
+
+
+Bs2JpsiPhi: &Bs2JpsiPhi
+  <<: *common
+  "sw" : "sw"
+  "sigmat_simon" : "B_LOKI_DTF_CTAUERR/0.299792458"
+
+Bd2JpsiKstar: &Bd2JpsiKstar
+  <<: *common
+  "sw" : "nsig_sw"
+  "kinWeight" : "kinWeight"
+
+Bu2JpsiKplus:
+  <<: *common
+  "sw" : "nsig_sw"
