@@ -30,8 +30,9 @@ def cut_keys_mode(wildcards):
     # if 'Bs2DsPi' not in wildcards.mode:
     #    return 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts phi_cuts'
     if 'Bs2DsPi' not in wildcards.mode:
-        if 'MC' in wildcards.mode: 
-            return 'L0_cuts B_cuts phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts MC_specific'   
+        if ('MC' in wildcards.mode) and (config["stripping_mode"]=='pidcuts'): 
+            keys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts MC_specific'   
+            return keys + " pid_stripping" if config["stripping_mode"]=="nopidcuts" else keys
         else:
             return 'L0_cuts B_cuts phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts'
 
@@ -306,9 +307,8 @@ if config['run_preselection']:
             file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
         params:
             script = 'selection/tools/apply_selection.py',
-            cut_keys = cut_keys_mode,
-            if config['stripping_mode'] =='nopidcuts':
-                cut_keys += ' pid_stripping'
+            cut_keys = cut_keys_mode
+            # cut_keys = 'pid_stripping' if config['stripping_mode']=='nopidcuts' else cut_keys_mode
             # file = lambda wildcards: selconfig['eos'] + '/' + selconfig['version'] + '/PID/{}/{}_{}_{}_selected_pidcorrected.root'.format(wildcards.mode, wildcards.mode, wildcards.year, wildcards.strip_sim)
         log:
             # tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_pidcorrected_selected_preselected.root')
