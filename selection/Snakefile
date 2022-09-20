@@ -30,7 +30,7 @@ def cut_keys_mode(wildcards):
     # if 'Bs2DsPi' not in wildcards.mode:
     #    return 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts B_cuts phi_cuts'
     if 'Bs2DsPi' not in wildcards.mode:
-        if ('MC' in wildcards.mode) and (config["stripping_mode"]=='pidcuts'): 
+        if ('MC' in wildcards.mode): 
             keys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts MC_specific'   
             return keys + " pid_stripping" if config["stripping_mode"]=="nopidcuts" else keys
         else:
