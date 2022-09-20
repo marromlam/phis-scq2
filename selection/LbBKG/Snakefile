@@ -137,7 +137,7 @@ if config['run_preselection']:
                                --tmp2 {tmp5}) &> {log}")
 
               shell("(" + selconfig['runUrania'] +
-                    " python {params.script} --input-file {tmp3} \
+                    " python selection/tools/PIDGen.py --input-file {tmp3} \
                                --input-tree-name DecayTree \
                                --output-file {output.file} \
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
@@ -206,7 +206,7 @@ if config['run_preselection']:
                                --tmp2 {tmp5}) &> {log}")
 
               shell("(" + selconfig['runUrania'] +
-                    "python {params.script} --input-file {tmp3} \
+                    " python {params.script} --input-file {tmp3} \
                                --input-tree-name DecayTree \
                                --output-file {output.file} \
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
