@@ -457,37 +457,37 @@ eos_mc:
         2015:
             str24r2_sim09b_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2015/MC_Bs2JpsiPhi_2015_sim09b_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2015/MC_Bs2JpsiPhi_2015_sim09b_MagUp.root'
  
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2015/MC_Bs2JpsiPhi_2015_sim09b_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2015/MC_Bs2JpsiPhi_2015_sim09b_MagDown.root'
  
         2016:
             str28r2_sim09b_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09b_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09b_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09b_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09b_MagDown.root'
  
             str28r2_sim09c_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09c_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09c_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09c_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2016/MC_Bs2JpsiPhi_2016_sim09c_MagDown.root'
                     
         2017:
             str29r2_sim09g_dst:
                 Up:
                     # Third WGP
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2017/MC_Bs2JpsiPhi_2017_sim09g_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2017/MC_Bs2JpsiPhi_2017_sim09g_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2017/MC_Bs2JpsiPhi_2017_sim09g_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2017/MC_Bs2JpsiPhi_2017_sim09g_MagDown.root'
         2018:
             str34_sim09g_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2018/MC_Bs2JpsiPhi_2018_sim09g_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2018/MC_Bs2JpsiPhi_2018_sim09g_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi/2018/MC_Bs2JpsiPhi_2018_sim09g_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi/2018/MC_Bs2JpsiPhi_2018_sim09g_MagDown.root'
 
     MC_Bs2JpsiKK_Swave:
         2015:
@@ -576,28 +576,28 @@ eos_mc:
         2015: 
             str24r2_sim09k_dst:
                  Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2015/MC_Bs2JpsiPhi_dG0_2015_sim09k_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_dG0/2015/MC_Bs2JpsiPhi_dG0_2015_sim09k_MagUp.root'
                  Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2015/MC_Bs2JpsiPhi_dG0_2015_sim09k_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_dG0/2015/MC_Bs2JpsiPhi_dG0_2015_sim09k_MagDown.root'
         2016: 
             str28r2_sim09k_dst:
                  Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2016/MC_Bs2JpsiPhi_dG0_2016_sim09k_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_dG0/2016/MC_Bs2JpsiPhi_dG0_2016_sim09k_MagUp.root'
                  Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2016/MC_Bs2JpsiPhi_dG0_2016_sim09k_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_dG0/2016/MC_Bs2JpsiPhi_dG0_2016_sim09k_MagDown.root'
            
         2017:
             str29r2_sim09h_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2017/MC_Bs2JpsiPhi_dG0_2017_sim09h_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_dG0/2017/MC_Bs2JpsiPhi_dG0_2017_sim09h_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2017/MC_Bs2JpsiPhi_dG0_2017_sim09h_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_dG0/2017/MC_Bs2JpsiPhi_dG0_2017_sim09h_MagDown.root'
         2018:
             str34_sim09h_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2018/MC_Bs2JpsiPhi_dG0_2018_sim09h_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_dG0/2018/MC_Bs2JpsiPhi_dG0_2018_sim09h_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_dG0/2018/MC_Bs2JpsiPhi_dG0_2018_sim09h_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_dG0/2018/MC_Bs2JpsiPhi_dG0_2018_sim09h_MagDown.root'
                     #
     MC_Bs2JpsiPhi_Prompt: 
         2015:
@@ -676,61 +676,61 @@ eos_mc:
         2015:
             str24r2_sim09b_ldst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09b_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09b_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09b_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09b_MagDown.root'
             str24r2_sim09c_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09c_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09c_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09c_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09c_MagDown.root'
             str24r2_sim09h_ldst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09h_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09h_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09h_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2015/MC_Bd2JpsiKstar_2015_sim09h_MagDown.root'
 
         2016:
             str28r2_sim09b_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_dst_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_dst_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_dst_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_dst_MagDown.root'
             str28r2_sim09b_ldst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_ldst_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_ldst_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_ldst_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09b_ldst_MagDown.root'
             str28r2_sim09h_ldst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09h_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09h_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09h_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2016/MC_Bd2JpsiKstar_2016_sim09h_MagDown.root'
 
         2017:
             str29r2_sim09g_ldst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09g_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09g_MagUp.root'
  
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09g_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09g_MagDown.root'
                     
             str29r2_sim09i_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09i_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09i_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09i_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2017/MC_Bd2JpsiKstar_2017_sim09i_MagDown.root'
         2018:
             str34_sim09g_ldst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09g_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09g_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09g_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09g_MagDown.root'
             str34_sim09i_dst:
                 Up:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09i_MagUp.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09i_MagUp.root'
                 Down:
-                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09i_MagDown.root'
+                    'root://eoslhcb.cern.ch///eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bd2JpsiKstar/2018/MC_Bd2JpsiKstar_2018_sim09i_MagDown.root'
     MC_Bu2JpsiKplus:
         2015: 
             str24r2_sim09b_ldst:
@@ -970,27 +970,27 @@ eos_mc:
         2015:
             str24r2_sim09h_dst:
                 Up:
-                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2015/MC_Bs2JpsiPhi_fromLb_2015_sim09h_MagUp.root'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_fromLb/2015/MC_Bs2JpsiPhi_fromLb_2015_sim09h_MagUp.root'
                 Down:
-                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2015/MC_Bs2JpsiPhi_fromLb_2015_sim09h_MagDown.root'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_fromLb/2015/MC_Bs2JpsiPhi_fromLb_2015_sim09h_MagDown.root'
         2016:
             str28r2_sim09g_dst:
                 Up:
-                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2016/MC_Bs2JpsiPhi_fromLb_2016_sim09g_MagUp.root'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_fromLb/2016/MC_Bs2JpsiPhi_fromLb_2016_sim09g_MagUp.root'
                 Down:
-                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2016/MC_Bs2JpsiPhi_fromLb_2016_sim09g_MagDown.root'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_fromLb/2016/MC_Bs2JpsiPhi_fromLb_2016_sim09g_MagDown.root'
         2017:
             str29r2_sim09g_dst:
                 Up:
-                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2017/MC_Bs2JpsiPhi_fromLb_2017_sim09g_MagUp.root'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_fromLb/2017/MC_Bs2JpsiPhi_fromLb_2017_sim09g_MagUp.root'
                 Down:
-                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2017/MC_Bs2JpsiPhi_fromLb_2017_sim09g_MagDown.root'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_fromLb/2017/MC_Bs2JpsiPhi_fromLb_2017_sim09g_MagDown.root'
         2018:
             str34_sim09g_dst:
                 Up:
-                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2018/MC_Bs2JpsiPhi_fromLb_2018_sim09g_MagUp.root'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_fromLb/2018/MC_Bs2JpsiPhi_fromLb_2018_sim09g_MagUp.root'
                 Down:
-                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v1r4/MC_Bs2JpsiPhi_fromLb/2018/MC_Bs2JpsiPhi_fromLb_2018_sim09g_MagUp.root'
+                     'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/restripped_tuples/MC_Bs2JpsiPhi_fromLb/2018/MC_Bs2JpsiPhi_fromLb_2018_sim09g_MagUp.root'
     MC_Bc2BsPi:
         2015:
             str24r2_sim09k_dst:
