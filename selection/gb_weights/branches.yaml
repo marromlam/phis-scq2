@@ -3,6 +3,7 @@ common: &common
   'time': 'B_LOKI_DTF_CTAU/{C_LIGHT}'
   'sigmat': 'B_LOKI_DTF_CTAUERR/{C_LIGHT}'
   'nLongTracks': '(int) nLongTracks'
+  'nTracks': '(int) nTracks'
   'B_ETA': 'B_ETA'
   'B_ConstJpsi_M_1': 'B_ConstJpsi_M[0]'
   'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR[0]'
