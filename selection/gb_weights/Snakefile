@@ -137,8 +137,8 @@ rule selection_gbw_bkgsubtract:
         mode = "(MC_)?(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
     input:
         sample = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root',
-        pars = lambda wcs: expand('output/params/tails_mc/{{year}}/{mode}/{{version}}.json',
-                                  mode=GBW_CONFIG['tails_mode'][wcs.mode]),
+        # pars = lambda wcs: expand('output/params/tails_mc/{{year}}/{mode}/{{version}}.json',
+                                  # mode=GBW_CONFIG['tails_mode'][wcs.mode]),
     params:
         script = 'selection/gb_weights/background_subtraction.py',
         mass_branch = lambda w: GBW_CONFIG['mass_branch'][f"{w.mode}"],
