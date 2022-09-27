@@ -456,11 +456,18 @@ rule selection_apply_veto:
     log:
         'output/log/selection_apply_veto/{year}/{mode}/{version}_selected.log'
     run:
+        with open(r"selection/cuts.yaml") as file:
+          cuts = yaml.load(file, Loader=yaml.FullLoader)
+
+        keys = ' '.join(cuts[f'{wildcards.mode}'].keys())
+        if config["stripping_mode"]=='pidcuts':
+            keys = keys.replace('pid_stripping', '')
         shell('(time python {params.script} \
         --input-file {input.files} \
         --input-tree-name DecayTree \
         --output-file {output} \
         --mode {wildcards.mode} \
+        --cut-keys {keys}\
         --selection-files {input.cuts} \
         --year {wildcards.year}) &> {log}')
 

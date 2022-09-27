@@ -101,6 +101,7 @@ if config['run_preselection']:
         params:
             script = 'selection/tools/PIDCorr.py',
             var = config["pid_flag"],
+            ntrscale = config["ntracks_scale"],
         output:
             file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root',
             tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}_tmp1.root',
@@ -116,6 +117,7 @@ if config['run_preselection']:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode}_{wildcards.pkkp} \
                                --tracks-file {input.tracks_prob} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2}) &> {log}"
@@ -132,6 +134,7 @@ if config['run_preselection']:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode}_{wildcards.pkkp} \
                                --tracks-file {input.tracks_prob} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {tmp4} \
                                --tmp2 {tmp5}) &> {log}")
@@ -143,6 +146,7 @@ if config['run_preselection']:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode}_{wildcards.pkkp} \
                                --tracks-file {input.tracks_pid} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2}) &>> {log}")
@@ -170,7 +174,8 @@ if config['run_preselection']:
         #                                                     pkkp='{pkkp}'),
         params:
             script = 'selection/tools/PIDGen.py',
-            var = config["pid_flag"]
+            var = config["pid_flag"],
+            ntrscale = config["ntracks_scale"],
         output:
             file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.root',
             tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}_tmp1.root',
@@ -186,6 +191,7 @@ if config['run_preselection']:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_prob} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2}) &> {log}")
@@ -201,6 +207,7 @@ if config['run_preselection']:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_prob} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {tmp4} \
                                --tmp2 {tmp5}) &> {log}")
@@ -212,6 +219,7 @@ if config['run_preselection']:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_pid} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2}) &>> {log}")
@@ -377,18 +385,23 @@ if config['run_preselection']:
         input:
             file = expand(rules.add_bdt_branches_Lb.output,
                           mode='{mode}', version='{version}', year='{year}'),
-            cuts = 'selection/cuts.yaml'
+            cuts = 'selection/cuts.yaml',
         params:
             script = 'selection/tools/apply_selection.py',
         output:
             # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_with_bdt_branches_cut_Lb.root'))
             SAMPLES + '/{year}/{mode}/{version}_preselected.root',
-        shell:
-            'python {params.script} --input-file {input.file} \
+        run:
+            keys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts Lambda_b_veto Bd_veto Match_cut'   
+            if config['stripping_mode'] == 'nopidcuts':
+                keys += 'pid_stripping'   
+
+            shell('python {params.script} --input-file {input.file} \
                                    --output-file {output} \
                                    --mode {wildcards.mode} \
+                                   --cut-keys {keys} \
                                    --selection-files {input.cuts} \
-                                   --year {wildcards.year}'
+                                   --year {wildcards.year}')
 
 
 # vim: fdm=marker:cc=120
