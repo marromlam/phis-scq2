@@ -14,18 +14,26 @@ common: &common
   'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
   'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
   'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+  'hplus_ProbNNk' : 'hplus_ProbNNk'
+  'muplus_ProbNNmu' : 'muplus_ProbNNmu'
+  'muminus_ProbNNmu' : 'mumius_ProbNNmu'
+  'hplus_PIDK' : 'hplus_PIDK'
+    
 
 Bs2JpsiPhi:  # &Bs2JpsiPhi
   <<: *common
   'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  'hminus_ProbNNk' : 'hminus_ProbNNk'
 
 Bs2JpsiPhi_Prompt:  # &Bs2JpsiPhi_Prompt
   <<: *common
   'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  'hminus_ProbNNk' : 'hminus_ProbNNk'
 
 Bd2JpsiKstar:  # &Bd2JpsiKstar
   <<: *common
   'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  'hminus_ProbNNk' : 'hminus_ProbNNk'
 
 Bu2JpsiKplus:  # &Bu2JpsiKplus
   <<: *common
