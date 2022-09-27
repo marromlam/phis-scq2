@@ -16,40 +16,6 @@ def input_for_correct_pid(wildcards):
     else:
         return SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root',
 
-rule scaling_tracks:
-    "Corrects distributions of nTracks before going to PID correction"
-    threads: 2
-    resources:
-        mem_mb = 12000
-    wildcard_constraints:
-        strip_sim = "str.*",
-        polarity = "(Up|Down)",
-        mode  = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bs2JpsiPhi_dG0|Bu2JpsiKplus)"
-    input:
-        input_mc = expand(rules.preselection_add_genlvl_info.output.file,
-                      mode='{mode}',
-                      version='{version}',
-                      strip_sim='{strip_sim}',
-                      year='{year}',
-                      polarity='{polarity}'),
-
-        input_data = lambda wcs: expand(SAMPLES + '/{year}/{mode}/{version}_bkgsubtracted.root',
-                                       mode=selconfig['gbw_input_data_mode'][wcs.mode],
-                                       year = wcs.year,
-                                       version = wcs.version
-                                       ),
-    params:
-        target_weight = lambda wildcards: expand('\"sw\"' if selconfig['gbw_input_data_mode'][wildcards.mode] != 'Bs2JpsiPhi_Prompt'
-                                                      else '\"\"'),
-        var = '{"nTracks"}',
-        treename = "DecayTree",
-    output:
-        plots = SAMPLES +'output/figures/plots/{mode}/{year}/nTracks_scaling_{version}_{strip_sim}_{polarity}',
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_{polarity}_nTracks.root'
-    shell:
-        "root -l -q 'selection/gb_weights/TrackChi2Rescaling.C({params.var}, {params.target_weight}, \"{input.input_mc}\", \"{input.input_data}\", \"{output.file}\", \"{params.treename}\", \"{params.treename}\", \"{output.plots}\")'"
-
-
 
 rule preselection_correct_pid:
     """
@@ -75,7 +41,8 @@ rule preselection_correct_pid:
         #                                 polarity='{polarity}'),
     params:
         script = 'selection/tools/PIDCorr.py',
-        var = config["pid_flag"]
+        var = config["pid_flag"],
+        ntrscale = config["ntracks_scale"],
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp1.root',
@@ -91,6 +58,7 @@ rule preselection_correct_pid:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_prob} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2}) &> {log}")
@@ -107,6 +75,7 @@ rule preselection_correct_pid:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_prob} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {tmp4} \
                                --tmp2 {tmp5}) &> {log}")
@@ -118,6 +87,7 @@ rule preselection_correct_pid:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_pid} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2}) &>> {log}")
@@ -151,6 +121,7 @@ rule preselection_correct_muonpid:
     params:
         script = 'selection/tools/PIDGen.py',
         var = config['pid_flag'],
+        ntrscale = config["ntracks_scale"],
     output:
         file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root',
         tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp1.root',
@@ -166,6 +137,7 @@ rule preselection_correct_muonpid:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_prob} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2}) &> {log}")
@@ -181,6 +153,7 @@ rule preselection_correct_muonpid:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_prob} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {tmp4} \
                                --tmp2 {tmp5}) &> {log}")
@@ -192,6 +165,7 @@ rule preselection_correct_muonpid:
                                --data-set Mag{wildcards.polarity}_{wildcards.year} \
                                --mode {wildcards.mode} \
                                --tracks-file {input.tracks_pid} \
+                               --ntrscale {params.ntrscale}\
                                --var {params.var}\
                                --tmp1 {output.tmp1} \
                                --tmp2 {output.tmp2}) &>> {log}")
