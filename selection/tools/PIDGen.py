@@ -19,6 +19,7 @@ def argument_parser():
     parser.add_argument('--output-file', help='Output ROOT file')
     parser.add_argument('--data-set', help='Mag and Year, for example MagUp_2016')
     parser.add_argument('--mode', help='Name of the selection in yaml')
+    parser.add_argument('--ntrscale', help='Scaling for nTracks')
     parser.add_argument('--var', default="default",
                            help='Variation, default indicates no syst neither stat')
     parser.add_argument('--tracks-file', nargs='+', help='Yaml file with tracks')
@@ -27,7 +28,7 @@ def argument_parser():
     return parser
 
 
-def PIDGen(input_file, input_tree_name, output_file, data_set, mode, var,
+def PIDGen(input_file, input_tree_name, output_file, data_set, mode, ntrscale,  var,
            tracks_file, tmp1, tmp2):
     ## START OF CONFIG
     # Read comments and check vars
@@ -67,6 +68,7 @@ def PIDGen(input_file, input_tree_name, output_file, data_set, mode, var,
     tracks = read_from_yaml(mode, tracks_file)
 
     variation = var
+    scaling = ntrscale
     #For calculating uncertainties (syst, and stat.)
 
     # IF ON LXPLUS: if /tmp exists and is accessible, use for faster processing
@@ -107,6 +109,7 @@ def PIDGen(input_file, input_tree_name, output_file, data_set, mode, var,
                 command += " -d %s" % dataset
                 command += " -i %s" % tmpinfile
                 command += " -o %s" % tmpoutfile
+                command += " --ntrscale %s" % scaling
                 command += " -v %s" % variation
                 if seed :
                     command += " -s %d" % seed
@@ -132,5 +135,4 @@ def PIDGen(input_file, input_tree_name, output_file, data_set, mode, var,
 if __name__ == "__main__":
     parser = argument_parser()
     args = parser.parse_args()
-    print(args)
     PIDGen(**vars(args))
