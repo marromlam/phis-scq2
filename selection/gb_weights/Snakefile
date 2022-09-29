@@ -5,7 +5,7 @@ with open('selection/gb_weights/config.yml') as file:
     GBW_CONFIG = yaml.load(file, Loader=yaml.FullLoader)
 
 
-# preliminar selection before GB {{{
+# preliminar selection before GB 
 
 rule selection_gbw_preliminar_mc:
     """
@@ -27,16 +27,19 @@ rule selection_gbw_preliminar_mc:
     params:
         script = 'selection/tools/apply_selection.py',
         # CHANGE IN CUT KEYS
-        cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific',
+        # cutkeys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific',
         # cutkeys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific_GBW',
     log:
         'output/log/selection_gbw_preliminar_mc/{year}/{mode}/{version}_{strip_sim}.log'
     run:
+        keys = 'B_TAU_cuts L0_cuts HLT1_cuts HLT2_cuts MC_specific'
+        if config["stripping_mode"]=="nopidcuts":
+            keys += ' pid_stripping'
         shell(f'(time python {params.script} \
         --input-file {input.file} \
         --output-file {output} \
         --mode {wildcards.mode} \
-        --cut-keys {params.cutkeys} \
+        --cut-keys {keys} \
         --selection-files {input.cuts} \
         --branches-files {input.branches} \
         --year {wildcards.year} \
@@ -82,10 +85,10 @@ rule selection_gbw_preliminar_data:
         --branches-files {input.branches} \
         --year {wildcards.year}) &> {log}')
 
-# }}}
 
 
-# sweigting for GB weighting {{{
+
+# sweigting for GB weighting 
 
 rule selection_gbw_tails:
     """
@@ -123,6 +126,7 @@ rule selection_gbw_tails:
         --mode {wildcards.mode} \
         --version {wildcards.version} \
         --year {wildcards.year}) &> {log}""")
+
 
 
 rule selection_gbw_bkgsubtract:
@@ -199,10 +203,10 @@ rule selection_gbw_bkgsubtract:
 #         --mode {wildcards.mode} \
 #         --year {wildcards.year}) &> {log}')
 
-# }}}
 
 
-# calculate GB weights {{{
+
+# calculate GB weights 
 
 rule selection_gbw_reweighter_train:
     """
@@ -237,10 +241,10 @@ rule selection_gbw_reweighter_train:
         --output-file {output}) \
         &> {log}')
 
-# }}}
 
 
-# Track scaling {{{
+
+# Track scaling 
 
 def trackchi2_vars(wildcards):
     mode = wildcards.mode
@@ -277,10 +281,10 @@ rule selection_gbw_trackchi2_scaling:
     shell:
         "root -l -q 'selection/gb_weights/TrackChi2Rescaling.C({params.vars}, {params.target_weight}, \"{input.input_mc}\", \"{input.input_data}\", \"{output.file}\", \"{params.treename}\", \"{params.treename}\", \"{params.plots}\")'"
 
-# }}}
 
 
-# apply GB weights {{{
+
+# apply GB weights 
 
 rule selection_gbw_compute:
     """
@@ -361,7 +365,7 @@ rule selection_gbw_compute_prompt:
         --output-file {output} \
         --output-weight-name {params.output_weight_name}) &> {log}')
 
-# }}}
+
 
 
 # vim: fdm=marker:cc=120
