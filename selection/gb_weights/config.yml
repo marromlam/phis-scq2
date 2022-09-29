@@ -73,6 +73,7 @@ all_branches:
     'time': 'time'
     'sigmat': 'sigmat'
     'nLongTracks': 'nLongTracks'
+    'nTracks': 'nTracks'
     'B_ETA': 'B_ETA'
     'B_P': 'B_P'
     'B_PT': 'B_PT'
@@ -81,9 +82,8 @@ all_branches:
     'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
     'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
     'hplus_ProbNNk' : 'hplus_ProbNNk'
-    'hminus_ProbNNk' : 'hminus_ProbNNk'
     'muplus_ProbNNmu' : 'muplus_ProbNNmu'
-    'muminus_ProbNNmu' : 'mumius_ProbNNmu'
+    'muminus_ProbNNmu' : 'muminus_ProbNNmu'
     'hplus_PIDK' : 'hplus_PIDK'
   Bs2JpsiPhi:  &all-Bs2JpsiPhi
     <<: [*all-common, *gbw-Bs2JpsiPhi]
@@ -91,18 +91,21 @@ all_branches:
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
   Bs2JpsiPhi_Prompt:  &all-Bs2JpsiPhi_Prompt
     <<: [*all-common, *gbw-Bs2JpsiPhi]
     'X_M': 'X_M'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
   Bd2JpsiKstar:  &all-Bd2JpsiKstar
     <<: [*all-common, *gbw-Bd2JpsiKstar]
     'X_M': 'X_M'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
   Bu2JpsiKplus:  &all-Bu2JpsiKplus
     <<: [*all-common, *gbw-Bu2JpsiKplus]
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
@@ -111,6 +114,7 @@ all_branches:
     <<: *all-Bs2JpsiPhi
     'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
@@ -118,6 +122,7 @@ all_branches:
     <<: *all-Bs2JpsiPhi_Prompt
     'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
@@ -125,6 +130,7 @@ all_branches:
     <<: *all-Bs2JpsiPhi
     'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
@@ -132,6 +138,7 @@ all_branches:
     <<: *all-Bs2JpsiPhi
     'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
@@ -139,6 +146,7 @@ all_branches:
     <<: *all-Bd2JpsiKstar
     'X_M': 'X_M'
     'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
     'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
     'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
     'B_BKGCAT': 'B_BKGCAT'
