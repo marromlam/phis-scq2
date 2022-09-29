@@ -3,7 +3,7 @@ common: &common
   'time': 'B_LOKI_DTF_CTAU/{C_LIGHT}'
   'sigmat': 'B_LOKI_DTF_CTAUERR/{C_LIGHT}'
   'nLongTracks': '(int) nLongTracks'
-  'nTracks': '(int) nTracks'
+  'nTracks': 'nTracks'
   'B_ETA': 'B_ETA'
   'B_ConstJpsi_M_1': 'B_ConstJpsi_M[0]'
   'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR[0]'
@@ -16,7 +16,7 @@ common: &common
   'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
   'hplus_ProbNNk' : 'hplus_ProbNNk'
   'muplus_ProbNNmu' : 'muplus_ProbNNmu'
-  'muminus_ProbNNmu' : 'mumius_ProbNNmu'
+  'muminus_ProbNNmu' : 'muminus_ProbNNmu'
   'hplus_PIDK' : 'hplus_PIDK'
     
 
