@@ -3,8 +3,8 @@
 import sys
 import htcondor
 from htcondor import JobEventType
-from os.path import join
-
+# from os.path import join
+import os
 
 def print_and_exit(s):
     print(s)
@@ -13,8 +13,9 @@ def print_and_exit(s):
 
 jobID, UUID, clusterID = sys.argv[1].split('_')
 
-jobDir = '/home3/marcos.romero/logs/condor/{}_{}'.format(jobID, UUID)
-jobLog = join(jobDir, 'condor.log')
+# jobDir = '/home3/marcos.romero/logs/condor/{}_{}'.format(jobID, UUID)
+jobDir = os.path.join(os.environ['HOME'], f'logs/condor/{jobID}_{UUID}')
+jobLog = os.path.join(jobDir, 'condor.log')
 
 failed_states = [
     JobEventType.JOB_HELD,
@@ -23,7 +24,7 @@ failed_states = [
 ]
 
 try:
-    jel = htcondor.JobEventLog(join(jobLog))
+    jel = htcondor.JobEventLog(os.path.join(jobLog))
     for event in jel.events(stop_after=5):
         if event.type in failed_states:
             print_and_exit('failed')

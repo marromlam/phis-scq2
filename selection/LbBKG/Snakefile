@@ -67,7 +67,7 @@ if config['run_preselection']:
         log:
             'output/log/split_tree_to_pid/{year}/{mode}/{version}_{strip_sim}_{polarity}_selected_with_gen_{pkkp}.log'
         run:
-            shell('(/home3/marcos.romero/.linuxbrew/bin/time python {params.script} \
+            shell('(time python {params.script} \
             --input-file {input.input_file} \
             --input-tree-name DecayTree \
             --output-file {output.file} \

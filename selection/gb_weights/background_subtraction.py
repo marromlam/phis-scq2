@@ -292,7 +292,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     # Build parameters {{{
 
     _mu = np.mean(rd.mass.get())
-    _sigma = 10 #min(np.std(rd.mass.get()), 20)
+    _sigma = 10  #min(np.std(rd.mass.get()), 20)
     _dsigma = 0
     _res = 0.
     print(mode)
@@ -340,7 +340,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
                           free=True,
                           latex=r"p_2^{B_s}"))
         else:
-            pars.add(dict(name="s0Bs", value=_sigma, min=0.1, max=30,
+            pars.add(dict(name="s0Bs", value=_sigma, min=1, max=30,
                           free=True,
                           latex=r"p_0^{B_s}"))
             pars.add(dict(name="s1Bs", value=0.0, min=0, max=10,
@@ -370,7 +370,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
         pars["fsigBs"].free = False if prefit else True
         if "hypatia" in model:
             # Hypatia tails {{{
-            pars.add(dict(name="lambd", value=-2.5, min=-6, max=2,
+            pars.add(dict(name="lambd", value=-3.5, min=-6, max=2,
                           free=True,
                           latex=r"\lambda",))
             pars.add(dict(name="zeta", value=1e-5,

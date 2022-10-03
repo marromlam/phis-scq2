@@ -245,7 +245,7 @@ if config['run_preselection']:
             # ELMARCS
             SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root'
         run:
-            shell('hadd {output} {input}')
+            shell('hadd -f {output} {input}')
 
     rule samples_upload_pidtuple:
       wildcard_constraints:
@@ -422,7 +422,7 @@ rule preselection_merge_pid_corrected:
         # tuples_path('{mode}/{mode}_{year}_pid.root')
         SAMPLES + '/{year}/{mode}/{version}_pid.root',
     shell:
-        'hadd {output} {input.files}'
+        'hadd -f {output} {input.files}'
 
 # }}}
 
