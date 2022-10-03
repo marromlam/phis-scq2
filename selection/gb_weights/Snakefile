@@ -122,7 +122,8 @@ rule selection_gbw_tails:
         --output-figures {output.plots} \
         --mode {wildcards.mode} \
         --version {wildcards.version} \
-        --year {wildcards.year}) &> {log}""")
+        --year {wildcards.year})
+        &> {log}""")
 
 
 rule selection_gbw_bkgsubtract:

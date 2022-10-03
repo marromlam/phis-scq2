@@ -7,8 +7,8 @@ eos: 'root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2'
 localeos: '/eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2'
 
 # Specify which Urania version to use in the pipeline
-runUrania: 'lb-run -c best --siteroot=/cvmfs/lhcb.cern.ch/lib Urania/v10r0'
-runUraniaNightly: 'lb-run -c best --siteroot=/cvmfs/lhcb.cern.ch/lib --nightly lhcb-head Urania/HEAD'
+runUrania: '/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/2541/stable/linux-64/bin/lb-run -c best --siteroot=/cvmfs/lhcb.cern.ch/lib Urania/v10r0'
+runUraniaNightly: '/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/2541/stable/linux-64/bin/lb-run -c best --siteroot=/cvmfs/lhcb.cern.ch/lib --nightly lhcb-head Urania/HEAD'
 
 # All available wildcards
 years:

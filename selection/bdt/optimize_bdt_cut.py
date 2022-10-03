@@ -66,7 +66,7 @@ if __name__ == '__main__':
     sample = ipanema.Sample.from_root(args["input_file"], branches=branches)
 
     # allocate arrays for the curve
-    number_of_bins = 40
+    number_of_bins = 100
     x_min, x_max = np.min(sample.df[bdt_branch]), np.max(sample.df[bdt_branch])
     x_min, x_max = np.floor(x_min), np.ceil(x_max)
     print(x_min, x_max)
