@@ -109,6 +109,9 @@ rule all:
 
 rule pack_thesis:
   input:
+    #
+    #
+    #
     # TABLES {{{
     # All tables needed for the theis or analysis note
     #
@@ -144,7 +147,7 @@ rule pack_thesis:
         "output/tables/time_acceptance/run2/Bu2JpsiKplus/{mversion}_{mtimeacc}.tex",
         ],
         mtimeacc = [
-            f"{config['timeacc']}BuasBd",  # using Bu as control channel
+            f"{config['timeacc']}NoncorrBuasBd",  # using Bu as control channel
         ],
         mversion = [f"{config['version']}@LcosK"]
     ),
@@ -223,6 +226,7 @@ rule pack_thesis:
             f"{config['version']}@LcosK+{config['version']}",
             f"{config['version']}@LcosK+{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4",
             f"{config['version']}@LcosK+{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3",
+            f"{config['version']}@LcosK+{config['version']}@LcosKPV1+{config['version']}@LcosKPV2+{config['version']}@LcosKPV3",
         ],
         myear = [f"{config['year']}", "2015", "2016", "2017", "2018"],
         mfit = [f"{config['fit']}"],
@@ -230,6 +234,65 @@ rule pack_thesis:
         mcsp = [f"{config['csp']}"],
         mflavor = [f"{config['flavor']}"],
         mtimeacc = [f"{config['timeacc']}"],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    #
+    expand(
+        "output/tables/physics_params/{myear}/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex",
+        mversion = [
+            f"{config['version']}@LcosK+{config['version']}@LcosKPV1+{config['version']}@LcosKPV2+{config['version']}@LcosKPV3",
+            f"{config['version']}@LcosK+{config['version']}@LcosKonlyOST+{config['version']}@LcosKonlySST+{config['version']}@LcosKonlyOSS",
+            f"{config['version']}@LcosK+{config['version']}@LcosKLSB+{config['version']}@LcosKLSB",
+            # f"{config['version']}@LcosK+{config['version']}@LcosKT1+{config['version']}@LcosKT2+{config['version']}@LcosKT3",
+            f"{config['version']}@LcosK+{config['version']}@LcosKbkgcat60",
+            # f"{config['version']}@LcosK+{config['version']}@LcosKonlyOST+{config['version']}@LcosKonlySST+{config['version']}@LcosKonlyOSS",
+        ],
+        myear = [f"{config['year']}"],
+        mfit = [f"{config['fit']}"],
+        mangacc = [ f"{config['angacc']}"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [f"{config['timeacc']}"],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    # syst
+    expand(
+        "output/tables/systematics/{myear}/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex",
+        mversion = [
+            f"{config['version']}@LcosKPV1+{config['version']}@LcosKPV2+{config['version']}@LcosKPV3",
+            f"{config['version']}@LcosKonlyOST+{config['version']}@LcosKonlySST+{config['version']}@LcosKonlyOSS",
+            f"{config['version']}@LcosKLSB+{config['version']}@LcosKRSB",
+            # f"{config['version']}@LcosKT1+{config['version']}@LcosKT2+{config['version']}@LcosKT3",
+            f"{config['version']}@LcosKbkgcat60",
+            # f"{config['version']}@LcosK+{config['version']}@LcosKonlyOST+{config['version']}@LcosKonlySST+{config['version']}@LcosKonlyOSS",
+        ],
+        myear = [f"{config['year']}"],
+        mfit = [f"{config['fit']}"],
+        mangacc = [ f"{config['angacc']}"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [f"{config['timeacc']}"],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    expand(
+        "output/tables/systematics/{myear}/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex",
+        mversion = [
+            # f"{config['version']}@LcosKPV1+{config['version']}@LcosKPV2+{config['version']}@LcosKPV3",
+            # f"{config['version']}@LcosKonlyOST+{config['version']}@LcosKonlySST+{config['version']}@LcosKonlyOSS",
+            # f"{config['version']}@LcosKLSB+{config['version']}@LcosKLSB",
+            f"{config['version']}@LcosKT1+{config['version']}@LcosKT2+{config['version']}@LcosKT3",
+            # f"{config['version']}@LcosKbkgcat60",
+            # f"{config['version']}@LcosK+{config['version']}@LcosKonlyOST+{config['version']}@LcosKonlySST+{config['version']}@LcosKonlyOSS",
+        ],
+        myear = [f"{config['year']}"],
+        mfit = [f"{config['fit']}"],
+        mangacc = [ f"{config['angacc']}"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [f"{config['timeacc']}".replace('3', '2')],
         mtimeres = [f"{config['timeres']}"],
         mtrigger = [f"{config['trigger']}"],
     ),
@@ -264,7 +327,7 @@ rule pack_thesis:
         mtimeacc = [
             f"{config['timeacc']}DGn0",  # using DG!=0 Bs MC
             f"{config['timeacc'].replace('3', '6')}",  # using 6 knots
-            # f"{config['timeacc']}+{config['timeacc']}BuasBd",  # using Bu as control channel
+            f"{config['timeacc']}BuasBd",  # using Bu as control channel
             f"{config['timeacc']}Noncorr"  # wihtout timeacc corerctions
         ],
         mtimeres = [f"{config['timeres']}"],
@@ -277,6 +340,17 @@ rule pack_thesis:
         mversion = [f"{config['version']}@LcosK"],
         mfit = [f"{config['fit']}"],
         mangacc = [f"analytic2knots1Dual+analytic2knots2Dual+analytic2knots3Dual"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [ f"{config['timeacc']}" ],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    expand(
+        "output/tables/physics_params/run2/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex",
+        mversion = [f"{config['version']}@LcosK"],
+        mfit = [f"{config['fit']}+{config['fit']}Poldep"],
+        mangacc = [f"{config['angacc']}"],
         mcsp = [f"{config['csp']}"],
         mflavor = [f"{config['flavor']}"],
         mtimeacc = [ f"{config['timeacc']}" ],
@@ -338,7 +412,6 @@ rule pack_thesis:
     #
     #
     #
-    #
     # FIGURES {{{
     #
     #
@@ -365,15 +438,16 @@ rule pack_thesis:
         rules.time_acceptance_simultaneous_plot.output,
         mtimeacc = [
             f"{config['timeacc']}",  # baseline
-            f"{config['timeacc']}".replace('3', '6'),  # using 6 knots
-            # f"{config['timeacc']}BuasBd",  # using Bu as control channel
-            f"{config['timeacc']}Noncorr"  # wihtout timeacc corerctions
+            # f"{config['timeacc']}".replace('3', '6'),  # using 6 knots
+            # f"{config['timeacc']}Noncorr"  # wihtout timeacc corerctions
         ],
         mmode = [ 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar' ],
         myear = [ '2015', '2016', '2017', '2018' ],
         mversion = [
             f"{config['version']}@LcosK",
-            f"{config['version']}@LcosK+{config['version']}"
+            f"{config['version']}@LcosK+{config['version']}",
+            f"{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4",
+            f"{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3",
         ],
         plot = ['fit', 'fitlog', 'spline', 'splinelog'],
         trigger = ['biased', 'unbiased'],
@@ -383,7 +457,7 @@ rule pack_thesis:
         mtimeacc = [
             f"{config['timeacc']}+{config['timeacc'].replace('3', '6')}",  # using 6 knots
             # f"{config['timeacc']}BuasBd",  # using Bu as control channel
-            f"{config['timeacc']}+{config['timeacc']}Noncorr"  # wihtout timeacc corerctions
+            f"{config['timeacc']}+{config['timeacc']}Noncorr",   # wihtout timeacc corerctions
         ],
         mmode = [ 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar' ],
         myear = [ '2015', '2016', '2017', '2018' ],
@@ -412,59 +486,6 @@ rule pack_thesis:
     #
     # }}}
     #
-    # time acceptance plot - nominal case only
-    # expand(rules.time_acceptance_simultaneous_plot.output,
-    #        mversion=config['version'],
-    #        mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
-    #        mtimeacc=['simul3', 'simul3Noncorr'],
-    #        myear=['2015', '2016', '2017', '2018'],
-    #        plot=['fitlog', 'splinelog'],
-    #        trigger=['biased', 'unbiased']),
-    # lifetime trend plots {{{
-    # expand(rules.lifetime_trend.output,
-    #        version=config['version'],
-    #        mode=['Bs2JpsiPhi', 'Bu2JpsiKplus', 'Bd2JpsiKstar'],
-    #        timeacc=['single', 'singleNoncorr'],
-    #        year=['run2']),
-    # }}}
-    #
-    #
-    # time acceptance plots - binned variables {{{
-    #
-    # cuts on the tuple using Bd as control channel
-    expand(
-        rules.time_acceptance_simultaneous_plot.output,
-        mversion = [
-            f"{config['version']}@LcosK+{config['version']}@LcosKpTB1+{config['version']}@LcosKpTB2+{config['version']}@LcosKpTB3+{config['version']}@LcosKpTB4",
-            f"{config['version']}@LcosK+{config['version']}@LcosKetaB1+{config['version']}@LcosKetaB2+{config['version']}@LcosKetaB3",
-        ],
-        myear = ["2015", "2016", "2017", "2018"],
-        mtimeacc = [f"{config['timeacc']}"],
-        mmode = [ 'MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar' ],
-        trigger = ['biased', 'unbiased'],
-        plot = ['fit', 'fitlog', 'spline', 'splinelog'],
-    ),
-    #
-    # }}}
-    #
-    #
-    # expand(rules.time_acceptance_plot.output,
-    #        version=['v0r5+v0r5@pTB1+v0r5@pTB2+v0r5@pTB3+v0r5@pTB4',
-    #                 'v0r5+v0r5@sigmat1+v0r5@sigmat2+v0r5@sigmat3',
-    #                 'v0r5+v0r5@etaB1+v0r5@etaB2+v0r5@etaB3'],
-    #        mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
-    #        timeacc=['simul3'],
-    #        year=['2015', '2016', '2017', '2018'],
-    #        plot=['splinelog'],
-    #        trigger=['biased', 'unbiased']),
-    # time acceptance plot - different knots + w/o kinWeight
-    # expand(rules.time_acceptance_plot.output,
-    #        version=config['version'],
-    #        mode=['MC_Bs2JpsiPhi_dG0', 'MC_Bd2JpsiKstar', 'Bd2JpsiKstar'],
-    #        timeacc=['simul3+simul6', 'simul3+simul3Noncorr'],
-    #        year=['2015', '2016', '2017', '2018'],
-    #        plot=['splinelog'],
-    #        trigger=['biased', 'unbiased']),
     #
     # angular acceptance plots {{{
     #
@@ -498,15 +519,96 @@ rule pack_thesis:
     # }}}
     #
     #
+    # physics plots {{{
+    #
+    expand("output/figures/physics_params/{myear}/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}/{mbranch}.pdf",
+        mversion = [f"{config['version']}@LcosK"],
+        mfit = [f"{config['fit']}"],
+        myear = [f"{config['year']}"],
+        mangacc = [f"{config['angacc']}"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [ f"{config['timeacc']}" ],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}", "biased", "unbiased"],
+        mbranch = ["time", "cosK", "cosL", "hphi"],
+    ),
+    # expand("output/figures/angular_acceptance/{year}/{mode}/{version}_analytic2knots_{trigger}_{branch}.pdf",
+    #         version=[f"{config['version']}@LcosK"],
+    #         mode=["MC_Bs2JpsiPhi_dG0", "MC_Bs2JpsiPhi"],
+    #         trigger=["biased", "unbiased"],
+    #         branch=["cosL", "cosK", "hphi"],
+    #         year=[ 2015, 2016, 2017, 2018],
+    # ),
+    #
+    # rwp2 = expand(rules.reweightings_plot_angular_acceptance.output,
+    #               version=['v0r5'],
+    #               mode=['MC_Bs2JpsiPhi','MC_Bs2JpsiPhi_dG0'],
+    #               branch=['B_P','B_PT','X_M','hplus_PT','hplus_P','hminus_PT','hminus_P'],
+    #               angacc=['yearly'],
+    #               timeacc=['repo']
+    #               weight=['sWeight','kinWeight','kkpWeight'],
+    #               year=['2015']),
+    #               #year=['2015','2016','2017','2018']),
     # }}}
+    #
+    #
+    #
+    # }}}
+    #
+    #
+    #
   output:
-    f"caca_{config['version']}.log"
+    f"output/{config['version']}.zip"
   run:
-      for element in f"{input}".split(' '):
-          notepath = f"{element}".replace('output', NOTE)
-          os.makedirs(os.path.dirname(notepath), exist_ok=True)
-          shell(f"cp {element} {notepath}")
-      shell("(ls) &> {output}")
+    import os
+    import shutil
+    # import tqdm
+    from tqdm import tqdm
+    v = config['version']
+
+    all_files = []
+    for this_input in input:
+      if isinstance(this_input, list):
+        print('its a list')
+        for item in this_input:
+          all_files.append(item)
+      else:
+        all_files.append(this_input)
+
+    # print(all_files)
+    # print(output)
+    cpath = f'{output}'
+    cpath = os.path.abspath(os.path.dirname(cpath)) + f"/{v}/"
+    # print(cpath)
+
+    # Remove directory if it exists
+    if os.path.isdir(cpath):
+        # print(f"rm -rf {cpath}")
+        os.system(f"rm -rf {cpath}")
+        # os.system(f"rm -rf {output[:-4]}")
+    # exit()
+    # Loop over all input files and make a copy of all pdfs
+    with tqdm(total=len(all_files)) as pbar:
+      for i, fn in enumerate(all_files):
+        _fn = os.path.abspath(fn)
+        _fn = _fn.replace(f"/{v}", "/thetuple")
+        if _fn.endswith('.json'):
+          out_path = _fn.replace('output/params/', f'output/{v}/jsons/')
+        elif _fn.endswith('.tex'):
+          out_path = _fn.replace('output/tables/', f'output/{v}/tables/')
+        elif _fn.endswith('.pdf'):
+          out_path = _fn.replace('output/figures/', f'output/{v}/plots/')
+        else:
+          out_path = None # add other methods if needed
+        if out_path:
+          # print(f"Copying {fn} to {out_path}...")
+          os.system(f"mkdir -p {os.path.dirname(out_path)}") # create dir
+          os.system(f"cp {fn} {out_path}")                 # copy file
+          #shutil.copy2(f"{file}", f"{file.replace('output/',out_path)}")
+        pbar.update(1)
+
+    shutil.make_archive(f'{cpath}', 'zip', f'{cpath}')
 
 
 
