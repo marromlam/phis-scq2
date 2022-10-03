@@ -46,7 +46,7 @@ if __name__ == '__main__':
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
   p.add_argument('--resolutions', help='Bs2JpsiPhi MC sample')
   p.add_argument('--params', help='Bs2JpsiPhi MC sample')
-  p.add_argument('--year', help='Year to fit') 
+  p.add_argument('--year', help='Year to fit')
   p.add_argument('--version', help='Version of the tuples to use')
   p.add_argument('--trigger', help='Trigger to fit')
   p.add_argument('--timeacc', help='Different flag to ... ')
@@ -60,8 +60,8 @@ if __name__ == '__main__':
   MODE = 'Bs2JpsiPhi'
   TRIGGER = args['trigger']
   TIMEACC = timeacc_guesser(args['timeacc'])
-  TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version']) 
-  TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version']) 
+  TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version'])
+  TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version'])
   MINER = args['minimizer']
 
   # Get badjanak model and configure it
@@ -86,14 +86,31 @@ if __name__ == '__main__':
     tUL = config.general['time_upper_limit']
   print(TIMEACC['use_lowTime'], TIMEACC['use_upTime'])
 
+  if 'T1' in args['version']:
+    tLL, tUL = tLL, 0.9247
+    fcns.badjanak.config['final_extrap'] = False
+  elif 'T2' in args['version']:
+    tLL, tUL = 0.9247, 1.9725
+    fcns.badjanak.config['final_extrap'] = False
+  elif 'T3' in args['version']:
+    tLL, tUL = 1.9725, tUL
+    # tLL, tUL = 2, tUL
+  else:
+    print("SAFE CUT")
+    # "T1": "time < 0.9247"
+    # "T2": "time > 0.9247 & time < 1.9725"
+    # "T3": "time > 1.9725"
+
   # Check timeacc flag to set knots and weights and place the final cut
   knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL).tolist()
+  if not fcns.badjanak.config['final_extrap']:
+    knots[-2] = knots[-1]
   tLL, tUL = knots[0], knots[-1]
-  
+
   # Cut is ready
   CUT = f'{time}>={tLL} & {time}<={tUL}'
   CUT = trigger_scissors(TRIGGER, CUT)         # place cut attending to trigger
-
+  print("Applied cut:", CUT)
 
   # Print settings
   printsubsec("Settings")
@@ -110,9 +127,7 @@ if __name__ == '__main__':
   print(time_offset)
   oparams = args['params'].split(',')
 
-
   # }}}
-
 
   # Get data into categories {{{
 
@@ -123,7 +138,7 @@ if __name__ == '__main__':
     return cats
 
   cats = {}
-  for i,m in enumerate(samples):
+  for i, m in enumerate(samples):
     # Correctly apply weight and name for diffent samples
     # MC_Bs2JpsiPhi {{{
     if ('MC_Bs2JpsiPhi' in m) and not ('MC_Bs2JpsiPhi_dG0' in m):
@@ -132,7 +147,8 @@ if __name__ == '__main__':
         weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
         weight = f'dg0Weight*sWeight'
-      mode = 'signalMC'; c = 'a'
+      mode = 'signalMC'
+      c = 'a'
     # }}}
     # MC_Bs2JpsiPhi_dG0 {{{
     elif 'MC_Bs2JpsiPhi_dG0' in m:
@@ -141,7 +157,8 @@ if __name__ == '__main__':
         weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
         weight = f'sWeight'
-      mode = 'signalMC'; c = 'a'
+      mode = 'signalMC'
+      c = 'a'
     # }}}
     # MC_Bd2JpsiKstar {{{
     elif 'MC_Bd2JpsiKstar' in m:
@@ -150,7 +167,8 @@ if __name__ == '__main__':
         weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
       else:
         weight = f'sWeight'
-      mode = 'controlMC'; c = 'b'
+      mode = 'controlMC'
+      c = 'b'
     # }}}
     # Bd2JpsiKstar {{{
     elif 'Bd2JpsiKstar' in m:
@@ -159,7 +177,8 @@ if __name__ == '__main__':
         weight = f'kbsWeight*sWeight'
       else:
         weight = f'sWeight'
-      mode = 'controlRD'; c = 'c'
+      mode = 'controlRD'
+      c = 'c'
     # }}}
     # MC_Bu2JpsiKplus {{{
     elif 'MC_Bu2JpsiKplus' in m:
@@ -168,7 +187,8 @@ if __name__ == '__main__':
         weight = f'kbsWeight*polWeight*sWeight'
       else:
         weight = f'sWeight'
-      mode = 'controlMC'; c = 'b'
+      mode = 'controlMC'
+      c = 'b'
     # }}}
     # Bu2JpsiKplus {{{
     elif 'Bu2JpsiKplus' in m:
@@ -178,7 +198,8 @@ if __name__ == '__main__':
         # weight = f'sWeight'  # TODO: fix kbsWeight here, it should exist and be a reweight Bu -> Bs
       else:
         weight = f'sWeight'
-      mode = 'controlRD'; c = 'c'
+      mode = 'controlRD'
+      c = 'c'
     # }}}
 
     # Final parsing time acceptance and version configurations {{{
@@ -202,39 +223,38 @@ if __name__ == '__main__':
     # Add knots
     cats[mode].knots = Parameters()
     cats[mode].knots.add(*[
-                {'name':f'k{j}', 'value':v, 'latex':f'k_{j}', 'free':False}
-                 for j,v in enumerate(knots[:-1])
-               ])
-    cats[mode].knots.add({'name':f'tLL', 'value':tLL,
-                          'latex':'t_{ll}', 'free':False})
-    cats[mode].knots.add({'name':f'tUL', 'value':tUL,
-                          'latex':'t_{ul}', 'free':False})
+        {'name': f'k{j}', 'value': v, 'latex': f'k_{j}', 'free': False}
+        for j, v in enumerate(knots[:-1])
+    ])
+    cats[mode].knots.add({'name': f'tLL', 'value': tLL,
+                          'latex': 't_{ll}', 'free': False})
+    cats[mode].knots.add({'name': f'tUL', 'value': tUL,
+                          'latex': 't_{ul}', 'free': False})
 
     # Add coeffs parameters
     cats[mode].params = Parameters()
     cats[mode].params.add(*[
-                    {'name':f'{c}{j}{TRIGGER[0]}', 'value':1.0,
-                     'latex':f'{c}_{j}^{TRIGGER[0]}',
-                     'free': False if j == 0 else True,  # 'min':0.1, 'max':10.
-                    } for j in range(len(knots[:-1])+2)
+        {'name': f'{c}{j}{TRIGGER[0]}', 'value': 1.0,
+         'latex': f'{c}_{j}^{TRIGGER[0]}',
+         'free': False if j == 0 else True, 'min': 0.1, 'max': 10.
+         } for j in range(len(knots[:-1]) + 2)
     ])
-    cats[mode].params.add({'name':f'gamma_{c}',
-                           'value':Gdvalue+resolutions[m]['DGsd'],
-                           'latex':f'\Gamma_{c}', 'free':False})
-    cats[mode].params.add({'name':f'mu_{c}',
+    cats[mode].params.add({'name': f'gamma_{c}',
+                           'value': Gdvalue + resolutions[m]['DGsd'],
+                           'latex': f'\Gamma_{c}', 'free': False})
+    cats[mode].params.add({'name': f'mu_{c}',
                            'value': 0 * time_offset[i]['mu'].value,
-                           'latex':f'\mu_{c}', 'free':False})
+                           'latex': f'\mu_{c}', 'free': False})
     _sigma = np.mean(cats[mode].df['sigmat'].values)
     print(f"sigmat = {resolutions[m]['sigma']} -> {_sigma}")
-    cats[mode].params.add({'name':f'sigma_{c}',
-                           'value':0*_sigma + 1*resolutions[m]['sigma'],
-                           'latex':f'\sigma_{c}', 'free':False})
+    cats[mode].params.add({'name': f'sigma_{c}',
+                           'value': 0 * _sigma + 1 * resolutions[m]['sigma'],
+                           'latex': f'\sigma_{c}', 'free': False})
     print(cats[mode].knots)
     print(cats[mode].params)
 
     # Attach labels and paths
     cats[mode].pars_path = oparams[i]
-
 
   # Configure kernel
   fcns.badjanak.config['knots'] = knots[:-1]
@@ -242,28 +262,27 @@ if __name__ == '__main__':
 
   # }}}
 
-
   # Time to fit {{{
 
   printsubsec(f"Simultaneous minimization procedure")
   fcn_call = fcns.saxsbxscxerf
-  fcn_pars = cats['signalMC'].params+cats['controlMC'].params+cats['controlRD'].params
-  fcn_kwgs={
-    'data': [cats['signalMC'].time, cats['controlMC'].time, cats['controlRD'].time],
-    'prob': [cats['signalMC'].lkhd, cats['controlMC'].lkhd, cats['controlRD'].lkhd],
-    'weight': [cats['signalMC'].weight, cats['controlMC'].weight, cats['controlRD'].weight],
-    # TODO: flatend should be applied in badjanak, general
-    # 'flatend': TIMEACC['use_flatend'],
-    'tLL': tLL,
-    'tUL': tUL
+  fcn_pars = cats['signalMC'].params + cats['controlMC'].params + cats['controlRD'].params
+  fcn_kwgs = {
+      'data': [cats['signalMC'].time, cats['controlMC'].time, cats['controlRD'].time],
+      'prob': [cats['signalMC'].lkhd, cats['controlMC'].lkhd, cats['controlRD'].lkhd],
+      'weight': [cats['signalMC'].weight, cats['controlMC'].weight, cats['controlRD'].weight],
+      # TODO: flatend should be applied in badjanak, general
+      # 'flatend': TIMEACC['use_flatend'],
+      'tLL': tLL,
+      'tUL': tUL
   }
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
 
-  if MINER.lower() in ("minuit","minos"):
-    result = mini.optimize(method='minuit', verbose=False, tol=0.1);
+  if MINER.lower() in ("minuit", "minos"):
+    result = mini.optimize(method='minuit', verbose=True)
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
-    _res = mini.optimize(method='nelder', verbose=False);
-    result = mini.optimize(method=MINER, params=_res.params, verbose=False);
+    _res = mini.optimize(method='nelder', verbose=False)
+    result = mini.optimize(method=MINER, params=_res.params, verbose=False)
   elif MINER.lower() in ('nelder'):
     result = mini.optimize(method='nelder', verbose=False)
   elif MINER.lower() in ('emcee'):
@@ -296,12 +315,11 @@ if __name__ == '__main__':
 
   # }}}
 
-
   # Writing results {{{
 
   printsec(f"Dumping parameters")
 
-  for name, cat in zip(cats.keys(),cats.values()):
+  for name, cat in zip(cats.keys(), cats.values()):
     list_params = cat.params.find('(a|b|c)(\d{1})(u|b)')
     print("Dumping:", list_params)
     cat.params.add(*[result.params.get(par) for par in list_params])
@@ -314,5 +332,5 @@ if __name__ == '__main__':
 # }}}
 
 
-# vim:foldmethod=marker
+# vim: fdm=marker
 # that's all folks!
