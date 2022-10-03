@@ -1,27 +1,21 @@
-DESCRIPTION = """
-    This script downloads tuples from open('config.json')->['eos'] and places
-    them, properly renamed within the convention of phis-scq, in the
-    open('config.json')->['path'] (the so-called sidecar folder)
-"""
-
 __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 __all__ = []
 
 
-# Modules {{{
+# Modules {{{
 
 import config
-import shutil
+# import shutil
 import uproot3 as uproot
 import argparse
 import os
 import numpy as np
 
-# }}}
+# }}}
 
 
-# Some config {{{
+# Some config {{{
 
 vsub_dict = {
     # used to place random cuts for MC
@@ -34,6 +28,9 @@ vsub_dict = {
     # lower and upper time cuts
     "LT": f"time < {config.general['lower_time_upper_limit']}",
     "UT": f"time > {config.general['upper_time_lower_limit']}",
+    "T1": "time < 0.9247",
+    "T2": "time > 0.9247 & time < 1.9725",
+    "T3": "time > 1.9725",
     # runNumber to check alignment in 2018
     "g210300": "runNumber > 210300",
     "l210300": "runNumber < 210300",
@@ -53,6 +50,10 @@ vsub_dict = {
     # cut the Bd angular distribution
     "LcosK": "helcosthetaK<=0.0",
     "UcosK": "helcosthetaK>0.0",
+    "LSB": "B_ConstJpsi_M_1 < 5417",
+    "RSB": "B_ConstJpsi_M_1 > 5287",
+    # "LbkgSB": "B_ConstJpsi_M_1 > 5417",
+    # "RbkgSB": "B_ConstJpsi_M_1 < 5287",
     # tagging
     "onlyOST": "abs(OS_Combination_DEC)==1 & abs(B_SSKaonLatest_TAGDEC)==0",
     "onlySST": "abs(OS_Combination_DEC)==0 & abs(B_SSKaonLatest_TAGDEC)==1",
@@ -83,130 +84,132 @@ vsub_dict = {
 # CMDLINE interfrace {{{
 
 if __name__ == "__main__":
-    # argument parser for snakemake
-    p = argparse.ArgumentParser(description=DESCRIPTION)
-    p.add_argument('--year', help='Year of the tuple.')
-    p.add_argument('--mode', help='Decay mode of the tuple.')
-    p.add_argument('--version', help='Version of the selection pipeline')
-    p.add_argument('--weight', help='The tuple surname')
-    p.add_argument('--tree', help='Input file tree name.')
-    p.add_argument('--input', help='Input file tree name.')
-    p.add_argument('--output', help='Input file tree name.')
-    p.add_argument('--uproot-kwargs', help='Arguments to uproot.pandas.df')
-    args = vars(p.parse_args())
+  # argument parser for snakemake
+  p = argparse.ArgumentParser(description="Chop tuples")
+  p.add_argument('--year', help='Year of the tuple.')
+  p.add_argument('--mode', help='Decay mode of the tuple.')
+  p.add_argument('--version', help='Version of the selection pipeline')
+  p.add_argument('--weight', help='The tuple surname')
+  p.add_argument('--tree', help='Input file tree name.')
+  p.add_argument('--input', help='Input file tree name.')
+  p.add_argument('--output', help='Input file tree name.')
+  p.add_argument('--uproot-kwargs', help='Arguments to uproot.pandas.df')
+  args = vars(p.parse_args())
 
-    # Get the flags and that stuff
-    # pipeline tuple version
-    v = args['version'].split("@")[0].split("bdt")[0]
-    V = args['version'].replace('bdt', '')  #  full version for phis-scq
-    y = args['year']
-    m = args['mode']
-    w = args['weight']
-    tree = args['tree']
-    is_mc = True if 'MC' in m else False
-    is_gun = True if 'GUN' in m else False
+  # Get the flags and that stuff
+  # pipeline tuple version
+  v = args['version'].split("@")[0].split("bdt")[0]
+  V = args['version'].replace('bdt', '')  # full version for phis-scq
+  y = args['year']
+  m = args['mode']
+  w = args['weight']
+  tree = args['tree']
+  is_mc = True if 'MC' in m else False
+  is_gun = True if 'GUN' in m else False
 
-    # choose sWeight varaible name {{{
+  # choose sWeight varaible name {{{
 
-    if "pTB" in V:
-        sw = 'sw_pt'
-    elif "etaB" in V:
-        sw = 'sw_eta'
-    elif "sigmat" in V:
-        sw = 'sw_sigmat'
+  if "pTB" in V:
+    sw = 'sw_pt'
+  elif "etaB" in V:
+    sw = 'sw_eta'
+  elif "sigmat" in V:
+    sw = 'sw_sigmat'
+  else:
+    sw = 'sw'
+
+  # }}}
+
+  # try DVTuple if the tree does not work {{{
+  print(args['input'])
+  try:
+    result = uproot.open(args['input'])[tree]
+    result = result.pandas.df(flatten=None)
+  except:
+    result = uproot.open(args['input'])['DVTuple'][tree]
+    result = result.pandas.df(flatten=None)
+
+  # }}}
+
+  # ensure sw branch exists {{{
+  list_of_branches = list(result.keys())
+  print(list_of_branches)
+
+  try:
+    print("There are sWeights variables")
+    if 'sw_cosK_noGBw' in list(result.keys()):
+      print('Adding Peilian sWeight')
+      # overwrite sw variable
+      result.eval("sw = sw_cosK_noGBw", inplace=True)
     else:
-        sw = 'sw'
+      print(f"Adding standard sWeight: {sw}")
+      # overwrite sw variable
+      result.eval(f"sw = {sw}", inplace=True)
+  except:
+    if 'B_BKGCAT' in list(result.keys()):
+      print("sWeight is set to zero for B_BKGCAT==60")
+      result['sw'] = np.where(result['B_BKGCAT'].values != 60, 1, 0)
+    else:
+      print("sWeight variable was not found. Set sw = 1")
+      result['sw'] = np.ones_like(result[result.keys()[0]])
 
-    # }}}
+  # }}}
 
-    # try DVTuple if the tree does not work {{{
-    print(args['input'])
-    try:
-        result = uproot.open(args['input'])[tree]
-        result = result.pandas.df(flatten=None)
-    except:
-        result = uproot.open(args['input'])['DVTuple'][tree]
-        result = result.pandas.df(flatten=None)
+  # place cuts according to version substring {{{
 
-    # }}}
-
-    # ensure sw branch exists {{{
-    list_of_branches = list(result.keys())
-    print(list_of_branches)
-
-    try:
-        print("There are sWeights variables")
-        if 'sw_cosK_noGBw' in list(result.keys()):
-            print('Adding Peilian sWeight')
-            # overwrite sw variable
-            result.eval("sw = sw_cosK_noGBw", inplace=True)
+  list_of_cuts = []
+  vsub_cut = None
+  for k, v in vsub_dict.items():
+    if k in V:
+      try:
+        noe = len(result.query(v))
+        if (k in ("g210300", "l210300")) and is_mc:
+          print("MCs are not cut in runNumber")
+        elif (k in ("g210300", "l210300")) and ("2018" != y):
+          print("Only 2018 RD is cut in runNumber")
+        elif (k in ("UcosK", "LcosK")) and 'Bd2JpsiKstar' not in m:
+          print("Cut in cosK was only planned in Bd")
+        elif (k in ("LSB", "RSB")) and 'Bs2JpsiPhi' != m:
+          print("Cut in LSB and RSB was only planned in Bs RD")
         else:
-            print(f"Adding standard sWeight: {sw}")
-            # overwrite sw variable
-            result.eval(f"sw = {sw}", inplace=True)
-    except:
-        if 'B_BKGCAT' in list(result.keys()):
-            print("sWeight is set to zero for B_BKGCAT==60")
-            result['sw'] = np.where(result['B_BKGCAT'].values != 60, 1, 0)
-        else:
-            print("sWeight variable was not found. Set sw = 1")
-            result['sw'] = np.ones_like(result[result.keys()[0]])
+          list_of_cuts.append(v)
+        if noe == 0:
+          print(f"ERROR: This cut leaves df empty. {v}")
+          print("       Query halted.")
+      except:
+        print(f"There is no such variable for the cut {v}")
+  if list_of_cuts:
+    vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
 
-    # }}}
+  # place the cut
+  print("Cut to be applied")
+  print(vsub_cut)
+  if vsub_cut and not is_gun:
+    result = result.query(vsub_cut)
+  print("Showing the final dataframe:")
+  print(result)
 
-    # place cuts according to version substring {{{
+  # }}}
 
-    list_of_cuts = []
-    vsub_cut = None
-    for k, v in vsub_dict.items():
-        if k in V:
-            try:
-                noe = len(result.query(v))
-                if (k in ("g210300", "l210300")) and is_mc:
-                    print("MCs are not cut in runNumber")
-                elif (k in ("g210300", "l210300")) and ("2018" != y):
-                    print("Only 2018 RD is cut in runNumber")
-                elif (k in ("UcosK", "LcosK")) and 'Bd2JpsiKstar' not in m:
-                    print("Cut in cosK was only planned in Bd")
-                else:
-                    list_of_cuts.append(v)
-                if noe == 0:
-                    print(f"ERROR: This cut leaves df empty. {v}")
-                    print("       Query halted.")
-            except:
-                print(f"There is no such variable for the cut {v}")
-    if list_of_cuts:
-        vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
+  # write {{{
 
-    # place the cut
-    print("Cut to be applied")
-    print(vsub_cut)
-    if vsub_cut and not is_gun:
-        result = result.query(vsub_cut)
-    print("Showing the final dataframe:")
-    print(result)
+  print(f"Starting to write {os.path.basename(args['output'])} file.")
+  with uproot.recreate(args['output']) as f:
+    _branches = {}
+    for k, v in result.items():
+      if 'int' in v.dtype.name:
+        _v = np.int32
+      elif 'bool' in v.dtype.name:
+        _v = np.int32
+      else:
+        _v = np.float64
+      _branches[k] = _v
+    mylist = list(dict.fromkeys(_branches.values()))
+    f[tree] = uproot.newtree(_branches)
+    f[tree].extend(result.to_dict(orient='list'))
+  print('Succesfully written.')
 
-    # }}}
-
-    # write {{{
-
-    print(f"Starting to write {os.path.basename(args['output'])} file.")
-    with uproot.recreate(args['output']) as f:
-        _branches = {}
-        for k, v in result.items():
-            if 'int' in v.dtype.name:
-                _v = np.int32
-            elif 'bool' in v.dtype.name:
-                _v = np.int32
-            else:
-                _v = np.float64
-            _branches[k] = _v
-        mylist = list(dict.fromkeys(_branches.values()))
-        f[tree] = uproot.newtree(_branches)
-        f[tree].extend(result.to_dict(orient='list'))
-    print('Succesfully written.')
-
-    # }}}
+  # }}}
 
 # }}}
 

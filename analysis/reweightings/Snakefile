@@ -108,7 +108,7 @@ rule reweighting_dg0:
 
 rule reweighting_kinematic_Bs:
   resources:
-    mem_mb=7168,
+    mem_mb=8000,
     threads=2
   wildcard_constraints:
     mode = "(MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)|Bd2JpsiKstar|Bu2JpsiKplus)"

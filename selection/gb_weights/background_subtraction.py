@@ -680,7 +680,7 @@ if __name__ == '__main__':
     elif 'Bs' in args['mode']:
         mass_range = (5320, 5420)
     else:
-        mass_range=False
+        mass_range = False
 
     # TODO: maybe in the future we want to split by trigger category
     pars, sw = mass_fitter(
@@ -692,7 +692,7 @@ if __name__ == '__main__':
         figs=args["output_figures"],  # where to save the fit plots
         model=args["mass_model"],  # mass model to use
         cut=cut,  # extra cuts, if required
-        sweights=sweights,  #  whether to comput or not the sWeights
+        sweights=sweights,  # whether to comput or not the sWeights
         input_pars=input_pars,  # whether to use prefit tail parameters or not
         verbose=True,  # level of verobisty
         prefit=is_prefit,  # level of verobisty

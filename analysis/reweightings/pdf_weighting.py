@@ -44,14 +44,14 @@ def pdf_weighting(data, target_params, original_params, mode):
              'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
              # 'X_ID_GenLvl', 'X_ID_GenLvl', 'X_ID_GenLvl', 'X_ID_GenLvl']
              # 'B_ID', 'B_ID', 'B_ID', 'B_ID']
-    badjanak.get_kernels(True)
+    badjanak.get_kernels()
     cross_rate = badjanak.delta_gamma5_mc
   elif mode in ("MC_Bs2JpsiPhi", "MC_Bs2JpsiPhi_dG0", "MC_Bs2JpsiKK_Swave"):
     badjanak.config["mHH"] = [990, 1008, 1016, 1020, 1024, 1032, 1050]
     avars = ['truehelcosthetaK_GenLvl','truehelcosthetaL_GenLvl',
              'truehelphi_GenLvl', 'B_TRUETAU_GenLvl', 'X_M', 'sigmat',
              'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl', 'B_ID_GenLvl']
-    badjanak.get_kernels(True)
+    badjanak.get_kernels()
     cross_rate = badjanak.delta_gamma5_mc
 
   # Load file
