@@ -266,7 +266,7 @@ if __name__ == '__main__':
 
     # compile the kernel
     #    so if knots change when importing parameters, the kernel is compiled
-    badjanak.get_kernels(True)
+    badjanak.get_kernels()
 
     # @profile
 
