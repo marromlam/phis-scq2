@@ -506,7 +506,7 @@ rule sweights_add:
     sweight = "(sWeight|sWeightForTag)"
   threads: 2
   resources:
-    mem_mb=8000
+    mem_mb=12000
   input:
     root_file = lambda wcs: tuple_and_npy_for_sweights(wcs),
     biased = lambda wcs: tuple_and_npy_for_sweights(wcs, what='biased'),
