@@ -394,7 +394,7 @@ if config['run_preselection']:
         run:
             keys = 'L0_cuts B_cuts phi_cuts B_TAU_cuts HLT1_cuts HLT2_cuts Lambda_b_veto Bd_veto Match_cut'   
             if config['stripping_mode'] == 'nopidcuts':
-                keys += 'pid_stripping'   
+                keys += ' pid_stripping'   
 
             shell('python {params.script} --input-file {input.file} \
                                    --output-file {output} \
