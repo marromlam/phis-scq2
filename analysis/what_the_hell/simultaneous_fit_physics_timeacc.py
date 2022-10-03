@@ -36,7 +36,7 @@ import analysis.badjanak as badjanak
 badjanak.config['fast_integral'] = 1
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
-badjanak.get_kernels(True)
+badjanak.get_kernels()
 
 import config
 bdtconfig = config.angacc['bdtconfig']
@@ -679,7 +679,7 @@ if __name__ == '__main__':
     print(samples)
 
 
-    badjanak.get_kernels(True)
+    badjanak.get_kernels()
 
 
     # shit {{{
