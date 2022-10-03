@@ -460,7 +460,7 @@ rule angular_acceptance_iterative_dual_data_run2:
     mem_mb = 16384
   threads: 16
   wildcard_constraints:
-    angacc = "run2Dual.*",
+    angacc = "run2Dual((?!.*?(Insieme)).*)",
   input:
     sample_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2'),
     sample_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2'),

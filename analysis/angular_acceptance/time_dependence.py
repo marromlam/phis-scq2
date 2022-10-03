@@ -34,7 +34,7 @@ from analysis import badjanak
 badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
-badjanak.get_kernels(True)
+badjanak.get_kernels()
 
 from analysis.angular_acceptance.new_merger import merge_std_dg0
 
