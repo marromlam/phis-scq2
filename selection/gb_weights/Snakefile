@@ -17,7 +17,7 @@ rule selection_gbw_preliminar_mc:
     resources:
         mem_mb = 6000
     wildcard_constraints:
-        mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
+        mode = "MC_(Bs2JpsiPhi|Bs2JpsiKK_Swave|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?"
     input:
         cuts = ['selection/cuts.yaml', 'selection/gb_weights/cuts.yaml'],
         branches = 'selection/branches.yaml',
@@ -53,7 +53,7 @@ rule selection_gbw_preliminar_data:
     resources:
         mem_mb = 6000
     wildcard_constraints:
-        mode = "(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)"
+        mode = "(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
     input:
         cuts = ['selection/cuts.yaml', 'selection/gb_weights/cuts.yaml'],
         branches = ['selection/gb_weights/branches.yaml',
@@ -96,7 +96,7 @@ rule selection_gbw_tails:
     resources:
         mem_mb = 12000
     wildcard_constraints:
-        mode = "MC_(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)(.*)?"
+        mode = "MC_(Bs2JpsiPhi|Bs2JpsiKK_Swave|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)(.*)?"
     input:
         sample = lambda wcs: expand(SAMPLES + '/{{year}}/{{mode}}/{{version}}_{strip_sim}_preliminarGBW.root',
                         strip_sim=selconfig['strip_sim'][wcs.mode][wcs.year])
@@ -138,8 +138,8 @@ rule selection_gbw_bkgsubtract:
         mode = "(MC_)?(Bs2JpsiPhi|Bs2JpsiPhi_Prompt|Bd2JpsiKstar|Bu2JpsiKplus)"
     input:
         sample = SAMPLES + '/{year}/{mode}/{version}_preliminarGBW.root',
-        pars = lambda wcs: expand('output/params/tails_mc/{{year}}/{mode}/{{version}}.json',
-                                  mode=GBW_CONFIG['tails_mode'][wcs.mode]),
+        # pars = lambda wcs: expand('output/params/tails_mc/{{year}}/{mode}/{{version}}.json',
+        #                           mode=GBW_CONFIG['tails_mode'][wcs.mode]),
     params:
         script = 'selection/gb_weights/background_subtraction.py',
         mass_branch = lambda w: GBW_CONFIG['mass_branch'][f"{w.mode}"],
@@ -344,7 +344,7 @@ rule selection_gbw_compute_prompt:
                 data_mode='Bs2JpsiPhi_Prompt',
                 data_year = selconfig['gbw_input_data_year'][f'{wcs.year}'])
     output:
-        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_gbWeight.root'
+        SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_gbWeightPrompt.root'
     params:
         script = 'selection/tools/apply_weights.py',
         variables_file = 'gb_weights/weighting_variables.yaml',

@@ -136,9 +136,9 @@ if __name__ == '__main__':
     # fig.savefig("bdtshit.pdf")
     v_mark = args['version'].split('@')[0]  # watermark plots
     tag_mark = ''
-    if v_mark[0] == 'b' or v_mark == 'v1r1':
-      v_mark = 'LHC$b$'  # watermark plots
-      tag_mark = 'THIS THESIS' 
+    # if v_mark[0] == 'b' or v_mark == 'v1r1':
+    v_mark = 'LHC$b$'  # watermark plots
+    tag_mark = 'THIS THESIS' 
     watermark(axplot2, version=v_mark, tag=tag_mark, scale=1.3)
     axplot2.legend(loc='lower left')
     fig.savefig(f"{args['output_figures']}/fom.pdf")
