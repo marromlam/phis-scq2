@@ -62,8 +62,7 @@ if __name__ == "__main__":
     os.makedirs(tmp_path, exist_ok=True)
 
     print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}')
-    os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
-    print(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
+    os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ ramon-run1:{git_path} {_flavor} | tar -x")
 
     print(f"Loading flavor factors {year}")
     raw_json = hjson.load(open(f"{tmp_path}/{_flavor}",'r'))
@@ -107,5 +106,4 @@ if __name__ == "__main__":
 
 
 # vim:foldmethod=marker
-# TODO: Do some cleaning 
-
+# TODO: Do some cleaning

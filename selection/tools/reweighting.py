@@ -50,6 +50,9 @@ def reweighting(original_file, original_tree_name, original_weight, target_file,
 
     target = ur.open(f"{target_file}:{target_tree_name}").arrays(library="np", expressions=variables)
     target = pandas.DataFrame(target)
+    if target_weight == "1":
+        target_weight = False
+    print("weight", target_weight)
     if target_weight:
         target_weight = ur.open(f"{target_file}:{target_tree_name}")[target_weight].array(library="np")
     else:

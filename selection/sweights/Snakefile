@@ -524,7 +524,7 @@ rule sweights_add:
     #                             massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
     #                            ),
   output:
-    root_file = SAMPLES+'/{year}/{mode}/{version}_{sweight}.root',
+    root_file = temporal(SAMPLES+'/{year}/{mode}/{version}_{sweight}.root'),
   params:
     script = 'selection/sweights/sweighter.py',
   log:
@@ -563,7 +563,7 @@ rule sweights_add_lb:
                                 year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
                                ),
   output:
-    root_file = temp(SAMPLES+'/{year}/{mode}/{version}_sWeight.root'),
+    root_file = temporal(SAMPLES+'/{year}/{mode}/{version}_sWeight.root'),
   params:
     script = 'selection/sweights/sweighter.py',
   log:
@@ -600,7 +600,7 @@ rule lbweights_add:
         # WARNING: version is hardcoded
         nLb = "analysis/params/lambda_b/{year}/v1r0.json"
     output:
-        rd = SAMPLES+"/{year}/Bs2JpsiPhi/{version}_lbWeight.root",
+        rd = temporal(SAMPLES+"/{year}/Bs2JpsiPhi/{version}_lbWeight.root"),
     params:
         script = 'selection/lb_add.py'
     log:

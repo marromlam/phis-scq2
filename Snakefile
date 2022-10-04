@@ -39,6 +39,12 @@ NOTE = settings.user['note']
 MAILS = settings.user['mail']
 YEARS = settings.years
 
+def temporal(arg):
+    if config['delete_temporal']:
+        return temp(arg)
+    else:
+        return arg
+
 # }}}
 
 
@@ -87,6 +93,7 @@ include: 'analysis/toys/Snakefile'
 include: 'packandgo/Snakefile'
 
 # }}}
+
 
 
 rule help:

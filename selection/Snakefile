@@ -87,7 +87,7 @@ if config['run_preselection']:
             # files = lambda wcs: grid_tuples(wcs)
             # files = '/scratch46/marcos.romero/sidecar14/{year}/{mode}_{strip_sim}_pidcorrected.root'
         output:
-            SAMPLES + '/{year}/{mode}/{version}_preselected.root'
+            temporal(SAMPLES + '/{year}/{mode}/{version}_preselected.root')
         log:
             'output/log/selection_preselection/{year}/{mode}/{version}.log'
         params:
@@ -126,7 +126,7 @@ if config['run_preselection']:
         resources:
             mem_mb = 6000
         output:
-            SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
+            temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root'),
         params:
             files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim][wildcards.polarity],
             script = 'selection/tools/apply_selection.py',
@@ -154,7 +154,7 @@ if config['run_preselection']:
         resources:
             mem_mb = 6000
         output:
-            SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_genlevel{polarity}.root',
+            temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_genlevel{polarity}.root'),
         log:
             'output/log/prepare_genlvl_mc/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.log'
         params:
@@ -195,8 +195,8 @@ if config['run_preselection']:
             script = 'selection/tools/add_generator_level_info.py',
             branches = 'selection/generator_level_branches_to_be_merged.yaml'
         output:
-            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pipas{polarity}.root',
-            file_tmp = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pipas{polarity}_tmp.root',
+            file = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pipas{polarity}.root'),
+            file_tmp = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pipas{polarity}_tmp.root'),
             # file = temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_selected_with_gen.root')),
             # file_tmp = temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_selected_with_gen_tmp.root'))
         log:
@@ -243,9 +243,11 @@ if config['run_preselection']:
         output:
             # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_selected_pidcorrected.root'))
             # ELMARCS
-            SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root'
+            temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root')
+        log:
+            'output/log/preselection_merge_polartities/{year}/{mode}/{version}_{strip_sim}_pidcorrected.log'
         run:
-            shell('hadd -f {output} {input}')
+            shell('(hadd -f {output} {input}) &> {log}')
 
     rule samples_upload_pidtuple:
       wildcard_constraints:
@@ -303,7 +305,7 @@ if config['run_preselection']:
             file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root',
         output:
             # tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_pidcorrected_selected_preselected.root')
-            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root',
+            file = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_beforeGBW.root'),
         params:
             script = 'selection/tools/apply_selection.py',
             cut_keys = cut_keys_mode,
@@ -349,8 +351,8 @@ rule selection_add_arrays:
     params:
         script  = 'selection/tools/add_arrays.py',
     output:
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_witharrs.root',
-        file_tmp = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_witharrs_tmp.root',
+        file = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_witharrs.root'),
+        file_tmp = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_witharrs_tmp.root'),
         # file = tuples_path('{mode}/{mode}_{strip_sim}_{year}_pid_gb_arr.root'),
         # file_tmp = temp(tuples_path('{mode}/{mode}_{strip_sim}_{year}_pid_gb_arr_tmp.root'))
     shell:
@@ -419,10 +421,11 @@ rule preselection_merge_pid_corrected:
     input:
         files = all_strippings
     output:
-        # tuples_path('{mode}/{mode}_{year}_pid.root')
-        SAMPLES + '/{year}/{mode}/{version}_pid.root',
-    shell:
-        'hadd -f {output} {input.files}'
+        temporal(SAMPLES + '/{year}/{mode}/{version}_pid.root'),
+    output:
+        'output/log/preselection_merge_pid_correcited/{year}/{mode}/{version}_pid.log'
+    run:
+        shell('(hadd -f {output} {input.files}) &> {log}')
 
 # }}}
 
