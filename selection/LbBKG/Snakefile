@@ -16,7 +16,7 @@ if config['run_preselection']:
             mode = 'MC_Bs2JpsiPhi_fromLb'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         # input:
         output:
             # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_prepared_Lb.root'))
@@ -51,7 +51,7 @@ if config['run_preselection']:
             # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
         threads: 2
         resources:
-            mem_mb = 10000
+            mem_mb = 30000
         input:
             input_file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
             # input_file = expand(rules.prepare_mc_Lb.output, mode='{mode}',
@@ -87,7 +87,7 @@ if config['run_preselection']:
             # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         input:
             tracks_prob = 'selection/pid/pidcorr.yaml',
             tracks_pid = 'selection/pid/pidcorr_pid.yaml',
@@ -161,7 +161,7 @@ if config['run_preselection']:
             # mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         input:
             tracks_prob = 'selection/pid/pidgen.yaml',
             tracks_pid = 'selection/pid/pidgen_pid.yaml',
@@ -237,7 +237,7 @@ if config['run_preselection']:
             mode = 'MC_Bs2JpsiPhi_fromLb'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         input:
             root = expand(rules.correct_muonpid_Lb.output.file,
                           mode='{mode}', strip_sim='{strip_sim}', year='{year}',
@@ -271,7 +271,7 @@ if config['run_preselection']:
             mode = 'MC_Bs2JpsiPhi_fromLb'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         input:
             lambda wildcards: expand(rules.merge_polarities_lambdab.output,
                                      mode=wildcards.mode, version=wildcards.version,
@@ -298,7 +298,7 @@ if config['run_preselection']:
             mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         input:
             files = expand(rules.merge_strippings_Lb.output,
                            mode='{mode}', version='{version}', year='{year}'),
@@ -330,7 +330,7 @@ if config['run_preselection']:
             mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         input:
             files = expand(rules.add_dalitz_weight_Lb.output,
                            mode='{mode}', version='{version}', year='{year}'),
@@ -354,7 +354,7 @@ if config['run_preselection']:
             mode = '(MC_)?Bs2JpsiPhi_(Lb|fromLb)'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         input:
             file = expand(rules.add_ppt_weight_Lb.output,
                           mode='{mode}', version='{version}', year='{year}'),
@@ -381,7 +381,7 @@ if config['run_preselection']:
             mode = 'MC_Bs2JpsiPhi_fromLb'
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 31000
         input:
             file = expand(rules.add_bdt_branches_Lb.output,
                           mode='{mode}', version='{version}', year='{year}'),
