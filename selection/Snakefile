@@ -19,7 +19,7 @@ include: 'LbBKG/Snakefile'
 # include: 'Snakefile-Bs2DsPi'
 
 
-# some extra helpers {{{
+# some extra helpers 
 
 def cut_keys_mode(wildcards):
     """
@@ -65,10 +65,10 @@ def grid_tuples(wcs):
     _t = _t.split(' ')
     return [XRootD.remote(__t) for __t in _t]
 
-# }}}
 
 
-# Preselection Data {{{
+
+# Preselection Data 
 
 if config['run_preselection']:
     rule preselection_data:
@@ -109,10 +109,10 @@ if config['run_preselection']:
             --branches-files {params.branches} \
             --year {wildcards.year}) &> {log}')
 
-# }}}
 
 
-# Prepare MC tuple {{{
+
+# Prepare MC tuple 
 
 if config['run_preselection']:
     rule preselection_prepare_mc:
@@ -125,7 +125,7 @@ if config['run_preselection']:
             mode  = "(MC)((?!.*?(_fromLb)).*)"
         threads: 2
         resources:
-            mem_mb = 6000
+            mem_mb = 25000
         output:
             SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
         params:
@@ -153,7 +153,7 @@ if config['run_preselection']:
         """
         threads: 2
         resources:
-            mem_mb = 6000
+            mem_mb = 25000
         output:
             SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_genlevel{polarity}.root',
         log:
@@ -183,7 +183,7 @@ if config['run_preselection']:
         """
         threads: 2
         resources:
-            mem_mb = 6000
+            mem_mb = 25000
         input:
             input_file = expand(rules.preselection_prepare_mc.output,
                                 mode='{mode}', version='{version}', year='{year}',
@@ -212,7 +212,7 @@ if config['run_preselection']:
             --branches-files {params.branches} \
             ) &> {log}')
 
-# }}}
+
 
 
 # NOTE: Running PID corrections is an expensive computational task. That is why
@@ -221,7 +221,7 @@ if config['run_pid']:
     include: 'pid/Snakefile'
 
 
-# Preselection MC {{{
+# Preselection MC 
 
 # rompe el pipeline
 if config['run_preselection']:
@@ -235,7 +235,7 @@ if config['run_preselection']:
             mode  = "(MC)((?!.*?(_fromLb)).*)"
         threads: 2
         resources:
-            mem_mb = 6000
+            mem_mb = 25000
         input:
             expand(
                 SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root',
@@ -254,7 +254,7 @@ if config['run_preselection']:
         weight = "(selected|sWeight|lbWeight|tagged)"
       threads: 2
       resources:
-        mem_mb=6144
+        mem_mb=25000
       params:
         os.path.join(settings.user['eos'], 'tuples_pidcorrected')
       input:
@@ -293,7 +293,7 @@ if config['run_preselection']:
         """
         threads: 2
         resources:
-            mem_mb = 12000
+            mem_mb = 25000
         wildcard_constraints:
             mode  = "(MC)((?!.*?(_fromLb)).*)"
         input:
@@ -322,18 +322,18 @@ if config['run_preselection']:
             --cut-keys {params.cut_keys} \
             --year {wildcards.year}) &> {log}')
 
-# }}}
+
 
 
 include: 'gb_weights/Snakefile'
 
 
-# Merge strippings {{{
+# Merge strippings 
 
 rule selection_add_arrays:
     threads: 2
     resources:
-        mem_mb = 6000
+        mem_mb = 25000
     input:
         files = lambda wildcards: expand(rules.selection_gbw_compute.output if wildcards.mode != 'MC_Bs2JpsiPhi_Prompt'
                                                                              else rules.apply_gb_weights_prompt.output, 
@@ -372,7 +372,7 @@ rule selection_merge_strippings:
         mode = "MC_.*"
     threads: 2
     resources:
-        mem_mb = 6000
+        mem_mb = 25000
     input:
         input_files = lambda wildcards: expand(
                 rules.selection_add_arrays.output.file if wildcards.mode == 'MC_Bs2JpsiPhi' or wildcards.mode == 'MC_Bs2JpsiPhi_Prompt'
@@ -391,10 +391,10 @@ rule selection_merge_strippings:
         'python {params.script} --input-files {input.input_files} \
                                --output-file {output}'
 
-# }}}
 
 
-# Merge PID corrected {{{
+
+# Merge PID corrected 
 
 def all_strippings(wildcards):
     strippings = selconfig['strip_sim'][wildcards.mode][wildcards.year]
@@ -417,7 +417,7 @@ rule preselection_merge_pid_corrected:
     """
     threads: 2
     resources:
-        mem_mb = 6000
+        mem_mb = 25000
     input:
         files = all_strippings
     output:
@@ -426,10 +426,10 @@ rule preselection_merge_pid_corrected:
     shell:
         'hadd {output} {input.files}'
 
-# }}}
 
 
-# Apply VETO {{{
+
+# Apply VETO 
 
 def input_to_background_veto(wildcards):
     return expand(rules.apply_bdt_selection.output,
@@ -444,7 +444,7 @@ rule selection_apply_veto:
     """
     threads: 2
     resources:
-        mem_mb = 6000
+        mem_mb = 25000
     input:
         # files = input_to_background_veto,
         files = SAMPLES + '/{year}/{mode}/{version}_elected.root',
@@ -471,7 +471,7 @@ rule selection_apply_veto:
         --selection-files {input.cuts} \
         --year {wildcards.year}) &> {log}')
 
-# }}}
+
 
 
 # vim: fdm=marker
