@@ -545,27 +545,40 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         weight = 'sWeight'
     # }}}
     # GUN_Bs2JpsiPhi {{{
-    elif m == 'GUN_Bs2JpsiPhi':
+    elif m == 'GUN_Bs2JpsiPhi' or m == 'GUN_Bs2JpsiKK_Swave':
       # WARNING: We dont chop this tuple with the @
-      if weight not in ['ready']:
+      if weight == 'kinWeight':
         weight = 'chopped'
+      if weight not in ['ready', 'chopped']:
+        weight = 'ready'
+      # elif weight == 'ready' or weight == 'selected':
+      #   weight = 'ready'
     # }}}
     # Bs2JpsiPhi_Prompt {{{
     elif m == 'Bs2JpsiPhi_Prompt':
       # WARNING: We dont chop this tuple with the @
       if weight not in ['ready']:
-        weight = 'chopped'
+        if config.base['allow_continuous']:
+            weight = 'selected'
+        else:
+            weight = 'ready'
     # }}}
     # MC_Bs2JpsiPhi_Prompt {{{
     elif m == 'MC_Bs2JpsiPhi_Prompt':
       # WARNING: We dont chop this tuple with the @
-      if weight not in ['ready', 'gbWeight']:
-        weight = 'chopped'
+      if weight not in ['ready']:
+        if config.base['allow_continuous']:
+            weight = 'selected'
+        else:
+            weight = 'ready'
     # }}}
     elif m == 'Bs2JpsiPhi_Prompt_mixPV':
       # WARNING: We dont chop this tuple with the @
       if weight not in ['ready']:
-        weight = 'chopped'
+        if config.base['allow_continuous']:
+            weight = 'ready'
+        else:
+            weight = 'ready'
     # }}}
   # print(f"{m} weight was transformed {__weight}->{weight}")
   # }}}

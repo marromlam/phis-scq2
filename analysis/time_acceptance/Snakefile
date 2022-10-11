@@ -446,7 +446,7 @@ rule lifetime_simul_Bu:
     btimeacc = lambda wcs: timeaccs(wcs, trigger='biased'),
     utimeacc = lambda wcs: timeaccs(wcs, trigger='unbiased'),
     resos = lambda wcs: expand('output/params/time_resolution/{year}/{mode}/{version}_amsrd.json',
-                               year=config.years[wcs.year],
+                               year=YEARS[wcs.year],
                                version=wcs.version, mode=wcs.mode)
   output:
     'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
