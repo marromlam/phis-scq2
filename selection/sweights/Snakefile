@@ -525,6 +525,7 @@ rule sweights_add:
     #                            ),
   output:
     root_file = temporal(SAMPLES+'/{year}/{mode}/{version}_{sweight}.root'),
+    plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{sweight}/')
   params:
     script = 'selection/sweights/sweighter.py',
   log:
@@ -538,6 +539,7 @@ rule sweights_add:
     python {params.script} \
     --input-sample {input.root_file} \
     --output-sample {output.root_file} \
+    --output-plots {output.plots} \
     --biased-weights {",".join(bpars)} \
     --unbiased-weights {",".join(upars)} \
     --mode {wildcards.mode} \
@@ -587,36 +589,37 @@ rule sweights_add_lb:
 
 # add Lb weights to Bs RD tuple {{{
 
-rule lbweights_add:
-    """Subtract the Lb background and create output file merged with provided Lb
-    mc tuple in provided data tuple."""
-    threads: 2
-    resources:
-      mem_mb=6000
-    input:
-        mcLb = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_fromLb', weight='sWeight'),
-        rdLb = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Lb', weight='sWeight'),
-        rd = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', weight='tagged'),
-        # WARNING: version is hardcoded
-        nLb = "analysis/params/lambda_b/{year}/v1r0.json"
-    output:
-        rd = temporal(SAMPLES+"/{year}/Bs2JpsiPhi/{version}_lbWeight.root"),
-    params:
-        script = 'selection/lb_add.py'
-    log:
-        'output/log/lbweights_add/{year}/Bs2JpsiPhi/{version}.log',
-    run:
-        # print(f"{output}")
-        shell(f"""(time\
-        python {params.script} \
-        --mc-lb-input {input.mcLb} \
-        --rd-lb-input {input.rdLb} \
-        --rd-input {input.rd} \
-        --number-of-lb {input.nLb} \
-        --rd-output {output.rd} \
-        --year {wildcards.year} \
-        --version {wildcards.version} \
-        ) &> {log}""")
+if config['run_tagging']:
+    rule lbweights_add:
+        """Subtract the Lb background and create output file merged with provided Lb
+        mc tuple in provided data tuple."""
+        threads: 2
+        resources:
+            mem_mb=6000
+        input:
+            mcLb = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_fromLb', weight='sWeight'),
+            rdLb = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Lb', weight='sWeight'),
+            rd = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', weight='tagged'),
+            # WARNING: version is hardcoded
+            nLb = "analysis/params/lambda_b/{year}/v1r0.json"
+        output:
+            rd = temporal(SAMPLES+"/{year}/Bs2JpsiPhi/{version}_lbWeight.root"),
+        params:
+            script = 'selection/lb_add.py'
+        log:
+            'output/log/lbweights_add/{year}/Bs2JpsiPhi/{version}.log',
+        run:
+            # print(f"{output}")
+            shell(f"""(time\
+            python {params.script} \
+            --mc-lb-input {input.mcLb} \
+            --rd-lb-input {input.rdLb} \
+            --rd-input {input.rd} \
+            --number-of-lb {input.nLb} \
+            --rd-output {output.rd} \
+            --year {wildcards.year} \
+            --version {wildcards.version} \
+            ) &> {log}""")
 
 # }}}
 
