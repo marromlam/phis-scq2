@@ -130,6 +130,13 @@ GUN_Bs2JpsiPhi:
   "genidB" : "B_ID_GenLvl"
   "mHH" : "1000*MKK"
 
+GUN_Bs2JpsiKK_Swave:
+  <<: *MC_common
+  "sWeight" : "sWeight"
+  "genidB" : "B_ID_GenLvl"
+  # "mHH" : "1000*MKK"
+  "mHH" : "X_M"
+
 # }}}
 
 
