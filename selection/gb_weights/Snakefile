@@ -371,7 +371,7 @@ rule selection_gbw_compute_prompt:
         temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_gbWeightPrompt.root')
     params:
         script = 'selection/tools/apply_weights.py',
-        variables_file = 'gb_weights/weighting_variables.yaml',
+        variables_file = 'selection/gb_weights/weighting_variables.yaml',
         weight_method = 'gb',
         output_weight_name = 'gb_weights_prompt'
     log:
