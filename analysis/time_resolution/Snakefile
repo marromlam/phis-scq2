@@ -101,7 +101,7 @@ rule time_resolution_from_git:
 # en teoria solo tiene WPV
 rule time_resolution_wpv_shape:
     input:
-        data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Prompt_mixPV', weight='chopped')
+        data = lambda wcs: tuples(wcs, version='v0r5', mode='Bs2JpsiPhi_Prompt_mixPV', weight='chopped')
     output:
         plots = directory('output/figures/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}'),
         json = 'output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}.json'
@@ -138,52 +138,59 @@ rule time_resolution_calculate_gb_weights:
 
 rule time_resolution_prompt:
     wildcard_constraints:
-        mode = '(MC_)?Bs2JpsiPhi_Prompt'
+        mode = '(MC_)?Bs2JpsiPhi_Prompt',
+        timeres = "(double|triple)(\d{1,2})of(\d{1,2})"
     input:
-        # TODO: create a wpv_shape guesser
-        wpv_shape = 'output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_classical10_{trigger}.json',
-        data = lambda wcs: tuples(wcs, weight='chopped'),
+        wpv_shape = lambda w: expand('output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}.json',
+                                     wpv=f"{config['wpv_model']}{config['wpv_nbins']}",
+                                     year=w.year, trigger=w.trigger, version=w.version),
+        data = lambda w: tuples(w, weight='chopped'),
     output:
         plots = directory('output/figures/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}'),
         json = 'output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.json',
         #       output/params/time_resolution/Bs2JpsiPhi_Prompt/v0r5_doubleClassical10_combined.json
         data_ll = SAMPLES+'/{year}/{mode}/{version}_llComponent~{timeres}~{trigger}.npy'
     params:
-        script = 'analysis/time_resolution/script1.py',
+        double = 'analysis/time_resolution/script1.py',
+        triple = 'analysis/time_resolution/script2.py',
     log:
         'output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.log'
     run:
+        script = params.double if 'double' in wildcards.timeres else params.triple
         shell(f"""(time\
-        python {params.script}\
+        python {script}\
         --in-data {input.data} \
-        --timeres {wildcards.timeres} \
-        --in-wpv {input.wpv_shape} \
-        --out-json {output.json} \
-        --out-plots {output.plots} \
-        --out-data {output.data_ll} \
+        --timeres {wildcards.timeres}\
+        --in-wpv {input.wpv_shape}\
+        --out-json {output.json}\
+        --out-plots {output.plots}\
+        --out-data {output.data_ll}\
         ) &> {log}""")
 
 
 rule time_resolution_signal:
     wildcard_constraints:
-        mode = 'MC_Bs2JpsiPhi'
+        mode = 'MC_Bs2JpsiPhi',
+        timeres = "(double|triple)(\d{1,2})of(\d{1,2})"
     input:
-        # TODO: create a wpv_shape guesser
-        wpv_shape = 'output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_classical10_{trigger}.json',
-        # data = XRootD.remote("root://eoslhcb.cern.ch//eos/lhcb/wg/B2CC/Bs2JpsiPhi-FullRun2/v0r5/OSCombined_Tuple/MC_Bs2JpsiPhi_comb/MC_Bs2JpsiPhi_2018_selected_bdt_v0r5.root"),
-        data = lambda wcs: tuples(wcs, weight='ready'),
+        wpv_shape = lambda w: expand('output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}.json',
+                                     wpv=f"{config['wpv_model']}{config['wpv_nbins']}",
+                                     year=w.year, trigger=w.trigger, version=w.version),
+        data = lambda w: tuples(w, weight='ready'),
     output:
         plots = directory('output/figures/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}'),
         json = 'output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.json',
         #       output/params/time_resolution/Bs2JpsiPhi_Prompt/v0r5_doubleClassical10_combined.json
         data_ll = SAMPLES+'/{year}/{mode}/{version}_llComponent~{timeres}~{trigger}.npy'
     params:
-        script = 'analysis/time_resolution/script1.py',
+        double = 'analysis/time_resolution/script1.py',
+        triple = 'analysis/time_resolution/script2.py',
     log:
         'output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.log'
     run:
+        script = params.double if 'double' in wildcards.timeres else params.triple
         shell(f"""(time\
-        python {params.script}\
+        python {script}\
         --in-data {input.data} \
         --timeres {wildcards.timeres} \
         --mode {wildcards.mode} \
@@ -197,16 +204,27 @@ rule time_resolution_signal:
 rule time_resolution_dilution_computation:
     wildcard_constraints:
         mode = '(MC_Bs2JpsiPhi(_Prompt)?|Bs2JpsiPhi_Prompt)',
-        timeres = "(double)"
+        timeres = "(double|triple)",
+        total_bins = "\d{1,2}"
     input:
-        # TODO: create a time_resolution_fit
-        data = lambda wcs: tuples(wcs, weight='chopped'),
-        json = expand('output/params/time_resolution_fit/{{year}}/{{mode}}/{{version}}_{{timeres}}{ibin}_{{trigger}}.json', ibin=range(1,10+1)),
-        data_ll =                       expand(SAMPLES+'/{{year}}/{{mode}}/{{version}}_llComponent~{{timeres}}{ibin}~{{trigger}}.npy', ibin=range(1,10+1))
-        #               /scratch46/marcos.romero/sidecar14/2015/Bs2JpsiPhi_Prompt/v0r5_llComponent~doubleClassical10bin3~combined.root
+        data = lambda w: tuples(w, weight='chopped'),
+        json = lambda w: expand('output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}{this_bin}of{total_bins}_{trigger}.json',
+                                year=w.year, mode=w.mode, version=w.version, trigger=w.trigger,
+                                timeres = w.timeres,
+                                # total_bins=config['timeres_nbins'],
+                                total_bins=w.total_bins,
+                                this_bin=range(1,int(w.total_bins)+1)),
+        data_ll = lambda w: expand(SAMPLES+'/{year}/{mode}/{version}_llComponent~{timeres}{this_bin}of{total_bins}~{trigger}.npy',
+                                   year=w.year, mode=w.mode, version=w.version, trigger=w.trigger,
+                                   timeres = w.timeres,
+                                   # total_bins=config['timeres_nbins'],
+                                   total_bins=w.total_bins,
+                                   this_bin=range(1,int(w.total_bins)+1)),
     output:
-        json = 'output/params/time_resolution_dilution/{year}/{mode}/{version}_{timeres}_{trigger}.json',
+        json = 'output/params/time_resolution_dilution/{year}/{mode}/{version}_{timeres}{total_bins}_{trigger}.json',
         #       output/params/time_resolution_dilution/2015/Bs2JpsiPhi_Prompt/v0r5_doubleClassical10_combined.json
+    log:
+        'output/log/time_resolution_dilution/{year}/{mode}/{version}_{timeres}{total_bins}_{trigger}.log',
     params:
         script = 'analysis/time_resolution/compute_dilution.py',
     run:
@@ -214,20 +232,21 @@ rule time_resolution_dilution_computation:
         fpars = [fpars] if isinstance(fpars,str) else fpars
         dlongl = input.json
         dlongl = [dlongl] if isinstance(dlongl,str) else dlongl
-        # _in_json = ",".join(fpars)
-        # print(_in_json)
-        shell(f'python {params.script} --data-in {input.data} \
-                               --data-ll {",".join(dlongl)} \
-                               --timeres {wildcards.timeres} \
-                               --mode {wildcards.mode} \
-                               --json-in {",".join(fpars)} \
-                               --json-out "{output.json}"')
+        shell(f"""(time python {params.script}\
+        --data-in {input.data}\
+        --data-ll {",".join(dlongl)}\
+        --timeres {wildcards.timeres}\
+        --total-bins {wildcards.total_bins}\
+        --mode {wildcards.mode}\
+        --json-in {",".join(fpars)}\
+        --json-out {output.json}\
+        ) &> {log}""")
 
 
 rule time_resolution_calibration_numerical:
     wildcard_constraints:
         mode = '(MC_Bs2JpsiPhi(_Prompt)?|Bs2JpsiPhi_Prompt)',
-        timeres = "(double)"
+        timeres = "(double|triple)",
     input:
         data = lambda wcs: tuples(wcs, weight='chopped'),
         json_bin = expand('output/params/time_resolution_fit/{{year}}/{{mode}}/{{version}}_{{timeres}}{ibin}_combined.json', ibin=range(1,10+1)),

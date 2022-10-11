@@ -38,14 +38,31 @@ def model1(time, fres, mu, sigma, fprompt, fll, fsl, fwpv, taul, taus, tau1,
   return norm * prob
 
 
+def model_bis(time,
+              fres, mu, sigma, fprompt, fll, fsl, fwpv, taul, taus, tau1,
+              tau2, share, tLL=-4, tUL=10, prob=False, norm=1):
+  """"
+  Model1: 2 resolution gaussians + long-live component + wrong PV
+  complete me
+  """
+  prog.kernel_time_fit_bis(prob, time, fres,
+                           np.float64(mu), sigma, np.float64(fprompt),
+                           np.float64(fll), np.float64(fsl), np.float64(fwpv),
+                           np.float64(taul), np.float64(taus),
+                           np.float64(tau1), np.float64(tau2), np.float64(share),
+                           np.float64(tLL), np.float64(tUL),
+                           global_size=(len(time),))
+  return norm * prob
+
+
 def fcn(params, time, prob, norm=1):
   p = params.valuesdict()
   pbin = ''
-  fres = ipanema.ristra.allocate(np.float64([1 - p[f'f{pbin}'], p[f'f{pbin}']]))
+  fres = ipanema.ristra.allocate(np.float64([p[f'f1'], p[f'f2'], p[f'f3']]))
   # fres = ipanema.ristra.allocate(np.float64([p[f'f{pbin}'], 1-p[f'f{pbin}']]))
   mu = p[f'mu{pbin}']
   sigma = ipanema.ristra.allocate(np.float64(
-      [p[f'sigma1{pbin}'], p[f'sigma2{pbin}']]))
+      [p[f'sigma1{pbin}'], p[f'sigma2{pbin}'], p[f'sigma3{pbin}']]))
   fprompt = p[f'fprompt{pbin}']
   fll = p[f'fll{pbin}']
   fsl = p[f'fsl{pbin}']
@@ -55,9 +72,9 @@ def fcn(params, time, prob, norm=1):
   tau1 = p[f'tau1{pbin}']
   tau2 = p[f'tau2{pbin}']
   share = p[f'share{pbin}']
-  model1(time=time, prob=prob, fres=fres, mu=mu, sigma=sigma,
-         fprompt=fprompt, fll=fll, fsl=fsl, fwpv=fwpv, taul=taul, taus=taus,
-         tau1=tau1, tau2=tau2, share=share, norm=norm)
+  model_bis(time=time, prob=prob, fres=fres, mu=mu, sigma=sigma,
+            fprompt=fprompt, fll=fll, fsl=fsl, fwpv=fwpv, taul=taul, taus=taus,
+            tau1=tau1, tau2=tau2, share=share, norm=norm)
   num = ipanema.ristra.get(prob)
   den = 1
   # normalization
@@ -127,64 +144,30 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
   # sigmat = RealVar(Name = 'sigmat', Observable = True, MinMax = (terr[0], terr[NBin]))
 
   DM = 17.74
-  # delta_ms = RealVar(Name = 'delta_ms', Value = 17.74)
-
-  # state_names = []
-
-  # NOT dev ### if type_nPV:
-  # NOT dev ###     for i in range(NBin):
-  # NOT dev ###         state_names += ["b{}nPV0".format(i)]
-  # NOT dev ###     for i in range(NBin):
-  # NOT dev ###         state_names += ["b{}nPV1".format(i)]
-  # if not type_nPV:
-  #      for i in range(NBin):
-  #         state_names += ["b{}".format(i)]
-
-  # sigmatCat = Category(Name = "sigmatCat", States = state_names)
-
-  # time = RealVar(Name = 'time', Observable = True, Value = 0., MinMax = (t[0], t[1]))
-
-  # Data = data(data_in, tree_name, time_range, time_error_bins, time, sigmat, state_names, sigmatCat, type_nPV, weight, cut)
-  #
-  # LERA{'Name': 'f_b0', 'Value': 0.11176278497437758, 'Error': 0.032299735913940454}
-  # LERA{'Name': 'frac1_ll_b0', 'Value': 0.3947397194675784, 'Error': 0.022004423552642215}
-  # LERA{'Name': 'frac_phys_2_b0', 'Value': 0.9453752139914314, 'Error': 0.010909009312546757}
-  # LERA{'Name': 'frac_prompt_b0', 'Value': 0.8225648776824983, 'Error': 0.007048963040368254}
-  # LERA{'Name': 'frac_tau1_b0', 'Value': 0.8192100193447707, 'Error': 0.0}
-  # LERA{'Name': 'mu_res_b0', 'Value': -0.0014090904634665863, 'Error': 0.00027745920985458133}
-  # LERA{'Name': 'sigma_par1_b0', 'Value': 0.02523478232120755, 'Error': 0.00039577215491256934}
-  # LERA{'Name': 'sigma_par2_b0', 'Value': 0.010145853353497401, 'Error': 0.0010451197103999571}
-  # LERA{'Name': 'tau1_ll_b0', 'Value': 0.10737326512206602, 'Error': 0.01562646584393622}
-  # LERA{'Name': 'tau1_wpv_b0', 'Value': 0.34871749861971346, 'Error': 0.0}
-  # LERA{'Name': 'tau2_ll_b0', 'Value': 1.3058202489411865, 'Error': 0.0462092334637594}
-  # LERA{'Name': 'tau2_wpv_b0', 'Value': 1.9181386272565453, 'Error': 0.0}
-  # LERA{'Name': 'D_b0', 'Value': 0.8959930513214064, 'Error': 0.0036077128209776486}
-  # LERA{'Name': 'sigma_eff_b0', 'Value': 0.026418447049524122, 'Error': 0.0004842659479439429}
-  # LERA{'Name': 'sigma_ave_b0', 'Value': 0.01906966521207871, 'Error': 0}
-  # LERA{'Name': 'num_b0', 'Value': 15097.0, 'Error': 122.86984984120393}
-  # LERA{'Name': 'frac_wpv_b0_', 'Value': 0.00969235558699772, 'Error': 0.00196963374798581}
-  # LERA{'Name': 'D_eff', 'Value': 0.8959930513214064, 'Error': 0.0025510382287676717}
-
-  # combData = Data[0]
   pars = ipanema.Parameters()
   pars.add(dict(name="fprompt", value=0.99,
                 min=0.1, max=1, free=True,
                 latex=r"f_{\mathrm{prompt}}"))
-  pars.add(dict(name="f", value=0.73,
-                min=0, max=1, free=True))
+
+  pars.add(dict(name="f1", value=0.73, min=0, max=1, free=True))
+  pars.add(dict(name="fproxy2", value=0.75, min=0, max=1, free=True))
+  pars.add(dict(name="f2", formula="(1-f1)*fproxy2", min=0, max=1, free=True))
+  pars.add(dict(name="f3", formula="(1-f1)*(1-fproxy2)", min=0, max=1, free=True))
+
   pars.add(dict(name="DM", value=17.74, free=False))
   pars.add(dict(name="mu", value=0,
                 min=-10, max=10, free=True))
+
   pars.add(dict(name="sigmap", value=0.025,
                 min=0.001, max=2))
   pars.add(dict(name="sigmapp", value=0.010,
                 min=0.001, max=2, free=True))
   pars.add(dict(name="sigma1",
-                formula="sigmap - sigmapp * sqrt((f)/(1-f))"))
+                formula="sigmap - sigmapp * sqrt((f2)/(1-f2))"))
   pars.add(dict(name="sigma2",
-                formula="sigmap + sigmapp * sqrt((1-f)/(f))"))
-  # pars.add(dict(name="sigma1", value=0.25, min=0.001, max=2000))
-  # pars.add(dict(name="sigma2", value=0.10, min=0.001, max=2000))
+                formula="sigmap + sigmapp * sqrt((1-f2)/(f2))"))
+  pars.add(dict(name="sigma3", value=0.20, min=0.001, max=2, free=False))
+
   pars.add(dict(name="fphys2", value=0.5 * LONG_LIVED,
                 min=0, max=1, free=LONG_LIVED,
                 latex=r"f_{\mathrm{phys}}"))
@@ -200,17 +183,35 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
   pars.add(dict(name="fwpv",
                 formula="(1-fprompt)*(1-fphys2)",
                 latex=r"f_{\mathrm{WPV}}"))
+
+
+# if (type_res == 'TRIPLE'):
+#       part1.append(FormulaVar(Name='part1_b{}'.format(i), Formula='(1 - @0 - @1)  * exp(-(1/2.) * (@2*@2) * (@3*@3))',
+#                               Arguments=[frac2_res, frac3_res, sig_res1, delta_ms]))
+#       part2.append(FormulaVar(Name='part2_b{}'.format(i), Formula='@0 * exp(-(1/2.) * (@1*@1) * (@2*@2))',
+#                               Arguments=[frac2_res, sig_res2, delta_ms]))
+#       part3.append(FormulaVar(Name='part3_b{}'.format(i), Formula='@0 * exp(-(1/2.) * (@1*@1) * (@2*@2))',
+#                               Arguments=[frac3_res, sig_res3, delta_ms]))
+#       sigma_eff.append(FormulaVar(Name='sigma_eff_b{}'.format(i), Formula='sqrt(-2. * log(@0 + @1 + @2)) / @3',
+#                                    Arguments=[part1[i], part2[i], part3[i], delta_ms]))
+#
+  # png_pars.append( { "Name" : sigma_eff[i].GetName(), "Value" : sigma_eff[i].getVal(), "Error" : sigma_eff[i].getPropagatedError(fitresults[i]) }  )
+  # png_pars.append( { "Name" : 'sigma_ave_b{}'.format(i), "Value" : (data_Prompt[i].meanVar(sigmat._var)).getVal(), "Error" : 0 } )
+  #
+
   # pars.add(dict(name="fwpv", formula="(1-fprompt)"))
   # add wpv parameters
   wpv_shape.lock()
   pars = pars + wpv_shape
   # parameters for calculation
-  pars.add(
-      dict(name="part1", formula="(1-f) * exp(-(1/2.) * (sigma1*sigma1) * (DM*DM))"))
-  pars.add(
-      dict(name="part2", formula="f  * exp(-(1/2.) * (sigma2*sigma2) * (DM*DM))"))
-  pars.add(dict(name="dilution", formula="part1 + part2"))
-  pars.add(dict(name="sigmaeff", formula="sqrt(-2*log(part1+part2))/DM"))
+  pars.add(dict(name="part1",
+                formula="(1-f2-f3) * exp(-(1/2.) * (sigma1*sigma1) * (DM*DM))"))
+  pars.add(dict(name="part2",
+                formula="f2  * exp(-(1/2.) * (sigma2*sigma2) * (DM*DM))"))
+  pars.add(dict(name="part3",
+                formula="f3  * exp(-(1/2.) * (sigma3*sigma3) * (DM*DM))"))
+  pars.add(dict(name="dilution", formula="part1 + part2 + part3"))
+  pars.add(dict(name="sigmaeff", formula="sqrt(-2*log(part1+part2+part3))/DM"))
   print(pars)
 
   # fit
@@ -226,36 +227,35 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
     v.max = +np.inf
     v.set(value=res.params[k].value, min=-np.inf, max=np.inf)
 
-  wexp = uncertainties.wrap(np.exp)
-  wlog = uncertainties.wrap(np.log)
-  wsqrt = uncertainties.wrap(np.sqrt)
-  pars = res.params
-  f = pars['f'].uvalue
-  sigma1 = pars['sigmap'].uvalue - pars['sigmapp'].uvalue * ((f) / (1 - f))**0.5
-  sigma2 = pars['sigmap'].uvalue + pars['sigmapp'].uvalue * ((1 - f) / (f))**0.5
-  exp1 = wexp(-(1 / 2.) * (sigma1 * pars['DM'].value)**2)
-  exp2 = wexp(-(1 / 2.) * (sigma2 * pars['DM'].value)**2)
-  part1 = (1 - pars['f'].uvalue) * exp1
-  part2 = (0 + pars['f'].uvalue) * exp2
-  dilution = part1 + part2
-  sigmaeff = wsqrt(-2 * wlog(part1 + part2)) / pars['DM'].value
-  pars['sigmaeff'].set(value=sigmaeff.n, stdev=sigmaeff.s)
-  pars['dilution'].set(value=dilution.n, stdev=dilution.s)
-  sigma_ave = np.mean(ipanema.ristra.get(sigmatd))
-  pars.add(dict(name='sigmaAverage', value=sigma_ave, stdev=0))
-  nevts = len(timed)
-  nevts = uncertainties.ufloat(nevts, np.sqrt(nevts))
-  pars.add(dict(name='nevts', value=nevts.n, stdev=nevts.s))
-  print(f"Dilution:          {dilution:.2uL}")
-  print(f"Sigma:             {sigmaeff:.2uL}")
-  print(f"Average of sigmat: {sigma_ave}")
-  print(f"Number of events:  {nevts:.2uL}")
-  print("New set of parameters")
-  print(pars)
+  # wexp = uncertainties.wrap(np.exp)
+  # wlog = uncertainties.wrap(np.log)
+  # wsqrt = uncertainties.wrap(np.sqrt)
+  # pars = res.params
+  # f = pars['f'].uvalue
+  # sigma1 = pars['sigmap'].uvalue - pars['sigmapp'].uvalue * ((f) / (1 - f))**0.5
+  # sigma2 = pars['sigmap'].uvalue + pars['sigmapp'].uvalue * ((1 - f) / (f))**0.5
+  # exp1 = wexp(-(1 / 2.) * (sigma1 * pars['DM'].value)**2)
+  # exp2 = wexp(-(1 / 2.) * (sigma2 * pars['DM'].value)**2)
+  # part1 = (1 - pars['f'].uvalue) * exp1
+  # part2 = (0 + pars['f'].uvalue) * exp2
+  # dilution = part1 + part2
+  # sigmaeff = wsqrt(-2 * wlog(part1 + part2)) / pars['DM'].value
+  # pars['sigmaeff'].set(value=sigmaeff.n, stdev=sigmaeff.s)
+  # pars['dilution'].set(value=dilution.n, stdev=dilution.s)
+  # sigma_ave = np.mean(ipanema.ristra.get(sigmatd))
+  # pars.add(dict(name='sigmaAverage', value=sigma_ave, stdev=0))
+  # nevts = len(timed)
+  # nevts = uncertainties.ufloat(nevts, np.sqrt(nevts))
+  # pars.add(dict(name='nevts', value=nevts.n, stdev=nevts.s))
+  # print(f"Dilution:          {dilution:.2uL}")
+  # print(f"Sigma:             {sigmaeff:.2uL}")
+  # print(f"Average of sigmat: {sigma_ave}")
+  # print(f"Number of events:  {nevts:.2uL}")
+  # print("New set of parameters")
+  # print(pars)
 
   timeh = ipanema.ristra.get(timed)
   sigmath = ipanema.ristra.get(sigmatd)
-  # sigmath = np.float64(cdf[sigmat].values)
   probh = 0 * timeh
 
   # _mass = ristra.get(rd.mass)
@@ -287,7 +287,7 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
       # _p[f].set(value=fpars[pspecie].value, min=-np.inf, max=np.inf)
       if f.startswith('f') and f != pspecie:
         # print(f"looking at {f}")
-        if len(f) == 1:
+        if len(f) == 2:
           0
           # print('f as is')
         elif 'fphys' in f:

@@ -10,6 +10,7 @@ import argparse
 import uproot3 as uproot
 import numpy as np
 import complot
+from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
 
 __all__ = []
 __author__ = ["Marcos Romero Lamas"]
@@ -199,11 +200,21 @@ def extract_wpv_shape(df, wpv='classical', bin_sigmat=False,
             _x = ipanema.ristra.linspace(tLL, tUL, 200)
             _y = 0*ipanema.ristra.linspace(tLL, tUL, 200)
             _y = wpv_component_pdf(time=_x, prob=_y, **pars.valuesdict())
-            axplot.plot(ipanema.ristra.get(_x),
-                        histo.norm * ipanema.ristra.get(_y))
-            axplot.plot(histo.bins, histo.counts, '.k')
+            __x = ipanema.ristra.get(_x)
+            __y = ipanema.ristra.get(_y) * histo.norm
+            axplot.plot(__x, __y)
+            axplot.errorbar(histo.bins, histo.counts, yerr=histo.yerr,
+                            xerr=histo.xerr, fmt='.', color='k')
+            pulls = complot.compute_pdfpulls(__x, __y, histo.bins, histo.counts,
+                                             *histo.yerr)
+            axpull.fill_between(histo.bins, pulls, 0)
+            axplot.set_ylabel('Candidates')
+            axpull.set_xlabel(r'$t$ [ps]')
+            v_mark = 'LHC$b$'  # watermark plots
+            tag_mark = 'THIS THESIS'
             plots[f"fit{pbin}"] = fig
             axplot.set_yscale('log')
+            watermark(axplot, version=v_mark, tag=tag_mark, scale=10.3)
             plots[f"logfit{pbin}"] = fig
     if with_plots:
         return pars, plots
