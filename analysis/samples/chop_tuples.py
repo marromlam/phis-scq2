@@ -72,6 +72,10 @@ vsub_dict = {
     "pid2": 'hplus_ProbNNk_corr>0.876 & hplus_ProbNNk_corr<0.965',
     "pid3": 'hplus_ProbNNk_corr>0.965 & hplus_ProbNNk_corr<0.996',
     "pid4": 'hplus_ProbNNk_corr>0.996',
+    "PID1": "( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=12.40) & (hplus_PIDK>0.0) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=12.40) & (hminus_PIDK>0.0) )",
+    "PID2": "( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=20.25) & (hplus_PIDK>12.40) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=20.25) & (hminus_PIDK>12.40) )",
+    "PID3": "( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=29.78) & (hplus_PIDK>20.25) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=29.78) & (hminus_PIDK>20.25) )",
+    "PID4": "( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=129.14) & (hplus_PIDK>29.78) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=129.14) & (hminus_PIDK>29.78) )",
     # prymary vertex cut
     "PV1": 'nPVs==1',
     "PV2": 'nPVs==2',
@@ -171,6 +175,8 @@ if __name__ == "__main__":
           print("Cut in cosK was only planned in Bd")
         elif (k in ("LSB", "RSB")) and 'Bs2JpsiPhi' != m:
           print("Cut in LSB and RSB was only planned in Bs RD")
+        elif (k in ("PID1", "PID2", "PID3", "PID4")) and 'Bs2JpsiPhi' not in m:
+          print("PID cut was only planned in Bs modes")
         else:
           list_of_cuts.append(v)
         if noe == 0:
