@@ -232,7 +232,7 @@ def do_fit(tLL, tUL, verbose=False):
   result = optimize(fcn_data, method='minuit', params=pars,
                     fcn_kwgs=dict(data=data, tLL=tLL, tUL=tUL), verbose=True,
                     timeit=True, tol=0.05, strategy=2)
-  print(result.params)
+  # print(result.params)
   # print fit results
   # print(result) # parameters are not blinded, so we dont print the result
   if not '2018' in data.keys() and not '2017' in data.keys():
@@ -844,7 +844,9 @@ if __name__ == '__main__':
     csp = Parameters.load(csp_factors[i])
     resolution = Parameters.load(time_resolution[i])
     flavor = Parameters.load(flavor_tagging[i])
-    mass = np.array(csp.build(csp, csp.find('mKK.*'))).tolist()
+    mass = np.array(csp.build(csp, csp.find('mKK.*')))
+    print(mass)
+    badjanak.config['mHH'] = mass.tolist()
 
     for t in ['biased', 'unbiased', 'combined']:
       data[y][t] = Sample.from_root(samples_data[i],
@@ -892,21 +894,15 @@ if __name__ == '__main__':
 
   print(f"\nFitting parameters\n{80*'='}")
   global pars
+  SWAVE = True
+  mass_knots = badjanak.config['mHH']
   pars = Parameters()
 
   # S wave fractions
-  pars.add(dict(name='fSlon1', value=0.480, min=0.00, max=0.90,
-                free=True, latex=r'f_S^{1}'))
-  pars.add(dict(name='fSlon2', value=0.040, min=0.00, max=0.90,
-                free=True, latex=r'f_S^{2}'))
-  pars.add(dict(name='fSlon3', value=0.004, min=0.00, max=0.90,
-                free=True, latex=r'f_S^{3}'))
-  pars.add(dict(name='fSlon4', value=0.009, min=0.00, max=0.90,
-                free=True, latex=r'f_S^{4}'))
-  pars.add(dict(name='fSlon5', value=0.059, min=0.00, max=0.90,
-                free=True, latex=r'f_S^{5}'))
-  pars.add(dict(name='fSlon6', value=0.130, min=0.00, max=0.90,
-                free=True, latex=r'f_S^{6}'))
+  for i in range(len(mass_knots) - 1):
+    pars.add(dict(
+        name=f'fSlon{i+1}', value=SWAVE * 0.0, min=0.00, max=0.90,
+        free=SWAVE, latex=rf'|A_S^{{{i+1}}}|^2'))
 
   # P wave fractions
   pars.add(dict(name="fPlon", value=0.5240, min=0.4, max=0.6,
@@ -925,18 +921,14 @@ if __name__ == '__main__':
                 free=False, latex=r"\phi_{\perp} - \phi_0"))
 
   # S wave strong phases
-  pars.add(dict(name='dSlon1', value=+2.34, min=-0.0, max=+4.0,
-                free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon2', value=+1.64, min=-0.0, max=+4.0,
-                free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon3', value=+1.09, min=-0.0, max=+4.0,
-                free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon4', value=-0.25, min=-4.0, max=+0.0,
-                free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon5', value=-0.48, min=-4.0, max=+0.0,
-                free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
-  pars.add(dict(name='dSlon6', value=-1.18, min=-4.0, max=+0.0,
-                free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
+  for i in range(len(mass_knots) - 1):
+    phase = np.linspace(2.3, -1.2, len(mass_knots) - 1)[i]
+    pars.add(dict(
+        name=f'dSlon{i+1}', value=SWAVE * phase,
+        min=0 if 2 * i < (len(mass_knots) - 1) else -4,
+        max=4 if 2 * i < (len(mass_knots) - 1) else 0,
+        free=SWAVE,
+        latex=rf"\delta_S^{{{i+1}}} - \delta_{{\perp}} \, \mathrm{{[rad]}}"))
 
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-2 * 3.14, max=2 * 3.14,
@@ -1010,7 +1002,7 @@ if __name__ == '__main__':
   # The iterative procedure starts ---------------------------------------------
 
   # update kernels with the given modifications
-  badjanak.get_kernels()
+  badjanak.get_kernels(True)
 
   # run the procedure!
 
@@ -1030,9 +1022,9 @@ if __name__ == '__main__':
   # ld_p.plot(ld_x, ld_y, xlabel='iteration', label='likelihood',xlim=(0,30))
   # ld_p.show()
 
-  # Storing some weights in disk -----------------------------------------------
-  #     For future use of computed weights created in this loop, these should be
-  #     saved to the path where samples are stored.
+  # Storing some weights in disk ----------------------------------------------
+  #     For future use of computed weights created in this loop, these should
+  #     be saved to the path where samples are stored.
   #     GBweighting is slow enough once!
   print('Storing weights in root file')
   for y, dy in mc.items():  #  loop over years
@@ -1059,3 +1051,6 @@ if __name__ == '__main__':
         f['DecayTree'] = uproot.newtree({var: np.float64 for var in pool.keys()})
         f['DecayTree'].extend(pool)
   print(f' * Succesfully writen')
+
+
+# vim: fdm=marker ts=2 sw=2 sts=2 sr et
