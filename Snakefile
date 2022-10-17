@@ -92,6 +92,7 @@ include: 'analysis/angular_fit/Snakefile'
 include: 'analysis/params/Snakefile'
 include: 'analysis/what_the_hell/Snakefile'
 include: 'analysis/toys/Snakefile'
+include: 'analysis/systematics/Snakefile'
 include: 'packandgo/Snakefile'
 
 # }}}
