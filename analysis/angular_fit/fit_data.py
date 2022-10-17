@@ -158,8 +158,11 @@ if __name__ == "__main__":
       # Normalize sWeights per bin
       sw = np.zeros_like(data[y][t].df['time'])
       for ml, mh in zip(mass[:-1], mass[1:]):
-        pos = data[y][t].df.eval(f'mHH>={ml} & mHH<{mh}')
-        _sw = data[y][t].df.eval(f'{weight}*(mHH>={ml} & mHH<{mh})')
+        # for tl, th in zip([0.3, 0.92, 1.97], [0.92, 1.97, 15]):
+        # sw_cut = f'mHH>={ml} & mHH<{mh} & time>={tl} &  time<{th}'
+        sw_cut = f'mHH>={ml} & mHH<{mh}'
+        pos = data[y][t].df.eval(sw_cut)
+        _sw = data[y][t].df.eval(f'{weight}*({sw_cut})')
         sw = np.where(pos, _sw * (sum(_sw) / sum(_sw * _sw)), sw)
       data[y][t].df['sWeightCorr'] = sw
       print(np.sum(sw))
@@ -343,7 +346,7 @@ if __name__ == "__main__":
                 latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps^{-1}]}"))
   pars.add(dict(name="DM", value=17.757, min=15.0, max=20.0,
                 free=True,
-                latex=r"\Delta m_s \, \mathrm{[ps]}^{-1}"))
+                latex=r"\Delta m_s \, \mathrm{[ps^{-1}]}"))
 
   # tagging
   pars.add(dict(name="eta_os",
