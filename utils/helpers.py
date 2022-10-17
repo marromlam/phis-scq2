@@ -230,7 +230,7 @@ def version_guesser(version):
         # only OS, SS or fully tagged events
         r"(only(OST|SST|OSS))?",
         # split in pTB, etaB and sigmat bins: for systematics
-        r"((pTB|pXB|pYB|etaB|sigmat|pid|PV)(\d{1}))?"
+        r"((pTB|pXB|pYB|etaB|sigmat|pid|PID|PV)(\d{1}))?"
         # split tuple by event number: useful for MC tests and crosschecks
         # Odd is plays data role and MC is Even
         r"(evtOdd|evtEven)?",
