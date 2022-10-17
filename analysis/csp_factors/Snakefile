@@ -114,12 +114,13 @@ rule csp_factors_merge:
     wildcard_constraints:
         mode = "(Bs2JpsiPhi)"
     input:
-        lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiKK_Swave/{version}_yearly{nbins}.json',
+        # lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiKK_Swave/{version}_yearly{nbins}.json',
+        lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiPhi/{version}_yearly{nbins}.json',
                          year=w.year if w.csp =="yearly" else YEARS[w.csp],
                          version=w.version,
                          nbins=w.nbins),
     output:
-        'output/params/csp_factors/{year}/{mode}/{version}_{csp,}{nbins,\d{1}}.json',
+        'output/params/csp_factors/{year}/{mode}/{version}_{csp}{nbins,\d{1}}.json',
     log:
         "output/log/csp_factors_calculate/{year}/{mode}/{version}_{csp}{nbins}.log"
     run:
@@ -128,6 +129,9 @@ rule csp_factors_merge:
         import numpy as np
         pars = f"{input}".split(' ')
         print(pars)
+        if len(pars) < 2:
+            shell(f"cp {input} {output}")
+            return
         pars = [ipanema.Parameters.load(p) for p in pars]
         for p in pars:
             print(p)
@@ -152,7 +156,7 @@ rule csp_factors_merge:
                   name=k, value=avg.n, stdev=avg.s, free=False
                   ))
         print(merged)
-        shell(f"cp {input} {output}")
+        merged.dump(f"{output}")
 
 
 # rule csp_factors_merge_files_for_Csp:
