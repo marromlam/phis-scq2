@@ -1,0 +1,25 @@
+rule systematic_general:
+    input:
+        "output/params/physics_params/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.json"
+    output:
+        "output/params/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_{syst}.json"
+
+
+systematics_list = [
+    "mass_factorization"
+]
+rule systematic_tabulate:
+    input:
+        pars = "output/params/physics_params/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.json",
+        syst = lambda w: expand(
+            "output/params/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_{syst}.json",
+            syst=systematics_list)
+    output:
+        "output/tables/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_total.tex"
+    run:
+        shell(f"""
+        time python analysis/systematics/generate_table.py\
+        --input-pars {input.pars}\
+        --input-systs {','.join(input.pars)}\
+        --output-table {output}
+        """)
