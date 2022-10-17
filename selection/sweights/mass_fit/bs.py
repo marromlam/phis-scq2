@@ -4,6 +4,9 @@ __email__ = ["mromerol@cern.ch"]
 
 from analysis.csp_factors.efficiency import (create_mass_bins,
                                              create_time_bins,
+                                             create_cosL_bins,
+                                             create_cosK_bins,
+                                             create_hphi_bins,
                                              create_sigmam_bins)
 from utils.helpers import cuts_and, trigger_scissors
 import config
@@ -60,6 +63,9 @@ def get_bin_from_version(version, subbin, mode):
   pattern = [
       "(mX(1|2|3|4|5|6))?",
       "(time(1|2|3|4))?",
+      "(cosL(1|2|3|4))?",
+      "(cosK(1|2|3|4))?",
+      "(hphi(1|2|3|4))?",
       "(sigmam(1|2|3|4))?",
   ]
   pattern = rf"\A{''.join(pattern)}\Z"
@@ -69,7 +75,10 @@ def get_bin_from_version(version, subbin, mode):
       q = p.search(w).groups()
       mX_bins = int(q[1]) if q[0] else 1
       time_bins = int(q[3]) if q[2] else 1
-      sigmam_bins = int(q[5]) if q[4] else 1
+      cosK_bins = int(q[5]) if q[4] else 1
+      cosL_bins = int(q[7]) if q[6] else 1
+      hphi_bins = int(q[9]) if q[8] else 1
+      sigmam_bins = int(q[11]) if q[10] else 1
     except:
       raise ValueError(f'Cannot interpret {w} as a sWeight config')
   # pattern = rf"\A{''.join(pattern)}\Z"
@@ -83,19 +92,27 @@ def get_bin_from_version(version, subbin, mode):
       q = p.search(subbin).groups()
       mX = int(q[1]) if q[0] else 1
       time = int(q[3]) if q[2] else 1
-      sigmam = int(q[5]) if q[4] else 1
+      cosK = int(q[5]) if q[4] else 1
+      cosL = int(q[7]) if q[6] else 1
+      hphi = int(q[9]) if q[8] else 1
+      sigmam = int(q[11]) if q[10] else 1
     except:
       raise ValueError(f'Cannot interpret {w} as a subbin')
   print(f"from subbin = {subbin} :: {mX}, {time}, {sigmam}")
   # create bins limits
   mXLL, mXUL = create_mass_bins(int(mX_bins))[mX - 1:mX + 1]
   timeLL, timeUL = create_time_bins(int(time_bins))[time - 1:time + 1]
-  # timeLL, timeUL, = 0.3, 15  # TODO: fix this
+  cosKLL, cosKUL = create_cosK_bins(int(cosK_bins))[cosK - 1:cosK + 1]
+  cosLLL, cosLUL = create_cosL_bins(int(cosL_bins))[cosL - 1:cosL + 1]
+  hphiLL, hphiUL = create_hphi_bins(int(hphi_bins))[hphi - 1:hphi + 1]
   sigmamLL, sigmamUL = create_sigmam_bins(int(sigmam_bins))[sigmam - 1:sigmam + 1]
   # list of cuts
   list_of_cuts = [
       f"X_M > {mXLL} & X_M < {mXUL}",
       f"time > {timeLL} & time < {timeUL}",
+      f"helcosthetaK > {cosKLL} & helcosthetaK < {cosKUL}",
+      f"helcosthetaL > {cosLLL} & helcosthetaL < {cosLUL}",
+      f"helphi > {hphiLL} & helphi < {hphiUL}",
       f"B_ConstJpsi_MERR_1 > {sigmamLL} & B_ConstJpsi_MERR_1 < {sigmamUL}",
   ]
   cuts = f"( {' ) & ( '.join(list_of_cuts)} )"
@@ -696,7 +713,7 @@ def mass_fitter(
         dict(name="s0Bs", value=0, min=0, max=50, free=False, latex=r"p_0^{B_s}")
     )
     pars.add(
-        dict(name="s1Bs", value=0.7, min=-5, max=10, free=True, latex=r"p_1^{B_s}")
+        dict(name="s1Bs", value=0.67, min=-5, max=10, free=True, latex=r"p_1^{B_s}")
     )
     pars.add(
         dict(name="s2Bs", value=0.00, min=-1, max=1, free=True, latex=r"p_2^{B_s}")
@@ -715,7 +732,6 @@ def mass_fitter(
   if input_pars:
     _pars = ipanema.Parameters.clone(input_pars)
     _pars.lock()
-    print(_pars)
     if with_calib:
       _pars.remove("fsigBs", "muBs")
       pars.remove("s1Bs", "s2Bs")
@@ -726,7 +742,6 @@ def mass_fitter(
       _pars.unlock("s0Bs")
     _pars.unlock("b")
     if 'lambd' in _pars:
-      # pars.remove("lambd")
       _pars.unlock("lambd")
     pars = pars + _pars
   else:
@@ -781,14 +796,14 @@ def mass_fitter(
       # }}}
     # Combinatorial background
     pars.add(dict(name='b', value=-0.05, min=-1, max=1, free=False, latex=r'b'))
-    pars.add(dict(name='fcomb', formula="1-fsigBs", latex=r'N_{comb}'))
+    pars.add(dict(name='fcomb', formula="1-fsigBs", latex=r'f_{comb}'))
 
   if has_bd:
     # Create common set of Bd parameters
     DMsd = 5366.89 - 5279.63
     DMsd = 87.26
     pars.add(
-        dict(name="fsigBd", value=0.01, min=0, max=1, free=True, latex=r"N_{B_d}")
+        dict(name="fsigBd", value=0.01, min=0, max=1, free=True, latex=r"f_{B_d^0}")
     )
     pars.add(dict(name="muBd", formula=f"muBs-{DMsd}", latex=r"\mu_{B_d}"))
     # pars.add(dict(name='sigmaBd',   value=1,    min=5,    max=20,    free=True,  latex=r'\sigma_{B_d}'))
@@ -818,7 +833,7 @@ def mass_fitter(
     # Combinatorial background
     pars.pop("fcomb")
     pars.add(dict(name="fcomb", formula="1-fsigBs-fsigBd",
-                  min=0, max=1, latex=r"N_{comb}"))
+                  min=0, max=1, latex=r"f_{comb}"))
 
   # finally, set mass lower and upper limits
   pars.add(dict(name="mLL", value=mLL, free=False, latex=r"m_{ll}"))
@@ -866,7 +881,7 @@ def mass_fitter(
       pars['lambd'].set(value=_pars['lambd'].value, init=-1.5, free=False)
 
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                           method='minuit', verbose=False, strategy=1,
+                           method='minuit', verbose=True, strategy=1,
                            tol=0.1)
     if with_calib:
       pars = ipanema.Parameters.clone(res.params)
@@ -875,7 +890,7 @@ def mass_fitter(
       pars["s2Bs"].set(value=0.1, init=0.1, min=-1, max=1, free=True)
       pars["s0Bs"].set(value=0.0, init=0.0, min=0.0, free=False)
       res = ipanema.optimize(fcn, pars, fcn_kwgs={"data": rd},
-                             method="minuit", verbose=False, strategy=2,
+                             method="minuit", verbose=True, strategy=2,
                              tol=0.05)
     pars = ipanema.Parameters.clone(res.params)
     for k, v in pars.items():
@@ -884,7 +899,7 @@ def mass_fitter(
     if 'lambd' in pars:
       pars.unlock('lambd')
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                           method='minuit', verbose=False, strategy=2,
+                           method='minuit', verbose=True, strategy=2,
                            tol=0.05)
 
   if res:
@@ -1036,7 +1051,8 @@ if __name__ == '__main__':
   else:
     input_pars = False
 
-  branches = ["B_ConstJpsi_M_1", "B_ConstJpsi_MERR_1", "hlt1b", "X_M", 'time']
+  branches = ["B_ConstJpsi_M_1", "B_ConstJpsi_MERR_1", "hlt1b", "X_M",
+              'time', 'helcosthetaK', 'helcosthetaL', 'helphi']
 
   if args["mass_weight"]:
     mass_weight = args["mass_weight"]

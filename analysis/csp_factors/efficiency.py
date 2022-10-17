@@ -110,6 +110,102 @@ def create_time_bins(nob):
   return mass_bins
 
 
+def create_cosK_bins(nob):
+  """
+  Creates a set of bins
+
+  Parameters
+  ----------
+  nob: int
+    Number of mass bins to be created.
+
+  Returns
+  -------
+  mass_bins: list
+    List with the edges for the required number of bins.
+  """
+
+  if int(nob) == 1:
+    mass_bins = [-1, 1]
+  elif int(nob) == 2:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 3:
+    mass_bins = [-1, -0.30365096, 0.30543088, 1]
+  elif int(nob) == 4:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 5:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 6:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  else:
+    raise ValueError("Number of bins cannot be higher than 6")
+  return mass_bins
+
+
+def create_cosL_bins(nob):
+  """
+  Creates a set of bins
+
+  Parameters
+  ----------
+  nob: int
+    Number of mass bins to be created.
+
+  Returns
+  -------
+  mass_bins: list
+    List with the edges for the required number of bins.
+  """
+
+  if int(nob) == 1:
+    mass_bins = [-1, 1]
+  elif int(nob) == 2:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 3:
+    mass_bins = [-1, -0.30443096, 0.30577088, 1]
+  elif int(nob) == 4:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 5:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 6:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  else:
+    raise ValueError("Number of bins cannot be higher than 6")
+  return mass_bins
+
+
+def create_hphi_bins(nob):
+  """
+  Creates a set of bins
+
+  Parameters
+  ----------
+  nob: int
+    Number of mass bins to be created.
+
+  Returns
+  -------
+  mass_bins: list
+    List with the edges for the required number of bins.
+  """
+
+  if int(nob) == 1:
+    mass_bins = [-3.15, 3.15]
+  elif int(nob) == 2:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 3:
+    mass_bins = [-3.14158648, -1.03376272, 1.0352542, 3.14158675]
+  elif int(nob) == 4:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 5:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  elif int(nob) == 6:
+    mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
+  else:
+    raise ValueError("Number of bins cannot be higher than 6")
+  return mass_bins
+
+
 def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
   r"""
   Get efficiency

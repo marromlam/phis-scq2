@@ -421,16 +421,19 @@ def guess_massbins(wcs, version=False, mode=False):
     else:
         v, w = v[0], False
     # print(v, w, c)
-    if not w:
-        if 'Bs' in mode:
-            w = 'mX6'
-        else:
-            w = ''
+    if 'Bs' in mode:
+      if not w:
+        w = 'mX6'
+    else:
+        w = ''
 
     # print(v, w, c)
     pattern = [
         "(mX(1|2|3|4|5|6))?",
         "(time(1|2|3|4))?",
+        "(cosL(1|2|3|4))?",
+        "(cosK(1|2|3|4))?",
+        "(hphi(1|2|3|4))?",
         "(sigmam(1|2|3|4))?",
     ]
     pattern = rf"\A{''.join(pattern)}\Z"
@@ -439,7 +442,10 @@ def guess_massbins(wcs, version=False, mode=False):
         q = p.search(w).groups()
         mX = int(q[1]) if q[0] else False
         time = int(q[3]) if q[2] else False
-        sigmam = int(q[5]) if q[4] else False
+        cosL = int(q[5]) if q[4] else False
+        cosK = int(q[7]) if q[6] else False
+        hphi = int(q[9]) if q[8] else False
+        sigmam = int(q[11]) if q[10] else False
 
         if mX:
             mX = [f'mX{i}' for i in range(1, mX+1)]
@@ -451,6 +457,21 @@ def guess_massbins(wcs, version=False, mode=False):
         else:
             time = ['']
 
+        if cosL:
+            cosL = [f'cosL{i}' for i in range(1, cosL+1)]
+        else:
+            cosL = ['']
+
+        if cosK:
+            cosK = [f'cosK{i}' for i in range(1, cosK+1)]
+        else:
+            cosK = ['']
+
+        if hphi:
+            hphi = [f'hphi{i}' for i in range(1, hphi+1)]
+        else:
+            hphi = ['']
+
         if sigmam:
             sigmam = [f'sigmam{i}' for i in range(1, sigmam+1)]
         else:
@@ -459,8 +480,11 @@ def guess_massbins(wcs, version=False, mode=False):
         caca = []
         for b1 in mX:
             for b2 in time:
-                for b3 in sigmam:
-                    caca.append(f"{b1}{b2}{b3}")
+                for b3 in cosL:
+                    for b4 in cosK:
+                        for b5 in hphi:
+                            for b6 in sigmam:
+                                caca.append(f"{b1}{b2}{b3}{b4}{b5}{b6}")
     except:
         raise ValueError(f'Cannot interpret {w} as a sWeight config')
     return caca
