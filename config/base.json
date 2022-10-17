@@ -1,5 +1,5 @@
 {
-  "version": "v2r0",
+  "version": "v4r0",
   "year": "run2",
   "fit": "auto",
   "angacc": "run2Dual",
@@ -17,7 +17,7 @@
   "randomize_flavor": false,
   "velo_effmodel": "francesca",
   "velo_massmodel": "cb",
-  "bs_mass_model": "ipatia",
+  "bs_mass_model": "cbcalib",
   "bs_mass_bins": [
     "mX1",
     "mX2",
