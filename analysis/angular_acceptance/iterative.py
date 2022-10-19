@@ -198,13 +198,18 @@ def merge_std_dg0(std, dg0, verbose=True, label=''):
     for j in range(1, cov_comb.shape[1]):
       corr[k, j] = cov_comb[k][j] / np.sqrt(cov_comb[k][k] * cov_comb[j][j])
 
+  print(corr)
   # Create parameters std_w
   out = Parameters()
   for k, wk in enumerate(std.keys()):
-    correl = {f'{wk}{label}': corr[k][j] for j in range(0, len(w)) if k > 0 and j > 0}
     out.add({'name': f'{wk}{label}', 'value': w[k], 'stdev': uw[k],
-             'free': False, 'latex': f'{std[wk].latex}^{label}', 'correl': correl})
+             'free': False, 'latex': f'{std[wk].latex}^{label}'})
+  for k, wk in enumerate(std.keys()):
+    print(wk, label)
+    correl = {f'w{j}{label}': corr[k][j] for j in range(0, len(w)) if k > 0 and j > 0}
+    out[f'{wk}{label}'].correl = correl
 
+  print(out.corr())
   if verbose:
     print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
     for k, wk in enumerate(std.keys()):
@@ -322,7 +327,7 @@ def do_pdf_weighting(tLL: float, tUL: float, verbose: bool):
 # }}}
 
 
-def do_kkp_weighting(verbose):
+def do_kkp_weighting(verbose, kinematic_bmeson=False):
   # 3rd step: kinematic weights ----------------------------------------------
   #    We need to change badjanak to handle MC samples and then we compute the
   #    desired pdf weights for a given set of fitted pars in step 1. This
@@ -331,6 +336,10 @@ def do_kkp_weighting(verbose):
   #    the GBweighter gives different results when having those 0s or having
   #    nothing after cutting the sample.
   global mc, data, weight_rd, weight_mc
+  weighting_branches = ['pTHm', 'pTHp', 'pHm', 'pHp']
+  if kinematic_bmeson:
+    weighting_branches += ['pTB', 'pB', 'mHH']
+    print("Adding kinematic B branches to reweighter.")
 
   threads = list()
   for y, dy in mc.items():  #  loop over years
@@ -338,7 +347,7 @@ def do_kkp_weighting(verbose):
       for t, v in dm.items():  # loop in triggers
         # original variables + weight (mc)
         j = len(v.pdfWeight.keys())
-        ov = v.df[['pTHm', 'pTHp', 'pHm', 'pHp']]
+        ov = v.df[weighting_branches]
         ow = v.df.eval(f'angWeight*polWeight*{weight_mc}')
         # WARNING: old school procedure:
         # ov  = v.df[['pTHm','pTHp','pHm','pHp']]
@@ -347,7 +356,7 @@ def do_kkp_weighting(verbose):
         print(v.pdfWeight[j])
         ow *= v.pdfWeight[j]
         # target variables + weight (real data)
-        tv = data[y][t].df[['pTHm', 'pTHp', 'pHm', 'pHp']]
+        tv = data[y][t].df[weighting_branches]
         tw = data[y][t].df.eval(weight_rd)
         # Run multicore (about 15 minutes per iteration)
         job = multiprocessing.Process(
@@ -458,7 +467,7 @@ def do_mc_combination(verbose=False, triggers=['biased', 'unbiased']):
   return checker, check_dict
 
 
-def angular_acceptance_iterative_procedure(tLL, tUL, verbose=False, iteration=0):
+def angular_acceptance_iterative_procedure(tLL, tUL, verbose=False, iteration=0, kinematic_bmeson=False):
   global pars
 
   itstr = f"[iteration #{iteration}]"
@@ -477,7 +486,7 @@ def angular_acceptance_iterative_procedure(tLL, tUL, verbose=False, iteration=0)
   # 3 kkpWeight MC to RD to match K+ and K- kinematic distributions
   print(f'\n{itstr} Kinematic reweighting MC samples in K momenta')
   t0 = timer()
-  do_kkp_weighting(verbose)
+  do_kkp_weighting(verbose, kinematic_bmeson=kinematic_bmeson)
   tf = timer() - t0
   print(f'Kinematic weighting took {tf:.3f} seconds.')
 
@@ -498,13 +507,13 @@ def angular_acceptance_iterative_procedure(tLL, tUL, verbose=False, iteration=0)
   return likelihood, checker, checker_dict
 
 
-def lipschitz_iteration(tLL, tUL, max_iter=30, verbose=True):
+def lipschitz_iteration(tLL, tUL, max_iter=30, verbose=True, kinematic_bmeson=False):
   global pars
   likelihoods = []
 
   for i in range(1, max_iter):
 
-    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, i)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, i, kinematic_bmeson=kinematic_bmeson)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
 
@@ -535,19 +544,19 @@ def lipschitz_iteration(tLL, tUL, max_iter=30, verbose=True):
   return all(checker), likelihoods
 
 
-def aitken_iteration(tLL, tUL, max_iter=30, verbose=True):
+def aitken_iteration(tLL, tUL, max_iter=30, verbose=True, kinematic_bmeson=False):
   global pars
   likelihoods = []
 
   for i in range(1, max_iter):
 
     # x1 = angular_acceptance_iterative_procedure <- x0
-    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, 2 * i - 1)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, 2 * i - 1, kinematic_bmeson=kinematic_bmeson)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
 
     # x2 = angular_acceptance_iterative_procedure <- x1
-    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, 2 * i)
+    ans = angular_acceptance_iterative_procedure(tLL, tUL, verbose, 2 * i, kinematic_bmeson=kinematic_bmeson)
     likelihood, checker, checker_dict = ans
     likelihoods.append(likelihood)
 
@@ -646,6 +655,10 @@ if __name__ == '__main__':
   TIMEACC = timeacc_guesser(args['timeacc'])
   TIMEACC['use_upTime'] = TIMEACC['use_upTime'] | ('UT' in args['version'])
   TIMEACC['use_lowTime'] = TIMEACC['use_lowTime'] | ('LT' in args['version'])
+  if "kinB" in args['angacc']:
+    kinematic_bmeson = True
+  else:
+    kinematic_bmeson = False
 
   # Prepare the cuts
   if TIMEACC['use_transverse_time']:
@@ -739,10 +752,10 @@ if __name__ == '__main__':
   # only load the branches that are actually used
   mc_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB',
                  'gencosK', 'gencosL', 'genhphi', f'gen{time}', 'genidB',
-                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'polWeight']
+                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'polWeight', 'pB', 'pTB']
   rd_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB',
                  'tagOSdec', 'tagSSdec', 'tagOSeta', 'tagSSeta',
-                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b']
+                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'pB', 'pTB']
 
   # MC reconstructed and generator level variable names
   reco = ['cosK', 'cosL', 'hphi', time]
@@ -1006,10 +1019,10 @@ if __name__ == '__main__':
 
   # run the procedure!
 
-  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True, tLL=tLL, tUL=tUL)
+  ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True, tLL=tLL, tUL=tUL, kinematic_bmeson=kinematic_bmeson)
 
   if not ok:
-    ok, likelihoods = aitken_iteration(max_iter=30, verbose=True, tLL=tLL, tUL=tUL)
+    ok, likelihoods = aitken_iteration(max_iter=30, verbose=True, tLL=tLL, tUL=tUL, kinematic_bmeson=kinematic_bmeson)
 
   if not ok:
     print('WARNING: Convergence was not achieved!')
