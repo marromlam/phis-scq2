@@ -42,7 +42,7 @@ rule time_acceptance_single:
     timeacc = "single.*"
   input:
     sample = lambda wcs: tuples(wcs),
-    reso = 'output/params/time_resolution/{year}/{mode}/{version}_amsrd.json',
+    reso = 'output/params/time_offset/{year}/{mode}/{version}_amsrd.json',
   output:
     params = 'output/params/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   log:
