@@ -164,18 +164,21 @@ def parse_angacc(angacc):
       r"(Odd)?",
       # create a pT weight
       r"(pT)?",
+      # create a pT weight
+      r"(kinB)?",
   ]
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
   try:
-    acc, dual, insieme, res, oddity, ptW = p.search(angacc).groups()
+    acc, dual, insieme, res, oddity, ptW, kinB = p.search(angacc).groups()
     ans = {
         "acc": acc,
         "dual": True if dual else False,
         "insieme": True if insieme else False,
         "use_truetime": True if res == 'Nores' else False,
         "use_oddWeight": True if oddity == 'Odd' else False,
-        "use_pTWeight": True if ptW == 'pT' else False
+        "use_pTWeight": True if ptW == 'pT' else False,
+        "use_kinB": True if kinB == 'kinB' else False
     }
     return ans
   except:
@@ -230,7 +233,7 @@ def version_guesser(version):
         # only OS, SS or fully tagged events
         r"(only(OST|SST|OSS))?",
         # split in pTB, etaB and sigmat bins: for systematics
-        r"((pTB|pXB|pYB|etaB|sigmat|pid|PID|PV)(\d{1}))?"
+        r"((pTB|pXB|pYB|pTJpsi|etaB|sigmat|pid|PID|PV)(\d{1}))?"
         # split tuple by event number: useful for MC tests and crosschecks
         # Odd is plays data role and MC is Even
         r"(evtOdd|evtEven)?",
@@ -559,26 +562,26 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
       # WARNING: We dont chop this tuple with the @
       if weight not in ['ready']:
         if config.base['allow_continuous']:
-            weight = 'selected'
+          weight = 'selected'
         else:
-            weight = 'ready'
+          weight = 'ready'
     # }}}
     # MC_Bs2JpsiPhi_Prompt {{{
     elif m == 'MC_Bs2JpsiPhi_Prompt':
       # WARNING: We dont chop this tuple with the @
       if weight not in ['ready']:
         if config.base['allow_continuous']:
-            weight = 'selected'
+          weight = 'selected'
         else:
-            weight = 'ready'
+          weight = 'ready'
     # }}}
     elif m == 'Bs2JpsiPhi_Prompt_mixPV':
       # WARNING: We dont chop this tuple with the @
       if weight not in ['ready']:
         if config.base['allow_continuous']:
-            weight = 'ready'
+          weight = 'ready'
         else:
-            weight = 'ready'
+          weight = 'ready'
     # }}}
   # print(f"{m} weight was transformed {__weight}->{weight}")
   # }}}

@@ -39,6 +39,11 @@ vsub_dict = {
     "pTB2": "B_PT >= 3.8e3 & B_PT < 6e3",
     "pTB3": "B_PT >= 6e3 & B_PT <= 9e3",
     "pTB4": "B_PT >= 9e3",
+    # bins of pTJpsi
+    "pTJpsi1": "Jpsi_PT >= 0 & Jpsi_PT < 3.8e3",
+    "pTJpsi2": "Jpsi_PT >= 3.8e3 & Jpsi_PT < 6e3",
+    "pTJpsi3": "Jpsi_PT >= 6e3 & Jpsi_PT <= 9e3",
+    "pTJpsi4": "Jpsi_PT >= 9e3",
     # bins of etaB
     "etaB1": "B_ETA >= 0 & B_ETA <= 3.3",
     "etaB2": "B_ETA >= 3.3 & B_ETA <= 3.9",
