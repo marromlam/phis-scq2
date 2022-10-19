@@ -744,14 +744,15 @@ rule physics_params_tabulate_versions:
                 'DGsd', 'DGs', 'DM']
     else:
         _params = ['fPlon', 'fPper', 
-                # 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
-                'dPpar', 'dPper',
-                'pPlon',
-                # 'pSlon', 'pPpar', 'pPper',
-                # 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
-                'lPlon',
-                # 'lSlon', 'lPpar', 'lPper',
-                'DGsd', 'DGs', 'DM']
+                   'dPpar', 'dPper',
+                   'pPlon',
+                   # 'pSlon', 'pPpar', 'pPper',
+                   'lPlon',
+                   # 'lSlon', 'lPpar', 'lPper',
+                   'DGsd', 'DGs', 'DM',
+                   'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                   'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                ]
     for p in _params:
         _row = [  f"$ {pars[0][p].latex:>50} $" ]
         for P in pars:
@@ -797,6 +798,8 @@ rule physics_params_tabulate_systematic:
   """
   General rule to create tables of physics params with pvalues
   """
+  wildcard_constraints:
+    mtrigger = "((?!.*?(total)).*)",
   threads: 8
   input:
       lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
