@@ -83,7 +83,7 @@ rule time_resolution_from_git:
     --output {output}\
     --repo {params.repo}\
     --linker {params.linker}\
-    ) #&> {log}""")
+    ) &> {log}""")
     # TODO: move this to the script itself / create another rule to merge time
     # resolution and time offset
     import ipanema
