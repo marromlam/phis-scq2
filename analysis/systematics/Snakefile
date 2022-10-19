@@ -5,17 +5,90 @@ rule systematic_general:
         "output/params/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_{syst}.json"
 
 
+
+# angular acceptance {{{
+
+rule systematic_angular_acceptance_stat:
+    input:
+        pars = "output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+        systs = lambda w: expand("output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}Smear{stat}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+               year = w.year,
+               mode = w.mode,
+               version = w.version,
+               fit = w.fit,
+               angacc = w.angacc,
+               csp = w.csp,
+               flavor = w.flavor,
+               timeacc = w.timeacc,
+               timeres = w.timeres,
+               trigger = w.trigger,
+               stat=range(1,251))
+    output:
+        pars = "output/params/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_angaccStat.json",
+        figs = directory("output/figures/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_angaccStat/")
+    run:
+        import ipanema
+        import numpy as np
+        import complot
+        import matplotlib.pyplot as plt
+        nom = ipanema.Parameters.load(f"{input.pars}")        
+        sys = [ipanema.Parameters.load(p) for p in input.systs]
+        # print(sys)
+        os.makedirs(f"{output.figs}", exist_ok=True)
+        for k, v in nom.items():
+            y = np.array([p[k].value - v.value for p in sys])
+            hy = complot.hist(y, bins=30, range=(-1,1))
+            rms = np.sqrt(np.mean(y**2))
+            fig, axplot = complot.axes_plot()
+            axplot.fill_between(hy.bins, hy.counts, 0, alpha=0.5)
+            axplot.set_aspect(1 / axplot.get_data_ratio())
+            axplot.set_xlim(-1, 1)
+            axplot.set_xlabel(f"${v.latex}$")
+            # axplot.set_ylabel(f"{v.latex}$")
+            fig.savefig(os.path.join(f"{output.figs}", f"{k}.pdf"))
+            nom[k].casket = {"angacc-statistical": rms}
+            plt.close()
+            # print(rms)
+        nom.dump(f"{output.pars}")
+
+# }}}
+#
+
+
+
+
+
+
+
+
+
+
+
+
 systematics_list = [
-    "mass_factorization"
+    # "massFactorization",
+    "angaccStat"
 ]
 rule systematic_tabulate:
     input:
-        pars = "output/params/physics_params/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.json",
+        pars = "output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
         syst = lambda w: expand(
-            "output/params/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_{syst}.json",
+               "output/params/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_{syst}.json",
+               # "output/params/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_{syst}.json",
+               year = w.year,
+               mode = w.mode,
+               version = w.version,
+               fit = w.fit,
+               angacc = w.angacc,
+               csp = w.csp,
+               flavor = w.flavor,
+               timeacc = w.timeacc,
+               timeres = w.timeres,
+               trigger = w.trigger,
             syst=systematics_list)
     output:
-        "output/tables/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_total.tex"
+        "output/tables/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_total.tex"
+        # "output/tables/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_total.tex"
     run:
         shell(f"""
         time python analysis/systematics/generate_table.py\
