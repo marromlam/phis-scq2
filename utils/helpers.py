@@ -227,7 +227,7 @@ def version_guesser(version):
         # background category
         r"(bkgcat60)?",
         # mass sidebands
-        r"(RSB|LSB)?",
+        r"(RSB|LSB|RSBsmall|LSBsmall)?",
         # split by magnet Up or Down: useful for crosschecks
         r"(magUp|magDown)?",
         # only OS, SS or fully tagged events
