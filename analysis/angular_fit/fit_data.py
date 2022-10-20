@@ -11,6 +11,7 @@ from utils.strings import cuts_and, printsec, printsubsec
 # from utils.plot import mode_tex
 from analysis import badjanak
 from ipanema import initialize, Sample, Parameters, ristra, optimize
+import complot
 
 import argparse
 import numpy as np
@@ -57,7 +58,7 @@ if __name__ == "__main__":
   parser.add_argument('--timeacc', help='Year of data-taking')
   parser.add_argument('--trigger', help='Year of data-taking')
   parser.add_argument('--blind', default=1, help='Year of data-taking')
-  parser.add_argument('--scan-likelihood', default=False, help='Year of data-taking')
+  parser.add_argument('--scan', default=False, help='Year of data-taking')
   args = vars(parser.parse_args())
 
   if not args['params'] and args['log_likelihood'] and args['input_params']:
@@ -682,23 +683,30 @@ if __name__ == "__main__":
   result.params.dump(args['params'])
 
   # if scan_likelihood, then we need to create some contours
-  scan_likelihood = args['scan_likelihood']
+  scan_likelihood = args['scan']
   # scan_likelihood = False
 
-  if scan_likelihood:
+  if scan_likelihood != "0":
+    print("scanning", scan_likelihood)
     if "+" in scan_likelihood:
       result._minuit.draw_mncontour(*scan_likelihood.split('+'),
                                     numpoints=100, nsigma=5)
     else:
-      result._minuit.draw_mnprofile(scan_likelihood, bins=20, bound=3,
-                                    subtract_min=True, band=True,
-                                    text=True)
+
+      x, y = result._minuit.draw_mnprofile(scan_likelihood, bins=20, bound=3,
+                                           subtract_min=True, band=True,
+                                           text=True)
+      fig, axplot = complot.axes_plot()
+      axplot.plot(x, y)
+      axplot.set_xlabel(f"${result.params[scan_likelihood].latex}$")
+      axplot.set_ylabel("$\Delta \log L$")
+      print(result._minuit.merrors)
     _figure = args['params'].replace('/params', '/figures')
     _figure = _figure.replace('.json', f'{scan_likelihood}.pdf')
     print(_figure)
     os.makedirs(os.path.dirname(_figure), exist_ok=True)
-    plt.xlim(1.8, 3.5)
-    plt.ylim(2.7, 3.5)
+    # plt.xlim(1.8, 3.5)
+    # plt.ylim(2.7, 3.5)
     plt.savefig(_figure)
 
   # }}}
