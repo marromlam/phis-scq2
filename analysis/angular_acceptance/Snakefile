@@ -1123,32 +1123,6 @@ rule pvalue_MCcheck:
 # }}}
 
 
-rule angular_acceptance_bdt_systematic:
-  input:
-    nominal = "output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
-    bdt = lambda w: expand("output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
-                           year=w.year, fit=w.fit, angacc=w.angacc, csp=w.csp,
-                           flavor=w.flavor, timeacc=w.timeacc, timeres=w.timeres,
-                           trigger=w.trigger,
-                           version=[f"{w.version.split('@')[0]}bdt{i}@{w.version.split('@')[1]}" for i in range(1,config['n_bdt_tests']+1)]
-    )
-  params:
-    n_tests=config['n_bdt_tests']
-  output:
-    pars = "output/params/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.json",
-    tabs = "output/tables/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.tex"
-  log:
-    "output/log/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.tex"
-  run:
-      shell(f"""(time\
-      python test_bdt_hists.py\
-      --nominal-params {input.nominal}\
-      --bdt-params {','.join(input.bdt)}\
-      --output-params {output.pars}\
-      --output-table {output.tabs}\
-      --n-tests {params.n_tests}\
-      ) &> {log}""")
-
 rule angular_acceptance_smearing:
     # wildcard_constraints:
     #   i = "\d{1,2,3,4}"

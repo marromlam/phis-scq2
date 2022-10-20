@@ -49,6 +49,7 @@ rule physics_params_data_Bs:
     --trigger {wildcards.trigger}\
     --version {wildcards.version}\
     --blind {settings.blinding['blind']}\
+    --scan {config['scan']}\
     ) &> {log}""")
     send_mail(f"Physics Parameters RD :: {wildcards}", f"{log}")
 
@@ -750,8 +751,8 @@ rule physics_params_tabulate_versions:
                    'lPlon',
                    # 'lSlon', 'lPpar', 'lPper',
                    'DGsd', 'DGs', 'DM',
-                   'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
-                   'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                   # 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                   # 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
                 ]
     for p in _params:
         _row = [  f"$ {pars[0][p].latex:>50} $" ]
@@ -883,7 +884,27 @@ rule physics_params_tabulate_systematic:
     # print(table)
     # exit()
 
-    _params = ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs', 'DM']
+    if 'Poldep' in wildcards.mfit:
+        _params = ['fPlon', 'fPper', 
+                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                'dPpar', 'dPper',
+                'pPlon',
+                'pSlon', 'pPpar', 'pPper',
+                'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                'lPlon',
+                'lSlon', 'lPpar', 'lPper',
+                'DGsd', 'DGs', 'DM']
+    else:
+        _params = ['fPlon', 'fPper', 
+                   'dPpar', 'dPper',
+                   'pPlon',
+                   # 'pSlon', 'pPpar', 'pPper',
+                   'lPlon',
+                   # 'lSlon', 'lPpar', 'lPper',
+                   'DGsd', 'DGs', 'DM',
+                   # 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                   # 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                ]
     for p in _params:
         _row = [  f"$ {pars[0][p].latex:>50} $" ]
         for P in pars:
@@ -894,7 +915,7 @@ rule physics_params_tabulate_systematic:
             standard_deviations = [P[p].uvalue.s for P in pars]
             def compute_chi2(reference_value):
                 chi2 = 0.0
-                for v, s in zip(central_values, standard_deviations):
+                for v, s in zip(central_values[1:], standard_deviations[1:]):
                     chi2 += ((v - reference_value)/s)**2
                 return chi2
 
@@ -902,7 +923,7 @@ rule physics_params_tabulate_systematic:
             p = 'reference_value'
             result = Minuit(compute_chi2, reference_value=0.0, errordef=1)
             result.migrad()
-            pval = chi2.sf(result.fval, len(central_values)-1)
+            pval = chi2.sf(result.fval, len(central_values)-1-1)
             systs = [c-central_values[0] for c in central_values]
             systs = np.array(systs)
             signs = systs/np.abs(systs)
