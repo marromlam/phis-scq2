@@ -1,3 +1,4 @@
+# TODOL this rule should be removed once every syst has its own rule
 rule systematic_general:
     input:
         "output/params/physics_params/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.json"
@@ -5,8 +6,141 @@ rule systematic_general:
         "output/params/systematics/run2/Bs2JpsiPhi/v4r0_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_{syst}.json"
 
 
+# mass systematics {{{
+
+rule systematic_mass_factorization:
+    input:
+        pars = "output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+        systs = lambda w: expand("output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+               year = w.year,
+               mode = w.mode,
+               version = ["v4r0~mX6time3@LcosK","v4r0~mX6cosL3@LcosK","v4r0~mX6cosK3@LcosK","v4r0~mX6hphi3@LcosK"],
+               fit = w.fit,
+               angacc = w.angacc,
+               csp = w.csp,
+               flavor = w.flavor,
+               timeacc = w.timeacc,
+               timeres = w.timeres,
+               trigger = w.trigger)
+    output:
+        pars = "output/params/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massFactorization.json",
+        # tabs = "output/tables/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massFactorization.tex",
+        # figs = directory("output/figures/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massFactorization/")
+    run:
+        import ipanema
+        import numpy as np
+        import sys
+        from iminuit import Minuit
+        from scipy.stats import chi2
+
+        verbose = False
+        pars = ipanema.Parameters.load(f"{input.pars}")
+        systs = f"{input.systs}".split(" ")
+        systs = [ipanema.Parameters.load(p) for p in systs]
+
+        for p in pars.keys():
+          if pars[p].free:
+            # get from parameters objects
+            central_values = [P[p].uvalue.n for P in systs]
+            standard_deviations = [P[p].uvalue.s for P in systs]
+            def compute_chi2(reference_value):
+                chi2 = 0.0
+                for v, s in zip(central_values, standard_deviations):
+                    chi2 += ((v - reference_value)/s)**2
+                return chi2
+
+            # do linear fit on those numbers
+            # p = 'reference_value'
+            _result = Minuit(compute_chi2, reference_value=0.0, errordef=1)
+            _result.migrad()
+            _pval = chi2.sf(_result.fval, len(central_values)-1)
+            _systs = [c-pars[p].value for c in central_values]
+            _systs = np.array(_systs)
+            _signs = _systs/np.abs(_systs)
+            syst = np.amax(np.abs(_systs))
+            syst *= _signs[np.abs(_systs) == syst]
+            # _row.append(f"$ {pval:+.3f} $")  # for pvalue
+            syst = syst if len(syst) < 2 else syst[0]
+            syst = np.float64(syst)
+          else:
+            syst = 0
+          _row = [f"{P[p].uvalue:.2uP}" for P in [pars]+systs]
+          _row = [f"{r:20}" for r in _row]
+          _row = [f"{p:<10}"] + _row + [f"{syst:.5f}"]
+          if verbose:
+            print("  ".join(_row))
+          pars[p].casket = {"mass-factorization": syst}
+        pars.dump(f"{output.pars}")
+
+# }}}
+
 
 # angular acceptance {{{
+
+rule systematic_angular_acceptance_bmeson_kinematics:
+    input:
+        pars = "output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+        systs = lambda w: expand("output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+               year = w.year,
+               mode = w.mode,
+               version = w.version,
+               fit = w.fit,
+               angacc = w.angacc+"kinB",
+               csp = w.csp,
+               flavor = w.flavor,
+               timeacc = w.timeacc,
+               timeres = w.timeres,
+               trigger = w.trigger)
+    output:
+        pars = "output/params/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_angaccBkinematics.json",
+        # tabs = "output/tables/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massFactorization.tex",
+        # figs = directory("output/figures/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massFactorization/")
+    run:
+        import ipanema
+        import numpy as np
+        import sys
+        from iminuit import Minuit
+        from scipy.stats import chi2
+
+        verbose = False
+        pars = ipanema.Parameters.load(f"{input.pars}")
+        systs = f"{input.systs}".split(" ")
+        systs = [ipanema.Parameters.load(p) for p in systs]
+
+        for p in pars.keys():
+          if pars[p].free:
+            # get from parameters objects
+            central_values = [P[p].uvalue.n for P in systs]
+            standard_deviations = [P[p].uvalue.s for P in systs]
+            def compute_chi2(reference_value):
+                chi2 = 0.0
+                for v, s in zip(central_values, standard_deviations):
+                    chi2 += ((v - reference_value)/s)**2
+                return chi2
+
+            # do linear fit on those numbers
+            # p = 'reference_value'
+            _result = Minuit(compute_chi2, reference_value=0.0, errordef=1)
+            _result.migrad()
+            _pval = chi2.sf(_result.fval, len(central_values)-1)
+            _systs = [c-pars[p].value for c in central_values]
+            _systs = np.array(_systs)
+            _signs = _systs/np.abs(_systs)
+            syst = np.amax(np.abs(_systs))
+            syst *= _signs[np.abs(_systs) == syst]
+            # _row.append(f"$ {pval:+.3f} $")  # for pvalue
+            syst = syst if len(syst) < 2 else syst[0]
+            syst = np.float64(syst)
+          else:
+            syst = 0
+          _row = [f"{P[p].uvalue:.2uP}" for P in [pars]+systs]
+          _row = [f"{r:20}" for r in _row]
+          _row = [f"{p:<10}"] + _row + [f"{syst:.5f}"]
+          if verbose:
+            print("  ".join(_row))
+          pars[p].casket = {"mass-factorization": syst}
+        pars.dump(f"{output.pars}")
+
 
 rule systematic_angular_acceptance_stat:
     input:
@@ -22,7 +156,7 @@ rule systematic_angular_acceptance_stat:
                timeacc = w.timeacc,
                timeres = w.timeres,
                trigger = w.trigger,
-               stat=range(1,251))
+               stat=range(1,250))
     output:
         pars = "output/params/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_angaccStat.json",
         figs = directory("output/figures/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_angaccStat/")
@@ -37,6 +171,7 @@ rule systematic_angular_acceptance_stat:
         os.makedirs(f"{output.figs}", exist_ok=True)
         for k, v in nom.items():
             y = np.array([p[k].value - v.value for p in sys])
+            print(y)
             hy = complot.hist(y, bins=30, range=(-1,1))
             rms = np.sqrt(np.mean(y**2))
             fig, axplot = complot.axes_plot()
@@ -48,27 +183,48 @@ rule systematic_angular_acceptance_stat:
             fig.savefig(os.path.join(f"{output.figs}", f"{k}.pdf"))
             nom[k].casket = {"angacc-statistical": rms}
             plt.close()
-            # print(rms)
+            print(rms)
         nom.dump(f"{output.pars}")
 
+
+rule systematic_angacc_gbconf:
+  input:
+    nominal = "output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+    bdt = lambda w: expand("output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+                           year=w.year, fit=w.fit, angacc=w.angacc, csp=w.csp,
+                           flavor=w.flavor, timeacc=w.timeacc, timeres=w.timeres,
+                           trigger=w.trigger,
+                           version=[f"{w.version.split('@')[0]}bdt{i}@{w.version.split('@')[1]}" for i in range(1,config['n_bdt_tests']+1)]
+    )
+  params:
+    n_tests=config['n_bdt_tests']
+  output:
+    pars = "output/params/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_angaccGBconf.json",
+    tabs = "output/tables/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_angaccGBconf.tex"
+  log:
+    "output/log/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.tex"
+  run:
+      shell(f"""(time\
+      python test_bdt_hists.py\
+      --nominal-params {input.nominal}\
+      --bdt-params {','.join(input.bdt)}\
+      --output-params {output.pars}\
+      --output-table {output.tabs}\
+      --n-tests {params.n_tests}\
+      ) &> {log}""")
+
 # }}}
-#
 
 
-
-
-
-
-
-
-
-
+# final systematics table {{{
 
 
 systematics_list = [
-    # "massFactorization",
-    "angaccStat"
+    "massFactorization",
+    "angaccStat",
+    # "angaccGBconf",
 ]
+
 rule systematic_tabulate:
     input:
         pars = "output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
@@ -93,6 +249,11 @@ rule systematic_tabulate:
         shell(f"""
         time python analysis/systematics/generate_table.py\
         --input-pars {input.pars}\
-        --input-systs {','.join(input.pars)}\
+        --input-systs {','.join(input.syst)}\
         --output-table {output}
         """)
+
+# }}}
+
+
+# vim: fdm=marker
