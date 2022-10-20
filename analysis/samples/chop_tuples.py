@@ -55,8 +55,10 @@ vsub_dict = {
     # cut the Bd angular distribution
     "LcosK": "helcosthetaK<=0.0",
     "UcosK": "helcosthetaK>0.0",
-    "LSB": "B_ConstJpsi_M_1 < 5417",
-    "RSB": "B_ConstJpsi_M_1 > 5287",
+    "LSB": "B_ConstJpsi_M_1 < 5397",
+    "RSB": "B_ConstJpsi_M_1 > 5337",
+    "LSBsmall": "B_ConstJpsi_M_1 < 5397 & B_ConstJpsi_M_1 > 5255",
+    "RSBsmall": "B_ConstJpsi_M_1 > 5337 & B_ConstJpsi_M_1 < 5460",
     # "LbkgSB": "B_ConstJpsi_M_1 > 5417",
     # "RbkgSB": "B_ConstJpsi_M_1 < 5287",
     # tagging
@@ -178,9 +180,11 @@ if __name__ == "__main__":
           print("Only 2018 RD is cut in runNumber")
         elif (k in ("UcosK", "LcosK")) and 'Bd2JpsiKstar' not in m:
           print("Cut in cosK was only planned in Bd")
-        elif (k in ("LSB", "RSB")) and 'Bs2JpsiPhi' != m:
+        elif (k in ("LSB", "RSB", "LSBsmall", "RSBsmall")) and 'Bs2JpsiPhi' != m:
           print("Cut in LSB and RSB was only planned in Bs RD")
         elif (k in ("PID1", "PID2", "PID3", "PID4")) and 'Bs2JpsiPhi' not in m:
+          print("PID cut was only planned in Bs modes")
+        elif (k in ("pid1", "pid2", "pid3", "pid4")) and 'Bs2JpsiPhi' not in m:
           print("PID cut was only planned in Bs modes")
         else:
           list_of_cuts.append(v)
