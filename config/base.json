@@ -4,6 +4,7 @@
   "fit": "auto",
   "angacc": "run2Dual",
   "csp": "vgc",
+  "scan": 0,
   "flavor": "amsrd",
   "timeacc": "simul3",
   "timeres": "amsrd",
