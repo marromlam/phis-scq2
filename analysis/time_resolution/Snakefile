@@ -108,7 +108,7 @@ rule time_resolution_wpv_shape:
     params:
         script = 'analysis/time_resolution/wrong_pv_component.py',
     log:
-        'output/params/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}.log'
+        'output/log/wpv_shape/{year}/Bs2JpsiPhi_Prompt_mixPV/{version}_{wpv}_{trigger}.log'
     run:
         shell(f"""(time\
         python {params.script} \
@@ -154,7 +154,7 @@ rule time_resolution_prompt:
         double = 'analysis/time_resolution/script1.py',
         triple = 'analysis/time_resolution/script2.py',
     log:
-        'output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.log'
+        'output/log/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.log'
     run:
         script = params.double if 'double' in wildcards.timeres else params.triple
         shell(f"""(time\
@@ -186,7 +186,7 @@ rule time_resolution_signal:
         double = 'analysis/time_resolution/script1.py',
         triple = 'analysis/time_resolution/script2.py',
     log:
-        'output/params/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.log'
+        'output/log/time_resolution_fit/{year}/{mode}/{version}_{timeres}_{trigger}.log'
     run:
         script = params.double if 'double' in wildcards.timeres else params.triple
         shell(f"""(time\
@@ -258,7 +258,7 @@ rule time_resolution_calibration_numerical:
     params:
         script = 'analysis/time_resolution/calibration.py',
     log:
-        'output/params/time_resolution/{year}/{mode}/{version}_{timeres}.log'
+        'output/log/time_resolution/{year}/{mode}/{version}_{timeres}.log'
     run:
         fpars = input.json_bin
         fpars = [fpars] if isinstance(fpars,str) else fpars
@@ -287,7 +287,7 @@ rule time_resolution_dilution_translation:
     params:
         script = 'analysis/time_resolution/translate.py',
     log:
-        'output/params/time_resolution_dilution/{year}/{mode}/{version}_{timeres}_{trigger}.log'
+        'output/log/time_resolution_dilution/{year}/{mode}/{version}_{timeres}_{trigger}.log'
     run:
         shell(f"""(time\
         python {params.script}\
