@@ -693,17 +693,43 @@ if __name__ == "__main__":
                                     numpoints=100, nsigma=5)
     else:
 
+      v = result.params[scan_likelihood].uvalue
+      print(v)
       x, y = result._minuit.draw_mnprofile(scan_likelihood, bins=20, bound=3,
                                            subtract_min=True, band=True,
                                            text=True)
       fig, axplot = complot.axes_plot()
-      axplot.plot(x, y)
-      axplot.set_xlabel(f"${result.params[scan_likelihood].latex}$")
+      axplot.plot(x, y, color="C0")  # scan
+      axplot.axvline(v.n,
+                     color="C1", linestyle="-")
+
+      vmin = None
+      vmax = None
+      if (scan_likelihood, 1) in result._minuit.merrors:
+        vmin = v.n + result._minuit.merrors[(scan_likelihood, -1)]
+        vmax = v.n + result._minuit.merrors[(scan_likelihood, 1)]
+      if scan_likelihood in result._minuit.errors:
+        vmin = v.n - result._minuit.errors[scan_likelihood]
+        vmax = v.n + result._minuit.errors[scan_likelihood]
+
+      plt.axvspan(vmin, vmax, facecolor="C1", alpha=0.4)
+
+      if vmin is None:
+        str_value = f"{v:.2uL}"
+      else:
+        str_value = f"{v:.2uL}".split('\pm')[0]
+        str_value = f"{str_value}_{{{v.n-vmax:.5f}}}^{{+{v.n-vmin:.5f}}}"
+      str_latex = f"{result.params[scan_likelihood].latex}"
+      str_units = str_latex.split("\,")[-1].replace("[", "")
+      str_units = str_units.replace("]", "")
+      str_latex = str_latex.split("\,")[0]
+      print(f"${str_latex} = {str_value}$ ${str_units}$")
+      axplot.set_xlabel(f"${str_latex} = {str_value}$ ${str_units}$")
       axplot.set_ylabel("$\Delta \log L$")
       print(result._minuit.merrors)
     _figure = args['params'].replace('/params', '/figures')
     _figure = _figure.replace('.json', f'/scans/{scan_likelihood}.pdf')
-    print(_figure)
+    print("Scan saved to:", _figure)
     os.makedirs(os.path.dirname(_figure), exist_ok=True)
     # plt.xlim(1.8, 3.5)
     # plt.ylim(2.7, 3.5)
