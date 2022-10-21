@@ -66,7 +66,7 @@ def get_bin_from_version(version, subbin, mode):
       "(cosL(1|2|3|4))?",
       "(cosK(1|2|3|4))?",
       "(hphi(1|2|3|4))?",
-      "(sigmam(1|2|3|4))?",
+      "(sigmam(1|2|3|4|5|6|7|8|9))?",
   ]
   pattern = rf"\A{''.join(pattern)}\Z"
   p = re.compile(pattern)
@@ -856,6 +856,8 @@ def mass_fitter(
   print(rd)
   rd.allocate(mass=mass_branch, merr="B_ConstJpsi_MERR_1")
   rd.allocate(pdf=f"0*{mass_branch}", weight=mass_weight)
+  mass_range = (min(rd.df[mass_branch]), max(rd.df[mass_branch]))
+  mLL, mUL = mass_range
   # print(rd)
 
   # }}}
@@ -895,7 +897,9 @@ def mass_fitter(
     pars = ipanema.Parameters.clone(res.params)
     for k, v in pars.items():
       v.init = v.value
-    pars.unlock('fsigBs', 'muBs', 'b', 'fsigBd')
+    pars.unlock('fsigBs', 'muBs', 'b')
+    if 'fsigBd' in pars:
+      pars.unlock('fsigBd')
     if 'lambd' in pars:
       pars.unlock('lambd')
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
@@ -1046,6 +1050,12 @@ if __name__ == '__main__':
   else:
     sweights = False
 
+  mass_model = args['mass_model']
+  if "sigma" in args['version']:
+    mass_model = 'crystalball'
+
+  has_bd = True if args["mode"] == "Bs2JpsiPhi" else False
+
   if args["input_params"]:
     input_pars = ipanema.Parameters.load(args["input_params"])
   else:
@@ -1073,14 +1083,35 @@ if __name__ == '__main__':
   bin_cut = get_bin_from_version(args['version'], args['mass_bin'], args['mode'])
 
   if input_pars:
-    if "LSB" in args['version']:
-      mass_range = (mass_range[0], 5367 + 30)
-      _2sig = input_pars['muBs'].value + 2 * 18
-      mass_range = (mass_range[0], _2sig)
+    from analysis.samples.chop_tuples import vsub_dict
+    if "LSBsmall" in args['version']:
+      mass_cut = vsub_dict['LSBsmall']
+      mass_range = False
+      print("mass cut from (L|R)SB", mass_cut)
+      cut = cuts_and(mass_cut, cut)
+    elif "RSBsmall" in args['version']:
+      mass_cut = vsub_dict['RSBsmall']
+      mass_range = False
+      has_bd = False
+      print("mass cut from (L|R)SB", mass_cut)
+      cut = cuts_and(mass_cut, cut)
+    elif "LSB" in args['version']:
+      mass_cut = vsub_dict['LSB']
+      mass_range = False
+      print("mass cut from (L|R)SB", mass_cut)
+      cut = cuts_and(mass_cut, cut)
+      # mass_range = (mass_range[0], 5367 + 30)
+      # _2sig = input_pars['muBs'].value + 2 * 18
+      # mass_range = (mass_range[0], _2sig)
     elif "RSB" in args['version']:
-      mass_range = (5367 - 30, mass_range[1])
-      _2sig = input_pars['muBs'].value - 2 * 18
-      mass_range = (_2sig, mass_range[1])
+      mass_cut = vsub_dict['RSB']
+      has_bd = False
+      mass_range = False
+      # mass_range = (5367 - 30, mass_range[1])
+      # _2sig = input_pars['muBs'].value - 2 * 18
+      # mass_range = (_2sig, mass_range[1])
+      print("mass cut from (L|R)SB", mass_cut)
+      cut = cuts_and(mass_cut, cut)
   cut = cuts_and(bin_cut, cut)
   print(cut)
 
@@ -1092,10 +1123,10 @@ if __name__ == '__main__':
       mass_weight=mass_weight,
       trigger=args["trigger"],
       figs=args["output_figures"],
-      model=args["mass_model"],
+      model=mass_model,
       cut=cut,
       sweights=sweights,
-      has_bd=True if args["mode"] == "Bs2JpsiPhi" else False,
+      has_bd=has_bd,
       input_pars=input_pars,
       verbose=False,
   )
@@ -1106,4 +1137,4 @@ if __name__ == '__main__':
 # }}}
 
 
-# vim:foldmethod=marker
+# vim: fdm=marker
