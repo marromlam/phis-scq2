@@ -85,7 +85,7 @@ WITHIN_KERNEL
 ftype time_efficiency(const ftype t, GLOBAL_MEM const ftype *coeffs,
     const ftype tLL, const ftype tUL)
 {
-  int bin   = getTimeBin(t);
+  int bin = getTimeBin(t);
   ftype c0 = getCoeff(coeffs,bin,0);
   ftype c1 = getCoeff(coeffs,bin,1);
   ftype c2 = getCoeff(coeffs,bin,2);
