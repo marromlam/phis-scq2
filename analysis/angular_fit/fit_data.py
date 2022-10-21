@@ -702,7 +702,7 @@ if __name__ == "__main__":
       axplot.set_ylabel("$\Delta \log L$")
       print(result._minuit.merrors)
     _figure = args['params'].replace('/params', '/figures')
-    _figure = _figure.replace('.json', f'{scan_likelihood}.pdf')
+    _figure = _figure.replace('.json', f'/scans/{scan_likelihood}.pdf')
     print(_figure)
     os.makedirs(os.path.dirname(_figure), exist_ok=True)
     # plt.xlim(1.8, 3.5)
