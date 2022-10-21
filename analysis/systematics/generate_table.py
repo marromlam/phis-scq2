@@ -27,18 +27,18 @@ syst_row_top = [
 ]
 syst_row_bottom = [
     "{systname:50}",
-    "${fSlon1:8}$",
-    "${fSlon2:8}$",
-    "${fSlon3:8}$",
-    "${fSlon4:8}$",
-    "${fSlon5:8}$",
-    "${fSlon6:8}$",
     "${dSlon1:8}$",
     "${dSlon2:8}$",
     "${dSlon3:8}$",
     "${dSlon4:8}$",
     "${dSlon5:8}$",
     "${dSlon6:8}$",
+    "${fSlon1:8}$",
+    "${fSlon2:8}$",
+    "${fSlon3:8}$",
+    "${fSlon4:8}$",
+    "${fSlon5:8}$",
+    "${fSlon6:8}$",
 ]
 syst_row_top = " & ".join(syst_row_top) + r"  \\"
 syst_row_bottom = " & ".join(syst_row_bottom) + r"  \\"
@@ -59,14 +59,14 @@ pars = ipanema.Parameters.load(args['input_pars'])
 _systs = args['input_systs'].split(',')
 _systs = [ipanema.Parameters.load(s) for s in _systs]
 
-systematics_list = [
-    "massFactorization",
-    "angaccStat",
+systematics_list = {
+    "massFactorization": "Mass factorization",
+    "angaccStat": "Angular acceptance statistical",
     # "angaccGBconf",
-]
+}
 
 systs = {}
-for i, name in enumerate(systematics_list):
+for i, name in enumerate(systematics_list.keys()):
   systs[name] = _systs[i]
 
 _values = {k: f"{v.uvalue:.2uL}".split(r'\pm')[0] for k, v in pars.items()}
@@ -87,8 +87,8 @@ bottom_table.append(r"\hline")
 
 for systname, systpars in systs.items():
   _syst = {k: v.casket[list(v.casket.keys())[0]] for k, v in systpars.items()}
-  _syst = {k: f"{v:+.4f}" for k, v in _syst.items()}
-  _syst.update({'systname': systname})
+  _syst = {k: f"{abs(v):.4f}" for k, v in _syst.items()}
+  _syst.update({'systname': systematics_list[systname]})
   top_table.append(syst_row_top.format(**_syst))
   bottom_table.append(syst_row_bottom.format(**_syst))
 
