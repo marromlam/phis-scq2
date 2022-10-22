@@ -31,7 +31,7 @@ if __name__ == '__main__':
   p = argparse.ArgumentParser(description="mass fit")
   p.add_argument('--input-sample')
   p.add_argument('--output-sample')
-  p.add_argument('--output-plots')
+  p.add_argument('--output-plots', default=False)
   p.add_argument('--biased-weights')
   p.add_argument('--unbiased-weights')
   p.add_argument('--mode')
@@ -108,6 +108,7 @@ if __name__ == '__main__':
     f["DecayTree"] = uproot.newtree(_branches)
     f["DecayTree"].extend(sample.df.to_dict(orient='list'))
 
+  print("create plot", create_plot)
   if create_plot:
     for k in list_of_weights:
       for i, sw in enumerate(bpars + upars):
@@ -196,7 +197,8 @@ if __name__ == '__main__':
     fig.savefig(os.path.join(args['output_plots'], f"logfit.pdf"))
     plt.close()
   else:
-    os.makedirs(args['output_plots'], exist_ok=True)
-    os.system(f"touch {os.path.join(args['output_plots'], 'placeholder.pdf')}")
+    if args['output_plots']:
+      os.makedirs(args['output_plots'], exist_ok=True)
+      os.system(f"touch {os.path.join(args['output_plots'], 'placeholder.pdf')}")
 
 # vim: fdm=marker
