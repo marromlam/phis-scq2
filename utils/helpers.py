@@ -557,6 +557,24 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
       # elif weight == 'ready' or weight == 'selected':
       #   weight = 'ready'
     # }}}
+    # Bs2DsPi {{{
+    elif m == 'Bs2DsPi':
+      # WARNING: We dont chop this tuple with the @
+      if weight not in ['ready']:
+        if config.base['allow_continuous']:
+          weight = 'selected'
+        else:
+          weight = 'ready'
+    # }}}
+    # MC_Bs2DsPi {{{
+    elif m == 'MC_Bs2DsPi':
+      # WARNING: We dont chop this tuple with the @
+      if weight not in ['ready']:
+        if config.base['allow_continuous']:
+          weight = 'selected'
+        else:
+          weight = 'ready'
+    # }}}
     # Bs2JpsiPhi_Prompt {{{
     elif m == 'Bs2JpsiPhi_Prompt':
       # WARNING: We dont chop this tuple with the @
@@ -575,6 +593,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         else:
           weight = 'ready'
     # }}}
+    # MC_Bs2JpsiPhi_Prompt\_mixPV {{{
     elif m == 'Bs2JpsiPhi_Prompt_mixPV':
       # WARNING: We dont chop this tuple with the @
       if weight not in ['ready']:
