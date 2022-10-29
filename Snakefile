@@ -63,6 +63,8 @@ MINERS = "(Minos|BFGS|LBFGSB|CG|Nelder)"
 # Some wildcards options ( this is not actually used )
 modes = ['Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi',
          'GUN_Bs2JpsiPhi', 'GUN_Bs2JpsiKK_Swave',
+         'Bs2DsPi', 'MC_Bs2DsPi',
+         'Bs2DsPi_Prompt', 'MC_Bs2DsPi_Prompt',
          'MC_Bs2JpsiKK_Swave', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar',
          'Bu2JpsiKplus', 'MC_Bu2JpsiKplus']
 
