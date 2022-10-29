@@ -42,9 +42,11 @@ if __name__ == '__main__':
   version = args['version']
   short_mode = shorten_mode(args['mode'])
   ones = False
+  is_bkg60 = False
   if version:
     if 'bkgcat60' in version and 'MC' in mode:
-      ones = True
+      # ones = True
+      is_bkg60 = True
 
   # Load full dataset and creae prxoy to store new sWeights
   sample = Sample.from_root(args['input_sample'], flatten=None)
@@ -88,12 +90,21 @@ if __name__ == '__main__':
 
   # add sweights
   for w in to_df.keys():
-    __proxy = 0 * _proxy
+    __proxy = 0 * _proxy - 999
     for sw in bpars + upars:
       _weight = np.load(sw, allow_pickle=True)
       _weight = _weight.item()
-      __proxy += _weight[w]
-    sample.df[f"{w[1:]}SW"] = 1 + 0 * __proxy if ones else __proxy
+      _weight = _weight[w]
+      __proxy[_weight != -999] = _weight[_weight != -999]
+    if is_bkg60:
+      sample.df[f"{w[1:]}SW"] = np.where(__proxy == -999, 1, __proxy)
+    else:
+      sample.df[f"{w[1:]}SW"] = 1 + 0 * __proxy if ones else __proxy
+  print("Dataframe before cleannin up")
+  print(sample.df)
+  sample.chop(f"sig{shorten_mode(mode)}SW != -999")
+  print("Dataframe after sWeight cleanning")
+  print(sample.df)
   with uproot.recreate(args['output_sample']) as f:
     _branches = {}
     for k, v in sample.df.items():

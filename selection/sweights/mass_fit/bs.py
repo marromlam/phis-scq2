@@ -81,6 +81,13 @@ def get_bin_from_version(version, subbin, mode):
       sigmam_bins = int(q[11]) if q[10] else 1
     except:
       raise ValueError(f'Cannot interpret {w} as a sWeight config')
+  else:
+    mX_bins = 1
+    time_bins = 1
+    cosK_bins = 1
+    cosL_bins = 1
+    hphi_bins = 1
+    sigmam_bins = 1
   # pattern = rf"\A{''.join(pattern)}\Z"
   print(f"from version = {version} :: {mX_bins}, {time_bins}, {sigmam_bins}")
   # }}}
@@ -98,6 +105,13 @@ def get_bin_from_version(version, subbin, mode):
       sigmam = int(q[11]) if q[10] else 1
     except:
       raise ValueError(f'Cannot interpret {w} as a subbin')
+  else:
+    mX = 1
+    time = 1
+    cosK = 1
+    cosL = 1
+    hphi = 1
+    sigmam = 1
   print(f"from subbin = {subbin} :: {mX}, {time}, {sigmam}")
   # create bins limits
   mXLL, mXUL = create_mass_bins(int(mX_bins))[mX - 1:mX + 1]
@@ -679,6 +693,11 @@ def mass_fitter(
   # mass cut and trigger cut
   current_cut = trigger_scissors(trigger, cuts_and(mass_cut, cut))
 
+  is_bkg60 = False
+  if 'B_BKGCAT == 60' in cut:
+    print('this sample is bkgcat60 only')
+    is_bkg60 = True
+
   # Select model and set parameters {{{
   #    Select model from command-line arguments and create corresponding set
   #    of paramters
@@ -835,6 +854,8 @@ def mass_fitter(
     pars.add(dict(name="fcomb", formula="1-fsigBs-fsigBd",
                   min=0, max=1, latex=r"f_{comb}"))
 
+  if is_bkg60:
+    pars.unlock('aL', 'nL', 'aR', 'nR')
   # finally, set mass lower and upper limits
   pars.add(dict(name="mLL", value=mLL, free=False, latex=r"m_{ll}"))
   pars.add(dict(name="mUL", value=mUL, free=False, latex=r"m_{ul}"))
@@ -850,7 +871,9 @@ def mass_fitter(
   print(f"Mass branch: {mass_branch}")
   print(f"Mass weight: {mass_weight}")
   rd = ipanema.Sample.from_pandas(odf)
-  _proxy = np.float64(rd.df[mass_branch]) * 0.0
+  _proxy = np.float64(rd.df[mass_branch]) * 0.0 - 999
+  # if is_bkg60:
+  #   _proxy += 1
   print(rd)
   rd.chop(current_cut)
   print(rd)
@@ -1071,9 +1094,15 @@ if __name__ == '__main__':
     mass_weight = "B_ConstJpsi_M_1/B_ConstJpsi_M_1"
 
   cut = False
+  if 'MC' in args['mode']:
+    branches += ["B_BKGCAT"]
   if "prefit" in args["output_params"]:
     cut = "B_BKGCAT == 0 | B_BKGCAT == 10 | B_BKGCAT == 50"
-    branches += ["B_BKGCAT"]
+
+  if 'bkgcat60' in args['version'] and 'MC' in args['mode'] and args['mass_bin'] == 'all':
+    cut = "B_BKGCAT == 60"
+    if mass_model == 'cbcalib':
+      mass_model = 'crystalball'
 
   sample = ipanema.Sample.from_root(args["sample"], branches=branches)
 
@@ -1096,22 +1125,22 @@ if __name__ == '__main__':
       print("mass cut from (L|R)SB", mass_cut)
       cut = cuts_and(mass_cut, cut)
     elif "LSB" in args['version']:
-      mass_cut = vsub_dict['LSB']
-      mass_range = False
-      print("mass cut from (L|R)SB", mass_cut)
-      cut = cuts_and(mass_cut, cut)
-      # mass_range = (mass_range[0], 5367 + 30)
-      # _2sig = input_pars['muBs'].value + 2 * 18
-      # mass_range = (mass_range[0], _2sig)
+      # mass_cut = vsub_dict['LSB']
+      # mass_range = False
+      # print("mass cut from (L|R)SB", mass_cut)
+      # cut = cuts_and(mass_cut, cut)
+      mass_range = (mass_range[0], 5367 + 30)
+      _2sig = input_pars['muBs'].value + 2 * 18
+      mass_range = (mass_range[0], _2sig)
     elif "RSB" in args['version']:
-      mass_cut = vsub_dict['RSB']
+      # mass_cut = vsub_dict['RSB']
       has_bd = False
-      mass_range = False
-      # mass_range = (5367 - 30, mass_range[1])
-      # _2sig = input_pars['muBs'].value - 2 * 18
-      # mass_range = (_2sig, mass_range[1])
-      print("mass cut from (L|R)SB", mass_cut)
-      cut = cuts_and(mass_cut, cut)
+      # mass_range = False
+      mass_range = (5367 - 30, mass_range[1])
+      _2sig = input_pars['muBs'].value - 2 * 18
+      mass_range = (_2sig, mass_range[1])
+      # print("mass cut from (L|R)SB", mass_cut)
+      # cut = cuts_and(mass_cut, cut)
   cut = cuts_and(bin_cut, cut)
   print(cut)
 
