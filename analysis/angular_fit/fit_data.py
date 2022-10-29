@@ -97,7 +97,7 @@ if __name__ == "__main__":
     print("SAFE CUT")
 
   # Prepare the cuts
-  CUT = cuts_and("", f'time>={tLL} & time<={tUL} & mB < 5390')
+  CUT = cuts_and("", f'time>={tLL} & time<={tUL}')
   print(CUT)
 
   # print("INPUTS")
