@@ -86,15 +86,16 @@ rule samples_stat_tuple:
   input:
     lambda wcs: tuples(wcs, year=f'{wcs.year}')
   output:
-    'output/tables/samples_stat_tuple/{year}/{mode}/{version}.tex'
+    'output/tables/samples_stat_tuple/{year}/{mode}/{version}_{kind}.tex'
   log:
-    'output/log/samples_stat_tuple/{year}/{mode}/{version}.log'
+    'output/log/samples_stat_tuple/{year}/{mode}/{version}_{kind}.log'
   run:
     shell(f"""(time\
     python analysis/samples/tuple_stat.py\
     --year {wildcards.year}\
     --sample {','.join(input)}\
     --output {output}\
+    --kind {wildcards.kind}\
     ) &> {log}""")
 
 # }}}
