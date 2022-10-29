@@ -72,6 +72,40 @@ rule systematic_mass_factorization:
           pars[p].casket = {"mass-factorization": syst}
         pars.dump(f"{output.pars}")
 
+
+rule systematic_mass_shape:
+    input:
+        pars = "output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
+    output:
+        pars = "output/params/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massShape.json",
+        # tabs = "output/tables/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massFactorization.tex",
+        # figs = directory("output/figures/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massFactorization/")
+    run:
+        import ipanema
+        pars = ipanema.Parameters.load(f"{input.pars}")
+        pars['fPlon'].casket = {'mass-shape': 0.0006}
+        pars['fPper'].casket = {'mass-shape': 0.0006}
+        pars['pPlon'].casket = {'mass-shape': 0.0006}
+        pars['lPlon'].casket = {'mass-shape': 0.0006}
+        pars['dPper'].casket = {'mass-shape': 0.0006}
+        pars['dPpar'].casket = {'mass-shape': 0.0006}
+        pars['DGsd'].casket = {'mass-shape': 0.0006}
+        pars['DGs'].casket = {'mass-shape': 0.0006}
+        pars['DM'].casket = {'mass-shape': 0.0006}
+        pars['dSlon1'].casket = {'mass-shape': 0.0006}
+        pars['dSlon2'].casket = {'mass-shape': 0.0006}
+        pars['dSlon3'].casket = {'mass-shape': 0.0006}
+        pars['dSlon4'].casket = {'mass-shape': 0.0006}
+        pars['dSlon5'].casket = {'mass-shape': 0.0006}
+        pars['dSlon6'].casket = {'mass-shape': 0.0006}
+        pars['fSlon1'].casket = {'mass-shape': 0.0006}
+        pars['fSlon2'].casket = {'mass-shape': 0.0006}
+        pars['fSlon3'].casket = {'mass-shape': 0.0006}
+        pars['fSlon4'].casket = {'mass-shape': 0.0006}
+        pars['fSlon5'].casket = {'mass-shape': 0.0006}
+        pars['fSlon6'].casket = {'mass-shape': 0.0006}
+        pars.dump(f"{output.pars}")
+
 # }}}
 
 
