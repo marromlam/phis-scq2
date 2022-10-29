@@ -87,7 +87,7 @@ bottom_table.append(r"\hline")
 
 for systname, systpars in systs.items():
   _syst = {k: v.casket[list(v.casket.keys())[0]] for k, v in systpars.items()}
-  _syst = {k: f"{abs(v):.4f}" for k, v in _syst.items()}
+  _syst = {k: f"{abs(v):.4f}".replace("0.0000", "-") for k, v in _syst.items()}
   _syst.update({'systname': systematics_list[systname]})
   top_table.append(syst_row_top.format(**_syst))
   bottom_table.append(syst_row_bottom.format(**_syst))

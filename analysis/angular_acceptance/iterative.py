@@ -198,18 +198,15 @@ def merge_std_dg0(std, dg0, verbose=True, label=''):
     for j in range(1, cov_comb.shape[1]):
       corr[k, j] = cov_comb[k][j] / np.sqrt(cov_comb[k][k] * cov_comb[j][j])
 
-  print(corr)
   # Create parameters std_w
   out = Parameters()
   for k, wk in enumerate(std.keys()):
     out.add({'name': f'{wk}{label}', 'value': w[k], 'stdev': uw[k],
              'free': False, 'latex': f'{std[wk].latex}^{label}'})
   for k, wk in enumerate(std.keys()):
-    print(wk, label)
     correl = {f'w{j}{label}': corr[k][j] for j in range(0, len(w)) if k > 0 and j > 0}
     out[f'{wk}{label}'].correl = correl
 
-  print(out.corr())
   if verbose:
     print(f"{'MC':>8} | {'MC_dG0':>8} | {'Combined':>8}")
     for k, wk in enumerate(std.keys()):
@@ -352,8 +349,6 @@ def do_kkp_weighting(verbose, kinematic_bmeson=False):
         # WARNING: old school procedure:
         # ov  = v.df[['pTHm','pTHp','pHm','pHp']]
         # ow  = v.df.eval(f'angWeight*polWeight*{weight_mc}')
-        print(v.pdfWeight)
-        print(v.pdfWeight[j])
         ow *= v.pdfWeight[j]
         # target variables + weight (real data)
         tv = data[y][t].df[weighting_branches]
@@ -577,8 +572,8 @@ def aitken_iteration(tLL, tUL, max_iter=30, verbose=True, kinematic_bmeson=False
             aitken = x2
           else:
             # checker.append(False)
-            # aitken = x2 - ( (x2-x1)**2 ) / den # aitken
-            # aitken = x0 - ( (x1-x0)**2 ) / den # steffensen
+            # aitken = x2 - ((x2 - x1)**2) / den  # aitken
+            # aitken = x0 - ((x1 - x0)**2) / den  # steffensen
             aitken = x1 - ((x2 - x1)**2) / den  # romero
 
           # update angacc
@@ -603,7 +598,9 @@ def aitken_iteration(tLL, tUL, max_iter=30, verbose=True, kinematic_bmeson=False
       print(f"\n{80*'-'}\n")
 
     print("CHECK: ", checker)
-    print("checker_dict: ", checker_dict)
+    print("checker_dict: ")
+    for ck, cv in checker_dict.items():
+      print(ck, cv)
     print("LIKELIHOODs: ", likelihoods)
 
     if all(checker) or i > 25:
@@ -750,11 +747,11 @@ if __name__ == '__main__':
   global mc, data, weight_rd, weight_mc
 
   # only load the branches that are actually used
-  mc_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB',
-                 'gencosK', 'gencosL', 'genhphi', f'gen{time}', 'genidB',
+  mc_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB', 'etaB',
+                 'gencosK', 'gencosL', 'genhphi', f'gen{time}', 'genidB', 'pTLm', 'pTLp', 'pLm', 'pLp',
                  'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'polWeight', 'pB', 'pTB']
   rd_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB',
-                 'tagOSdec', 'tagSSdec', 'tagOSeta', 'tagSSeta',
+                 'tagOSdec', 'tagSSdec', 'tagOSeta', 'tagSSeta', 'pTLm', 'pTLp', 'pLm', 'pLp', 'etaB',
                  'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'pB', 'pTB']
 
   # MC reconstructed and generator level variable names
@@ -798,6 +795,8 @@ if __name__ == '__main__':
 
     for m, v in zip(mcmodes, [angWeight_std, angWeight_dg0]):
       angWeight = uproot.open(v[i])['DecayTree'].array('angWeight')
+      if kinematic_bmeson:
+        angWeight = np.ones_like(angWeight)
       # mc[y][m]['unbiased'].olen = len(angWeight)
       for t in ['biased', 'unbiased']:
         mc[y][m]['biased'].olen = len(angWeight)
@@ -858,7 +857,6 @@ if __name__ == '__main__':
     resolution = Parameters.load(time_resolution[i])
     flavor = Parameters.load(flavor_tagging[i])
     mass = np.array(csp.build(csp, csp.find('mKK.*')))
-    print(mass)
     badjanak.config['mHH'] = mass.tolist()
 
     for t in ['biased', 'unbiased', 'combined']:
@@ -1022,7 +1020,7 @@ if __name__ == '__main__':
   ok, likelihoods = lipschitz_iteration(max_iter=10, verbose=True, tLL=tLL, tUL=tUL, kinematic_bmeson=kinematic_bmeson)
 
   if not ok:
-    ok, likelihoods = aitken_iteration(max_iter=30, verbose=True, tLL=tLL, tUL=tUL, kinematic_bmeson=kinematic_bmeson)
+    ok, likelihoods = aitken_iteration(max_iter=7, verbose=True, tLL=tLL, tUL=tUL, kinematic_bmeson=kinematic_bmeson)
 
   if not ok:
     print('WARNING: Convergence was not achieved!')

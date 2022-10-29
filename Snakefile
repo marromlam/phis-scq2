@@ -442,6 +442,16 @@ rule pack_thesis:
     #
     # }}}
     #
+    # time resolution {{{
+    expand(
+       "output/figures/time_resolution_fit/{myear}/{mmode}/{mversion}_{mtimeres}1of1_{mtrigger}",
+       mtimeres = [ f"triple" ],
+        mmode = [ 'MC_Bs2JpsiPhi_Prompt', 'Bs2JpsiPhi_Prompt'],
+        myear = [ '2015', '2016', '2017', '2018' ],
+        mversion = [ f"{config['version']}" ],
+        mtrigger = ['combined'],
+    ),
+    # }}}
     #
     # time acceptance plots {{{
     #
@@ -564,6 +574,19 @@ rule pack_thesis:
     #               #year=['2015','2016','2017','2018']),
     # }}}
     #
+    # scans {{{
+    expand("output/figures/physics_params/{myear}/Bs2JpsiPhi/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}/scans",
+        mversion = [f"{config['version']}@LcosK"],
+        mfit = [f"{config['fit']}"],
+        myear = [f"{config['year']}"],
+        mangacc = [f"{config['angacc']}"],
+        mcsp = [f"{config['csp']}"],
+        mflavor = [f"{config['flavor']}"],
+        mtimeacc = [ f"{config['timeacc']}" ],
+        mtimeres = [f"{config['timeres']}"],
+        mtrigger = [f"{config['trigger']}"],
+    ),
+    # }}}
     #
     #
     # }}}

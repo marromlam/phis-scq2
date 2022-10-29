@@ -24,7 +24,8 @@ vsub_dict = {
     # magnet cuts
     "magUp": "Polarity == 1",
     "magDown": "Polarity == -1",
-    "bkgcat60": "B_BKGCAT != 60",
+    # "bkgcat60": "B_BKGCAT != 60",
+    "bkgcat60": "time > 0",
     # lower and upper time cuts
     "LT": f"time < {config.general['lower_time_upper_limit']}",
     "UT": f"time > {config.general['upper_time_lower_limit']}",
@@ -40,10 +41,11 @@ vsub_dict = {
     "pTB3": "B_PT >= 6e3 & B_PT <= 9e3",
     "pTB4": "B_PT >= 9e3",
     # bins of pTJpsi
-    "pTJpsi1": "Jpsi_PT >= 0 & Jpsi_PT < 3.8e3",
-    "pTJpsi2": "Jpsi_PT >= 3.8e3 & Jpsi_PT < 6e3",
-    "pTJpsi3": "Jpsi_PT >= 6e3 & Jpsi_PT <= 9e3",
-    "pTJpsi4": "Jpsi_PT >= 9e3",
+    # 6.35292846, 1073.35454412, 1749.62548721, 2512.92106449, 4412.51093472
+    "pTJpsi1": "Jpsi_PT >= 0 & Jpsi_PT < 1073",
+    "pTJpsi2": "Jpsi_PT >= 1073 & Jpsi_PT < 1749",
+    "pTJpsi3": "Jpsi_PT >= 1749 & Jpsi_PT <= 2512",
+    "pTJpsi4": "Jpsi_PT >= 2512",
     # bins of etaB
     "etaB1": "B_ETA >= 0 & B_ETA <= 3.3",
     "etaB2": "B_ETA >= 3.3 & B_ETA <= 3.9",
@@ -59,6 +61,8 @@ vsub_dict = {
     # "RSB": "B_ConstJpsi_M_1 > 5337",
     "LSB": "B_ConstJpsi_M_1 < 5550",
     "RSB": "B_ConstJpsi_M_1 > 5200",
+    # "LSB": "B_ConstJpsi_M_1 < 5417",
+    # "RSB": "B_ConstJpsi_M_1 > 5287",
     "LSBsmall": "B_ConstJpsi_M_1 < 5397 & B_ConstJpsi_M_1 > 5255",
     "RSBsmall": "B_ConstJpsi_M_1 > 5337 & B_ConstJpsi_M_1 < 5460",
     # "LbkgSB": "B_ConstJpsi_M_1 > 5417",
@@ -81,10 +85,10 @@ vsub_dict = {
     "pid2": 'hplus_ProbNNk_corr>0.876 & hplus_ProbNNk_corr<0.965',
     "pid3": 'hplus_ProbNNk_corr>0.965 & hplus_ProbNNk_corr<0.996',
     "pid4": 'hplus_ProbNNk_corr>0.996',
-    "PID1": "( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=12.40) & (hplus_PIDK>0.0) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=12.40) & (hminus_PIDK>0.0) )",
-    "PID2": "( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=20.25) & (hplus_PIDK>12.40) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=20.25) & (hminus_PIDK>12.40) )",
-    "PID3": "( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=29.78) & (hplus_PIDK>20.25) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=29.78) & (hminus_PIDK>20.25) )",
-    "PID4": "( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=129.14) & (hplus_PIDK>29.78) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=129.14) & (hminus_PIDK>29.78) )",
+    "PID1": "( (hplus_PIDK<hminus_PIDK) & ({scale}*hplus_PIDK<= 12.40) & ({scale}*hplus_PIDK> 0.00) ) | ( (hminus_PIDK<=hplus_PIDK) & ({scale}*hminus_PIDK<= 12.40) & ({scale}*hminus_PIDK>0.0) )",
+    "PID2": "( (hplus_PIDK<hminus_PIDK) & ({scale}*hplus_PIDK<= 20.25) & ({scale}*hplus_PIDK>12.40) ) | ( (hminus_PIDK<=hplus_PIDK) & ({scale}*hminus_PIDK<= 20.25) & ({scale}*hminus_PIDK>12.40) )",
+    "PID3": "( (hplus_PIDK<hminus_PIDK) & ({scale}*hplus_PIDK<= 29.78) & ({scale}*hplus_PIDK>20.25) ) | ( (hminus_PIDK<=hplus_PIDK) & ({scale}*hminus_PIDK<= 29.78) & ({scale}*hminus_PIDK>20.25) )",
+    "PID4": "( (hplus_PIDK<hminus_PIDK) & ({scale}*hplus_PIDK<=129.14) & ({scale}*hplus_PIDK>29.78) ) | ( (hminus_PIDK<=hplus_PIDK) & ({scale}*hminus_PIDK<=129.14) & ({scale}*hminus_PIDK>29.78) )",
     # prymary vertex cut
     "PV1": 'nPVs==1',
     "PV2": 'nPVs==2',
@@ -148,6 +152,10 @@ if __name__ == "__main__":
   list_of_branches = list(result.keys())
   print(list_of_branches)
 
+  # add pT for Jpsi if it does not exist
+  if not 'Jpsi_PT' in list_of_branches:
+    result.eval("Jpsi_PT = sqrt( (muplus_PX + muminus_PX)**2 + (muplus_PY + muminus_PY)**2)", inplace=True)
+
   try:
     print("There are sWeights variables")
     if 'sw_cosK_noGBw' in list(result.keys()):
@@ -172,10 +180,10 @@ if __name__ == "__main__":
 
   list_of_cuts = []
   vsub_cut = None
+  scale = 0.916 if 'MC' in m else 1.00
   for k, v in vsub_dict.items():
     if k in V:
       try:
-        noe = len(result.query(v))
         if (k in ("g210300", "l210300")) and is_mc:
           print("MCs are not cut in runNumber")
         elif (k in ("g210300", "l210300")) and ("2018" != y):
@@ -189,10 +197,11 @@ if __name__ == "__main__":
         elif (k in ("pid1", "pid2", "pid3", "pid4")) and 'Bs2JpsiPhi' not in m:
           print("PID cut was only planned in Bs modes")
         else:
-          list_of_cuts.append(v)
-        if noe == 0:
-          print(f"ERROR: This cut leaves df empty. {v}")
-          print("       Query halted.")
+          list_of_cuts.append(v.format(scale=scale))
+          noe = len(result.query(list_of_cuts[-1]))
+          if noe == 0:
+            print(f"ERROR: This cut leaves df empty. {v}")
+            print("       Query halted.")
       except:
         print(f"There is no such variable for the cut {v}")
   if list_of_cuts:

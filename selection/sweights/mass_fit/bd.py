@@ -178,7 +178,7 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
   print(f"Mass branch: {mass_branch}")
   print(f"Mass weight: {mass_weight}")
   rd = Sample.from_pandas(odf)
-  _proxy = np.float64(rd.df[mass_branch]) * 0.0
+  _proxy = np.float64(rd.df[mass_branch]) * 0.0 - 999
   rd.chop(current_cut)
   rd.allocate(mass=mass_branch, pdf=f'0*{mass_branch}', weight=mass_weight)
   # print(rd)
@@ -276,6 +276,7 @@ if __name__ == '__main__':
   p.add_argument('--trigger')
   p.add_argument('--sweights')
   p.add_argument('--mode')
+  p.add_argument('--version')
   args = vars(p.parse_args())
 
   if args['sweights']:
