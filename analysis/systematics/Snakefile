@@ -21,6 +21,17 @@ rule systematic_mass_factorization:
                flavor = w.flavor,
                timeacc = w.timeacc,
                timeres = w.timeres,
+               trigger = w.trigger),
+        tabs = lambda w: expand("output/tables/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.tex",
+               year = w.year,
+               mode = w.mode,
+               version = "v4r0~mX6time3@LcosK+v4r0~mX6cosL3@LcosK+v4r0~mX6cosK3@LcosK+v4r0~mX6hphi3@LcosK",
+               fit = w.fit,
+               angacc = w.angacc,
+               csp = w.csp,
+               flavor = w.flavor,
+               timeacc = w.timeacc,
+               timeres = w.timeres,
                trigger = w.trigger)
     output:
         pars = "output/params/systematics/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_massFactorization.json",
