@@ -125,6 +125,14 @@ rule pack_thesis:
     # TABLES {{{
     # All tables needed for the theis or analysis note
     #
+    # stat tuple{{{
+    expand("output/tables/samples_stat_tuple/{myear}/{mmode}/{mversion}_{mstat}.tex",
+        mversion = [f"{config['version']}@LcosK"],
+        mmode = ["Bu2JpsiKplus", "Bd2JpsiKstar", "Bs2JpsiPhi"],
+        myear = ["run2"],
+        mstat = ["stat"],
+    ),
+    # }}}
     #
     # time acceptance tables {{{
     #
@@ -424,6 +432,25 @@ rule pack_thesis:
     #
     # FIGURES {{{
     #
+    # sweights {{{
+    expand(rules.sweights_add.output.plots,
+           version = [ f"{config['version']}@LcosK" ],
+           mode = ['Bs2JpsiPhi', 'Bd2JpsiKstar',
+                   # 'Bu2JpsiKplus'
+            ],
+           year = ['2015', '2016', '2017', '2018'],
+           sweight=['sWeight'],
+    ),
+    expand(rules.mass_fit_bs_lb.output.plots,
+           version = [ f"{config['version']}" ],
+           mode = ['Bs2JpsiPhi_Lb'],
+           year = ['2015', '2016', '2017', '2018'],
+           sweight=['sWeight'],
+           massbin=['all'],
+           massmodel=['ipatiaChebyshev'],
+           trigger=['kminus', 'kplus'],
+    ),
+    # }}}
     #
     # reweighting plots {{{
     #
@@ -443,11 +470,18 @@ rule pack_thesis:
     # time resolution {{{
     expand(
        "output/figures/time_resolution_fit/{myear}/{mmode}/{mversion}_{mtimeres}1of1_{mtrigger}",
-       mtimeres = [ f"triple" ],
+        mtimeres = [ f"triple" ],
         mmode = [ 'MC_Bs2JpsiPhi_Prompt', 'Bs2JpsiPhi_Prompt'],
         myear = [ '2015', '2016', '2017', '2018' ],
         mversion = [ f"{config['version']}" ],
         mtrigger = ['combined'],
+    ),
+    expand(
+       "output/figures/time_resolution/{myear}/{mmode}/{mversion}_{mtimeres}",
+        mtimeres = [ f"double10" ],
+        mmode = [ 'Bs2JpsiPhi'],
+        myear = [ '2015', '2016', '2017', '2018' ],
+        mversion = [ f"{config['version']}" ],
     ),
     # }}}
     #
@@ -506,6 +540,15 @@ rule pack_thesis:
     #
     # }}}
     #
+    # 
+    # csp factors {{{
+    expand("output/figures/mass_efficiencies/{myear}/{mmode}/{mversion}_{mcsp}.pdf",
+           mversion=["v4r0~mX6@LcosK"],
+           myear=[2015, 2016, 2017, 2018],
+           mmode=['MC_Bs2JpsiPhi'],
+           mcsp = ['yearly4', 'yearly6']
+           ),
+    # }}}
     #
     # angular acceptance plots {{{
     #
@@ -524,6 +567,13 @@ rule pack_thesis:
             mode=["MC_Bs2JpsiPhi_dG0", "MC_Bs2JpsiPhi"],
             trigger=["biased", "unbiased"],
             branch=["cosL", "cosK", "hphi"],
+            year=[ 2015, 2016, 2017, 2018],
+    ),
+    expand("output/figures/angular_acceptance/{year}/{mode}/{version}_analytic_{trigger}",
+            version=[f"{config['version']}@LcosK"],
+            mode=["MC_Bs2JpsiPhi_dG0", "MC_Bs2JpsiPhi"],
+            trigger=["biased", "unbiased"],
+            # branch=["cosL", "cosK", "hphi"],
             year=[ 2015, 2016, 2017, 2018],
     ),
     #
@@ -607,7 +657,13 @@ rule pack_thesis:
         for item in this_input:
           all_files.append(item)
       else:
-        all_files.append(this_input)
+        if os.path.isdir(this_input):
+            _files = [f for f in os.listdir(this_input) if not f.startswith('.')]
+            for f in _files:
+                print(f)
+                all_files.append(os.path.join(this_input, f))
+        else:
+            all_files.append(this_input)
 
     # print(all_files)
     # print(output)
@@ -624,6 +680,7 @@ rule pack_thesis:
     # Loop over all input files and make a copy of all pdfs
     with tqdm(total=len(all_files)) as pbar:
       for i, fn in enumerate(all_files):
+        # print(i, fn)
         _fn = os.path.abspath(fn)
         _fn = _fn.replace(f"/{v}", "/thetuple")
         if _fn.endswith('.json'):
@@ -633,6 +690,7 @@ rule pack_thesis:
         elif _fn.endswith('.pdf'):
           out_path = _fn.replace('output/figures/', f'output/{v}/plots/')
         else:
+          print('Problems')
           out_path = None # add other methods if needed
         if out_path:
           # print(f"Copying {fn} to {out_path}...")

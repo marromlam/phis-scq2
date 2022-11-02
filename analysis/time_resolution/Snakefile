@@ -304,9 +304,19 @@ rule time_resolution_calibration_translate:
     wildcard_constraints:
         mode = 'Bs2JpsiPhi'
     input:
-        data = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Prompt', weight='chopped'),
-        json_old = 'output/params/time_resolution_dilution/{year}/{mode}_Prompt/{version}_{timeres}_combined.json',
-        json_trs = 'output/params/time_resolution_dilution/{year}/{mode}/{version}_{timeres}_combined.json',
+        data = lambda wcs: tuples(wcs, version=f"{wcs.version}".split('@')[0],mode='Bs2JpsiPhi_Prompt', weight='chopped'),
+        json_old = lambda wcs: expand('output/params/time_resolution_dilution/{year}/{mode}_Prompt/{version}_{timeres}_combined.json',
+                                    version=f"{wcs.version}".split('@')[0],
+                                    year=f"{wcs.year}",
+                                    mode=f"{wcs.mode}",
+                                    timeres=f"{wcs.timeres}",
+                          ),
+        json_trs = lambda wcs: expand('output/params/time_resolution_dilution/{year}/{mode}/{version}_{timeres}_combined.json',
+                                    version=f"{wcs.version}".split('@')[0],
+                                    year=f"{wcs.year}",
+                                    mode=f"{wcs.mode}",
+                                    timeres=f"{wcs.timeres}",
+                          ),
     output:
         plots = directory('output/figures/time_resolution/{year}/{mode}/{version}_{timeres}'),
         jsonLinear = 'output/params/time_resolution/{year}/{mode}/{version}_{timeres}Linear.json',
