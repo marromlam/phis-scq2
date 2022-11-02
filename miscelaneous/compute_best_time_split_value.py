@@ -25,10 +25,10 @@ def equibins1d(x, nbin):
 
 
 all_data = pd.concat([
-    uproot.open('/scratch49/marcos.romero/sidecar/2015/Bs2JpsiPhi/v3r0@LcosK.root')['DecayTree'].pandas.df(),
-    uproot.open('/scratch49/marcos.romero/sidecar/2016/Bs2JpsiPhi/v3r0@LcosK.root')['DecayTree'].pandas.df(),
-    uproot.open('/scratch49/marcos.romero/sidecar/2017/Bs2JpsiPhi/v3r0@LcosK.root')['DecayTree'].pandas.df(),
-    uproot.open('/scratch49/marcos.romero/sidecar/2018/Bs2JpsiPhi/v3r0@LcosK.root')['DecayTree'].pandas.df()
+    uproot.open('/scratch49/marcos.romero/sidecar/2015/Bs2JpsiPhi/v4r0@LcosK.root')['DecayTree'].pandas.df(),
+    uproot.open('/scratch49/marcos.romero/sidecar/2016/Bs2JpsiPhi/v4r0@LcosK.root')['DecayTree'].pandas.df(),
+    uproot.open('/scratch49/marcos.romero/sidecar/2017/Bs2JpsiPhi/v4r0@LcosK.root')['DecayTree'].pandas.df(),
+    uproot.open('/scratch49/marcos.romero/sidecar/2018/Bs2JpsiPhi/v4r0@LcosK.root')['DecayTree'].pandas.df()
 ])
 print(all_data)
 

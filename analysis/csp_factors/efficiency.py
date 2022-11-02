@@ -98,7 +98,7 @@ def create_time_bins(nob):
   elif int(nob) == 2:
     mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
   elif int(nob) == 3:
-    mass_bins = [0.3, 0.92, 1.97, 15]
+    mass_bins = [0.3, 1.00, 2.05, 15]
   elif int(nob) == 4:
     mass_bins = [990, 1008, 1016, 1020, 1024, 1032, 1050]
   elif int(nob) == 5:

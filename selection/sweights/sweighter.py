@@ -32,8 +32,8 @@ if __name__ == '__main__':
   p.add_argument('--input-sample')
   p.add_argument('--output-sample')
   p.add_argument('--output-plots', default=False)
-  p.add_argument('--biased-weights')
-  p.add_argument('--unbiased-weights')
+  p.add_argument('--sweights')
+  # p.add_argument('--unbiased-weights')
   p.add_argument('--mode')
   p.add_argument('--version', default=None)
   args = vars(p.parse_args())
@@ -53,10 +53,10 @@ if __name__ == '__main__':
   _proxy = np.float64(sample.df['time']) * 0.0
 
   # List all set of sWeights to be merged
-  bpars = args["biased_weights"].split(",")
-  upars = args["unbiased_weights"].split(",")
+  sweights = args["sweights"].split(",")
+  # upars = args["unbiased_weights"].split(",")
 
-  list_of_weights = np.load(bpars[0], allow_pickle=True)
+  list_of_weights = np.load(sweights[0], allow_pickle=True)
   list_of_weights = list_of_weights.item()
   list_of_weights = list(list_of_weights.keys())
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
   to_df = {}
   create_plot = False
   for k in list_of_weights:
-    for sw in bpars + upars:
+    for sw in sweights:
       v = np.load(sw, allow_pickle=True)
       v = v.item()
       if k.startswith('mass'):
@@ -91,13 +91,13 @@ if __name__ == '__main__':
   # add sweights
   for w in to_df.keys():
     __proxy = 0 * _proxy - 999
-    for sw in bpars + upars:
+    for i, sw in enumerate(sweights):
       _weight = np.load(sw, allow_pickle=True)
       _weight = _weight.item()
       _weight = _weight[w]
       __proxy[_weight != -999] = _weight[_weight != -999]
     if is_bkg60:
-      sample.df[f"{w[1:]}SW"] = np.where(__proxy == -999, 1, __proxy)
+      sample.df[f"{w[1:]}SW"] = np.where(__proxy == -999, sample.df['gb_weights'], __proxy)
     else:
       sample.df[f"{w[1:]}SW"] = 1 + 0 * __proxy if ones else __proxy
   print("Dataframe before cleannin up")
@@ -105,6 +105,7 @@ if __name__ == '__main__':
   sample.chop(f"sig{shorten_mode(mode)}SW != -999")
   print("Dataframe after sWeight cleanning")
   print(sample.df)
+
   with uproot.recreate(args['output_sample']) as f:
     _branches = {}
     for k, v in sample.df.items():
@@ -122,7 +123,7 @@ if __name__ == '__main__':
   print("create plot", create_plot)
   if create_plot:
     for k in list_of_weights:
-      for i, sw in enumerate(bpars + upars):
+      for i, sw in enumerate(sweights):
         # print("file", i)
         v = np.load(sw, allow_pickle=True)
         v = v.item()
@@ -202,7 +203,7 @@ if __name__ == '__main__':
     fig.savefig(os.path.join(args['output_plots'], f"fit.pdf"))
     axplot.set_yscale("log")
     try:
-      axplot.set_ylim(1e0, 1.5 * np.max(to_plot['total']['arr']))
+      axplot.set_ylim(1e-6, 1.5 * np.max(to_plot['total']['arr']))
     except:
       print("axes not scaled")
     fig.savefig(os.path.join(args['output_plots'], f"logfit.pdf"))

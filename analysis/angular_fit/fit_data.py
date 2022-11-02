@@ -115,7 +115,7 @@ if __name__ == "__main__":
   weight = 'sWeight'
   # weight = 'sw'
   branches_to_load += real
-  branches_to_load += ['sw', 'sWeight', 'lbWeight']
+  branches_to_load += ['sw', 'sWeight', 'lbWeight', 'mB']
 
   if timeacc_config['use_veloWeight']:
     weight = f'veloWeight*{weight}'

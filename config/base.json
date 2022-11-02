@@ -18,7 +18,7 @@
   "randomize_flavor": false,
   "velo_effmodel": "francesca",
   "velo_massmodel": "cb",
-  "bs_mass_model": "cbcalib",
+  "bs_mass_model": "ipatia",
   "bs_mass_bins": [
     "mX1",
     "mX2",
@@ -51,5 +51,6 @@
   "stripping_mode": "pidcuts",
   "delete_temporal": false,
   "tuples_downstream_version": "v1r0",
-  "tuples_standalone_version": "v2r0"
+  "tuples_standalone_version": "v2r0",
+  "tuples_tagging_version": "v1r5"
 }

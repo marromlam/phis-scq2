@@ -761,6 +761,7 @@ def mass_fitter(
       _pars.unlock("s0Bs")
     _pars.unlock("b")
     if 'lambd' in _pars:
+      pars.remove("lambd")
       _pars.unlock("lambd")
     pars = pars + _pars
   else:
@@ -879,8 +880,8 @@ def mass_fitter(
   print(rd)
   rd.allocate(mass=mass_branch, merr="B_ConstJpsi_MERR_1")
   rd.allocate(pdf=f"0*{mass_branch}", weight=mass_weight)
-  mass_range = (min(rd.df[mass_branch]), max(rd.df[mass_branch]))
-  mLL, mUL = mass_range
+  # mass_range = (min(rd.df[mass_branch]), max(rd.df[mass_branch]))
+  # mLL, mUL = mass_range
   # print(rd)
 
   # }}}
@@ -898,12 +899,14 @@ def mass_fitter(
   # res = False
   if not res:
     print("There was a problem with the fit. Let's try again.")
-    pars['fsigBs'].set(value=0.0, min=0.0, max=1)
+    pars['fsigBs'].set(value=0.5, min=0.0, max=1)
     pars['s1Bs'].set(value=0.0, init=0.0, min=-20, max=20, free=False)
     pars['s2Bs'].set(value=0.0, init=0.0, min=-1, max=1, free=False)
-    pars['s0Bs'].set(value=1.0, init=1.0, min=0.5, free=True)
+    pars['s0Bs'].set(value=10.0, init=10.0, min=0.5, free=True)
     if 'lambd' in pars:
       pars['lambd'].set(value=_pars['lambd'].value, init=-1.5, free=False)
+    if 'fsigBd' in pars:
+      pars['fsigBd'].set(value=0, init=0, free=False)
 
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
                            method='minuit', verbose=True, strategy=1,
@@ -920,10 +923,11 @@ def mass_fitter(
     pars = ipanema.Parameters.clone(res.params)
     for k, v in pars.items():
       v.init = v.value
+    print("Partial fits succeded! Now performing full fit")
     pars.unlock('fsigBs', 'muBs', 'b')
-    if 'fsigBd' in pars:
+    if 'fsigBd' in pars:  # :and len(rd.mass) > 1000:
       pars.unlock('fsigBd')
-    if 'lambd' in pars:
+    if 'lambd' in pars:  # and len(rd.mass) > 200:
       pars.unlock('lambd')
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
                            method='minuit', verbose=True, strategy=2,
@@ -1075,7 +1079,8 @@ if __name__ == '__main__':
 
   mass_model = args['mass_model']
   if "sigma" in args['version']:
-    mass_model = 'crystalball'
+    if mass_model == 'cbcalib':
+      mass_model = 'crystalball'
 
   has_bd = True if args["mode"] == "Bs2JpsiPhi" else False
 
@@ -1126,21 +1131,19 @@ if __name__ == '__main__':
       cut = cuts_and(mass_cut, cut)
     elif "LSB" in args['version']:
       # mass_cut = vsub_dict['LSB']
-      # mass_range = False
-      # print("mass cut from (L|R)SB", mass_cut)
       # cut = cuts_and(mass_cut, cut)
-      mass_range = (mass_range[0], 5367 + 30)
+      # mass_range = False
+      # mass_range = (mass_range[0], 5367 + 30)
       _2sig = input_pars['muBs'].value + 2 * 18
       mass_range = (mass_range[0], _2sig)
     elif "RSB" in args['version']:
       # mass_cut = vsub_dict['RSB']
-      has_bd = False
+      # cut = cuts_and(mass_cut, cut)
       # mass_range = False
-      mass_range = (5367 - 30, mass_range[1])
+      # mass_range = (5367 - 30, mass_range[1])
       _2sig = input_pars['muBs'].value - 2 * 18
       mass_range = (_2sig, mass_range[1])
-      # print("mass cut from (L|R)SB", mass_cut)
-      # cut = cuts_and(mass_cut, cut)
+      has_bd = False
   cut = cuts_and(bin_cut, cut)
   print(cut)
 
