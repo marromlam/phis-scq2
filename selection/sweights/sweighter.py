@@ -97,7 +97,7 @@ if __name__ == '__main__':
       _weight = _weight[w]
       __proxy[_weight != -999] = _weight[_weight != -999]
     if is_bkg60:
-      sample.df[f"{w[1:]}SW"] = np.where(__proxy == -999, 1, __proxy)
+      sample.df[f"{w[1:]}SW"] = np.where(__proxy == -999, sample.df['gb_weights'], __proxy)
     else:
       sample.df[f"{w[1:]}SW"] = 1 + 0 * __proxy if ones else __proxy
   print("Dataframe before cleannin up")
