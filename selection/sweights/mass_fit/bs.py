@@ -892,11 +892,12 @@ def mass_fitter(
   # res = False
   try:
     res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                           method='minuit', verbose=verbose, strategy=1,
+                           method='minuit', verbose=verbose, strategy=2,
                            tol=0.05)
+    if res.params['s0Bs'].value > 19.99:
+      res = False
   except:
     res = False
-  # res = False
   if not res:
     print("There was a problem with the fit. Let's try again.")
     pars['fsigBs'].set(value=0.5, min=0.0, max=1)
@@ -925,7 +926,7 @@ def mass_fitter(
       v.init = v.value
     print("Partial fits succeded! Now performing full fit")
     pars.unlock('fsigBs', 'muBs', 'b')
-    if 'fsigBd' in pars:  # :and len(rd.mass) > 1000:
+    if 'fsigBd' in pars:  # and len(rd.mass) > 1000:
       pars.unlock('fsigBd')
     if 'lambd' in pars:  # and len(rd.mass) > 200:
       pars.unlock('lambd')
@@ -1134,16 +1135,16 @@ if __name__ == '__main__':
       # cut = cuts_and(mass_cut, cut)
       # mass_range = False
       # mass_range = (mass_range[0], 5367 + 30)
-      _2sig = input_pars['muBs'].value + 2 * 18
+      _2sig = input_pars['muBs'].value + 2 * 30
       mass_range = (mass_range[0], _2sig)
     elif "RSB" in args['version']:
       # mass_cut = vsub_dict['RSB']
       # cut = cuts_and(mass_cut, cut)
       # mass_range = False
       # mass_range = (5367 - 30, mass_range[1])
-      _2sig = input_pars['muBs'].value - 2 * 18
+      _2sig = input_pars['muBs'].value - 2 * 30
       mass_range = (_2sig, mass_range[1])
-      has_bd = False
+      # has_bd = False
   cut = cuts_and(bin_cut, cut)
   print(cut)
 
