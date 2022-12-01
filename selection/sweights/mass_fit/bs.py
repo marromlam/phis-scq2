@@ -588,7 +588,8 @@ def cb_exponential3(
         nR=0, b=0, norm=1, mLL=None, mUL=None,):
   # prepare calibrations
   sBs = s0Bs + merr * (s1Bs + merr * s2Bs)
-  sBd = s0Bd + 0 * s1Bd + 0 * s2Bd
+  # sBd = s0Bd + 0 * s1Bd + 0 * s2Bd
+  sBd = s0Bs + merr * (s1Bs + merr * s2Bs)
 
   # main peak
   prog.kernel_double_crystal_ball(signal, mass, np.float64(muBs), sBs,
@@ -599,9 +600,14 @@ def cb_exponential3(
   pBs = ipanema.ristra.get(signal)
   # second peak with same tails as main one
   if fsigBd > 0:
-    prog.kernel_gaussian(signal, mass, np.float64(muBd), np.float64(sBd),
-                         np.float64(mLL), np.float64(mUL),
-                         global_size=(len(mass)),)
+    prog.kernel_double_crystal_ball(signal, mass, np.float64(muBd), sBd,
+                                  np.float64(aL), np.float64(nL),
+                                  np.float64(aR), np.float64(nR),
+                                  np.float64(mLL), np.float64(mUL),
+                                  global_size=(len(mass)),)
+    # prog.kernel_gaussian(signal, mass, np.float64(muBd), np.float64(sBd),
+    #                      np.float64(mLL), np.float64(mUL),
+    #                      global_size=(len(mass)),)
     pBd = ipanema.ristra.get(signal)
   else:
     pBd = 0
@@ -735,7 +741,7 @@ def mass_fitter(
         dict(name="s1Bs", value=0.67, min=-5, max=10, free=True, latex=r"p_1^{B_s}")
     )
     pars.add(
-        dict(name="s2Bs", value=0.00, min=-1, max=1, free=True, latex=r"p_2^{B_s}")
+        dict(name="s2Bs", value=0.00, min=-1, max=2, free=True, latex=r"p_2^{B_s}")
     )
   else:
     pars.add(
@@ -1014,7 +1020,7 @@ def mass_fitter(
     fig.savefig(os.path.join(figs, f"fit.pdf"))
   axplot.set_yscale("log")
   try:
-    axplot.set_ylim(1e0, 1.5 * np.max(y))
+    axplot.set_ylim(1e-1, 1.5 * np.max(y))
   except:
     print("axes not scaled")
   if figs:
@@ -1111,8 +1117,8 @@ if __name__ == '__main__':
 
   sample = ipanema.Sample.from_root(args["sample"], branches=branches)
 
-  mass_range = (5202, 5548)
-  # mass_range = (5200, 5550)
+  # mass_range = (5202, 5548)
+  mass_range = (5200, 5550)
   #   mass_range = (5270, 5450) # DANGER
   bin_cut = get_bin_from_version(args['version'], args['mass_bin'], args['mode'])
 
@@ -1134,16 +1140,16 @@ if __name__ == '__main__':
       # cut = cuts_and(mass_cut, cut)
       # mass_range = False
       # mass_range = (mass_range[0], 5367 + 30)
-      _2sig = input_pars['muBs'].value + 2 * 18
+      _2sig = input_pars['muBs'].value + 2 * 30
       mass_range = (mass_range[0], _2sig)
     elif "RSB" in args['version']:
       # mass_cut = vsub_dict['RSB']
       # cut = cuts_and(mass_cut, cut)
       # mass_range = False
       # mass_range = (5367 - 30, mass_range[1])
-      _2sig = input_pars['muBs'].value - 2 * 18
+      _2sig = input_pars['muBs'].value - 2 * 30
       mass_range = (_2sig, mass_range[1])
-      has_bd = False
+      # has_bd = False
   cut = cuts_and(bin_cut, cut)
   print(cut)
 
@@ -1162,6 +1168,9 @@ if __name__ == '__main__':
       input_pars=input_pars,
       verbose=False,
   )
+  for k, v in pars.items():
+    if v.free:
+      print(f"{k:>10} : {v.uvalue:.6uP}")
   pars.dump(args["output_params"])
   if sw:
     np.save(args["sweights"], sw)
