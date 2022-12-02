@@ -231,7 +231,7 @@ def version_guesser(version):
         # split by magnet Up or Down: useful for crosschecks
         r"(magUp|magDown)?",
         # only OS, SS or fully tagged events
-        r"(only(OST|SST|OSS))?",
+        r"(only(OST|SST|OSS)|tag)?",
         # split in pTB, etaB and sigmat bins: for systematics
         r"((pTB|pXB|pYB|pTJpsi|etaB|sigmat|pid|PID|PV)(\d{1}))?"
         # split tuple by event number: useful for MC tests and crosschecks
@@ -560,7 +560,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
     # Bs2DsPi {{{
     elif m == 'Bs2DsPi':
       # WARNING: We dont chop this tuple with the @
-      if weight not in ['ready']:
+      if weight not in ['ready', 'kinWeight']:
         if config.base['allow_continuous']:
           weight = 'selected'
         else:
@@ -871,13 +871,19 @@ def send_mail(subject, body, files=None):
 
 # Other utils {{{
 
-def trigger_scissors(trigger, CUT=""):
+def trigger_scissors(trigger, CUT="", hlt1b=True):
   if trigger == 'biased':
-    # CUT = cuts_and("Jpsi_Hlt1DiMuonHighMassDecision_TOS==0",CUT)
-    CUT = cuts_and("hlt1b==1", CUT)
+    if hlt1b:
+        CUT = cuts_and("hlt1b==1", CUT)
+    else:
+        CUT = cuts_and("Jpsi_Hlt1DiMuonHighMassDecision_TOS==0",CUT)
   elif trigger == 'unbiased':
+    if hlt1b:
+        CUT = cuts_and("hlt1b==0", CUT)
+    else:
+        CUT = cuts_and("Jpsi_Hlt1DiMuonHighMassDecision_TOS==1",CUT)
     # CUT = cuts_and("Jpsi_Hlt1DiMuonHighMassDecision_TOS==1",CUT)
-    CUT = cuts_and("hlt1b==0", CUT)
+    # CUT = cuts_and("hlt1b==0", CUT)
   return CUT
 
 
