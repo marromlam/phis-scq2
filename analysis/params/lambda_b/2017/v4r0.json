@@ -1,0 +1,10 @@
+{
+  nLb:
+  {
+    name: nLb
+    value: 1330
+    stdev: 79
+    free: false
+    latex: n_{\Lambda_b}
+  }
+}

@@ -5,7 +5,7 @@
   "angacc": "run2Dual",
   "csp": "vgc",
   "scan": 0,
-  "flavor": "amsrd",
+  "flavor": "peilian",
   "timeacc": "simul3",
   "timeres": "amsrd",
   "timeres_nbins": 9,
@@ -18,7 +18,7 @@
   "randomize_flavor": false,
   "velo_effmodel": "francesca",
   "velo_massmodel": "cb",
-  "bs_mass_model": "ipatia",
+  "bs_mass_model": "cbcalib",
   "bs_mass_bins": [
     "mX1",
     "mX2",
@@ -31,7 +31,7 @@
   "bd_mass_bins": [
     "all"
   ],
-  "bu_mass_model": "crystalball",
+  "bu_mass_model": "ipatia",
   "bu_mass_bins": [
     "all"
   ],
