@@ -171,7 +171,7 @@ def get_kernels(verbose=False, pedantic=False):
     """
     global __KERNELS__
     prog = compile(verbose, pedantic)
-    items = ['pyrateBs', 'pyrateBd',
+    items = ['pyrateBs', 'pyrateBd',  # 'pyrateBs_two_gamma',
              'pyFcoeffs',
              'pySingleTimeAcc', 'pyRatioTimeAcc', 'pyFullTimeAcc', 'pySpline',
              #  'py_tijk2weights'
@@ -245,6 +245,8 @@ def parser_rateBs(
         r['G'] = p['Gs']
     else:
         r['G'] = Gd + DGsd + DGd
+    if 'Gn' in p:  # nuisance gamma
+        r['Gn'] = p['Gn']
 
     # Compute fractions of S and P wave objects
     FP = abs(1.-fSlon)
@@ -287,22 +289,49 @@ def parser_rateBs(
     r['sigma_curvature'] = sigma_curvature
     r['mu'] = mu
 
-    # # Tagging
-
-    r['eta_os'] = eta_os
-    r['eta_ss'] = eta_ss
-    r['p0_os'] = p0_os
-    r['p1_os'] = p1_os
-    r['p2_os'] = p2_os
-    r['p0_ss'] = p0_ss
-    r['p1_ss'] = p1_ss
-    r['p2_ss'] = p2_ss
-    r['dp0_os'] = dp0_os
-    r['dp1_os'] = dp1_os
-    r['dp2_os'] = dp2_os
-    r['dp0_ss'] = dp0_ss
-    r['dp1_ss'] = dp1_ss
-    r['dp2_ss'] = dp2_ss
+    # Tagging
+    _eta_os = [k for k in p.keys() if re.compile("(eta_os|etaOS)((1|2)[0-9])?").match(k)]
+    # print(_eta_os)
+    r['eta_os'] = p[_eta_os[0]] if _eta_os else eta_os
+    _eta_ss = [k for k in p.keys() if re.compile("(eta_ss|etaSS)((1|2)[0-9])?").match(k)]
+    # print(_eta_ss)
+    r['eta_ss'] = p[_eta_ss[0]] if _eta_ss else eta_ss
+    _p0_os =  [k for k in p.keys() if re.compile("(p0_os|p0OS)((1|2)[0-9])?").match(k)]
+    # print(_p0_os)
+    r['p0_os'] =  p[_p0_os[0]] if _p0_os else p0_os
+    _p1_os =  [k for k in p.keys() if re.compile("(p1_os|p1OS)((1|2)[0-9])?").match(k)]
+    # print(_p1_os)
+    r['p1_os'] =  p[_p1_os[0]] if _p1_os else p1_os
+    _p2_os =  [k for k in p.keys() if re.compile("(p2_os|p2OS)((1|2)[0-9])?").match(k)]
+    # print(_p2_os)
+    r['p2_os'] =  p[_p2_os[0]] if _p2_os else p2_os
+    _p0_ss =  [k for k in p.keys() if re.compile("(p0_ss|p0SS)((1|2)[0-9])?").match(k)]
+    # print(_p0_ss)
+    r['p0_ss'] =  p[_p0_ss[0]] if _p0_ss else p0_ss
+    _p1_ss =  [k for k in p.keys() if re.compile("(p1_ss|p1SS)((1|2)[0-9])?").match(k)]
+    # print(_p1_ss)
+    r['p1_ss'] =  p[_p1_ss[0]] if _p1_ss else p1_ss
+    _p2_ss =  [k for k in p.keys() if re.compile("(p2_ss|p2SS)((1|2)[0-9])?").match(k)]
+    # print(_p2_ss)
+    r['p2_ss'] =  p[_p2_ss[0]] if _p2_ss else p2_ss
+    _dp0_os = [k for k in p.keys() if re.compile("(dp0_os|dp0OS)((1|2)[0-9])?").match(k)]
+    # print(_dp0_os)
+    r['dp0_os'] = p[_dp0_os[0]] if _dp0_os else dp0_os
+    _dp1_os = [k for k in p.keys() if re.compile("(dp1_os|dp1OS)((1|2)[0-9])?").match(k)]
+    # print(_dp1_os)
+    r['dp1_os'] = p[_dp1_os[0]] if _dp1_os else dp1_os
+    _dp2_os = [k for k in p.keys() if re.compile("(dp2_os|dp2OS)((1|2)[0-9])?").match(k)]
+    # print(_dp2_os)
+    r['dp2_os'] = p[_dp2_os[0]] if _dp2_os else dp2_os
+    _dp0_ss = [k for k in p.keys() if re.compile("(dp0_ss|dp0SS)((1|2)[0-9])?").match(k)]
+    # print(_dp0_ss)
+    r['dp0_ss'] = p[_dp0_ss[0]] if _dp0_ss else dp0_ss
+    _dp1_ss = [k for k in p.keys() if re.compile("(dp1_ss|dp1SS)((1|2)[0-9])?").match(k)]
+    # print(_dp1_ss)
+    r['dp1_ss'] = p[_dp1_ss[0]] if _dp1_ss else dp1_ss
+    _dp2_ss = [k for k in p.keys() if re.compile("(dp2_ss|dp2SS)((1|2)[0-9])?").match(k)]
+    # print(_dp2_ss)
+    r['dp2_ss'] = p[_dp2_ss[0]] if _dp2_ss else dp2_ss
 
     # Time acceptance
     timeacc = [p[k] for k in p.keys() if re.compile(
@@ -314,7 +343,7 @@ def parser_rateBs(
 
     # Angular acceptance
     angacc = [p[k] for k in p.keys() if re.compile(
-        'w([0-9])([0-9])?(u|b)?').match(k)]
+        'w([0-9])([0-9])?(u|b)?(\d{2})?').match(k)]
     if angacc:
         r['angacc'] = THREAD.to_device(real_type(angacc))
     else:
@@ -487,6 +516,74 @@ def delta_gamma5(input, output, G, DG, DM, CSP, ASlon, APlon, APpar, APper,
         global_size=g_size, local_size=l_size)
     # grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
 
+def delta_gamma5_mod(input, output, G, Gn,  DG, DM, CSP, ASlon, APlon, APpar, APper,
+                 pSlon, pPlon, pPpar, pPper, dSlon, dPlon, dPpar, dPper, lSlon,
+                 lPlon, lPpar, lPper, tLL, tUL, cosKLL, cosKUL, cosLLL, cosLUL,
+                 hphiLL, hphiUL, sigma_offset, sigma_slope, sigma_curvature,
+                 mu, eta_os, eta_ss, p0_os,  p1_os, p2_os, p0_ss, p1_ss, p2_ss,
+                 dp0_os, dp1_os, dp2_os, dp0_ss, dp1_ss, dp2_ss, timeacc,
+                 angacc, use_fk=1, use_angacc=0, use_timeacc=0,
+                 use_timeoffset=0, set_tagging=0, use_timeres=0, **crap):
+    g_size, l_size = get_sizes(output.shape[0], config['block_size'])
+    # print(Gn)
+    __KERNELS__.rateBs_two_gamma(
+        input, output, real_type(G), real_type(Gn), real_type(DG), real_type(DM),
+        CSP.astype(real_type), ASlon.astype(real_type),
+        APlon.astype(real_type), APpar.astype(real_type),
+        APper.astype(real_type), real_type(pSlon), real_type(pPlon),
+        real_type(pPpar),                real_type(pPper),
+        dSlon.astype(real_type),          real_type(dPlon),                 real_type(
+            dPpar),                 real_type(dPper),
+        real_type(lSlon),                 real_type(lPlon),                 real_type(
+            lPpar),                 real_type(lPper),
+        # Time range
+        real_type(tLL), real_type(tUL),
+        real_type(cosKLL), real_type(cosKUL),
+        real_type(cosLLL), real_type(cosLUL),
+        real_type(hphiLL), real_type(hphiUL),
+        # Time resolution
+        real_type(sigma_offset), real_type(
+            sigma_slope), real_type(sigma_curvature),
+        real_type(mu),
+        # Flavor tagging
+        real_type(eta_os), real_type(eta_ss),
+        real_type(p0_os), real_type(p1_os), real_type(p2_os),
+        real_type(p0_ss), real_type(p1_ss), real_type(p2_ss),
+        real_type(dp0_os), real_type(dp1_os), real_type(dp2_os),
+        real_type(dp0_ss), real_type(dp1_ss), real_type(dp2_ss),
+        # Decay-time acceptance
+        timeacc.astype(real_type),
+        # Angular acceptance
+        angacc.astype(real_type),
+        # Flags
+        np.int32(use_fk), np.int32(len(CSP)), np.int32(
+            use_angacc), np.int32(use_timeacc),
+        np.int32(use_timeoffset), np.int32(set_tagging), np.int32(use_timeres),
+        np.int32(len(output)),
+        global_size=g_size, local_size=l_size)
+    # grid=(int(np.ceil(output.shape[0]/BLOCK_SIZE)),1,1), block=(BLOCK_SIZE,1,1))
+
+def delta_gamma5_data_mod(input, output, use_fk=1, use_angacc=1, use_timeacc=1,
+                      use_timeoffset=0, set_tagging=1, use_timeres=1,
+                      BLOCK_SIZE=256, **pars):
+    """
+    This function is intended to be used with MC input arrays. It does use
+    time acceptance nor angular acceptance. The tagging is set to perfect
+    tagging and the time resolution is disabled.
+
+
+    Parameters
+    ----------
+    input : ipanema.ristra
+      Input data with proper shape
+    output : ipanema.ristra
+      Output array with proper shape to store pdf values
+    """
+    p = parser_rateBs(**pars)
+    delta_gamma5_mod(input, output, use_fk=use_fk, use_angacc=use_angacc,
+                 use_timeacc=use_timeacc, use_timeoffset=use_timeoffset,
+                 set_tagging=set_tagging, use_timeres=use_timeres,
+                 BLOCK_SIZE=BLOCK_SIZE, **p)
 
 def delta_gamma5_data(input, output, use_fk=1, use_angacc=1, use_timeacc=1,
                       use_timeoffset=0, set_tagging=1, use_timeres=1,

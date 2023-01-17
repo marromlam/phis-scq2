@@ -27,9 +27,8 @@ initialize(config.user['backend'], 1)
 
 # some general configration for the badjanak kernel
 badjanak.config['debug'] = 0
-badjanak.config['fast_integral'] = 1
-badjanak.config['debug_evt'] = 774
-
+badjanak.config['fast_integral'] = 0
+badjanak.config['debug_evt'] = 0
 
 if __name__ == "__main__":
   DESCRIPTION = """
@@ -175,7 +174,7 @@ if __name__ == "__main__":
   # Compile the kernel
   #    so if knots change when importing parameters, the kernel is compiled
   # badjanak.config["precision"]='single'
-  badjanak.get_kernels()
+  badjanak.get_kernels(True)
 
   # TODO: move this to a function which parses fit wildcard
   SWAVE = True
@@ -190,6 +189,9 @@ if __name__ == "__main__":
   if 'Poldep' in FIT:
     POLDEP = True
   BLIND = bool(int(args['blind']))
+  TWO_GAMMA = False
+  CONSTR = True
+  # CONSTR = False
   # BLIND = False
   print("blind:", BLIND)
   print("polalization dependent:", POLDEP)
@@ -337,58 +339,168 @@ if __name__ == "__main__":
                 value=gamma_ref, min=0.0, max=1.0,
                 free=False,
                 latex=r"\Gamma_d \, \mathrm{[ps]}^{-1}"))
+  if TWO_GAMMA:
+    pars.add(dict(name="Gn",
+                    value=0.6, min=0.0, max=5.5,
+                    free=TWO_GAMMA,
+                    latex=r"\Gamma_d \, \mathrm{[ps]}^{-1}"))
   pars.add(dict(name="DGs", value=(1 - DGZERO) * 0.3, min=0.0, max=1.7,
                 free=1 - DGZERO,
                 latex=r"\Delta\Gamma_s \, \mathrm{[ps^{-1}]}",
                 blindstr="BsDGsFullRun2",
                 blind=BLIND, blindscale=1.0, blindengine="root"))
-  pars.add(dict(name="DGsd", value=0.03 * 0, min=-0.1, max=0.1,
+  pars.add(dict(name="DGsd", value=0.03 * 0, min=-0.5, max=0.5,
                 free=True,
                 latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps^{-1}]}"))
+  # pars.add(dict(name="Gs", value=0.03 * 0, min=-5.5, max=5.5,
+  #               free=True,
+  #               latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps^{-1}]}"))
   pars.add(dict(name="DM", value=17.757, min=15.0, max=20.0,
                 free=True,
                 latex=r"\Delta m_s \, \mathrm{[ps^{-1}]}"))
 
-  # tagging
-  pars.add(dict(name="eta_os",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['eta_os'].value,
-                free=False))
-  pars.add(dict(name="eta_ss",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['eta_ss'].value,
-                free=False))
-  pars.add(dict(name="p0_os",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['p0_os'].value,
-                free=True, min=0.0, max=1.0,
-                latex=r"p^{\rm OS}_{0}"))
-  pars.add(dict(name="p1_os",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['p1_os'].value,
-                free=True, min=0.5, max=1.5,
-                latex=r"p^{\rm OS}_{1}"))
-  pars.add(dict(name="p0_ss",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['p0_ss'].value,
-                free=True, min=0.0, max=2.0,
-                latex=r"p^{\rm SS}_{0}"))
-  pars.add(dict(name="p1_ss",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['p1_ss'].value,
-                free=True, min=0.0, max=2.0,
-                latex=r"p^{\rm SS}_{1}"))
-  pars.add(dict(name="dp0_os",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].value,
-                free=True, min=-0.1, max=0.1,
-                latex=r"\Delta p^{\rm OS}_{0}"))
-  pars.add(dict(name="dp1_os",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_os'].value,
-                free=True, min=-0.1, max=0.1,
-                latex=r"\Delta p^{\rm OS}_{1}"))
-  pars.add(dict(name="dp0_ss",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_ss'].value,
-                free=True, min=-0.1, max=0.1,
-                latex=r"\Delta p^{\rm SS}_{0}"))
-  pars.add(dict(name="dp1_ss",
-                value=data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_ss'].value,
-                free=True, min=-0.1, max=0.1,
-                latex=r"\Delta p^{\rm SS}_{1}"))
+  # # tagging
+  # pars.add(dict(name="eta_os",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['eta_os'].value,
+  #               free=False))
+  # pars.add(dict(name="eta_ss",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['eta_ss'].value,
+  #               free=False))
+  # pars.add(dict(name="p0_os",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['p0_os'].value,
+  #               free=True, min=0.0, max=1.0,
+  #               latex=r"p^{\rm OS}_{0}"))
+  # pars.add(dict(name="p1_os",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['p1_os'].value,
+  #               free=True, min=0.5, max=1.5,
+  #               latex=r"p^{\rm OS}_{1}"))
+  # pars.add(dict(name="p0_ss",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['p0_ss'].value,
+  #               free=True, min=0.0, max=2.0,
+  #               latex=r"p^{\rm SS}_{0}"))
+  # pars.add(dict(name="p1_ss",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['p1_ss'].value,
+  #               free=True, min=0.0, max=2.0,
+  #               latex=r"p^{\rm SS}_{1}"))
+  # pars.add(dict(name="dp0_os",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].value,
+  #               free=True, min=-0.1, max=0.1,
+  #               latex=r"\Delta p^{\rm OS}_{0}"))
+  # pars.add(dict(name="dp1_os",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_os'].value,
+  #               free=True, min=-0.1, max=0.1,
+  #               latex=r"\Delta p^{\rm OS}_{1}"))
+  # pars.add(dict(name="dp0_ss",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_ss'].value,
+  #               free=True, min=-0.1, max=0.1,
+  #               latex=r"\Delta p^{\rm SS}_{0}"))
+  # pars.add(dict(name="dp1_ss",
+  #               value=data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_ss'].value,
+  #               free=True, min=-0.1, max=0.1,
+  #               latex=r"\Delta p^{\rm SS}_{1}"))
 
+  # for year in YEARS:
+  # # for year in list(samples.keys()):
+  #   if CONSTR:
+  #     pars += data[year][TRIGGER[0]].flavor
+  #   else:
+  #     data[year][TRIGGER[0]].flavor.lock()
+  #     pars += data[year][TRIGGER[0]].flavor
+  # for p in pars:
+  #   if p.startswith('eta'):
+  #     print(p)
+  #     pars.lock(p)
+
+  for year in YEARS:
+    if int(year) > 2015:
+      str_year = str(year)
+      syear = int(str_year[2:])
+      pars.add(dict(name=f"eta_os{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['eta_os'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['eta_os'].stdev,
+                  free=False))
+      pars.add(dict(name=f"eta_ss{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['eta_ss'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['eta_ss'].stdev,
+                  free=False))
+      pars.add(dict(name=f"p0_os{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['p0_os'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['p0_os'].stdev,
+                  free=CONSTR, min=0.0, max=1.0,
+                  latex=r"p^{\rm OS}_{0}"))
+      pars.add(dict(name=f"p1_os{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['p1_os'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['p1_os'].stdev,
+                  free=CONSTR, min=0.5, max=1.5,
+                  latex=r"p^{\rm OS}_{1}"))
+      pars.add(dict(name=f"p0_ss{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['p0_ss'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['p0_ss'].stdev,
+                  free=CONSTR, min=0.0, max=2.0,
+                  latex=r"p^{\rm SS}_{0}"))
+      pars.add(dict(name=f"p1_ss{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['p1_ss'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['p1_ss'].stdev,
+                  free=CONSTR, min=0.0, max=2.0,
+                  latex=r"p^{\rm SS}_{1}"))
+      pars.add(dict(name=f"dp0_os{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['dp0_os'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['dp0_os'].stdev,
+                  free=CONSTR, min=-0.1, max=0.1,
+                  latex=r"\Delta p^{\rm OS}_{0}"))
+      pars.add(dict(name=f"dp1_os{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['dp1_os'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['dp1_os'].stdev,
+                  free=CONSTR, min=-0.1, max=0.1,
+                  latex=r"\Delta p^{\rm OS}_{1}"))
+      pars.add(dict(name=f"dp0_ss{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['dp0_ss'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['dp0_ss'].stdev,
+                  free=CONSTR, min=-0.1, max=0.1,
+                  latex=r"\Delta p^{\rm SS}_{0}"))
+      pars.add(dict(name=f"dp1_ss{syear}",
+                  value=data[str(year)][TRIGGER[0]].flavor['dp1_ss'].value,
+                  stdev=data[str(year)][TRIGGER[0]].flavor['dp1_ss'].stdev,
+                  free=CONSTR, min=-0.1, max=0.1,
+                  latex=r"\Delta p^{\rm SS}_{1}"))
+  print(pars)
+
+  os_corr = np.array([
+	[    1.00, 0.03, 0.14,-0.00, 0.30,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
+	[    0.03, 1.00,-0.00, 0.65,-0.00, 0.35, 0.00, 0.00, 0.00,-0.00,-0.00,-0.00 ],
+	[    0.14,-0.00, 1.00, 0.05, 0.10,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
+	[   -0.00, 0.65, 0.05, 1.00,-0.00, 0.29, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
+	[    0.30,-0.00, 0.10,-0.00, 1.00, 0.04, 0.00, 0.00,-0.00,-0.00, 0.00,-0.00 ],
+	[   -0.00, 0.35,-0.00, 0.29, 0.04, 1.00, 0.00,-0.00, 0.00, 0.00, 0.00,-0.00 ],
+	[    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00, 0.12, 0.00, 0.00, 0.00, 0.00 ],
+	[    0.00, 0.00, 0.00, 0.00, 0.00,-0.00, 0.12, 1.00,-0.00,-0.00,-0.00,-0.00 ],
+	[    0.00, 0.00, 0.00, 0.00,-0.00, 0.00, 0.00,-0.00, 1.00, 0.14,-0.00,-0.00 ],
+	[    0.00,-0.00, 0.00, 0.00,-0.00, 0.00, 0.00,-0.00, 0.14, 1.00,-0.00,-0.00 ],
+	[    0.00,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00,-0.00, 1.00, 0.14 ],
+	[    0.00,-0.00, 0.00, 0.00,-0.00,-0.00, 0.00,-0.00,-0.00,-0.00, 0.14, 1.00 ]
+	])
+  ss_corr = np.array([
+	[    1.00,-0.03, 0.07,-0.00, 0.09,-0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
+	[   -0.03, 1.00,-0.00, 0.36,-0.00, 0.32,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	[    0.07,-0.00, 1.00, 0.04, 0.05,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 0.00 ],
+	[   -0.00, 0.36, 0.04, 1.00,-0.00, 0.19,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	[    0.09,-0.00, 0.05,-0.00, 1.00, 0.05, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
+	[   -0.00, 0.32,-0.00, 0.19, 0.05, 1.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	[    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 1.00, 0.12, 0.00,-0.00,-0.00,-0.00 ],
+	[    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.12, 1.00, 0.00, 0.00,-0.00,-0.00 ],
+	[    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.00, 0.00, 1.00, 0.13,-0.00, 0.00 ],
+	[    0.00,-0.00,-0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.13, 1.00, 0.00, 0.00 ],
+	[   -0.00,-0.00, 0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 1.00, 0.11 ],
+	[   -0.00, 0.00, 0.00, 0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.00, 0.11, 1.00 ]
+	])
+  pars.corr_from_matrix(os_corr,
+                        ["p0_os16", "p1_os16", "p0_os17", "p1_os17", "p0_os18",
+                         "p1_os18", "dp0_os16", "dp1_os16", "dp0_os17",
+                         "dp1_os17", "dp0_os18", "dp1_os18", ])
+  pars.corr_from_matrix(ss_corr,
+                        ["p0_ss16", "p1_ss16", "p0_ss17", "p1_ss17", "p0_ss18",
+                         "p1_ss18", "dp0_ss16", "dp1_ss16", "dp0_ss17",
+                         "dp1_ss17", "dp0_ss18", "dp1_ss18", ])
   # for year in YEARS:
   #   if int(year) > 2015:
   #     str_year = str(year)
@@ -529,10 +641,127 @@ if __name__ == "__main__":
     return dictOut
 
   tagConstr = taggingConstraints(data)
+  for k, v in tagConstr.items():
+    print(k)
+    print(v)
 
   # }}}
 
   # define fcn function {{{
+
+################## -old -  def fcn_tag_constr_data(parameters: Parameters, data: dict) -> np.ndarray:
+################## -old -    """
+################## -old -    Cost function to fit real data. Data is a dictionary of years, and each
+################## -old -    year should be a dictionary of trigger categories. This function loops
+################## -old -    over years and trigger categories.  Here we are going to unblind the
+################## -old -    parameters to the p.d.f., thats why we call
+################## -old -    parameters.valuesdict(blind=False), by
+################## -old -    default `parameters.valuesdict()` has blind=True.
+################## -old -
+################## -old -    Parameters
+################## -old -    ----------
+################## -old -    parameters : `ipanema.Parameters`
+################## -old -    Parameters object with paramaters to be fitted.
+################## -old -    data : dict
+################## -old -
+################## -old -    Returns
+################## -old -    -------
+################## -old -    np.ndarray
+################## -old -    Array containing the weighted likelihoods
+################## -old -
+################## -old -    """
+################## -old -    # parameters['dp0_os'].value += 0.004
+################## -old -    # parameters['dp1_os'].value += 0.004
+################## -old -    # parameters['dp0_ss'].value -= 0.003
+################## -old -
+################## -old -    pars_dict = parameters.valuesdict(blind=False)
+################## -old -    # os_names = parameters.find(rf"\A(p[0-2])(_os|OS)({y[2:]})?\Z")
+################## -old -    # ss_names = parameters.find(rf"\A(p[0-2])(_ss|SS)({y[2:]})?\Z")
+################## -old -    # dos_names = parameters.find(rf"\A(dp[0-2])(_os|OS)({y[2:]})?\Z")
+################## -old -    # dss_names = parameters.find(rf"\A(dp[0-2])(_ss|SS)({y[2:]})?\Z")
+################## -old -
+################## -old -    chi2TagConstr = 0.
+################## -old -
+################## -old -    chi2TagConstr += (pars_dict['dp0_os'] - data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].value)**2 / data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].stdev**2
+################## -old -    chi2TagConstr += (pars_dict['dp1_os'] - data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_os'].value)**2 / data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_os'].stdev**2
+################## -old -    chi2TagConstr += (pars_dict['dp0_ss'] - data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_ss'].value)**2 / data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_ss'].stdev**2
+################## -old -    chi2TagConstr += (pars_dict['dp1_ss'] - data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_ss'].value)**2 / data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_ss'].stdev**2
+################## -old -
+################## -old -    tagcvOS = np.matrix([pars_dict['p0_os'], pars_dict['p1_os']]) - tagConstr['pOS']
+################## -old -    tagcvSS = np.matrix([pars_dict['p0_ss'], pars_dict['p1_ss']]) - tagConstr['pSS']
+################## -old -    Y_OS = np.dot(tagcvOS, tagConstr['covOSInv'])
+################## -old -    chi2TagConstr += np.dot(Y_OS, tagcvOS.T)
+################## -old -    Y_SS = np.dot(tagcvSS, tagConstr['covSSInv'])
+################## -old -    chi2TagConstr += np.dot(Y_SS, tagcvSS.T)
+################## -old -
+################## -old -    # c_dos = parameters.valuesarray(dos_names)
+################## -old -    # c_dss = parameters.valuesarray(dss_names)
+################## -old -    # c0_dos = np.matrix(c_dos - data[str(YEARS[0])][TRIGGER[0]].flavor.valuesarray(dos_names))
+################## -old -    # c0_dss = np.matrix(c_dss - data[str(YEARS[0])][TRIGGER[0]].flavor.valuesarray(dss_names))
+################## -old -    # cov_dos = np.matrix(data[str(YEARS[0])][TRIGGER[0]].flavor.cov(dos_names))  # constraint covariance matrix
+################## -old -    # cov_dss = np.matrix(data[str(YEARS[0])][TRIGGER[0]].flavor.cov(dss_names))  # constraint covariance matrix
+################## -old -    # cnstr_os = np.dot(np.dot(c0_dos, np.linalg.inv(cov_dos)), c0_dos.T)
+################## -old -    # cnstr_ss = np.dot(np.dot(c0_dss, np.linalg.inv(cov_dss)), c0_dss.T)
+################## -old -    # cnstr += len(c0_dos) * np.log(2 * np.pi) + np.log(np.linalg.det(cov_dos))
+################## -old -    # cnstr = np.float64(cnstr[0][0]) / len(dt.prob)
+################## -old -    # cnstr = cnstr_os + cnstr_ss
+################## -old -
+################## -old -    chi2 = []
+################## -old -    chi2_2 = []
+################## -old -    for y, dy in data.items():
+################## -old -      for _, dt in dy.items():
+################## -old -        os_names = parameters.find(rf"\A((d)?p[0-2])(_os|OS)({y[2:]})?\Z")
+################## -old -        ss_names = parameters.find(rf"\A((d)?p[0-2])(_ss|SS)({y[2:]})?\Z")
+################## -old -        dos_names = parameters.find(rf"\A(dp[0-2])(_os|OS)({y[2:]})?\Z")
+################## -old -        dss_names = parameters.find(rf"\A(dp[0-2])(_ss|SS)({y[2:]})?\Z")
+################## -old -        c_os = parameters.valuesarray(os_names)
+################## -old -        c_ss = parameters.valuesarray(ss_names)
+################## -old -        c0_os = np.matrix(c_os - dt.flavor.valuesarray(os_names))
+################## -old -        c0_ss = np.matrix(c_ss - dt.flavor.valuesarray(ss_names))
+################## -old -        # c_dos = parameters.valuesarray(dos_names)
+################## -old -        # c_dss = parameters.valuesarray(dss_names)
+################## -old -        # c0_dos = np.matrix(c_dos - dt.flavor.valuesarray(dos_names))
+################## -old -        # c0_dss = np.matrix(c_dss - dt.flavor.valuesarray(dss_names))
+################## -old -        cov_os = np.matrix(dt.flavor.cov(os_names))  # constraint covariance matrix
+################## -old -        cov_ss = np.matrix(dt.flavor.cov(ss_names))  # constraint covariance matrix
+################## -old -        # cov_dos = np.matrix(dt.flavor.cov(dos_names))  # constraint covariance matrix
+################## -old -        # cov_dss = np.matrix(dt.flavor.cov(dss_names))  # constraint covariance matrix
+################## -old -        cnstr_os = np.dot(np.dot(c0_os, np.linalg.inv(cov_os)), c0_os.T)
+################## -old -        cnstr_ss = np.dot(np.dot(c0_ss, np.linalg.inv(cov_ss)), c0_ss.T)
+################## -old -        # cnstr_os += np.dot(np.dot(c0_dos, np.linalg.inv(cov_dos)), c0_dos.T)
+################## -old -        # cnstr_ss += np.dot(np.dot(c0_dss, np.linalg.inv(cov_dss)), c0_dss.T)
+################## -old -        cnstr = cnstr_os + cnstr_ss
+################## -old -        badjanak.delta_gamma5_data(
+################## -old -        # badjanak.delta_gamma5_data_mod(
+################## -old -            dt.data, dt.prob, **pars_dict,
+################## -old -            **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
+################## -old -            **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
+################## -old -            # **dt.flavor.valuesdict(),
+################## -old -            tLL=tLL, tUL=tUL,
+################## -old -            use_fk=1, use_angacc=1, use_timeacc=1,
+################## -old -            use_timeoffset=0, set_tagging=1, use_timeres=1,
+################## -old -            BLOCK_SIZE=128
+################## -old -        )
+################## -old -        # exit()
+################## -old -        _cnstr = np.float64(cnstr[0][0]) / len(dt.prob)
+################## -old -        chi2_2.append(-2.0 * (ristra.log(dt.prob) * dt.weight).get() + _cnstr)
+################## -old -        chi2.append(-2.0 * (ristra.log(dt.prob) * dt.weight).get())
+################## -old -    # print('my', cnstr, "   vero", chi2TagConstr)
+################## -old -
+################## -old -    # chi2conc = np.concatenate(chi2)
+################## -old -    chi2conc = np.concatenate(chi2_2)
+################## -old -    # chi2conc = chi2conc + np.array(len(chi2conc)*[chi2TagConstr[0][0]/float(len(chi2conc))])
+################## -old -
+################## -old -    # chi2TagConstr = float(chi2TagConstr[0][0] / len(chi2conc))
+################## -old -    # print(np.sum(chi2conc + chi2TagConstr))
+################## -old -    # print(np.sum(np.concatenate(chi2_2)))
+################## -old -    # exit()
+################## -old -    # for i in range(len(chi2conc)): chi2conc[i] += chi2TagConstr
+################## -old -
+################## -old -    # print(chi2TagConstr)
+################## -old -    # print( np.nan_to_num(chi2conc + chi2TagConstr, 0, 100, 100).sum() )
+################## -old -    return chi2conc  # + chi2TagConstr  # np.concatenate(chi2)
+
 
   def fcn_tag_constr_data(parameters: Parameters, data: dict) -> np.ndarray:
     """
@@ -555,46 +784,50 @@ if __name__ == "__main__":
     Array containing the weighted likelihoods
 
     """
-    pars_dict = parameters.valuesdict(blind=False)
-    chi2TagConstr = 0.
-
-    chi2TagConstr += (pars_dict['dp0_os'] - data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].value)**2 / data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_os'].stdev**2
-    chi2TagConstr += (pars_dict['dp1_os'] - data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_os'].value)**2 / data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_os'].stdev**2
-    chi2TagConstr += (pars_dict['dp0_ss'] - data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_ss'].value)**2 / data[str(YEARS[0])][TRIGGER[0]].flavor['dp0_ss'].stdev**2
-    chi2TagConstr += (pars_dict['dp1_ss'] - data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_ss'].value)**2 / data[str(YEARS[0])][TRIGGER[0]].flavor['dp1_ss'].stdev**2
-
-    tagcvOS = np.matrix([pars_dict['p0_os'], pars_dict['p1_os']]) - tagConstr['pOS']
-    tagcvSS = np.matrix([pars_dict['p0_ss'], pars_dict['p1_ss']]) - tagConstr['pSS']
-
-    Y_OS = np.dot(tagcvOS, tagConstr['covOSInv'])
-    chi2TagConstr += np.dot(Y_OS, tagcvOS.T)
-    Y_SS = np.dot(tagcvSS, tagConstr['covSSInv'])
-    chi2TagConstr += np.dot(Y_SS, tagcvSS.T)
+    tag_names_all = parameters.find(r"\A((d)?p[0-2])(_os|OS|_ss|SS|IFT|ift)(\d{2})?\Z")
+    tag_names_all2 = [shit.replace('15', '') for shit in tag_names_all]
+    tag_names_all2 = [shit.replace('16', '') for shit in tag_names_all2]
+    tag_names_all2 = [shit.replace('17', '') for shit in tag_names_all2]
+    tag_names_all2 = [shit.replace('18', '') for shit in tag_names_all2]
+    pars_all = parameters.valuesdict(blind=False)
+    pars_dict = {k: v for k, v in pars_all.items() if k not in tag_names_all}
+    # print(pars_all)
+    # exit()
 
     chi2 = []
-    for _, dy in data.items():
+    for y, dy in data.items():
       for _, dt in dy.items():
+        yt = y[2:] if y[2:] != "15" else "16"
+        tag_names = parameters.find(rf"\A((d)?p[0-2])(_os|OS|_ss|SS|IFT|ift)({yt})?\Z")
+        _tag = {k: v for k, v in pars_all.items() if k in tag_names}
         badjanak.delta_gamma5_data(
             dt.data, dt.prob, **pars_dict,
             **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
             **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-            # **dt.flavor.valuesdict(),
+            **_tag,
             tLL=tLL, tUL=tUL,
             use_fk=1, use_angacc=1, use_timeacc=1,
-            use_timeoffset=0, set_tagging=1, use_timeres=1,
-            BLOCK_SIZE=256
+            use_timeoffset=1, set_tagging=1, use_timeres=1,
+            BLOCK_SIZE=128
         )
-        chi2.append(-2.0 * (ristra.log(dt.prob) * dt.weight).get())
+        # exit()
+        chi2.append(-2. * ((ristra.log(dt.prob)) * dt.weight).get())
+
+    if CONSTR:
+      c = parameters.valuesarray(tag_names_all)
+      c0 = np.matrix(c - dt.flavor.valuesarray(tag_names_all2))
+      # cov = dt.flavor.cov(tag_names)  # constraint covariance matrix
+      cov = pars.cov(tag_names_all)  # constraint covariance matrix
+      cnstr = np.dot(np.dot(c0, np.linalg.inv(cov)), c0.T)
+      cnstr += len(c0) * np.log(2 * np.pi) + np.log(np.linalg.det(cov))
+      cnstr = np.float64(cnstr[0][0])
+    else:
+      cnstr = 0
 
     chi2conc = np.concatenate(chi2)
-    # chi2conc = chi2conc + np.array(len(chi2conc)*[chi2TagConstr[0][0]/float(len(chi2conc))])
+    # exit()
+    return chi2conc + cnstr / len(chi2conc)
 
-    chi2TagConstr = float(chi2TagConstr[0][0] / len(chi2conc))
-    # for i in range(len(chi2conc)): chi2conc[i] += chi2TagConstr
-
-    # print(chi2TagConstr)
-    # print( np.nan_to_num(chi2conc + chi2TagConstr, 0, 100, 100).sum() )
-    return chi2conc + chi2TagConstr  # np.concatenate(chi2)
 
   # function without constraining on tagging parameters
   def fcn_data(parameters: Parameters, data: dict) -> np.ndarray:
@@ -653,7 +886,7 @@ if __name__ == "__main__":
 
   result = optimize(cost_function, method=MINER, params=pars,
                     fcn_kwgs={'data': data},
-                    verbose=False, timeit=True,  # tol=0.1, strategy=1,
+                    verbose=True, timeit=True,  # tol=0.05, strategy=2,
                     policy='filter')
 
   # full print of result

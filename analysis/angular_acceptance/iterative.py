@@ -48,7 +48,7 @@ simplefilter(action='ignore', category=FutureWarning)
 initialize(config.user['backend'], 1, real='double')
 
 # get badjanak and compile it with corresponding flags
-badjanak.config['fast_integral'] = 1
+badjanak.config['fast_integral'] = 0
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
 badjanak.get_kernels()
@@ -157,10 +157,13 @@ def fcn_data(parameters, data, tLL, tUL):
     for trig in ['biased', 'unbiased']:
       dt = dy[trig]
       badjanak.delta_gamma5_data(dt.data, dt.lkhd, **pars_dict,
-                                 **dt.timeacc.valuesdict(), **dt.angacc.valuesdict(),
-                                 **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                                 **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc=1,
-                                 use_timeoffset=0, BLOCK_SIZE=128)
+                                 **dt.timeacc.valuesdict(),
+                                 **dt.angacc.valuesdict(),
+                                 **dt.resolution.valuesdict(),
+                                 **dt.csp.valuesdict(),
+                                 **dt.flavor.valuesdict(),
+                                 tLL=tLL, tUL=tUL, use_timeacc=1,
+                                 use_timeoffset=1, BLOCK_SIZE=128)
       chi2.append(-2.0 * (ristra.log(dt.lkhd) * dt.weight).get())
 
   return np.concatenate(chi2)
@@ -823,7 +826,6 @@ if __name__ == '__main__':
         mc[y][m][t].angaccs = {}
         mc[y][m][t].kkpWeight = {}
         mc[y][m][t].pdfWeight = {}
-        print(mc[y][m][t])
 
     for m, v in zip(mcmodes, [kkpWeight_std, kkpWeight_dg0]):
       mc[y][m]['biased'].path_to_weights = v[i]
@@ -832,24 +834,6 @@ if __name__ == '__main__':
   # Load corresponding data sample
   data = {}
 
-  # peilian = {
-  #   "biased": {
-  #       'c0b' : [1.000000000  ,  1.000000000   ,  1.000000000  ,  1.000000000],
-  #       'c1b' : [1.404441965  ,  2.034903448   ,  1.793688160  ,  2.109954168],
-  #       'c2b' : [1.575348124  ,  2.132255870   ,  1.997642384  ,  2.103855385],
-  #       'c3b' : [1.721472125  ,  2.706255362   ,  2.177309635  ,  2.548558825],
-  #       'c4b' : [1.580756482  ,  2.332426364   ,  1.950674299  ,  2.201890007],
-  #       'c5b' : [1.297480622  ,  2.207037229   ,  1.715259990  ,  2.127568961]
-  #   },
-  #   "unbiased": {
-  #       'c0u' : [1.000000000  ,  1.000000000   ,   1.000000000  ,  1.000000000],
-  #       'c1u' : [0.942728636  ,  1.041056452   ,   1.048783555  ,  1.028894315],
-  #       'c2u' : [0.965602272  ,  1.014986248   ,   0.972442672  ,  0.971275008],
-  #       'c3u' : [0.950822558  ,  1.030074922   ,   1.060093219  ,  1.015860357],
-  #       'c4u' : [1.028011836  ,  1.010640385   ,   0.944467065  ,  0.925709609],
-  #       'c5u' : [0.885257347  ,  0.961310891   ,   0.976730026  ,  0.934504370]
-  #   }
-  # }
   printsubsec('Loading RD samples')
   for i, y in enumerate(YEARS):
     data[y] = {}
@@ -873,10 +857,6 @@ if __name__ == '__main__':
       print(data[y][t].knots)
       badjanak.config['knots'] = np.array(data[y][t].knots).tolist()
       data[y][t].timeacc = Parameters.build(c, c.fetch('(a|b|c).*'))
-      data[y][t].chop(trigger_scissors(t, CUT))
-      # for k, v in peilian[t].items():
-      #       data[y][t].timeacc[k].value = v[i]
-      #       data[y][t].timeacc[k].init = v[i]
       data[y][t].chop(trigger_scissors(t, CUT))
       trigWeight = data[y]['combined'].df.eval(trigger_scissors(t))
       data[y]['combined'].df[f'{t}Weight'] = trigWeight
