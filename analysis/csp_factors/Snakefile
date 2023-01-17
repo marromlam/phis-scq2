@@ -59,9 +59,14 @@ rule csp_factors_efficiency_hist_yearly:
     Efficiency histograms in m(KK) for Csp factors.
     """
     input:
-        mc = SAMPLES+"/{year}/{mode}/{version}.root",
-        pgun = expand(SAMPLES+"/{{year}}/GUN_Bs2JpsiKK_Swave/{version}.root",
-                      version=config['tuples_standalone_version'])
+        mc = lambda w: expand(SAMPLES+"/{year}/{mode}/{version}.root",
+                    year=YEARS[f'{w.year}'],
+                    mode=w.mode,
+                    version=w.version),
+        pgun = lambda w: expand(SAMPLES+"/{year}/GUN_Bs2JpsiKK_Swave/{version}.root",
+                    version=config['tuples_standalone_version'],
+                    year=YEARS[f'{w.year}'],
+                    mode=w.mode)
     output:
         histos = 'output/params/mass_efficiencies/{year}/{mode}/{version}_yearly{nbins}.npy',
         plots = 'output/figures/mass_efficiencies/{year}/{mode}/{version}_yearly{nbins}.pdf'
@@ -70,10 +75,14 @@ rule csp_factors_efficiency_hist_yearly:
     log:
         "output/log/csp_factors_efficiency/{year}/{mode}/{version}_yearly{nbins}.log"
     run:
+        mc = input.mc
+        mc = [mc] if isinstance(mc,str) else mc
+        pgun = input.pgun
+        pgun = [pgun] if isinstance(pgun,str) else pgun
         shell(f"""(time\
         python {params.script} \
-        --simulated-sample {input.mc} \
-        --pgun-sample {input.pgun} \
+        --simulated-sample {','.join(mc)} \
+        --pgun-sample {','.join(pgun)} \
         --output-figure {output.plots} \
         --output-histos {output.histos} \
         --mode {wildcards.mode} \
@@ -114,8 +123,8 @@ rule csp_factors_merge:
     wildcard_constraints:
         mode = "(Bs2JpsiPhi)"
     input:
-        # lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiKK_Swave/{version}_yearly{nbins}.json',
-        lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiPhi/{version}_yearly{nbins}.json',
+        lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiKK_Swave/{version}_yearly{nbins}.json',
+        # lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiPhi/{version}_yearly{nbins}.json',
                          year=w.year if w.csp =="yearly" else YEARS[w.csp],
                          version=w.version,
                          nbins=w.nbins),

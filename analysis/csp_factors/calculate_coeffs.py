@@ -162,9 +162,11 @@ def evCsp(mLL, mUL, threshold, cut_off, eff=False,
   if not eff:
     @np.vectorize
     def eff(m):
-      if m < mLL or m > mUL:
-        return 0
-      return 1
+      if m >= mLL and m <= mUL:
+        return 1
+      return 0
+    threshold = mLL
+    cut_off = mUL
 
   def sw(m): return swave(m)
   def pw(m): return pwave(m)
@@ -239,7 +241,7 @@ def evCsp(mLL, mUL, threshold, cut_off, eff=False,
 
 
 def calculate_csp_factors(mKK_knots, histos=False, as_params=False,
-                          threshold=2 * (493.677 + 2), cut_off=1200):
+                          threshold=2 * (493.677 + 2 * 0), cut_off=1200):
   # input_dir1, input_dir2 = histos, histos
 
   # TODO: get this from the created funtion
@@ -259,8 +261,11 @@ def calculate_csp_factors(mKK_knots, histos=False, as_params=False,
   resolution_last_bin = True
   if not isinstance(histos, np.ndarray):
     resolution_last_bin = False
+  # this is useful for non S-wave MCs only
+  resolution_last_bin = False
 
   if len(eff) > 3 and resolution_last_bin:
+    print('adding shifts')
     __f = []
     _x = []
     _y = []
@@ -274,7 +279,6 @@ def calculate_csp_factors(mKK_knots, histos=False, as_params=False,
       _x.append(__x)
       _y.append(__y)
       # __f.append(interpolate.interp1d( __x, __y, fill_value='extrapolate'))
-      print(__y[0], __y[-1])
       __f.append(
           interpolate.interp1d(__x, __y, fill_value=(__y[0], __y[-1]), bounds_error=False)
       )

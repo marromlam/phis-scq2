@@ -9,6 +9,12 @@ import uproot3 as uproot
 import numpy as np
 # import matplotlib.pyplot as plt
 import complot
+import pandas as pd
+
+# from numericFunctionClass import NF  # taken from Urania
+# import pickle as cPickle
+from utils.plot import watermark
+from utils.helpers import version_guesser
 
 
 def create_mass_bins(nob):
@@ -244,6 +250,7 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
 
   if not weight:
     weight = f'{mass_branch}/{mass_branch}'
+  print("Weight:", weight)
 
   mass_knots = create_mass_bins(int(nbins))
   mLL, mUL = mass_knots[0] - 10, mass_knots[-1] + 10 + 140 * has_swave
@@ -256,8 +263,8 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
   hwide = np.histogram(df2['mHH'].values, nwide, range=(mLL, mUL))[0]
   hnarr = np.histogram(df2['mHH'].values, nnarr, range=(mLL, mUL))[0]
   # just to have the same hitogram as the one from ROOT::Draw
-  hwide = np.array([0.] + hwide.tolist())
-  hnarr = np.array([0.] + hnarr.tolist())
+  hwide = np.array(hwide.tolist())
+  hnarr = np.array(hnarr.tolist())
 
   # }}}
 
@@ -275,9 +282,7 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
     _w = df1.eval(f"( {_weight} ) * {weight}")
     _v = df1['truemHH'].values
     _c, _b = np.histogram(_v, _nbins, weights=_w, range=(mLL, mUL))
-    # print("bins", _b)
-    hb.append([_b, [0] + _c.tolist() + [0]])
-    # hb.append([0.5*(_b[1:]+_b[:-1]), [0] + _c.tolist() + [0]])
+    hb.append([_b, _c.tolist()])
 
   # }}}
 
@@ -290,10 +295,9 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
     _masses = []
     if(j == 0 or j == int(nbins) - 1):
       NBINS = nwide
-      # print("NBINS WIDE=",NBINS)
       for i in range(NBINS):
-        ratio = hb[j][1][i] / max(hwide[i], 1)
-        if j != 0 and hb[j][1][i] < mLL and has_swave:
+        ratio = hb[j][1][i] / float(max(hwide[i], 1))
+        if j != 0 and hwide[i] < mLL and has_swave:
           ratio = 0.
         ratio = 0 if hwide[i] == 0 else ratio
         _ratios.append(ratio)
@@ -302,8 +306,8 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
       NBINS = nnarr
       # print("NBINS NARROW =",NBINS_NARROW)
       for i in range(NBINS):
-        ratio = hb[j][1][i] / max(hnarr[i], 1)
-        if j != 0 and hb[j][1][i] < mLL and has_swave:
+        ratio = hb[j][1][i] / float(max(hnarr[i], 1))
+        if j != 0 and hnarr[i] < mLL and has_swave:
           ratio = 0.
         ratio = 0 if hnarr[i] == 0 else ratio
         _ratios.append(ratio)
@@ -317,11 +321,11 @@ def epsmKK(df1, df2, mode, year, nbins=6, mass_branch='X_M', weight=False):
 
   # ### To dump: NF with ratios and masses
   # functions = []
-  # for i in range(len(mkk_bins)):
-  #     functions.append(NF(masses[i],ratios[i]))
-  #     # cPickle.dump(functions[i],open(),"w"))
-  #     with open(dsafdsafadskfahds, "wb") as output_file:
-  #          cPickle.dump(functions[i], output_file)
+  # for i in range(len(mass_knots) - 1):
+  #   functions.append(NF(masses[i], ratios[i]))
+  #   # cPickle.dump(functions[i],open(),"w"))
+  #   with open(f"/scratch46/forVeronika/histo{mass_knots[i]}_{mass_knots[i+1]}", "wb") as output_file:
+  #     cPickle.dump(functions[i], output_file)
 
   # }}}
 
@@ -352,10 +356,15 @@ if __name__ == '__main__':
   ]
 
   # load samples as dataframes
-  sim = uproot.open(args['simulated_sample'])
-  sim = sim[list(sim.keys())[0]].pandas.df(branches=list_branches)
-  gun = uproot.open(args['pgun_sample'])
-  gun = gun[list(gun.keys())[0]].pandas.df()
+  # sim = uproot.open(args['simulated_sample'])
+  sim = [uproot.open(f) for f in args['simulated_sample'].split(',')]
+  sim = [f[list(f.keys())[0]].pandas.df(branches=list_branches) for f in sim]
+  # sim = [f[list(f.keys())[0]].pandas.df() for f in sim]
+  sim = pd.concat(sim)
+  gun = [uproot.open(f) for f in args['pgun_sample'].split(',')]
+  gun = [f[list(f.keys())[0]].pandas.df() for f in gun]
+  gun = pd.concat(gun)
+  # gun = gun[list(gun.keys())[0]].pandas.df()
   # print(gun.keys())
   # gun.eval("mHH = X_M", inplace=True)
   print(sim)
@@ -370,7 +379,7 @@ if __name__ == '__main__':
   print(args['nbins'])
   masses, ratios = epsmKK(sim, gun, mode=args['mode'], year=args['year'],
                           nbins=args['nbins'], mass_branch=mass_branch,
-                          weight=False)
+                          weight=weight)
 
   # create efficiency plot
   fig, axplot = complot.axes_providers.axes_plot()
@@ -378,8 +387,11 @@ if __name__ == '__main__':
     axplot.fill_between(masses[i], ratios[i], 0, alpha=0.5)
   axplot.set_xlabel(r"$m(K^+K^-)$")
   axplot.set_ylabel(r"Efficiency, $\epsilon$")
+  # version_watermark = version_guesser(args['version'])[0]
+  version_watermark = None
+  watermark(axplot, version=f"final", scale=1.2)
+
   fig.savefig(args['output_figure'])
-  print(masses, ratios)
   print(args['output_histos'])
   # dump results
   np.save(os.path.join(args['output_histos']), [masses, ratios],
