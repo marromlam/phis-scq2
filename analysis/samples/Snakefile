@@ -22,6 +22,10 @@ if config['allow_downloads'] and not config['run_selection']:
     log:
       'output/log/samples_download_tuple/{year}/{mode}/{version}_{weight}.log'
     run:
+      if 'GUN' in f"{wildcards.mode}":
+        folder = 'tuples_standalone'
+      else:
+        folder = 'tuples'
       shell(f"""(time\
       python analysis/samples/download_tuples.py\
       --year {wildcards.year}\
@@ -30,7 +34,7 @@ if config['allow_downloads'] and not config['run_selection']:
       --weight {wildcards.weight}\
       --tree DecayTree\
       --output {output}\
-      --eos {params}\
+      --eos {params}/{folder}\
       ) &> {log}""")
 
 
@@ -46,7 +50,7 @@ rule samples_upload_tuple:
   input:
     lambda wcs: tuples(wcs, year=f'{wcs.year}', weight=f'{wcs.weight}')
   output:
-    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9]+}_{weight,[A-Za-z0-9]+}.eos'
+    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}_{weight,[A-Za-z0-9]+}.eos'
   run:
     m = f'{wildcards.mode}'
     y = f'{wildcards.year}'
@@ -82,15 +86,16 @@ rule samples_stat_tuple:
   input:
     lambda wcs: tuples(wcs, year=f'{wcs.year}')
   output:
-    'output/tables/samples_stat_tuple/{year}/{mode}/{version}.tex'
+    'output/tables/samples_stat_tuple/{year}/{mode}/{version}_{kind}.tex'
   log:
-    'output/log/samples_stat_tuple/{year}/{mode}/{version}.log'
+    'output/log/samples_stat_tuple/{year}/{mode}/{version}_{kind}.log'
   run:
     shell(f"""(time\
     python analysis/samples/tuple_stat.py\
     --year {wildcards.year}\
     --sample {','.join(input)}\
     --output {output}\
+    --kind {wildcards.kind}\
     ) &> {log}""")
 
 # }}}
@@ -103,7 +108,7 @@ rule samples_stat_tuple:
 rule samples_chop_tuple:
   threads: 2
   resources:
-    mem_mb=6144
+    mem_mb=8000
   input:
     lambda wcs: tuples(wcs, version=f'{wcs.version}'.split('@')[0].split('~')[0].split('bdt')[0], year=f'{wcs.year}', weight=f'ready')
   output:
@@ -126,7 +131,7 @@ rule samples_chop_tuple:
 rule samples_reduce_tuple:
   threads: 2
   wildcard_constraints:
-    mode = "((MC_|GUN_)?(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus)(_dG0)?|MC_Bs2JpsiKK_Swave)"
+    mode = "((MC_|GUN_)?(Bs2JpsiPhi|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK)(_dG0|_Swave)?)"
   resources:
     mem_mb=2048
   input:

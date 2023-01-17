@@ -2,8 +2,8 @@
   nLb:
   {
     name: nLb
-    value: 291.0
-    stdev: 39
+    value: 288.0
+    stdev: 38
     free: false
     latex: n_{\Lambda_b}
   }

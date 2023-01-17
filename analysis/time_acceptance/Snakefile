@@ -42,7 +42,7 @@ rule time_acceptance_single:
     timeacc = "single.*"
   input:
     sample = lambda wcs: tuples(wcs),
-    reso = 'output/params/time_resolution/{year}/{mode}/{version}_amsrd.json',
+    reso = 'output/params/time_offset/{year}/{mode}/{version}_amsrd.json',
   output:
     params = 'output/params/time_acceptance/{year}/{mode}/{version}_{timeacc}_{trigger}.json',
   log:
@@ -446,7 +446,7 @@ rule lifetime_simul_Bu:
     btimeacc = lambda wcs: timeaccs(wcs, trigger='biased'),
     utimeacc = lambda wcs: timeaccs(wcs, trigger='unbiased'),
     resos = lambda wcs: expand('output/params/time_resolution/{year}/{mode}/{version}_amsrd.json',
-                               year=config.years[wcs.year],
+                               year=YEARS[wcs.year],
                                version=wcs.version, mode=wcs.mode)
   output:
     'output/params/lifetime/{year}/{mode}/{version}_{timeacc}_{trigger}.json',

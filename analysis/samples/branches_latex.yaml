@@ -31,31 +31,31 @@ common: &common
     descr : ''
   'cosK' :
     peval : 'helcosthetaK'
-    latex: '\cos \theta_K'
+    latex: '\cos \theta_{\mathrm{K}}'
     range: [-1.0, 1.0]
     units : ''
     descr : ''
   'cosL' :
     peval : 'helcosthetaL'
-    latex: '\cos \theta_{\mu}'
+    latex: '\cos \theta_{\upmu}'
     range: [-1.0, 1.0]
     units : ''
     descr : ''
   'hphi' :
     peval : 'helphi'
-    latex: '\phi_h'
+    latex: '\varphi_h'
     range: [-3.142, 3.142]
     units : 'rad'
     descr : ''
   'idB' :
     peval : 'B_ID'
-    latex : 'B_{ID}'
+    latex : '\mathrm{id}(B)'
     range : [-1000.0, 1000.0]
     units : ''
     descr : ''
   'idHH' : 
     peval: 'X_ID'
-    latex: 'X_{ID}'
+    latex: '\mathrm{id}(X)'
     range: []
     units : ''
     descr : ''
@@ -79,31 +79,31 @@ common: &common
     descr : ''
   'evtN' : 
     peval : 'eventNumber'
-    latex : 'evtNumber'
+    latex : '\mathtt{evtNumber}'
     range : []
     units : ''
     descr : ''
   'runNumber' : 
     peval : 'runNumber'
-    latex : 'runNumber'
+    latex : '\mathrr{runNumber}'
     range : []
     units : ''
     descr : ''
   'sw' :
     peval : 'sw'
-    latex : 'sw'
+    latex : 'w_s'
     range : []
     units : ''
     descr : ''
   'veloWeight' : 
     peval : 'veloWeight'
-    latex : 'w_{VELO}'
+    latex : 'w_{\mathrm{VELO}}'
     range : []
     units : ''
     descr : ''
   'sWeight' : 
     peval : 'sw'
-    latex : 's_{w}'
+    latex : 'w_s'
     range : []
     units : ''
     descr : ''
@@ -135,49 +135,49 @@ Bs_common: &Bs_common
   #cinematics
   'pHp' :
     peval : 'hplus_P'
-    latex : 'p(K^+)'
+    latex : 'p(\mathrm{K^+})'
     range : [0.0, 1.5e+5]
     units : 'MeV'
     descr : ''
   'pTHp' :
     peval : 'hplus_PT'
-    latex : 'p_T(K^+)'
+    latex : 'p_T(\mathrm{K^+})'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr : ''
   'pHm' :
     peval : 'hminus_P'
-    latex : 'p(K^-)'
+    latex : 'p(\mahtrm{K^-})'
     range: [0.0, 1.5e+5]
     units : 'MeV'
     descr : ''
   'pTHm' :
     peval : 'hminus_PT'
-    latex : 'p_T(K^-)'
+    latex : 'p_T(\mathrm{K^-})'
     range: [0.0, 1.0e+4]
     units : 'MeV'
     descr : ''
   'mHH' :
     peval : 'X_M'
-    latex : 'm_{K^+K^-}'
+    latex : 'm(\mathrm{K^+K^-})'
     range: [990, 1050]
     units : 'MeV'
     descr : ''
   'pTB' :
     peval : 'B_PT'
-    latex: 'p_T(B_s)'
+    latex: 'p_T(\mathrm{B_s^0})'
     range: [0.0, 4.0e+4]
     units : 'MeV'
     descr : ''
   'pB' :
     peval : 'B_P'
-    latex: 'p(B_s)'
+    latex: 'p(\mathrm{B_s^0})'
     range: [0.0, 8.0e+5]
     units : 'MeV'
     descr : ''
   'etaB' :
     peval : 'B_ETA'
-    latex: '\eta_{B_s}'
+    latex: '\eta(\mathrm{B_s^0})'
     range: [2, 5]
     units : ''
     descr : ''
@@ -236,19 +236,21 @@ Bs_common: &Bs_common
     range: [0.0, 10.0] 
     units : ''
     descr : ''
-  # 'nTracks':
-  #   peval : 'nTracks'
-  #   latex: 'nTracks'
-  #   range: [0., 1000.]
-  # 'nLongTracks':
-  #   latex: 'nLongTracks'
-  #   range: [0. ,180.]
-  # 'nSPDHits':
-  #   latex: 'nSPDHits'
-  #   range: [0., 1200]
+  'nTracks':
+    peval : 'nTracks'
+    latex: 'n_{\mathrm{tracks}}'
+    range: [0., 780]
+  'nLongTracks':
+    peval : 'nLongTracks'
+    latex: 'n_{\mathrm{longtracks}}'
+    range: [0. ,120]
+  'nSPDHits':
+    peval: 'nSPDHits'
+    latex: 'nSPDHits'
+    range: [0., 1200]
   'hplus_TRACK_CHI2NDOF':
     peval: 'hplus_TRACK_CHI2NDOF'
-    latex: 'K^{+}_{TRACK, \chi2_{ndof}}'
+    latex: '\chi_{\mathrm{track}}^2/n_{\mathrm{dof}} (\mathrm{K^+})'
     range: [0., 5.] 
     units : ''
     descr : ''
@@ -263,7 +265,7 @@ Bs_common: &Bs_common
   #   range: [-0.2, 1.2]
   'hminus_TRACK_CHI2NDOF':
     peval : 'hminus_TRACK_CHI2NDOF'
-    latex: 'K^{-}_{TRACK, \chi2_{ndof}}'
+    latex: '\chi_{\mathrm{track}}^2/n_{\mathrm{dof}} (\mathrm{K^-})'
     range: [0.2, 2.2]
     units : ''
     descr : ''
@@ -282,9 +284,15 @@ Bs_common: &Bs_common
   # 'muplus_PIDmu':
   #   latex: '\mu^{+}_{PID}'
   #   range: [-1., 16.]
-  'muminus_TRACK_CHI2NDOF':
+  'chi2ndofTrackLp':
+    peval : 'muplus_TRACK_CHI2NDOF'
+    latex: '\chi_{\mathrm{track}}^2/n_{\mathrm{dof}} (\upmu^+)'
+    range: [0.1, 2.5]
+    units : ''
+    descr : ''
+  'chi2ndofTrackLm':
     peval : 'muminus_TRACK_CHI2NDOF'
-    latex: '\mu^{-}_{TRACK, \chi2_{ndof}}'
+    latex: '\chi_{\mathrm{track}}^2/n_{\mathrm{dof}} (\upmu^-)'
     range: [0.1, 2.5]
     units : ''
     descr : ''
@@ -456,7 +464,7 @@ Bd_common: &Bd_common
   'pTB' :
     peval: 'B_PT'
     latex: 'p_T(B_d)'
-    range: [0.0, 4.0e+4]
+    range: [-100.0, 4.0e+4]
     units: 'MeV'
     descr: ''
   'pB' :

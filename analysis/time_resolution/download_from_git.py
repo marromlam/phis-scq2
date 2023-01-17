@@ -1,3 +1,8 @@
+from utils.strings import printsec
+from ipanema import Parameters
+import hjson
+import argparse
+import os
 DESCRIPTION = """
     Sync time resolution parameters from B2CC gitlab.
 """
@@ -10,11 +15,6 @@ __all__ = []
 
 # Modules {{{
 
-import os
-import argparse
-import hjson
-from ipanema import Parameters
-from utils.strings import printsec
 
 # }}}
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
   linker = args['linker']
   repo = args['repo']
 
-  if version in ('v0r0','v0r1','v0r2','v0r3','v0r4'):
+  if version in ('v0r0', 'v0r1', 'v0r2', 'v0r3', 'v0r4'):
     printsec("Plugging old time resolution")
     old = f"analysis/params/time_resolution/{mode}/old.json"
     params = Parameters.load(old)
@@ -53,18 +53,18 @@ if __name__ == "__main__":
 
     # get name for time resolution
     if version == 'v0r5':
-        _timeres = hjson.load(open(linker, "r"))[timeres][0].format(year=year)
+      _timeres = hjson.load(open(linker, "r"))[timeres][0].format(year=year)
     else:
-        surname = 'nominal'
-        if 'pT1' in args['version']:
-            surname = 'pT0'
-        elif 'pT2' in args['version']:
-            surname = 'pT1'
-        elif 'pT3' in args['version']:
-            surname = 'pT2'
-        elif 'pT4' in args['version']:
-            surname = 'pT2'
-        _timeres = hjson.load(open(linker, "r"))[timeres][1].format(surname=surname)
+      surname = 'nominal'
+      if 'pT1' in args['version']:
+        surname = 'pT0'
+      elif 'pT2' in args['version']:
+        surname = 'pT1'
+      elif 'pT3' in args['version']:
+        surname = 'pT2'
+      elif 'pT4' in args['version']:
+        surname = 'pT2'
+      _timeres = hjson.load(open(linker, "r"))[timeres][1].format(surname=surname)
 
     # cook local and remote paths
     tmp_path = out_path.replace('output', 'tmp')
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_timeres} | tar -x")
 
     print(f"Loading Time Resolution {year}")
-    rawd = hjson.load(open(f"{tmp_path}/{_timeres}",'r'))['TimeResParameters']
+    rawd = hjson.load(open(f"{tmp_path}/{_timeres}", 'r'))['TimeResParameters']
     outd = Parameters.load("analysis/params/time_resolution/Bs2JpsiPhi/none.json")
 
     # parse parameters
@@ -98,7 +98,7 @@ if __name__ == "__main__":
               elif rawd[k]['Name'] == f'rho_p{j-1}_p{i-1}_time_res':
                 outd[par].correl[rap] = rawd[k]['Value']
               else:
-                outd[par].correl[rap] = 1 if i==j else 0
+                outd[par].correl[rap] = 1 if i == j else 0
         else:
           print(f"    - Parameter {par} does not exist")
 

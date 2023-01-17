@@ -46,6 +46,7 @@ rule mass_prefit_bd_mc:
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 
@@ -83,6 +84,7 @@ rule mass_fit_bd_mc:
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
     --sweights {output.sweights} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 
@@ -119,6 +121,7 @@ rule mass_fit_bd_rd:
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
     --sweights {output.sweights} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 # }}}
@@ -157,6 +160,7 @@ rule mass_prefit_bu_mc:
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 
@@ -195,6 +199,7 @@ rule mass_fit_bu_mc:
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
     --sweights {output.sweights} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 
@@ -233,6 +238,7 @@ rule mass_fit_bu_rd:
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
     --sweights {output.sweights} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 # }}}
@@ -251,7 +257,7 @@ rule mass_prefit_bs_mc:
   wildcard_constraints:
     mode = 'MC_(Bs2JpsiPhi(_dG0)?|Bs2JpsiKK_Swave)'
   input:
-    root_file = lambda wcs: tuples(wcs, weight='chopped'),
+    root_file = lambda wcs: tuples(wcs, version=f"{wcs.version}".replace('LSB', "").replace("RSB", ""), weight='chopped'),
   output:
     params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
@@ -332,7 +338,7 @@ rule mass_fit_bs_rd:
   params:
     script = 'selection/sweights/mass_fit/bs.py',
   log:
-    'output/log/mass_bs_fit_rd/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
+    'output/log/mass_fit_bs_rd/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
     shell(f"""(time\
     python {params.script} \
@@ -342,6 +348,117 @@ rule mass_fit_bs_rd:
     --output-figures {output.plots} \
     --mass-model {wildcards.massmodel} \
     --mass-weight wLb \
+    --mass-bin {wildcards.massbin} \
+    --trigger {wildcards.trigger}\
+    --mode {wildcards.mode} \
+    --version {wildcards.version} \
+    --sweights {output.sweights} \
+    ) &> {log}""")
+
+# }}}
+
+
+# mass fitters for Ds {{{
+
+rule mass_prefit_ds_mc:
+  """
+  Run mass fit on selected Bs0->J/psiPhi MC to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 candidates.
+  """
+  threads: 2
+  resources:
+    mem_mb=6000
+  wildcard_constraints:
+    mode = 'MC_Bs2DsPi'
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='chopped'),
+  output:
+    params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
+    plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
+  params:
+    script = 'selection/sweights/mass_fit/ds.py',
+  log:
+    'output/log/mass_prefit_ds_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
+  run:
+    shell(f"""(time\
+    python {params.script} \
+    --sample {input.root_file} \
+    --output-params {output.params} \
+    --output-figures {output.plots} \
+    --mass-model {wildcards.massmodel} \
+    --mass-bin {wildcards.massbin} \
+    --trigger {wildcards.trigger}\
+    --mode {wildcards.mode} \
+    --version {wildcards.version} \
+    ) &> {log}""")
+
+
+rule mass_fit_ds_mc:
+  """
+  Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 candidates.
+  """
+  threads: 2
+  resources:
+    mem_mb=6000
+  wildcard_constraints:
+    mode = 'MC_Bs2DsPi'
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='chopped'),
+    params = 'output/params/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
+  output:
+    params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
+    sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
+    plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
+  params:
+    script = 'selection/sweights/mass_fit/ds.py',
+  log:
+    'output/log/mass_fit_ds_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
+  run:
+    shell(f"""(time\
+    python {params.script} \
+    --sample {input.root_file} \
+    --input-params {input.params} \
+    --output-params {output.params} \
+    --output-figures {output.plots} \
+    --mass-model {wildcards.massmodel} \
+    --mass-bin {wildcards.massbin} \
+    --trigger {wildcards.trigger}\
+    --mode {wildcards.mode} \
+    --version {wildcards.version} \
+    --sweights {output.sweights} \
+    ) &> {log}""")
+
+
+rule mass_fit_ds_rd:
+  """
+  Run mass fit on selected B0->J/psiK* MC to determine Ipatia tail parameters for
+  the fit to data. It only takes B_BKGCAT=0,50 candidates.
+  """
+  threads: 2
+  resources:
+    mem_mb=6000
+  wildcard_constraints:
+    mode = 'Bs2DsPi'
+  input:
+    root_file = lambda wcs: tuples(wcs, weight='chopped'),
+    params = 'output/params/mass_fit/{year}/MC_{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
+  output:
+    params = 'output/params/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.json',
+    sweights = temp(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.npy'),
+    plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
+  params:
+    script = 'selection/sweights/mass_fit/ds.py',
+  log:
+    'output/log/mass_ft_ds_rd/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
+  run:
+    shell(f"""(time\
+    python {params.script} \
+    --sample {input.root_file} \
+    --input-params {input.params} \
+    --output-params {output.params} \
+    --output-figures {output.plots} \
+    --mass-model {wildcards.massmodel} \
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
@@ -387,6 +504,7 @@ rule mass_fit_bs_lb:
     --mode {wildcards.mode} \
     --year {wildcards.year} \
     --sweights {output.sweights} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 # }}}
@@ -421,17 +539,23 @@ def guess_massbins(wcs, version=False, mode=False):
     else:
         v, w = v[0], False
     # print(v, w, c)
-    if not w:
-        if 'Bs' in mode:
-            w = 'mX6'
-        else:
-            w = ''
+    if 'Bs' in mode:
+      if not w:
+        w = 'mX6'
+      if 'bkgcat60' in version and 'MC' in mode:
+        # print('bkg detected')
+        w = ''
+    else:
+        w = ''
 
     # print(v, w, c)
     pattern = [
         "(mX(1|2|3|4|5|6))?",
         "(time(1|2|3|4))?",
-        "(sigmam(1|2|3|4))?",
+        "(cosL(1|2|3|4))?",
+        "(cosK(1|2|3|4))?",
+        "(hphi(1|2|3|4))?",
+        "(sigmam(1|2|3|4|5|6|7|8|9))?",
     ]
     pattern = rf"\A{''.join(pattern)}\Z"
     p = re.compile(pattern)
@@ -439,7 +563,10 @@ def guess_massbins(wcs, version=False, mode=False):
         q = p.search(w).groups()
         mX = int(q[1]) if q[0] else False
         time = int(q[3]) if q[2] else False
-        sigmam = int(q[5]) if q[4] else False
+        cosL = int(q[5]) if q[4] else False
+        cosK = int(q[7]) if q[6] else False
+        hphi = int(q[9]) if q[8] else False
+        sigmam = int(q[11]) if q[10] else False
 
         if mX:
             mX = [f'mX{i}' for i in range(1, mX+1)]
@@ -451,6 +578,21 @@ def guess_massbins(wcs, version=False, mode=False):
         else:
             time = ['']
 
+        if cosL:
+            cosL = [f'cosL{i}' for i in range(1, cosL+1)]
+        else:
+            cosL = ['']
+
+        if cosK:
+            cosK = [f'cosK{i}' for i in range(1, cosK+1)]
+        else:
+            cosK = ['']
+
+        if hphi:
+            hphi = [f'hphi{i}' for i in range(1, hphi+1)]
+        else:
+            hphi = ['']
+
         if sigmam:
             sigmam = [f'sigmam{i}' for i in range(1, sigmam+1)]
         else:
@@ -459,8 +601,11 @@ def guess_massbins(wcs, version=False, mode=False):
         caca = []
         for b1 in mX:
             for b2 in time:
-                for b3 in sigmam:
-                    caca.append(f"{b1}{b2}{b3}")
+                for b3 in cosL:
+                    for b4 in cosK:
+                        for b5 in hphi:
+                            for b6 in sigmam:
+                                caca.append(f"{b1}{b2}{b3}{b4}{b5}{b6}")
     except:
         raise ValueError(f'Cannot interpret {w} as a sWeight config')
     return caca
@@ -491,8 +636,9 @@ def tuple_and_npy_for_sweights(wcs, version=None, year=None, mode=None, what='tu
         return tuples(wcs, version=_name, weight=_surname)
     # parameters
     parameters = []
-    for _bin in _massbin:
-        parameters.append(SAMPLES + f'/{year}/{mode}/{_name}_{_massmodel}_{_bin}_{what}.npy')
+    for _item in what:
+        for _bin in _massbin:
+            parameters.append(SAMPLES + f'/{year}/{mode}/{_name}_{_massmodel}_{_bin}_{_item}.npy')
     # print(parameters)
     return parameters
 
@@ -506,11 +652,11 @@ rule sweights_add:
     sweight = "(sWeight|sWeightForTag)"
   threads: 2
   resources:
-    mem_mb=8000
+    mem_mb=12000
   input:
-    root_file = lambda wcs: tuple_and_npy_for_sweights(wcs),
-    biased = lambda wcs: tuple_and_npy_for_sweights(wcs, what='biased'),
-    unbiased = lambda wcs: tuple_and_npy_for_sweights(wcs, what='unbiased'),
+    root_file = lambda w: tuple_and_npy_for_sweights(w),
+    sweights = lambda w: tuple_and_npy_for_sweights(w, what=['combined'] if "Ds" in w.mode else ['biased', 'unbiased']),
+    # unbiased = lambda wcs: tuple_and_npy_for_sweights(wcs, what='unbiased'),
     # root_file = lambda wcs: tuples(wcs, weight='chopped' if 'Bu' not in f'{wcs.mode}' else 'selected'),
     # biased = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_{massmodel}_{massbin}_biased.npy',
     #                             year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
@@ -524,23 +670,25 @@ rule sweights_add:
     #                             massmodel=config[(f'{wcs.mode}'.lower()[:2] if not 'MC' in f'{wcs.mode}' else f'{wcs.mode}'.split('_')[1].lower()[:2]) + "_mass_model"]
     #                            ),
   output:
-    root_file = SAMPLES+'/{year}/{mode}/{version}_{sweight}.root',
+    root_file = temporal(SAMPLES+'/{year}/{mode}/{version}_{sweight}.root'),
+    plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{sweight}/')
   params:
     script = 'selection/sweights/sweighter.py',
   log:
     'output/log/sweights_add/{year}/{mode}/{version}_{sweight}.log',
   run:
-    bpars = input.biased
-    bpars = [bpars] if isinstance(bpars,str) else bpars
-    upars = input.unbiased
-    upars = [upars] if isinstance(upars,str) else upars
+    sweights = input.sweights
+    sweights = [sweights] if isinstance(sweights, str) else sweights
+    # upars = input.unbiased
+    # upars = [upars] if isinstance(upars,str) else upars
     shell(f"""(time\
     python {params.script} \
     --input-sample {input.root_file} \
     --output-sample {output.root_file} \
-    --biased-weights {",".join(bpars)} \
-    --unbiased-weights {",".join(upars)} \
+    --output-plots {output.plots} \
+    --sweights {",".join(sweights)} \
     --mode {wildcards.mode} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 
@@ -556,30 +704,36 @@ rule sweights_add_lb:
     mem_mb=6000
   input:
     root_file = lambda wcs: tuples(wcs, weight='tagged'),
-    kplus = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_ipatiaChebyshev_all_kplus.npy',
+    # kplus = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_ipatiaChebyshev_all_kplus.npy',
+    #                             year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
+    #                            ),
+    # kminus = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_ipatiaChebyshev_all_kminus.npy',
+    #                             year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
+    #                            ),
+    sweights = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_ipatiaChebyshev_all_{kaon}.npy',
                                 year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
-                               ),
-    kminus = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_ipatiaChebyshev_all_kminus.npy',
-                                year=f"{wcs.year}", mode=f"{wcs.mode}", version=f"{wcs.version}",
+                                kaon=['kplus', 'kminus']
                                ),
   output:
-    root_file = temp(SAMPLES+'/{year}/{mode}/{version}_sWeight.root'),
+    root_file = temporal(SAMPLES+'/{year}/{mode}/{version}_sWeight.root'),
   params:
     script = 'selection/sweights/sweighter.py',
   log:
     'output/log/sweights_bs_rd/{year}/{mode}/{version}.log',
   run:
-    bpars = input.kplus
-    bpars = [bpars] if isinstance(bpars,str) else bpars
-    upars = input.kminus
-    upars = [upars] if isinstance(upars,str) else upars
+    # bpars = input.kplus
+    # bpars = [bpars] if isinstance(bpars,str) else bpars
+    # upars = input.kminus
+    # upars = [upars] if isinstance(upars,str) else upars
+    sweights = input.sweights
+    sweights = [sweights] if isinstance(sweights, str) else sweights
     shell(f"""(time\
     python {params.script} \
     --input-sample {input.root_file} \
     --output-sample {output.root_file} \
-    --biased-weights {",".join(bpars)} \
-    --unbiased-weights {",".join(upars)} \
+    --sweights {",".join(sweights)} \
     --mode {wildcards.mode} \
+    --version {wildcards.version} \
     ) &> {log}""")
 
 # }}}
@@ -587,36 +741,37 @@ rule sweights_add_lb:
 
 # add Lb weights to Bs RD tuple {{{
 
-rule lbweights_add:
-    """Subtract the Lb background and create output file merged with provided Lb
-    mc tuple in provided data tuple."""
-    threads: 2
-    resources:
-      mem_mb=6000
-    input:
-        mcLb = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_fromLb', weight='sWeight'),
-        rdLb = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Lb', weight='sWeight'),
-        rd = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', weight='tagged'),
-        # WARNING: version is hardcoded
-        nLb = "analysis/params/lambda_b/{year}/v1r0.json"
-    output:
-        rd = SAMPLES+"/{year}/Bs2JpsiPhi/{version}_lbWeight.root",
-    params:
-        script = 'selection/lb_add.py'
-    log:
-        'output/log/lbweights_add/{year}/Bs2JpsiPhi/{version}.log',
-    run:
-        # print(f"{output}")
-        shell(f"""(time\
-        python {params.script} \
-        --mc-lb-input {input.mcLb} \
-        --rd-lb-input {input.rdLb} \
-        --rd-input {input.rd} \
-        --number-of-lb {input.nLb} \
-        --rd-output {output.rd} \
-        --year {wildcards.year} \
-        --version {wildcards.version} \
-        ) &> {log}""")
+if config['run_tagging']:
+    rule lbweights_add:
+        """Subtract the Lb background and create output file merged with provided Lb
+        mc tuple in provided data tuple."""
+        threads: 2
+        resources:
+            mem_mb=6000
+        input:
+            mcLb = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_fromLb', weight='sWeight'),
+            rdLb = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi_Lb', weight='sWeight'),
+            rd = lambda wcs: tuples(wcs, mode='Bs2JpsiPhi', weight='tagged'),
+            # WARNING: version is hardcoded
+            nLb = "analysis/params/lambda_b/{year}/v4r0.json"
+        output:
+            rd = temporal(SAMPLES+"/{year}/Bs2JpsiPhi/{version}_lbWeight.root"),
+        params:
+            script = 'selection/lb_add.py'
+        log:
+            'output/log/lbweights_add/{year}/Bs2JpsiPhi/{version}.log',
+        run:
+            # print(f"{output}")
+            shell(f"""(time\
+            python {params.script} \
+            --mc-lb-input {input.mcLb} \
+            --rd-lb-input {input.rdLb} \
+            --rd-input {input.rd} \
+            --number-of-lb {input.nLb} \
+            --rd-output {output.rd} \
+            --year {wildcards.year} \
+            --version {wildcards.version} \
+            ) &> {log}""")
 
 # }}}
 

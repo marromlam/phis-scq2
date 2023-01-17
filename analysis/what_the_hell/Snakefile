@@ -90,7 +90,8 @@ rule brutality2:
   threads: 128,
   wildcard_constraints:
     mode = 'Bs2JpsiPhi',
-    angacc = '.*Insieme'
+    angacc = '.*Insieme',
+    fit = '.*pifostio.*'
   input:
     tupleBdRD = lambda wcs: tuples(wcs, mode="Bd2JpsiKstar"),
     tupleBdMC = lambda wcs: tuples(wcs, mode="MC_Bd2JpsiKstar"),

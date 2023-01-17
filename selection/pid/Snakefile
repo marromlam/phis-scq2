@@ -41,9 +41,9 @@ rule preselection_correct_pid:
     params:
         script = 'selection/tools/PIDCorr.py',
     output:
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root',
-        tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp1.root',
-        tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp2.root',
+        file = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.root'),
+        tmp1 = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp1.root'),
+        tmp2 = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_tmp2.root'),
     log:
         'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}.log',
     shell:
@@ -85,9 +85,9 @@ rule preselection_correct_muonpid:
     params:
         script = 'selection/tools/PIDGen.py',
     output:
-        file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root',
-        tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp1.root',
-        tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp2.root',
+        file = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.root'),
+        tmp1 = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp1.root'),
+        tmp2 = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_tmp2.root'),
     log:
         'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}.log',
     shell:

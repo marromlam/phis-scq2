@@ -1,0 +1,583 @@
+% !TEX program = pdflatex
+\documentclass[9pt,xcolor={table,svgnames},aspectratio=43]{beamer}
+% \usecolortheme[accent=blue]{orchid}
+\usetheme{Singapore}
+\usecolortheme{orchid}
+\useinnertheme{circles}
+% \useoutertheme{infolines}
+% \usepackage{colourchange}
+% \usepackage[table, svgnames]{xcolor}
+\usepackage{array}
+\usepackage{tikz}
+
+\definecolor{UBCblue}{rgb}{0.04706, 0.13725, 0.26667} % UBC Blue (primary)
+\definecolor{UBCgrey}{rgb}{0.3686, 0.5255, 0.6235} % UBC Grey (secondary)
+
+% \usepackage{arev}
+% \usepackage{cmbright}
+% \usepackage{gfsneohellenicot}
+% \usepackage[default]{gfsneohellenic}
+\usepackage[sfdefault,scaled=.85,lf]{FiraSans}
+\usepackage{newtxsf}
+
+
+
+\setbeamertemplate{headline}{}
+
+\makeatletter
+\AtBeginDocument{%
+  {
+    \usebeamercolor{section in head/foot}
+  }
+  \pgfdeclareverticalshading{beamer@headfade}{\paperwidth}
+  {%
+    color(0cm)=(White!25!bg);
+    color(1.25cm)=(RoyalBlue!25!bg)%
+  }
+  \setbeamercolor{section in head/foot}{bg=}
+}
+\addtoheadtemplate{\pgfuseshading{beamer@headfade}\vskip-1.25cm}{}
+\makeatother
+
+\setbeamercolor{palette primary}{bg=RoyalBlue,fg=white}
+\setbeamercolor{palette secondary}{bg=RoyalBlue,fg=white}
+\setbeamercolor{palette tertiary}{bg=RoyalBlue,fg=white}
+\setbeamercolor{palette quaternary}{bg=RoyalBlue,fg=white}
+\setbeamercolor{structure}{fg=RoyalBlue} % itemize, enumerate, etc
+\setbeamercolor{section in toc}{fg=RoyalBlue} % TOC sections
+
+% Override palette coloring with secondary
+\setbeamercolor{subsection in head/foot}{bg=UBCgrey,fg=white}
+\setbeamercovered{transparent=20}
+
+
+\setbeamertemplate{navigation symbols}{}
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+\defbeamertemplate*{title page}{customized}[1][]
+{
+  \centering
+  \vspace{2cm}
+  {\color{RoyalBlue}\Huge\bf\boldmath\TalkTitle}\par
+  \usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle\par
+  \vspace{1cm}
+  {\color{Black}\small\TalkAuthor}\par
+  \medskip
+  \usebeamerfont{institute}\TalkInstitute\par
+  \usebeamerfont{date}\TalkDate\par
+  \usebeamercolor[fg]{titlegraphic}\inserttitlegraphic
+}
+
+% \setbeamercolor{frametitle}{fg=white}
+% \setbeamerfont{frametitle}{size=\tiny}
+\setbeamertemplate{frametitle}{%
+  \begin{center}
+  {\small \color{Gray} \bf \boldmath \insertsection}\\
+  % {\bf \boldmath \insertsubsection : \insertframetitle}\\
+  {\bf \boldmath \insertframetitle}\\\insertframesubtitle
+  \end{center}
+  % \centering\insertframesubtitle%
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Talk Configuration %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TalkPlace}{$\phi_s$ meeting}
+\newcommand{\TalkAuthor}{
+\href{mailto:veronika.chobanova@cern.ch}{Veronika Chobanova}\\
+\href{mailto:diego.martinez.santos@cern.ch}{Diego Martínez Santos}\\
+\href{mailto:marcos.romero.lamas@cern.ch}{Marcos Romero Lamas}\\
+\href{mailto:rruizfer@cern.ch}{Ramon A. Ruiz Fernandez}
+}
+\newcommand{\TalkAuthorShort}{V. G. Chobanova, D. Martínez, M. Romero, R. A. Ruiz}
+\newcommand{\TalkTitle}{$\phi_s$ status in Santiago}
+\newcommand{\TalkTitleShort}{$\phi_s$ status in Santiago}
+\newcommand{\TalkInstitute}{}
+\newcommand{\TalkDate}{September 19th}
+\newcommand{\TalkDateNumber}{2022/09/19}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% \newcommand{\TupleVersion}{v1r0p1@LcosK}
+\newcommand{\TupleVersion}{v3r0@LcosK}
+\newcommand{\TupleVersionOriginal}{v3r0}
+% \newcommand{\FIGS}{/home3/marcos.romero/phis-scq.git/14-lifetime-and-ptb-issues/output/figures}
+% \newcommand{\FIGS}{/lustre/LHCb/marcos.romero/phis-scq/output/figures}
+\newcommand{\FIGS}{/home3/marcos.romero/phis-scq.git/16-welcome-lera/output/figures}
+\newcommand{\TABLES}{/home3/marcos.romero/phis-scq.git/16-welcome-lera/output/tables}
+\newcommand{\LUSTRE}{/scratch49/marcos.romero/phis-scq/output/figures}
+
+
+\newenvironment{variableblock}[3]{%
+  \setbeamercolor{block body}{#2}
+  \setbeamercolor{block title}{#3}
+  \begin{block}{#1}}{\end{block}}
+
+
+\makeatletter
+\g@addto@macro{\endtabular}{\rowfont{}}% Clear row font
+\makeatother
+\newcommand{\rowfonttype}{}% Current row font
+\newcommand{\rowfont}[1]{% Set current row font
+\gdef\rowfonttype{#1}#1\ignorespaces%
+}
+\makeatother
+
+\newcommand{\highlight}[1]{ {\color{RoyalBlue}\boldmath\textbf{#1}} }
+
+
+\begin{document}
+
+% \selectmanualcolor{red}
+
+
+% Title page an d table of contents {{{
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+% \begin{frame}
+%   \addtocounter{framenumber}{-1}
+%   \tableofcontents
+% \end{frame}
+
+% }}}
+
+
+% New tuple version section {{{
+
+\section{New tuple version}
+
+
+\begin{frame}
+\frametitle{v2r0}
+% \frametitle{Today's plan}
+
+$v2rX$ have solved all the blockers we had since 2020
+
+\begin{itemize}
+	\item ...
+\end{itemize}
+
+\end{frame}
+
+% }}}
+
+
+% Some results {{{
+
+\section{Some results}
+
+
+\begin{frame}{Baseline result}
+
+	  \small
+    \centering
+    \input{\TABLES/physics_params/run2/Bs2JpsiPhi/\TupleVersion+\TupleVersionOriginal_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex}
+
+\end{frame}
+
+
+% \begin{frame}{Check in years without $\cos \theta_K < 0$}
+%
+%   \resizebox{\textwidth}{!}{
+%     \input{\TABLES/physics_params/2015+2016+2017+2018/Bs2JpsiPhi/\TupleVersionOriginal_auto_yearlyDual_vgc_amsrd_simul3_amsrd_combined.tex}
+%   }
+%
+% \end{frame}
+%
+%
+% \begin{frame}{Check in years with $\cos \theta_K < 0$}
+%
+%   \resizebox{\textwidth}{!}{
+%     \input{\TABLES/physics_params/2015+2016+2017+2018/Bs2JpsiPhi/\TupleVersion_auto_yearlyDual_vgc_amsrd_simul3_amsrd_combined.tex}
+%   }
+%
+% \end{frame}
+
+
+\begin{frame}{Check by trigger}
+
+	  \small\centering
+  % \resizebox{\textwidth}{!}{
+    \input{\TABLES/physics_params/run2/Bs2JpsiPhi/\TupleVersion _auto_run2Dual_vgc_amsrd_simul3_amsrd_biased+unbiased.tex}
+  % }
+
+\end{frame}
+
+
+\begin{frame}{Check in $p_T(B)$ bins}
+
+	\centering
+  \resizebox{\textwidth}{!}{
+    \input{\TABLES/physics_params/run2/Bs2JpsiPhi/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex}
+  }
+
+\end{frame}
+
+
+% \foreach \year in {2015, 2016, 2017, 2018}{
+% \begin{frame}{Check in $p_T(B)$ bins in \year}
+%
+%   \resizebox{\textwidth}{!}{
+%     \input{\TABLES/physics_params/\year/Bs2JpsiPhi/\TupleVersion pTB1+\TupleVersion pTB2+\TupleVersion pTB3+\TupleVersion pTB4_auto_yearlyDual_vgc_amsrd_simul3_amsrd_combined.tex}
+%   }
+%
+% \end{frame}
+% }
+
+
+\begin{frame}{Check in $\eta (B)$ bins}
+
+	  \small\centering
+  % \resizebox{\textwidth}{!}{
+    \input{\TABLES/physics_params/run2/Bs2JpsiPhi/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex}
+  % }
+
+\end{frame}
+
+
+% \foreach \year in {2015, 2016, 2017, 2018}{
+% \begin{frame}{Check in $\eta (B)$ bins in \year}
+%
+%   \resizebox{\textwidth}{!}{
+%     \input{\TABLES/physics_params/\year/Bs2JpsiPhi/\TupleVersion etaB1+\TupleVersion etaB2+\TupleVersion etaB3_auto_yearlyDual_vgc_amsrd_simul3_amsrd_combined.tex}
+%   }
+%
+% \end{frame}
+% }
+
+
+\begin{frame}{Check by taggers}
+
+	  \small\centering
+  % \resizebox{\textwidth}{!}{
+    \input{\TABLES/physics_params/run2/Bs2JpsiPhi/\TupleVersion onlyOST+\TupleVersion onlySST+\TupleVersion onlyOSS_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex}
+  % }
+
+\end{frame}
+
+
+\begin{frame}{Check by number of PVs}
+
+	  \small\centering
+  % \resizebox{\textwidth}{!}{
+    \input{\TABLES/physics_params/run2/Bs2JpsiPhi/\TupleVersion PV1+\TupleVersion PV2+\TupleVersion PV3_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex}
+  % }
+
+\end{frame}
+
+
+\begin{frame}{Check mass fit  LSB and RSB}
+
+	  \small\centering
+  % \resizebox{\textwidth}{!}{
+    % \input{\TABLES/systematics/run2/Bs2JpsiPhi/\TupleVersion LSB+\TupleVersion RSB_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex}
+  % }
+
+\end{frame}
+
+
+
+\begin{frame}{\texorpdfstring{Use $B_u^+$ as control channel}{Use Bu}}
+
+	  \small\centering
+  % \resizebox{\textwidth}{!}{
+    \input{\TABLES/systematics/run2/Bs2JpsiPhi/v2r0@LcosK_auto_run2Dual_vgc_amsrd_simul3+simul3BuasBd_amsrd_combined.tex}
+  % }
+		$\Gamma_s(B_u^+ \texttt{as control}) = 1.5233 \pm 0.0047$,
+	$\Gamma_s(B_d^0 \texttt{as control}) = 1.5357 \pm 0.0052$
+  pvalue 0.08
+
+\end{frame}
+
+
+\begin{frame}{Polarization-dependent fit}
+
+  \centering
+  \resizebox{0.5\textwidth}{!}{
+    \input{\TABLES/physics_params/run2/Bs2JpsiPhi/v2r0@LcosK_auto+autoPoldep_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex}
+  }
+
+\end{frame}
+
+\begin{frame}{Fully simultaneous fit}
+	\framesubtitle{Time acceptance coefficents free during fit + iterative}
+
+	  \small\centering
+  % \resizebox{0.5\textwidth}{!}{
+    \input{\TABLES/physics_params/run2/Bs2JpsiPhi/v2r0p8@LcosK_auto+pifostio2_run2DualInsieme_vgc_amsrd_simul3_amsrd_combined.tex}
+  % }
+
+\end{frame}
+
+
+
+\begin{frame}{Test different GB configurations}
+	\framesubtitle{just 10 now, 100 for final release}
+
+
+	  \scriptsize\centering
+  % \resizebox{0.5\textwidth}{!}{
+    % \input{\TABLES/systematics/run2/Bs2JpsiPhi/v2r0@LcosK_auto_run2Dual_vgc_amsrd_simul3_amsrd_combined_gbconf.tex}
+  % }
+
+\end{frame}
+
+
+
+% }}}
+
+
+% \end{document}
+
+
+
+
+\section{Selection}
+
+
+\section{Baseline analysis}
+
+
+\section{pT}
+
+% BsMC mass prefits {{{
+%
+% \foreach \year in {2015,2016,2017,2018}{%
+\foreach \year in {2016}{%
+  \foreach \ptbin in {1,2,3,4}{%
+    \begin{frame}% [default]
+    \frametitle{$B_s^0$ signal MC mass \textit{pre}fits for \year}
+    \framesubtitle{\TupleVersion pTB\ptbin} 
+    \begin{tabular}{cccccc}
+        1st            & 2nd            & 3rd            & 4th            & 5th            & 6th            \\
+            $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin \\ \hline
+        \\
+        \multicolumn{6}{c}{biased} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_biased/fit.pdf} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_biased/logfit.pdf} \\
+        \\
+        \multicolumn{6}{c}{unbiased} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_unbiased/fit.pdf} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_prefit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_unbiased/logfit.pdf} \\
+    \end{tabular}
+    \end{frame}
+  }
+}
+%
+% }}}
+
+
+% BsMC mass fits {{{
+%
+% \foreach \year in {2015, 2016, 2017, 2018}{%
+\foreach \year in {2016}{%
+  \foreach \ptbin in {1,2,3,4}{%
+    \begin{frame}%[default]
+    \frametitle{$B_s^0$ signal MC mass fits for \year}
+    \framesubtitle{\TupleVersion pTB\ptbin} 
+    \begin{tabular}{cccccc}
+        1st            & 2nd            & 3rd            & 4th            & 5th            & 6th            \\
+            $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin \\ \hline
+        \\
+        \multicolumn{6}{c}{biased} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_biased/fit.pdf} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_biased/logfit.pdf} \\
+        \\
+        \multicolumn{6}{c}{unbiased} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_unbiased/fit.pdf} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_unbiased/logfit.pdf} \\
+    \end{tabular}
+    \end{frame}
+  }
+}
+%
+% }}}
+
+
+% BsMCdG0 mass fits {{{
+%
+% \foreach \year in {2015, 2016, 2017, 2018}{%
+\foreach \year in {2016}{%
+  \foreach \ptbin in {1,2,3,4}{%
+    \begin{frame}%[default]
+    \frametitle{$B_s^0$ $\Delta\Gamma=0$ MC mass fits for \year}
+    \framesubtitle{\TupleVersion pTB\ptbin} 
+    \begin{tabular}{cccccc}
+        1st            & 2nd            & 3rd            & 4th            & 5th            & 6th            \\
+            $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin \\ \hline
+        \\
+        \multicolumn{6}{c}{biased} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX1_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX2_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX3_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX4_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX5_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX6_biased/fit.pdf} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX1_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX2_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX3_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX4_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX5_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX6_biased/logfit.pdf} \\
+        \\
+        \multicolumn{6}{c}{unbiased} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX1_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX2_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX3_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX4_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX5_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX6_unbiased/fit.pdf} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX1_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX2_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX3_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX4_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX5_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_cbcalib_mX6_unbiased/logfit.pdf} \\
+    \end{tabular}
+    \end{frame}
+  }
+}
+%
+% }}}
+
+
+% BsRD mass fits {{{
+%
+% \foreach \year in {2015, 2016, 2017, 2018}{%
+\foreach \year in {2016}{%
+  \foreach \ptbin in {1,2,3,4}{%
+    \begin{frame}%[default]
+    \frametitle{$B_s^0$ RD mass fits for \year}
+    \framesubtitle{\TupleVersion pTB\ptbin} 
+    \begin{tabular}{cccccc}
+        1st            & 2nd            & 3rd            & 4th            & 5th            & 6th            \\
+            $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin &     $m(X)$ bin \\ \hline
+        \\
+        \multicolumn{6}{c}{biased} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_biased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_biased/fit.pdf} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_biased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_biased/logfit.pdf} \\
+        \\
+        \multicolumn{6}{c}{unbiased} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_unbiased/fit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_unbiased/fit.pdf} \\
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX1_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX2_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX3_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX4_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX5_unbiased/logfit.pdf} &
+        \includegraphics[width=0.13\textwidth]{\FIGS/mass_fit/\year/Bs2JpsiPhi/\TupleVersion pTB\ptbin_cbcalib_mX6_unbiased/logfit.pdf} \\
+    \end{tabular}
+    \end{frame}
+  }
+}
+%
+% }}}
+
+
+\input{containers/figures_time_acceptance}
+\input{containers/figures_angular_acceptance}
+
+
+\begin{frame}{Baseline result}
+	% WARNING
+
+    \centering
+    % \input{\TABLES/physics_params/run2/Bs2JpsiPhi/\TupleVersion +\TupleVersionOriginal _auto_run2Dual_vgc_amsrd_simul3_amsrd_combined.tex}
+    % \includegraphics[width=0.45\textwidth]{\FIGS/lifetime/run2/Bd2JpsiKstar/\TupleVersion_single3Noncorr_trend.pdf}
+    % \includegraphics[width=0.45\textwidth]{\FIGS/lifetime/run2/Bd2JpsiKstar/\TupleVersionOriginal_single3Noncorr_trend.pdf}
+
+\end{frame}
+
+
+\subsection{Reweightings}
+
+% Bs MC dG0 {{{
+
+% \foreach \year in {2015,2016,2017,2018}{%
+%   \foreach \ptbin in {1,2,3,4}{%
+%     \begin{frame}
+%     \frametitle{$B_s^0\, \DeltaGamma = 0$ MC reweights for \year}
+%     \framesubtitle{\TupleVersion pTB\ptbin} 
+%     Kinematic weights by trigger category $20:0.3:3:1000$
+%     \begin{tabular}{ccc}
+%       Weight & $p_T(B)$ & $m(KK)$ \\
+%       sWeight & 
+%       \includegraphics[height=3.3cm]{\FIGS/reweightings/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_pTB_sWeight.pdf}
+%       \includegraphics[height=3.3cm]{\FIGS/reweightings/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_mX_sWeight.pdf}
+%       kinWeight &
+%       \includegraphics[height=3.3cm]{\FIGS/reweightings/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_pTB_kinWeight.pdf}
+%       \includegraphics[height=3.3cm]{\FIGS/reweightings/\year/MC_Bs2JpsiPhi_dG0/\TupleVersion pTB\ptbin_mX_kinWeight.pdf}
+%     \end{tabular}
+%     \end{frame}
+%   }
+% }
+
+% }}}
+
+\end{document}
+
+
+% vim: fdm=marker
+

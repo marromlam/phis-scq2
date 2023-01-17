@@ -12,6 +12,8 @@ tails_mode:
   'MC_Bd2JpsiKstar': 'MC_Bd2JpsiKstar'
   'Bu2JpsiKplus': 'MC_Bu2JpsiKplus'
   'MC_Bu2JpsiKplus': 'MC_Bu2JpsiKplus'
+  'MC_Bs2JpsiPhi_Prompt': 'MC_Bs2JpsiPhi_Prompt'
+  'Bs2JpsiPhi_Prompt': 'MC_Bs2JpsiPhi_Prompt'
 
 
 mass_model:
@@ -22,6 +24,8 @@ mass_model:
   'MC_Bd2JpsiKstar': 'dgauss'
   'Bu2JpsiKplus': 'hypatia'
   'MC_Bu2JpsiKplus': 'hypatia'
+  'Bs2JpsiPhi_Prompt': 'dgauss'
+  'MC_Bs2JpsiPhi_Prompt': 'dgauss'
 
 
 mass_branch:
@@ -32,6 +36,8 @@ mass_branch:
   'MC_Bd2JpsiKstar': 'B_ConstJpsi_M_1'
   'Bu2JpsiKplus': 'B_ConstJpsi_M_1'
   'MC_Bu2JpsiKplus': 'B_ConstJpsi_M_1'
+  'Bs2JpsiPhi_Prompt': 'B_ConstJpsi_M_1'
+  'MC_Bs2JpsiPhi_Prompt': 'B_ConstJpsi_M_1'
 
 
 gbweighting_branches:
@@ -52,7 +58,8 @@ gbweighting_branches:
   Bu2JpsiKplus: &gbw-Bu2JpsiKplus
     'B_PT': 'B_PT'
     'B_ETA': 'B_ETA'
-    'nTracks': 'nTracks'
+    # 'nTracks': 'nTracks'
+    'nLongTracks': 'nLongTracks'
   MC_Bs2JpsiPhi:
     <<: *gbw-common
   MC_Bs2JpsiPhi_Prompt:

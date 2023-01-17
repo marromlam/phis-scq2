@@ -49,6 +49,12 @@ kbsWeight:
     target: ["{sWeight}"]
     variables: ["B_PT", "B_P"]
 
+  Bs2DsPi:
+    # BsRD -> BsRD
+    original: ["{sWeight}"]
+    target: ["{sWeight}"]
+    variables: ["B_PT", "nPVs", "nTracks", "B_ETA"]
+
 # }}}
 
 

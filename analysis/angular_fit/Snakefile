@@ -49,10 +49,102 @@ rule physics_params_data_Bs:
     --trigger {wildcards.trigger}\
     --version {wildcards.version}\
     --blind {settings.blinding['blind']}\
+    --scan {config['scan']}\
     ) &> {log}""")
     send_mail(f"Physics Parameters RD :: {wildcards}", f"{log}")
 
 # }}}
+
+
+
+# plot projections {{{
+
+rule physics_params_data_Bs_plot:
+  wildcard_constraints:
+    fit = "(auto|yearly|run2|run2a)(Dual)?(Poldep|magUp|magDown)?",
+    mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
+  threads: 8
+  resources:
+    memb_mb=4000
+  input:
+    samples = lambda wcs: tuples(wcs, year=f'{wcs.year}'),
+    angacc_biased = lambda wcs: angaccs(wcs, trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, trigger='unbiased'),
+    timeacc_biased = lambda wcs: timeaccs(wcs, trigger='biased'),
+    timeacc_unbiased = lambda wcs: timeaccs(wcs, trigger='unbiased'),
+    csp_factors = lambda wcs: csps(wcs),
+    time_resolution = lambda wcs: timeress(wcs),
+    flavor = lambda wcs: flavors(wcs),
+    params = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+  output:
+    time = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/time.pdf',
+    cosK = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosK.pdf',
+    cosL = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosL.pdf',
+    hphi = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/hphi.pdf'
+  log:
+    'output/log/physics_params_plot/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+  run:
+    # WARNING: maybe this needs to be understood
+    samples = input.samples
+    samples = [samples] if isinstance(samples,str) else samples
+    figures = os.path.dirname(f"{output.time}")
+    shell(f"""(time\
+    python analysis/angular_fit/plot_projections.py\
+    --samples {",".join(samples)}\
+    --angacc-biased {",".join(input.angacc_biased)}\
+    --angacc-unbiased {",".join(input.angacc_unbiased)}\
+    --timeacc-biased {",".join(input.timeacc_biased)}\
+    --timeacc-unbiased {",".join(input.timeacc_unbiased)}\
+    --csp {",".join(input.csp_factors)}\
+    --time-resolution {",".join(input.time_resolution)}\
+    --flavor-tagging {",".join(input.flavor)}\
+    --params {input.params}\
+    --figures {figures}\
+    --year {",".join(YEARS[f'{wildcards.year}'])}\
+    --fit {wildcards.fit}\
+    --angacc {wildcards.angacc}\
+    --timeacc {wildcards.timeacc}\
+    --trigger {wildcards.trigger}\
+    --version {wildcards.version}\
+    ) &> {log}""")
+    send_mail(f"Physics Parameters RD :: {wildcards}", f"{log}")
+
+
+rule physics_params_data_Bs_scan:
+  wildcard_constraints:
+    fit = "(auto|yearly|run2|run2a)(Dual)?(Poldep|magUp|magDown)?",
+    mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
+  threads: 8
+  resources:
+    memb_mb=4000
+  input:
+    samples = lambda wcs: tuples(wcs, year=f'{wcs.year}'),
+    angacc_biased = lambda wcs: angaccs(wcs, trigger='biased'),
+    angacc_unbiased = lambda wcs: angaccs(wcs, trigger='unbiased'),
+    timeacc_biased = lambda wcs: timeaccs(wcs, trigger='biased'),
+    timeacc_unbiased = lambda wcs: timeaccs(wcs, trigger='unbiased'),
+    csp_factors = lambda wcs: csps(wcs),
+    time_resolution = lambda wcs: timeress(wcs),
+    flavor = lambda wcs: flavors(wcs),
+    params = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+  output:
+    directory('output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/scans/'),
+  log:
+    'output/log/physics_params_scan/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+  run:
+    pars = ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs', 'DM']
+    print(10*"WARNING ")
+    print("You are about to run scans for the likelihood of the phis analysis")
+    print("The directory is going to be UNLOCKED!")
+    print("Proceed under your risk!")
+    print(10*"WARNING ")
+    for p in pars:
+        shell(f"snakemake {input.params} -j -f --unlock") 
+        shell(f"(snakemake {input.params} -j -f --config scan={p}) &> {log}") 
+
+# }}}
+
+
 
 
 # rule physics_params_data_Bs_dll:
@@ -304,7 +396,7 @@ rule physics_params_data_Bx_dll_compare:
     logls[0,1] = np.load(f"{input.logl_dp}")
     logls[1,0] = np.load(f"{input.logl_pd}")
     logls[1,1] = np.load(f"{input.logl_pp}")
-    print(logls)
+    # print(logls)
 
     # load parameters
     pars = [
@@ -316,7 +408,7 @@ rule physics_params_data_Bx_dll_compare:
     s, p, d = check_DLL_agreement(logls, pars, sigmas=True, pvalue=True, ndof=True, mdof=8)
     #ans = f"{wildcards.pyear:>10} & {wildcards.pversion:>10} & {wildcards.pfit:>10} & {wildcards.pangacc:>10} & {wildcards.ptimeacc:>10} & {wildcards.dyear:>10} & {wildcards.dversion:>10} & {wildcards.dfit:>10} & {wildcards.dangacc:>10} & {wildcards.dtimeacc:>10} & ${s:+.2f}\sigma$ & ${p:.4f}$ & ${d:.0f}$"
     ans = np.float64([s, p, d])
-    print(ans)
+    # print(ans)
 
     # write
     # with open(f'{output}','w') as fp:
@@ -583,7 +675,7 @@ rule physics_params_mcfit_vs_mcgen:
     from ipanema import Parameters
     fit_parameters = f"{input}"
     gen_parameters = f"{params}"[2:-2]
-    print(gen_parameters)
+    # print(gen_parameters)
     fit = Parameters.load(fit_parameters)
     gen = Parameters.load(gen_parameters)
     table = []
@@ -673,7 +765,27 @@ rule physics_params_tabulate_versions:
     # print(table)
     # exit()
 
-    _params = ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs', 'DM']
+    if 'Poldep' in wildcards.mfit:
+        _params = ['fPlon', 'fPper', 
+                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                'dPpar', 'dPper',
+                'pPlon',
+                'pSlon', 'pPpar', 'pPper',
+                'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                'lPlon',
+                'lSlon', 'lPpar', 'lPper',
+                'DGsd', 'DGs', 'DM']
+    else:
+        _params = ['fPlon', 'fPper', 
+                   'dPpar', 'dPper',
+                   'pPlon',
+                   # 'pSlon', 'pPpar', 'pPper',
+                   'lPlon',
+                   # 'lSlon', 'lPpar', 'lPper',
+                   'DGsd', 'DGs', 'DM',
+                   # 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                   # 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                ]
     for p in _params:
         _row = [  f"$ {pars[0][p].latex:>50} $" ]
         for P in pars:
@@ -687,12 +799,14 @@ rule physics_params_tabulate_versions:
                 for v, s in zip(central_values, standard_deviations):
                     chi2 += ((v - reference_value)/s)**2
                 return chi2
-
-            # do linear fit on those numbers
-            p = 'reference_value'
-            result = Minuit(compute_chi2, reference_value=0.0, errordef=1)
-            result.migrad()
-            pval = chi2.sf(result.fval, len(central_values)-1)
+            if all(standard_deviations):
+                # do linear fit on those numbers
+                p = 'reference_value'
+                result = Minuit(compute_chi2, reference_value=0.0, errordef=1)
+                result.migrad()
+                pval = chi2.sf(result.fval, len(central_values)-1)
+            else:
+                pval = 0
             _row.append(f"$ {pval:+.3f} $")
         table.append(" & ".join(_row))
     with open(f'{output}','w') as f:
@@ -712,10 +826,13 @@ rule physics_params_tabulate_versions:
       f.write(r"\end{tabular}")
     f.close()
 
+
 rule physics_params_tabulate_systematic:
   """
   General rule to create tables of physics params with pvalues
   """
+  wildcard_constraints:
+    mtrigger = "((?!.*?(total)).*)",
   threads: 8
   input:
       lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
@@ -799,7 +916,27 @@ rule physics_params_tabulate_systematic:
     # print(table)
     # exit()
 
-    _params = ['fPlon', 'fPper', 'dPpar', 'dPper', 'pPlon', 'lPlon', 'DGsd', 'DGs', 'DM']
+    if 'Poldep' in wildcards.mfit:
+        _params = ['fPlon', 'fPper', 
+                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                'dPpar', 'dPper',
+                'pPlon',
+                'pSlon', 'pPpar', 'pPper',
+                'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                'lPlon',
+                'lSlon', 'lPpar', 'lPper',
+                'DGsd', 'DGs', 'DM']
+    else:
+        _params = ['fPlon', 'fPper', 
+                   'dPpar', 'dPper',
+                   'pPlon',
+                   # 'pSlon', 'pPpar', 'pPper',
+                   'lPlon',
+                   # 'lSlon', 'lPpar', 'lPper',
+                   'DGsd', 'DGs', 'DM',
+                   # 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                   # 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                ]
     for p in _params:
         _row = [  f"$ {pars[0][p].latex:>50} $" ]
         for P in pars:
@@ -810,7 +947,7 @@ rule physics_params_tabulate_systematic:
             standard_deviations = [P[p].uvalue.s for P in pars]
             def compute_chi2(reference_value):
                 chi2 = 0.0
-                for v, s in zip(central_values, standard_deviations):
+                for v, s in zip(central_values[1:], standard_deviations[1:]):
                     chi2 += ((v - reference_value)/s)**2
                 return chi2
 
@@ -818,7 +955,7 @@ rule physics_params_tabulate_systematic:
             p = 'reference_value'
             result = Minuit(compute_chi2, reference_value=0.0, errordef=1)
             result.migrad()
-            pval = chi2.sf(result.fval, len(central_values)-1)
+            pval = chi2.sf(result.fval, len(central_values)-1-1)
             systs = [c-central_values[0] for c in central_values]
             systs = np.array(systs)
             signs = systs/np.abs(systs)
@@ -826,7 +963,7 @@ rule physics_params_tabulate_systematic:
             syst *= signs[np.abs(systs) == syst]
             # _row.append(f"$ {pval:+.3f} $")  # for pvalue
             syst = syst if len(syst) < 2 else syst[0]
-            print(np.float64(syst))
+            # print(np.float64(syst))
             _row.append(f"$ {np.float64(syst):+.4f} $")
         table.append(" & ".join(_row))
     with open(f'{output}','w') as f:

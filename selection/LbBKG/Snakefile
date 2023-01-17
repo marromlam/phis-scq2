@@ -20,7 +20,7 @@ if config['run_preselection']:
         # input:
         output:
             # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_prepared_Lb.root'))
-            SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root',
+            temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}.root'),
         params:
             files = lambda wildcards: selconfig['eos_mc'][wildcards.mode][int(wildcards.year)][wildcards.strip_sim][wildcards.polarity],
             script = 'selection/tools/apply_selection.py',
@@ -63,11 +63,11 @@ if config['run_preselection']:
             script = 'selection/tools/split_tree.py',
         output:
             # file = temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_{polarity}_selected_with_gen_{pkkp}.root'))
-            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_splitted{pkkp}.root',
+            file = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_prepared{polarity}_splitted{pkkp}.root'),
         log:
             'output/log/split_tree_to_pid/{year}/{mode}/{version}_{strip_sim}_{polarity}_selected_with_gen_{pkkp}.log'
         run:
-            shell('(/home3/marcos.romero/.linuxbrew/bin/time python {params.script} \
+            shell('(time python {params.script} \
             --input-file {input.input_file} \
             --input-tree-name DecayTree \
             --output-file {output.file} \
@@ -100,9 +100,9 @@ if config['run_preselection']:
         params:
             script = 'selection/tools/PIDCorr.py',
         output:
-            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root',
-            tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}_tmp1.root',
-            tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}tmp2.root',
+            file = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.root'),
+            tmp1 = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}_tmp1.root'),
+            tmp2 = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorr{polarity}_splitted{pkkp}tmp2.root'),
         log:
             'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidcorrected{polarity}_splitted{pkkp}.log',
         shell:
@@ -139,9 +139,9 @@ if config['run_preselection']:
         params:
             script = 'selection/tools/PIDGen.py',
         output:
-            file = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.root',
-            tmp1 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}_tmp1.root',
-            tmp2 = SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}tmp2.root',
+            file = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.root'),
+            tmp1 = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}_tmp1.root'),
+            tmp2 = temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}tmp2.root'),
         log:
             'output/log/selection_pid_correction/{year}/{mode}/{version}_{strip_sim}_pidgen{polarity}_splitted{pkkp}.log',
         shell:
@@ -185,12 +185,15 @@ if config['run_preselection']:
                               pkkp=selconfig['MC_Bs2JpsiPhi_fromLb_pkkp'])
         output:
             # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_selected_pidcorrected_Lb.root'))
-            SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root'
-        shell:
-           'if grep -i error  {input.logfile1} {input.logfile2} ;\
+            temporal(SAMPLES + '/{year}/{mode}/{version}_{strip_sim}_pidcorrected.root')
+        log:
+            # temp(tuples_path('{mode}/{year}/{strip_sim}/{mode}_{year}_{strip_sim}_selected_pidcorrected_Lb.root'))
+            'output/log/merge_polarities/{year}/{mode}/{version}_{strip_sim}_pidcorrected.log'
+        run:
+           shell('(if grep -i error  {input.logfile1} {input.logfile2} ;\
             then echo an error occured with pid correction, please check the log files;\
             else hadd {output} {input.root};\
-            fi;'
+            fi;) &> {log}')
     
     
     rule merge_strippings_Lb:
@@ -210,10 +213,11 @@ if config['run_preselection']:
                                      strip_sim=selconfig['strip_sim'][wildcards.mode][wildcards.year],
                                      year=wildcards.year)
         output:
-            # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_Lb.root'))
-            SAMPLES + '/{year}/{mode}/{version}_stripmerged.root'
+            temporal(SAMPLES + '/{year}/{mode}/{version}_stripmerged.root')
+        log:
+            'outpyt/log/merge_strippings/{year}/{mode}/{version}_stripmerged.log'
         shell:
-            'hadd {output} {input}'
+            '(hadd {output} {input}) &> {log}'
     
     rule add_dalitz_weight_Lb:
         """
@@ -238,7 +242,7 @@ if config['run_preselection']:
             funcfile = 'selection/LbBKG/WeightLb/FitRes5/params_pentaquark_paper.func'
         output:
             # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_Lb.root'))
-            SAMPLES + '/{year}/{mode}/{version}_dalitzWeight.root'
+            temporal(SAMPLES + '/{year}/{mode}/{version}_dalitzWeight.root')
         run:
             # WARNING :: this needs to be compiled on old ROOT
             # 'cd selection/LbBKG/WeightLb/; mkdir -p bin;'
@@ -272,7 +276,7 @@ if config['run_preselection']:
             script = 'selection/LbBKG/pptw/addpptw.C',
         output:
             # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_Lb.root'))
-            SAMPLES + '/{year}/{mode}/{version}_pptWeight.root'
+            temporal(SAMPLES + '/{year}/{mode}/{version}_pptWeight.root')
         shell:
             '{input.command} {params.script} addpptw {input.files} {output} {input.weight_file}'
     
@@ -294,7 +298,7 @@ if config['run_preselection']:
         params:
             script = 'selection/tools/apply_selection.py',
         output:
-            SAMPLES + '/{year}/{mode}/{version}_withbdtLb.root'
+            temporal(SAMPLES + '/{year}/{mode}/{version}_withbdtLb.root')
             # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_with_bdt_branches_Lb.root'))
         shell:
             'python {params.script} --input-file {input.file} \
@@ -322,7 +326,7 @@ if config['run_preselection']:
             script = 'selection/tools/apply_selection.py',
         output:
             # temp(tuples_path('{mode}/{mode}_{year}_selected_pidcorrected_dalitzw_pptw_with_bdt_branches_cut_Lb.root'))
-            SAMPLES + '/{year}/{mode}/{version}_preselected.root',
+            temporal(SAMPLES + '/{year}/{mode}/{version}_preselected.root'),
         shell:
             'python {params.script} --input-file {input.file} \
                                    --output-file {output} \
