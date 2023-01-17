@@ -237,12 +237,9 @@ def splinexerfconstr(pars, cats, weight=False, tLL=0.3, tUL=15):
       # get coeffs - currently being fitted
       lpars = pars.find(rf'c(A)?(\d{{1}})(\d{{1}})?({t[0]})_({y[2:]})')
       c = pars.valuesarray(lpars)
-      # print(c)
 
       # compute gaussian constraint - from previous fits
       lpars = dt.params.find(rf'c(B)?(\d{{1}})(\d{{1}})?({t[0]})')[1:]
-      # print(lpars)
-      # print(dt.params.valuesarray(lpars))
       # constraint mu
       c0 = np.matrix(c[1:] - dt.params.valuesarray(lpars))
       # constraint covariance matrix
