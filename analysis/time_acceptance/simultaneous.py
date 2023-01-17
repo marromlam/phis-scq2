@@ -217,7 +217,7 @@ if __name__ == '__main__':
     cats[mode].allocate(time=time, lkhd='0*time', weight=weight)
     print(np.min(cats[mode].time.get()), np.max(cats[mode].time.get()))
     cats[mode].weight = swnorm(cats[mode].weight)
-    print(cats[mode].df)
+    print(cats[mode].df[['time', 'sWeight']])
     # print(cats[mode].df['veloWeight'])
 
     # Add knots
@@ -236,14 +236,14 @@ if __name__ == '__main__':
     cats[mode].params.add(*[
         {'name': f'{c}{j}{TRIGGER[0]}', 'value': 1.0,
          'latex': f'{c}_{j}^{TRIGGER[0]}',
-         'free': False if j == 0 else True, 'min': 0.1, 'max': 10.
+         'free': False if j == 0 else True,  # 'min': 0.1, 'max': 10.
          } for j in range(len(knots[:-1]) + 2)
     ])
     cats[mode].params.add({'name': f'gamma_{c}',
                            'value': Gdvalue + resolutions[m]['DGsd'],
                            'latex': f'\Gamma_{c}', 'free': False})
     cats[mode].params.add({'name': f'mu_{c}',
-                           'value': 0 * time_offset[i]['mu'].value,
+                           'value': 1 * time_offset[i]['mu'].value,
                            'latex': f'\mu_{c}', 'free': False})
     _sigma = np.mean(cats[mode].df['sigmat'].values)
     print(f"sigmat = {resolutions[m]['sigma']} -> {_sigma}")
@@ -279,7 +279,7 @@ if __name__ == '__main__':
   mini = Optimizer(fcn_call=fcn_call, params=fcn_pars, fcn_kwgs=fcn_kwgs)
 
   if MINER.lower() in ("minuit", "minos"):
-    result = mini.optimize(method='minuit', verbose=True)
+    result = mini.optimize(method='minuit', verbose=True, strategy=2)
   elif MINER.lower() in ('bfgs', 'lbfgsb'):
     _res = mini.optimize(method='nelder', verbose=False)
     result = mini.optimize(method=MINER, params=_res.params, verbose=False)

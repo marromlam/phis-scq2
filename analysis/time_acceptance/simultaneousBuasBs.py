@@ -1,11 +1,12 @@
 import config
-from reweightings.kinematic_weighting import reweight
+from analysis.reweightings.kinematic_weighting import reweight
 from utils.helpers import swnorm, trigger_scissors
 from utils.helpers import version_guesser, timeacc_guesser
 from utils.strings import cuts_and
 from utils.plot import mode_tex
 from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
-from ipanema import initialize, plotting
+from ipanema import initialize
+from trash_can.knot_generator import create_time_bins
 import hjson
 import os
 import argparse
@@ -30,11 +31,11 @@ __email__ = ['mromerol@cern.ch']
 # binned variables
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
+# all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
 Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
+tLL = config.general['time_lower_limit']
+tUL = config.general['time_upper_limit']
 
 # Parse arguments for this script
 
@@ -74,7 +75,7 @@ if __name__ == '__main__':
 
   # Get badjanak model and configure it
   initialize(config.user['backend'], 1 if YEAR in (2015, 2017) else 1)
-  import time_acceptance.fcn_functions as fcns
+  import analysis.time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
   CUT = ''  # bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
@@ -104,9 +105,10 @@ if __name__ == '__main__':
   otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(TIMEACC['nknots'])]
-  kinWeight = 'Weight'
-  sw = 'sw'
+  knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL).tolist()
+  if not fcns.badjanak.config['final_extrap']:
+    knots[-2] = knots[-1]
+  tLL, tUL = knots[0], knots[-1]
   if TIMEACC['corr']:
     # to be implemented
     0
@@ -121,23 +123,23 @@ if __name__ == '__main__':
     # Correctly apply weight and name for diffent samples
     if m == 'MC_Bu2JpsiKplus':
       if TIMEACC['corr']:
-        weight = f'kin{kinWeight}*polWeight*{sw}'
+        weight = f'kbuWeight*polWeight*sWeight'
       else:
-        weight = f'polWeight*{sw}'
+        weight = f'polWeight*sWeight'
       mode = 'BuMC'
       c = 'a'
     elif m == 'MC_Bd2JpsiKstar':
       if TIMEACC['corr']:
-        weight = f'kbu{kinWeight}*polWeight*pdfWeight*{sw}'
+        weight = f'kbuWeight*polWeight*pdfWeight*sWeight'
       else:
-        weight = f'pdfWeight*polWeight*{sw}'
+        weight = f'pdfWeight*polWeight*sWeight'
       mode = 'BdMC'
       c = 'b'
     elif m == 'Bd2JpsiKstar':
       if TIMEACC['corr']:
-        weight = f'kbu{kinWeight}*{sw}'
+        weight = f'kbuWeight*sWeight'
       else:
-        weight = f'{sw}'
+        weight = f'sWeight'
       mode = 'BdRD'
       c = 'c'
 
