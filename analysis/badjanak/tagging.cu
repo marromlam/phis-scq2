@@ -25,7 +25,7 @@ const CONSTANT_MEM ftype MHH[MKNOTS] = {990, 1050};
 #include <lib99ocl/complex.c>
 // #include <lib99ocl/cspecial.c>
 // #include <lib99ocl/random.c>
-// #include <lib99ocl/special.c>
+#include <lib99ocl/special.c>
 
 #include "decay_time_acceptance.c"
 #include "decay_time_acceptance.h"

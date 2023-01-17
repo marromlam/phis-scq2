@@ -67,4 +67,5 @@ const CONSTANT_MEM ftype TRISTAN[NTERMS] = ${TRISTAN};
 #include "toy.cu"
 #endif
 
+
 // that's all folks
