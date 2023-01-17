@@ -58,7 +58,8 @@ gbweighting_branches:
   Bu2JpsiKplus: &gbw-Bu2JpsiKplus
     'B_PT': 'B_PT'
     'B_ETA': 'B_ETA'
-    'nTracks': 'nTracks'
+    # 'nTracks': 'nTracks'
+    'nLongTracks': 'nLongTracks'
   MC_Bs2JpsiPhi:
     <<: *gbw-common
   MC_Bs2JpsiPhi_Prompt:

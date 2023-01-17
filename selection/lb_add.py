@@ -211,8 +211,18 @@ if __name__ == '__main__':
     #     rf['DecayTree'] = uproot.newtree({var: 'float64' for var in rdLbOut})
     #     rf['DecayTree'].extend(rdLbOut.to_dict(orient='list'))
     with uproot.recreate(args['rd_output']) as rf:
-        rf['DecayTree'] = uproot.newtree({var: 'float64' for var in rdOut})
-        rf['DecayTree'].extend(rdOut.to_dict(orient='list'))
+      _branches = {}
+      for k, v in rdOut.items():
+          if 'int' in v.dtype.name:
+              _v = np.int32
+          elif 'bool' in v.dtype.name:
+              _v = np.int32
+          else:
+              _v = np.float64
+          _branches[k] = _v
+      # mylist = list(dict.fromkeys(_branches.values()))
+      rf['DecayTree'] = uproot.newtree(_branches)
+      rf['DecayTree'].extend(rdOut.to_dict(orient='list'))
 
 
 # vim: fdm=marker ts=2 sw=2 sts=2 sr et

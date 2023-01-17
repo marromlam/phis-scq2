@@ -130,29 +130,36 @@ if __name__ == '__main__':
         if k.startswith('mass'):
           to_plot['mass'] = v[k]
           to_plot['xlabel'] = k.split('_')[-1]
-          to_plot['xlabel'] = to_plot['xlabel'].replace('mu', r'\mu\!')
-          to_plot['xlabel'] = to_plot['xlabel'].replace('pi', r'\pi\!')
-          to_plot['xlabel'] = to_plot['xlabel'].replace('K', r'K\!')
+          to_plot['xlabel'] = to_plot['xlabel'].replace('mu', r'\upmu\!')
+          to_plot['xlabel'] = to_plot['xlabel'].replace('pi', r'\uppi\!')
+          to_plot['xlabel'] = to_plot['xlabel'].replace('K', r'\mathrm{K}\!')
         elif k.startswith('bins'):
           to_plot['bins'] = v[k]
         elif k.startswith('counts'):
           to_plot['counts'] += v[k]
         elif k.startswith('pull'):
-          to_plot['pull'] += v[k]
+          _n_pull = v[k]
+          _p_pull = to_plot['pull']
+          # for i in range(len(_n_pull)):
+          #   if np.abs(_n_pull[i]) > np.abs(_p_pull[i]):
+          #         to_plot['pull'][i] = _n_pull[i]
+          #   else:
+          #         to_plot['pull'][i] = _p_pull[i]
+          to_plot['pull'] += v[k] / len(sweights)
         elif k.startswith('yerr'):
-          to_plot['yerr'] += v[k]
+          to_plot['yerr'] += np.array(v[k])
         elif k.startswith('xerr'):
-          to_plot['xerr'] = v[k]
+          to_plot['xerr'] = np.array(v[k])
         elif k.startswith('pdf_'):
           to_plot[k[4:]]['arr'] += v[k]
           if 'Bd' in k:
-            label = r'$B_d^0$'
+            label = r'$\mathrm{B_d^0}$'
           elif 'Bs' in k:
-            label = r'$B_s^0$'
+            label = r'$\mathrm{B_s^0}$'
           elif 'Bu' in k:
-            label = r'$B_u^+$'
+            label = r'$\mathrm{B_u^+}$'
           elif 'Ds' in k:
-            label = r'$D_s^+$'
+            label = r'$\mathrm{D_s^+}$'
           elif 'total' in k:
             label = "total fit"
           elif 'comb' in k:
@@ -168,6 +175,7 @@ if __name__ == '__main__':
     hcounts = to_plot['counts']
     to_plot.pop('counts')
     hyerr = to_plot['yerr']
+    err = np.sqrt(to_plot['yerr']**2 + to_plot['xerr']**2)
     to_plot.pop('yerr')
     hxerr = to_plot['xerr']
     to_plot.pop('xerr')
@@ -188,22 +196,28 @@ if __name__ == '__main__':
       axplot.plot(mass, to_plot[k]['arr'], "-", color=_color,
                   label=to_plot[k]['label'])
     # plot pulls
-    hpull = complot.compute_pdfpulls(mass, to_plot['total']['arr'], hbins, hcounts, *hyerr)
+    hpull = complot.compute_pdfpulls(mass,
+                                     to_plot['total']['arr'],
+                                     hbins,
+                                     hcounts, *hyerr)
+    # hpull = to_plot['total']['pull'],
     axpull.fill_between(hbins, hpull, 0, facecolor="C0", alpha=0.5)
     # label and save the plot
     axpull.set_xlabel(rf"$m({xlabel})$ [MeV/$c^2$]")
     axpull.set_ylim(-6.5, 6.5 / np.inf)
     axpull.set_yticks([-5, 0, 5])
     axplot.set_ylabel(rf"Candidates")
-    axplot.legend(loc="upper right")
+    axplot.legend(loc="upper right", fontsize=12)
     v_mark = 'LHC$b$'  # watermark plots
     tag_mark = 'THIS THESIS'
-    watermark(axplot, version=v_mark, tag=tag_mark, scale=1.3)
+    watermark(axplot, version="final", scale=1.1)
+    # fig.savefig("fit.pdf")
+    # exit()
     os.makedirs(args['output_plots'], exist_ok=True)
     fig.savefig(os.path.join(args['output_plots'], f"fit.pdf"))
     axplot.set_yscale("log")
     try:
-      axplot.set_ylim(1e-6, 1.5 * np.max(to_plot['total']['arr']))
+      axplot.set_ylim(1e0, 1.5 * np.max(to_plot['total']['arr']))
     except:
       print("axes not scaled")
     fig.savefig(os.path.join(args['output_plots'], f"logfit.pdf"))
@@ -212,5 +226,6 @@ if __name__ == '__main__':
     if args['output_plots']:
       os.makedirs(args['output_plots'], exist_ok=True)
       os.system(f"touch {os.path.join(args['output_plots'], 'placeholder.pdf')}")
+
 
 # vim: fdm=marker

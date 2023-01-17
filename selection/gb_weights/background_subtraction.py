@@ -471,7 +471,7 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
   if verbose:
     print("Running full fit")
   res = ipanema.optimize(fcn, pars, fcn_kwgs={'data': rd},
-                         method='minuit', verbose=verbose, tol=10, strategy=1)
+                         method='minuit', verbose=verbose, strategy=2)
 
   if verbose:
     print(res)

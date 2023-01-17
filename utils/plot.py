@@ -154,6 +154,13 @@ def get_nbins(var, mode='Bs'):
 
 # Get branch and units in TeX {{{
 
+def name_from_lhcb_to_scq(branch, mode='Bs2JpsiPhi'):
+  for b in BRANCHES[mode]:
+    if BRANCHES[mode][b]['peval'] == branch:
+      return b
+  raise ValueError(f"Unknown branch {branch}")
+
+
 def get_var_in_latex(var, mode='Bs2JpsiPhi'):
   return BRANCHES[mode][var].get('latex')
 
@@ -174,19 +181,19 @@ def make_square_axes(ax):
   ax.set_aspect(1 / ax.get_data_ratio())
 
 
-def watermark(ax, version='final', tag='', size=(20, 8.25), scale=1.2, pos=(0.05, 0.9)):
+def watermark(ax, version='final', tag='', size=(20, 8.25), scale=1.2, pos=(0.05, 0.9), color='black'):
   if 'final' in version:
     version = 'LHCb'
     tag = 'THIS THESIS'
-    size = [25, 9.8]
+    size = [23, 9.8]
   if scale:
     ax.set_ylim(ax.get_ylim()[0], ax.get_ylim()[1] * scale)
   # ax.text(ax.get_xlim()[0]+(ax.get_xlim()[1]-ax.get_xlim()[0])*0.03, ax.get_ylim()[1]*0.95,
   #         f'{version}', fontsize=size[0], color='black',
   #         ha='left', va='top', alpha=1.0)
-  ax.text(pos[0]-0.02, pos[1], f'{version}', fontsize=size[0], color='black',
+  ax.text(pos[0] - 0.02, pos[1], f'{version}', fontsize=size[0], color=color,
           ha='left', va='center', transform=ax.transAxes, alpha=1.0)
-  ax.text(pos[0]-0.02, pos[1] - 0.06, f'{tag}', fontsize=size[1], color='black',
+  ax.text(pos[0] - 0.02, pos[1] - 0.06, f'{tag}', fontsize=size[1], color=color,
           ha='left', va='center', transform=ax.transAxes, alpha=1.0)
   # ax.text(ax.get_xlim()[1]*0.025, ax.get_ylim()[1]*0.85,
   #         f'{tag}', fontsize=size[1], color='black',
@@ -195,4 +202,4 @@ def watermark(ax, version='final', tag='', size=(20, 8.25), scale=1.2, pos=(0.05
 # }}}
 
 
-# vim:foldmethod=marker
+# vim: fdm=marker

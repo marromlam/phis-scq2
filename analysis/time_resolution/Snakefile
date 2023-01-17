@@ -78,7 +78,7 @@ rule time_resolution_from_git:
     python analysis/time_resolution/download_from_git.py\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
-    --version v1r0\
+    --version v4r0\
     --timeres {wildcards.timeres}\
     --output {output}\
     --repo {params.repo}\
@@ -230,7 +230,7 @@ rule time_resolution_dilution_computation:
     run:
         fpars = input.json
         fpars = [fpars] if isinstance(fpars,str) else fpars
-        dlongl = input.json
+        dlongl = input.data_ll
         dlongl = [dlongl] if isinstance(dlongl,str) else dlongl
         shell(f"""(time python {params.script}\
         --data-in {input.data}\

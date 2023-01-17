@@ -225,7 +225,7 @@ def version_guesser(version):
         # upper / lower times
         r"(LT|UT|T1|T2|T3)?",
         # background category
-        r"(bkgcat60)?",
+        r"(bkgcat60|bkgcat050)?",
         # mass sidebands
         r"(RSB|LSB|RSBsmall|LSBsmall)?",
         # split by magnet Up or Down: useful for crosschecks

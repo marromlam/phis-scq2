@@ -324,7 +324,8 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
   # axpull.hlines(3, mLL, mUL, linestyles='dotted', color='k', alpha=0.2)
   # axpull.hlines(-3, mLL, mUL, linestyles='dotted', color='k', alpha=0.2)
 
-  axplot.legend(loc="upper right", prop={'size': 8})
+  # axplot.legend(loc="upper right", prop={'size': 8})
+  axplot.legend(loc='center left', bbox_to_anchor=(1, 0.5), prop={'size': 16})
   if figs:
     os.makedirs(figs, exist_ok=True)
     fig.savefig(os.path.join(figs, f"fit.pdf"))
@@ -336,7 +337,7 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
   if figs:
     v_mark = 'LHC$b$'  # watermark plots
     tag_mark = 'THIS THESIS'
-    watermark(axplot, version=v_mark, tag=tag_mark, scale=10.3)
+    watermark(axplot, version="final", scale=10.3)
     fig.savefig(os.path.join(figs, f"logfit.pdf"))
   plt.close()
 
@@ -354,6 +355,12 @@ def time_resolution(df, time_range, sigma_range, wpv_shape, mode,
   # time_bias = [ p for p in pdf_pars if p['Name'][:2] == 'mu']
   # llDataSetFile = TFile.Open(data_out, "recreate")
 
+  # generate long live component
+  _p = ipanema.Parameters.clone(fpars)
+  _p['fprompt'].set(value=0, min=-np.inf, max=np.inf)
+  _p['fwpv'].set(value=0, min=-np.inf, max=np.inf)
+
+  ll_pdf = pdf(_p, proxy_mass, proxy_prob, norm=hdata.norm)
   # ll_integrals = []
   # ll_datasets = []
   #

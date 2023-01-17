@@ -214,7 +214,7 @@ def extract_wpv_shape(df, wpv='classical', bin_sigmat=False,
             tag_mark = 'THIS THESIS'
             plots[f"fit{pbin}"] = fig
             axplot.set_yscale('log')
-            watermark(axplot, version=v_mark, tag=tag_mark, scale=10.3)
+            watermark(axplot, version="final", scale=9.3)
             plots[f"logfit{pbin}"] = fig
     if with_plots:
         return pars, plots
