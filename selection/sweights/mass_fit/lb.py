@@ -21,6 +21,8 @@ from utils.helpers import trigger_scissors, cuts_and
 import config
 import complot
 
+from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
+
 
 TIME_CUT = "(B_LOKI_DTF_CTAU/0.29979245)>0.3"
 CUT_KMINUS = '((hminus_ProbNNp>0.7) & (hminus_ProbNNp>hplus_ProbNNp))'
@@ -41,7 +43,7 @@ prog = ipanema.compile("""
 
 # ipatia as signal and chebyshev for background {{{
 
-def ipatia_chebyshev(mass, signal, fpeak=0, fcomb=0, mu=0, sigma=10, lambd=0,
+def ipatia_chebyshev(mass, signal, fsigBs=0, fcomb=0, mu=0, sigma=10, lambd=0,
                      zeta=0, beta=0, aL=0, nL=0, aR=0, nR=0, b=0, t0=1, t1=1,
                      t2=0, t3=0, t4=0, t5=0, t6=0, t7=0, mLL=False, mUL=False,
                      norm=1):
@@ -77,7 +79,7 @@ def ipatia_chebyshev(mass, signal, fpeak=0, fcomb=0, mu=0, sigma=10, lambd=0,
   prog.kernel_chebyshev(signal, mass, t, np.int32(deg), np.float64(mLL),
                         np.float64(mUL), global_size=(len(mass)))
   pComb = signal.get()
-  return norm * (fpeak * pPeak + fcomb * pComb)
+  return norm * (fsigBs * pPeak + fcomb * pComb)
 
 # }}}
 
@@ -106,7 +108,7 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
 
   pars = ipanema.Parameters()
   # Create common set of Bs parameters (all models must have and use)
-  pars.add(dict(name='fpeak', value=0.8, min=0.05, max=1, free=True,
+  pars.add(dict(name='fsigBs', value=0.8, min=0.05, max=1, free=True,
            latex=r'N_{B_s}'))
   pars.add(dict(name='mu', value=5620, min=5500, max=5700,
            latex=r'\mu_{B_s}'))
@@ -116,7 +118,7 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
   if input_pars:
     _pars = ipanema.Parameters.clone(input_pars)
     _pars.lock()
-    _pars.remove('fpeak', 'mu', 'sigma')
+    _pars.remove('fsigBs', 'mu', 'sigma')
     _pars.unlock('b')
     pars = pars + _pars
   else:
@@ -147,7 +149,7 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
                   latex=r't_1'))
     pars.add(dict(name='t2', value=-0.03, min=-1, max=1, free=True,
                   latex=r't_2'))
-    pars.add(dict(name='fcomb', formula="1-fpeak", latex=r'f_{comb}'))
+    pars.add(dict(name='fcomb', formula="1-fsigBs", latex=r'f_{comb}'))
   print(pars)
 
   # }}}
@@ -220,14 +222,17 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
   _pulls = complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts,
                                     *hdata.yerr)
   axpull.fill_between(hdata.bins, _pulls, 0, facecolor="C0", alpha=0.5)
-  axpull.set_xlabel(r'$m(J/\psi KK)$ [MeV/$c^2$]')
+  if 'kplus' in figs:
+    axpull.set_xlabel(r'$m(\text{J}\!/\!\uppsi \text{pK}^+)$ [MeV/$c^2$]')
+  else:
+    axpull.set_xlabel(r'$m(\text{J}\!/\!\uppsi \text{pK}^-)$ [MeV/$c^2$]')
   axpull.set_ylim(-6.5, 6.5)
   axpull.set_yticks([-5, 0, 5])
   if mass_weight:
     axplot.set_ylabel("Weighted candidates")
   else:
     axplot.set_ylabel("Candidates")
-  axplot.legend(loc="upper left")
+  # axplot.legend(loc="upper left")
   if figs:
     os.makedirs(figs, exist_ok=True)
     fig.savefig(os.path.join(figs, "fit.pdf"))
@@ -240,7 +245,7 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
 
   if sweights:
     # separate paramestes in yields and shape parameters
-    _yields = ipanema.Parameters.find(fpars, "fpeak(.*)?") + ["fcomb"]
+    _yields = ipanema.Parameters.find(fpars, "fsigBs(.*)?") + ["fcomb"]
     _pars = list(fpars)
     [_pars.remove(_y) for _y in _yields]
     _yields = ipanema.Parameters.build(fpars, _yields)

@@ -106,7 +106,7 @@ rule physics_params_data_Bs_plot:
     --timeacc {wildcards.timeacc}\
     --trigger {wildcards.trigger}\
     --version {wildcards.version}\
-    ) #&> {log}""")
+    ) &> {log}""")
     send_mail(f"Physics Parameters RD :: {wildcards}", f"{log}")
 
 

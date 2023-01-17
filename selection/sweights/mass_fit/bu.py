@@ -10,6 +10,7 @@ import numpy as np
 from ipanema import Sample, ristra, splot
 
 from selection.sweights.mass_fit.bs import cb_exponential3
+from selection.sweights.mass_fit.bd import ipatia_exponential as ipatia_exponential_bd
 from utils.helpers import cuts_and, trigger_scissors
 
 __author__ = ["Marcos Romero"]
@@ -73,6 +74,19 @@ def cb_exponential(
                         b=b, norm=norm, mLL=mLL, mUL=mUL)
   return ans
 
+
+def ipatia_exponential(
+    mass, signal, fsigBu, fexp, muBu, sigmaBu, lambd, beta, zeta, aL, nL, aR, nR, b, norm=1
+):
+  # merr = ristra.allocate(np.zeros_like(mass))
+  mLL, mUL = ristra.min(mass), ristra.max(mass)
+  ans = ipatia_exponential_bd(mass, signal,
+                        nsigBd=fsigBu,  nexp=fexp,
+                        muBd=muBu, sigmaBd=sigmaBu,
+                        lambd=lambd, zeta=zeta, beta=beta,
+                        aL=aL, nL=nL, aR=aR, nR=nR,
+                        b=b, norm=norm, mLL=mLL, mUL=mUL)
+  return ans
 
 # }}}
 
@@ -167,15 +181,17 @@ def mass_fitter(
     pars.add(dict(name="b", value=-4e-3, min=-1, max=1, free=True, latex=r"b"))
     pars.add(dict(name="fexp", formula="1-fsigBu", latex=r"N_{comb}"))
   pars.unlock("fsigBu", "muBu", "sigmaBu", "b")
-  # if 'ipatia' in model:
-  #     pars.unlock('zeta', 'beta')
+  if 'ipatia' in model:
+      # pars.unlock('zeta', 'beta', 'lambd')
+      pars.unlock('beta', 'lambd')
+      # pars.unlock('beta')
   print(pars)
 
   # }}}
 
   # Chose model {{{
 
-  if model == "ipatia":
+  if model.startswith("ipatia"):
     pdf = ipatia_exponential
   elif model.startswith("crystalball"):
     pdf = cb_exponential
@@ -196,6 +212,7 @@ def mass_fitter(
   _proxy = np.float64(rd.df[mass_branch]) * 0.0 - 999
   rd.chop(current_cut)
   rd.allocate(mass=mass_branch, pdf=f"0*{mass_branch}", weight=mass_weight)
+  rd.weight *= ristra.sum(rd.weight) / ristra.sum(rd.weight**2)
 
   # }}}
 
@@ -222,6 +239,7 @@ def mass_fitter(
     fpars = ipanema.Parameters.clone(pars)
     print(fpars)
 
+  all_pdfs = {}
   fig, axplot, axpull = complot.axes_plotpull()
   hdata = complot.hist(
       ristra.get(rd.mass), weights=rd.df.eval(mass_weight), bins=60, density=False
@@ -235,28 +253,29 @@ def mass_fitter(
 
   # plot signal: nbkg -> 0 and nexp -> 0
   _p = ipanema.Parameters.clone(fpars)
-  if "fsigBu" in _p:
-    _p["fsigBu"].set(value=0, min=-np.inf, max=np.inf)
   if "fexp" in _p:
     _p["fexp"].set(value=0, min=-np.inf, max=np.inf)
   _x, _y = ristra.get(mass), ristra.get(
       pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm)
   )
   axplot.plot(_x, _y, color="C1", label=rf"$B_u^+$ {model}")
+  all_pdfs['pdf_fsigBu'] = _y
 
   # plot fit with all components and data
   _p = ipanema.Parameters.clone(fpars)
   x, y = ristra.get(mass), ristra.get(
       pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm)
   )
+  all_pdfs['pdf_total'] = y
+  all_pdfs['mass_mumuK'] = x
+  all_pdfs['bins'] = hdata.bins
+  all_pdfs['counts'] = hdata.counts
+  all_pdfs['yerr'] = hdata.yerr
+  all_pdfs['xerr'] = hdata.xerr
   axplot.plot(x, y, color="C0")
-  axpull.fill_between(
-      hdata.bins,
-      complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts, *hdata.yerr),
-      0,
-      facecolor="C0",
-      alpha=0.5,
-  )
+  pulls = complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts, *hdata.yerr)
+  axpull.fill_between( hdata.bins, pulls, 0, facecolor="C0", alpha=0.5,)
+  all_pdfs['pulls'] = pulls
   axpull.set_xlabel(r"$m(J/\psi K^+)$ [MeV/$c^2$]")
   axpull.set_ylim(-6.5, 6.5)
   axpull.set_yticks([-5, 0, 5])
@@ -290,6 +309,7 @@ def mass_fitter(
       _sw = np.copy(_proxy)
       _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
       sw[k] = _sw
+    sw = {**sw, **all_pdfs}
     print(sw)
     return (fpars, sw)
 

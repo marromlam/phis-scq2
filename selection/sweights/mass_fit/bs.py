@@ -886,6 +886,7 @@ def mass_fitter(
   print(rd)
   rd.allocate(mass=mass_branch, merr="B_ConstJpsi_MERR_1")
   rd.allocate(pdf=f"0*{mass_branch}", weight=mass_weight)
+  rd.weight *= ipanema.ristra.sum(rd.weight) / ipanema.ristra.sum(rd.weight**2)
   # mass_range = (min(rd.df[mass_branch]), max(rd.df[mass_branch]))
   # mLL, mUL = mass_range
   # print(rd)
@@ -931,7 +932,7 @@ def mass_fitter(
       v.init = v.value
     print("Partial fits succeded! Now performing full fit")
     pars.unlock('fsigBs', 'muBs', 'b')
-    if 'fsigBd' in pars:  # :and len(rd.mass) > 1000:
+    if 'fsigBd' in pars:  # and len(rd.mass) > 5000:
       pars.unlock('fsigBd')
     if 'lambd' in pars:  # and len(rd.mass) > 200:
       pars.unlock('lambd')

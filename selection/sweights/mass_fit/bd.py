@@ -121,7 +121,7 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
       # Hypatia tails {{{
       pars.add(dict(name='lambd', value=-1.5, min=-4,
                max=-1.1, free=True, latex=r'\lambda'))
-      pars.add(dict(name='zeta', value=1e-5,
+      pars.add(dict(name='zeta', value=0*1e-5,
                free=False, latex=r'\zeta'))
       pars.add(dict(name='beta', value=0.0,
                free=False, latex=r'\beta'))
@@ -154,6 +154,8 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
     # will not use combinatorial background.
     pars['nsigBd'].value = 1
     pars['nsigBd'].free = False
+  if 'lambd' in pars:
+      pars['lambd'].free = True
   print(pars)
 
   # }}}
@@ -181,6 +183,7 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
   _proxy = np.float64(rd.df[mass_branch]) * 0.0 - 999
   rd.chop(current_cut)
   rd.allocate(mass=mass_branch, pdf=f'0*{mass_branch}', weight=mass_weight)
+  rd.weight *= ristra.sum(rd.weight) / ristra.sum(rd.weight**2)
   # print(rd)
 
   # }}}
@@ -195,6 +198,7 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
     fpars = ipanema.Parameters.clone(pars)
     print(fpars)
 
+  all_pdfs = {}
   fig, axplot, axpull = complot.axes_plotpull()
   hdata = complot.hist(ristra.get(rd.mass), weights=rd.df.eval(mass_weight),
                        bins=60, density=False)
@@ -206,22 +210,27 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
 
   # plot signal: nbkg -> 0 and nexp -> 0
   _p = ipanema.Parameters.clone(fpars)
-  if 'nsigBd' in _p:
-    _p['nsigBd'].set(value=0, min=-np.inf, max=np.inf)
   if 'nexp' in _p:
     _p['nexp'].set(value=0, min=-np.inf, max=np.inf)
   _x, _y = ristra.get(mass), ristra.get(
       pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
   axplot.plot(_x, _y, color="C1", label=rf'$B_d^0$ {model}')
+  all_pdfs['pdf_fsigBd'] = _y
 
   # plot fit with all components and data
   _p = ipanema.Parameters.clone(fpars)
   x, y = ristra.get(mass), ristra.get(
       pdf(mass, signal, **_p.valuesdict(), norm=hdata.norm))
+  all_pdfs['pdf_total'] = y
+  all_pdfs['mass_mumuKpi'] = x
+  all_pdfs['bins'] = hdata.bins
+  all_pdfs['counts'] = hdata.counts
+  all_pdfs['yerr'] = hdata.yerr
+  all_pdfs['xerr'] = hdata.xerr
   axplot.plot(x, y, color='C0')
-  axpull.fill_between(hdata.bins, complot.compute_pdfpulls(
-      x, y, hdata.bins, hdata.counts, *hdata.yerr), 0, facecolor="C0",
-      alpha=0.5)
+  pulls = complot.compute_pdfpulls(x, y, hdata.bins, hdata.counts, *hdata.yerr)
+  axpull.fill_between(hdata.bins, pulls, 0, facecolor="C0", alpha=0.5)
+  all_pdfs['pulls'] = pulls
   axpull.set_xlabel(r'$m(J/\psi K\pi)$ [MeV/$c^2$]')
   axpull.set_ylim(-6.5, 6.5)
   axpull.set_yticks([-5, 0, 5])
@@ -252,7 +261,8 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
       _sw = np.copy(_proxy)
       _sw[list(rd.df.index)] = v * np.float64(rd.df.eval(mass_weight))
       sw[k] = _sw
-    print(sw)
+    sw = {**sw, **all_pdfs}
+    # print(sw)
     return (fpars, sw)
 
   # }}}

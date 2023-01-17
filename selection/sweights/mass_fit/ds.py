@@ -143,9 +143,11 @@ def mass_fitter(
 
   # Chose model {{{
 
+  model = 'hypatia'
   if model == 'hypatia':
     signal_pdf = hypatia_exponential
   else:
+    signal_pdf = hypatia_exponential
     raise ValueError(f"{model} cannot be assigned as mass model")
 
   def roo_hist_pdf(hist):
@@ -338,6 +340,7 @@ def mass_fitter(
   print(f"Events (after cut): {rd.shape}")
   rd.allocate(mass=mass_branch)
   rd.allocate(pdf=f"0*{mass_branch}", weight=mass_weight)
+  rd.weight *= ipanema.ristra.sum(rd.weight) / ipanema.ristra.sum(rd.weight**2)
 
   # }}}
 
