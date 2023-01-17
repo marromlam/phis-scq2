@@ -50,7 +50,7 @@ rule samples_upload_tuple:
   input:
     lambda wcs: tuples(wcs, year=f'{wcs.year}', weight=f'{wcs.weight}')
   output:
-    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9]+}_{weight,[A-Za-z0-9]+}.eos'
+    SAMPLES+'/{year}/{mode}/{version,[A-Za-z0-9@]+}_{weight,[A-Za-z0-9]+}.eos'
   run:
     m = f'{wildcards.mode}'
     y = f'{wildcards.year}'

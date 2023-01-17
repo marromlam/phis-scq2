@@ -59,10 +59,12 @@ if __name__ == "__main__":
     tmp_path = out_path.replace('output', 'tmp')
     tmp_path = os.path.dirname(tmp_path)
     git_path = f"fitinputs/{version}/tagging_calibration/{year}/"
+    if 'peilian' in flavor:
+        git_path = f"fitinputs/{version}/tagging_calibration/"
     os.makedirs(tmp_path, exist_ok=True)
 
-    print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}')
-    os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ ramon-run1:{git_path} {_flavor} | tar -x")
+    print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}/{_flavor}')
+    os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
 
     print(f"Loading flavor factors {year}")
     raw_json = hjson.load(open(f"{tmp_path}/{_flavor}",'r'))

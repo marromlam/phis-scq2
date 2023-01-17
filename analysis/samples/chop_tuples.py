@@ -26,6 +26,7 @@ vsub_dict = {
     "magDown": "Polarity == -1",
     # "bkgcat60": "B_BKGCAT != 60",
     "bkgcat60": "time > 0",
+    "bkgcat050": "B_BKGCAT != 60 & abs(B_MC_MOTHER_ID) != 541",
     # lower and upper time cuts
     "LT": f"time < {config.general['lower_time_upper_limit']}",
     "UT": f"time > {config.general['upper_time_lower_limit']}",
@@ -71,6 +72,7 @@ vsub_dict = {
     "onlyOST": "abs(OS_Combination_DEC)==1 & abs(B_SSKaonLatest_TAGDEC)==0",
     "onlySST": "abs(OS_Combination_DEC)==0 & abs(B_SSKaonLatest_TAGDEC)==1",
     "onlyOSS": "abs(OS_Combination_DEC)==1 & abs(B_SSKaonLatest_TAGDEC)==1",
+    "tag": "(abs(OS_Combination_DEC)==1 & abs(B_SSKaonLatest_TAGDEC)==0) | (abs(OS_Combination_DEC)==0 & abs(B_SSKaonLatest_TAGDEC)==1) | (abs(OS_Combination_DEC)==1 & abs(B_SSKaonLatest_TAGDEC)==1) ",
     # pXB and pYB cuts
     "pXB1": "B_PX >= 0 & B_PX < 2.7e3",
     "pXB2": "B_PX >= 2.7e3 & B_PX < 4.2e3",
@@ -153,8 +155,8 @@ if __name__ == "__main__":
   print(list_of_branches)
 
   # add pT for Jpsi if it does not exist
-  if not 'Jpsi_PT' in list_of_branches:
-    result.eval("Jpsi_PT = sqrt( (muplus_PX + muminus_PX)**2 + (muplus_PY + muminus_PY)**2)", inplace=True)
+  # if not 'Jpsi_PT' in list_of_branches:
+  #   result.eval("Jpsi_PT = sqrt( (muplus_PX + muminus_PX)**2 + (muplus_PY + muminus_PY)**2)", inplace=True)
 
   try:
     print("There are sWeights variables")
@@ -181,6 +183,7 @@ if __name__ == "__main__":
   list_of_cuts = []
   vsub_cut = None
   scale = 0.916 if 'MC' in m else 1.00
+  scale = 1.00
   for k, v in vsub_dict.items():
     if k in V:
       try:
@@ -196,6 +199,10 @@ if __name__ == "__main__":
           print("PID cut was only planned in Bs modes")
         elif (k in ("pid1", "pid2", "pid3", "pid4")) and 'Bs2JpsiPhi' not in m:
           print("PID cut was only planned in Bs modes")
+        elif (k in ("tag") and 'Bs2JpsiPhi' not in m):
+          print("tag cut was only planned in Bs modes")
+        elif (k in ("bkgcat050") and 'MC_Bs2JpsiPhi' not in m):
+          print("tag cut was only planned in Bs MC modes")
         else:
           list_of_cuts.append(v.format(scale=scale))
           noe = len(result.query(list_of_cuts[-1]))

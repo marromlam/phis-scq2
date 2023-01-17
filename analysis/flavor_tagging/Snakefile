@@ -29,7 +29,7 @@ rule flavor_tagging_basics:
 rule flavor_tagging_basics_from_git:
   threads: 128
   wildcard_constraints:
-    flavor = "ams(rd|mc|dg0)"
+    flavor = "(ams(rd|mc|dg0)|peilian)"
   params:
     repo = "ssh://git@gitlab.cern.ch:7999/lhcb-b2cc/Bs2JpsiPhi-FullRun2.git",
     linker = "analysis/params/flavor_tagging/linker.json"
@@ -42,7 +42,7 @@ rule flavor_tagging_basics_from_git:
     python analysis/flavor_tagging/download_from_git.py\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
-    --version v0r5\
+    --version v4r0\
     --flavor {wildcards.flavor}\
     --output {output}\
     --repo {params.repo}\
