@@ -16,7 +16,9 @@ import uproot3 as uproot
 import ipanema
 import uncertainties as unc
 from uncertainties import unumpy
+import complot
 
+from utils.plot import get_range, get_var_in_latex, watermark, make_square_axes
 
 def calibration_fit(sigmat, sigmat_errl, sigmat_errh, sigmaeff, sigmaeff_err, average):
     # model
@@ -51,7 +53,7 @@ def calibration_fit(sigmat, sigmat_errl, sigmat_errh, sigmaeff, sigmaeff_err, av
 
 
 def calibrate_numerical(df, json_in_binned, json_in_num, sigma_edges,
-                        time_range, weight=False):
+                        time_range, weight=False, plots=False):
     """
     Calibration of ...
     """
@@ -235,12 +237,45 @@ def calibrate_numerical(df, json_in_binned, json_in_num, sigma_edges,
     # leg.AddEntry(g2, "dilution", "p")
     # leg.Draw("same")
     # pic.SaveAs(os.path.join(plot_out, 'resolution_plot_comparisoni_numerical_only.pdf'))
+    if plots:
+      # model = lambda x, p: np.sum([x**l * p[l] for l in len(p)])
+      def model(x, p):
+        return p[0] + p[1]*(x-average) + p[2]*(x-average)**2
+      sigma_proxy = np.linspace(np.min(sigma_edges), np.max(sigma_edges), 100)
+      fig, axplot = complot.axes_plot()
+      # print(pars_linear.array())
+      # print(pars_linear.valuesarray())
+      axplot.plot(sigma_proxy, model(sigma_proxy, pars_linear.valuesarray()))
+      axplot.plot(sigma_proxy, model(sigma_proxy, pars_parab.valuesarray()))
+      axplot.errorbar(sigmat, sigmaeff, yerr=sigmaeff_err,
+                      xerr=[sigmat_errl, sigmat_errh],
+                      fmt='.', color=f'k')
+      # _norm = np.trapz(d)
+      # h, e = np.histogram(df[sigmat_variable], bins=sigma_edges, density=True)
+      # c = 0.5 * (e[:-1] + e[1:])
+      axplot2 = axplot.twinx()
+      # axplot2.plot(c, h, '-')
+      axplot2.hist(df[sigmat_variable], bins=sigma_edges, color='k', alpha=0.2)
+      # axplot2.plot(x_arr, y_arr, '.', color='C0')
+      # axplot2.plot(best_x, best_y, 'o', color='C2',
+      #              label=f'Optimal cut at {best_x:.2f}')
+      # axplot.set_xlabel(bdt_branch.replace('_', '-'))
+      # _norm = np.trapz(h, c)
+      # _norm = np.trapz(_n, c)
+      # print(_norm)
+      # print(_n/np.sum(_n))
+      # axplot.plot(c, h, color='k', alpha=0.2)
+      axplot.set_xlabel(r'$\sigma_t$ [ps]')
+      axplot.set_ylabel(r'$\sigma_{eff}$ [ps]')
+      axplot2.set_ylabel("Candidates")
+      fig.savefig(os.path.join(plots, "linear.pdf"))
+      fig.savefig(os.path.join(plots, "parabolic.pdf"))
 
     return pars_linear, pars_parab
 
 
 def calibrate_translate(df, json_in_old, json_in_num, sigma_edges,
-                        time_range, weight=False):
+                        time_range, weight=False, plots=False):
     """
     Calibration of ...
     """
@@ -274,7 +309,7 @@ def calibrate_translate(df, json_in_old, json_in_num, sigma_edges,
         sigmaeff.append(json_in_num[f'seff{i}'].value)
         sigmaeff_err.append(json_in_num[f'seff{i}'].stdev)
         _n.append(cdf.shape[0])
-
+    print("N=",_n)
     average = np.float64(offset)
     sigmat = np.array(sigmat)
     sigmat_errl = np.array(sigmat_errl)
@@ -296,7 +331,7 @@ def calibrate_translate(df, json_in_old, json_in_num, sigma_edges,
     # sigmaeff = np.array([0.02764900118658738, 0.031177090280900478, 0.035376195341426823, 0.04056104474443091, 0.046127998677014156, 0.05145105445398956, 0.05659221598906638, 0.06206370481389605, 0.0682574021801124, 0.07786812535719949])
     # sigmat_errl = np.array([0.009069665212078708, 0.003063862470350759, 0.0034382115385308935, 0.0031469223373329983, 0.0029515220264153055, 0.0023465893258160717, 0.0022778543000632964, 0.002248487816319457, 0.002244098227330328, 0.005543021557939273])
     # sigmat_errh = np.array([0.001930334787921293, 0.0019361375296492386, 0.0025617884614691083, 0.002853077662667, 0.003048477973584693, 0.0026534106741839328, 0.002722145699936701, 0.0027515121836805406, 0.0027559017726696763, 0.010456978442060727])
-    sigmaeff_err = np.array([0.006956510701671419, 0.004133957190790816, 0.0024829463333260076, 0.002156767431179304, 0.002286561639815726, 0.0030467450541910445, 0.004055239328439427, 0.0055906637536084465, 0.007587856523453849, 0.007702887579720337])
+    # sigmaeff_err = np.array([0.006956510701671419, 0.004133957190790816, 0.0024829463333260076, 0.002156767431179304, 0.002286561639815726, 0.0030467450541910445, 0.004055239328439427, 0.0055906637536084465, 0.007587856523453849, 0.007702887579720337])
     print("x =", sigmat)
     print("ux =", sigmaeff)
     print("uy =", sigmaeff_err)
@@ -305,6 +340,45 @@ def calibrate_translate(df, json_in_old, json_in_num, sigma_edges,
 
     pars_linear, pars_parab = calibration_fit(sigmat, sigmat_errl, sigmat_errh,
                                               sigmaeff, sigmaeff_err, average)
+    
+    if plots:
+      # model = lambda x, p: np.sum([x**l * p[l] for l in len(p)])
+      def model(x, p):
+        return p[0] + p[1]*(x-average) + p[2]*(x-average)**2
+      sigma_proxy = np.linspace(np.min(sigma_edges), np.max(sigma_edges), 100)
+      fig, axplot = complot.axes_plot()
+      # print(pars_linear.array())
+      # print(pars_linear.valuesarray())
+      axplot.plot(sigma_proxy, model(sigma_proxy, pars_linear.valuesarray()))
+      axplot.plot(sigma_proxy, model(sigma_proxy, pars_parab.valuesarray()))
+      axplot.errorbar(sigmat, sigmaeff, yerr=sigmaeff_err,
+                      xerr=[sigmat_errl, sigmat_errh],
+                      fmt='.', color=f'k')
+      # _norm = np.trapz(d)
+      # h, e = np.histogram(df[sigmat_variable], bins=sigma_edges, density=True)
+      # c = 0.5 * (e[:-1] + e[1:])
+      axplot2 = axplot.twinx()
+      # axplot2.plot(c, h, '-')
+      axplot2.hist(df[sigmat_variable], bins=sigma_edges, color='k', alpha=0.2)
+      # axplot2.plot(x_arr, y_arr, '.', color='C0')
+      # axplot2.plot(best_x, best_y, 'o', color='C2',
+      #              label=f'Optimal cut at {best_x:.2f}')
+      # axplot.set_xlabel(bdt_branch.replace('_', '-'))
+      # _norm = np.trapz(h, c)
+      # _norm = np.trapz(_n, c)
+      # print(_norm)
+      # print(_n/np.sum(_n))
+      # axplot.plot(c, h, color='k', alpha=0.2)
+      axplot.set_xlabel(r'$\sigma_t$ [ps]')
+      axplot.set_ylabel(r'$\sigma_{\mathrm{eff}}$ [ps]')
+      axplot2.set_ylabel("Candidates")
+
+      v_mark = 'LHC$b$'  # watermark plots
+      tag_mark = 'THIS THESIS'
+      watermark(axplot, version=v_mark, tag=tag_mark, scale=1.1)
+      fig.savefig(os.path.join(plots, "linear.pdf"))
+      fig.savefig(os.path.join(plots, "parabolic.pdf"))
+
 
     return pars_linear, pars_parab
 
@@ -342,16 +416,19 @@ if __name__ == '__main__':
     pnum = ipanema.Parameters.load(args['in_json_num'])
 
     # branching for Bs RD mode
+    os.makedirs(args['out_plot'], exist_ok=True)
     if mode == 'Bs2JpsiPhi':
-        pl, pp = calibrate_translate(df, p, pnum, timeres_binning, time_range)
+        pl, pp = calibrate_translate(df, p, pnum, timeres_binning, time_range,
+                                     plots=args['out_plot'])
     else:
-        pl, pp = calibrate_numerical(df, p, pnum, timeres_binning, time_range)
+        pl, pp = calibrate_numerical(df, p, pnum, timeres_binning, time_range,
+                                     plots=args['out_plot'])
 
     # save the results
     pl.dump(args['out_json_linear'])
     pp.dump(args['out_json_parab'])
-    os.makedirs(args['out_plot'], exist_ok=True)
-    pp.dump(os.path.join(args['out_plot'], "merda"))
+    # os.makedirs(args['out_plot'], exist_ok=True)
+    # pp.dump(os.path.join(args['out_plot'], "merda"))
 
 
 # vim: fdm=marker ts=2 sw=2 sts=2 sr et

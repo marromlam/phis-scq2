@@ -66,7 +66,7 @@ if __name__ == '__main__':
     sample = ipanema.Sample.from_root(args["input_file"], branches=branches)
 
     # allocate arrays for the curve
-    number_of_bins = 40
+    number_of_bins = 100
     x_min, x_max = np.min(sample.df[bdt_branch]), np.max(sample.df[bdt_branch])
     x_min, x_max = np.floor(x_min), np.ceil(x_max)
     print(x_min, x_max)
@@ -136,9 +136,9 @@ if __name__ == '__main__':
     # fig.savefig("bdtshit.pdf")
     v_mark = args['version'].split('@')[0]  # watermark plots
     tag_mark = ''
-    if v_mark[0] == 'b' or v_mark == 'v1r1':
-      v_mark = 'LHC$b$'  # watermark plots
-      tag_mark = 'THIS THESIS' 
+    # if v_mark[0] == 'b' or v_mark == 'v1r1':
+    v_mark = 'LHC$b$'  # watermark plots
+    tag_mark = 'THIS THESIS' 
     watermark(axplot2, version=v_mark, tag=tag_mark, scale=1.3)
     axplot2.legend(loc='lower left')
     fig.savefig(f"{args['output_figures']}/fom.pdf")

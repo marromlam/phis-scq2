@@ -1,3 +1,15 @@
+import config
+from analysis.reweightings.kinematic_weighting import reweight
+from utils.helpers import swnorm, trigger_scissors
+from utils.helpers import version_guesser, timeacc_guesser
+from utils.strings import cuts_and
+from utils.plot import mode_tex
+from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
+from ipanema import initialize
+from trash_can.knot_generator import create_time_bins
+import hjson
+import os
+import argparse
 DESCRIPTION = """
     Computes angular acceptance coefficients using half BdMC sample as udG0
     and half BdRD sample as BdRD.
@@ -8,36 +20,26 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
-
 ################################################################################
 # Modules ######################################################################
 
-import argparse
-import os
-import hjson
 
 # load ipanema
-from ipanema import initialize, plotting
-from ipanema import ristra, Parameters, optimize, Sample, plot_conf2d, Optimizer
 
 # import some phis-scq utils
-from utils.plot import mode_tex
-from utils.strings import cuts_and
-from utils.helpers import version_guesser, timeacc_guesser
-from utils.helpers import swnorm, trigger_scissors
-from reweightings.kinematic_weighting import reweight
 
-import config
 # binned variables
 # bin_vars = hjson.load(open('config.json'))['binned_variables_cuts']
 resolutions = config.timeacc['constants']
-all_knots = config.timeacc['knots']
+# all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
 Gdvalue = config.general['Gd']
-tLL = config.general['tLL']
-tUL = config.general['tUL']
+tLL = config.general['time_lower_limit']
+tUL = config.general['time_upper_limit']
 
 # Parse arguments for this script
+
+
 def argument_parser():
   p = argparse.ArgumentParser(description=DESCRIPTION)
   p.add_argument('--samples', help='Bs2JpsiPhi MC sample')
@@ -51,11 +53,11 @@ def argument_parser():
   p.add_argument('--minimizer', default='minuit', help='Different flag to ... ')
   return p
 
+
 if __name__ != '__main__':
   import badjanak
 
 ################################################################################
-
 
 
 ################################################################################
@@ -72,11 +74,11 @@ if __name__ == '__main__':
   MINER = args['minimizer']
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], 1 if YEAR in (2015,2017) else 1)
-  import time_acceptance.fcn_functions as fcns
+  initialize(config.user['backend'], 1 if YEAR in (2015, 2017) else 1)
+  import analysis.time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = ''#bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ''  # bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = trigger_scissors(TRIGGER, CUT)          # place cut attending to trigger
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
@@ -90,7 +92,7 @@ if __name__ == '__main__':
 
   # Print settings
   print(f"\n{80*'='}\nSettings\n{80*'='}\n")
-  print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
+  print(f"{'backend':>15}: {config.user['backend']:50}")
   print(f"{'trigger':>15}: {TRIGGER:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
@@ -103,16 +105,15 @@ if __name__ == '__main__':
   otables = args['tables'].split(',')
 
   # Check timeacc flag to set knots and weights and place the final cut
-  knots = all_knots[str(TIMEACC['nknots'])]
-  kinWeight = 'Weight'
-  sw = 'sw'
+  knots = create_time_bins(int(TIMEACC['nknots']), tLL, tUL).tolist()
+  if not fcns.badjanak.config['final_extrap']:
+    knots[-2] = knots[-1]
+  tLL, tUL = knots[0], knots[-1]
   if TIMEACC['corr']:
     # to be implemented
     0
   if TIMEACC['use_veloWeight']:
     sw = f'veloWeight*{sw}'
-
-
 
   # Get data into categories --------------------------------------------------
   print(f"\n{80*'='}\nLoading categories\n{80*'='}\n")
@@ -122,22 +123,25 @@ if __name__ == '__main__':
     # Correctly apply weight and name for diffent samples
     if m == 'MC_Bu2JpsiKplus':
       if TIMEACC['corr']:
-        weight = f'kin{kinWeight}*polWeight*{sw}'
+        weight = f'kbuWeight*polWeight*sWeight'
       else:
-        weight = f'polWeight*{sw}'
-      mode = 'BuMC'; c = 'a'
+        weight = f'polWeight*sWeight'
+      mode = 'BuMC'
+      c = 'a'
     elif m == 'MC_Bd2JpsiKstar':
       if TIMEACC['corr']:
-        weight = f'kbu{kinWeight}*polWeight*pdfWeight*{sw}'
+        weight = f'kbuWeight*polWeight*pdfWeight*sWeight'
       else:
-        weight = f'pdfWeight*polWeight*{sw}'
-      mode = 'BdMC'; c = 'b'
+        weight = f'pdfWeight*polWeight*sWeight'
+      mode = 'BdMC'
+      c = 'b'
     elif m == 'Bd2JpsiKstar':
       if TIMEACC['corr']:
-        weight = f'kbu{kinWeight}*{sw}'
+        weight = f'kbuWeight*sWeight'
       else:
-        weight = f'{sw}'
-      mode = 'BdRD'; c = 'c'
+        weight = f'sWeight'
+      mode = 'BdRD'
+      c = 'c'
 
     # Load the sample
     cats[mode] = Sample.from_root(samples[i], cuts=CUT, share=SHARE, name=mode)
@@ -163,10 +167,10 @@ if __name__ == '__main__':
         {'name': f'{c}{j}{TRIGGER[0]}', 'value': 1.0,
          'latex': f'{c}_{j}^{TRIGGER[0]}',
          'free': False if j == 0 else True,  # 'min':0.10, 'max':5.0
-         } for j in range(len(knots[:-1])+2)
+         } for j in range(len(knots[:-1]) + 2)
     ])
     cats[mode].params.add({'name': f'gamma_{c}',
-                           'value': Gdvalue+resolutions[m]['DGsd'],
+                           'value': Gdvalue + resolutions[m]['DGsd'],
                            'latex': f'\Gamma_{c}', 'free': False})
     cats[mode].params.add({'name': f'mu_{c}',
                            'value': resolutions[m]['mu'],
@@ -180,18 +184,14 @@ if __name__ == '__main__':
     cats[mode].pars_path = oparams[i]
     cats[mode].tabs_path = otables[i]
 
-
-
   # Configure kernel ----------------------------------------------------------
   fcns.badjanak.config['knots'] = knots[:-1]
-  fcns.badjanak.get_kernels(True)
-
-
+  fcns.badjanak.get_kernels()
 
   # Time to fit acceptance ----------------------------------------------------
   print(f"\n{80*'='}\nSimultaneous minimization procedure\n{80*'='}\n")
   fcn_call = fcns.saxsbxscxerf
-  fcn_pars = cats['BuMC'].params+cats['BdMC'].params+cats['BdRD'].params
+  fcn_pars = cats['BuMC'].params + cats['BdMC'].params + cats['BdRD'].params
   fcn_kwgs = {
       'data': [cats['BuMC'].time, cats['BdMC'].time, cats['BdRD'].time],
       'prob': [cats['BuMC'].lkhd, cats['BdMC'].lkhd, cats['BdRD'].lkhd],
@@ -211,8 +211,6 @@ if __name__ == '__main__':
     result = mini.optimize(method='emcee', verbose=False, params=_res.params,
                            steps=1000, nwalkers=100, behavior='chi2')
   print(result)
-
-
 
   # Writing results -----------------------------------------------------------
   print(f"\n{80*'='}\nDumping parameters\n{80*'='}\n")

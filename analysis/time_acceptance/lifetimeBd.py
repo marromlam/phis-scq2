@@ -119,7 +119,7 @@ if __name__ == '__main__':
       fcns.badjanak.config['knots'] = np.array(knots).tolist()
 
   # recompile kernel (just in case)
-  fcns.badjanak.get_kernels(True)
+  fcns.badjanak.get_kernels()
 
   # }}}
 

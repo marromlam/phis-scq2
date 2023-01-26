@@ -20,7 +20,7 @@ rule reweighting_polarity:
     original = lambda wcs: tuples(wcs, weight='veloWeight'),
     target = lambda wcs: tuples(wcs, mode='data', weight='sWeight'),
   output:
-    sample   = (SAMPLES+'/{year}/{mode}/{version}_polWeight.root')
+    sample = temporal(SAMPLES+'/{year}/{mode}/{version}_polWeight.root')
   log:
     'output/log/reweighting_polarity/{year}/{mode}/{version}.log'
   run:
@@ -56,7 +56,7 @@ rule reweighting_pdf:
     original = lambda wcs: f"{wcs.year}/{'Bs2JpsiPhi' if 'Bs' in f'{wcs.mode}' else 'Bd2JpsiKstar'}.json",
     target = lambda wcs: f"{wcs.year}/{wcs.mode}.json",
   output:
-    sample = (SAMPLES+'/{year}/{mode}/{version}_pdfWeight.root')
+    sample = temporal(SAMPLES+'/{year}/{mode}/{version}_pdfWeight.root')
   log:
     'output/log/reweighting_pdf/{year}/{mode}/{version}.log'
   run:
@@ -83,7 +83,7 @@ rule reweighting_dg0:
     original = lambda wcs: f"{wcs.year}/MC_Bs2JpsiPhi_dG0.json",
     target = lambda wcs: f"{wcs.year}/{wcs.mode}.json",
   output:
-    sample = (SAMPLES+'/{year}/{mode}/{version}_dg0Weight.root')
+    sample = temporal(SAMPLES+'/{year}/{mode}/{version}_dg0Weight.root')
   log:
     'output/log/reweighting_dg0/{year}/{mode}/{version}.log'
   run:
@@ -108,7 +108,7 @@ rule reweighting_dg0:
 
 rule reweighting_kinematic_Bs:
   resources:
-    mem_mb=7168,
+    mem_mb=8000,
     threads=2
   wildcard_constraints:
     mode = "(MC_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bu2JpsiKplus|Bs2JpsiKK_Swave)|Bd2JpsiKstar|Bu2JpsiKplus)"
@@ -116,7 +116,7 @@ rule reweighting_kinematic_Bs:
     original = lambda wcs: tuples(wcs, weight='oddWeight'),
     target = lambda wcs: tuples(wcs, mode='cdata', weight='kinWeight'),
   output:
-    sample = (SAMPLES+'/{year}/{mode}/{version}_kinWeight.root')
+    sample = temporal(SAMPLES+'/{year}/{mode}/{version}_kinWeight.root')
   log:
     'output/log/reweighting_kinematic_Bs/{year}/{mode}/{version}.log'
   run:
@@ -146,7 +146,7 @@ rule reweighting_kinematic_Bu:
       mode='Bu2JpsiKplus' if f'{wcs.mode}'=='Bd2JpsiKstar' else 'Bd2JpsiKstar',
       weight='kbuWeight'),
   output:
-    sample = (SAMPLES+'/{year}/{mode}/{version}_kbuWeight.root')
+    sample = temporal(SAMPLES+'/{year}/{mode}/{version}_kbuWeight.root')
   log:
     'output/log/reweighting_kinematic_Bu/{year}/{mode}/{version}.log'
   run:
@@ -174,7 +174,7 @@ rule reweighting_kinematic_Bd:
     original = lambda wcs: tuples(wcs, weight='pdfWeight'),
     target = lambda wcs: tuples(wcs, mode='Bd2JpsiKstar', weight='kbdWeight'),
   output:
-    sample = (SAMPLES+'/{year}/{mode}/{version}_kbdWeight.root')
+    sample = temporal(SAMPLES+'/{year}/{mode}/{version}_kbdWeight.root')
   log:
     'output/log/reweighting_kinematic_Bd/{year}/{mode}/{version}.log'
   run:
@@ -202,7 +202,7 @@ rule reweighting_kinematic_odd:
     original = lambda wcs: tuples(wcs, weight='kbuWeight'),
     target = lambda wcs: tuples(wcs, mode='cdata', weight='kinWeight'),
   output:
-    sample = (SAMPLES+'/{year}/{mode}/{version}_oddWeight.root')
+    sample = temporal(SAMPLES+'/{year}/{mode}/{version}_oddWeight.root')
   log:
     'output/log/reweighting_kinematic_odd/{year}/{mode}/{version}.log'
   run:
@@ -231,7 +231,7 @@ rule reweighting_phi:
     original = lambda wcs: tuples(wcs, weight='pdfWeight'),
     target = lambda wcs: tuples(wcs, mode=f"{wcs.mode}".replace("Bd2JpsiKstar", "Bs2JpsiPhi"), weight='polWeight'),
   output:
-    sample = (SAMPLES+'/{year}/{mode}/{version}_phiWeight.root')
+    sample = temporal(SAMPLES+'/{year}/{mode}/{version}_phiWeight.root')
   log:
     'output/log/reweighting_pdf/{year}/{mode}/{version}.log'
   run:

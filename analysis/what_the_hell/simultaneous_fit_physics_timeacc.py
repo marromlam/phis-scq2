@@ -36,7 +36,7 @@ import analysis.badjanak as badjanak
 badjanak.config['fast_integral'] = 1
 badjanak.config['debug'] = 0
 badjanak.config['debug_evt'] = 0
-badjanak.get_kernels(True)
+badjanak.get_kernels()
 
 import config
 bdtconfig = config.angacc['bdtconfig']
@@ -159,7 +159,8 @@ def fcn_data(parameters, data):
                   # **dt.timeacc.valuesdict(),
                   **dt.angacc.valuesdict(),
                   **dt.resolution.valuesdict(), **dt.csp.valuesdict(),
-                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc=1)
+                  **dt.flavor.valuesdict(), tLL=tLL, tUL=tUL, use_timeacc=1,
+                  use_timeoffset=1)
       chi2.append(ristra.get(-2 * (ristra.log(dt.prob)+cnstr) * dt.weight))
   # exit()
   return np.concatenate(chi2)
@@ -679,7 +680,7 @@ if __name__ == '__main__':
     print(samples)
 
 
-    badjanak.get_kernels(True)
+    badjanak.get_kernels()
 
 
     # shit {{{

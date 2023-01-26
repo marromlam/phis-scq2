@@ -1,3 +1,14 @@
+import config
+from utils.helpers import swnorm, trigger_scissors
+from utils.helpers import version_guesser, timeacc_guesser
+from utils.strings import cuts_and, printsec, printsubsec
+from ipanema import Parameters, optimize, Sample
+from ipanema import initialize
+import uncertainties as unc
+import hjson
+import numpy as np
+import os
+import argparse
 DESCRIPTION = """
     Computes the lifetime of half a Bu RD sample using spline coefficients
     taken from the other halve. Runs over YEARS variable tuples.
@@ -10,23 +21,12 @@ __email__ = ['mromerol@cern.ch']
 
 # Modules {{{
 
-import argparse
-import os
-import numpy as np
-import hjson
-import uncertainties as unc
 
 # load ipanema
-from ipanema import initialize
-from ipanema import Parameters, optimize, Sample
 
 # import some phis-scq utils
-from utils.strings import cuts_and, printsec, printsubsec
-from utils.helpers import  version_guesser, timeacc_guesser
-from utils.helpers import  swnorm, trigger_scissors
 
 # phis-scq config
-import config
 resolutions = config.timeacc['constants']
 all_knots = config.timeacc['knots']
 bdtconfig = config.timeacc['bdtconfig']
@@ -68,27 +68,25 @@ if __name__ == '__main__':
 
   # }}}
 
-
   # Settings {{{
 
   # Get badjanak model and configure it
-  initialize(os.environ['IPANEMA_BACKEND'], 1)
+  initialize(config.user['backend'], 1)
   import time_acceptance.fcn_functions as fcns
 
   # Prepare the cuts
-  CUT = ""#bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
+  CUT = ""  # bin_vars[VAR][BIN] if FULLCUT else ''   # place cut attending to version
   CUT = cuts_and(CUT, f'time>={tLL} & time<={tUL}')
 
   # Print settings
   print(f"\n{80*'='}\nSettings\n{80*'='}\n")
-  print(f"{'backend':>15}: {os.environ['IPANEMA_BACKEND']:50}")
+  print(f"{'backend':>15}: {config.user['backend']:50}")
   print(f"{'cuts':>15}: {CUT:50}")
   print(f"{'year(s)':>15}: {YEAR:50}")
   print(f"{'timeacc':>15}: {TIMEACC['acc']:50}")
   print(f"{'minimizer':>15}: {MINER:50}\n")
 
   # }}}
-
 
   # Get data into categories {{{
 
@@ -112,20 +110,19 @@ if __name__ == '__main__':
       # Add coeffs parameters
       c = Parameters.load(args[f'{t}_params'].split(',')[i])
       knots = Parameters.build(c, c.find('k.*'))
-      cats[m][t].params = Parameters.build(c,c.find('c.*')+['mu_c','sigma_c'])
+      cats[m][t].params = Parameters.build(c, c.find('c.*') + ['mu_c', 'sigma_c'])
 
       # Update kernel with the corresponding knots
       fcns.badjanak.config['knots'] = np.array(knots).tolist()
 
   # }}}
 
-
   # Fit {{{
 
   printsubsec("Minimization procedure")
 
   # recompile kernel (just in case)
-  fcns.badjanak.get_kernels(True)
+  fcns.badjanak.get_kernels()
 
   # create a common gamma parameter for biased and unbiased
   lfpars = Parameters()
@@ -141,7 +138,7 @@ if __name__ == '__main__':
                       "value": par.value, "stdev": par.stdev,
                       "latex": f"{par.latex.replace('cB', 'cA')}{{}}^{y[2:]}",
                       "min": par.min, "max": par.max, "free": par.free
-                    })
+                      })
         else:
           lfpars.add({"name": p.replace('Bc', 'Ac')})
           lfpars[p.replace('Bc', 'Ac')] = par
@@ -150,18 +147,17 @@ if __name__ == '__main__':
 
   # lifetime fit
   lifefit = optimize(fcn_call=fcns.splinexerfconstr, params=lfpars,
-                     fcn_kwgs={'cats':cats, 'weight':True},
-                     method=MINER, verbose=False, strategy=1, tol=0.05);
+                     fcn_kwgs={'cats': cats, 'weight': True},
+                     method=MINER, verbose=False, strategy=1, tol=0.05)
 
   # }}}
-
 
   # Saving results {{{
 
   printsubsec(f"Lifetime estimation")
   print(lifefit)
-  tauBd = unc.ufloat(1.520,0.004)
-  tauBu = 1/lifefit.params['gamma'].uvalue
+  tauBd = unc.ufloat(1.520, 0.004)
+  tauBu = 1 / lifefit.params['gamma'].uvalue
   print(f"\\tau(B_u^+) = {tauBu:.2uL}")
   print(f"\\tau(B_d^0) = {tauBd:.2uL} WA")
   print(f"\\tau(B_u^+)/\\tau(B_d^0) = {tauBu/tauBd:.2uL}")

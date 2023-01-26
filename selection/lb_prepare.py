@@ -69,7 +69,7 @@ def tagging_fractions(df, tag_type='run2'):
 
     # create OS histogram
     etaOS = df.query(f"{TAGS[tag_type]['tagOS']}!=0")[TAGS[tag_type]['etaOS']]
-    swOS = df.query(f"{TAGS[tag_type]['tagOS']}!=0")['peakSW']
+    swOS = df.query(f"{TAGS[tag_type]['tagOS']}!=0")['sigBsSW']
     hOS = np.histogram(etaOS, eOS_18, weights=swOS)
     # print(np.sum(hOS[0]))
 
@@ -89,7 +89,7 @@ def tagging_fractions(df, tag_type='run2'):
 
     # create SS histogram
     etaSS = df.query(f"{TAGS[tag_type]['tagSS']}!=0")[TAGS[tag_type]['etaSS']]
-    swSS = df.query(f"{TAGS[tag_type]['tagSS']}!=0")['peakSW']
+    swSS = df.query(f"{TAGS[tag_type]['tagSS']}!=0")['sigBsSW']
     hSS = np.histogram(etaSS, eSS_12, weights=swSS)
 
     # create a generator for the OS tagger
@@ -107,11 +107,11 @@ def tagging_fractions(df, tag_type='run2'):
     # get fractions OS/SS/OS&SS
     qOS = TAGS[tag_type]['tagOS']
     qSS = TAGS[tag_type]['tagSS']
-    dssw_os = np.sum(df.query(f"{qOS}!=0 & {qSS}==0")['peakSW'])
-    dssw_ss = np.sum(df.query(f"{qOS}==0 & {qSS}!=0")['peakSW'])
-    dssw_ss_os = np.sum(df.query(f"{qOS}!=0 & {qSS}!=0")['peakSW'])
-    dssw_ut = np.sum(df.query(f"{qOS}==0 & {qSS}==0")['peakSW'])
-    tot = np.sum(df['peakSW'])
+    dssw_os = np.sum(df.query(f"{qOS}!=0 & {qSS}==0")['sigBsSW'])
+    dssw_ss = np.sum(df.query(f"{qOS}==0 & {qSS}!=0")['sigBsSW'])
+    dssw_ss_os = np.sum(df.query(f"{qOS}!=0 & {qSS}!=0")['sigBsSW'])
+    dssw_ut = np.sum(df.query(f"{qOS}==0 & {qSS}==0")['sigBsSW'])
+    tot = np.sum(df['sigBsSW'])
 
     os_tagged = dssw_os / tot
     ss_tagged = dssw_ss / tot
@@ -124,10 +124,10 @@ def tagging_fractions(df, tag_type='run2'):
     print(f"{'Fraction of only NOT tagged events':>50} : {untagged:.4f}")
     print(" ")
 
-    dssw_os_p1 = np.sum(df.query(f"{qOS}==+1 & {qSS}==0")['peakSW'])
-    dssw_os_m1 = np.sum(df.query(f"{qOS}==-1 & {qSS}==0")['peakSW'])
-    dssw_ss_p1 = np.sum(df.query(f"{qOS}==0 & {qSS}==+1")['peakSW'])
-    dssw_ss_m1 = np.sum(df.query(f"{qOS}==0 & {qSS}==-1")['peakSW'])
+    dssw_os_p1 = np.sum(df.query(f"{qOS}==+1 & {qSS}==0")['sigBsSW'])
+    dssw_os_m1 = np.sum(df.query(f"{qOS}==-1 & {qSS}==0")['sigBsSW'])
+    dssw_ss_p1 = np.sum(df.query(f"{qOS}==0 & {qSS}==+1")['sigBsSW'])
+    dssw_ss_m1 = np.sum(df.query(f"{qOS}==0 & {qSS}==-1")['sigBsSW'])
 
     os_p1 = dssw_os_p1 / dssw_os
     os_m1 = dssw_os_m1 / dssw_os

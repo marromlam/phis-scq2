@@ -134,7 +134,7 @@ rule angular_acceptance_corrected:
     mem_mb = 4096
   wildcard_constraints:
     mode = "(MC)_(Bs2JpsiPhi(_dG0)?|Bd2JpsiKstar|Bs2JpsiKK_Swave)",
-    angacc = "corrected(.*)?"
+    angacc = "corrected((?!.*?(Insieme|Smear)).*)",
   input:
     sample_mc = lambda wcs: tuples(wcs),
     sample_rd = lambda wcs: tuples(wcs, mode='data'),
@@ -173,7 +173,8 @@ rule angular_acceptance_corrected_dual:
   resources:
     mem_mb = 512
   wildcard_constraints:
-    step = "(naive|corrected|analytic.*)Dual.*",
+    # step = "(naive|corrected|analytic.*)Dual.*",
+    step = "(naive|corrected|analytic.*)Dual((?!.*?(Insieme|Smear)).*)",
     #version = "^((?!v0r1).)*$",
   input:
     weights_std = lambda wcs: f"output/params/angular_acceptance/{wcs.year}/MC_Bs2JpsiPhi/{wcs.version}_{wcs.step.replace('Dual','')}_{wcs.csp}_{wcs.trigger}.json",
@@ -460,7 +461,7 @@ rule angular_acceptance_iterative_dual_data_run2:
     mem_mb = 16384
   threads: 16
   wildcard_constraints:
-    angacc = "run2Dual.*",
+    angacc = "run2Dual((?!.*?(Insieme|Smear)).*)",
   input:
     sample_std = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi', year='run2'),
     sample_dG0 = lambda wcs: tuples(wcs, mode='MC_Bs2JpsiPhi_dG0', year='run2'),
@@ -1122,31 +1123,40 @@ rule pvalue_MCcheck:
 # }}}
 
 
-rule angular_acceptance_bdt_systematic:
-  input:
-    nominal = "output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
-    bdt = lambda w: expand("output/params/physics_params/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json",
-                           year=w.year, fit=w.fit, angacc=w.angacc, csp=w.csp,
-                           flavor=w.flavor, timeacc=w.timeacc, timeres=w.timeres,
-                           trigger=w.trigger,
-                           version=[f"{w.version.split('@')[0]}bdt{i}@{w.version.split('@')[1]}" for i in range(1,config['n_bdt_tests']+1)]
-    )
-  params:
-    n_tests=config['n_bdt_tests']
-  output:
-    pars = "output/params/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.json",
-    tabs = "output/tables/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.tex"
-  log:
-    "output/log/systematics/{year}/Bs2JpsiPhi/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}_gbconf.tex"
-  run:
-      shell(f"""(time\
-      python test_bdt_hists.py\
-      --nominal-params {input.nominal}\
-      --bdt-params {','.join(input.bdt)}\
-      --output-params {output.pars}\
-      --output-table {output.tabs}\
-      --n-tests {params.n_tests}\
-      ) &> {log}""")
+rule angular_acceptance_smearing:
+    # wildcard_constraints:
+    #   i = "\d{1,2,3,4}"
+    input:
+      biased = lambda wcs: angaccs(wcs, trigger='biased'),
+      unbiased = lambda wcs: angaccs(wcs, trigger='unbiased'),
+    output:
+      biased = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}Smear{i}_{csp}_{flavor}_{timeacc}_{timeres}_biased.json',
+      unbiased = 'output/params/angular_acceptance/{year}/{mode}/{version}_{angacc}Smear{i}_{csp}_{flavor}_{timeacc}_{timeres}_unbiased.json',
+    run:
+        num_samples = 10
+        import ipanema
+        import numpy as np
+        rng = np.random.default_rng()
+        # print(input.biased)
+        # The desired mean values of the sample.
+        b = ipanema.Parameters.load(f"{input.biased}")
+        u = ipanema.Parameters.load(f"{input.unbiased}")
+        mub, covb = b.valuesarray(), b.cov()
+        muu, covu = u.valuesarray(), u.cov()
+        # print(covb)
+        # print(mub)
+        # print(muu)
+        # Generate the random samples.
+        new_b = rng.multivariate_normal(mub, covb, size=num_samples)
+        new_u = rng.multivariate_normal(muu, covu, size=num_samples)
+        # print(new_b[-1])
+        # print(new_u[-1])
+        for i, v in enumerate(b.values()):
+            v.set(value=new_b[0][i], init=new_b[0][i])
+        for i, v in enumerate(u.values()):
+            v.set(value=new_u[0][i], init=new_u[0][i])
+        b.dump(f"{output.biased}")
+        u.dump(f"{output.unbiased}")
 
 
 

@@ -93,7 +93,7 @@ if __name__ == "__main__":
     is_mc = True if 'MC' in m else False
 
     eos_name = f"{v}_{m}_{y}_{w}.root"
-    eos_path = os.path.join(f"{EOSPATH}/tuples", v, m, y)
+    eos_path = os.path.join(f"{EOSPATH}", v, m, y)
 
     loc_name = f"{v}_{w}.root"
     loc_path = os.path.dirname(os.path.abspath(args['output']))

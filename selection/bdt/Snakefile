@@ -20,7 +20,7 @@ rule selection_bdt_background:
         branches = ['selection/bdt/branches.yaml'],
         files = SAMPLES + '/{year}/{mode}/{version}_preselected.root'
     output:
-        SAMPLES + '/{year}/{mode}/{version}_background_proxy.root'
+        temporal(SAMPLES + '/{year}/{mode}/{version}_background_proxy.root')
     log:
         'output/log/selection_background_for_bdt/{year}/{mode}/{version}.log'
     params:
@@ -53,7 +53,7 @@ rule selection_bdt_signal:
     params:
         script = 'selection/tools/apply_selection.py',
     output:
-        SAMPLES + '/{year}/{mode}/{version}_signal_proxy.root'
+        temporal(SAMPLES + '/{year}/{mode}/{version}_signal_proxy.root')
     log:
         'output/log/selection_signal_for_bdt/{year}/{mode}/{version}.log'
     run:
@@ -148,7 +148,7 @@ rule selection_bdt_add_branches:
         script = 'selection/tools/apply_selection.py',
     output:
         # temp(tuples_path('bdt/{mode}/{mode}_{year}_selected_with_bdt_branches.root'))
-        SAMPLES + '/{year}/{mode}/{version}_withbdt.root'
+        temporal(SAMPLES + '/{year}/{mode}/{version}_withbdt.root')
     log:
         'output/log/add_bdt_branches/{year}/{mode}/{version}.log'
     run:
@@ -200,7 +200,7 @@ rule selection_add_bdt_response:
         bdt_cut = lambda w: BDT_CONFIG['bdt_cutoff'][w.mode],
         branches = 'selection/bdt/branches.yaml',
     output:
-        SAMPLES + '/{year}/{mode}/{version}_bdt_response.root'
+        temporal(SAMPLES + '/{year}/{mode}/{version}_bdt_response.root')
     log:
         'output/log/selection_add_bdt_response/{year}/{mode}/{version}.log'
     run:
@@ -229,7 +229,7 @@ rule selection_bdt_masscut:
         cuts = 'selection/bdt/cuts_masscut.yaml',
         branches = 'selection/bdt/branches.yaml',
     output:
-        SAMPLES + '/{year}/{mode}/{version}_withbdt_masscut.root'
+        temporal(SAMPLES + '/{year}/{mode}/{version}_withbdt_masscut.root')
     log:
         'output/log/selection_bdt_masscut/{year}/{mode}/{version}.log'
     run:
@@ -261,7 +261,7 @@ rule selection_bdt_cut_optimization:
         mode = '(Bs2JpsiPhi|Bu2JpsiKplus)'
     input:
         tuple_file = SAMPLES + '/{year}/{mode}/{version}_withbdt_masscut.root',
-        pars = 'output/params/tails_mc/{year}/MC_{mode}/{version}.json',
+        # pars = 'output/params/tails_mc/{year}/MC_{mode}/{version}.json',
     params:
         script = 'selection/bdt/optimize_bdt_cut.py',
         mass_model = lambda w: BDT_CONFIG['mass_model'][f"{w.mode}"],
@@ -282,7 +282,6 @@ rule selection_bdt_cut_optimization:
         --mode {wildcards.mode} \
         --year {wildcards.year} \
         --version {wildcards.version} \
-        --input-params {input.pars} \
         ) &> {log}')
 
 

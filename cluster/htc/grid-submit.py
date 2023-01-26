@@ -15,9 +15,12 @@ job_properties = read_job_properties(jobscript)
 # print(job_properties)
 
 UUID = uuid4()  # random UUID
-jobDir = '/home3/marcos.romero/logs/condor/{}_{}'.format(job_properties['jobid'], UUID)
+# jobDir = '/logs/condor/{}_{}'.format(job_properties['jobid'], UUID)
+
+jobDir = os.path.join(os.environ['HOME'],
+                      f"logs/condor/{job_properties['jobid']}_{UUID}")
 makedirs(jobDir, exist_ok=True)
-shit = join(jobDir, 'condor.job')
+shit = os.path.join(jobDir, 'condor.job')
 os.system(f"cp {jobscript} {shit}")
 sub = htcondor.Submit({
     'executable':   '/bin/bash',

@@ -302,7 +302,7 @@ if __name__ == '__main__':
     cats['BdMC']['B'].weight = swnorm(cats['BdMC']['B'].weight)
   # Configure kernel
   fcns.badjanak.config['knots'] = this_conf['timeacc']['knots'][:-1]
-  fcns.badjanak.get_kernels(True)
+  fcns.badjanak.get_kernels()
 
   # Time to fit acceptance {{{
 

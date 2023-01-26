@@ -59,8 +59,14 @@ rule csp_factors_efficiency_hist_yearly:
     Efficiency histograms in m(KK) for Csp factors.
     """
     input:
-        mc = SAMPLES+"/{year}/{mode}/{version}.root",
-        pgun = SAMPLES+"/{year}/GUN_Bs2JpsiPhi/{version}.root",
+        mc = lambda w: expand(SAMPLES+"/{year}/{mode}/{version}.root",
+                    year=YEARS[f'{w.year}'],
+                    mode=w.mode,
+                    version=w.version),
+        pgun = lambda w: expand(SAMPLES+"/{year}/GUN_Bs2JpsiKK_Swave/{version}.root",
+                    version=config['tuples_standalone_version'],
+                    year=YEARS[f'{w.year}'],
+                    mode=w.mode)
     output:
         histos = 'output/params/mass_efficiencies/{year}/{mode}/{version}_yearly{nbins}.npy',
         plots = 'output/figures/mass_efficiencies/{year}/{mode}/{version}_yearly{nbins}.pdf'
@@ -69,10 +75,14 @@ rule csp_factors_efficiency_hist_yearly:
     log:
         "output/log/csp_factors_efficiency/{year}/{mode}/{version}_yearly{nbins}.log"
     run:
+        mc = input.mc
+        mc = [mc] if isinstance(mc,str) else mc
+        pgun = input.pgun
+        pgun = [pgun] if isinstance(pgun,str) else pgun
         shell(f"""(time\
         python {params.script} \
-        --simulated-sample {input.mc} \
-        --pgun-sample {input.pgun} \
+        --simulated-sample {','.join(mc)} \
+        --pgun-sample {','.join(pgun)} \
         --output-figure {output.plots} \
         --output-histos {output.histos} \
         --mode {wildcards.mode} \
@@ -113,13 +123,50 @@ rule csp_factors_merge:
     wildcard_constraints:
         mode = "(Bs2JpsiPhi)"
     input:
-        'output/params/csp_factors/{year}/MC_Bs2JpsiPhi/{version}_yearly{nbins}.json',
+        lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiKK_Swave/{version}_yearly{nbins}.json',
+        # lambda w: expand('output/params/csp_factors/{year}/MC_Bs2JpsiPhi/{version}_yearly{nbins}.json',
+                         year=w.year if w.csp =="yearly" else YEARS[w.csp],
+                         version=w.version,
+                         nbins=w.nbins),
     output:
-        'output/params/csp_factors/{year}/{mode}/{version}_yearly{nbins}.json',
+        'output/params/csp_factors/{year}/{mode}/{version}_{csp}{nbins,\d{1}}.json',
     log:
-        "output/log/csp_factors_calculate/{year}/{mode}/{version}_yearly{nbins}.log"
+        "output/log/csp_factors_calculate/{year}/{mode}/{version}_{csp}{nbins}.log"
     run:
-        shell(f"cp {input} {output}")
+        import ipanema
+        from uncertainties import unumpy, ufloat
+        import numpy as np
+        pars = f"{input}".split(' ')
+        print(pars)
+        if len(pars) < 2:
+            shell(f"cp {input} {output}")
+            return
+        pars = [ipanema.Parameters.load(p) for p in pars]
+        for p in pars:
+            print(p)
+        merged = ipanema.Parameters()
+        for k in pars[0].keys():
+            if "mKK" in k:
+              merged.add(dict(
+                name=k,
+                value=pars[0][k].value,
+                stdev=pars[0][k].stdev,
+                free=pars[0][k].free
+                ))
+            else:
+              _values = [p[k].uvalue.n for p in pars]
+              _errors = [p[k].uvalue.s+1e-5 for p in pars]
+              print(_values, _errors)
+              arr = unumpy.uarray(_values, _errors)
+              # avg = sum(arr)/len(arr)
+              avg = ufloat(np.mean(_values), np.std(_values))
+              print(avg)
+              merged.add(dict(
+                  name=k, value=avg.n, stdev=avg.s, free=False
+                  ))
+        print(merged)
+        merged.dump(f"{output}")
+
 
 # rule csp_factors_merge_files_for_Csp:
 #     params:

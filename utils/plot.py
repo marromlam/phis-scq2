@@ -16,7 +16,7 @@ import os
 
 PHISSCQ = os.environ['PHISSCQ']
 with open(rf"{PHISSCQ}/analysis/samples/branches_latex.yaml") as file:
-    BRANCHES = yaml.load(file, Loader=yaml.FullLoader)
+  BRANCHES = yaml.load(file, Loader=yaml.FullLoader)
 
 # }}}
 
@@ -88,26 +88,32 @@ def guess_mode(mode, modifier=False, version=False):
   return m
 
 
-
 def mode2tex(mode, modifier=False, version=False):
   m = guess_mode(mode, modifier, version)
   print(mode, modifier, version, m)
   ans = ['', '', '']
-  if 'Bs' in m: ans[1] = 'B_s^0'
-  elif 'Bd' in m: ans[1] = 'B_d^0'
+  if 'Bs' in m:
+    ans[1] = 'B_s^0'
+  elif 'Bd' in m:
+    ans[1] = 'B_d^0'
   elif 'Bu' in m:
     ans[1] = 'B_u^+'
   else:
     print('ERROR: I cannot convert this mode')
 
   # which kind of samples is it?
-  if 'MC' in m: ans[0] = 'MC'
-  elif 'TOY' in m: ans[0] = 'TOY'
-  else: ans[0] = 'RD'
+  if 'MC' in m:
+    ans[0] = 'MC'
+  elif 'TOY' in m:
+    ans[0] = 'TOY'
+  else:
+    ans[0] = 'RD'
 
   # special MC handlers
-  if 'dG0' in m: ans[2] = r'\mathrm{w}\,\Delta\Gamma=0'
-  if 'Swave' in m: ans[2] = r'\mathrm{w\,S-wave}'
+  if 'dG0' in m:
+    ans[2] = r'\mathrm{w}\,\Delta\Gamma=0'
+  if 'Swave' in m:
+    ans[2] = r'\mathrm{w\,S-wave}'
 
   return ans
 
@@ -133,13 +139,13 @@ def get_nbins(var, mode='Bs'):
   if mode in ('Bd', 'Bd2JpsiKstar'):
     mode = 'Bd'
   ranges_dict = dict(
-  B_PT = (70,0,4e4),
-  B_P = (70,0,8e5),
-  X_M = (70,840,960) if 'Bd2JpsiKstar' in mode else (70,990,1050),
-  hplus_P = (70,0,1.5e5),
-  hplus_PT = (70,0,1.0e4),
-  hminus_P = (70,0,1.5e5),
-  hminus_PT = (70,0,1.0e4),
+      B_PT=(70, 0, 4e4),
+      B_P=(70, 0, 8e5),
+      X_M=(70, 840, 960) if 'Bd2JpsiKstar' in mode else (70, 990, 1050),
+      hplus_P=(70, 0, 1.5e5),
+      hplus_PT=(70, 0, 1.0e4),
+      hminus_P=(70, 0, 1.5e5),
+      hminus_PT=(70, 0, 1.0e4),
   )
   return ranges_dict[var][0]
 
@@ -147,6 +153,13 @@ def get_nbins(var, mode='Bs'):
 
 
 # Get branch and units in TeX {{{
+
+def name_from_lhcb_to_scq(branch, mode='Bs2JpsiPhi'):
+  for b in BRANCHES[mode]:
+    if BRANCHES[mode][b]['peval'] == branch:
+      return b
+  raise ValueError(f"Unknown branch {branch}")
+
 
 def get_var_in_latex(var, mode='Bs2JpsiPhi'):
   return BRANCHES[mode][var].get('latex')
@@ -161,27 +174,27 @@ def get_units(var, mode='Bs2JpsiPhi'):
 # Force square axes / Watermark {{{
 
 def make_square_axes(ax):
-    """Make an axes square in screen units.
+  """Make an axes square in screen units.
 
-    Should be called after plotting.
-    """
-    ax.set_aspect(1 / ax.get_data_ratio())
+  Should be called after plotting.
+  """
+  ax.set_aspect(1 / ax.get_data_ratio())
 
 
-def watermark(ax, version='final', tag='', size=(20,8.25), scale=1.2, pos=(0.05,0.9)):
-  if version == 'final':
-    version = 'LHC$b$'
-    tag = ' COLLABORATION'
-    size = [20,5.8]
+def watermark(ax, version='final', tag='', size=(20, 8.25), scale=1.2, pos=(0.05, 0.9), color='black'):
+  if 'final' in version:
+    version = 'LHCb'
+    tag = 'THIS THESIS'
+    size = [23, 9.8]
   if scale:
-    ax.set_ylim(ax.get_ylim()[0],ax.get_ylim()[1]*scale)
+    ax.set_ylim(ax.get_ylim()[0], ax.get_ylim()[1] * scale)
   # ax.text(ax.get_xlim()[0]+(ax.get_xlim()[1]-ax.get_xlim()[0])*0.03, ax.get_ylim()[1]*0.95,
   #         f'{version}', fontsize=size[0], color='black',
   #         ha='left', va='top', alpha=1.0)
-  ax.text(pos[0], pos[1], f'{version}', fontsize=size[0], color='black',
-          ha='left', va='center', transform = ax.transAxes, alpha=1.0)
-  ax.text(pos[0], pos[1]-0.05, f'{tag}', fontsize=size[1], color='black',
-          ha='left', va='center', transform = ax.transAxes, alpha=1.0)
+  ax.text(pos[0] - 0.02, pos[1], f'{version}', fontsize=size[0], color=color,
+          ha='left', va='center', transform=ax.transAxes, alpha=1.0)
+  ax.text(pos[0] - 0.02, pos[1] - 0.06, f'{tag}', fontsize=size[1], color=color,
+          ha='left', va='center', transform=ax.transAxes, alpha=1.0)
   # ax.text(ax.get_xlim()[1]*0.025, ax.get_ylim()[1]*0.85,
   #         f'{tag}', fontsize=size[1], color='black',
   #         ha='left', va='top', alpha=1.0)
@@ -189,4 +202,4 @@ def watermark(ax, version='final', tag='', size=(20,8.25), scale=1.2, pos=(0.05,
 # }}}
 
 
-# vim:foldmethod=marker
+# vim: fdm=marker

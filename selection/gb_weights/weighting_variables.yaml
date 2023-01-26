@@ -19,7 +19,8 @@ Bd2JpsiKstar:
 Bu2JpsiKplus: &Bu2JpsiKplus
   'B_PT': 'B_PT'
   'B_ETA': 'B_ETA'
-  'nTracks': 'nTracks'
+  # 'nTracks': 'nTracks'
+  'nLongTracks': 'nLongTracks'
   'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
   'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
   'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
