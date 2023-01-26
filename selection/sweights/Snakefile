@@ -12,9 +12,86 @@
 #                      basically tell which kind of rules are run.
 #
 #        Author: Marcos Romero Lamas (mromerol@cern.ch)
+#                Ramón Ángel Ruiz Fernandez (rruizfer@cern.ch)
+
+
+# PID issue solver {{{
+
+rule sw8_paleros:
+  """
+  This is because gbw8 are calculated before BDT, we think this is a possible bias
+  lets try a first set of sw8 then do the gbw8 and then lets do the chopped and all
+  the machinery.
+  """
+  threads: 2
+  resources:
+    mem_mb=6000
+  wildcard_constraints:
+    mode = '(Bd2JpsiKstar|Bs2JpsiPhi)', #For the moment only for RD
+  input:
+    sample = lambda wcs: tuples(wcs, weight='lbWeight') #will imply problems then
+  output:
+    plots = directory('output/figures/mass_fitpalero/{year}/{mode}/{version}/'),
+    root_file = SAMPLES+'/{year}/{mode}/{version}_pregbw.root',
+    pars = 'output/params/sw8_paleros/{year}/{mode}/{version}.json',
+  params:
+    script = 'selection/sweights/mass_fit/bkg_substraction.py',
+    mass_model = "dgauss",
+    mass_branch = 'B_ConstJpsi_M_1',
+    mass_weight =  'wLb'
+  log:
+    'output/log/sw_paleros/{year}/{mode}/{version}.log',
+  run:
+    shell('mkdir -p {output.plots}')
+    shell('(time python {params.script} \
+        --sample {input.sample} \
+        --sweights {output.root_file} \
+        --mass-branch {params.mass_branch} \
+        --mass-model {params.mass_model} \
+        --mass-weight {params.mass_weight} \
+        --output-params {output.pars} \
+        --output-figures {output.plots} \
+        --mode {wildcards.mode} \
+        --version {wildcards.version} \
+        --year {wildcards.year}) &> {log}')
+
+
+rule gb_weighting:
+  resources:
+    mem_mb=7168,
+    threads=2
+  wildcard_constraints:
+    mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
+  input:
+    # original = lambda wcs: tuples(wcs, weight='ready'),
+    original = lambda wcs: tuples(wcs, version=f'{wcs.version}'.split('@')[0].split('~')[0].split('bdt')[0], year=f'{wcs.year}', weight=f'ready'),
+    target = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_pregbw.root',
+                               year = wcs.year,
+                               mode = wcs.mode.replace("MC_", "").replace("_dG0",""),
+                               version = wcs.version
+                                ),
+  output:
+    sample = SAMPLES+'/{year}/{mode}/{version}_gbw.root'
+  log:
+    'output/log/gb_weighting/{year}/{mode}/{version}.log'
+  run:
+    shell(f"""(time\
+    python analysis/reweightings/kinematic_weighting.py\
+    --original-file {input.original}\
+    --original-treename DecayTree\
+    --target-file {input.target}\
+    --target-treename DecayTree\
+    --output-file {output.sample}\
+    --mode {wildcards.mode}\
+    --year {wildcards.year}\
+    --version {wildcards.version}\
+    --weight-set gbWeight\
+    ) &> {log}""")
+    send_mail(f"Kinematic Bs weighting :: {wildcards}", f"{log}")
 
 
 # mass fitters for Bd {{{
+
 
 rule mass_prefit_bd_mc:
   """
@@ -33,6 +110,7 @@ rule mass_prefit_bd_mc:
     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/sweights/mass_fit/bd.py',
+    mass_weight = config['gb_weight_branch']
   log:
     'output/log/mass_prefit_bd_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -42,7 +120,7 @@ rule mass_prefit_bd_mc:
     --output-params {output.params} \
     --output-figures {output.plots} \
     --mass-model {wildcards.massmodel} \
-    --mass-weight gb_weights \
+    --mass-weight {params.mass_weight} \
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
@@ -69,6 +147,7 @@ rule mass_fit_bd_mc:
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/sweights/mass_fit/bd.py',
+    mass_weight = config['gb_weight_branch']
   log:
     'output/log/mass_fit_bd_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -79,7 +158,7 @@ rule mass_fit_bd_mc:
     --output-params {output.params} \
     --output-figures {output.plots} \
     --mass-model {wildcards.massmodel} \
-    --mass-weight gb_weights \
+    --mass-weight {params.mass_weight} \
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
@@ -263,6 +342,7 @@ rule mass_prefit_bs_mc:
     plots = directory('output/figures/mass_prefit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/sweights/mass_fit/bs.py',
+    mass_weight = config['gb_weight_branch']
   log:
     'output/log/mass_prefit_bs_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -272,7 +352,7 @@ rule mass_prefit_bs_mc:
     --output-params {output.params} \
     --output-figures {output.plots} \
     --mass-model {wildcards.massmodel} \
-    --mass-weight gb_weights \
+    --mass-weight {params.mass_weight} \
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \
@@ -299,6 +379,7 @@ rule mass_fit_bs_mc:
     plots = directory('output/figures/mass_fit/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}/')
   params:
     script = 'selection/sweights/mass_fit/bs.py',
+    mass_weight = config['gb_weight_branch']
   log:
     'output/log/mass_fit_bs_mc/{year}/{mode}/{version}_{massmodel}_{massbin}_{trigger}.log',
   run:
@@ -309,7 +390,7 @@ rule mass_fit_bs_mc:
     --output-params {output.params} \
     --output-figures {output.plots} \
     --mass-model {wildcards.massmodel} \
-    --mass-weight gb_weights \
+    --mass-weight {params.mass_weight} \
     --mass-bin {wildcards.massbin} \
     --trigger {wildcards.trigger}\
     --mode {wildcards.mode} \

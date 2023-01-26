@@ -94,7 +94,7 @@ rule angular_acceptance_naive_analytical:
   resources:
     mem_mb = 4096
   wildcard_constraints:
-    mode = "(TOY|MC)_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
+    mode = "(TOY_|MC_)?(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?",
     angacc = "(analytic).*"
   input:
     sample = lambda wcs: tuples(wcs),
@@ -119,7 +119,7 @@ rule angular_acceptance_naive_analytical:
     --angacc {wildcards.angacc}\
     --trigger {wildcards.trigger}\
     --figures {output.figures}
-    ) &> {log}""")
+    ) #&> {log}""")
     send_mail(f"Angular Acceptance Naive :: {wildcards}", f"{log}")
 
 # }}}

@@ -47,10 +47,13 @@
   "allow_continuous": true,
   "run_tagging": false,
   "ludicrous": false,
+  "ntracks_scale": "1.0",
   "selection_mode": "run2",
   "stripping_mode": "pidcuts",
   "delete_temporal": false,
   "tuples_downstream_version": "v1r0",
   "tuples_standalone_version": "v2r0",
-  "tuples_tagging_version": "v1r5"
+  "tuples_tagging_version": "v1r5",
+  "gb_weight_branch": "gbWeight"
+
 }

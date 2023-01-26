@@ -13,6 +13,7 @@
 #include <lib99ocl/complex.h>
 #include <lib99ocl/core.h>
 #include <lib99ocl/special.h>
+#include <lib99ocl/cspecial.h>
 
 #include "decay_time_acceptance.h"
 

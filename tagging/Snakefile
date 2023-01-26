@@ -40,7 +40,7 @@ rule tagging_combination_calibration:
         input_tuple=os.path.abspath(f'{input.sample}'),
         sweight=f"sigBuSW",  # sw if you want to use Piera's
         # TODO: MC should use TRUE_ID but there were problems
-        idvar=f"B_ID" if 'MC' in f"{wildcards.mode}" else "B_ID",
+        idvar=f"B_ID_GenLvl" if 'MC' in f"{wildcards.mode}" else "B_ID",
       )))
     # second, write down a bash script to run the EPM
     job_cmds = [

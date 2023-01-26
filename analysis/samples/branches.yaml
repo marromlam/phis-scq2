@@ -56,6 +56,8 @@ common: &common
   "maxChi2TrackL" : "max_mu_TRCHI2_mva"
   "phiHH" : "phiHH"
   "Jpsi_Hlt1DiMuonHighMassDecision_TOS": "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
+  "nTracks" : "nTracks"
+  "nLongTracks" : "nLongTracks"
 
 # }}}
 
@@ -79,7 +81,9 @@ MC_common: &MC_common
   "polWeight" : "polWeight"
   "pdfWeight" : "pdfWeight"
   "bkgcatB" : "B_BKGCAT"
-  "gbWeight" : "gb_weights"
+  # "gbWeight" : "gb_weights"
+  "gbWeight" : "gbWeight"
+  "pidHpcorr" : "hplus_PIDK_corr"
 
 # }}}
 
@@ -89,6 +93,7 @@ MC_common: &MC_common
 Bs2JpsiPhi: # &Bs2JpsiPhi
   <<: *common
   "sWeight" : "sigBsSW"
+  "pidHm" : "hminus_PIDK"
   "tagOSdec" : "OS_Combination_DEC"
   "tagSSdec" : "B_SSKaonLatest_TAGDEC"
   "tagOSeta" : "OS_Combination_ETA"
@@ -97,8 +102,11 @@ Bs2JpsiPhi: # &Bs2JpsiPhi
 
 MC_Bs2JpsiPhi_dG0: &MC_Bs2JpsiPhi_dG0
   <<: *MC_common
+  # "sWeight" : "sigBsSW/gb_weights"
   "sWeight" : "sigBsSW"
   "genidB" : "B_ID_GenLvl"
+  "pidHm" : "hminus_PIDK"
+  "pidHmcorr" : "hminus_PIDK_corr"
 
 MC_Bs2JpsiPhi: # &MC_Bs2JpsiPhi
   <<: *MC_Bs2JpsiPhi_dG0
@@ -153,13 +161,17 @@ Bd2JpsiKstar: # &Bd2JpsiKstar
   "tagSSdec" : "0*time"
   "tagOSeta" : "0*time"
   "tagSSeta" : "0*time"
+  "pidHm" : "hminus_PIDK"
 
 MC_Bd2JpsiKstar:
   <<: *MC_common
+  # "sWeight" : "sigBdSW/gb_weights"
   "sWeight" : "sigBdSW"
   "genidB" : "511*X_ID_GenLvl/313"
   "kbuWeight" : "kbuWeight"
   "kbdWeight" : "kbdWeight"
+  "pidHm" : "hminus_PIDK"
+  "pidHmcorr" : "hminus_PIDK_corr"
 
 # }}}
 

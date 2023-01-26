@@ -347,14 +347,18 @@ def do_kkp_weighting(verbose, kinematic_bmeson=False):
       for t, v in dm.items():  # loop in triggers
         # original variables + weight (mc)
         j = len(v.pdfWeight.keys())
-        ov = v.df[weighting_branches]
-        ow = v.df.eval(f'angWeight*polWeight*{weight_mc}')
+        # ov  = v.df[['pTHm','pTHp','pHm','pHp','mHH', 'etaB', 'nTracks', 'pB', 'pTB', 'pLp', 'pLm', 'pTLm', 'pTLp']]
+        # ov  = v.df[['pTHm','pTHp','pHm','pHp', 'mHH', 'nTracks', 'etaB']]
+        ov  = v.df[['pTHm','pTHp','pHm','pHp']]
+        ow  = v.df.eval(f'angWeight*polWeight*{weight_mc}')
         # WARNING: old school procedure:
         # ov  = v.df[['pTHm','pTHp','pHm','pHp']]
         # ow  = v.df.eval(f'angWeight*polWeight*{weight_mc}')
         ow *= v.pdfWeight[j]
         # target variables + weight (real data)
-        tv = data[y][t].df[weighting_branches]
+        # tv = data[y][t].df[['pTHm','pTHp','pHm','pHp', 'mHH', 'etaB', 'nTracks', 'pB', 'pTB', 'pLp', 'pLm', 'pTLm', 'pTLp']]
+        # tv = data[y][t].df[['pTHm','pTHp','pHm','pHp', 'mHH', 'nTracks', 'etaB']]
+        tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
         tw = data[y][t].df.eval(weight_rd)
         # Run multicore (about 15 minutes per iteration)
         job = multiprocessing.Process(
@@ -750,12 +754,16 @@ if __name__ == '__main__':
   global mc, data, weight_rd, weight_mc
 
   # only load the branches that are actually used
-  mc_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB', 'etaB',
-                 'gencosK', 'gencosL', 'genhphi', f'gen{time}', 'genidB', 'pTLm', 'pTLp', 'pLm', 'pLp',
-                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'polWeight', 'pB', 'pTB']
-  rd_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB',
-                 'tagOSdec', 'tagSSdec', 'tagOSeta', 'tagSSeta', 'pTLm', 'pTLp', 'pLm', 'pLp', 'etaB',
-                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'pB', 'pTB']
+  mc_branches = ['cosK','cosL','hphi', time, 'mHH', 'sigmat', 'idB',
+                 'gencosK','gencosL','genhphi', f'gen{time}', 'genidB',
+                 'pHm','pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'polWeight', 'gbWeight', 'etaB', 'nTracks', 'pB', 'pTB',
+                  # 'pidHmcorr', 'pidHpcorr',
+                 'pLp', 'pLm', 'pTLm', 'pTLp']
+  rd_branches = ['cosK','cosL','hphi', time, 'mHH', 'sigmat', 'idB',
+                 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta',
+                 'pHm','pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'etaB', 'nTracks', 
+                  # 'pidHm', 'pidHp',
+                 'pB', 'pTB', 'pLp', 'pLm', 'pTLm', 'pTLp']
 
   # MC reconstructed and generator level variable names
   reco = ['cosK', 'cosL', 'hphi', time]
@@ -769,7 +777,7 @@ if __name__ == '__main__':
 
   # sWeight variable
   weight_rd = 'sWeight'
-  weight_mc = 'sWeight'
+  weight_mc = 'sWeight' #Ramon Warning
   if TIMEACC['use_veloWeight']:
     mc_branches += ['veloWeight']
     rd_branches += ['veloWeight']
@@ -921,6 +929,19 @@ if __name__ == '__main__':
         free=SWAVE,
         latex=rf"\delta_S^{{{i+1}}} - \delta_{{\perp}} \, \mathrm{{[rad]}}"))
 
+  # pars.add(dict(name='dSlon1', value=+2.34, min=0.5, max=+4.0,
+  #           free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
+  # pars.add(dict(name='dSlon2', value=+1.64, min=0.5, max=+3.0,
+  #           free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
+  # pars.add(dict(name='dSlon3', value=+1.09, min=-2.0, max=+2.0,
+  #           free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
+  # pars.add(dict(name='dSlon4', value=0.5, min=-1.5, max=+1.5,
+  #           free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
+  # pars.add(dict(name='dSlon5', value=-0.48, min=-2.0, max=+0.0,
+  #           free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
+  # pars.add(dict(name='dSlon6', value=-1.18, min=-3.0, max=+0.0,
+  #           free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
+  
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-2 * 3.14, max=2 * 3.14,
                 free=False, latex=r"\delta_0"))

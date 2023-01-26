@@ -5,6 +5,34 @@
 # Marcos Romero Lamas (mromerol@cern.ch)
 
 
+# GBw8 {{{
+# For the moment variables for gbw8ing but wo CHI2TRACKSCALING
+gbWeight:
+  MC_Bs2JpsiPhi: &gbWeight_MC_Bs2JpsiPhi
+    # BsMC -> BsRD
+    original: ["time/time"]
+    target: ["sw"]
+    # variables: ["B_PT", "B_ETA", "nTracks"]
+    variables: ["B_PT", "B_ETA", "nLongTracks"]
+  
+  MC_Bs2JpsiPhi_dG0: 
+    # BsMC -> BsRD
+    <<: *gbWeight_MC_Bs2JpsiPhi 
+  
+  MC_Bs2JpsiKK_Swave: 
+    # BsMC -> BsRD
+    <<: *gbWeight_MC_Bs2JpsiPhi 
+
+  MC_Bd2JpsiKstar: 
+    # BdMC -> BdRD
+    original: ["time/time"]
+    target: ["sw"]
+    # variables: ["B_PT", "B_ETA", "nTracks"]
+    variables: ["B_PT", "B_ETA", "nLongTracks"]
+
+
+#}}}
+
 # Kinematic reweighings to Bs {{{
 #    These are the general reweightings to be done. They are used in the 
 #    time acceptable pipeline. Everything is reweighted to Bs, and non=-Bs MC
@@ -14,8 +42,10 @@ kbsWeight:
   MC_Bs2JpsiPhi: &kbsWeight_MC_Bs2JpsiPhi
     # BsMC -> BsRD
     original: ["{sWeight}*polWeight*pdfWeight"]
+    # original: ["{sWeight}*polWeight"]
     target: ["{sWeight}"]
     variables: ["B_PT", "X_M"]
+    # variables: ["B_PT", "X_M", "B_ETA", "nTracks"]
   
   MC_Bs2JpsiPhi_dG0: 
     # BsMC -> BsRD
@@ -28,8 +58,10 @@ kbsWeight:
   MC_Bd2JpsiKstar: 
     # BdMC -> BdRD
     original: ["{sWeight}*polWeight*pdfWeight"]
+    # original: ["{sWeight}*polWeight"]
     target: ["{sWeight}*kbsWeight"]
     variables: ["B_PT", "X_M"]
+    # variables: ["B_PT", "X_M",  "B_ETA", "nTracks"]
 
   MC_Bu2JpsiKplus:
     # BuMC -> BuRD

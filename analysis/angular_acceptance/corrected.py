@@ -11,7 +11,7 @@ __author__ = ['Marcos Romero Lamas']
 __email__ = ['mromerol@cern.ch']
 
 
-# Modules {{{
+# Modules 
 
 import numpy as np
 import os
@@ -35,14 +35,14 @@ simplefilter(action='ignore', category=FutureWarning)
 # from analysis.angular_acceptance.iterative_mc import acceptance_effect
 # 40:0.25:5:500, 500:0.1:2:1000, 30:0.3:4:500, 20:0.3:3:1000
 
-# }}}
 
 
-# Run and get the job done {{{
+
+# Run and get the job done 
 
 if __name__ == '__main__':
 
-  # Parse arguments {{{
+  # Parse arguments 
 
   DESCRIPTION = """
     Computes angular acceptance with corrections in mHH, pB, pTB variables
@@ -76,9 +76,9 @@ if __name__ == '__main__':
   else:
     time = 'time'
 
-  # }}}
+  
 
-  # setting upper and lower time limits {{{
+  # setting upper and lower time limits 
 
   if 'UT' in args['version']:
     tLL = config.general['upper_time_lower_limit']
@@ -120,9 +120,9 @@ if __name__ == '__main__':
   print(f"{'angacc':>15}: {'corrected':50}")
   print(f"{'bdtconfig':>15}: {list(bdtconfig.values())}\n")
 
-  # }}}
+  
 
-  # Load samples {{{
+  # Load samples 
 
   printsec("Loading categories")
 
@@ -194,34 +194,30 @@ if __name__ == '__main__':
   print(pd.concat((rd.df[['mHH', 'pB', 'pTB']],
                    rd.df.eval(weight_rd)), axis=1))
 
-  # }}}
 
-  # Compute standard kinematic weights {{{
+  # Compute standard kinematic weights 
   #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
 
   printsec('Compute angWeights correcting MC sample in kinematics')
   print(" * Computing kinematic GB-weighting in pTB, pB and mHH")
 
+  # reweighter.fit(original=mc.df[['mHH', 'pB', 'pTB', 'etaB', 'nTracks']],
+                   # target=rd.df[['mHH', 'pB', 'pTB', 'etaB', 'nTracks']],
   reweighter.fit(original=mc.df[['mHH', 'pB', 'pTB']],
                  target=rd.df[['mHH', 'pB', 'pTB']],
                  original_weight=mc.df.eval(weight_mc),
                  target_weight=rd.df.eval(weight_rd))
   angWeight = reweighter.predict_weights(mc.df[['mHH', 'pB', 'pTB']])
+  # angWeight = reweighter.predict_weights(mc.df[['mHH', 'pB', 'pTB', 'etaB', 'nTracks']])
   angWeight = np.where(mc.df.eval(weight_mc) != 0, angWeight, 0)
   kinWeight[list(mc.df.index)] = angWeight
 
-  print(f"{'idx':>3} | {'sw':>11} | {'polWeight':>11} | {'angWeight':>11} ")
-  for i in range(0, 20):
-    if kinWeight[i] != 0:
-      print(f"{str(i):>3} | {mc.df.eval('sWeight')[i]:+.8f} |",
-            f"{mc.df['polWeight'][i]:+.8f} | {kinWeight[i]:+.8f} ")
-
   np.save(args['output_weights_file'], kinWeight)
 
-  # }}}
+  
 
-  # Compute angWeights correcting with kinematic weights {{{
+  # Compute angWeights correcting with kinematic weights 
   #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
   badjanak.get_kernels()
@@ -245,18 +241,18 @@ if __name__ == '__main__':
   print("Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
   print(f"{pars}")
 
-  # }}}
+  
 
-  # Writing results {{{
+  # Writing results 
   #    Exporting computed results
   printsec("Dumping parameters")
   # Dump json file
   print(f"Dumping json parameters to {args['output_params']}")
   pars.dump(args['output_params'])
 
-  # }}}
+  
 
-# }}}
+
 
 
 # vim: fdm=marker

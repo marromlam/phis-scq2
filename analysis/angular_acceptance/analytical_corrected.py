@@ -169,8 +169,9 @@ if __name__ == "__main__":
   p.add_argument('--trigger', help='Trigger(s) to fit [comb/(biased)/unbiased]')
   args = vars(p.parse_args())
 
-  tLL = 0.3
-  tUL = 15
+  tLL = 0.3; tUL = 15
+  version = args['version']
+  year = args['year']
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEAR = args['year']
   ANGACC = args['angacc']
@@ -197,6 +198,7 @@ if __name__ == "__main__":
   print(f"{'angacc':>15}: {ANGACC} {order_cosK}{order_cosL}{order_hphi}")
 
   weight_str = 'polWeight*sWeight'
+  data_weight_str = 'sWeight'
   if VERSION == 'v0r0':
     args['input_params'] = args['input_params'].replace('generator', 'generator_old')
     weight_str = 'polWeight*sWeight/gbWeight'
@@ -204,15 +206,24 @@ if __name__ == "__main__":
 
   # load parameters
   gen = Parameters.load(args['input_params'])
+  print(args['input_params'])
+
+  data_pars_path = "output/params/physics_params/run2/Bs2JpsiPhi/v4r1@LcosKPID2_run2_run2Dual_vgc_amsrd_simul3_amsrd_combined.json" 
+  exit()
 
   # load MC sample
   branches = ['cosK', 'cosL', 'hphi', 'time', 'gencosK', 'gencosL', 'genhphi',
               'gentime', 'polWeight', 'sWeight', 'gbWeight', 'hlt1b'
               ]
   mc = Sample.from_root(args['sample'], branches=branches)
+  # data_path = args['sample'].replace('MC_', '')
+  # data = Sample.from_root(args['sample'], branches=branches_data)
   mc.chop(CUT)
+  # data.chop(CUT)
   mc = mc.df
+  # data = data.df
   print(mc)
+  # print(data)
 
   """
   mc = pd.concat((
@@ -239,6 +250,7 @@ if __name__ == "__main__":
   # alpha = np.sum(weights)/np.sum(weights**2)
   """
   sum_weights = np.array(mc.eval(weight_str)).sum()
+  # data_sum_weights = np.array(data.eval(data_weight_str)).sum()
 
   # Prepare data and arrays {{{
 
