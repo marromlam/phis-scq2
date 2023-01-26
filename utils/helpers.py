@@ -32,6 +32,7 @@ if config.user['compute_sweights']:
   sw8s = 'sWeight'
 else:
   sw8s = 'ready'
+print(sw8s)
   # sw8s = 'selected'
 
 # FIXME: obviously this is not reading from the command line arguments sent to
@@ -390,251 +391,245 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
           m = 'Bs2JpsiPhi'
         elif m == 'Bu2JpsiKplus':
           m = 'Bs2JpsiPhi'
-        else:
-            if mode == 'data':
-                if m.startswith('MC_'):
-                    m = m[3:]
-                    if m.endswith('_dG0'):
-                        m = m[:-4]
-                    elif m.endswith('_Swave'):
-                        m = m[:-8] + 'Phi'
-            elif mode == 'cdata':
-                if m.startswith('MC_'):
-                    m = m[3:]
-                    if m.endswith('_dG0'):
-                        m = m[:-4]
-                    elif m.endswith('_Swave'):
-                        m = m[:-8] + 'Phi'
-                elif m == 'Bs2JpsiPhi':
-                    m = 'Bd2JpsiKstar'
-                elif m == 'Bd2JpsiKstar':
-                    m = 'Bs2JpsiPhi'
-                elif m == 'Bu2JpsiKplus':
-                    m = 'Bs2JpsiPhi'
-            elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
-                m = mode
-
-    # }}}
-    # print("wcs.mode, m, mode = ", f"{wcs.mode}", m, mode)
-
-    # Model handler when asking for weights {{{
-    __weight = weight
-    _general = ['selected', 'tagged', 'chopped', ready, sw8s, vw8s]
-
-    # If we want to run the whole weighting pipeline, we just skip the set of
-    # `ready` tuples and we call for `lbWeight` or `tagged` ones. This allows
-    # the user to run the pipeline withou uploading the results to EOS
-    if weight == 'ready':
-        weight = ready
-
-    # Now we are going to be sure the `weight` wildcard makes sense wrt the
-    # mode of the tuple itself.
-    # WARNING: Touching this set of ifs is really dangerous and can break the
-    #          whole pipeline.
-    # TODO: Try to simplify
-    if weight:
-        # Bs2JpsiPhi {{{
-        if m == 'Bs2JpsiPhi':
-            # if weight == 'sWeight':
-            #     weight = 'ready'
-            if weight == 'gbw':
-                weight = 'lbWeight'
-            if weight not in _general + ['lbWeight']:
-                weight = vw8s
-        # }}}
-        # Bu2JpsiKplus {{{
-        elif m == 'Bu2JpsiKplus':
-            if weight == 'gbw':
-                weight = 'lbWeight'
-            if weight == 'lbWeight':
-                weight = 'tagged'
-            if weight not in _general + ['sWeightForTag', 'kinWeight']:
-                weight = vw8s
-        # }}}
-        # Bd2JpsiKstar {{{
+    else:
+      if mode == 'data':
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+      elif mode == 'cdata':
+        if m.startswith('MC_'):
+          m = m[3:]
+          if m.endswith('_dG0'):
+            m = m[:-4]
+          elif m.endswith('_Swave'):
+            m = m[:-8] + 'Phi'
+        elif m == 'Bs2JpsiPhi':
+          m = 'Bd2JpsiKstar'
         elif m == 'Bd2JpsiKstar':
-            if weight == 'oddWeight':
-                # kbuWeight needed for Bd RD
-                weight = kbuWeight
-            if weight == 'pdfWeight':
-                # if we dont plan to run the whole reweighting pipeline, then
-                # the kbuWeight=pdfWeight, and BdRD does not have such weight
-                # here we skip it to selected/ready
-                weight = vw8s
-            if weight == 'gbw':
-                weight = 'lbWeight'
-            if weight == 'lbWeight':
-                # skip tagging
-                weight = 'selected'
-            # elif weight == 'kbuWeight':
-            #   # kbuWeight needed for Bd RD
-            #   weight = 'phiWeight'
-            if weight not in _general + ['phiWeight', kbuWeight,
-                                         'kinWeight']:
-                weight = vw8s
-        # }}}
-        # MC_Bu2JpsiKplus {{{
-        elif m == 'MC_Bu2JpsiKplus':
-            if weight == 'gbw':
-                weight = 'lbWeight'
-            if weight == 'lbWeight':
-                weight = 'tagged'
-            if weight == 'gbw':
-                weight = 'tagged'
-            if weight == 'veloWeight':
-                weight = vw8s
-            elif weight not in _general + ['sWeightForTag', 'polWeight', 'kinWeight']:
-                weight = 'polWeight'
-        # }}}
-        # MC_Bd2JpsiKstar {{{
-        elif m == 'MC_Bd2JpsiKstar':
-            if weight == 'lbWeight':
-                weight = 'selected'
-            if weight == 'oddWeight':
-                weight = oddWeight
-            elif weight == 'veloWeight':
-                weight = vw8s
-            elif weight not in ['selected', 'ready', 'chopped', sw8s, vw8s, 'gbw',
-                                'phiWeight', 'polWeight', 'pdfWeight',
-                                kbuWeight, oddWeight, 'angWeight', 'kinWeight',
-                                'kkpWeight']:
-                weight = 'polWeight'
-        # }}}
-        # MC_Bs2JpsiPhi {{{
-        elif m == 'MC_Bs2JpsiPhi':
-            if weight == 'lbWeight':
-                weight = 'tagged'
-            if weight == 'oddWeight':
-                weight = oddWeight
-            elif weight == 'kbuWeight':
-                weight = 'pdfWeight'
-            elif weight == 'veloWeight':
-                weight = vw8s
-            elif weight not in _general + ['dg0Weight', 'polWeight', 'gbw',
-                                           'pdfWeight', oddWeight,
-                                           'kinWeight', 'angWeight',
-                                           'kkpWeight']:
-                weight = 'dg0Weight'
-        # }}}
-        # MC_Bs2JpsiKK_Swave {{{
-        elif m == 'MC_Bs2JpsiKK_Swave':
-            if weight == 'lbWeight':
-                weight = 'tagged'
-            if weight == 'oddWeight':
-                weight = oddWeight
-            elif weight == 'kbuWeight':
-                weight = 'pdfWeight'
-            elif weight == 'veloWeight':
-                weight = vw8s
-            elif weight not in _general + ['dg0Weight', 'polWeight', 'gbw',
-                                           'pdfWeight', oddWeight,
-                                           'kinWeight', 'angWeight',
-                                           'kkpWeight']:
-                weight = 'dg0Weight'
-        # }}}
-        # MC_Bs2JpsiPhi_dG0 {{{
-        elif m == 'MC_Bs2JpsiPhi_dG0':
-            if weight == 'lbWeight':
-                weight = 'tagged'
-            if weight == 'oddWeight':
-                weight = oddWeight
-            if weight == 'kbuWeight':
-                weight = 'pdfWeight'
-            elif weight == 'veloWeight':
-                weight = vw8s
-            elif weight not in _general + ['kkpWeight', 'polWeight', 'gbw',
-                                           'pdfWeight', oddWeight,
-                                           'kinWeight', 'angWeight']:
-                weight = 'polWeight'
-        # }}}
-        # MC_Bs2JpsiPhi_fromLb {{{
-        elif m == 'MC_Bs2JpsiPhi_fromLb':
-            if weight not in ['selected', 'tagged', 'ready', 'chopped']:
-                weight = 'selected'
-        # }}}
-        # Bs2JpsiPhi_Lb {{{
-        elif m == 'Bs2JpsiPhi_Lb':
-            if weight not in ['selected', 'tagged', 'sWeight', 'ready', 'chopped']:
-                weight = 'sWeight'
-        # }}}
-        elif m == 'GUN_Bs2JpsiPhi' or m == 'GUN_Bs2JpsiKK_Swave':
-        # WARNING: We dont chop this tuple with the @
-          if weight == 'kinWeight':
-            weight = 'chopped'
-          if weight not in ['ready', 'chopped']:
-            weight = 'ready'
-    # }}}
+          m = 'Bs2JpsiPhi'
+        elif m == 'Bu2JpsiKplus':
+          m = 'Bs2JpsiPhi'
+      elif mode in ('Bs2JpsiPhi', 'MC_Bs2JpsiPhi_dG0', 'MC_Bs2JpsiPhi', 'Bd2JpsiKstar', 'MC_Bd2JpsiKstar', 'Bu2JpsiKplus', 'MC_Bu2JpsiKplus', 'MC_Bs2JpsiKK_Swave'):
+        m = mode
 
+  # }}}
+  # print("wcs.mode, m, mode = ", f"{wcs.mode}", m, mode)
+
+  # Model handler when asking for weights {{{
+  __weight = weight
+  _general = ['selected', 'tagged', 'chopped', ready, sw8s, vw8s]
+
+  # If we want to run the whole weighting pipeline, we just skip the set of
+  # `ready` tuples and we call for `lbWeight` or `tagged` ones. This allows
+  # the user to run the pipeline withou uploading the results to EOS
+  if weight == 'ready':
+    weight = ready
+
+  # Now we are going to be sure the `weight` wildcard makes sense wrt the
+  # mode of the tuple itself.
+  # WARNING: Touching this set of ifs is really dangerous and can break the
+  #          whole pipeline.
+  # TODO: Try to simplify
+  if weight:
+    # Bs2JpsiPhi {{{
+    if m == 'Bs2JpsiPhi':
+      # if weight == 'sWeight':
+      #     weight = 'ready'
+      if weight not in _general + ['lbWeight']:
+        weight = vw8s
+    # }}}
+    # Bu2JpsiKplus {{{
+    elif m == 'Bu2JpsiKplus':
+      if weight == 'lbWeight':
+        weight = 'tagged'
+      if weight not in _general + ['sWeightForTag', 'kinWeight']:
+        weight = vw8s
+    # }}}
+    # Bd2JpsiKstar {{{
+    elif m == 'Bd2JpsiKstar':
+      if weight == 'oddWeight':
+        # kbuWeight needed for Bd RD
+        weight = kbuWeight
+      if weight == 'pdfWeight':
+        # if we dont plan to run the whole reweighting pipeline, then
+        # the kbuWeight=pdfWeight, and BdRD does not have such weight
+        # here we skip it to selected/ready
+        weight = vw8s
+      if weight == 'lbWeight':
+        # skip tagging
+        weight = 'selected'
+      # elif weight == 'kbuWeight':
+      #   # kbuWeight needed for Bd RD
+      #   weight = 'phiWeight'
+      if weight not in _general + ['phiWeight', kbuWeight,
+                                   'kinWeight']:
+        weight = vw8s
+    # }}}
+    # MC_Bu2JpsiKplus {{{
+    elif m == 'MC_Bu2JpsiKplus':
+      if weight == 'lbWeight':
+        weight = 'tagged'
+      if weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in _general + ['sWeightForTag', 'polWeight', 'kinWeight']:
+        weight = 'polWeight'
+    # }}}
+    # MC_Bd2JpsiKstar {{{
+    elif m == 'MC_Bd2JpsiKstar':
+      if weight == 'lbWeight':
+        weight = 'selected'
+      if weight == 'oddWeight':
+        weight = oddWeight
+      elif weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in ['selected', 'ready', 'chopped', sw8s, vw8s,
+                          'phiWeight', 'polWeight', 'pdfWeight',
+                          kbuWeight, oddWeight, 'angWeight', 'kinWeight',
+                          'kkpWeight']:
+        weight = 'polWeight'
+    # }}}
+    # MC_Bs2JpsiPhi {{{
+    elif m == 'MC_Bs2JpsiPhi':
+      if weight == 'lbWeight':
+        weight = 'tagged'
+      if weight == 'oddWeight':
+        weight = oddWeight
+      elif weight == 'kbuWeight':
+        weight = 'pdfWeight'
+      elif weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in _general + ['dg0Weight', 'polWeight',
+                                     'pdfWeight', oddWeight,
+                                     'kinWeight', 'angWeight',
+                                     'kkpWeight']:
+        weight = 'dg0Weight'
+    # }}}
+    # MC_Bs2JpsiKK_Swave {{{
+    elif m == 'MC_Bs2JpsiKK_Swave':
+      if weight == 'lbWeight':
+        weight = 'tagged'
+      if weight == 'oddWeight':
+        weight = oddWeight
+      elif weight == 'kbuWeight':
+        weight = 'pdfWeight'
+      elif weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in _general + ['dg0Weight', 'polWeight',
+                                     'pdfWeight', oddWeight,
+                                     'kinWeight', 'angWeight',
+                                     'kkpWeight']:
+        weight = 'dg0Weight'
+    # }}}
+    # MC_Bs2JpsiPhi_dG0 {{{
+    elif m == 'MC_Bs2JpsiPhi_dG0':
+      if weight == 'lbWeight':
+        weight = 'tagged'
+      if weight == 'oddWeight':
+        weight = oddWeight
+      if weight == 'kbuWeight':
+        weight = 'pdfWeight'
+      elif weight == 'veloWeight':
+        weight = vw8s
+      elif weight not in _general + ['kkpWeight', 'polWeight',
+                                     'pdfWeight', oddWeight,
+                                     'kinWeight', 'angWeight']:
+        weight = 'polWeight'
+    # }}}
+    # MC_Bs2JpsiPhi_fromLb {{{
+    elif m == 'MC_Bs2JpsiPhi_fromLb':
+      if weight not in ['selected', 'tagged', 'ready', 'chopped']:
+        weight = 'selected'
+    # }}}
+    # Bs2JpsiPhi_Lb {{{
+    elif m == 'Bs2JpsiPhi_Lb':
+      if weight not in ['selected', 'tagged', 'sWeight', 'ready', 'chopped']:
+        weight = 'sWeight'
+    # }}}
+    # GUN_Bs2JpsiPhi {{{
+    elif m == 'GUN_Bs2JpsiPhi' or m == 'GUN_Bs2JpsiKK_Swave':
+      # WARNING: We dont chop this tuple with the @
+      if weight == 'kinWeight':
+        weight = 'chopped'
+      if weight not in ['ready', 'chopped']:
+        weight = 'ready'
+      # elif weight == 'ready' or weight == 'selected':
+      #   weight = 'ready'
+    # }}}
     # Bs2DsPi {{{
-        elif m == 'Bs2DsPi':
-        # WARNING: We dont chop this tuple with the @
-          if weight not in ['ready', 'kinWeight']:
-            if config.base['allow_continuous']:
-              weight = 'selected'
-            else:
-              weight = 'ready'
-        # }}}
-        # MC_Bs2DsPi {{{
-        elif m == 'MC_Bs2DsPi':
-          # WARNING: We dont chop this tuple with the @
-          if weight not in ['ready']:
-            if config.base['allow_continuous']:
-              weight = 'selected'
-            else:
-              weight = 'ready'
-    # }}}
-
-        # Bs2JpsiPhi_Prompt {{{
-        elif m == 'Bs2JpsiPhi_Prompt':
-            # WARNING: We dont chop this tuple with the @
-            if config.base['allow_continuous']:
-              weight = 'selected'
-            else:
-              weight = 'ready'
-        # }}}
-        # MC_Bs2JpsiPhi_Prompt {{{
-        elif m == 'MC_Bs2JpsiPhi_Prompt':
-            # WARNING: We dont chop this tuple with the @
-            if weight not in ['ready']:
-              if config.base['allow_continuous']:
-                weight = 'selected'
-              else:
-                weight = 'ready'
-        # }}}
-        elif m == 'Bs2JpsiPhi_Prompt_mixPV':
-          # WARNING: We dont chop this tuple with the @
-          if weight not in ['ready']:
-            if config.base['allow_continuous']:
-              weight = 'ready'
-            else:
-              weight = 'ready'
-        # }}}
-    # print(f"{m} weight was transformed {__weight}->{weight}")
-    # }}}
-
-    # Return list of tuples for YEARS[year] {{{
-
-    if year:
-        years = YEARS[year]
-
-
-    path = []
-    for y in years:
-      if weight:
-        if weight == 'angWeight':
-          path.append(
-            f"{SAMPLES}/{y}/{m}/{v}_{angacc}_{csp}_{weight}.root")
-        elif weight == 'kkpWeight':
-          path.append(
-            f"{SAMPLES}/{y}/{m}/{v}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root")
+    elif m == 'Bs2DsPi':
+      # WARNING: We dont chop this tuple with the @
+      if weight not in ['ready', 'kinWeight']:
+        if config.base['allow_continuous']:
+          weight = 'selected'
         else:
-          path.append(f"{SAMPLES}/{y}/{m}/{v}_{weight}.root")
+          weight = 'ready'
+    # }}}
+    # MC_Bs2DsPi {{{
+    elif m == 'MC_Bs2DsPi':
+      # WARNING: We dont chop this tuple with the @
+      if weight not in ['ready']:
+        if config.base['allow_continuous']:
+          weight = 'selected'
+        else:
+          weight = 'ready'
+    # }}}
+    # Bs2JpsiPhi_Prompt {{{
+    elif m == 'Bs2JpsiPhi_Prompt':
+      # WARNING: We dont chop this tuple with the @
+      if weight not in ['ready']:
+        if config.base['allow_continuous']:
+          weight = 'selected'
+        else:
+          weight = 'ready'
+    # }}}
+    # MC_Bs2JpsiPhi_Prompt {{{
+    elif m == 'MC_Bs2JpsiPhi_Prompt':
+      # WARNING: We dont chop this tuple with the @
+      if weight not in ['ready']:
+        if config.base['allow_continuous']:
+          weight = 'selected'
+        else:
+          weight = 'ready'
+    # }}}
+    # MC_Bs2JpsiPhi_Prompt\_mixPV {{{
+    elif m == 'Bs2JpsiPhi_Prompt_mixPV':
+      # WARNING: We dont chop this tuple with the @
+      if weight not in ['ready']:
+        if config.base['allow_continuous']:
+          weight = 'ready'
+        else:
+          weight = 'ready'
+    # }}}
+  # print(f"{m} weight was transformed {__weight}->{weight}")
+  # }}}
+
+  # Return list of tuples for YEARS[year] {{{
+
+  if year:
+    years = YEARS[year]
+  else:
+    years = YEARS[f'{wcs.year}']
+
+  path = []
+  for y in years:
+    if weight:
+      if weight == 'angWeight':
+        path.append(
+            f"{SAMPLES}/{y}/{m}/{v}_{angacc}_{csp}_{weight}.root")
+      elif weight == 'kkpWeight':
+        path.append(
+            f"{SAMPLES}/{y}/{m}/{v}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{weight}.root")
       else:
-        path.append(f"{SAMPLES}/{y}/{m}/{v}.root")
+        path.append(f"{SAMPLES}/{y}/{m}/{v}_{weight}.root")
+    else:
+      path.append(f"{SAMPLES}/{y}/{m}/{v}.root")
 
   # }}}
 
-    return path[0] if len(path) == 1 else path
+  return path[0] if len(path) == 1 else path
 
 
 def timeress(wcs, version=False, year=False, mode=False, timeres=False):
@@ -901,3 +896,4 @@ def swnorm(sw):
 
 
 # vim: foldmethod=marker
+
