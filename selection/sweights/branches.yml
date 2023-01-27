@@ -1,0 +1,257 @@
+# Configuration file for sw8 paleros
+#
+# Here we...
+
+# For a given mode, which is the corresponing mode to extract the tails from?
+# Here we define it
+# tails_mode:
+#   'Bs2JpsiPhi': 'MC_Bs2JpsiPhi'
+#   'MC_Bs2JpsiPhi': 'MC_Bs2JpsiPhi'
+#   'MC_Bs2JpsiPhi_dG0': 'MC_Bs2JpsiPhi'
+#   'Bd2JpsiKstar': 'MC_Bd2JpsiKstar'
+#   'MC_Bd2JpsiKstar': 'MC_Bd2JpsiKstar'
+#   'Bu2JpsiKplus': 'MC_Bu2JpsiKplus'
+#   'MC_Bu2JpsiKplus': 'MC_Bu2JpsiKplus'
+#   'MC_Bs2JpsiPhi_Prompt': 'MC_Bs2JpsiPhi_Prompt'
+#   'Bs2JpsiPhi_Prompt': 'MC_Bs2JpsiPhi_Prompt'
+#
+#
+# mass_model:
+#   'Bs2JpsiPhi': 'dgauss'
+#   'MC_Bs2JpsiPhi': 'dgauss'
+#   'MC_Bs2JpsiPhi_dG0': 'dgauss'
+#   'Bd2JpsiKstar': 'dgauss'
+#   'MC_Bd2JpsiKstar': 'dgauss'
+#   'Bu2JpsiKplus': 'hypatia'
+#   'MC_Bu2JpsiKplus': 'hypatia'
+#   'Bs2JpsiPhi_Prompt': 'dgauss'
+#   'MC_Bs2JpsiPhi_Prompt': 'dgauss'
+#
+#
+# mass_branch:
+#   'Bs2JpsiPhi': 'B_ConstJpsi_M_1'
+#   'MC_Bs2JpsiPhi': 'B_ConstJpsi_M_1'
+#   'MC_Bs2JpsiPhi_dG0': 'B_ConstJpsi_M_1'
+#   'Bd2JpsiKstar': 'B_ConstJpsi_M_1'
+#   'MC_Bd2JpsiKstar': 'B_ConstJpsi_M_1'
+#   'Bu2JpsiKplus': 'B_ConstJpsi_M_1'
+#   'MC_Bu2JpsiKplus': 'B_ConstJpsi_M_1'
+#   'Bs2JpsiPhi_Prompt': 'B_ConstJpsi_M_1'
+#   'MC_Bs2JpsiPhi_Prompt': 'B_ConstJpsi_M_1'
+
+
+gbweighting_branches:
+  common: &gbw-common
+    'B_PT': 'B_PT'
+    'B_ETA': 'B_ETA'
+    'nLongTracks': 'nLongTracks'
+    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+  Bs2JpsiPhi: &gbw-Bs2JpsiPhi
+    <<: *gbw-common
+  Bs2JpsiPhi_Prompt:
+    <<: *gbw-common
+  Bd2JpsiKstar: &gbw-Bd2JpsiKstar
+    <<: *gbw-common
+  Bu2JpsiKplus: &gbw-Bu2JpsiKplus
+    'B_PT': 'B_PT'
+    'B_ETA': 'B_ETA'
+    # 'nTracks': 'nTracks'
+    'nLongTracks': 'nLongTracks'
+  MC_Bs2JpsiPhi:
+    <<: *gbw-common
+  MC_Bs2JpsiPhi_Prompt:
+    <<: *gbw-common
+  MC_Bs2JpsiPhi_dG0:
+    <<: *gbw-common
+  MC_Bs2JpsiKK_Swave:
+    <<: *gbw-common
+  MC_Bd2JpsiKstar:
+    <<: *gbw-common
+  MC_Bu2JpsiKplus:
+    <<: *gbw-Bu2JpsiKplus
+
+
+all_branches:
+  common: &all-common
+    'Polarity': 'Polarity'
+    'time': 'time'
+    'sigmat': 'sigmat'
+    'nLongTracks': 'nLongTracks'
+    'nTracks': 'nTracks'
+    'B_ETA': 'B_ETA'
+    'B_P': 'B_P'
+    'B_PT': 'B_PT'
+    'hlt1b': 'hlt1b'
+    'hplus_TRACK_CHI2NDOF': 'hplus_TRACK_CHI2NDOF'
+    'muplus_TRACK_CHI2NDOF': 'muplus_TRACK_CHI2NDOF'
+    'muminus_TRACK_CHI2NDOF': 'muminus_TRACK_CHI2NDOF'
+    'hplus_ProbNNk' : 'hplus_ProbNNk'
+    'muplus_ProbNNmu' : 'muplus_ProbNNmu'
+    'muminus_ProbNNmu' : 'muminus_ProbNNmu'
+    'hplus_PIDK' : 'hplus_PIDK'
+    'hplus_P' : 'hplus_P'
+    "helcosthetaK"      :     "helcosthetaK"
+    "helcosthetaL"      :     "helcosthetaL"
+    "helphi"            :     "helphi"
+    "B_ID"             :      "B_ID"
+    "X_M"              :      "X_M"
+    "B_ConstJpsi_M_1" :       "B_ConstJpsi_M_1"
+    "X_ID"              :     "X_ID"
+    "sigmat"              :   "sigmat"
+    "hplus_P"          :      "hplus_P"
+    "hplus_PT"          :     "hplus_PT"
+    "hminus_P"         :      "hminus_P"
+    "hminus_PT"         :     "hminus_PT"
+    "muplus_P"         :      "muplus_P"
+    "muplus_PT"         :     "muplus_PT"
+    "muminus_P"        :      "muminus_P"
+    "muminus_PT"        :     "muminus_PT"
+    "B_PT"             :      "B_PT"
+    "hlt1b"              :    "hlt1b"
+    "Polarity"            :   "Polarity"
+    "eventNumber"       :     "eventNumber"
+    "runNumber"         :     "runNumber"
+    # "doca_z"            :      "doca_z"
+    "X_PT"              :      "X_PT"
+    "log_Jpsi_VX_CHI2NDOF_mva"                    :  "log_Jpsi_VX_CHI2NDOF_mva"
+    "log_min_mu_PNNmu_mva"                        :  "log_min_mu_PNNmu_mva"
+    "hplus_PIDK"                                  :  "hplus_PIDK"
+    "hplus_TRACK_CHI2NDOF"                        :  "hplus_TRACK_CHI2NDOF"
+    "hminus_TRACK_CHI2NDOF"                       :  "hminus_TRACK_CHI2NDOF"
+    "muplus_TRACK_CHI2NDOF"                       :  "muplus_TRACK_CHI2NDOF"
+    "muminus_TRACK_CHI2NDOF"                      :  "muminus_TRACK_CHI2NDOF"
+    "max_K_TRCHI2_mva"                            :  "max_K_TRCHI2_mva"
+    "max_mu_TRCHI2_mva"                           :  "max_mu_TRCHI2_mva"
+    # "phiHH"                                       :  "phiHH"
+    "Jpsi_Hlt1DiMuonHighMassDecision_TOS"         :  "Jpsi_Hlt1DiMuonHighMassDecision_TOS"
+
+  Bs2JpsiPhi:  &all-Bs2JpsiPhi
+    <<: [*all-common, *gbw-Bs2JpsiPhi]
+    'X_M': 'X_M'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
+    'hminus_P' : 'hminus_P'
+
+  # Bs2JpsiPhi_Prompt:  &all-Bs2JpsiPhi_Prompt
+  #   <<: [*all-common, *gbw-Bs2JpsiPhi]
+  #   'X_M': 'X_M'
+  #   'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+  #   'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+  #   'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  #   'hminus_ProbNNk' : 'hminus_ProbNNk'
+  #   'hminus_P' : 'hminus_P'
+
+  Bd2JpsiKstar:  &all-Bd2JpsiKstar
+    <<: [*all-common, *gbw-Bd2JpsiKstar]
+    'X_M': 'X_M'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
+    'hminus_P' : 'hminus_P'
+
+  # Bu2JpsiKplus:  &all-Bu2JpsiKplus
+  #   <<: [*all-common, *gbw-Bu2JpsiKplus]
+  #   'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+  #   'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+
+  MC_Bs2JpsiPhi:
+    <<: *all-Bs2JpsiPhi
+    'X_M': 'X_M'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'B_BKGCAT': 'B_BKGCAT'
+    'hminus_P' : 'hminus_P'
+
+    # "truetimeT" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 ) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_PT*5.344286e-22))"
+    # "gentimeT" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 ) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_PT*5.344286e-22))"
+    "B_TRUETAU"                 : "B_TRUETAU"
+    "truehelcosthetaK"          : "truehelcosthetaK"
+    "truehelcosthetaL"          : "truehelcosthetaL"
+    "truehelphi"                : "truehelphi"
+    "B_TRUETAU_GenLvl"         :  "B_TRUETAU_GenLvl"
+    "truehelcosthetaK_GenLvl"  :  "truehelcosthetaK_GenLvl"
+    "truehelcosthetaL_GenLvl"  :  "truehelcosthetaL_GenLvl"
+    "truehelphi_GenLvl"        :  "truehelphi_GenLvl"
+    "B_BKGCAT"                 :  "B_BKGCAT"
+    "B_ID_GenLvl"                     :  "B_ID_GenLvl"
+    "hminus_PIDK"                     :  "hminus_PIDK"
+    "hminus_PIDK_corr"                :  "hminus_PIDK_corr"
+    "gb_weights"                      :  "gb_weights"
+
+  # MC_Bs2JpsiPhi_Prompt:
+  #   <<: *all-Bs2JpsiPhi_Prompt
+  #   'X_M': 'X_M'
+  #   'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  #   'hminus_ProbNNk' : 'hminus_ProbNNk'
+  #   'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+  #   'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+  #   'B_BKGCAT': 'B_BKGCAT'
+
+  MC_Bs2JpsiPhi_dG0:
+    <<: *all-Bs2JpsiPhi
+    'X_M': 'X_M'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'B_BKGCAT': 'B_BKGCAT'
+    'hminus_P' : 'hminus_P'
+    # "truetimeT" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 ) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_PT*5.344286e-22))"
+    # "gentimeT" : "sqrt( (B_SV_X - B_BPV_X)**2 + (B_SV_Y- B_BPV_Y)**2 ) * (1.e-3) * B_M * (1.782662e-30*1e12/(B_PT*5.344286e-22))"
+    "B_TRUETAU"                 : "B_TRUETAU"
+    "truehelcosthetaK"          : "truehelcosthetaK"
+    "truehelcosthetaL"          : "truehelcosthetaL"
+    "truehelphi"                : "truehelphi"
+    "B_TRUETAU_GenLvl"         :  "B_TRUETAU_GenLvl"
+    "truehelcosthetaK_GenLvl"  :  "truehelcosthetaK_GenLvl"
+    "truehelcosthetaL_GenLvl"  :  "truehelcosthetaL_GenLvl"
+    "truehelphi_GenLvl"        :  "truehelphi_GenLvl"
+    "B_BKGCAT"                 :  "B_BKGCAT"
+    "B_ID_GenLvl"                     :  "B_ID_GenLvl"
+    "hminus_PIDK"                     :  "hminus_PIDK"
+    "hminus_PIDK_corr"                :  "hminus_PIDK_corr"
+    "gb_weights"                      :  "gb_weights"
+
+  # MC_Bs2JpsiKK_Swave:
+  #   <<: *all-Bs2JpsiPhi
+  #   'X_M': 'X_M'
+  #   'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+  #   'hminus_ProbNNk' : 'hminus_ProbNNk'
+  #   'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+  #   'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+  #   'B_BKGCAT': 'B_BKGCAT'
+  #   'hminus_P' : 'hminus_P'
+
+  MC_Bd2JpsiKstar:
+    <<: *all-Bd2JpsiKstar
+    'X_M': 'X_M'
+    'hminus_TRACK_CHI2NDOF': 'hminus_TRACK_CHI2NDOF'
+    'hminus_ProbNNk' : 'hminus_ProbNNk'
+    'B_ConstJpsi_M_1': 'B_ConstJpsi_M_1'
+    'B_ConstJpsi_MERR_1': 'B_ConstJpsi_MERR_1'
+    'B_BKGCAT': 'B_BKGCAT'
+    "B_TRUETAU"                 : "B_TRUETAU"
+    "truehelcosthetaK"          : "truehelcosthetaK"
+    "truehelcosthetaL"          : "truehelcosthetaL"
+    "truehelphi"                : "truehelphi"
+    "B_TRUETAU_GenLvl"         :  "B_TRUETAU_GenLvl"
+    "truehelcosthetaK_GenLvl"  :  "truehelcosthetaK_GenLvl"
+    "truehelcosthetaL_GenLvl"  :  "truehelcosthetaL_GenLvl"
+    "truehelphi_GenLvl"        :  "truehelphi_GenLvl"
+    'hminus_P' : 'hminus_P'
+    "X_ID_GenLvl"      : "X_ID_GenLvl"
+    "hminus_PIDK"      : "hminus_PIDK"
+    "hminus_PIDK_corr" : "hminus_PIDK_corr"
+    "gb_weights"                      :  "gb_weights"
+
+  # MC_Bu2JpsiKplus:
+  #   <<: *all-Bu2JpsiKplus
+  #   'B_BKGCAT': 'B_BKGCAT'
