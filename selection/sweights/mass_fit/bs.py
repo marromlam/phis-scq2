@@ -384,8 +384,7 @@ def ipatia_exponential(
         np.float64(s0Bd),
         np.float64(mLL),
         np.float64(mUL),
-        global_size=(len(mass)),
-    )
+        global_size=(len(mass)),    )
     pBd = ipanema.ristra.get(signal)
   else:
     pBd = 0
@@ -1095,7 +1094,6 @@ if __name__ == '__main__':
     input_pars = ipanema.Parameters.load(args["input_params"])
   else:
     input_pars = False
-
   branches = ["B_ConstJpsi_M_1", "B_ConstJpsi_MERR_1", "hlt1b", "X_M",
               'time', 'helcosthetaK', 'helcosthetaL', 'helphi']
 
@@ -1180,3 +1178,4 @@ if __name__ == '__main__':
 
 
 # vim: fdm=marker
+
