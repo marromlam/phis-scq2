@@ -10,7 +10,7 @@
 gbWeight:
   MC_Bs2JpsiPhi: &gbWeight_MC_Bs2JpsiPhi
     # BsMC -> BsRD
-    original: ["time/time"]
+    original: ["sw"]
     target: ["sw"]
     # variables: ["B_PT", "B_ETA", "nTracks"]
     variables: ["B_PT", "B_ETA", "nLongTracks"]
@@ -25,7 +25,7 @@ gbWeight:
 
   MC_Bd2JpsiKstar: 
     # BdMC -> BdRD
-    original: ["time/time"]
+    original: ["sw"]
     target: ["sw"]
     # variables: ["B_PT", "B_ETA", "nTracks"]
     variables: ["B_PT", "B_ETA", "nLongTracks"]
