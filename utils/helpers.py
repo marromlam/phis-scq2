@@ -32,7 +32,6 @@ if config.user['compute_sweights']:
   sw8s = 'sWeight'
 else:
   sw8s = 'ready'
-print(sw8s)
   # sw8s = 'selected'
 
 # FIXME: obviously this is not reading from the command line arguments sent to
@@ -436,14 +435,16 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
   if weight:
     # Bs2JpsiPhi {{{
     if m == 'Bs2JpsiPhi':
-      # if weight == 'sWeight':
-      #     weight = 'ready'
+      if weight == 'gbw':
+          weight = 'lbWeight'
       if weight not in _general + ['lbWeight']:
         weight = vw8s
     # }}}
     # Bu2JpsiKplus {{{
     elif m == 'Bu2JpsiKplus':
       if weight == 'lbWeight':
+        weight = 'tagged'
+      if weight == 'gbw':
         weight = 'tagged'
       if weight not in _general + ['sWeightForTag', 'kinWeight']:
         weight = vw8s
@@ -458,6 +459,8 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
         # the kbuWeight=pdfWeight, and BdRD does not have such weight
         # here we skip it to selected/ready
         weight = vw8s
+      if weight == 'gbw':
+          weight = 'selected'
       if weight == 'lbWeight':
         # skip tagging
         weight = 'selected'
@@ -470,6 +473,8 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
     # }}}
     # MC_Bu2JpsiKplus {{{
     elif m == 'MC_Bu2JpsiKplus':
+      if weight == 'gbw':
+        weight = 'tagged'
       if weight == 'lbWeight':
         weight = 'tagged'
       if weight == 'veloWeight':
@@ -486,7 +491,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in ['selected', 'ready', 'chopped', sw8s, vw8s,
-                          'phiWeight', 'polWeight', 'pdfWeight',
+                          'phiWeight', 'polWeight', 'pdfWeight', 'gbw', 'pregbw',
                           kbuWeight, oddWeight, 'angWeight', 'kinWeight',
                           'kkpWeight']:
         weight = 'polWeight'
@@ -502,7 +507,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in _general + ['dg0Weight', 'polWeight',
-                                     'pdfWeight', oddWeight,
+                                     'pdfWeight', oddWeight, 'gbw', 'pregbw',
                                      'kinWeight', 'angWeight',
                                      'kkpWeight']:
         weight = 'dg0Weight'
@@ -518,7 +523,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in _general + ['dg0Weight', 'polWeight',
-                                     'pdfWeight', oddWeight,
+                                     'pdfWeight', oddWeight, 'gbw', 'pregbw',
                                      'kinWeight', 'angWeight',
                                      'kkpWeight']:
         weight = 'dg0Weight'
@@ -534,7 +539,7 @@ def tuples(wcs, version=False, year=False, mode=False, weight=False,
       elif weight == 'veloWeight':
         weight = vw8s
       elif weight not in _general + ['kkpWeight', 'polWeight',
-                                     'pdfWeight', oddWeight,
+                                     'pdfWeight', oddWeight, 'gbw', 'pregbw',
                                      'kinWeight', 'angWeight']:
         weight = 'polWeight'
     # }}}
