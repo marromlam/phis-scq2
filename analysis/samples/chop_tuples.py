@@ -83,15 +83,6 @@ vsub_dict = {
     "pYB3": "B_PY >= 4.2e3 & B_PY <= 6.3e3",
     "pYB4": "B_PY >= 6.3e3",
     # pid cuts
-    # "pid1": 'hplus_ProbNNk_corr<0.876',
-    # "pid2": 'hplus_ProbNNk_corr>0.876 & hplus_ProbNNk_corr<0.965',
-    # "pid3": 'hplus_ProbNNk_corr>0.965 & hplus_ProbNNk_corr<0.996',
-    # "pid4": 'hplus_ProbNNk_corr>0.996',
-    # "PID1": "( (hplus_PIDK<hminus_PIDK) & ({scale}*hplus_PIDK<= 12.40) & ({scale}*hplus_PIDK> 0.00) ) | ( (hminus_PIDK<=hplus_PIDK) & ({scale}*hminus_PIDK<= 12.40) & ({scale}*hminus_PIDK>0.0) )",
-    # "PID2": "( (hplus_PIDK<hminus_PIDK) & ({scale}*hplus_PIDK<= 20.25) & ({scale}*hplus_PIDK>12.40) ) | ( (hminus_PIDK<=hplus_PIDK) & ({scale}*hminus_PIDK<= 20.25) & ({scale}*hminus_PIDK>12.40) )",
-    # "PID3": "( (hplus_PIDK<hminus_PIDK) & ({scale}*hplus_PIDK<= 29.78) & ({scale}*hplus_PIDK>20.25) ) | ( (hminus_PIDK<=hplus_PIDK) & ({scale}*hminus_PIDK<= 29.78) & ({scale}*hminus_PIDK>20.25) )",
-    # "PID4": "( (hplus_PIDK<hminus_PIDK) & ({scale}*hplus_PIDK<=129.14) & ({scale}*hplus_PIDK>29.78) ) | ( (hminus_PIDK<=hplus_PIDK) & ({scale}*hminus_PIDK<=129.14) & ({scale}*hminus_PIDK>29.78) )",
-
     # "PID1": "(hminus_isMuon==0) & (hplus_isMuon==0) & ( ( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=12.40) & (hplus_PIDK>0.0) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=12.40) & (hminus_PIDK>0.0) ) )",
     # "PID2": "(hminus_isMuon==0) & (hplus_isMuon==0) & ( ( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=20.25) & (hplus_PIDK>12.40) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=20.25) & (hminus_PIDK>12.40) ) )",
     # "PID3": "(hminus_isMuon==0) & (hplus_isMuon==0) & ( ( (hplus_PIDK<hminus_PIDK) & (hplus_PIDK<=29.78) & (hplus_PIDK>20.25) ) | ( (hminus_PIDK<=hplus_PIDK) & (hminus_PIDK<=29.78) & (hminus_PIDK>20.25) ) ) ",
@@ -204,58 +195,13 @@ if __name__ == "__main__":
 
   # place cuts according to version substring {{{
 
-  # list_of_cuts = []
-  # vsub_cut = None
-  # scale = 0.916 if 'MC' in m else 1.00
-  # scale = 1.00
-  # for k, v in vsub_dict.items():
-  #   if k in V:
-  #     try:
-  #       if (k in ("g210300", "l210300")) and is_mc:
-  #         print("MCs are not cut in runNumber")
-  #       elif (k in ("g210300", "l210300")) and ("2018" != y):
-  #         print("Only 2018 RD is cut in runNumber")
-  #       elif (k in ("UcosK", "LcosK")) and 'Bd2JpsiKstar' not in m:
-  #         print("Cut in cosK was only planned in Bd")
-  #       elif (k in ("LSB", "RSB", "LSBsmall", "RSBsmall")) and 'Bs2JpsiPhi' != m:
-  #         print("Cut in LSB and RSB was only planned in Bs RD")
-  #       elif (k in ("PID1", "PID2", "PID3", "PID4")) and 'Bs2JpsiPhi' not in m:
-  #         print("PID cut was only planned in Bs modes")
-  #       elif (k in ("pid1", "pid2", "pid3", "pid4")) and 'Bs2JpsiPhi' not in m:
-  #         print("PID cut was only planned in Bs modes")
-  #       elif (k in ("tag") and 'Bs2JpsiPhi' not in m):
-  #         print("tag cut was only planned in Bs modes")
-  #       elif (k in ("bkgcat050") and 'MC_Bs2JpsiPhi' not in m):
-  #         print("tag cut was only planned in Bs MC modes")
-  #       else:
-  #         list_of_cuts.append(v.format(scale=scale))
-  #         noe = len(result.query(list_of_cuts[-1]))
-  #         if noe == 0:
-  #           print(f"ERROR: This cut leaves df empty. {v}")
-  #           print("       Query halted.")
-  #     except:
-  #       print(f"There is no such variable for the cut {v}")
-  # if list_of_cuts:
-  #   vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
-  #
-  # # place the cut
-  # print("Cut to be applied")
-  # print(vsub_cut)
-  # if vsub_cut and not is_gun:
-  #   result = result.query(vsub_cut)
-  # print("Showing the final dataframe:")
-  # print(result)
 
-  # }}}
-
-  # write {{{
-
-    list_of_cuts = []
-    vsub_cut = None
-    for k, v in vsub_dict.items():
+  list_of_cuts = []
+  vsub_cut = None
+  for k, v in vsub_dict.items():
         if k in V:
             try:
-                # noe = len(result.query(v))
+                noe = len(result.query(v))
                 if (k in ("g210300", "l210300")) and is_mc:
                     print("MCs are not cut in runNumber")
                 elif (k in ("g210300", "l210300")) and ("2018" != y):
@@ -364,8 +310,16 @@ if __name__ == "__main__":
                     print("       Query halted.")
             except:
                 print(f"There is no such variable for the cut {v}")
-    if list_of_cuts:
+  if list_of_cuts:
         vsub_cut = f"( {' ) & ( '.join(list_of_cuts)} )"
+        
+  # place the cut  
+  print("Cut to be applied")  
+  print(vsub_cut)  
+  if vsub_cut and not is_gun:     
+    result = result.query(vsub_cut)  
+  print("Showing the final dataframe:")
+  print(result)
 
   print(f"Starting to write {os.path.basename(args['output'])} file.")
   with uproot.recreate(args['output']) as f:
