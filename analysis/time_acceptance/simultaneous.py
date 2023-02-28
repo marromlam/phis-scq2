@@ -145,7 +145,6 @@ if __name__ == '__main__':
       m = 'MC_Bs2JpsiPhi'
       if TIMEACC['corr']:
         weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
-        # weight = f'kbsWeight*polWeight*sWeight'
       else:
         weight = f'dg0Weight*sWeight'
       mode = 'signalMC'
@@ -156,7 +155,6 @@ if __name__ == '__main__':
       m = 'MC_Bs2JpsiPhi_dG0'
       if TIMEACC['corr']:
         weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
-        # weight = f'kbsWeight*polWeight*sWeight'
       else:
         weight = f'sWeight'
       mode = 'signalMC'
@@ -167,7 +165,6 @@ if __name__ == '__main__':
       m = 'MC_Bd2JpsiKstar'
       if TIMEACC['corr']:
         weight = f'kbsWeight*polWeight*pdfWeight*sWeight'
-        # weight = f'kbsWeight*polWeight*sWeight'
       else:
         weight = f'sWeight'
       mode = 'controlMC'
