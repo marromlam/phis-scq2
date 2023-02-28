@@ -851,9 +851,9 @@ WITHIN_KERNEL void integralFullSpline(
     const ftype DG, const ftype DM, const ftype delta_t, const ftype tLL,
     const ftype tUL, const ftype t_offset, GLOBAL_MEM const ftype *coeffs) {
   ftype integrals[4] = {0., 0., 0., 0.};
-  intgTimeAcceptance(integrals, delta_t, G, DG, DM, coeffs, t_offset, tLL, tUL);
-  // intgTimeAcceptanceOffset(integrals, delta_t, G, DG, DM, coeffs, t_offset,
-  // tLL, tUL);
+  // intgTimeAcceptance(integrals, delta_t, G, DG, DM, coeffs, t_offset, tLL, tUL);
+  intgTimeAcceptanceOffset(integrals, delta_t, G, DG, DM, coeffs, t_offset,
+  tLL, tUL);
 
   ftype ta = integrals[0];
   ftype tb = integrals[1];
