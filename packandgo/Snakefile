@@ -265,21 +265,21 @@ rule physics_params_tabular_yearly:
 
 
 # Pack pTB, sigmat or etaB table {{{
-
+ruleorder: physics_params_tabular_binned_variables > physics_params_tabulate_versions
 rule physics_params_tabular_binned_variables:
   resources:
     mem_mb=1048
   wildcard_constraints:
-    var = "(.*)(pTB|sigmat|etaB)"
+    var = "(.*)(pTB|sigmat|etaB|PID)"
   input:
-    p1 = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+    # p1 = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
     p2 = lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}@{{var}}{bin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.json',
-                            bin=[1,2,3] if 'pTB' not in f'{wcs.var}' else [1,2,3,4]),
-    l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}__vs__{{year}}_{{version}}@{{var}}{bin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.npy",
-                            bin=[1,2,3] if 'pTB' not in f'{wcs.var}' else [1,2,3,4]),
+                            bin=[1,2,3,4] if 'pTB' not in f'{wcs.var}' else [1,2,3,4]),
+    # l1 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}__vs__{{year}}_{{version}}@{{var}}{bin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.npy",
+                            # bin=[1,2,3,4] if 'pTB' not in f'{wcs.var}' else [1,2,3,4]),
     l2 = lambda wcs: expand("tmp/pvalues/{{mode}}/{{year}}_{{version}}@{{var}}{dbin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}__vs__{{year}}_{{version}}@{{var}}{pbin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.npy",
-                            pbin=[1,2,3] if 'pTB' not in f'{wcs.var}' else [1,2,3,4],
-                            dbin=[1,2,3] if 'pTB' not in f'{wcs.var}' else [1,2,3,4])
+                            pbin=[1,2,3,4] if 'pTB' not in f'{wcs.var}' else [1,2,3,4],
+                            dbin=[1,2,3,4] if 'pTB' not in f'{wcs.var}' else [1,2,3,4])
   output:
     'output/tables/physics_params/{year}/{mode}/{version}@{var}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.tex',
   log:
@@ -291,15 +291,15 @@ rule physics_params_tabular_binned_variables:
     dlls = {}; n = len(input.p2); print(n)
 
     # convert them to lists
-    a = f"{','.join(input.l1)}".split(',')
+    # a = f"{','.join(input.l1)}".split(',')
     b = f"{','.join(input.l2)}".split(',')
     b = [b[i::n] for i in range(n)]
-    print(a)
+    # print(a)
     for i in range(0,n):
       dlls[i+1] = {}
-      dlls[i+1]["0"] = np.load(a[i]).tolist()[:-1]
+      # dlls[i+1]["0"] = np.load(a[i]).tolist()[:-1]
       for j in range(0,i):
-        dlls[i+1][j+1] = np.load(b[i][j]).tolist()[:-1]
+        dlls[i][j] = np.load(b[i][j]).tolist()[:-1]
     for k1,v1 in dlls.items():
       for k2,v2 in v1.items():
         print(k1,k2,v2)
@@ -311,7 +311,7 @@ rule physics_params_tabular_binned_variables:
 
     shell(f"""(time\
     python packandgo/physics_tables.py\
-    --params {",".join( [f"{input.p1}"]+f"{','.join(input.p2)}".split(",")  )}\
+    --params {",".join( f"{','.join(input.p2)}".split(",")  )}\
     --output {output}\
     --mode {wildcards.mode}\
     --year {",".join((n+1)*[f"{wildcards.year}"])}\
