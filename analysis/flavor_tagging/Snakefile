@@ -36,13 +36,13 @@ rule flavor_tagging_basics_from_git:
   output:
     "output/params/flavor_tagging/{year}/{mode}/{version}_{flavor}.json",
   log:
-    "output/log/time_resolution_from_git/{year}/{mode}/{version}_{flavor}.log",
+    "output/log/flavor_tagging_from_git/{year}/{mode}/{version}_{flavor}.log",
   run:
     shell(f"""(time\
     python analysis/flavor_tagging/download_from_git.py\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
-    --version v4r0\
+    --version {wildcards.version}\
     --flavor {wildcards.flavor}\
     --output {output}\
     --repo {params.repo}\
