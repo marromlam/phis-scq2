@@ -1,7 +1,6 @@
 # SWEIGHTS
 #
-#   Description: Background subtracted samples are required to perfrom fits to
-#                the time-angular distribution of Bq mesons if the background
+#   Description: Background subtracted samples are required to perfrom fits to the time-angular distribution of Bq mesons if the background
 #                is not modelled. Within the whole phis-scq pipeline all fits
 #                asume the samples are background subtracted. This set of rules
 #                allow the user to compute sWeights for all the involved modes.
@@ -16,6 +15,193 @@
 
 
 # PID issue solver {{{
+#TODO clean this shit
+# rule prefit_singlemassbin_bs:
+#   threads: 2
+#   resources:
+#     mem_mb=6000
+#   wildcard_constraints:
+#     mode = 'MC_(Bs2JpsiPhi)(_dG0)?'
+#   input:
+#     sample = lambda wcs: tuples(wcs, weight='lbWeight') #will imply problems then
+#     # root_file = lambda wcs: tuples(wcs, version=f"{wcs.version}".replace('LSB', "").replace("RSB", ""), weight='chopped'),
+#   output:
+#     params = 'output/params/mass_prefit_singlemassbin/{year}/{mode}/{version}.json',
+#     plots = directory('output/figures/mass_prefit_singlemassbin/{year}/{mode}/{version}/')
+#   params:
+#     script = 'selection/sweights/mass_fit/mf_singlemassbin.py' ,
+#     mass_branch = 'B_ConstJpsi_M_1',
+#   log:
+#     'output/log/mass_prefit_singlemassbin/{year}/{mode}/{version}.log',
+#   run:
+#     shell(f"""(time\
+#       python {params.script} \
+#       --sample {input.sample} \
+#       --output-params {output.params} \
+#       --output-figures {output.plots} \
+#       --mass-bin 'all' \
+#       --mode {wildcards.mode} \
+#       --version {wildcards.version} \
+#     ) &> {log}""")
+#
+# rule fit_singlemassbin_mc_bs:
+#   threads: 2
+#   resources:
+#     mem_mb=6000
+#   wildcard_constraints:
+#     mode = '(MC_)(Bs2JpsiPhi)(_dG0)?'
+#   input:
+#     sample = lambda wcs: tuples(wcs, weight='lbWeight'), #will imply problems then
+#     params = 'output/params/mass_prefit_singlemassbin/{year}/{mode}/{version}.json',
+#   output:
+#     params = 'output/params/mass_fit_singlemassbin/{year}/{mode}/{version}.json',
+#     plots = directory('output/figures/mass_fit_singlemassbin/{year}/{mode}/{version}/'),
+#     root_file = SAMPLES+'/{year}/{mode}/{version}_pregbw.root',
+#   params:
+#     script = 'selection/sweights/mass_fit/mf_singlemassbin.py',
+#     mass_model = "cbcalib",
+#     mass_branch = 'B_ConstJpsi_M_1',
+#   log:
+#     'output/log/mass_fit_singlemassbin/{year}/{mode}/{version}.log',
+#   run:
+#     shell(f"""(time\
+#     python {params.script} \
+#     --sample {input.sample} \
+#     --input-params {input.params} \
+#     --output-params {output.params} \
+#     --output-figures {output.plots} \
+#     --mass-bin 'all' \
+#     --sweights {output.root_file} \
+#     --mode {wildcards.mode} \
+#     --version {wildcards.version} \
+#     ) &> {log}""")
+#
+#
+# rule fit_singlemassbin_rd_bs:
+#   threads: 2
+#   resources:
+#     mem_mb=6000
+#   wildcard_constraints:
+#     mode = '(Bs2JpsiPhi)'
+#   input:
+#     sample = lambda wcs: tuples(wcs, weight='lbWeight'), #will imply problems then
+#     params = 'output/params/mass_prefit_singlemassbin/{year}/MC_{mode}/{version}.json',
+#   output:
+#     params = 'output/params/mass_fit_singlemassbin/{year}/{mode}/{version}.json',
+#     plots = directory('output/figures/mass_fit_singlemassbin/{year}/{mode}/{version}/'),
+#     root_file = SAMPLES+'/{year}/{mode}/{version}_pregbw.root',
+#   params:
+#     script = 'selection/sweights/mass_fit/mf_singlemassbin.py',
+#     # script = 'selection/sweights/mass_fit/mf_singlemassbin.py',
+#     mass_model = "cbcalib",
+#     mass_branch = 'B_ConstJpsi_M_1',
+#   log:
+#     'output/log/mass_fit_singlemassbin/{year}/{mode}/{version}.log',
+#   run:
+#     shell(f"""(time\
+#     python {params.script} \
+#     --sample {input.sample} \
+#     --input-params {input.params} \
+#     --output-params {output.params} \
+#     --output-figures {output.plots} \
+#     --mass-bin 'all' \
+#     --sweights {output.root_file} \
+#     --mode {wildcards.mode} \
+#     --version {wildcards.version} \
+#     ) &> {log}""")
+#
+# rule prefit_singlemassbin_bd:
+#   threads: 2
+#   resources:
+#     mem_mb=6000
+#   wildcard_constraints:
+#     mode = 'MC_Bd2JpsiKstar'
+#   input:
+#     sample = lambda wcs: tuples(wcs, weight='lbWeight') #will imply problems then
+#     # root_file = lambda wcs: tuples(wcs, version=f"{wcs.version}".replace('LSB', "").replace("RSB", ""), weight='chopped'),
+#   output:
+#     params = 'output/params/mass_prefit_singlemassbin/{year}/{mode}/{version}.json',
+#     plots = directory('output/figures/mass_prefit_singlemassbin/{year}/{mode}/{version}/')
+#   params:
+#     script = 'selection/sweights/mass_fit/mf_singlemassbin_bd.py',
+#     mass_branch = 'B_ConstJpsi_M_1',
+#   log:
+#     'output/log/mass_prefit_singlemassbin/{year}/{mode}/{version}.log',
+#   run:
+#     shell(f"""(time\
+#       python {params.script} \
+#       --sample {input.sample} \
+#       --output-params {output.params} \
+#       --output-figures {output.plots} \
+#       --mass-bin 'all' \
+#       --mode {wildcards.mode} \
+#       --version {wildcards.version} \
+#     ) &> {log}""")
+#
+# rule fit_singlemassbin_mc_bd:
+#   threads: 2
+#   resources:
+#     mem_mb=6000
+#   wildcard_constraints:
+#     mode = 'MC_Bd2JpsiKstar'
+#   input:
+#     sample = lambda wcs: tuples(wcs, weight='lbWeight'), #will imply problems then
+#     params = 'output/params/mass_prefit_singlemassbin/{year}/{mode}/{version}.json',
+#   output:
+#     params = 'output/params/mass_fit_singlemassbin/{year}/{mode}/{version}.json',
+#     plots = directory('output/figures/mass_fit_singlemassbin/{year}/{mode}/{version}/'),
+#     root_file = SAMPLES+'/{year}/{mode}/{version}_pregbw.root',
+#   params:
+#     script = 'selection/sweights/mass_fit/mf_singlemassbin_bd.py',
+#     mass_model = "cbcalib",
+#     mass_branch = 'B_ConstJpsi_M_1',
+#   log:
+#     'output/log/mass_fit_singlemassbin/{year}/{mode}/{version}.log',
+#   run:
+#     shell(f"""(time\
+#     python {params.script} \
+#     --sample {input.sample} \
+#     --input-params {input.params} \
+#     --output-params {output.params} \
+#     --output-figures {output.plots} \
+#     --mass-bin 'all' \
+#     --sweights {output.root_file} \
+#     --mode {wildcards.mode} \
+#     --version {wildcards.version} \
+#     ) &> {log}""")
+#
+#
+# rule fit_singlemassbin_rd_bd:
+#   threads: 2
+#   resources:
+#     mem_mb=6000
+#   wildcard_constraints:
+#     mode = 'Bd2JpsiKstar'
+#   input:
+#     sample = lambda wcs: tuples(wcs, weight='lbWeight'), #will imply problems then
+#     params = 'output/params/mass_prefit_singlemassbin/{year}/MC_{mode}/{version}.json',
+#   output:
+#     params = 'output/params/mass_fit_singlemassbin/{year}/{mode}/{version}.json',
+#     plots = directory('output/figures/mass_fit_singlemassbin/{year}/{mode}/{version}/'),
+#     root_file = SAMPLES+'/{year}/{mode}/{version}_pregbw.root',
+#   params:
+#     script = 'selection/sweights/mass_fit/mf_singlemassbin_bd.py',
+#     mass_model = "cbcalib",
+#     mass_branch = 'B_ConstJpsi_M_1',
+#   log:
+#     'output/log/mass_fit_singlemassbin/{year}/{mode}/{version}.log',
+#   run:
+#     shell(f"""(time\
+#     python {params.script} \
+#     --sample {input.sample} \
+#     --input-params {input.params} \
+#     --output-params {output.params} \
+#     --output-figures {output.plots} \
+#     --mass-bin 'all' \
+#     --sweights {output.root_file} \
+#     --mode {wildcards.mode} \
+#     --version {wildcards.version} \
+#     ) &> {log}""")
 
 rule sw8_paleros:
   """
@@ -27,13 +213,14 @@ rule sw8_paleros:
   resources:
     mem_mb=6000
   wildcard_constraints:
-    mode = '(Bd2JpsiKstar|Bs2JpsiPhi)', #For the moment only for RD
+    mode = '(MC_)?(Bd2JpsiKstar|Bs2JpsiPhi)(_dG0)?', #For the moment only for RD
   input:
     sample = lambda wcs: tuples(wcs, weight='lbWeight') #will imply problems then
   output:
     plots = directory('output/figures/mass_fitpalero/{year}/{mode}/{version}/'),
     root_file = SAMPLES+'/{year}/{mode}/{version}_pregbw.root',
-    pars = 'output/params/sw8_paleros/{year}/{mode}/{version}.json',
+    pars_biased = 'output/params/sw8_paleros/{year}/{mode}/{version}_biased.json',
+    pars_unbiased = 'output/params/sw8_paleros/{year}/{mode}/{version}_unbiased.json',
   params:
     script = 'selection/sweights/mass_fit/bkg_substraction.py',
     mass_model = "dgauss",
@@ -49,7 +236,8 @@ rule sw8_paleros:
         --mass-branch {params.mass_branch} \
         --mass-model {params.mass_model} \
         --mass-weight {params.mass_weight} \
-        --output-params {output.pars} \
+        --output-params-biased {output.pars_biased} \
+        --output-params-unbiased {output.pars_unbiased} \
         --output-figures {output.plots} \
         --mode {wildcards.mode} \
         --version {wildcards.version} \
@@ -64,7 +252,7 @@ rule gb_weighting:
     mode = "MC_(Bs2JpsiPhi|Bd2JpsiKstar)(_dG0)?"
   input:
     # original = lambda wcs: tuples(wcs, weight='ready'),
-    original = lambda wcs: tuples(wcs, version=f'{wcs.version}'.split('@')[0].split('~')[0].split('bdt')[0], year=f'{wcs.year}', weight=f'ready'),
+    original = lambda wcs: tuples(wcs, version=f'{wcs.version}'.split('@')[0].split('~')[0].split('bdt')[0], year=f'{wcs.year}', weight=f'pregbw'),
     target = lambda wcs: expand(SAMPLES+'/{year}/{mode}/{version}_pregbw.root',
                                year = wcs.year,
                                mode = wcs.mode.replace("MC_", "").replace("_dG0",""),
