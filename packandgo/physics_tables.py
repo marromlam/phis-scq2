@@ -2,7 +2,7 @@ DESCRIPTION = """
   hey there
 """
 
-from analysis.utils.plot import mode_tex
+from utils.plot import mode_tex
 from ipanema import Parameters
 import argparse
 import os
@@ -86,14 +86,14 @@ def blend_parameters(*p, p0=False, params=True, pvalue=False, chisqr=False, verb
 # "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB1_run2_run2_simul6.json"
 #
 #
-pp = [
-"output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_simul6.json",
-#"output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_simul3.json",
-"output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB1_run2_run2_simul6.json",
-"output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB2_run2_run2_simul6.json",
-"output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB3_run2_run2_simul6.json",
-"output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB4_run2_run2_simul6.json"
-]
+# pp = [
+# "output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_simul6.json",
+# #"output/params/physics_params/run2/Bs2JpsiPhi/v0r5_run2_run2_simul3.json",
+# "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB1_run2_run2_simul6.json",
+# "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB2_run2_run2_simul6.json",
+# "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB3_run2_run2_simul6.json",
+# "output/params/physics_params/run2/Bs2JpsiPhi/v0r5@cutpTB4_run2_run2_simul6.json"
+# ]
 
 lp = ['pPlon', 'lPlon', 'DGsd', "DGs", "DM", "fPper", "fPlon", "dPpar", "dPper"]
 
