@@ -127,8 +127,11 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     mass_cut = f"{mass_branch} >= {mLL} & {mass_branch} <= {mUL}"
 
     # mass cut and trigger cut
-    cut =  f"({trigger}) & ({cut})" if trigger else cut
-    current_cut = mass_cut if not cut else f"({mass_cut}) & ({cut})"
+    # cut =  f"({trigger}) & ({cut})" if trigger else cut
+    # current_cut = mass_cut if not cut else f"({mass_cut}) & ({cut})"
+
+    current_cut = trigger_scissors(trigger, cuts_and(mass_cut, cut))
+    print(current_cut)
 
     # Allocate the sample variables {{{
     verbose=True
@@ -417,21 +420,21 @@ def mass_fitter(odf, mass_range=False, mass_branch="B_ConstJpsi_M_1",
     axplot.legend(loc="upper left")
     if figs:
         os.makedirs(figs, exist_ok=True)
-        n_files = len(next(os.walk(figs))[2]) 
-        if not n_files:
-            fig.savefig(os.path.join(figs, "fit.pdf"))
-        else:
-            fig.savefig(os.path.join(figs, f"fit{n_files+1}.pdf"))
+        # n_files = False
+        # if not n_files:
+        fig.savefig(os.path.join(figs, f"fit_{trigger}.pdf"))
+        # else:
+        #     fig.savefig(os.path.join(figs, f"fit{n_files+1}.pdf"))
     axplot.set_yscale("log")
     try:
         axplot.set_ylim(1e0, 1.5 * np.max(y))
     except:
         print("Axes were not scaled, because log of zero events")
     if figs:
-        if not n_files:
-            fig.savefig(os.path.join(figs, "logfit.pdf"))
-        else:
-            fig.savefig(os.path.join(figs, f"logfit{n_files+1}.pdf"))
+        # if not n_files:
+        fig.savefig(os.path.join(figs, f"logfit_{trigger}.pdf"))
+        # else:
+        #     fig.savefig(os.path.join(figs, f"logfit{n_files+1}.pdf"))
     plt.close()
 
     # }}}
@@ -476,7 +479,9 @@ if __name__ == '__main__':
                    help='Dataset to fit and get sweights for')
     p.add_argument('--input-params', default=False,
                    help='In case of doing a prefit, provide here parameters')
-    p.add_argument('--output-params',
+    p.add_argument('--output-params-biased',
+                   help='Output mass fit parameters')
+    p.add_argument('--output-params-unbiased',
                    help='Output mass fit parameters')
     p.add_argument('--output-figures',
                    help='Mass fit plots')
@@ -517,9 +522,7 @@ if __name__ == '__main__':
     print(mass_weight)
     cut = False
     is_prefit = False
-    if "tails" in args["output_params"]:
-        cut = "B_BKGCAT == 0 | B_BKGCAT == 10 | B_BKGCAT == 50"
-        is_prefit = True
+
     print("is_prefit =", is_prefit)
     is_prefit = bool(args['override_prefit']) if args['override_prefit'] else is_prefit
     print("is_prefit =", is_prefit)
@@ -536,34 +539,40 @@ if __name__ == '__main__':
       needed_branches += [mass_weight]
     df = uproot.open(sample)["DecayTree"].pandas.df(branches=needed_branches)
         
-    # if args["mode"]=="Bs2JpsiPhi":
-    #   _branches += [mass_weight]
-    #
-    # df = Sample.from_root(sample, branches=_branches).df
-    # print(df.keys())
-    # exit()
-    # df = pd.concat([
-    #         Sample.from_root(sample, branches=_branches).df 
-    #         for sample in args["sample"].split(',')])
-    # [df.eval(f"{k}={v}", inplace=True) for k,v in branches.items()]
-    # df = df[list(branches.keys())]
 
     if 'Bu' in args['mode']:
         mass_range = (5240, 5320)
     elif 'Bd' in args['mode']:
-        mass_range = (5230, 5330)
+        mass_range = (5210, 5350)
     elif 'Bs' in args['mode']:
-        mass_range = (5320, 5420)
+        mass_range = (5200, 5550)
     else:
       mass_range=False
 
     # TODO: maybe in the future we want to split by trigger category
-    pars, sw = mass_fitter(
+
+    
+    # pars, sw = mass_fitter(
+    #     df,
+    #     mass_range=mass_range,  # we compute it from the mass branch range
+    #     mass_branch=args['mass_branch'],  # branch to fit
+    #     mass_weight=mass_weight,  # weight to apply to the likelihood
+    #     trigger=False,  # trigger splitter
+    #     figs=args["output_figures"],  # where to save the fit plots
+    #     model=args["mass_model"],  # mass model to use
+    #     cut=cut,  # extra cuts, if required
+    #     sweights=sweights,  #  whether to comput or not the sWeights
+    #     input_pars=input_pars,  # whether to use prefit tail parameters or not
+    #     verbose=True,  # level of verobisty
+    #     prefit=is_prefit,  # level of verobisty
+    #     mode=args['mode']
+    # )
+    pars_biased, sw_biased = mass_fitter(
         df,
         mass_range=mass_range,  # we compute it from the mass branch range
         mass_branch=args['mass_branch'],  # branch to fit
         mass_weight=mass_weight,  # weight to apply to the likelihood
-        trigger=False,  # trigger splitter
+        trigger="biased",  # trigger splitter
         figs=args["output_figures"],  # where to save the fit plots
         model=args["mass_model"],  # mass model to use
         cut=cut,  # extra cuts, if required
@@ -574,9 +583,37 @@ if __name__ == '__main__':
         mode=args['mode']
     )
 
-    pars.dump(args["output_params"])
-    if sw:
-        df['sw'] = sw[list(sw.keys())[0]]
+    pars_unbiased, sw_unbiased = mass_fitter(
+        df,
+        mass_range=mass_range,  # we compute it from the mass branch range
+        mass_branch=args['mass_branch'],  # branch to fit
+        mass_weight=mass_weight,  # weight to apply to the likelihood
+        trigger="unbiased",  # trigger splitter
+        figs=args["output_figures"],  # where to save the fit plots
+        model=args["mass_model"],  # mass model to use
+        cut=cut,  # extra cuts, if required
+        sweights=sweights,  #  whether to comput or not the sWeights
+        input_pars=input_pars,  # whether to use prefit tail parameters or not
+        verbose=True,  # level of verobisty
+        prefit=is_prefit,  # level of verobisty
+        mode=args['mode']
+    )
+
+    sw = sw_biased[list(sw_biased.keys())[0]] + sw_unbiased[list(sw_unbiased.keys())[0]]
+
+    #For checking:
+    # for i in range(100):
+    #   print(f"sw = {sw[i]}, sw_biased = {sw_biased['fsigBs'][i]}, sw_unbiased = {sw_unbiased['fsigBs'][i]}")
+
+
+    pars_biased.dump(args["output_params_biased"])
+    pars_unbiased.dump(args["output_params_unbiased"])
+    # pars.dump(args["output_params_biased"])
+    # pars.dump(args["output_params_unbiased"])
+    # if sw:
+        # df['sw'] = sw[list(sw.keys())[0]]
+    if sw_biased and sw_unbiased:
+        df['sw'] = sw
         with uproot.recreate(args['sweights']) as f:
             _branches = {}
             for k, v in df.items():
