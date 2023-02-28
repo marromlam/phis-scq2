@@ -1,8 +1,8 @@
 # REWEIGHTING CONF FILE
 # This file contains all reweighings...
 #
-# 
 # Marcos Romero Lamas (mromerol@cern.ch)
+# Ramón Ángel Ruiz Fernández (rruizfer@cern.ch)
 
 
 # GBw8 {{{
@@ -10,13 +10,14 @@
 gbWeight:
   MC_Bs2JpsiPhi: &gbWeight_MC_Bs2JpsiPhi
     # BsMC -> BsRD
-    original: ["sw"]
+    # TODO: Use also sw8 for MC
+    original: ["time/time"]
     target: ["sw"]
-    # variables: ["B_PT", "B_ETA", "nTracks"]
-    variables: ["B_PT", "B_ETA", "nLongTracks"]
-  
-  MC_Bs2JpsiPhi_dG0: 
-    # BsMC -> BsRD
+    variables: ["B_PT", "B_ETA", "nLongTracks", "hplus_TRACK_CHI2NDOF",  "hminus_TRACK_CHI2NDOF", "muplus_TRACK_CHI2NDOF", "muminus_TRACK_CHI2NDOF"]
+    # variables: ["B_PT", "B_ETA", "nLongTracks"]
+
+  MC_Bs2JpsiPhi_dG0:                                           
+    # BsMC -> BsRD                                             
     <<: *gbWeight_MC_Bs2JpsiPhi 
   
   MC_Bs2JpsiKK_Swave: 
@@ -25,10 +26,11 @@ gbWeight:
 
   MC_Bd2JpsiKstar: 
     # BdMC -> BdRD
-    original: ["sw"]
+    # TODO: Use also sw8 for MC
+    original: ["time/time"]
     target: ["sw"]
-    # variables: ["B_PT", "B_ETA", "nTracks"]
-    variables: ["B_PT", "B_ETA", "nLongTracks"]
+    variables: ["B_PT", "B_ETA", "nLongTracks", "hplus_TRACK_CHI2NDOF",  "hminus_TRACK_CHI2NDOF", "muplus_TRACK_CHI2NDOF", "muminus_TRACK_CHI2NDOF"]
+    # variables: ["B_PT", "B_ETA", "nLongTracks"]
 
 
 #}}}
