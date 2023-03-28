@@ -20,6 +20,7 @@ import uproot3 as uproot
 import numpy as np
 import argparse
 from ipanema.tools.misc import get_vars_from_string
+from hep_ml.metrics_utils import ks_2samp_weighted
 
 # TODO: create resimplement this
 from analysis.angular_acceptance.bdtconf_tester import bdtmesh
@@ -66,6 +67,8 @@ def reweight(original, target, original_weight, target_weight,
   target.
   """
   # setup the reweighter
+  print(f"Final Configuration:  n_estimators= {n_estimators}, learning_rate = {learning_rate}, max_depth = {max_depth}, min_samples_leaf = {min_samples_leaf}")
+
   reweighter = GBReweighter(n_estimators=int(n_estimators),
                             learning_rate=float(learning_rate),
                             max_depth=int(max_depth),
@@ -76,8 +79,10 @@ def reweight(original, target, original_weight, target_weight,
                  original_weight=original_weight,
                  target_weight=target_weight)
 
+  
   # predict the weights
   kinWeight = reweighter.predict_weights(original)
+
 
   # use truncation if set, flush to zero
   if int(trunc):
@@ -132,6 +137,7 @@ def kinematic_weighting(original_file, original_treename, original_vars,
     print("NOTE: This is v0r0 tuple, special config is loading")
     config.user['reweightings_per_trigger'] = False
     check_result = True
+
   if config.user['reweightings_per_trigger']:
     TRIGGER = ['biased', 'unbiased']
   else:
@@ -139,18 +145,29 @@ def kinematic_weighting(original_file, original_treename, original_vars,
 
   # Reweighting
   theWeight = np.zeros_like(list(odf.index)).astype(np.float64)
+  
+
+  # GBW8 Configuration in selection: Not used here :
+  # if "gbWeight" in weight_set:
+  #     n_estimators = 60
+  #     learning_rate = 0.1
+  #     max_depth = 6
+  #     min_samples_leaf = 1000
+
   for trig in TRIGGER:
-    if config.user['reweightings_per_trigger']:
+    if len(TRIGGER)>1:
       codf = odf.query(trigger_scissors(trig))  # .sample(frac=1)
       ctdf = tdf.query(trigger_scissors(trig))  # .sample(frac=1)
     else:
       codf = odf  # .sample(frac=1)  # .reset_index(drop=True)
       ctdf = tdf  # .sample(frac=1)  # .reset_index(drop=True)
+
     cw = reweight(codf.get(original_vars), ctdf.get(target_vars),
                   codf.eval(original_weight), ctdf.eval(target_weight),
                   n_estimators, learning_rate, max_depth,
                   min_samples_leaf, trunc)
     theWeight[list(codf.index)] = cw
+
   odf[weight_set] = theWeight
 
   # Check maximum difference wrt. to the kinWeight variable in the tuple
@@ -158,8 +175,19 @@ def kinematic_weighting(original_file, original_treename, original_vars,
     print("Max. diff. wrt. Simon:",
           np.max(odf['kinWeight'] - odf[weight_set]))
 
+  #Kolmogorov-test
+  probs = []
+  for var in original_vars:
+    _prob = ks_2samp_weighted(odf.get(var), tdf.get(var),
+                              weights1=odf.eval(f"{original_weight}*{weight_set}"),
+                              weights2=tdf.eval(target_weight))
+    probs.append(_prob)
+
+  print(f" * GB-weighting is done", "\n", f"  KS test : {probs}")
+
   print('Final dataframe of weights')
   print(odf[get_vars_from_string(original_weight) + [weight_set]])
+
 
   # Save weights to file
   print(f'Writing to {output_file}')
@@ -215,6 +243,18 @@ if __name__ == '__main__':
 
   # change bdt according to filename, if applies
   bdtconfig = timeacc['bdtconfig']
+  version = args['version']
+  # if "v5r0" in args['version']:
+  #   if "MC_Bs2JpsiPhi" in args['mode']:
+  #     args["target_weight"] = "sw"
+  #     args["original_weight"] = "sw_p2vv*polWeight*pdfWeight"
+  #   elif "MC_Bd2JpsiKstar" in args['mode']:
+  #     args["target_weight"] = "sw*kbsWeight"
+  #     args["original_weight"] = "sw*polWeight*pdfWeight"
+  #   elif "Bd2JpsiKstar" in args['mode']:
+  #     args["original_weight"] = "sw"
+  #     args["target_weight"] = "sw"
+
   if 'bdt' in args['version'].split('@')[0]:
     bdtconfig = args['version'].split('@')[0].split('~')[0].split('bdt')[1]
     bdtconfig = int(bdtconfig)
