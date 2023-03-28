@@ -40,6 +40,11 @@ if __name__ == "__main__":
   out_path = args['output']
   linker = args['linker']
   repo = args['repo']
+  
+  mc = any(x in version for x in ["fake", "gene", "reco"])
+
+  if not mc:
+    version = "v4r0"
 
   if version in ('v0r0', 'v0r1', 'v0r2', 'v0r3', 'v0r4'):
     printsec("Plugging old time resolution")
@@ -64,12 +69,20 @@ if __name__ == "__main__":
         surname = 'pT2'
       elif 'pT4' in args['version']:
         surname = 'pT2'
+
+      if mc:
+        surname = 'mc_signal'
+
       _timeres = hjson.load(open(linker, "r"))[timeres][1].format(surname=surname)
 
     # cook local and remote paths
     tmp_path = out_path.replace('output', 'tmp')
     tmp_path = os.path.dirname(tmp_path)
+
     git_path = f"fitinputs/{version}/time_resolution/{year}"
+    if mc:
+      git_path = f"fitinputs/v4r0/time_resolution/{year}"
+
     os.makedirs(tmp_path, exist_ok=True)
 
     print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}')
@@ -77,6 +90,7 @@ if __name__ == "__main__":
 
     print(f"Loading Time Resolution {year}")
     rawd = hjson.load(open(f"{tmp_path}/{_timeres}", 'r'))['TimeResParameters']
+    
     outd = Parameters.load("analysis/params/time_resolution/Bs2JpsiPhi/none.json")
 
     # parse parameters
@@ -85,6 +99,7 @@ if __name__ == "__main__":
     for i, par in enumerate(list(outd.keys())):
       what = par.split('_')[-1]
       outd[par].correl = {}
+      
       for ii, _ in enumerate(list(rawd)):
         if rawd[ii]['Name'] == 'mu':
           outd[par].set(value=rawd[ii]['Value'], stdev=rawd[ii]['Error'])
