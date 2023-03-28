@@ -34,6 +34,9 @@ badjanak.config['fast_integral'] = 0
 # PDF weighting {{{
 
 def pdf_weighting(data, target_params, original_params, mode):
+  #TODO: Add some information for Swave (csps are needed) look for example
+  #dg0 function in case you need the time acc. from this,
+
   # Modify flags, compile model and get kernels
   if mode in ("MC_Bd2JpsiKstar"):
     badjanak.config["mHH"] = [826, 861, 896, 931, 966]
@@ -119,9 +122,16 @@ def dg0_weighting(data, target_params, original_params, mode):
   # Compute!
   original_params = Parameters.load(original_params)
   target_params = Parameters.load(target_params)
-  cross_rate(vars_d,pdf_d,**original_params.valuesdict(),tLL=0.3,tUL=15.0);
-  original_pdf_h = pdf_d.get()
-  cross_rate(vars_d,pdf_d,**target_params.valuesdict(),tLL=0.3,tUL=15.0);
+  if "Swave" in mode:
+    #TODO: Check if they are needed the csps, if so do more generic the loading
+    csp = Parameters.load("/scratch49/ramon.ruiz/phis-scq/output/params/csp_factors/2016/Bs2JpsiPhi/v5r4@LcosK_vgc.json")
+    cross_rate(vars_d,pdf_d,**original_params.valuesdict(), **csp.valuesdict() ,tLL=0.3,tUL=15.0);
+    original_pdf_h = pdf_d.get()
+    cross_rate(vars_d,pdf_d,**target_params.valuesdict(), **csp.valuesdict() ,tLL=0.3,tUL=15.0);
+  else:
+    cross_rate(vars_d,pdf_d,**original_params.valuesdict(),tLL=0.3,tUL=15.0);
+    original_pdf_h = pdf_d.get()
+    cross_rate(vars_d,pdf_d,**target_params.valuesdict(),tLL=0.3,tUL=15.0);
   target_pdf_h = pdf_d.get()
   np.seterr(divide='ignore', invalid='ignore')                 # remove warnings
   dg0Weight = np.nan_to_num(original_pdf_h/target_pdf_h)
@@ -158,8 +168,19 @@ if __name__ == '__main__':
   oparams = args['original_params']
   rfile = args['output_file']
 
+  print(oparams)
+  print(tparams)
+
   # check for dg0 string in output_file name, so derive what to do
   weight = 'dg0Weight' if 'dg0Weight' in rfile else 'pdfWeight'
+
+  # if ("reco2" in args["input_file"]) and ("MC_Bs2JpsiKK_Swave" in args["mode"]):
+  if (weight=='dg0Weight') and ("MC_Bs2JpsiKK_Swave" in args["mode"]):
+    tparams = args['target_params']
+    oparams = args['target_params'].replace('.json', '_dG0.json')
+
+  print(f"Original Parameters: {oparams}")
+  print(f"Target Parameters: {tparams}")
 
   # add weight to dataframe
   print(f'Loading {ifile}')
