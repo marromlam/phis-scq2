@@ -28,6 +28,7 @@ rule time_resolution_offset:
     from ipanema import Parameters
     mode = f"{wildcards.mode}"
     year = f"{wildcards.year}"
+    version = f"{wildcards.version}"
     pars = Parameters.load(f"analysis/params/time_resolution/{mode}/none.json")
     output_file = f"{output}"
 
@@ -51,6 +52,14 @@ rule time_resolution_offset:
     if not "v0r0" in f"{wildcards.version}":
         if mode in meson.keys():
             pars['mu'].set(value=1e-3 * meson[mode][year])
+        #Waring if we have Bd also w/ Fakeground we have to change this
+        if (mode=="Bs2JpsiPhi") and ("fake" in version):
+            pars['mu'].set(value=0.0)
+        #TODO fix this
+        if (mode=="Bs2JpsiPhi") and ("gene" in version):
+            pars['mu'].set(value=0.0)
+        if (mode=="Bs2JpsiPhi") and ("reco" in version):
+            pars['mu'].set(value=0.0)
     pars.dump(output_file)
 
 # }}}
@@ -78,7 +87,7 @@ rule time_resolution_from_git:
     python analysis/time_resolution/download_from_git.py\
     --year {wildcards.year}\
     --mode {wildcards.mode}\
-    --version v4r0\
+    --version {wildcards.version}\
     --timeres {wildcards.timeres}\
     --output {output}\
     --repo {params.repo}\
