@@ -190,6 +190,7 @@ all_branches:
     "B_BKGCAT"                 :  "B_BKGCAT"
     "B_ID_GenLvl"                     :  "B_ID_GenLvl"
     "hminus_PIDK"                     :  "hminus_PIDK"
+    "hplus_PIDK_corr"                :  "hplus_PIDK_corr"
     "hminus_PIDK_corr"                :  "hminus_PIDK_corr"
     "gb_weights"                      :  "gb_weights"
 
@@ -224,6 +225,7 @@ all_branches:
     "B_BKGCAT"                 :  "B_BKGCAT"
     "B_ID_GenLvl"                     :  "B_ID_GenLvl"
     "hminus_PIDK"                     :  "hminus_PIDK"
+    "hplus_PIDK_corr"                :  "hplus_PIDK_corr"
     "hminus_PIDK_corr"                :  "hminus_PIDK_corr"
     "gb_weights"                      :  "gb_weights"
 
