@@ -191,6 +191,8 @@ def get_angular_acceptance(mc, tLL, tUL, kkpWeight=False):
   # compute angular acceptance
   if 'Bs2Jpsi' in MODE:
     ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict(), tLL=tLL, tUL=tUL)
+  elif 'Swave' in MODE:
+    ans = badjanak.get_angular_acceptance_weights(mc.true, mc.reco, weight, **mc.params.valuesdict(),**mc.csp.valuesdict(), tLL=tLL, tUL=tUL)
   else:
     ans = badjanak.get_angular_acceptance_weights_Bd(mc.true, mc.reco, weight, **mc.params.valuesdict(), tLL=tLL, tUL=tUL)
 
@@ -215,8 +217,11 @@ def fcn_data(parameters, data, tLL, tUL):
 
   for dy in data.values():
     for dt in dy.values():
-      badjanak_gamma5(dt.data, dt.lkhd, pars_dict, **dt.timeacc.valuesdict(),
-                      **dt.csp.valuesdict(), **dt.angacc.valuesdict(),
+      badjanak_gamma5(dt.data, dt.lkhd, pars_dict, 
+                      **dt.timeacc.valuesdict(),
+                      **dt.angacc.valuesdict(), 
+                      **dt.resolution.valuesdict(),
+                      **dt.csp.valuesdict(), 
                       tLL=tLL, tUL=tUL, BLOCK_SIZE=128)
       chi2.append(-2.0 * (ristra.log(dt.lkhd) * dt.weight).get())
 
@@ -283,11 +288,11 @@ def do_fit(tLL, tUL, verbose=False):
   # start where we left
   for v in pars.values():
     v.init = v.value
-
+  print(pars)
   # do the fit
   result = optimize(fcn_data, method='minuit', params=pars,
                     fcn_kwgs=dict(data=data, tLL=tLL, tUL=tUL), verbose=True, timeit=True,
-                    tol=0.05, strategy=2)
+                    tol=0.5, strategy=1)
 
   # print fit results
   print(result)  # parameters are not blinded, so we dont print the result
@@ -335,6 +340,8 @@ def do_pdf_weighting(tLL, tUL, verbose):
         print(f' * Calculating pdfWeight for {MODE}-{y}-{t} sample')
       j = len(v.pdfWeight.keys()) + 1
       # v.pdfWeight[i] = pdf_reweighting(v, v.params, pars+data[y][t].csp)
+      if "Swave" in MODE:
+        v.params = v.params + v.csp
       v.pdfWeight[j] = compute_pdf_ratio_weight(v, v.params, pars + data[y][t].csp, tLL=tLL, tUL=tUL)
   if verbose:
     for y, dy in mc.items():  #  loop over years
@@ -621,8 +628,11 @@ if __name__ == '__main__':
   if 'Bs2Jpsi' in MODE:
     def badjanak_gamma5(data, lkhd, pars, **kwargs):
       return badjanak.delta_gamma5_data(data, lkhd, **pars, **kwargs,
-                                        use_timeacc=2,
-                                        use_timeres=0, set_tagging=0)
+                                        use_fk=1,
+                                        use_timeacc=1,
+                                        use_angacc=1,
+                                        use_timeres=1, 
+                                        set_tagging=0)
   else:
     def badjanak_gamma5(data, lkhd, pars, **kwargs):
       return badjanak.delta_gamma5_data_Bd(data, lkhd, **pars, **kwargs,
@@ -633,7 +643,7 @@ if __name__ == '__main__':
   #initialize(os.environ['IPANEMA_BACKEND'], 1 if YEARS in (2015,2017) else -1)
 
   # Prepare the cuts -----------------------------------------------------------
-  CUT = f'gentime>={tLL} & gentime<={tUL}'
+  CUT = f'time>={tLL} & time<={tUL}'
 
   # Samples as lists, mc and data
   samples_mc = args['sample_mc'].split(',')
@@ -675,13 +685,13 @@ if __name__ == '__main__':
   printsec('Loading samples')
   global mc, data, weight_rd, weight_mc
   # MC reconstructed and generator level variable names
-  reco = ['cosK', 'cosL', 'hphi', 'gentime']
+  reco = ['cosK', 'cosL', 'hphi', 'time']
   true = ['gencosK', 'gencosL', 'genhphi', 'gentime']
-  real = ['cosK', 'cosL', 'hphi', 'gentime']
+  real = ['cosK', 'cosL', 'hphi', 'time']
   if 'Bs2Jpsi' in MODE:
     reco += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
     true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
-    real += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*mHH', '0*mHH']
+    real += ['mHH', 'sigmat', 'genidB', 'genidB', '0*mHH', '0*mHH']
   elif 'Bd2JpsiKstar' in MODE:
     reco += ['mHH', '0*sigmat', 'idB', 'idB', '0*time', '0*time']
     true += ['mHH', '0*sigmat', 'idB', 'idB', '0*time', '0*time']
@@ -704,6 +714,8 @@ if __name__ == '__main__':
   HAS_SWAVE = False
   if "Swave" in MODE:
     HAS_SWAVE = True
+  if "reco2" in VERSION:
+    HAS_SWAVE = True
 
   print(f"Using weight = {weight_mc} for MC")
   print(f"Using weight = {weight_rd} for data")
@@ -714,10 +726,12 @@ if __name__ == '__main__':
 
   for i, y in enumerate(YEARS):
     mc[y] = {}
+    csp = Parameters.load(csp_factors[i])
     for t in ['biased', 'unbiased']:
       # load sample in two categories
       mc[y][t] = Sample.from_root(samples_mc[i], share=SHARE)
       mc[y][t].name = f"{MODE}-{y}-{t}"
+      mc[y][t].csp = csp.build(csp, csp.find('CSP.*'))
 
       # associate generator level params
       mc[y][t].assoc_params(params_mc[i])
