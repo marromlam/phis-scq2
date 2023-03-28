@@ -111,10 +111,10 @@ def mass_fitter(odf, mass_range=False, mass_branch='B_ConstJpsi_M_1',
   else:
     pars = ipanema.Parameters()
     # Create common set of parameters (all models must have and use)
-    pars.add(dict(name='nsigBd', value=0.99, min=0.2,
+    pars.add(dict(name='nsigBd', value=0.99, min=0.4,
              max=1, free=True, latex=r'N_{B_d}'))
-    pars.add(dict(name='muBd', value=5280, min=5200,
-             max=5500, latex=r'\mu_{B_d}'))
+    pars.add(dict(name='muBd', value=5280, min=5220,
+             max=5320, latex=r'\mu_{B_d}'))
     pars.add(dict(name='sigmaBd', value=11, min=5,
              max=100, free=True, latex=r'\sigma_{B_d}'))
     if 'ipatia' in model:
@@ -313,6 +313,7 @@ if __name__ == '__main__':
     branches += ['B_BKGCAT']
 
   sample = Sample.from_root(args['sample'], branches=branches)
+  # print(sample.df[["hlt1b", "B_ConstJpsi_M_1"]])
 
   mass_range = (5210, 5350)
   if args['mass_bin']:
@@ -343,7 +344,9 @@ if __name__ == '__main__':
                          sweights=sweights,
                          input_pars=input_pars, verbose=False)
   pars.dump(args['output_params'])
+
   if sw:
+    # print(sw["nsigBd"][0:40])
     np.save(args['sweights'], sw)
 
 # }}}
