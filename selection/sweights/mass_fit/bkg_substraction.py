@@ -513,13 +513,7 @@ if __name__ == '__main__':
 
     mass_branch = args['mass_branch']
 
-    if (args["mass_weight"]) and ("Bs" in args["mode"]) and ("MC" not in args["mode"]):
-        mass_weight = args["mass_weight"]
-    else:
-        mass_weight = f"{mass_branch}/{mass_branch}"
 
-    # mass_weight = f"{mass_branch}/{mass_branch}"
-    print(mass_weight)
     cut = False
     is_prefit = False
 
@@ -535,8 +529,14 @@ if __name__ == '__main__':
     in_file = uproot.open(sample)["DecayTree"]
     in_file = [i.decode() for i in in_file.keys()]
     needed_branches = [b for b in branches if b in in_file]
-    if args["mode"]=="Bs2JpsiPhi":
-      needed_branches += [mass_weight]
+    
+    is_mc = any(x in version for x in ["fake", "gene", "reco"]) 
+    if (args["mass_weight"]) and ("Bs2JpsiPhi" == args["mode"]) and (not is_mc):
+        mass_weight = args["mass_weight"]
+        needed_branches += [mass_weight]
+    else:
+        mass_weight = f"{mass_branch}/{mass_branch}"
+
     df = uproot.open(sample)["DecayTree"].pandas.df(branches=needed_branches)
         
 
@@ -551,7 +551,7 @@ if __name__ == '__main__':
 
     # TODO: maybe in the future we want to split by trigger category
 
-    
+     
     # pars, sw = mass_fitter(
     #     df,
     #     mass_range=mass_range,  # we compute it from the mass branch range
