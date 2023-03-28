@@ -3,8 +3,8 @@ DESCRIPTION = """
 """
 
 
-__author__ = ['Marcos Romero Lamas']
-__email__ = ['mromerol@cern.ch']
+__author__ = ['Marcos Romero Lamas', 'Ramón Ángel Ruiz Fernandez']
+__email__ = ['mromerol@cern.ch', 'rruizfer@CERN.CH']
 __all__ = []
 
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
   linker = args['linker']
   repo = args['repo']
   
-  if "v5r" not in version:
+  if ("v5r" not in version) and ("fake" not in version):
     version = "v4r0"
 
   if version in ('v0r0', 'v0r1', 'v0r2', 'v0r3', 'v0r4'):
@@ -51,6 +51,30 @@ if __name__ == "__main__":
     print(params)
     params.dump(out_path)
     print(f"Dumping parameters to {out_path}")
+
+  #Warning take Calibrations from Ramon repository
+  elif "fake" in version:
+    if year in ["2015", "2016"]:
+        y = "201516"
+    else:
+        y = year
+    # ss_path = f"/scratch48/ramon.ruiz/Inclusive_Tagging/tagging-for-phi_s/output/params/MC_cal/MC_Bs2DsPi/{y}/v4r9_gbw_nodeltas.json"
+    # os_path = f"/scratch48/ramon.ruiz/Inclusive_Tagging/tagging-for-phi_s/output/params/MC_cal/MC_Bu2JpsiKplus/{y}/v4r9_gbw_nodeltas.json"
+    ss_path = f"/scratch48/ramon.ruiz/Inclusive_Tagging/tagging-for-phi_s/output/params/MC_cal/MC_Bs2DsPi/{y}/v4r9_gbw_full.json"
+    os_path = f"/scratch48/ramon.ruiz/Inclusive_Tagging/tagging-for-phi_s/output/params/MC_cal/MC_Bu2JpsiKplus/{y}/v4r9_gbw_full.json"
+    params = Parameters()
+    for tag,_ in zip(["ss", "os"], [ss_path, os_path]):
+        _pars = Parameters.load(_)
+        for key in _pars.keys():
+            if "eta_b" in key:
+              params[f"eta_{tag}"] = _pars[key]
+            else:
+              params[f"{key}_{tag}"] = _pars[key]
+    print(params)
+    params.dump(out_path)
+    print(f"Dumping parameters to {out_path}")
+    
+
   else:
     printsec("Get flavor tagging parameters from Bs2JpsiPhi-FullRun2 repository")
 
@@ -66,6 +90,9 @@ if __name__ == "__main__":
     os.makedirs(tmp_path, exist_ok=True)
     
     print(version)
+    # if ("peilian" in flavor) and ('v5r' in version or 'v4m0' in version or 'rm1' in version or 'rm2' in version):
+
+    #Take -> Last calibration that takes into account also systematic unc.
     if ("peilian" in flavor) and ('v5r' in version):
       if "2015" in year:
         year = "2016"
@@ -97,7 +124,8 @@ if __name__ == "__main__":
 
             elif (rawd[_i]['Name'][:6] == f'{par[:3]}_'+f'{par[4:]}'.upper()) and (year in rawd[_i]["Name"]):
               outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
-
+         
+        #TODO: It is not in the json we have to hardcoded it :(
         outd["eta_os"].set(value=0.3546, stdev=0.)
         outd["eta_ss"].set(value=0.42388, stdev=0.)
 
