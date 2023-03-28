@@ -76,6 +76,8 @@ if __name__ == '__main__':
   else:
     time = 'time'
 
+  print(f"time used {time}")
+
   
 
   # setting upper and lower time limits 
@@ -133,6 +135,15 @@ if __name__ == '__main__':
   # Load Monte Carlo samples
   mc = Sample.from_root(args['sample_mc'], share=SHARE, name=MODE)
   mc.assoc_params(args['input_params'])
+  # if "reco2" in args['version']:
+  if "Swave" in args['mode']:
+    #Add CSPs for MC in case we have Swave contribution
+    #TODO: Add this as a requirement of the script -> For the moment Swave not used in baseline
+    #and will continue with this patch
+    csp = Parameters.load("/scratch49/ramon.ruiz/phis-scq/output/params/csp_factors/2015/Bs2JpsiPhi/reco_vgc.json")
+    mc.csp = csp.build(csp, csp.find('CSP.*'))
+
+  print(f"Input params:{args['input_params']}")
   kinWeight = np.zeros_like(list(mc.df.index)).astype(np.float64)
   # Load corresponding data sample
   rd = Sample.from_root(args['sample_data'], share=SHARE, name='data')
@@ -221,10 +232,14 @@ if __name__ == '__main__':
   #     This means compute the kinematic weights using 'mHH','pB' and 'pTB'
   #     variables
   badjanak.get_kernels()
-  if 'Bs2Jpsi' in MODE:
+  if 'Bs2JpsiPhi' in MODE:
     angacc = badjanak.get_angular_acceptance_weights(
         mc.true, mc.reco, mc.weight * ristra.allocate(angWeight),
         **mc.params.valuesdict(), tLL=tLL, tUL=tUL)
+  if 'Swave' in MODE:
+    angacc = badjanak.get_angular_acceptance_weights(
+        mc.true, mc.reco, mc.weight * ristra.allocate(angWeight),
+        **mc.params.valuesdict(), **mc.csp.valuesdict(), tLL=tLL, tUL=tUL)
   elif 'Bd2JpsiKstar' in MODE:
     angacc = badjanak.get_angular_acceptance_weights_Bd(
         mc.true, mc.reco, mc.weight * ristra.allocate(angWeight),
@@ -238,7 +253,7 @@ if __name__ == '__main__':
               'correl': correl, 'free': False,
               'latex': f'w_{i}^{TRIGGER[0]}'})
 
-  print("Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
+  print(f"Corrected angular weights for {MODE}{YEAR}-{TRIGGER} sample are:")
   print(f"{pars}")
 
   
