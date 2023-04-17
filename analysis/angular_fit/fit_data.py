@@ -1,5 +1,5 @@
-__author__ = ['Marcos Romero Lamas']
-__email__ = ['mromerol@cern.ch']
+__author__ = ['Marcos Romero Lamas', 'Ramón Ángel Ruiz Fernandez']
+__email__ = ['mromerol@cern.ch', 'rruizfer@CERN.CH']
 __all__ = []
 
 
@@ -58,10 +58,14 @@ if __name__ == "__main__":
   parser.add_argument('--trigger', help='Year of data-taking')
   parser.add_argument('--blind', default=1, help='Year of data-taking')
   parser.add_argument('--scan', default=False, help='Year of data-taking')
+  parser.add_argument('--gpu', default=1, help='Gpu')
   args = vars(parser.parse_args())
+
 
   if not args['params'] and args['log_likelihood'] and args['input_params']:
     print("Just evaluate likelihood on data and input-params")
+
+  # initialize(config.user['backend'], args['gpu'])
 
   VERSION, SHARE, EVT, MAG, FULLCUT, VAR, BIN = version_guesser(args['version'])
   YEARS = args['year'].split(',')
@@ -109,12 +113,22 @@ if __name__ == "__main__":
 
   branches_to_load = ['hlt1b']
   # Lists of data variables to load and build arrays
-  real = ['cosK', 'cosL', 'hphi', 'time', 'mHH', 'sigmat']
+  if "gene" in args["version"]:
+    real = ['gencosK', 'gencosL', 'genhphi', 'time', 'mHH', 'sigmat']
+  else:
+    real = ['cosK', 'cosL', 'hphi', 'time', 'mHH', 'sigmat']
+  
+  print(f"Version = {args['version']}, real={real}")
   real += ['tagOSdec', 'tagSSdec', 'tagOSeta', 'tagSSeta']
   weight = 'sWeight'
-  # weight = 'sw'
+
   branches_to_load += real
-  branches_to_load += ['sw', 'sWeight', 'lbWeight', 'mB']
+  branches_to_load += ['sWeight']
+
+  # if ("fake" in args["version"]) or ("gene" in args["version"]) or ("reco" in args["version"]):
+  #   branches_to_load += ['sWeight']
+  # else:
+  #   branches_to_load += ['sw', 'sWeight', 'lbWeight', 'mB']
 
   if timeacc_config['use_veloWeight']:
     weight = f'veloWeight*{weight}'
@@ -151,10 +165,18 @@ if __name__ == "__main__":
       tLL, tUL = c['tLL'].value, c['tUL'].value
       knots = np.array(Parameters.build(c, c.fetch('k.*')))
       badjanak.config['knots'] = knots.tolist()
-      # Angular acceptance
-      data[y][t].timeacc = Parameters.build(c, c.fetch('(a|b|c).*'))
-      w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
+
+      #warning Peilian check
+      # data[y][t].timeacc = Parameters.build(c, c.fetch('(a|b|c).*'))
+      pei = Parameters.load(f"/scratch49/ramon.ruiz/phis-scq/acceptances_v4r1/time_acc/{y}_{t}.json")
+      data[y][t].timeacc = pei
+
+      #Warning Peilian check
+      # w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
+      # data[y][t].angacc = Parameters.build(w, w.fetch('w.*'))
+      w = Parameters.load(f"/scratch49/ramon.ruiz/phis-scq/acceptances_v4r1/ang_acc/{y}_{t}.json")
       data[y][t].angacc = Parameters.build(w, w.fetch('w.*'))
+
       # Normalize sWeights per bin
       sw = np.zeros_like(data[y][t].df['time'])
       for ml, mh in zip(mass[:-1], mass[1:]):
@@ -189,14 +211,15 @@ if __name__ == "__main__":
   if 'Poldep' in FIT:
     POLDEP = True
   BLIND = bool(int(args['blind']))
+  if any(x in args["version"] for x in ["fake", "gene", "reco"]):
+    BLIND = False
   TWO_GAMMA = False
   CONSTR = True
-  # CONSTR = False
-  # BLIND = False
+  BC_CONTRIBUTION = True
+
   print("blind:", BLIND)
   print("polalization dependent:", POLDEP)
 
-  # BLIND = False
 
   # Prepare parameters {{{
 
@@ -263,28 +286,29 @@ if __name__ == "__main__":
              latex=r"\phi_{\perp} - \phi_0 \, \mathrm{[rad]}"))
 
   # S wave strong phases
-  for i in range(len(mass_knots) - 1):
-    phase = np.linspace(2.3, -1.2, len(mass_knots) - 1)[i]
-    pars.add(dict(
-        name=f'dSlon{i+1}', value=SWAVE * phase,
-        min=0 if 2 * i < (len(mass_knots) - 1) else -4,
-        max=4 if 2 * i < (len(mass_knots) - 1) else 0,
-        free=SWAVE,
-        latex=rf"\delta_S^{{{i+1}}} - \delta_{{\perp}} \, \mathrm{{[rad]}}"))
+  # for i in range(len(mass_knots) - 1):
+  #   phase = np.linspace(2.3, -1.2, len(mass_knots) - 1)[i]
+  #   pars.add(dict(
+  #       name=f'dSlon{i+1}', value=SWAVE * phase,
+  #       min=0 if 2 * i < (len(mass_knots) - 1) else -4,
+  #       max=4 if 2 * i < (len(mass_knots) - 1) else 0,
+  #       free=SWAVE,
+  #       latex=rf"\delta_S^{{{i+1}}} - \delta_{{\perp}} \, \mathrm{{[rad]}}"))
 
-    # pars.add(dict(name='dSlon1', value=+2.34, min=1.5, max=+4.0,
-    #         free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
-    # pars.add(dict(name='dSlon2', value=+1.64, min=1., max=+3.0,
-    #         free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
-    # pars.add(dict(name='dSlon3', value=+1.09, min=-1.0, max=+2.0,
-    #         free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
-    #
-    # pars.add(dict(name='dSlon4', value=2., min=-3.14, max=+2.14,
-    #         free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
-    # pars.add(dict(name='dSlon5', value=-0.48, min=-3.5, max=+0.5,
-    #         free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
-    # pars.add(dict(name='dSlon6', value=-1.18, min=-2.0, max=-0.0,
-    #         free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
+  # S wave strong phases
+  pars.add(dict(name='dSlon1', value=+2.34, min=0., max=+np.pi,
+            free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon2', value=+1.64, min=-0.5, max=+np.pi,
+            free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon3', value=+1.09, min=0., max=+2.5,
+            free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
+
+  pars.add(dict(name='dSlon4', value=-0.2, min=-1.5, max=+1.5,
+            free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon5', value=-0.48, min=-2.5, max=0.,
+            free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon6', value=-1.18, min=-3., max=+0.,
+            free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
 
 
   # P wave strong phases
@@ -359,17 +383,36 @@ if __name__ == "__main__":
                     value=0.6, min=0.0, max=5.5,
                     free=TWO_GAMMA,
                     latex=r"\Gamma_d \, \mathrm{[ps]}^{-1}"))
-  pars.add(dict(name="DGs", value=(1 - DGZERO) * 0.3, min=0.0, max=1.7,
+
+  if BC_CONTRIBUTION:
+    DGsd_Bc = unc.ufloat(-0.00145, 0.00021)
+    DGs_Bc = unc.ufloat(-0.00168, 0.00068)
+    pars.add(dict(name="n_Bc", value=0., 
+						free=True))
+    pars.add(dict(name="DGsd_Bs", value=0, min=-0.5, max=0.5,
+						free=True,
+				   ))
+
+    pars.add(dict(name="DGs_Bs", value=0, min=-0.5, max=0.5,
+						free=True,
+            blindstr="BsDGsFullRun2",
+            blind=BLIND, blindscale=1.0, blindengine="root"))
+
+    pars.add(dict(name="DGs",
+						formula = f"DGs_Bs + {DGs_Bc.n} + {DGs_Bc.s}*n_Bc"
+				    ))
+    pars.add(dict(name="DGsd",
+						formula=f"DGsd_Bs + {DGsd_Bc.n} + {DGsd_Bc.s}*n_Bc"
+          ))
+  else:
+    pars.add(dict(name="DGs", value=(1 - DGZERO) * 0.3, min=0.0, max=1.7,
                 free=1 - DGZERO,
                 latex=r"\Delta\Gamma_s \, \mathrm{[ps^{-1}]}",
                 blindstr="BsDGsFullRun2",
                 blind=BLIND, blindscale=1.0, blindengine="root"))
-  pars.add(dict(name="DGsd", value=0.03 * 0, min=-0.5, max=0.5,
+    pars.add(dict(name="DGsd", value=0.03 * 0, min=-0.5, max=0.5,
                 free=True,
                 latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps^{-1}]}"))
-  # pars.add(dict(name="Gs", value=0.03 * 0, min=-5.5, max=5.5,
-  #               free=True,
-  #               latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps^{-1}]}"))
   pars.add(dict(name="DM", value=17.757, min=15.0, max=20.0,
                 free=True,
                 latex=r"\Delta m_s \, \mathrm{[ps^{-1}]}"))
@@ -434,6 +477,7 @@ if __name__ == "__main__":
                   value=data[str(year)][TRIGGER[0]].flavor['eta_os'].value,
                   stdev=data[str(year)][TRIGGER[0]].flavor['eta_os'].stdev,
                   free=False))
+
       pars.add(dict(name=f"eta_ss{syear}",
                   value=data[str(year)][TRIGGER[0]].flavor['eta_ss'].value,
                   stdev=data[str(year)][TRIGGER[0]].flavor['eta_ss'].stdev,
@@ -479,35 +523,70 @@ if __name__ == "__main__":
                   free=CONSTR, min=-0.1, max=0.1,
                   latex=r"\Delta p^{\rm SS}_{1}"))
   print(pars)
+  
 
+  # if any(x in args["version"] for x in ["fake", "gene", "reco"]):
+  #   os_corr = np.array([
+	 #  [    1.00 ,  0.143,    0.,   0.,   0.,   0., -0.0025, -0.0027,       0.,      0.,        0.,     0.],
+  #     [    0.143,    1.0,    0.,   0.,   0.,   0., -0.0028, 0.00031,       0.,      0.,        0.,     0.],
+  #     [       0.,     0.,  1.0,  0.14,   0.,   0.,      0.,      0.,   0.0013, -0.0031,        0.,     0.],
+  #     [       0.,     0.,  0.14,  1.0,   0.,   0.,      0.,      0.,  -0.0031,  0.0048,        0.,     0.],
+  #     [       0.,     0.,    0.,   0.,  1.0, 0.14,      0.,      0.,       0.,       0.,  -0.0007, -0.0044],
+  #     [       0.,     0.,    0.,   0.,  0.14,  1.,      0.,      0.,       0.,       0.,  -0.0044,  0.0093],
+  #
+  #     [-0.0025,  -0.0028,     0.,      0.,      0.,      0.,    1., 0.143,     0.,     0.,    0.,    0.],
+  #     [-0.0027, -0.00031,     0.,      0.,      0.,      0., 0.143,    1.,     0.,     0.,    0.,    0.],
+  #     [     0.,       0., 0.0013, -0.0031,      0.,      0.,     0.,   0.,     1.,  0.141,    0.,    0.],
+  #     [     0.,       0.,  0.0031, 0.0048,      0.,      0.,     0.,   0.,  0.141,     1.,    0.,    0.],
+  #     [     0.,       0.,   0.,        0., -0.0007, -0.0044,     0.,   0.,     0.,     0.,    1., 0.143],
+  #     [     0.,       0.,   0.,        0., -0.0044,  0.0093,     0.,   0.,     0.,     0., 0.143,    1.],
+  #
+	 #  ])
+  #   ss_corr = np.array([
+	 #  [    1.00 ,  0.076,     0.,    0.,    0.,    0.,-0.0056,  0.0055,        0.,    0.,     0.,     0.],
+	 #  [    0.076,    1.0,     0.,    0.,    0.,    0., 0.0055,  -0.014,        0.,    0.,     0.,     0.],
+  #     [       0.,     0.,    1.0, 0.074,    0.,    0.,     0.,       0., -0.0072, 0.0084,     0.,     0.],
+  #     [       0.,     0.,  0.074,   1.0,    0.,    0.,     0.,       0.,  0.0084, -0.031,     0.,     0.],
+  #     [       0.,     0.,     0.,    0.,   1.0, 0.078,     0.,       0.,        0.,   0., -0.010, 0.0015],
+  #     [       0.,     0.,     0.,    0., 0.078,    1.,     0.,       0.,        0.,    0., 0.0015, -0.012],
+  #
+  #     [-0.0056, 0.0055,       0.,     0.,     0.,     0.,     1., 0.076,    0.,    0.,    0.,    0.],
+  #     [ 0.0055, -0.014,       0.,     0.,     0.,     0.,  0.076,    1.,    0.,    0.,    0.,    0.],
+  #     [     0.,      0., -0.0072, 0.0084,     0.,     0.,     0.,    0.,    1., 0.074,    0.,    0.],
+  #     [     0.,      0.,  0.0084, -0.031,     0.,     0.,     0.,    0., 0.074,    1.,    0.,    0.],
+  #     [     0.,      0.,      0.,     0., -0.010, 0.0015,     0.,    0.,    0.,    0.,    1., 0.078],
+  #     [     0.,      0.,      0.,     0.,  0.0015, -0.012,     0.,   0.,    0.,    0., 0.078,     1.],
+	 #  ])
+  # else:
   os_corr = np.array([
-	[    1.00, 0.03, 0.14,-0.00, 0.30,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
-	[    0.03, 1.00,-0.00, 0.65,-0.00, 0.35, 0.00, 0.00, 0.00,-0.00,-0.00,-0.00 ],
-	[    0.14,-0.00, 1.00, 0.05, 0.10,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
-	[   -0.00, 0.65, 0.05, 1.00,-0.00, 0.29, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
-	[    0.30,-0.00, 0.10,-0.00, 1.00, 0.04, 0.00, 0.00,-0.00,-0.00, 0.00,-0.00 ],
-	[   -0.00, 0.35,-0.00, 0.29, 0.04, 1.00, 0.00,-0.00, 0.00, 0.00, 0.00,-0.00 ],
-	[    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00, 0.12, 0.00, 0.00, 0.00, 0.00 ],
-	[    0.00, 0.00, 0.00, 0.00, 0.00,-0.00, 0.12, 1.00,-0.00,-0.00,-0.00,-0.00 ],
-	[    0.00, 0.00, 0.00, 0.00,-0.00, 0.00, 0.00,-0.00, 1.00, 0.14,-0.00,-0.00 ],
-	[    0.00,-0.00, 0.00, 0.00,-0.00, 0.00, 0.00,-0.00, 0.14, 1.00,-0.00,-0.00 ],
-	[    0.00,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00,-0.00, 1.00, 0.14 ],
-	[    0.00,-0.00, 0.00, 0.00,-0.00,-0.00, 0.00,-0.00,-0.00,-0.00, 0.14, 1.00 ]
-	])
+	  [    1.00, 0.03, 0.14,-0.00, 0.30,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
+	  [    0.03, 1.00,-0.00, 0.65,-0.00, 0.35, 0.00, 0.00, 0.00,-0.00,-0.00,-0.00 ],
+	  [    0.14,-0.00, 1.00, 0.05, 0.10,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
+	  [   -0.00, 0.65, 0.05, 1.00,-0.00, 0.29, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ],
+	  [    0.30,-0.00, 0.10,-0.00, 1.00, 0.04, 0.00, 0.00,-0.00,-0.00, 0.00,-0.00 ],
+	  [   -0.00, 0.35,-0.00, 0.29, 0.04, 1.00, 0.00,-0.00, 0.00, 0.00, 0.00,-0.00 ],
+	  [    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00, 0.12, 0.00, 0.00, 0.00, 0.00 ],
+	  [    0.00, 0.00, 0.00, 0.00, 0.00,-0.00, 0.12, 1.00,-0.00,-0.00,-0.00,-0.00 ],
+	  [    0.00, 0.00, 0.00, 0.00,-0.00, 0.00, 0.00,-0.00, 1.00, 0.14,-0.00,-0.00 ],
+	  [    0.00,-0.00, 0.00, 0.00,-0.00, 0.00, 0.00,-0.00, 0.14, 1.00,-0.00,-0.00 ],
+	  [    0.00,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00,-0.00, 1.00, 0.14 ],
+	  [    0.00,-0.00, 0.00, 0.00,-0.00,-0.00, 0.00,-0.00,-0.00,-0.00, 0.14, 1.00 ]
+	  ])
   ss_corr = np.array([
-	[    1.00,-0.03, 0.07,-0.00, 0.09,-0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
-	[   -0.03, 1.00,-0.00, 0.36,-0.00, 0.32,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
-	[    0.07,-0.00, 1.00, 0.04, 0.05,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 0.00 ],
-	[   -0.00, 0.36, 0.04, 1.00,-0.00, 0.19,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
-	[    0.09,-0.00, 0.05,-0.00, 1.00, 0.05, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
-	[   -0.00, 0.32,-0.00, 0.19, 0.05, 1.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
-	[    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 1.00, 0.12, 0.00,-0.00,-0.00,-0.00 ],
-	[    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.12, 1.00, 0.00, 0.00,-0.00,-0.00 ],
-	[    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.00, 0.00, 1.00, 0.13,-0.00, 0.00 ],
-	[    0.00,-0.00,-0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.13, 1.00, 0.00, 0.00 ],
-	[   -0.00,-0.00, 0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 1.00, 0.11 ],
-	[   -0.00, 0.00, 0.00, 0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.00, 0.11, 1.00 ]
-	])
+	  [    1.00,-0.03, 0.07,-0.00, 0.09,-0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
+	  [   -0.03, 1.00,-0.00, 0.36,-0.00, 0.32,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	  [    0.07,-0.00, 1.00, 0.04, 0.05,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 0.00 ],
+	  [   -0.00, 0.36, 0.04, 1.00,-0.00, 0.19,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	  [    0.09,-0.00, 0.05,-0.00, 1.00, 0.05, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
+	  [   -0.00, 0.32,-0.00, 0.19, 0.05, 1.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 1.00, 0.12, 0.00,-0.00,-0.00,-0.00 ],
+	  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.12, 1.00, 0.00, 0.00,-0.00,-0.00 ],
+	  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.00, 0.00, 1.00, 0.13,-0.00, 0.00 ],
+	  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.13, 1.00, 0.00, 0.00 ],
+	  [   -0.00,-0.00, 0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 1.00, 0.11 ],
+	  [   -0.00, 0.00, 0.00, 0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.00, 0.11, 1.00 ]
+	  ])
+
   pars.corr_from_matrix(os_corr,
                         ["p0_os16", "p1_os16", "p0_os17", "p1_os17", "p0_os18",
                          "p1_os18", "dp0_os16", "dp1_os16", "dp0_os17",
@@ -832,16 +911,21 @@ if __name__ == "__main__":
       c = parameters.valuesarray(tag_names_all)
       c0 = np.matrix(c - dt.flavor.valuesarray(tag_names_all2))
       # cov = dt.flavor.cov(tag_names)  # constraint covariance matrix
-      cov = pars.cov(tag_names_all)  # constraint covariance matrix
+      cov = pars.cov(tag_names_all) # constraint covariance matrix
       cnstr = np.dot(np.dot(c0, np.linalg.inv(cov)), c0.T)
       cnstr += len(c0) * np.log(2 * np.pi) + np.log(np.linalg.det(cov))
       cnstr = np.float64(cnstr[0][0])
     else:
       cnstr = 0
 
+    if BC_CONTRIBUTION:
+      bc = parameters["n_Bc"].value**2
+    else:
+      bc = 0
+
     chi2conc = np.concatenate(chi2)
-    # exit()
-    return chi2conc + cnstr / len(chi2conc)
+
+    return chi2conc + (cnstr + bc) / len(chi2conc) 
 
 
   # function without constraining on tagging parameters
@@ -898,7 +982,14 @@ if __name__ == "__main__":
     exit(0)
 
   printsubsec("Simultaneous minimization procedure")
-
+  
+  # if any(x in args["version"] for x in ["fake", "gene", "reco"]):
+  #   result = optimize(cost_function, method=MINER, params=pars,
+  #                   fcn_kwgs={'data': data},
+  #                   verbose=True, timeit=True,  tol=0.5, strategy=1,
+  #                   policy='filter')
+  #
+  # else:
   result = optimize(cost_function, method=MINER, params=pars,
                     fcn_kwgs={'data': data},
                     verbose=True, timeit=True,  # tol=0.05, strategy=2,
@@ -929,10 +1020,10 @@ if __name__ == "__main__":
 
   print("Dump parameters")
   result.params.dump(args['params'])
+  fit_pars = Parameters.clone(result.params)
 
   # if scan_likelihood, then we need to create some contours
   scan_likelihood = args['scan']
-  # scan_likelihood = False
 
   if scan_likelihood != "0":
     print("scanning", scan_likelihood)
@@ -940,48 +1031,45 @@ if __name__ == "__main__":
       result._minuit.draw_mncontour(*scan_likelihood.split('+'),
                                     numpoints=100, nsigma=5)
     else:
+      v = fit_pars[scan_likelihood]
+      nsigma = 3
+      lower_bound = max(v.value - v.stdev*nsigma, v.min)
+      upper_bound = min(v.value + v.stdev*nsigma, v.max)
+      bound = [lower_bound, upper_bound]
+      print(f"Bound of profiling {bound}")
+      #Documentation says that is better to use this stimation of errors
+      #http://piti118.github.io/iminuit/api.html
+      #But it is more slow
+      asym_err = result._minuit.minos(scan_likelihood) 
 
-      v = result.params[scan_likelihood].uvalue
-      print(v)
-      x, y = result._minuit.draw_mnprofile(scan_likelihood, bins=20, bound=3,
-                                           subtract_min=True, band=True,
-                                           text=True)
+      x, y  = result._minuit.draw_mnprofile(scan_likelihood, bins=25, bound=bound,
+                                            subtract_min=True, band=True, text=True
+                                        )
+
       fig, axplot = complot.axes_plot()
-      axplot.plot(x, y, color="C0")  # scan
-      axplot.axvline(v.n,
-                     color="C1", linestyle="-")
+      axplot.plot(x, y, color="C0")  # scan_likelihood
+      axplot.axvline(v.value,
+                        color="black", linestyle="--")
 
-      vmin = None
-      vmax = None
-      if (scan_likelihood, 1) in result._minuit.merrors:
-        vmin = v.n + result._minuit.merrors[(scan_likelihood, -1)]
-        vmax = v.n + result._minuit.merrors[(scan_likelihood, 1)]
-      if scan_likelihood in result._minuit.errors:
-        vmin = v.n - result._minuit.errors[scan_likelihood]
-        vmax = v.n + result._minuit.errors[scan_likelihood]
-
-      plt.axvspan(vmin, vmax, facecolor="C1", alpha=0.4)
-
-      if vmin is None:
-        str_value = f"{v:.2uL}"
-      else:
-        str_value = f"{v:.2uL}".split('\pm')[0]
-        str_value = f"{str_value}_{{{v.n-vmax:.5f}}}^{{+{v.n-vmin:.5f}}}"
+      vmin = v.value + asym_err[scan_likelihood]["lower"]
+      vmax = v.value + asym_err[scan_likelihood]["upper"]
+      plt.axvspan(vmin, vmax, facecolor="gray", alpha=0.4)
+      str_value = f"{v.uvalue:.2uL}".split('\pm')[0]
+      str_value = f"{str_value}_{{{vmin - v.uvalue.n:.5f}}}^{{+{vmax-v.uvalue.n:.5f}}}"
       str_latex = f"{result.params[scan_likelihood].latex}"
       str_units = str_latex.split("\,")[-1].replace("[", "")
       str_units = str_units.replace("]", "")
       str_latex = str_latex.split("\,")[0]
-      print(f"${str_latex} = {str_value}$ ${str_units}$")
+      if str_latex == str_units:
+        str_units = " "
+      axplot.set_ylabel("$-2 \Delta \log L$")
       axplot.set_xlabel(f"${str_latex} = {str_value}$ ${str_units}$")
-      axplot.set_ylabel("$\Delta \log L$")
-      print(result._minuit.merrors)
-    _figure = args['params'].replace('/params', '/figures')
-    _figure = _figure.replace('.json', f'/scans/{scan_likelihood}.pdf')
-    print("Scan saved to:", _figure)
-    os.makedirs(os.path.dirname(_figure), exist_ok=True)
-    # plt.xlim(1.8, 3.5)
-    # plt.ylim(2.7, 3.5)
-    plt.savefig(_figure)
+      axplot.set_xlim(bound[0], bound[1])
+      _figure = args['params'].replace('/params', '/figures')
+      _figure = _figure.replace('.json', f'/scan_likelihoods/{scan_likelihood}.pdf')
+      print("scan_likelihood saved to:", _figure)
+      os.makedirs(os.path.dirname(_figure), exist_ok=True)
+      plt.savefig(_figure)
 
   # }}}
 
