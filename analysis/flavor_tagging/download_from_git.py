@@ -96,10 +96,10 @@ if __name__ == "__main__":
     if ("peilian" in flavor) and ('v5r' in version):
       if "2015" in year:
         year = "2016"
-      git_path = f"fitinputs/v4r0/tagging_calibration/"
+      git_path = f"fitinputs/v4r1/tagging_calibration/"
       outd = Parameters.load("analysis/params/flavor_tagging/Bs2JpsiPhi/none.json")
       for tag in ["OS", "SSK"] :
-        _flavor = f"ExampleCombinationOutputResultSet{tag}-v4r0.json"
+        _flavor = f"ExampleCombinationOutputResultSet{tag}-v4r1.json"
 
         print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}/{_flavor}')
         os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
@@ -129,7 +129,47 @@ if __name__ == "__main__":
         outd["eta_os"].set(value=0.3546, stdev=0.)
         outd["eta_ss"].set(value=0.42388, stdev=0.)
 
+    #Take -> Last calibration that takes into account also systematic unc.
+    if ("ift" in flavor) and ('v5r' in version):
+      if "2015" in year:
+        year = "2016"
+      git_path = f"fitinputs/v4r1/tagging_calibration/"
+      outd = Parameters.load("analysis/params/flavor_tagging/Bs2JpsiPhi/none_ift.json")
+      # for tag in ["OS", "SSK"] :
+      for tag in ["IFT"] :
+        _flavor = f"ExampleCombinationOutputResultSet{tag}-v4r1.json"
+
+        print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}/{_flavor}')
+        os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
+
+        print(f"Loading flavor factors {year}")
+        raw_json = hjson.load(open(f"{tmp_path}/{_flavor}",'r'))
+        rawd = raw_json['ResultSet'][0]["Parameter"]
+  
+        print(f'Parsing parameters to match phis-scq sctructure')
+        for i, par in enumerate(list(outd.keys())):
+          for _i in range(len(rawd)):
+            if (rawd[_i]['Name'][:6] == f'{par[:2]}_'+f'{par[3:]}'.upper()) and (year in rawd[_i]["Name"]):
+              outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
+              outd[par].correl = {}
+              for j in range(0,3):
+                pi = par[:2]; pj = f"p{j}"; tag = par[3:]
+                for k in range(len(rawd)):
+                  if rawd[k]['Name'][:12].lower() == f'rho_{pi}_{pj}_{tag}':
+                    outd[par].correl[f"{pj}_{tag}"] = rawd[k]['Value']
+                  elif rawd[k]['Name'][:12].lower() == f'rho_{pj}_{pi}_{tag}':
+                    outd[par].correl[f"{pj}_{tag}"] = rawd[k]['Value']
+
+            elif (rawd[_i]['Name'][:7] == f'{par[:3]}_'+f'{par[4:]}'.upper()) and (year in rawd[_i]["Name"]):
+              outd[par].set(value=rawd[_i]['Value'], stdev=rawd[_i]['Error'])
+         
+        #TODO: It is not in the json we have to hardcoded it :(
+        outd["eta_ift"].set(value=0.402, stdev=0.)
+
+
     else:
+      version = "v4r0"
+      git_path = f"fitinputs/{version}/tagging_calibration/{year}/"
       print(f'Downloading Bs2JpsiPhi-FullRun2: {git_path}/{_flavor}')
       os.system(f"git archive --remote={repo} --prefix=./{tmp_path}/ HEAD:{git_path} {_flavor} | tar -x")
 
