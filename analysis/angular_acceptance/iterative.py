@@ -26,6 +26,7 @@ import numpy as np
 import argparse
 from warnings import simplefilter
 from utils.helpers import parse_angacc
+
 DESCRIPTION = """
     Angular acceptance iterative procedure
 """
@@ -234,7 +235,12 @@ def do_fit(tLL, tUL, verbose=False):
     v.init = v.value
 
   # do the fit
-  result = optimize(fcn_data, method='minuit', params=pars,
+  if ("fake" in args["version"]) or ("gene" in args["version"]) or ("reco" in args["version"]): 
+    result = optimize(fcn_data, method='minuit', params=pars,
+                    fcn_kwgs=dict(data=data, tLL=tLL, tUL=tUL), verbose=True,
+                    timeit=True, tol=0.5, strategy=1)
+  else:
+    result = optimize(fcn_data, method='minuit', params=pars,
                     fcn_kwgs=dict(data=data, tLL=tLL, tUL=tUL), verbose=True,
                     timeit=True, tol=0.05, strategy=2)
   # print(result.params)
@@ -349,7 +355,9 @@ def do_kkp_weighting(verbose, kinematic_bmeson=False):
         j = len(v.pdfWeight.keys())
         # ov  = v.df[['pTHm','pTHp','pHm','pHp','mHH', 'etaB', 'nTracks', 'pB', 'pTB', 'pLp', 'pLm', 'pTLm', 'pTLp']]
         # ov  = v.df[['pTHm','pTHp','pHm','pHp', 'mHH', 'nTracks', 'etaB']]
-        ov  = v.df[['pTHm','pTHp','pHm','pHp']]
+        # ov  = v.df[['pTHm','pTHp','pHm','pHp']]
+        ov = v.df[weighting_branches]
+        
         ow  = v.df.eval(f'angWeight*polWeight*{weight_mc}')
         # WARNING: old school procedure:
         # ov  = v.df[['pTHm','pTHp','pHm','pHp']]
@@ -358,7 +366,8 @@ def do_kkp_weighting(verbose, kinematic_bmeson=False):
         # target variables + weight (real data)
         # tv = data[y][t].df[['pTHm','pTHp','pHm','pHp', 'mHH', 'etaB', 'nTracks', 'pB', 'pTB', 'pLp', 'pLm', 'pTLm', 'pTLp']]
         # tv = data[y][t].df[['pTHm','pTHp','pHm','pHp', 'mHH', 'nTracks', 'etaB']]
-        tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
+        # tv = data[y][t].df[['pTHm','pTHp','pHm','pHp']]
+        tv = data[y][t].df[weighting_branches]
         tw = data[y][t].df.eval(weight_rd)
         # Run multicore (about 15 minutes per iteration)
         job = multiprocessing.Process(
@@ -754,16 +763,21 @@ if __name__ == '__main__':
   global mc, data, weight_rd, weight_mc
 
   # only load the branches that are actually used
-  mc_branches = ['cosK','cosL','hphi', time, 'mHH', 'sigmat', 'idB',
-                 'gencosK','gencosL','genhphi', f'gen{time}', 'genidB',
-                 'pHm','pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'polWeight', 'gbWeight', 'etaB', 'nTracks', 'pB', 'pTB',
-                  # 'pidHmcorr', 'pidHpcorr',
-                 'pLp', 'pLm', 'pTLm', 'pTLp']
-  rd_branches = ['cosK','cosL','hphi', time, 'mHH', 'sigmat', 'idB',
-                 'tagOSdec','tagSSdec', 'tagOSeta', 'tagSSeta',
-                 'pHm','pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'etaB', 'nTracks', 
-                  # 'pidHm', 'pidHp',
-                 'pB', 'pTB', 'pLp', 'pLm', 'pTLm', 'pTLp']
+  mc_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB', 'etaB',
+                 'gencosK', 'gencosL', 'genhphi', f'gen{time}', 'genidB', 'pTLm', 'pTLp', 'pLm', 'pLp',
+                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'polWeight', 'pB', 'pTB']
+                 #  'etaB', 'nTracks' -> for PID issue
+
+  if "gene" in args["version"]:
+    rd_branches = ['gencosK', 'gencosL', 'genhphi', time, 'mHH', 'sigmat', 'idB',
+                 'tagOSdec', 'tagSSdec', 'tagOSeta', 'tagSSeta', 'pTLm', 'pTLp', 'pLm', 'pLp', 'etaB',
+                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'pB', 'pTB']
+
+  else:
+    rd_branches = ['cosK', 'cosL', 'hphi', time, 'mHH', 'sigmat', 'idB',
+                 'tagOSdec', 'tagSSdec', 'tagOSeta', 'tagSSeta', 'pTLm', 'pTLp', 'pLm', 'pLp', 'etaB',
+                 'pHm', 'pHp', 'pTHp', 'pTHm', 'sWeight', 'hlt1b', 'pB', 'pTB']
+
 
   # MC reconstructed and generator level variable names
   reco = ['cosK', 'cosL', 'hphi', time]
@@ -772,12 +786,17 @@ if __name__ == '__main__':
   true += ['mHH', '0*sigmat', 'genidB', 'genidB', '0*time', '0*time']
 
   # RD variable names
-  real = ['cosK', 'cosL', 'hphi', time]
+  if "gene" in args["version"]:
+    real = ['gencosK', 'gencosL', 'genhphi', time]
+  else:
+    real = ['cosK', 'cosL', 'hphi', time]
+
+  print(f"Version: {args['version']}, real variables: {real}")
   real += ['mHH', 'sigmat', 'tagOSdec', 'tagSSdec', 'tagOSeta', 'tagSSeta']
 
   # sWeight variable
   weight_rd = 'sWeight'
-  weight_mc = 'sWeight' #Ramon Warning
+  weight_mc = 'sWeight'
   if TIMEACC['use_veloWeight']:
     mc_branches += ['veloWeight']
     rd_branches += ['veloWeight']
@@ -884,9 +903,11 @@ if __name__ == '__main__':
       for l, h in zip(mass[:-1], mass[1:]):
         pos = d.df.eval(f'mHH>={l} & mHH<{h}')
         this_sw = d.df.eval(f'{weight_rd}*(mHH>={l} & mHH<{h})')
+
         sw = np.where(pos, this_sw * (sum(this_sw) / sum(this_sw * this_sw)), sw)
       d.df['sWeight'] = sw
       d.allocate(data=real, weight='sWeight', lkhd='0*time')
+
 
   # Prepare dict of parameters -------------------------------------------------
   printsec('Parameters and initial status')
@@ -919,29 +940,19 @@ if __name__ == '__main__':
   pars.add(dict(name="pPper", value=0.00, min=-1.0, max=1.0,
                 free=False, latex=r"\phi_{\perp} - \phi_0"))
 
-  # S wave strong phases
-  for i in range(len(mass_knots) - 1):
-    phase = np.linspace(2.3, -1.2, len(mass_knots) - 1)[i]
-    pars.add(dict(
-        name=f'dSlon{i+1}', value=SWAVE * phase,
-        min=0 if 2 * i < (len(mass_knots) - 1) else -4,
-        max=4 if 2 * i < (len(mass_knots) - 1) else 0,
-        free=SWAVE,
-        latex=rf"\delta_S^{{{i+1}}} - \delta_{{\perp}} \, \mathrm{{[rad]}}"))
+  pars.add(dict(name='dSlon1', value=+2.34, min=0.5, max=+4.0,
+           free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon2', value=+1.64, min=0.5, max=+3.0,
+           free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon3', value=+1.09, min=-2.0, max=+2.0,
+           free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon4', value=0.5, min=-1.5, max=+1.5,
+           free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon5', value=-0.48, min=-2.0, max=+0.0,
+            free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
+  pars.add(dict(name='dSlon6', value=-1.18, min=-3.0, max=+0.0,
+             free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
 
-  # pars.add(dict(name='dSlon1', value=+2.34, min=0.5, max=+4.0,
-  #           free=True, latex=r"\delta_S^{1} - \delta_{\perp}"))
-  # pars.add(dict(name='dSlon2', value=+1.64, min=0.5, max=+3.0,
-  #           free=True, latex=r"\delta_S^{2} - \delta_{\perp}"))
-  # pars.add(dict(name='dSlon3', value=+1.09, min=-2.0, max=+2.0,
-  #           free=True, latex=r"\delta_S^{3} - \delta_{\perp}"))
-  # pars.add(dict(name='dSlon4', value=0.5, min=-1.5, max=+1.5,
-  #           free=True, latex=r"\delta_S^{4} - \delta_{\perp}"))
-  # pars.add(dict(name='dSlon5', value=-0.48, min=-2.0, max=+0.0,
-  #           free=True, latex=r"\delta_S^{5} - \delta_{\perp}"))
-  # pars.add(dict(name='dSlon6', value=-1.18, min=-3.0, max=+0.0,
-  #           free=True, latex=r"\delta_S^{6} - \delta_{\perp}"))
-  
   # P wave strong phases
   pars.add(dict(name="dPlon", value=0.000, min=-2 * 3.14, max=2 * 3.14,
                 free=False, latex=r"\delta_0"))
@@ -1010,6 +1021,18 @@ if __name__ == '__main__':
   for l in zip(*lu):
     print(*l, sep="| ")
   print(f"\n")
+  
+
+  # print time acceptances
+  lb = [data[y]['biased'].timeacc.__str__(['value']).splitlines() for i, y in enumerate(YEARS)]
+  lu = [data[y]['unbiased'].timeacc.__str__(['value']).splitlines() for i, y in enumerate(YEARS)]
+  print(f"\nBiased time acceptance\n{80*'='}")
+  for l in zip(*lb):
+    print(*l, sep="| ")
+  print(f"\nUnbiased time acceptance\n{80*'='}")
+  for l in zip(*lu):
+    print(*l, sep="| ")
+  # exit()
 
   # The iterative procedure starts ---------------------------------------------
 
