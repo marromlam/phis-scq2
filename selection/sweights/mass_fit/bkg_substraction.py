@@ -530,7 +530,7 @@ if __name__ == '__main__':
     in_file = [i.decode() for i in in_file.keys()]
     needed_branches = [b for b in branches if b in in_file]
     
-    is_mc = any(x in version for x in ["fake", "gene", "reco"]) 
+    is_mc = any(x in args['version'] for x in ["fake", "gene", "reco"]) 
     if (args["mass_weight"]) and ("Bs2JpsiPhi" == args["mode"]) and (not is_mc):
         mass_weight = args["mass_weight"]
         needed_branches += [mass_weight]
