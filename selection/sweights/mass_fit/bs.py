@@ -728,7 +728,7 @@ def mass_fitter(
   pars = ipanema.Parameters()
   # Create common set of Bs parameters (all models must have and use)
   pars.add(
-      dict(name="fsigBs", value=0.9, min=0.05, max=1, free=True, latex=r"f_{B_s}")
+      dict(name="fsigBs", value=0.9, min=0.01, max=1, free=True, latex=r"f_{B_s}")
   )
   pars.add(dict(name="muBs", value=5367, min=5350, max=5390, latex=r"\mu_{B_s}"))
   if with_calib:
@@ -737,7 +737,7 @@ def mass_fitter(
         dict(name="s0Bs", value=0, min=0, max=50, free=False, latex=r"p_0^{B_s}")
     )
     pars.add(
-        dict(name="s1Bs", value=0.67, min=-5, max=10, free=True, latex=r"p_1^{B_s}")
+        dict(name="s1Bs", value=0.67, min=-3, max=4, free=True, latex=r"p_1^{B_s}")
     )
     pars.add(
         dict(name="s2Bs", value=0.00, min=-1, max=2, free=True, latex=r"p_2^{B_s}")
@@ -992,6 +992,21 @@ def mass_fitter(
     axplot.plot(_x, _y, "-.", color="C2", label="Bd")
     all_pdfs['pdf_fsigBd'] = _y
 
+
+  # plot backgrounds: nsig -> 0
+  _p = ipanema.Parameters.clone(fpars)
+  if "fsigBs" in _p:
+    _p["fsigBs"].set(value=0, min=-np.inf, max=np.inf)
+  if "fcomb" in _p:
+    _p["fsigBd"].set(value=0, min=-np.inf, max=np.inf)
+  _p["fcomb"].set(value=fpars["fcomb"].value)
+  
+  _x, _y = ipanema.ristra.get(mass), ipanema.ristra.get(
+        pdf(mass, merr, signal, **_p.valuesdict(), norm=hdata.norm)
+    )
+  axplot.plot(_x, _y, "-.", color="C3", label="Combinatorial")
+  all_pdfs['pdf_fcomb'] = _y
+
   # plot fit with all components and data
   _p = ipanema.Parameters.clone(fpars)
   x, y = ipanema.ristra.get(mass), ipanema.ristra.get(
@@ -1096,12 +1111,19 @@ if __name__ == '__main__':
     input_pars = False
   branches = ["B_ConstJpsi_M_1", "B_ConstJpsi_MERR_1", "hlt1b", "X_M",
               'time', 'helcosthetaK', 'helcosthetaL', 'helphi']
-
-  if args["mass_weight"]:
+  
+  if args["mass_weight"] and ("fake" not in args["version"]):
     mass_weight = args["mass_weight"]
-    branches += [mass_weight]
+    # branches += [mass_weight]
   else:
     mass_weight = "B_ConstJpsi_M_1/B_ConstJpsi_M_1"
+
+  if ("reco" in args["version"]) or ("gene" in args["version"]):
+    mass_weight = "B_ConstJpsi_M_1/B_ConstJpsi_M_1" 
+    has_bd = False
+
+  if mass_weight != "B_ConstJpsi_M_1/B_ConstJpsi_M_1":
+    branches += [mass_weight]
 
   cut = False
   if 'MC' in args['mode']:
@@ -1149,6 +1171,11 @@ if __name__ == '__main__':
       _2sig = input_pars['muBs'].value - 2 * 30
       mass_range = (_2sig, mass_range[1])
       # has_bd = False
+
+  # #Fakeground flag Swave + Fakeground
+  # if "fake" in args['version']:
+  #   has_bd = False
+
   cut = cuts_and(bin_cut, cut)
   print(cut)
 
