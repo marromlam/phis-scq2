@@ -50,6 +50,7 @@ rule physics_params_data_Bs:
     --version {wildcards.version}\
     --blind {settings.blinding['blind']}\
     --scan {config['scan']}\
+    --gpu {config['gpu']}\
     ) &> {log}""")
     send_mail(f"Physics Parameters RD :: {wildcards}", f"{log}")
 
@@ -59,55 +60,55 @@ rule physics_params_data_Bs:
 
 # plot projections {{{
 
-rule physics_params_data_Bs_plot:
-  wildcard_constraints:
-    fit = "(auto|yearly|run2|run2a)(Dual)?(Poldep|magUp|magDown)?",
-    mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
-  threads: 8
-  resources:
-    memb_mb=4000
-  input:
-    samples = lambda wcs: tuples(wcs, year=f'{wcs.year}'),
-    angacc_biased = lambda wcs: angaccs(wcs, trigger='biased'),
-    angacc_unbiased = lambda wcs: angaccs(wcs, trigger='unbiased'),
-    timeacc_biased = lambda wcs: timeaccs(wcs, trigger='biased'),
-    timeacc_unbiased = lambda wcs: timeaccs(wcs, trigger='unbiased'),
-    csp_factors = lambda wcs: csps(wcs),
-    time_resolution = lambda wcs: timeress(wcs),
-    flavor = lambda wcs: flavors(wcs),
-    params = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
-  output:
-    time = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/time.pdf',
-    cosK = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosK.pdf',
-    cosL = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosL.pdf',
-    hphi = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/hphi.pdf'
-  log:
-    'output/log/physics_params_plot/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
-  run:
-    # WARNING: maybe this needs to be understood
-    samples = input.samples
-    samples = [samples] if isinstance(samples,str) else samples
-    figures = os.path.dirname(f"{output.time}")
-    shell(f"""(time\
-    python analysis/angular_fit/plot_projections.py\
-    --samples {",".join(samples)}\
-    --angacc-biased {",".join(input.angacc_biased)}\
-    --angacc-unbiased {",".join(input.angacc_unbiased)}\
-    --timeacc-biased {",".join(input.timeacc_biased)}\
-    --timeacc-unbiased {",".join(input.timeacc_unbiased)}\
-    --csp {",".join(input.csp_factors)}\
-    --time-resolution {",".join(input.time_resolution)}\
-    --flavor-tagging {",".join(input.flavor)}\
-    --params {input.params}\
-    --figures {figures}\
-    --year {",".join(YEARS[f'{wildcards.year}'])}\
-    --fit {wildcards.fit}\
-    --angacc {wildcards.angacc}\
-    --timeacc {wildcards.timeacc}\
-    --trigger {wildcards.trigger}\
-    --version {wildcards.version}\
-    ) &> {log}""")
-    send_mail(f"Physics Parameters RD :: {wildcards}", f"{log}")
+# rule physics_params_data_Bs_plot:
+#   wildcard_constraints:
+#     fit = "(auto|yearly|run2|run2a)(Dual)?(Poldep|magUp|magDown)?",
+#     mode = "(Bs2JpsiPhi|Bs2JpsiKstar)"
+#   threads: 8
+#   resources:
+#     memb_mb=4000
+#   input:
+#     samples = lambda wcs: tuples(wcs, year=f'{wcs.year}'),
+#     angacc_biased = lambda wcs: angaccs(wcs, trigger='biased'),
+#     angacc_unbiased = lambda wcs: angaccs(wcs, trigger='unbiased'),
+#     timeacc_biased = lambda wcs: timeaccs(wcs, trigger='biased'),
+#     timeacc_unbiased = lambda wcs: timeaccs(wcs, trigger='unbiased'),
+#     csp_factors = lambda wcs: csps(wcs),
+#     time_resolution = lambda wcs: timeress(wcs),
+#     flavor = lambda wcs: flavors(wcs),
+#     params = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+#   output:
+#     time = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/time.pdf',
+#     cosK = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosK.pdf',
+#     cosL = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosL.pdf',
+#     hphi = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/hphi.pdf'
+#   log:
+#     'output/log/physics_params_plot/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+#   run:
+#     # WARNING: maybe this needs to be understood
+#     samples = input.samples
+#     samples = [samples] if isinstance(samples,str) else samples
+#     figures = os.path.dirname(f"{output.time}")
+#     shell(f"""(time\
+#     python analysis/angular_fit/plot_projections.py\
+#     --samples {",".join(samples)}\
+#     --angacc-biased {",".join(input.angacc_biased)}\
+#     --angacc-unbiased {",".join(input.angacc_unbiased)}\
+#     --timeacc-biased {",".join(input.timeacc_biased)}\
+#     --timeacc-unbiased {",".join(input.timeacc_unbiased)}\
+#     --csp {",".join(input.csp_factors)}\
+#     --time-resolution {",".join(input.time_resolution)}\
+#     --flavor-tagging {",".join(input.flavor)}\
+#     --params {input.params}\
+#     --figures {figures}\
+#     --year {",".join(YEARS[f'{wildcards.year}'])}\
+#     --fit {wildcards.fit}\
+#     --angacc {wildcards.angacc}\
+#     --timeacc {wildcards.timeacc}\
+#     --trigger {wildcards.trigger}\
+#     --version {wildcards.version}\
+#     ) &> {log}""")
+#     send_mail(f"Physics Parameters RD :: {wildcards}", f"{log}")
 
 
 rule physics_params_data_Bs_scan:
@@ -243,7 +244,7 @@ rule physics_params_data_Bs_dll_old:
     pars = 'output/params/physics_params/{pyear}/{mode}/{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.json',
     # dparams = 'output/params/physics_params/{dyear}/Bs2JpsiPhi/{dversion}_{dfit}_{dangacc}_{dtimeacc}.json',
   output:
-    temp('tmp/dlls/{mode}/{dyear}_{dversion}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.npy')
+    'tmp/dlls/{mode}/{dyear}_{dversion}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.npy'
   log:
     'tmp/dlls/{mode}/{dyear}_{dversion}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.log'
   run:
@@ -313,10 +314,10 @@ rule physics_params_data_Bs_plot:
     flavor = lambda wcs: flavors(wcs),
     params = 'output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
   output:
-    time = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/time.pdf',
-    cosK = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosK.pdf',
-    cosL = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosL.pdf',
-    hphi = 'output/figures/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/hphi.pdf'
+    time = 'output/figures_proj/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/time.pdf',
+    cosK = 'output/figures_proj/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosK.pdf',
+    cosL = 'output/figures_proj/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/cosL.pdf',
+    hphi = 'output/figures_proj/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}/hphi.pdf'
   log:
     'output/log/physics_params_plot/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
   run:
@@ -436,7 +437,7 @@ rule physics_params_data_Bx_dll_compare:
     logl_pd = 'tmp/dlls/{mode}/{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}__vs__{dyear}_{dversion}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}.npy',
     logl_pp = 'tmp/dlls/{mode}/{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.npy'
   output:
-    temp('tmp/pvalues/{mode}/{dyear}_{dversion}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.npy')
+    'tmp/pvalues/{mode}/{dyear}_{dversion}_{dfit}_{dangacc}_{dcsp}_{dflavor}_{dtimeacc}_{dtimeres}_{dtrigger}__vs__{pyear}_{pversion}_{pfit}_{pangacc}_{pcsp}_{pflavor}_{ptimeacc}_{ptimeres}_{ptrigger}.npy'
   run:
     import numpy as np
     from ipanema import Parameters
@@ -455,6 +456,8 @@ rule physics_params_data_Bx_dll_compare:
       Parameters.load(f'{input.pars_d}'),
       Parameters.load(f'{input.pars_p}')
     ]
+    print(pars[0])
+    print(pars[1])
 
     # check agreement
     s, p, d = check_DLL_agreement(logls, pars, sigmas=True, pvalue=True, ndof=True, mdof=8)
@@ -750,6 +753,8 @@ rule physics_params_tabulate_versions:
   General rule to create tables of physics params with pvalues
   """
   threads: 8
+  wildcard_constraints:
+    year = "(2015|2016|2017|2018|run2a|run2b|run2)"
   input:
       lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
             year = wcs.myear.split('+'),
@@ -834,9 +839,9 @@ rule physics_params_tabulate_versions:
                    # 'pSlon', 'pPpar', 'pPper',
                    'lPlon',
                    # 'lSlon', 'lPpar', 'lPper',
-                   'DGsd', 'DGs', 'DM',
-                   # 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
-                   # 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                   'DGsd_Bs', 'DGs_Bs', 'DM',
+                   'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6',
+                   'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
                 ]
     for p in _params:
         _row = [  f"$ {pars[0][p].latex:>50} $" ]
@@ -877,6 +882,7 @@ rule physics_params_tabulate_versions:
       f.write('\n')
       f.write(r"\end{tabular}")
     f.close()
+
 
 rule physics_params_tabulate_versions_diffsigma:
   """
@@ -1007,19 +1013,20 @@ rule physics_params_tabulate_systematic:
     mtrigger = "((?!.*?(total)).*)",
   threads: 8
   input:
-      lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
-            year = config['year'],
-            mode = 'Bs2JpsiPhi',
-            version = config['version'] + '@LcosK',
-            # fit = [f.replace('run2', y) for f,y in zip(wcs.mfit.split('+'), wcs.myear.split('+'))],
-            fit = config['fit'],
-            angacc = config['angacc'],
-            csp = config['csp'],
-            flavor = config['flavor'],
-            timeacc = config['timeacc'],
-            timeres = config['timeres'],
-            trigger = config['trigger']
-            ),
+      #Waring RAMON
+      # lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+      #       year = config['year'],
+      #       mode = 'Bs2JpsiPhi',
+      #       version = config['version'] + '@LcosK',
+      #       # fit = [f.replace('run2', y) for f,y in zip(wcs.mfit.split('+'), wcs.myear.split('+'))],
+      #       fit = config['fit'],
+      #       angacc = config['angacc'],
+      #       csp = config['csp'],
+      #       flavor = config['flavor'],
+      #       timeacc = config['timeacc'],
+      #       timeres = config['timeres'],
+      #       trigger = config['trigger']
+            # ),
       lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
             year = wcs.myear.split('+'),
             mode = wcs.mmode.split('+'),
@@ -1106,8 +1113,8 @@ rule physics_params_tabulate_systematic:
                    'lPlon',
                    # 'lSlon', 'lPpar', 'lPper',
                    'DGsd', 'DGs', 'DM',
-                   # 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
-                   # 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                   'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6',
+                   'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
                 ]
     for p in _params:
         _row = [  f"$ {pars[0][p].latex:>50} $" ]
@@ -1154,6 +1161,326 @@ rule physics_params_tabulate_systematic:
       f.write('\n')
       f.write(r"\end{tabular}")
     f.close()
+
+rule comparing_tag:
+  """
+  General rule to create tables of physics params with pvalues
+  """
+  threads: 8
+  input:
+     baseline = "/scratch49/ramon.ruiz/phis-scq/output/params/physics_params/run2/Bs2JpsiPhi/v5r4@LcosK_run2_run2Dual_vgc_peilian_simul3_amsrd_combined.json",
+     ift = "/scratch49/ramon.ruiz/phis-scq/IFT.json",
+     gitagger = "/scratch49/ramon.ruiz/phis-scq/gitagger.json",
+  output:
+    'output/tables/compare_taggers/run2/Bs2JpsiPhi/Comparing_taggers.tex'
+  log:
+    'output/log/compare_taggers/run2/Bs2JpsiPhi/Comparing_taggers.tex'
+  run:
+    import ipanema
+    import numpy as np
+    import sys
+    from iminuit import Minuit
+    from scipy.stats import chi2
+    print(f"{input}")
+    # exit()
+    pars = f"{input}".split(" ")
+    pars = [ipanema.Parameters.load(p) for p in pars]
+    # vers = f"{wildcards.version}".split("+")
+    
+    wilds = []
+    header = []
+    _header = [f"{' ':<54}"]
+    _header[0] = f"{'Parameter':<54}"
+            # _header[-1] = f"{'pvalue':>10}"
+    _header[-1] = f"{'syst.':>10}"
+    header.append( " & ".join(_header) )
+
+    _calign = 'l|' + 'c'*len(pars) + '|c'
+    table = []
+
+    _params = [
+                   # 'fPlon', 'fPper', 
+                   # 'dPpar', 'dPper',
+                   'pPlon',
+                   # 'pSlon', 'pPpar', 'pPper',
+                   'lPlon',
+                   # 'lSlon', 'lPpar', 'lPper',
+                   # 'DGsd', 'DGs', 
+                   'DM',
+                   # 'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6',
+                   # 'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
+                ]
+    for p in _params:
+        _row = [  f"$ {pars[0][p].latex:>50} $" ]
+        for P in pars:
+            _row.append( f"$ {f'{P[p].uvalue:.3uL}':>25} $" )
+        if len(pars) > 1:
+            # get from parameters objects
+            central_values = [P[p].uvalue.n for P in pars]
+            standard_deviations = [P[p].uvalue.s for P in pars]
+            def compute_chi2(reference_value):
+                chi2 = 0.0
+                for v, s in zip(central_values[1:], standard_deviations[1:]):
+                    chi2 += ((v - reference_value)/s)**2
+                return chi2
+
+            # do linear fit on those numbers
+            p = 'reference_value'
+            result = Minuit(compute_chi2, reference_value=0.0, errordef=1)
+            result.migrad()
+            pval = chi2.sf(result.fval, len(central_values)-1-1)
+            systs = [c-central_values[0] for c in central_values]
+            systs = np.array(systs)
+            signs = systs/np.abs(systs)
+            syst = np.amax(np.abs(systs))
+            syst *= signs[np.abs(systs) == syst]
+            # _row.append(f"$ {pval:+.3f} $")  # for pvalue
+            syst = syst if len(syst) < 2 else syst[0]
+            # print(np.float64(syst))
+            _row.append(f"$ {np.float64(syst):+.4f} $")
+        table.append(" & ".join(_row))
+    with open(f'{output}','w') as f:
+      f.write(rf"\begin{{tabular}}{{{_calign}}}")
+      f.write('\n')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write("\\\\ \n".join(header))
+      f.write('\\\\ \n')
+      f.write(f'\hline')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write("\\\\ \n".join(table))
+      f.write('\\\\ \n')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write(r"\end{tabular}")
+    f.close()
+
+
+
+
+rule physics_params_fakeground:
+  """
+  General rule to create table for Fakeground study
+  """
+  wildcard_constraints:
+    mtrigger = "((?!.*?(total)).*)",
+  threads: 8
+  input:
+      lambda wcs: expand('output/params/physics_params/{year}/{mode}/{version}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.json',
+            year = wcs.myear.split('+'),
+            mode = wcs.mmode.split('+'),
+            version = wcs.mversion.split('+'),
+            # fit = [f.replace('run2', y) for f,y in zip(wcs.mfit.split('+'), wcs.myear.split('+'))],
+            fit = wcs.mfit.split('+'),
+            angacc = wcs.mangacc.split('+'),
+            csp = wcs.mcsp.split('+'),
+            flavor = wcs.mflavor.split('+'),
+            timeacc = wcs.mtimeacc.split('+'),
+            timeres = wcs.mtimeres.split('+'),
+            trigger = wcs.mtrigger.split('+')
+            ),
+      ["/scratch49/ramon.ruiz/phis-scq/inputs_swave_mc.json"] #sWave evtGen MC fint
+  output:
+    'output/tables/fakeground/{myear}/{mmode}/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.tex'
+  log:
+    'output/log/physics_params_tabulate_fakeground/{myear}/{mmode}/{mversion}_{mfit}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}_{mtrigger}.log'
+  run:
+    import ipanema
+    import numpy as np
+    import sys
+    from iminuit import Minuit
+    from scipy.stats import chi2
+
+    pars = f"{input}".split(" ")
+    pars = [ipanema.Parameters.load(p) for p in pars]
+    # pars[0]["dSlon4"].set(value=pars[0]["dSlon4"].value - 2 * np.pi)
+    # vers = f"{wildcards.version}".split("+")
+    
+    wilds = []
+    header = []
+    _header = [f"{'Parameter':<54}"]
+    _header += [f"{'Values':<29}"]
+    _header += [f"{'Generated':<29}"]
+    _header += [f"{'diff.':>10}"]
+    header.append( " & ".join(_header) )
+
+    _calign = 'l|' + 'c'*len(pars) + '|c'
+    # lets build the tble
+    table = []
+    # table.append(" & ".join(_header))
+    # print(table)
+    # exit()
+
+    if 'Poldep' in wildcards.mfit:
+        _params = ['fPlon', 'fPper', 
+                'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6', 
+                'dPpar', 'dPper',
+                'pPlon',
+                'pSlon', 'pPpar', 'pPper',
+                'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6', 
+                'lPlon',
+                'lSlon', 'lPpar', 'lPper',
+                'DGsd', 'DGs', 'DM']
+    else:
+        _params = [
+                    # 'fPlon', 'fPper', 
+                   # 'dPpar', 'dPper',
+                   'pPlon',
+                   # 'pSlon', 'pPpar', 'pPper',
+                   'lPlon',
+                   # 'lSlon', 'lPpar', 'lPper',
+                   'DGsd', 'DGs', 'DM',
+                   'fPlon', 'fPper', 
+                   'dPpar', 'dPper', 
+                   'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6',
+                   'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
+                ]
+
+    for p in _params:
+        _row = [  f"$ {pars[0][p].latex:>50} $" ]
+        for P in pars:
+            _row.append( f"$ {f'{P[p].uvalue:.2uL}':>25} $" )
+        if len(pars) > 1:
+            # get from parameters objects
+            central_values = [P[p].uvalue.n for P in pars]
+            standard_deviations = [P[p].uvalue.s for P in pars]
+
+            # do linear fit on those numbers
+            p = 'reference_value'
+            systs = [c-central_values[0] for c in central_values]
+            systs = np.array(systs)
+            signs = systs/np.abs(systs)
+            syst = np.amax(np.abs(systs))
+            syst *= signs[np.abs(systs) == syst]
+            syst = syst if len(syst) < 2 else syst[0]
+            _row.append(f"$ {np.float64(syst):+.4f} $")
+        table.append(" & ".join(_row))
+    with open(f'{output}','w') as f:
+      f.write(rf"\begin{{tabular}}{{{_calign}}}")
+      f.write('\n')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write("\\\\ \n".join(header))
+      f.write('\\\\ \n')
+      f.write(f'\hline')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write("\\\\ \n".join(table))
+      f.write('\\\\ \n')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write(r"\end{tabular}")
+    f.close()
+
+
+
+rule physics_params_neglect_corr:
+  """
+  General rule to create table for Fakeground study
+  """
+  threads: 8
+  input:
+      ["/scratch49/ramon.ruiz/phis-scq/tmp/params/physics_params/run2/MC_Bs2JpsiKK_Swave/reco2@evtOdd_run2Dual_vgc_none_single3NoncorrDGn0_amsrd.json", 
+      "/scratch49/ramon.ruiz/phis-scq/inputs_swave_mc.json"] #sWave evtGen MC fint
+  output:
+    'output/tables/neglect_corr/{myear}/{mmode}/{mversion}_{mangacc}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}.tex'
+  log:
+    'output/log/physics_params_tabulate_neglect_corr/{myear}/{mmode}/{mversion}_{mangacc}_{mcsp}_{mcsp}_{mflavor}_{mtimeacc}_{mtimeres}.log'
+  run:
+    import ipanema
+    import numpy as np
+    import sys
+    from iminuit import Minuit
+    from scipy.stats import chi2
+
+    pars = f"{input}".split(" ")
+    pars = [ipanema.Parameters.load(p) for p in pars]
+    # pars[0]["dSlon4"].set(value=pars[0]["dSlon4"].value - 2 * np.pi)
+    # vers = f"{wildcards.version}".split("+")
+    
+    wilds = []
+    header = []
+    _header = [f"{'Parameter':<54}"]
+    _header += [f"{'Values':<29}"]
+    _header += [f"{'Generated':<29}"]
+    _header += [f"{'diff.':>10}"]
+    header.append( " & ".join(_header) )
+
+    _calign = 'l|' + 'c'*len(pars) + '|c'
+    # lets build the tble
+    table = []
+    # table.append(" & ".join(_header))
+    # print(table)
+    # exit()
+
+    _params = [
+                    # 'fPlon', 'fPper', 
+                   # 'dPpar', 'dPper',
+                   'pPlon',
+                   # 'pSlon', 'pPpar', 'pPper',
+                   'lPlon',
+                   # 'lSlon', 'lPpar', 'lPper',
+                   'DGsd', 'DGs', 'DM',
+                   'fPlon', 'fPper', 
+                   'dPpar', 'dPper', 
+                   'fSlon1', 'fSlon2', 'fSlon3', 'fSlon4', 'fSlon5', 'fSlon6',
+                   'dSlon1', 'dSlon2', 'dSlon3', 'dSlon4', 'dSlon5', 'dSlon6',
+                ]
+
+    for p in _params:
+        _row = [  f"$ {pars[0][p].latex:>50} $" ]
+        for P in pars:
+            _row.append( f"$ {f'{P[p].uvalue:.2uL}':>25} $" )
+        if len(pars) > 1:
+            # get from parameters objects
+            central_values = [P[p].uvalue.n for P in pars]
+            standard_deviations = [P[p].uvalue.s for P in pars]
+
+            # do linear fit on those numbers
+            p = 'reference_value'
+            systs = [c-central_values[0] for c in central_values]
+            systs = np.array(systs)
+            signs = systs/np.abs(systs)
+            syst = np.amax(np.abs(systs))
+            syst *= signs[np.abs(systs) == syst]
+            syst = syst if len(syst) < 2 else syst[0]
+            _row.append(f"$ {np.float64(syst):+.4f} $")
+        table.append(" & ".join(_row))
+    with open(f'{output}','w') as f:
+      f.write(rf"\begin{{tabular}}{{{_calign}}}")
+      f.write('\n')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write("\\\\ \n".join(header))
+      f.write('\\\\ \n')
+      f.write(f'\hline')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write("\\\\ \n".join(table))
+      f.write('\\\\ \n')
+      f.write(f'\hline')
+      f.write('\n')
+      f.write(r"\end{tabular}")
+    f.close()
+
+
+rule bootstrapping:
+  # resoruces:
+    # mem_mb = 1048
+  threads: 8
+  wildcard_constraints:
+    var = "boot"
+  input:
+    fits = lambda wcs: expand('output/params/physics_params/{{year}}/{{mode}}/{{version}}@LcosK{{var}}{bin}_{{fit}}_{{angacc}}_{{csp}}_{{flavor}}_{{timeacc}}_{{timeres}}_{{trigger}}.json',
+                                 bin= list(range(100)))
+  output:
+    'output/tables/physics_params_bootstrapping/{year}/{mode}/{version}@LcosK{var}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.tex',
+  log:
+    'output/log/physics_params_bootstrapping/{year}/{mode}/{version}@LcosK{var}_{fit}_{angacc}_{csp}_{flavor}_{timeacc}_{timeres}_{trigger}.log'
+  run:
+    print("Finished boot")
+                              
 # }}}
 
 
