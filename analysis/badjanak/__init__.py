@@ -293,7 +293,7 @@ def parser_rateBs(
     _eta_os = [k for k in p.keys() if re.compile("(eta_os|etaOS)((1|2)[0-9])?").match(k)]
     # print(_eta_os)
     r['eta_os'] = p[_eta_os[0]] if _eta_os else eta_os
-    _eta_ss = [k for k in p.keys() if re.compile("(eta_ss|etaSS)((1|2)[0-9])?").match(k)]
+    _eta_ss = [k for k in p.keys() if re.compile("(eta_ss|etaSS|eta_ift)((1|2)[0-9])?").match(k)]
     # print(_eta_ss)
     r['eta_ss'] = p[_eta_ss[0]] if _eta_ss else eta_ss
     _p0_os =  [k for k in p.keys() if re.compile("(p0_os|p0OS)((1|2)[0-9])?").match(k)]
@@ -305,10 +305,10 @@ def parser_rateBs(
     _p2_os =  [k for k in p.keys() if re.compile("(p2_os|p2OS)((1|2)[0-9])?").match(k)]
     # print(_p2_os)
     r['p2_os'] =  p[_p2_os[0]] if _p2_os else p2_os
-    _p0_ss =  [k for k in p.keys() if re.compile("(p0_ss|p0SS)((1|2)[0-9])?").match(k)]
+    _p0_ss =  [k for k in p.keys() if re.compile("(p0_ss|p0SS|p0_ift)((1|2)[0-9])?").match(k)]
     # print(_p0_ss)
     r['p0_ss'] =  p[_p0_ss[0]] if _p0_ss else p0_ss
-    _p1_ss =  [k for k in p.keys() if re.compile("(p1_ss|p1SS)((1|2)[0-9])?").match(k)]
+    _p1_ss =  [k for k in p.keys() if re.compile("(p1_ss|p1SS|p1_ift)((1|2)[0-9])?").match(k)]
     # print(_p1_ss)
     r['p1_ss'] =  p[_p1_ss[0]] if _p1_ss else p1_ss
     _p2_ss =  [k for k in p.keys() if re.compile("(p2_ss|p2SS)((1|2)[0-9])?").match(k)]
@@ -323,10 +323,10 @@ def parser_rateBs(
     _dp2_os = [k for k in p.keys() if re.compile("(dp2_os|dp2OS)((1|2)[0-9])?").match(k)]
     # print(_dp2_os)
     r['dp2_os'] = p[_dp2_os[0]] if _dp2_os else dp2_os
-    _dp0_ss = [k for k in p.keys() if re.compile("(dp0_ss|dp0SS)((1|2)[0-9])?").match(k)]
+    _dp0_ss = [k for k in p.keys() if re.compile("(dp0_ss|dp0SS|dp0_ift)((1|2)[0-9])?").match(k)]
     # print(_dp0_ss)
     r['dp0_ss'] = p[_dp0_ss[0]] if _dp0_ss else dp0_ss
-    _dp1_ss = [k for k in p.keys() if re.compile("(dp1_ss|dp1SS)((1|2)[0-9])?").match(k)]
+    _dp1_ss = [k for k in p.keys() if re.compile("(dp1_ss|dp1SS|dp1_ift)((1|2)[0-9])?").match(k)]
     # print(_dp1_ss)
     r['dp1_ss'] = p[_dp1_ss[0]] if _dp1_ss else dp1_ss
     _dp2_ss = [k for k in p.keys() if re.compile("(dp2_ss|dp2SS)((1|2)[0-9])?").match(k)]
