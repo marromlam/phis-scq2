@@ -2,6 +2,7 @@
 #
 #
 #    Marcos Romero Lamas
+#    Ramon Angel Ruiz Fernandez
 
 
 # Modules {{{
@@ -233,16 +234,17 @@ def version_guesser(version):
         # only OS, SS or fully tagged events
         r"(only(OST|SST|OSS)|tag)?",
         # split in pTB, etaB and sigmat bins: for systematics
-        r"((pTB|pXB|pYB|pTJpsi|etaB|sigmat|Prob|PID|PV)(\d{1}))?"
+        r"((pTB|pXB|pYB|pTJpsi|etaB|sigmat|Prob|PID|PV)(\d{1}))?",
         # split tuple by event number: useful for MC tests and crosschecks
         # Odd is plays data role and MC is Even
         r"(evtOdd|evtEven)?",
+        r"(boot\d+)?"
     ]
     pattern = rf"\A{''.join(pattern)}\Z"
     p = re.compile(pattern)
     try:
       # FIXME: please change this!! -- it is awful
-      share, timecut, runN, cosk, bkg60, massSB, mag, ttag, tag, fullcut, var, nbin, evt = p.search(mod).groups()
+      share, timecut, runN, cosk, bkg60, massSB, mag, ttag, tag, fullcut, var, nbin, evt, boot = p.search(mod).groups()
       share = int(share) if share else 100
       evt = evt if evt else None
       nbin = int(nbin) - 1 if nbin else None
@@ -646,6 +648,8 @@ def timeress(wcs, version=False, year=False, mode=False, timeres=False):
     timeres = f"{wcs.timeres}"
   if not mode:
     mode = f"{wcs.mode}"
+  if "boot" in version:
+    version = "v5r4@LcosK"
 
   # loop over years and return list of time acceptances
   ans = []
@@ -664,6 +668,8 @@ def csps(wcs, version=False, year=False, mode=False, csp=False):
     csp = f"{wcs.csp}"
   if not mode:
     mode = f"{wcs.mode}"
+  if "boot" in version:
+    version = "v5r4@LcosK"
 
   # loop over years and return list of time acceptances
   ans = []
@@ -682,6 +688,9 @@ def flavors(wcs, version=False, year=False, mode=False, flavor=False):
     flavor = f"{wcs.flavor}"
   if not mode:
     mode = f"{wcs.mode}"
+
+  if "boot" in version:
+    version = "v5r4@LcosK"
 
   # loop over years and return list of time acceptances
   ans = []
@@ -705,6 +714,9 @@ def timeaccs(wcs, version: typing.Optional[str] = None,
     trigger = f"{wcs.trigger}"
   if not mode:
     mode = f"{wcs.mode}"
+
+  if "boot" in version:
+    version = "v5r4@LcosK"
 
   # assert(type(timeacc) == str)
   # for _arg in [version, year, mode, timeacc, trigger]:
@@ -780,6 +792,10 @@ def angaccs(wcs, version=False, year=False, mode=False, timeacc=False,
     trigger = f"{wcs.trigger}"
   if not mode:
     mode = f"{wcs.mode}"
+
+  if "boot" in version:
+    version = "v5r4@LcosK"
+
   # select mode
   if angacc.startswith('naive') or angacc.startswith('corrected'):
     # loop over years and return list of time acceptances
