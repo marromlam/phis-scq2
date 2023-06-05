@@ -167,6 +167,7 @@ if __name__ == "__main__":
       badjanak.config['knots'] = knots.tolist()
 
       #warning Peilian check
+      #Warning
       # data[y][t].timeacc = Parameters.build(c, c.fetch('(a|b|c).*'))
       pei = Parameters.load(f"/scratch49/ramon.ruiz/phis-scq/acceptances_v4r1/time_acc/{y}_{t}.json")
       data[y][t].timeacc = pei
@@ -174,7 +175,7 @@ if __name__ == "__main__":
       #Warning Peilian check
       # w = Parameters.load(args[f'angacc_{t}'].split(',')[i])
       # data[y][t].angacc = Parameters.build(w, w.fetch('w.*'))
-      w = Parameters.load(f"/scratch49/ramon.ruiz/phis-scq/acceptances_v4r1/ang_acc/{y}_{t}.json")
+      w = Parameters.load(f"/scratch49/ramon.ruiz/phis-scq/acceptances_v4r1/ang_acc_updated/{y}_{t}.json")
       data[y][t].angacc = Parameters.build(w, w.fetch('w.*'))
 
       # Normalize sWeights per bin
@@ -245,7 +246,7 @@ if __name__ == "__main__":
                   blindstr="BsPhisSDelFullRun2",
                   blind=BLIND, blindscale=2., blindengine="root"))
     pars.add(dict(name="pPlon", value=0.3, min=-5.0, max=5.0,
-                  free=True, latex=r"\phi_0 \, \mathrm{[rad]}",
+                  free=True, latex=r"\phi_s \, \mathrm{[rad]}",
                   blindstr="BsPhiszeroFullRun2" if POLDEP else "BsPhisFullRun2",
                   blind=BLIND, blindscale=2 if POLDEP else 1, blindengine="root"))
     pars.add(dict(name="pPpar", value=0.00, min=-5.0, max=5.0,
@@ -329,7 +330,7 @@ if __name__ == "__main__":
                   latex=r"|\lambda_S|/|\lambda_0|"))
     pars.add(dict(name="lPlon", value=1., min=0.4, max=1.6,
                   free=True,
-                  latex=r"|\lambda_0|"))
+                  latex=r"|\lambda|"))
     pars.add(dict(name="lPpar", value=1., min=0.4, max=1.6,
                   free=POLDEP,
                   latex=r"|\lambda_{\parallel}|/|\lambda_0|"))
@@ -385,17 +386,18 @@ if __name__ == "__main__":
                     latex=r"\Gamma_d \, \mathrm{[ps]}^{-1}"))
 
   if BC_CONTRIBUTION:
-    DGsd_Bc = unc.ufloat(-0.00145, 0.00021)
-    DGs_Bc = unc.ufloat(-0.00168, 0.00068)
+    DGs_Bc = unc.ufloat(-0.00145, 0.00033)
+    DGsd_Bc = unc.ufloat(-0.00168, 0.00068)
     pars.add(dict(name="n_Bc", value=0., 
 						free=True))
     pars.add(dict(name="DGsd_Bs", value=0, min=-0.5, max=0.5,
 						free=True,
-				   ))
+                        latex=r"\Gamma_s - \Gamma_d \, \mathrm{[ps^{-1}]}"))
 
     pars.add(dict(name="DGs_Bs", value=0, min=-0.5, max=0.5,
 						free=True,
             blindstr="BsDGsFullRun2",
+            latex=r"\Delta\Gamma_s \, \mathrm{[ps^{-1}]}",
             blind=BLIND, blindscale=1.0, blindengine="root"))
 
     pars.add(dict(name="DGs",
@@ -470,7 +472,7 @@ if __name__ == "__main__":
   #     pars.lock(p)
 
   for year in YEARS:
-    if int(year) > 2015:
+    if (int(year) > 2015) or (YEARS==["2015"]):
       str_year = str(year)
       syear = int(str_year[2:])
       pars.add(dict(name=f"eta_os{syear}",
@@ -524,10 +526,10 @@ if __name__ == "__main__":
                   latex=r"\Delta p^{\rm SS}_{1}"))
   print(pars)
   
-
+  #Private calculation for MC:
   # if any(x in args["version"] for x in ["fake", "gene", "reco"]):
   #   os_corr = np.array([
-	 #  [    1.00 ,  0.143,    0.,   0.,   0.,   0., -0.0025, -0.0027,       0.,      0.,        0.,     0.],
+  #  [    1.00 ,  0.143,    0.,   0.,   0.,   0., -0.0025, -0.0027,       0.,      0.,        0.,     0.],
   #     [    0.143,    1.0,    0.,   0.,   0.,   0., -0.0028, 0.00031,       0.,      0.,        0.,     0.],
   #     [       0.,     0.,  1.0,  0.14,   0.,   0.,      0.,      0.,   0.0013, -0.0031,        0.,     0.],
   #     [       0.,     0.,  0.14,  1.0,   0.,   0.,      0.,      0.,  -0.0031,  0.0048,        0.,     0.],
@@ -572,21 +574,46 @@ if __name__ == "__main__":
 	  [    0.00,-0.00, 0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00,-0.00, 1.00, 0.14 ],
 	  [    0.00,-0.00, 0.00, 0.00,-0.00,-0.00, 0.00,-0.00,-0.00,-0.00, 0.14, 1.00 ]
 	  ])
+  #Old correlation for SS -> From Kechen old time acceptance and bug on errors
+  # ss_corr = np.array([
+	 #  [    1.00,-0.03, 0.07,-0.00, 0.09,-0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
+	 #  [   -0.03, 1.00,-0.00, 0.36,-0.00, 0.32,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	 #  [    0.07,-0.00, 1.00, 0.04, 0.05,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 0.00 ],
+	 #  [   -0.00, 0.36, 0.04, 1.00,-0.00, 0.19,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	 #  [    0.09,-0.00, 0.05,-0.00, 1.00, 0.05, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
+	 #  [   -0.00, 0.32,-0.00, 0.19, 0.05, 1.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
+	 #  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 1.00, 0.12, 0.00,-0.00,-0.00,-0.00 ],
+	 #  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.12, 1.00, 0.00, 0.00,-0.00,-0.00 ],
+	 #  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.00, 0.00, 1.00, 0.13,-0.00, 0.00 ],
+	 #  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.13, 1.00, 0.00, 0.00 ],
+	 #  [   -0.00,-0.00, 0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 1.00, 0.11 ],
+	 #  [   -0.00, 0.00, 0.00, 0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.00, 0.11, 1.00 ]
+	 #  ])
+  #Updated one SSK calibration -> spline in acceptances bug fixed
   ss_corr = np.array([
-	  [    1.00,-0.03, 0.07,-0.00, 0.09,-0.00, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
-	  [   -0.03, 1.00,-0.00, 0.36,-0.00, 0.32,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
-	  [    0.07,-0.00, 1.00, 0.04, 0.05,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 0.00 ],
-	  [   -0.00, 0.36, 0.04, 1.00,-0.00, 0.19,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
-	  [    0.09,-0.00, 0.05,-0.00, 1.00, 0.05, 0.00, 0.00, 0.00, 0.00,-0.00,-0.00 ],
-	  [   -0.00, 0.32,-0.00, 0.19, 0.05, 1.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00 ],
-	  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 1.00, 0.12, 0.00,-0.00,-0.00,-0.00 ],
-	  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.12, 1.00, 0.00, 0.00,-0.00,-0.00 ],
-	  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00, 0.00, 0.00, 1.00, 0.13,-0.00, 0.00 ],
-	  [    0.00,-0.00,-0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.13, 1.00, 0.00, 0.00 ],
-	  [   -0.00,-0.00, 0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 1.00, 0.11 ],
-	  [   -0.00, 0.00, 0.00, 0.00,-0.00, 0.00,-0.00,-0.00, 0.00, 0.00, 0.11, 1.00 ]
-	  ])
-
+        [    1.00,-0.05, 0.11, 0.00, 0.15, 0.00, 0.00, 0.00, 0.00, 0.00,-0.00, 0.00 ],
+        [   -0.05, 1.00,-0.00, 0.18,-0.00, 0.16,-0.00, 0.00, 0.00, 0.00,-0.00, 0.00 ],
+        [    0.11,-0.00, 1.00, 0.04, 0.09,-0.00,-0.00,-0.00, 0.00, 0.00,-0.00,-0.00 ],
+        [    0.00, 0.18, 0.04, 1.00, 0.00, 0.29,-0.00,-0.00, 0.00, 0.00,-0.00,-0.00 ],
+        [    0.15,-0.00, 0.09, 0.00, 1.00, 0.05,-0.00,-0.00, 0.00, 0.00,-0.00,-0.00 ],
+        [    0.00, 0.16,-0.00, 0.29, 0.05, 1.00,-0.00,-0.00, 0.00, 0.00,-0.00,-0.00 ],
+        [    0.00,-0.00,-0.00,-0.00,-0.00,-0.00, 1.00, 0.12, 0.00,-0.00,-0.00,-0.00 ],
+        [    0.00, 0.00,-0.00,-0.00,-0.00,-0.00, 0.12, 1.00, 0.00, 0.00,-0.00,-0.00 ],
+        [    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 1.00, 0.13,-0.00, 0.00 ],
+        [    0.00, 0.00, 0.00, 0.00, 0.00, 0.00,-0.00, 0.00, 0.13, 1.00, 0.00, 0.00 ],
+        [   -0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 1.00, 0.11 ],
+        [    0.00, 0.00,-0.00,-0.00,-0.00,-0.00,-0.00,-0.00, 0.00, 0.00, 0.11, 1.00 ]
+    ])
+  # if YEARS==["2015"]:
+  #   pars.corr_from_matrix(os_corr,
+  #                       ["p0_os15", "p1_os15", "p0_os17", "p1_os17", "p0_os18",
+  #                        "p1_os18", "dp0_os15", "dp1_os15", "dp0_os17",
+  #                        "dp1_os17", "dp0_os18", "dp1_os18", ])
+  #   pars.corr_from_matrix(ss_corr,
+  #                       ["p0_ss15", "p1_ss15", "p0_ss17", "p1_ss17", "p0_ss18",
+  #                        "p1_ss18", "dp0_ss15", "dp1_ss15", "dp0_ss17",
+  #                        "dp1_ss17", "dp0_ss18", "dp1_ss18", ])
+  # else:
   pars.corr_from_matrix(os_corr,
                         ["p0_os16", "p1_os16", "p0_os17", "p1_os17", "p0_os18",
                          "p1_os18", "dp0_os16", "dp1_os16", "dp0_os17",
@@ -595,6 +622,7 @@ if __name__ == "__main__":
                         ["p0_ss16", "p1_ss16", "p0_ss17", "p1_ss17", "p0_ss18",
                          "p1_ss18", "dp0_ss16", "dp1_ss16", "dp0_ss17",
                          "dp1_ss17", "dp0_ss18", "dp1_ss18", ])
+
   # for year in YEARS:
   #   if int(year) > 2015:
   #     str_year = str(year)
@@ -975,6 +1003,7 @@ if __name__ == "__main__":
   # Minimization {{{
 
   if args['log_likelihood']:
+
     pars = Parameters.load(args['input_params'])
     ll = cost_function(pars, data).sum()
     print(f"Found sum(LL) to be {ll}")
