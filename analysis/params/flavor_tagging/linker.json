@@ -1,4 +1,5 @@
 {
   "amsrd": "tagging_parameters_{year}.json",
-  "peilian": "tagging_{year}.json"
+  "peilian": "tagging_{year}.json",
+  "ift": "tagging_{year}.json"
 }
